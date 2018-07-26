@@ -322,6 +322,8 @@ class RestrictToDetectorTest : AbstractCheckTest() {
     }
 
     fun testGmsHide() {
+        // Tests that the @Hide works, and that when applied to classes, it is applied to
+        // constructors and to static methods.
         lint().files(
             java(
                 "" +
@@ -331,8 +333,11 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                         "\n" +
                         "public class HideTest {\n" +
                         "    public void test() {\n" +
-                        "        HiddenInPackage.test(); // Error\n" +
-                        "        HiddenClass.test(); // Error\n" +
+                        "        HiddenInPackage hp = new HiddenInPackage(); // Error\n" +
+                        "        HiddenInPackage.test(); // Error!\n" +
+                        "        HiddenClass hc = new HiddenClass(); // Error\n" +
+                        "        HiddenClass.test(); // Error!\n" +
+                        "        PublicClass pc = new PublicClass();  // OK!\n" +
                         "        PublicClass.hiddenMethod(); // Error\n" +
                         "        PublicClass.normalMethod(); // OK!\n" +
                         "    }\n" +
@@ -347,10 +352,13 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                         "\n" +
                         "public class HideTest {\n" +
                         "    public void test() {\n" +
-                        "        HiddenInPackage.test(); // Error\n" +
-                        "        HiddenClass.test(); // Error\n" +
-                        "        PublicClass.hiddenMethod(); // Error\n" +
-                        "        PublicClass.normalMethod(); // OK!\n" +
+                        "        HiddenInPackage hp = new HiddenInPackage();!\n" +
+                        "        HiddenInPackage.test();\n" +
+                        "        HiddenClass hc = new HiddenClass();\n" +
+                        "        HiddenClass.test();\n" +
+                        "        PublicClass pc = new PublicClass();\n" +
+                        "        PublicClass.hiddenMethod();\n" +
+                        "        PublicClass.normalMethod();\n" +
                         "    }\n" +
                         "}\n"
             ),
@@ -430,16 +438,22 @@ class RestrictToDetectorTest : AbstractCheckTest() {
             )
         ).run().expect(
             "" +
-                    "src/test/pkg/HideTest.java:7: Error: HiddenInPackage.test is marked as internal and should not be accessed from apps [RestrictedApi]\n" +
-                    "        HiddenInPackage.test(); // Error\n" +
+                    "src/test/pkg/HideTest.java:7: Error: HiddenInPackage constructor is marked as internal and should not be accessed from apps [RestrictedApi]\n" +
+                    "        HiddenInPackage hp = new HiddenInPackage(); // Error\n" +
+                    "                             ~~~~~~~~~~~~~~~~~~~~~\n" +
+                    "src/test/pkg/HideTest.java:8: Error: HiddenInPackage.test is marked as internal and should not be accessed from apps [RestrictedApi]\n" +
+                    "        HiddenInPackage.test(); // Error!\n" +
                     "                        ~~~~\n" +
-                    "src/test/pkg/HideTest.java:8: Error: HiddenClass is marked as internal and should not be accessed from apps [RestrictedApi]\n" +
-                    "        HiddenClass.test(); // Error\n" +
+                    "src/test/pkg/HideTest.java:9: Error: HiddenClass constructor is marked as internal and should not be accessed from apps [RestrictedApi]\n" +
+                    "        HiddenClass hc = new HiddenClass(); // Error\n" +
+                    "                         ~~~~~~~~~~~~~~~~~\n" +
+                    "src/test/pkg/HideTest.java:10: Error: HiddenClass is marked as internal and should not be accessed from apps [RestrictedApi]\n" +
+                    "        HiddenClass.test(); // Error!\n" +
                     "        ~~~~~~~~~~~\n" +
-                    "src/test/pkg/HideTest.java:9: Error: PublicClass.hiddenMethod is marked as internal and should not be accessed from apps [RestrictedApi]\n" +
+                    "src/test/pkg/HideTest.java:12: Error: PublicClass.hiddenMethod is marked as internal and should not be accessed from apps [RestrictedApi]\n" +
                     "        PublicClass.hiddenMethod(); // Error\n" +
                     "                    ~~~~~~~~~~~~\n" +
-                    "3 errors, 0 warnings\n"
+                    "5 errors, 0 warnings"
         )
     }
 
@@ -513,6 +527,157 @@ class RestrictToDetectorTest : AbstractCheckTest() {
             ),
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
+    }
+
+    fun testGmsHideInheritedAnnotation() {
+        // Ensure that @Hide on a superclass doesn't automatically mean that all members
+        // are hidden too. It is valid for methods to be inherited non-hidden from hidden
+        // superclasses (e.g. an abstract superclass). Only the static methods and constructors
+        // should automatically follow the @Hide of their containing class.
+        lint().files(
+                java(
+                        "src/test/pkg/HideTest.java",
+                        "" +
+                                "package test.pkg;\n" +
+                                "\n" +
+                                "import com.google.android.gms.foo.bar.HiddenClass;\n" +
+                                "import com.google.android.gms.foo.bar.SubclassHiddenClass;\n" +
+                                "import com.google.android.gms.foo.bar.SubclassHiddenInPackage;\n" +
+                                "\n" +
+                                "public class HideTest {\n" +
+                                "    public void test() {\n" +
+                                "        HiddenClass h = new HiddenClass(); // Error\n" +
+                                "        h.hidden();  // Error\n" +
+                                "        h.overrideNotHidden();  // Error\n" +
+                                "        h.notHidden(); // OK!\n" +
+                                "        SubclassHiddenClass s1 = new SubclassHiddenClass();\n" +
+                                "        s1.hidden(); // Error\n" +
+                                "        s1.overrideNotHidden(); // OK!\n" +
+                                "        s1.notHidden(); // OK!\n" +
+                                "        SubclassHiddenInPackage s2 = new SubclassHiddenInPackage();\n" +
+                                "        s2.hidden(); // Error\n" +
+                                "        s2.overrideNotHidden(); // OK!\n" +
+                                "        s2.notHidden(); // OK!\n" +
+                                "    }\n" +
+                                "}\n"
+                ),
+                java(
+                        "" +
+                                "package com.google.android.gms.foo.bar;\n" +
+                                "\n" +
+                                "import test.pkg.HiddenClass;\n" +
+                                "\n" +
+                                "public class SubclassHiddenClass extends HiddenClass {\n" +
+                                "    @Override\n" +
+                                "    public void overrideNotHidden(){\n" +
+                                "    }\n" +
+                                "}\n"
+                ),
+                java(
+                        "" +
+                                "package com.google.android.gms.foo.bar;\n" +
+                                "\n" +
+                                "import test.pkg.internal.HiddenInPackage;\n" +
+                                "\n" +
+                                "public class SubclassHiddenInPackage extends HiddenInPackage {\n" +
+                                "    @Override\n" +
+                                "    public void overrideNotHidden(){\n" +
+                                "    }\n" +
+                                "}\n"
+                ),
+                java(
+                        "" +
+                                "package test.pkg.internal;\n" +
+                                "\n" +
+                                "import com.google.android.gms.common.internal.Hide;\n" +
+                                "\n" +
+                                "public class HiddenInPackage {\n" +
+                                "    @Hide\n" +
+                                "    public void hidden() {\n" +
+                                "    }\n" +
+                                "    @Hide\n" +
+                                "    public void overrideNotHidden() {\n" +
+                                "    }\n" +
+                                "    public void notHidden() {\n" +
+                                "    }\n" +
+                                "}\n"
+                ),
+                java(
+                        "" +
+                                "package test.pkg;\n" +
+                                "\n" +
+                                "import com.google.android.gms.common.internal.Hide;\n" +
+                                "\n" +
+                                "@Hide\n" +
+                                "public class HiddenClass {\n" +
+                                "    public HiddenClass() {\n" +
+                                "    }\n" +
+                                "    @Hide\n" +
+                                "    public void hidden() {\n" +
+                                "    }\n" +
+                                "    @Hide\n" +
+                                "    public void overrideNotHidden() {\n" +
+                                "    }\n" +
+                                "    public void notHidden() {\n" +
+                                "    }\n" +
+                                "}\n"
+                ),
+                java(
+                        "" +
+                                "package com.google.android.gms.common.internal;\n" +
+                                "\n" +
+                                "import java.lang.annotation.Documented;\n" +
+                                "import java.lang.annotation.ElementType;\n" +
+                                "import java.lang.annotation.Retention;\n" +
+                                "import java.lang.annotation.RetentionPolicy;\n" +
+                                "import java.lang.annotation.Target;\n" +
+                                "import static java.lang.annotation.ElementType.*;\n" +
+                                "@Target({TYPE,FIELD,METHOD,CONSTRUCTOR,PACKAGE})\n" +
+                                "@Retention(RetentionPolicy.CLASS)\n" +
+                                "public @interface Hide {}"
+                ),
+                java(
+                        "src/test/pkg/internal/package-info.java", "" +
+                        "@Hide\n" +
+                        "package test.pkg.internal;\n" +
+                        "\n" +
+                        "import com.google.android.gms.common.internal.Hide;\n"
+                ),
+                // Also register the compiled version of the above package-info jar file;
+                // without this we don't resolve package annotations
+                base64gzip(
+                        "libs/packageinfoclass.jar", "" +
+                        "H4sIAAAAAAAAAAvwZmYRYeDg4GC4tYDfmwEJcDKwMPi6hjjqevq56f87xcDA" +
+                        "zBDgzc4BkmKCKgnAqVkEiOGafR39PN1cg0P0fN0++5457eOtq3eR11tX69yZ" +
+                        "85uDDK4YP3hapOflq+Ppe7F0FQtnxAvJI9KzpF6KLX22RE1suVZGxdJpFqKq" +
+                        "ac9EtUVei758mv2p6GMRI9gtbSuDVb2ANnmhuEVhPqpbVIC4JLW4RL8gO10/" +
+                        "M68ktSgvMUe/IDE5OzE9VTczLy1fLzknsbjYt9cw75CDgOt/oQOKoRmXXB6x" +
+                        "pc0qWZmhpKSoqKoe8SbRNM22+c1WfveDjBYih1RcP3X/X/q/q3znvHMM9wxO" +
+                        "T0itKKn4tW2d5g9nJesz/fssfhzY+eLetKnv9x5+Hb7cM+vflbiom65xK6M+" +
+                        "efpEt9cER/ge1HFRW5+aHBS0Ilrq3a0pLsLmr5TXLn1S3u76yOziR4F/J+qX" +
+                        "H/581+ti9oK36x4p7WXgU/6T1tI+Xy7Z6E2JQvADNlAAHM4XN1kP9N5VcAAw" +
+                        "MokwoEYHLKJAcYkKUGIWXStyuIqgaLPFEa/IJoDCH9lhKigmnCQyNgK8WdlA" +
+                        "6pmB8DyQPsUI4gEAH9csuq8CAAA="
+                )
+        ).run().expect(
+                "" +
+                        "src/test/pkg/HideTest.java:9: Error: HiddenClass is marked as internal and should not be accessed from apps [RestrictedApi]\n" +
+                        "        HiddenClass h = new HiddenClass(); // Error\n" +
+                        "                        ~~~~~~~~~~~~~~~~~\n" +
+                        "src/test/pkg/HideTest.java:10: Error: HiddenClass.hidden is marked as internal and should not be accessed from apps [RestrictedApi]\n" +
+                        "        h.hidden();  // Error\n" +
+                        "          ~~~~~~\n" +
+                        "src/test/pkg/HideTest.java:11: Error: HiddenClass.overrideNotHidden is marked as internal and should not be accessed from apps [RestrictedApi]\n" +
+                        "        h.overrideNotHidden();  // Error\n" +
+                        "          ~~~~~~~~~~~~~~~~~\n" +
+                        "src/test/pkg/HideTest.java:14: Error: HiddenClass.hidden is marked as internal and should not be accessed from apps [RestrictedApi]\n" +
+                        "        s1.hidden(); // Error\n" +
+                        "           ~~~~~~\n" +
+                        "src/test/pkg/HideTest.java:18: Error: HiddenInPackage.hidden is marked as internal and should not be accessed from apps [RestrictedApi]\n" +
+                        "        s2.hidden(); // Error\n" +
+                        "           ~~~~~~\n" +
+                        "5 errors, 0 warnings"
+        )
     }
 
     fun testPrivateVisibilityWithDefaultConstructor() {

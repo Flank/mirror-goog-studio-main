@@ -71,14 +71,21 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     ) {
 
         when (qualifiedName) {
-            RESTRICT_TO_ANNOTATION.oldName(), RESTRICT_TO_ANNOTATION.newName(),
-            GMS_HIDE_ANNOTATION -> {
+            RESTRICT_TO_ANNOTATION.oldName(), RESTRICT_TO_ANNOTATION.newName() -> {
                 if (method != null) {
                     checkRestrictTo(
-                        context, usage, method, annotation, allMemberAnnotations,
-                        allClassAnnotations
+                            context, usage, method, annotation, allMemberAnnotations,
+                            allClassAnnotations, true
                     )
                 }
+            }
+            GMS_HIDE_ANNOTATION -> {
+                val isConstructor = method == null || method.isConstructor
+                val isStatic = if (method == null) false else context.evaluator.isStatic(method)
+                checkRestrictTo(
+                    context, usage, method, annotation, allMemberAnnotations,
+                    allClassAnnotations, isConstructor || isStatic
+                )
             }
             VISIBLE_FOR_TESTING_ANNOTATION.oldName(), VISIBLE_FOR_TESTING_ANNOTATION.newName(),
             GUAVA_VISIBLE_FOR_TESTING -> {
@@ -250,16 +257,17 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     private fun checkRestrictTo(
         context: JavaContext,
         node: UElement,
-        method: PsiMethod,
+        method: PsiMethod?,
         annotation: UAnnotation,
         allMethodAnnotations: List<UAnnotation>,
-        allClassAnnotations: List<UAnnotation>
+        allClassAnnotations: List<UAnnotation>,
+        applyClassAnnotationsToMembers: Boolean = true
     ) {
         val scope = getRestrictionScope(annotation)
         if (scope != 0) {
             checkRestrictTo(
                 context, node, method, annotation, allMethodAnnotations,
-                allClassAnnotations, scope
+                allClassAnnotations, scope, applyClassAnnotationsToMembers
             )
         }
     }
@@ -267,14 +275,23 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     private fun checkRestrictTo(
         context: JavaContext,
         node: UElement,
-        method: PsiMethod,
+        method: PsiMethod?,
         annotation: UAnnotation,
         allMethodAnnotations: List<UAnnotation>,
         allClassAnnotations: List<UAnnotation>,
-        scope: Int
+        scope: Int,
+        applyClassAnnotationsToMembers: Boolean = true
     ) {
 
-        val containingClass = method.containingClass ?: return
+        val containingClass = if (method != null) {
+            method.containingClass
+        } else if (node is UCallExpression) {
+            node.classReference?.resolve() as PsiClass
+        } else {
+            null
+        }
+
+        containingClass ?: return
 
         var isClassAnnotation = false
         if (containsAnnotation(allMethodAnnotations, annotation)) {
@@ -282,10 +299,10 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             // For example, NavigationView (a public, exposed class) extends ScrimInsetsFrameLayout, which
             // is a restricted class. We don't want to make all uses of NavigationView to suddenly be
             // treated as Restricted just because it inherits code from a restricted API.
-            if (context.evaluator.isInherited(annotation, method)) {
+            if (method != null && context.evaluator.isInherited(annotation, method)) {
                 return
             }
-        } else {
+        } else if (applyClassAnnotationsToMembers) {
             // Found restriction or class or package: make sure we only check on the most
             // specific scope, otherwise we report the same error multiple times
             // or report errors on restrictions that have been redefined
@@ -300,9 +317,11 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             } else if (containsRestrictionAnnotation(allClassAnnotations)) {
                 return
             }
+        } else { // not in member annotations and applyClassAnnotationToMembers is false.
+            return
         }
 
-        if (scope and RESTRICT_TO_LIBRARY_GROUP != 0) {
+        if (scope and RESTRICT_TO_LIBRARY_GROUP != 0 && method != null) {
             // TODO: Consult Project.getMavenCoordinates
             val evaluator = context.evaluator
             val thisCoordinates = evaluator.getLibrary(node)
@@ -321,7 +340,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             }
         }
 
-        if (scope and RESTRICT_TO_LIBRARY != 0) {
+        if (scope and RESTRICT_TO_LIBRARY != 0 && method != null) {
             // TODO: Consult Project.getMavenCoordinates
             val evaluator = context.evaluator
             val thisCoordinates = evaluator.getLibrary(node)
@@ -401,14 +420,14 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     private fun reportRestriction(
         where: String?,
         containingClass: PsiClass,
-        method: PsiMethod,
+        method: PsiMethod?,
         context: JavaContext,
         node: UElement,
         isClassAnnotation: Boolean
     ) {
         var api: String
-        api = if (method.isConstructor) {
-            method.name + " constructor"
+        api = if (method == null || method.isConstructor) {
+            method?.name ?: containingClass.name + " constructor"
         } else {
             containingClass.name + "." + method.name
         }

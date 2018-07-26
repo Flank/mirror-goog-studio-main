@@ -48,6 +48,7 @@ import org.jetbrains.uast.getContainingUMethod
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.java.JavaUAnnotation
 import org.jetbrains.uast.util.isAssignment
+import org.jetbrains.uast.util.isConstructorCall
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 import java.util.ArrayList
 import java.util.HashSet
@@ -255,7 +256,14 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
 
     fun visitCallExpression(context: JavaContext, call: UCallExpression) {
         val method = call.resolve()
-        if (method != null) {
+        // Implicit, generated, default constructors resolve to null, but we still want to check
+        // this case using the class's annotations. So thus, check a null if it represents
+        // a constructor call.
+        if (method == null) {
+            if (call.isConstructorCall()) {
+                checkCallUnresolved(context, call)
+            }
+        } else {
             checkCall(context, method, call)
         }
     }
@@ -340,6 +348,9 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         }
     }
 
+    /**
+     * Extract the relevant annotations from the call and run the checks on the annotations.
+     */
     private fun checkCall(
         context: JavaContext,
         method: PsiMethod,
@@ -352,9 +363,55 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
 
         // Look for annotations on the class as well: these trickle
         // down to all the methods in the class
-        val containingClass = method.containingClass
+        val containingClass: PsiClass? = method.containingClass
+        val (classAnnotations, pkgAnnotations) = getClassAndPkgAnnotations(
+            containingClass, evaluator, call
+        )
+
+        doCheckCall(context, method, methodAnnotations, classAnnotations, pkgAnnotations, call)
+    }
+
+    /**
+     * Extract the relevant annotations from the call and run the checks on the annotations.<p>
+     *
+     * This method is used in cases where UCallExpression.resolve() returns null. One important
+     * case this happens is when an implicit, generated, default constructor (a class with no
+     * explicit constructor in the source code) is called.
+     */
+    private fun checkCallUnresolved(
+        context: JavaContext,
+        call: UCallExpression
+    ) {
+        val evaluator = context.evaluator
+
+        val allAnnotations = evaluator.getAllAnnotations(call, true)
+        val methodAnnotations: List<UAnnotation> =
+            filterRelevantAnnotations(evaluator, allAnnotations)
+
+        val containingClass = call.classReference?.resolve() as PsiClass?
+        val (classAnnotations, pkgAnnotations) = getClassAndPkgAnnotations(
+            containingClass, evaluator, call
+        )
+        // This block is duplicated in checkCall. Pulling this into its own method turns
+        // out not to save many lines of code due to the number of parameters and that two variables
+        // are being initialized.
+
+        doCheckCall(context, null, methodAnnotations, classAnnotations, pkgAnnotations, call)
+    }
+
+    private fun getClassAndPkgAnnotations(
+        containingClass: PsiClass?,
+        evaluator: JavaEvaluator,
+        call: UCallExpression
+    ): Pair<List<UAnnotation>, List<UAnnotation>> {
+
+        // Yes, returning a pair is ugly. But we are initializing two lists, and splitting this
+        // into two methods takes more lines of code then it saves over copying this block into
+        // two methods.
+        // Plus, destructuring assignment makes calling this method
         val classAnnotations: List<UAnnotation>
         val pkgAnnotations: List<UAnnotation>
+
         if (containingClass != null) {
             val annotations = evaluator.getAllAnnotations(containingClass, true)
             classAnnotations = filterRelevantAnnotations(evaluator, annotations, call)
@@ -371,6 +428,20 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
             pkgAnnotations = emptyList()
         }
 
+        return Pair(classAnnotations, pkgAnnotations)
+    }
+
+    /**
+     * Do the checks of a call based on the method, class, and package annotations given.
+     */
+    private fun doCheckCall(
+        context: JavaContext,
+        method: PsiMethod?,
+        methodAnnotations: List<UAnnotation>,
+        classAnnotations: List<UAnnotation>,
+        pkgAnnotations: List<UAnnotation>,
+        call: UCallExpression
+    ) {
         if (!methodAnnotations.isEmpty()) {
             checkAnnotations(
                 context, call, AnnotationUsageType.METHOD_CALL, method,
@@ -394,18 +465,24 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
             )
         }
 
-        val mapping = evaluator.computeArgumentMapping(call, method)
-        for ((argument, parameter) in mapping) {
-            val allParameterAnnotations = evaluator.getAllAnnotations(parameter, true)
-            val filtered = filterRelevantAnnotations(evaluator, allParameterAnnotations, call)
-            if (filtered.isEmpty()) {
-                continue
-            }
+        // Sadly, a null method means no parameter checks at this time.
+        // Right now, computing the argument mapping expects a method object and cannot work based
+        // off a raw UExpression.
+        if (method != null) {
+            val evaluator = context.evaluator
+            val mapping = evaluator.computeArgumentMapping(call, method)
+            for ((argument, parameter) in mapping) {
+                val allParameterAnnotations = evaluator.getAllAnnotations(parameter, true)
+                val filtered = filterRelevantAnnotations(evaluator, allParameterAnnotations, call)
+                if (filtered.isEmpty()) {
+                    continue
+                }
 
-            checkAnnotations(
-                context, argument, AnnotationUsageType.METHOD_CALL_PARAMETER, method,
-                filtered, methodAnnotations, classAnnotations, pkgAnnotations
-            )
+                checkAnnotations(
+                    context, argument, AnnotationUsageType.METHOD_CALL_PARAMETER, method,
+                    filtered, methodAnnotations, classAnnotations, pkgAnnotations
+                )
+            }
         }
     }
 
