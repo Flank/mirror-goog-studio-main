@@ -27,6 +27,7 @@ class Daemon;
 class Command {
  public:
   Command(const proto::Command& command) : command_(command) {}
+  virtual ~Command() {}
 
   const proto::Command& command() { return command_; }
 
