@@ -506,6 +506,8 @@ public class RepoManagerImpl extends RepoManager {
         public void run(@NonNull ProgressIndicator indicator, @NonNull ProgressRunner runner) {
             boolean success = false;
             boolean localSuccess = false;
+            boolean wasIndeterminate = indicator.isIndeterminate();
+            indicator.setIndeterminate(false);
             try {
                 LocalRepoLoader local = mLocalRepoLoaderFactory.createLocalRepoLoader();
                 if (local != null &&
@@ -573,6 +575,7 @@ public class RepoManagerImpl extends RepoManager {
                 }
                 success = true;
             } finally {
+                indicator.setIndeterminate(wasIndeterminate);
                 synchronized (mTaskLock) {
                     // The processing of the task is now complete.
                     // To ensure that no more callbacks are added, and to allow another task to be
