@@ -18,6 +18,7 @@ package com.android.tools.perflogger;
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.testutils.TestUtils;
+import com.google.common.collect.ImmutableList;
 import com.google.gson.stream.JsonWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -82,6 +83,7 @@ public class Metric {
     @NonNull private final String myMetricName;
     @NonNull private final File myOutputDirectory;
     @NonNull private final Map<Benchmark, List<MetricSample>> mySamples;
+    @NonNull private final Map<Benchmark, ImmutableList<Analyzer>> myAnalyzers;
 
     /**
      * @param metricName The name to be used to associate the logged data with. e.g. the legend name
@@ -103,6 +105,7 @@ public class Metric {
 
         // Preserve insertion order - mostly for test purposes.
         mySamples = new LinkedHashMap<>();
+        myAnalyzers = new LinkedHashMap<>();
     }
 
     @VisibleForTesting
@@ -125,6 +128,18 @@ public class Metric {
     public void addSamples(@NonNull Benchmark benchmark, @NonNull MetricSample... data) {
         mySamples.putIfAbsent(benchmark, new ArrayList<>());
         mySamples.get(benchmark).addAll(Arrays.asList(data));
+    }
+
+    /**
+     * Assigns a collection of perfgate analyzers to this metric for a given benchmark.
+     *
+     * @param benchmark The {@link Benchmark} to set the analyzers for.
+     * @param analyzers The {@link Analyzer} Collection to be assigned to this metric for the given
+     *     benchmark.
+     */
+    public void setAnalyzers(
+            @NonNull Benchmark benchmark, @NonNull Collection<Analyzer> analyzers) {
+        myAnalyzers.put(benchmark, ImmutableList.copyOf(analyzers));
     }
 
     /** Writes the logged benchmark data out to the test output directory. */
@@ -159,7 +174,22 @@ public class Metric {
                         }
                         writer.endObject();
                     }
-
+                    Collection<Analyzer> analyzers = myAnalyzers.get(benchmark);
+                    if (analyzers != null && !analyzers.isEmpty()) {
+                        writer.name("analyzers").beginArray();
+                        {
+                            for (Analyzer analyzer : analyzers) {
+                                writer.beginObject();
+                                for (Map.Entry<String, String> analyzerEntry :
+                                        analyzer.getNameValueMap().entrySet()) {
+                                    writer.name(analyzerEntry.getKey());
+                                    writer.value(analyzerEntry.getValue());
+                                }
+                                writer.endObject();
+                            }
+                        }
+                        writer.endArray();
+                    }
                     writer.endObject();
                 }
                 writer.endArray();

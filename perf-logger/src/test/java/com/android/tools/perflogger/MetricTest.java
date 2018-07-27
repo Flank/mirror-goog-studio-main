@@ -19,11 +19,13 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.tools.perflogger.Metric.MetricSample;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.CharStreams;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -33,37 +35,37 @@ public class MetricTest {
 
     @Test
     public void testCommitWithNoData() throws Exception {
-        Metric logger = new Metric(myTestName.getMethodName());
-        logger.commit();
+        Metric metric = new Metric(myTestName.getMethodName());
+        metric.commit();
 
-        File outputDir = logger.getOutputDirectory();
+        File outputDir = metric.getOutputDirectory();
         assertThat(outputDir.exists()).isTrue();
         assertThat(outputDir.listFiles()).asList().isEmpty();
     }
 
     @Test
     public void testMetricNameRenamed() throws Exception {
-        Metric logger = new Metric("DEAD[BEEF]");
-        assertThat(logger.getMetricName()).isEqualTo("DEAD-BEEF-");
-        logger = new Metric("DEAD BEEF");
-        assertThat(logger.getMetricName()).isEqualTo("DEAD-BEEF");
+        Metric metric = new Metric("DEAD[BEEF]");
+        assertThat(metric.getMetricName()).isEqualTo("DEAD-BEEF-");
+        metric = new Metric("DEAD BEEF");
+        assertThat(metric.getMetricName()).isEqualTo("DEAD-BEEF");
     }
 
     @Test
     public void testSingleBenchmark() throws Exception {
-        Metric logger = new Metric(myTestName.getMethodName());
+        Metric metric = new Metric(myTestName.getMethodName());
         Benchmark benchmark = new Benchmark.Builder("AS Metric Test").build();
-        logger.addSamples(
+        metric.addSamples(
                 benchmark,
                 new MetricSample(1, 10),
                 new MetricSample(2, 20),
                 new MetricSample(3, 30));
-        logger.commit();
+        metric.commit();
 
         File outputFile =
                 new File(
-                        logger.getOutputDirectory(),
-                        String.format("%s.json", logger.getMetricName()));
+                        metric.getOutputDirectory(),
+                        String.format("%s.json", metric.getMetricName()));
         assertThat(outputFile.exists()).isTrue();
         String expected =
                 "{\n"
@@ -91,33 +93,106 @@ public class MetricTest {
     }
 
     @Test
+    public void testMedianWindowDeviationAnalyzers() throws Exception {
+        Metric metric = new Metric(myTestName.getMethodName());
+        Benchmark benchmark = new Benchmark.Builder("AS Metric Test").build();
+        List<Analyzer> analyzers =
+                ImmutableList.of(
+                        new MedianWindowDeviationAnalyzer.Builder().build(),
+                        new MedianWindowDeviationAnalyzer.Builder()
+                                .setMetricAggregate(Analyzer.MetricAggregate.MEAN)
+                                .setRunInfoQueryLimit(24)
+                                .setRecentWindowSize(5)
+                                .setConstTerm(25.0)
+                                .setMedianCoeff(0.10)
+                                .setMadCoeff(1.0)
+                                .build());
+        metric.setAnalyzers(benchmark, analyzers);
+        metric.addSamples(
+                benchmark,
+                new MetricSample(1, 10),
+                new MetricSample(2, 20),
+                new MetricSample(3, 30));
+        metric.commit();
+
+        File outputFile =
+                new File(
+                        metric.getOutputDirectory(),
+                        String.format("%s.json", metric.getMetricName()));
+        assertThat(outputFile.exists()).isTrue();
+        String expected =
+                "{\n"
+                        + "  \"metric\": \""
+                        + myTestName.getMethodName()
+                        + "\",\n"
+                        + "  \"benchmarks\": [\n"
+                        + "    {\n"
+                        + "      \"benchmark\": \"AS Metric Test\",\n"
+                        + "      \"project\": \"Perfgate for Android Studio\",\n"
+                        + "      \"data\": {\n"
+                        + "        \"1\": 10,\n"
+                        + "        \"2\": 20,\n"
+                        + "        \"3\": 30\n"
+                        + "      },\n"
+                        + "      \"analyzers\": [\n"
+                        + "        {\n"
+                        + "          \"type\": \"MedianWindowDeviationAnalyzer\",\n"
+                        + "          \"metricAggregate\": \"MEDIAN\",\n"
+                        + "          \"runInfoQueryLimit\": \"50\",\n"
+                        + "          \"recentWindowSize\": \"11\",\n"
+                        + "          \"constTerm\": \"0.0\",\n"
+                        + "          \"medianCoeff\": \"0.05\",\n"
+                        + "          \"madCoeff\": \"1.0\"\n"
+                        + "        },\n"
+                        + "        {\n"
+                        + "          \"type\": \"MedianWindowDeviationAnalyzer\",\n"
+                        + "          \"metricAggregate\": \"MEAN\",\n"
+                        + "          \"runInfoQueryLimit\": \"24\",\n"
+                        + "          \"recentWindowSize\": \"5\",\n"
+                        + "          \"constTerm\": \"25.0\",\n"
+                        + "          \"medianCoeff\": \"0.1\",\n"
+                        + "          \"madCoeff\": \"1.0\"\n"
+                        + "        }\n"
+                        + "      ]\n"
+                        + "    }\n"
+                        + "  ]\n"
+                        + "}";
+        InputStream outputStream = new FileInputStream(outputFile);
+        String output = CharStreams.toString(new InputStreamReader(outputStream, Charsets.UTF_8));
+        assertThat(output).isEqualTo(expected);
+
+        // Delete file to prevent it from being uploaded.
+        outputFile.delete();
+    }
+
+    @Test
     public void testMultipleBenchmarks() throws Exception {
-        Metric logger = new Metric(myTestName.getMethodName());
+        Metric metric = new Metric(myTestName.getMethodName());
         Benchmark benchmark1 = new Benchmark.Builder("AS Metric Test1").build();
-        logger.addSamples(
+        metric.addSamples(
                 benchmark1,
                 new MetricSample(1, 10),
                 new MetricSample(2, 20),
                 new MetricSample(3, 30));
         Benchmark benchmark2 = new Benchmark.Builder("AS Metric Test2").build();
-        logger.addSamples(
+        metric.addSamples(
                 benchmark2,
                 new MetricSample(4, 40),
                 new MetricSample(5, 50),
                 new MetricSample(6, 60));
         Benchmark benchmark3 =
                 new Benchmark.Builder("AS Metric Test2").setProject("Custom Project").build();
-        logger.addSamples(
+        metric.addSamples(
                 benchmark3,
                 new MetricSample(7, 70),
                 new MetricSample(8, 80),
                 new MetricSample(9, 90));
-        logger.commit();
+        metric.commit();
 
         File outputFile =
                 new File(
-                        logger.getOutputDirectory(),
-                        String.format("%s.json", logger.getMetricName()));
+                        metric.getOutputDirectory(),
+                        String.format("%s.json", metric.getMetricName()));
         String expected =
                 "{\n"
                         + "  \"metric\": \""
