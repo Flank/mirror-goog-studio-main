@@ -16,6 +16,7 @@
 
 #include "dump.h"
 
+#include <dirent.h>
 #include <libgen.h>
 #include <stdlib.h>
 #include <string.h>
@@ -74,12 +75,31 @@ bool DumpCommand::Run() {
   std::string dumpBase_ = dumpFolder + packageName_ + "/";
   mkdir(dumpBase_.c_str(), kDirectoryMode);
 
+  // Unlink all files which could have been generated from a previous run.
+  ClearDirectory(dumpBase_.c_str());
+
   ApkRetriever apkRetriever(packageName_);
   for (std::string& apkPath : apkRetriever.get()) {
     ApkArchive archive(apkPath);
     archive.ExtractMetadata(packageName_, dumpBase_);
   }
   return true;
+}
+void DumpCommand::ClearDirectory(const char* dirname) const noexcept {
+  DIR* dir;
+  struct dirent* entry;
+  char path[PATH_MAX];
+  dir = opendir(dirname);
+  while ((entry = readdir(dir)) != NULL) {
+    if (strcmp(entry->d_name, ".") && strcmp(entry->d_name, "..")) {
+      snprintf(path, (size_t)PATH_MAX, "%s/%s", dirname, entry->d_name);
+      if (entry->d_type == DT_DIR) {
+        ClearDirectory(path);
+      }
+      unlink(path);
+    }
+  }
+  closedir(dir);
 }
 
 }  // namespace deployer

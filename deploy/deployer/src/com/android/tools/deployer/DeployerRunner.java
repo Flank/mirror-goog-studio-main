@@ -17,9 +17,7 @@
 package com.android.tools.deployer;
 
 import com.android.utils.ILogger;
-import com.android.utils.StdLogger;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 class InstallerNotifier implements Deployer.InstallerCallBack {
     @Override
@@ -28,7 +26,7 @@ class InstallerNotifier implements Deployer.InstallerCallBack {
 
 public class DeployerRunner {
 
-    private static final ILogger LOGGER = new StdLogger(StdLogger.Level.VERBOSE);
+    private static final ILogger LOGGER = Logger.getLogger(DeployerRunner.class);
 
     // Run it from bazel with the following command:
     // bazel run :deployer.runner org.wikipedia.alpha PATH_TO_APK1 PATH_TO_APK2
@@ -58,21 +56,18 @@ public class DeployerRunner {
         // Run
         Deployer deployer =
                 new Deployer(packageName, apks, new InstallerNotifier(), new AdbCmdline());
+        Deployer.RunResponse response = deployer.run();
 
-        HashMap<String, HashMap<String, Apk.ApkEntryStatus>> diffs;
-
-        try {
-            diffs = deployer.run();
-        } catch (DeployerException e) {
-            LOGGER.error(e, null);
+        if (response.status != Deployer.RunResponse.Status.OK) {
+            LOGGER.info("%s", response.errorMessage);
             return;
         }
 
         // Output apks differences found.
-        for (String apk : apks) {
-            HashMap<String, Apk.ApkEntryStatus> statuses = diffs.get(apk);
-            for (String key : statuses.keySet()) {
-                Apk.ApkEntryStatus status = statuses.get(key);
+        for (String apkName : response.result.keySet()) {
+            Deployer.RunResponse.Analysis analysis = response.result.get(apkName);
+            for (String key : analysis.diffs.keySet()) {
+                Apk.ApkEntryStatus status = analysis.diffs.get(key);
                 switch (status) {
                     case CREATED:
                         LOGGER.info("%s has been CREATED.", key);

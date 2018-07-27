@@ -66,7 +66,7 @@ public class AdbCmdline implements AdbClient {
         parameters[1] = "-r";
         parameters[2] = "-t";
         for (int i = 0; i < apks.size(); i++) {
-            parameters[i + 3] = apks.get(i).getPath();
+            parameters[i + 3] = apks.get(i).getLocalArchive().getPath();
         }
         run(parameters);
     }

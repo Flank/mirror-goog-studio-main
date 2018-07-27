@@ -83,7 +83,7 @@ public class DdmDevice implements AdbClient {
     public void installMultiple(List<Apk> apks) throws DeployerException {
         List<File> files = new ArrayList<>();
         for (Apk apk : apks) {
-            files.add(new File(apk.getPath()));
+            files.add(new File(apk.getLocalArchive().getPath()));
         }
         try {
             device.installPackages(files, true, Arrays.asList("-t", "-r"), 10, TimeUnit.SECONDS);

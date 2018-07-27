@@ -17,33 +17,56 @@
 package com.android.tools.deployer;
 
 import com.android.utils.ILogger;
-import com.android.utils.StdLogger;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Deployer {
 
-    private static final ILogger LOGGER = new StdLogger(StdLogger.Level.VERBOSE);
+    private static final ILogger LOGGER = Logger.getLogger(Deployer.class);
     private final String packageName;
     private final ArrayList<Apk> apks = new ArrayList<>();
     private final InstallerCallBack installerCallBack;
     private final AdbClient adb;
+    private final Path workingDirectory;
 
     // TODO:
     // Until we figure out the threading model of IR2, run installation in a background thread so
     // Hot Swap is not blocked. At the very minimum, this should be a static field when we release.
-    ExecutorService installerThread = Executors.newSingleThreadExecutor();
+    private ExecutorService installerThread = Executors.newSingleThreadExecutor();
+    private StopWatch stopWatch;
 
-    StopWatch stopWatch;
+    // status field is always set.
+    // If status is ERROR, only errorMessage is set.
+    // If status is OK, all fields except errorMessage are set.
+    // If status is NO_INSTALLED, only localApkHash fields are set.
+    public static class RunResponse {
+        public enum Status {
+            OK,
+            NOT_INSTALLED,
+            ERROR
+        }
+
+        public static class Analysis {
+            public HashMap<String, Apk.ApkEntryStatus> diffs;
+            public String localApkHash;
+            public String remoteApkHash;
+        }
+
+        public Status status = Status.OK; // Always set.
+        public String errorMessage; // Set only if status != OK.
+        public HashMap<String, Analysis> result =
+                new HashMap<>(); // Set only if status == OK otherwise content is undefined.
+    }
+
 
     public interface InstallerCallBack {
         void onInstallationFinished(boolean status);
@@ -55,56 +78,102 @@ public class Deployer {
         this.packageName = packageName;
         this.installerCallBack = cb;
         this.adb = adb;
-        for (String path : apkPaths) {
-            apks.add(new Apk(path));
-        }
-    }
-
-    /* Generates a diff between the new apks and the remote apks installed on the device,
-     * followed immediately with either a full install or a patch install depending on
-     * the size of the patch.
-     *
-     * Returns a map containing the diff for each apks. If a diff could not be generated for an apk
-     * the hash entry will be null.
-     */
-    public HashMap<String, HashMap<String, Apk.ApkEntryStatus>> run() {
-        stopWatch.start();
-
-        Path workingDirectory;
         try {
             workingDirectory = Files.createTempDirectory("ir2deployer");
         } catch (IOException e) {
             throw new DeployerException("Unable to create a temporary directory.", e);
         }
 
-        // Create a tmp directory where the remote dmps files will be stored.
+        String dumpLocation = Paths.get(workingDirectory.toString(), packageName).toString();
+        for (String path : apkPaths) {
+            apks.add(new Apk(path, dumpLocation));
+        }
+    }
+
+    /*
+     * Generates a diff between the new apks and the remote apks installed on the device,
+     * followed immediately with either a full install or a patch install depending on
+     * the size of the patch.
+     */
+    public RunResponse run() {
+        stopWatch.start();
+        RunResponse response = new RunResponse();
+
         getRemoteApkDumps(packageName, workingDirectory.toAbsolutePath().toString());
         stopWatch.mark("Dumps retrieved");
 
-        // Make sure all splits have valid spit attribute and there is only one base.
-        Set<String> expectedAPKNmes = new HashSet<>();
-        for (Apk apk : apks) {
-            String onDeviceName = apk.getOnDeviceName();
-            if (expectedAPKNmes.contains(onDeviceName)) {
-                throw new DeployerException("APK set expects '" + onDeviceName + "' twice.");
+        try {
+            chechDumps(apks, response);
+            if (response.status == RunResponse.Status.ERROR) {
+                return response;
             }
-            expectedAPKNmes.add(onDeviceName);
+
+            generateHashs(apks, response);
+            if (response.status == RunResponse.Status.NOT_INSTALLED) {
+                return response;
+            }
+
+            generateDiffs(apks, response);
+        } finally {
+            install();
         }
 
-        // Generate diffs for all apks in the list
-        HashMap<String, HashMap<String, Apk.ApkEntryStatus>> diffs = new HashMap<>();
+        return response;
+    }
+
+    private void chechDumps(ArrayList<Apk> apks, RunResponse response) {
+        int remoteApks = 0;
         for (Apk apk : apks) {
-            String dumpFilename = getExpectedDumpFilename(apk);
-            diffs.put(
-                    apk.getPath(),
-                    apk.diff(
-                            Paths.get(
-                                    workingDirectory.toString(), packageName, "/", dumpFilename)));
+            if (apk.getRemoteArchive().exists()) {
+                remoteApks++;
+            }
         }
-        stopWatch.mark("Diff generated");
+        // If no remote apks were retrieved, it is likely the app was not installed.
+        if (remoteApks == 0) {
+            response.status = RunResponse.Status.NOT_INSTALLED;
+            response.errorMessage = "App not installed";
+        }
 
-        install();
-        return diffs;
+        // Check the local apk split structure is the same as the remote split.
+        if (remoteApks != apks.size()) {
+            response.status = RunResponse.Status.ERROR;
+            response.errorMessage = "Remote apks count differ, unable to generate a diff.";
+        }
+    }
+
+    private RunResponse.Analysis findOrCreateAnalysis(RunResponse response, String apkName) {
+        RunResponse.Analysis analysis = response.result.get(apkName);
+        if (analysis == null) {
+            analysis = new RunResponse.Analysis();
+            response.result.put(apkName, analysis);
+        }
+        return analysis;
+    }
+
+    private void generateHashs(ArrayList<Apk> apks, RunResponse response) {
+        for (Apk apk : apks) {
+            RunResponse.Analysis analysis = findOrCreateAnalysis(response, apk.getPath());
+            analysis.localApkHash = apk.getLocalArchive().getDigest();
+            if (apk.getRemoteArchive().exists()) {
+                analysis.remoteApkHash = apk.getRemoteArchive().getDigest();
+            }
+        }
+    }
+
+    private void generateDiffs(ArrayList<Apk> apks, RunResponse response) {
+        for (Apk apk : apks) {
+            try {
+                RunResponse.Analysis analysis = findOrCreateAnalysis(response, apk.getPath());
+                analysis.diffs = apk.diff();
+                response.result.put(apk.getPath(), analysis);
+            } catch (DeployerException e) {
+                response.status = RunResponse.Status.ERROR;
+                StringWriter stringWriter = new StringWriter();
+                PrintWriter printWriter = new PrintWriter(stringWriter);
+                e.printStackTrace(printWriter);
+                response.errorMessage = stringWriter.toString();
+            }
+        }
     }
 
     // TODO: If the installer extracted v2 signature block, use it to generates apk patches.
@@ -125,15 +194,6 @@ public class Deployer {
                         installerThread.shutdown();
                     }
                 });
-    }
-
-    // TODO: Add support for split. In order to do this, this function needs to:
-    //  - Open the local apk.
-    //  - Parse AndroidManifest binary XML.
-    //  - Look for "manifest" node, attribute "split". If not present, return base.apk. Otherwise
-    //    return the value found.
-    private String getExpectedDumpFilename(Apk apk) throws DeployerException {
-        return apk.getOnDeviceName() + ".remotecd";
     }
 
     private void getRemoteApkDumps(String packageName, String dst) throws DeployerException {

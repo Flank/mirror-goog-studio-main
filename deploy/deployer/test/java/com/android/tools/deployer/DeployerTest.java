@@ -17,9 +17,15 @@
 package com.android.tools.deployer;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.android.testutils.TestUtils;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashMap;
 import org.junit.Test;
 
@@ -28,13 +34,11 @@ public class DeployerTest {
     private static final String BASE = "tools/base/deploy/deployer/test/resource/";
 
     @Test
-    public void testCentralDirectoryParse() {
+    public void testCentralDirectoryParse() throws IOException {
         File file = TestUtils.getWorkspaceFile(BASE + "base.apk.remotecd");
-        ZipCentralDirectory zcd = new ZipCentralDirectory(file);
-        HashMap<String, Long> crcs = new HashMap<>();
-        zcd.getCrcs(crcs);
+        byte[] fileContent = Files.readAllBytes(Paths.get(file.getAbsolutePath()));
+        HashMap<String, Long> crcs = ZipUtils.readCrcs(fileContent);
         assertEquals(1007, crcs.size());
-
         long manifestCrc = crcs.get("AndroidManifest.xml");
         assertEquals(0x5804A053, manifestCrc);
     }
@@ -42,7 +46,71 @@ public class DeployerTest {
     @Test
     public void testApkId() {
         File file = TestUtils.getWorkspaceFile(BASE + "sample.apk");
-        Apk apk = new Apk(file.getAbsolutePath());
-        assertEquals(apk.getDigestString(), "ec25d183db88a0ad6c9cc7199388d31331907e09");
+        Apk apk = new Apk(file.getAbsolutePath(), BASE);
+        assertEquals(apk.getLocalArchive().getDigest(), "74eaa38f4d4d8619c7bb886289f84efe1fce7ce3");
+    }
+
+    @Test
+    public void testApkArchiveMap() {
+        File file = TestUtils.getWorkspaceFile(BASE + "sample.apk");
+        ApkFull apkFull = new ApkFull(file.getAbsolutePath());
+        ApkFull.ApkArchiveMap apkArchiveMap = apkFull.getMap();
+        assertNotEquals(apkArchiveMap.cdOffset, ApkFull.ApkArchiveMap.UNINITIALIZED);
+        assertNotEquals(apkArchiveMap.cdSize, ApkFull.ApkArchiveMap.UNINITIALIZED);
+        assertNotEquals(apkArchiveMap.eocdOffset, ApkFull.ApkArchiveMap.UNINITIALIZED);
+        assertNotEquals(apkArchiveMap.eocdSize, ApkFull.ApkArchiveMap.UNINITIALIZED);
+        assertEquals(apkArchiveMap.signatureBlockOffset, ApkFull.ApkArchiveMap.UNINITIALIZED);
+        assertEquals(apkArchiveMap.signatureBlockSize, ApkFull.ApkArchiveMap.UNINITIALIZED);
+    }
+
+    @Test
+    public void testApkArchiveV2Map() {
+        File file = TestUtils.getWorkspaceFile(BASE + "v2_signed.apk");
+        ApkFull apkFull = new ApkFull(file.getAbsolutePath());
+        ApkFull.ApkArchiveMap apkArchiveMap = apkFull.getMap();
+        assertNotEquals(apkArchiveMap.cdOffset, ApkFull.ApkArchiveMap.UNINITIALIZED);
+        assertNotEquals(apkArchiveMap.cdSize, ApkFull.ApkArchiveMap.UNINITIALIZED);
+        assertNotEquals(apkArchiveMap.eocdOffset, ApkFull.ApkArchiveMap.UNINITIALIZED);
+        assertNotEquals(apkArchiveMap.eocdSize, ApkFull.ApkArchiveMap.UNINITIALIZED);
+        assertNotEquals(apkArchiveMap.signatureBlockOffset, ApkFull.ApkArchiveMap.UNINITIALIZED);
+        assertNotEquals(apkArchiveMap.signatureBlockSize, ApkFull.ApkArchiveMap.UNINITIALIZED);
+    }
+
+    @Test
+    public void testApkArchiveApkDumpdMatchCrcs() {
+        String app1Base = BASE + "signed_app/";
+        File file = TestUtils.getWorkspaceFile(app1Base + "base.apk");
+        File workingDirectory = TestUtils.getWorkspaceFile(app1Base);
+        Apk apk = new Apk(file.getAbsolutePath(), workingDirectory.getAbsolutePath());
+
+        assertEquals(
+                apk.getLocalArchive().getCrcs().keySet().size(),
+                apk.getRemoteArchive().getCrcs().keySet().size());
+        assertTrue(
+                Arrays.equals(
+                        apk.getLocalArchive().getCrcs().keySet().toArray(),
+                        apk.getRemoteArchive().getCrcs().keySet().toArray()));
+        assertTrue(
+                Arrays.equals(
+                        apk.getLocalArchive().getCrcs().values().toArray(),
+                        apk.getRemoteArchive().getCrcs().values().toArray()));
+    }
+
+    @Test
+    public void testApkArchiveApkV2SignedDumpdMatchDigest() {
+        String app1Base = BASE + "signed_app/";
+        File file = TestUtils.getWorkspaceFile(app1Base + "base.apk");
+        File workingDirectory = TestUtils.getWorkspaceFile(app1Base);
+        Apk apk = new Apk(file.getAbsolutePath(), workingDirectory.getAbsolutePath());
+        assertEquals(apk.getLocalArchive().getDigest(), apk.getRemoteArchive().getDigest());
+    }
+
+    @Test
+    public void testApkArchiveApkNonV2SignedDumpdMatchDigest() {
+        String app1Base = BASE + "nonsigned_app/";
+        File file = TestUtils.getWorkspaceFile(app1Base + "base.apk");
+        File workingDirectory = TestUtils.getWorkspaceFile(app1Base);
+        Apk apk = new Apk(file.getAbsolutePath(), workingDirectory.getAbsolutePath());
+        assertEquals(apk.getLocalArchive().getDigest(), apk.getRemoteArchive().getDigest());
     }
 }

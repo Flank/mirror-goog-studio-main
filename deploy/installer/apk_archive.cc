@@ -114,7 +114,7 @@ ApkArchive::Location ApkArchive::FindCDRecord(const uint8_t* cursor) noexcept {
     uint32_t offsetToCdHeader;
     uint16_t commnetSize;
     uint8_t comment[0];
-  };
+  } __attribute__((packed));
   ecdr_t* header = (ecdr_t*)cursor;
 
   Location location;

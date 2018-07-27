@@ -16,30 +16,7 @@
 
 package com.android.tools.deployer;
 
-import com.google.common.collect.Lists;
-import com.google.common.io.BaseEncoding;
-import com.google.devrel.gmscore.tools.apk.arsc.BinaryResourceFile;
-import com.google.devrel.gmscore.tools.apk.arsc.Chunk;
-import com.google.devrel.gmscore.tools.apk.arsc.XmlAttribute;
-import com.google.devrel.gmscore.tools.apk.arsc.XmlChunk;
-import com.google.devrel.gmscore.tools.apk.arsc.XmlStartElementChunk;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.LongBuffer;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 public class Apk {
 
@@ -49,23 +26,20 @@ public class Apk {
         DELETED
     }
 
-    private static final String DIGEST_ALGORITHM = "SHA-1";
-    private final ZipFile zipFile;
+    private final ApkFull localArchive;
+    private final ApkDump remoteArchive;
+    private final String path;
 
-    private byte[] digest = null;
-    private String onDeviceName = null;
-
-    public Apk(String path) {
-        try {
-            zipFile = new ZipFile(path);
-        } catch (IOException e) {
-            throw new DeployerException("Unable to read Zipfile.", e);
-        }
+    public Apk(String path, String workingDirectory) {
+        this.path = path;
+        localArchive = new ApkFull(path);
+        remoteArchive = new ApkDump(path, workingDirectory);
     }
 
-    public HashMap<String, ApkEntryStatus> diff(Path remoteCDDump) throws DeployerException {
-        HashMap<String, Long> localCrcs = extractLocalCrcs();
-        HashMap<String, Long> remoteCrcs = extractRemoteCrcs(remoteCDDump);
+    // Traverse local and remote list of crcs in order to detect what has changed in a local apk.
+    public HashMap<String, ApkEntryStatus> diff() throws DeployerException {
+        HashMap<String, Long> localCrcs = localArchive.getCrcs();
+        HashMap<String, Long> remoteCrcs = remoteArchive.getCrcs();
 
         HashMap<String, ApkEntryStatus> diffs = new HashMap<>();
         for (String key : localCrcs.keySet()) {
@@ -85,131 +59,19 @@ public class Apk {
             if (!localCrcs.containsKey(key)) {
                 diffs.put(key, ApkEntryStatus.CREATED);
             }
-        }
+    }
         return diffs;
     }
 
-    public String getOnDeviceName() {
-        if (onDeviceName != null) {
-            return onDeviceName;
-        }
+    public ApkFull getLocalArchive() {
+        return localArchive;
+    }
 
-        try {
-            ZipEntry manifestEntry = zipFile.getEntry("AndroidManifest.xml");
-            InputStream stream = zipFile.getInputStream(manifestEntry);
-            String splitValue = getSplitValue(stream);
-            if (splitValue == null) {
-                splitValue = "base";
-            } else {
-                splitValue = "split_" + splitValue;
-            }
-            onDeviceName = splitValue + ".apk";
-        } catch (IOException e) {
-            throw new DeployerException("Unable to retrieve on device name for " + getPath(), e);
-        }
-        return onDeviceName;
+    public ApkDump getRemoteArchive() {
+        return remoteArchive;
     }
 
     public String getPath() {
-        return zipFile.getName();
-    }
-
-    private List<Chunk> sortByOffset(Map<Integer, Chunk> contentChunks) {
-        List<Integer> offsets = Lists.newArrayList(contentChunks.keySet());
-        Collections.sort(offsets);
-        List<Chunk> chunks = new ArrayList<>(offsets.size());
-        for (Integer offset : offsets) {
-            chunks.add(contentChunks.get(offset));
-        }
-        return chunks;
-    }
-
-    private String getSplitValue(InputStream decompressedManifest) throws IOException {
-        BinaryResourceFile file = BinaryResourceFile.fromInputStream(decompressedManifest);
-        List<Chunk> chunks = file.getChunks();
-
-        if (chunks.size() == 0) {
-            throw new DeployerException("Invalid APK, empty manifest");
-        }
-
-        if (!(chunks.get(0) instanceof XmlChunk)) {
-            throw new DeployerException("APK '" + getPath() + "' manifest chunk[0] != XmlChunk");
-        }
-
-        XmlChunk xmlChunk = (XmlChunk) chunks.get(0);
-        List<Chunk> contentChunks = sortByOffset(xmlChunk.getChunks());
-
-        for (Chunk chunk : contentChunks) {
-            if (chunk instanceof XmlStartElementChunk) {
-                XmlStartElementChunk startChunk = (XmlStartElementChunk) chunk;
-                if (startChunk.getName().equals("manifest")) {
-                    for (XmlAttribute attribute : startChunk.getAttributes()) {
-                        if (attribute.name().equals("split")) {
-                            return attribute.rawValue();
-                        }
-                    }
-                    return null;
-                }
-            }
-        }
-        return null;
-    }
-
-    public byte[] getDigest() {
-        if (digest != null) {
-            return digest;
-        }
-
-        byte[] backingArray = new byte[zipFile.size() * Long.BYTES];
-        LongBuffer crcs = ByteBuffer.wrap(backingArray).asLongBuffer();
-        Enumeration<? extends ZipEntry> entries = zipFile.entries();
-        while (entries.hasMoreElements()) {
-            ZipEntry entry = entries.nextElement();
-            crcs.put(entry.getCrc());
-        }
-        crcs.rewind();
-
-        MessageDigest messageDigest;
-        try {
-            messageDigest = MessageDigest.getInstance(DIGEST_ALGORITHM);
-        } catch (NoSuchAlgorithmException e) {
-            throw new DeployerException("MessageDigest:" + DIGEST_ALGORITHM + " unavailable.", e);
-        }
-        digest = messageDigest.digest(backingArray);
-        return digest;
-    }
-
-    public String getDigestString() {
-        byte[] digest = getDigest();
-        return BaseEncoding.base16().lowerCase().encode(digest);
-    }
-
-    // Retrieve the local APK crcs. The expected file is a valid zip archive which
-    // can be accessed via java.util.zip package.
-    private HashMap<String, Long> extractLocalCrcs() throws DeployerException {
-        HashMap<String, Long> localCrcs = new HashMap<>();
-        Path path = FileSystems.getDefault().getPath(getPath());
-        if (!Files.exists(path)) {
-            throw new DeployerException("APK file'" + getPath() + "' does not exists.");
-        }
-
-        Enumeration<? extends ZipEntry> entries = zipFile.entries();
-        while (entries.hasMoreElements()) {
-            ZipEntry entry = entries.nextElement();
-            String name = entry.getName();
-            long crc = entry.getCrc();
-            localCrcs.put(name, crc);
-        }
-        return localCrcs;
-    }
-
-    // Retrieve the remote APK crcs. The expected file is a dump of the Central Directory Record
-    // and is not a valid zip archive. The Central Directory Record is expected to start at offset
-    // zero.
-    private HashMap<String, Long> extractRemoteCrcs(Path remoteCDDump) throws DeployerException {
-        HashMap<String, Long> remoteCrcs = new HashMap<>();
-        ZipCentralDirectory zcd = new ZipCentralDirectory(remoteCDDump.toString());
-        zcd.getCrcs(remoteCrcs);
-        return remoteCrcs;
+        return path;
     }
 }

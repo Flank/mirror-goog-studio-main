@@ -34,6 +34,8 @@ class DumpCommand : public Command {
   // TODO: Move all these to a Workspace object (and re-use "fs" from profiler
   // for it).
   std::string GetBase();
+  // Delete all files and directory contained in the provided folder name.
+  void ClearDirectory(const char* path) const noexcept;
   std::string packageName_;
 };
 
