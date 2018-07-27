@@ -2404,7 +2404,7 @@ public abstract class TaskManager {
             dexOptions = extension.getDexOptions();
         }
 
-        boolean minified = runJavaCodeShrinker(variantScope);
+        boolean minified = variantScope.getCodeShrinker() != null;
         FileCache userLevelCache = getUserDexCache(minified, dexOptions.getPreDexLibraries());
         DexArchiveBuilderTransform preDexTransform =
                 new DexArchiveBuilderTransformBuilder()
@@ -2504,20 +2504,6 @@ public abstract class TaskManager {
         } else {
             return null;
         }
-    }
-
-    private boolean runJavaCodeShrinker(VariantScope variantScope) {
-        return variantScope.getCodeShrinker() != null || isTestedAppObfuscated(variantScope);
-    }
-
-    /**
-     * Default values if {@code false}, only {@link TestApplicationTaskManager} overrides this,
-     * because tested applications might be obfuscated.
-     *
-     * @return if the tested application is obfuscated
-     */
-    protected boolean isTestedAppObfuscated(@NonNull VariantScope variantScope) {
-        return false;
     }
 
     /** Create InstantRun related tasks that should be ran right after the java compilation task. */
@@ -3120,7 +3106,8 @@ public abstract class TaskManager {
                                     RUNTIME_CLASSPATH, ALL, CONSUMER_PROGUARD_RULES));
             maybeAddFeatureProguardRules(variantScope, configurationFiles);
             transform.setConfigurationFiles(configurationFiles);
-        } else if (isTestedAppObfuscated(variantScope)) {
+        } else if (variantScope.getType().isForTesting()
+                && !variantScope.getType().isTestComponent()) {
             // This is a test-only module and the app being tested was obfuscated with ProGuard.
             applyProguardDefaultsForTest(transform);
 
@@ -3534,7 +3521,7 @@ public abstract class TaskManager {
 
         preBuildTask.dependsOn(MAIN_PREBUILD);
 
-        if (runJavaCodeShrinker(scope)) {
+        if (scope.getCodeShrinker() != null) {
             preBuildTask.dependsOn(EXTRACT_PROGUARD_FILES);
         }
     }

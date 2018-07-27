@@ -168,17 +168,11 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
         // do nothing
     }
 
-    @Override
-    protected boolean isTestedAppObfuscated(@NonNull VariantScope variantScope) {
-        return variantScope.getCodeShrinker() == CodeShrinker.PROGUARD
-                || variantScope.getCodeShrinker() == CodeShrinker.R8;
-    }
-
     @Nullable
     @Override
     protected CodeShrinker maybeCreateJavaCodeShrinkerTransform(
             @NonNull VariantScope variantScope) {
-        if (isTestedAppObfuscated(variantScope)) {
+        if (variantScope.getCodeShrinker() != null) {
             return doCreateJavaCodeShrinkerTransform(
                     variantScope,
                     Objects.requireNonNull(variantScope.getCodeShrinker()),
