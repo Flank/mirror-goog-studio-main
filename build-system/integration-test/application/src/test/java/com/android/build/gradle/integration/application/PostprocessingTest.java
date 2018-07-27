@@ -119,7 +119,7 @@ public class PostprocessingTest {
 
         TestFileUtils.addMethod(
                 project.getMainSrcDir("java/com/example/helloworld/HelloWorld.java"),
-                "public HelloWorld(String s) {\n"
+                "public HelloWorld() {\n"
                         + "    new DataClass();\n"
                         + "}\n"
                         + "static class DataClass {}\n"
@@ -153,7 +153,7 @@ public class PostprocessingTest {
 
         TestFileUtils.addMethod(
                 project.getMainSrcDir("java/com/example/helloworld/HelloWorld.java"),
-                "public HelloWorld(String s) {\n"
+                "public HelloWorld() {\n"
                         + "    System.out.println(new DataClass());\n"
                         + "}\n"
                         + "static class DataClass {}\n"
