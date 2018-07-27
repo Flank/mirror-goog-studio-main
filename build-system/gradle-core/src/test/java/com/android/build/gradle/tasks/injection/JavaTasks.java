@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.tasks.InternalID;
 import com.android.build.gradle.tasks.Replace;
 import com.android.build.gradle.tasks.TaskArtifactsHolderTest;
+import java.io.File;
 import org.gradle.api.file.Directory;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.InputFiles;
@@ -119,5 +120,14 @@ public class JavaTasks {
         }
 
         private Provider<Directory> classes;
+    }
+
+    public static class NoIDOnInputProvidedTask extends TaskArtifactsHolderTest.TestTask {
+        @InputFiles
+        public File getClasses() {
+            return classes;
+        }
+
+        private File classes;
     }
 }

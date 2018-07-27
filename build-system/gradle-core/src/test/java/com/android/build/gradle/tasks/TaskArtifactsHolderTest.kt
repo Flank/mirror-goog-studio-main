@@ -77,6 +77,11 @@ class TaskArtifactsHolderTest {
         }
         test(createConfigAction<KotlinTasks.ValidInputTask>(variantScope), setupMock)
         test(createConfigAction<JavaTasks.ValidInputTask>(variantScope), setupMock)
+
+        // check an @InputFiles annotated field with no ID does not generate an injection error
+        // since the input can be explicitly set during the task configuration.
+        test(createConfigAction<KotlinTasks.NoIDOnInputProvidedTask>(variantScope), {})
+        test(createConfigAction<JavaTasks.NoIDOnInputProvidedTask>(variantScope), {})
     }
 
     @Test
@@ -127,9 +132,9 @@ class TaskArtifactsHolderTest {
         } catch(e: RuntimeException) {
             assertThat(e.message).isEqualTo(
                 "Task: com.android.build.gradle.tasks.injection.KotlinTasks\$MismatchedOutputTypeTask\n" +
-                    "\tMethod: public final org.gradle.api.provider.Provider<org.gradle.api.file.Directory> com.android.build.gradle.tasks.injection.KotlinTasks\$MismatchedOutputTypeTask.getClasses()\n" +
-                    "\tannotated with @org.gradle.api.tasks.OutputDirectory() with ArtifactID \"BUNDLE\"\n" +
-                    "\twhich kind is set to FILE")
+                        "\tMethod: public final org.gradle.api.provider.Provider<org.gradle.api.file.Directory> com.android.build.gradle.tasks.injection.KotlinTasks\$MismatchedOutputTypeTask.getClasses()\n" +
+                        "\tannotated with @org.gradle.api.tasks.OutputDirectory() expecting a DIRECTORY \n" +
+                        "\tbut its ArtifactID \"BUNDLE is set to be a FILE")
         }
 
         try {
@@ -175,8 +180,8 @@ class TaskArtifactsHolderTest {
             assertThat(e.message).isEqualTo(
                 "Task: com.android.build.gradle.tasks.injection.JavaTasks\$MismatchedOutputTypeTask\n" +
                         "\tMethod: public org.gradle.api.provider.Provider<org.gradle.api.file.Directory> com.android.build.gradle.tasks.injection.JavaTasks\$MismatchedOutputTypeTask.getClasses()\n" +
-                        "\tannotated with @org.gradle.api.tasks.OutputDirectory() with ArtifactID \"BUNDLE\"\n" +
-                        "\twhich kind is set to FILE")
+                        "\tannotated with @org.gradle.api.tasks.OutputDirectory() expecting a DIRECTORY \n" +
+                        "\tbut its ArtifactID \"BUNDLE is set to be a FILE")
         }
 
         try {

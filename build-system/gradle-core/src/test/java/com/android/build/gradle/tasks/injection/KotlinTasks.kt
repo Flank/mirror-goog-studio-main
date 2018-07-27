@@ -86,4 +86,9 @@ class KotlinTasks {
         @get:Replace
         lateinit var classes: Provider<Directory>
     }
+
+    open class NoIDOnInputProvidedTask: TaskArtifactsHolderTest.TestTask() {
+        @get:InputFiles
+        lateinit var classes: BuildableArtifact
+    }
 }
