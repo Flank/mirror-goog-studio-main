@@ -445,6 +445,9 @@ def iml_module(name,
     test_main_class = None,
     back_deps=[]):
 
+  if name == "intellij.groovy":
+    test_srcs = []  # workaround for b/111900968
+
   prod_deps = []
   test_deps = []
   for dep in deps:
