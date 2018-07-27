@@ -20,6 +20,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.perflogger.Benchmark;
+import com.android.tools.perflogger.Metric;
+import com.android.tools.perflogger.Metric.MetricSample;
 import com.android.tools.profiler.GrpcUtils;
 import com.android.tools.profiler.PerfDriver;
 import com.android.tools.profiler.memory.MemoryStubWrapper;
@@ -27,6 +29,7 @@ import com.android.tools.profiler.proto.Common.Session;
 import com.android.tools.profiler.proto.MemoryProfiler.MemoryStartRequest;
 import com.android.tools.profiler.proto.MemoryProfiler.MemoryStopRequest;
 import com.android.tools.profiler.proto.MemoryProfiler.TrackAllocationsResponse;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.regex.Pattern;
@@ -52,6 +55,7 @@ public class LiveAllocationTest {
                 });
     }
 
+    private static final int NUM_SAMPLES = 10;
     private static final String ACTIVITY_CLASS = "com.activity.MemoryActivity";
     private static final String PROFILER_PROJECT_NAME = "Android Studio Profilers";
     private static final String LIVE_ALLOCATION_BENCHMARK_NAME =
@@ -105,18 +109,31 @@ public class LiveAllocationTest {
                 new Benchmark.Builder(LIVE_ALLOCATION_BENCHMARK_NAME)
                         .setProject(PROFILER_PROJECT_NAME)
                         .build();
+        Metric metric =
+                new Metric(
+                        String.format(
+                                "allocation-count_%d-size_%d-tracking_%s",
+                                myAllocationCount, myAllocationSize, myIsTracking ? "on" : "off"));
+
         androidDriver.setProperty("allocation.count", String.valueOf(myAllocationCount));
         androidDriver.setProperty("allocation.size", String.valueOf(myAllocationSize));
 
-        androidDriver.triggerMethod(ACTIVITY_CLASS, "allocate");
-        assertThat(androidDriver.waitForInput("MemoryActivity.allocate")).isTrue();
-        assertThat(androidDriver.waitForInput("allocation_count=" + myAllocationCount)).isTrue();
-        String allocationTiming = androidDriver.waitForInput(ALLOCATION_TIMING_PATTERN);
-        assertThat(allocationTiming).isNotEmpty();
-        benchmark.log(
-                String.format(
-                        "allocation-count_%d-size_%d-tracking_%s",
-                        myAllocationCount, myAllocationSize, myIsTracking ? "on" : "off"),
-                Long.parseLong(allocationTiming));
+        for (int i = 0; i < NUM_SAMPLES; ++i) {
+            androidDriver.triggerMethod(ACTIVITY_CLASS, "gc");
+            assertThat(androidDriver.waitForInput("MemoryActivity.gc")).isTrue();
+            androidDriver.triggerMethod(ACTIVITY_CLASS, "allocate");
+            assertThat(androidDriver.waitForInput("MemoryActivity.allocate")).isTrue();
+            assertThat(androidDriver.waitForInput("allocation_count=" + myAllocationCount))
+                    .isTrue();
+            String allocationTiming = androidDriver.waitForInput(ALLOCATION_TIMING_PATTERN);
+            assertThat(allocationTiming).isNotEmpty();
+            metric.addSamples(
+                    benchmark,
+                    new MetricSample(
+                            Instant.now().toEpochMilli(), Long.parseLong(allocationTiming)));
+            androidDriver.triggerMethod(ACTIVITY_CLASS, "free");
+            assertThat(androidDriver.waitForInput("free_count=0")).isTrue();
+        }
+        metric.commit();
     }
 }

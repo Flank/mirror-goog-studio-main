@@ -156,7 +156,7 @@ perf_test(
 
 perf_test(
     name = "PerformanceTest",
-    size = "medium",
+    size = "large",
     srcs = [
         "testSrcs/com/android/tools/profiler/performance/LiveAllocationTest.java",
     ],
