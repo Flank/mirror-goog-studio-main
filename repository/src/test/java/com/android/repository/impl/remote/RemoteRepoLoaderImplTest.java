@@ -18,10 +18,12 @@ package com.android.repository.impl.remote;
 
 import static com.android.repository.testframework.FakePackage.FakeRemotePackage;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.repository.Revision;
-import com.android.repository.api.*;
+import com.android.repository.api.Channel;
+import com.android.repository.api.RemotePackage;
+import com.android.repository.api.RepoManager;
+import com.android.repository.api.RepositorySource;
+import com.android.repository.api.SimpleRepositorySource;
 import com.android.repository.impl.manager.RemoteRepoLoader;
 import com.android.repository.impl.manager.RemoteRepoLoaderImpl;
 import com.android.repository.impl.meta.Archive;
@@ -35,14 +37,10 @@ import com.android.repository.testframework.FakeSettingsController;
 import com.android.repository.testframework.MockFileOp;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.io.*;
 import java.net.URL;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CyclicBarrier;
 import junit.framework.TestCase;
 
 /** Tests for {@link RemoteRepoLoaderImpl} */
@@ -281,114 +279,5 @@ public class RemoteRepoLoaderImplTest extends TestCase {
         progress.assertNoErrorsOrWarnings();
         assertEquals(2, pkgs.size());
         assertTrue(pkgs.get("dummy;foo") instanceof FakePackage);
-    }
-
-    public void testDownloadsAreParallel() throws Exception {
-        RepositorySource httpSource =
-                new SimpleRepositorySource(
-                        "http://www.example.com",
-                        "HTTP Source UI Name",
-                        true,
-                        ImmutableSet.of(RepoManager.getGenericModule()),
-                        null);
-        RepositorySource httpSource2 =
-                new SimpleRepositorySource(
-                        "http://www.example2.com",
-                        "HTTP Source2 UI Name",
-                        true,
-                        ImmutableSet.of(RepoManager.getGenericModule()),
-                        null);
-        RepositorySource fileSource =
-                new SimpleRepositorySource(
-                        "file:///foo/bar",
-                        "File Source UI Name",
-                        true,
-                        ImmutableSet.of(RepoManager.getGenericModule()),
-                        null);
-        List<RepositorySource> sourceList = ImmutableList.of(httpSource, httpSource2, fileSource);
-        FakeProgressIndicator progress = new FakeProgressIndicator();
-        RemoteRepoLoader loader =
-                new RemoteRepoLoaderImpl(
-                        ImmutableList.of(new FakeRepositorySourceProvider(sourceList)), null, null);
-        CyclicBarrier barrier = new CyclicBarrier(sourceList.size());
-        FakeDownloader downloader =
-                new FakeDownloader(new MockFileOp()) {
-                    private void awaitBarrier() {
-                        try {
-                            barrier.await();
-                        } catch (Exception e) {
-                            fail(
-                                    "Unexpected exception while waiting in download thread: "
-                                            + e.getMessage());
-                        }
-                    }
-
-                    @NonNull
-                    @Override
-                    public InputStream downloadAndStream(
-                            @NonNull URL url, @NonNull ProgressIndicator indicator)
-                            throws IOException {
-                        InputStream stream = super.downloadAndStream(url, indicator);
-                        awaitBarrier();
-                        return stream;
-                    }
-
-                    @Nullable
-                    @Override
-                    public Path downloadFully(
-                            @NonNull URL url, @NonNull ProgressIndicator indicator)
-                            throws IOException {
-                        Path path = super.downloadFully(url, indicator);
-                        awaitBarrier();
-                        return path;
-                    }
-
-                    @Override
-                    public void downloadFully(
-                            @NonNull URL url,
-                            @NonNull File target,
-                            @Nullable String checksum,
-                            @NonNull ProgressIndicator indicator)
-                            throws IOException {
-                        super.downloadFully(url, target, checksum, indicator);
-                        awaitBarrier();
-                    }
-                };
-
-        downloader.registerUrl(
-                new URL("http://www.example.com"), getClass().getResourceAsStream("/testRepo.xml"));
-        downloader.registerUrl(
-                new URL("http://www.example2.com"),
-                getClass().getResourceAsStream("/testRepo.xml"));
-        downloader.registerUrl(
-                new URL("file:///foo/bar"), getClass().getResourceAsStream("/testRepo.xml"));
-
-        Thread mainFetchThread =
-                new Thread(
-                        () -> {
-                            try {
-                                Map<String, RemotePackage> pkgs =
-                                        loader.fetchPackages(
-                                                progress,
-                                                downloader,
-                                                new FakeSettingsController(false));
-                                // The same repo manifest comes from all sources, which just contains 2 packages and we sanity check it here.
-                                // This test just verifies that the downloads are indeed parallel - the rest of the tests will therefore serve to verify
-                                // the correctness of the concurrent data processing (i.e., assert other package details in various cases),
-                                // in addition to the specific aspect of the implementation they are testing.
-                                assertEquals(2, pkgs.size());
-                            } catch (Throwable t) {
-                                StringWriter stringWriter = new StringWriter();
-                                PrintWriter printWriter = new PrintWriter(stringWriter);
-                                t.printStackTrace(printWriter);
-                                fail(
-                                        "Exception in fetchPackages() thread: "
-                                                + stringWriter.toString());
-                            }
-                        });
-        mainFetchThread.start();
-        mainFetchThread.join(60000);
-        assertFalse(mainFetchThread.isAlive());
-        assertFalse(mainFetchThread.isInterrupted());
     }
 }
