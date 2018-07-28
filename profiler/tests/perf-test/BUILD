@@ -160,6 +160,7 @@ perf_test(
     srcs = [
         "testSrcs/com/android/tools/profiler/performance/LiveAllocationTest.java",
     ],
+    tags = ["manual"],  # b/111934232
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":test_lib",
