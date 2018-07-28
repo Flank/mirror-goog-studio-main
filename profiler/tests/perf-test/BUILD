@@ -59,7 +59,6 @@ java_test(
         "//tools/base/profiler/native/perfd:android/arm64-v8a/perfd",
         "//tools/base/profiler/native/perfd:android/armeabi-v7a/perfd",
         "//tools/base/profiler/native/perfd:android/x86/perfd",
-        "//tools/base/profiler/native/perfd:android/x86_64/perfd",
     ],
     jvm_flags = ["-Dtest.suite.jar=NativeBinarySizeTest.jar"],
     tags = ["no_windows"],

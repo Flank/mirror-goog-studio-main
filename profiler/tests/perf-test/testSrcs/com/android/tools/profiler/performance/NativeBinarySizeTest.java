@@ -45,14 +45,19 @@ public class NativeBinarySizeTest {
                         .build();
         for (Map.Entry<String, String> file : files.entrySet()) {
             for (String abi : abis) {
-                // getWorkspaceFile asserts the file exists.
-                File binary =
-                        TestUtils.getWorkspaceFile(
-                                String.format(
-                                                "tools/base/profiler/native/%s/android/",
-                                                file.getKey())
-                                        + String.format("%s/%s", abi, file.getValue()));
-                benchmark.log(String.format("%s_%s", file.getKey(), abi), binary.length());
+                try {
+                    // getWorkspaceFile asserts the file exists.
+                    File binary =
+                            TestUtils.getWorkspaceFile(
+                                    String.format(
+                                                    "tools/base/profiler/native/%s/android/",
+                                                    file.getKey())
+                                            + String.format("%s/%s", abi, file.getValue()));
+                    benchmark.log(String.format("%s_%s", file.getKey(), abi), binary.length());
+                }
+                catch (IllegalArgumentException ignored) {
+                    // ignore binaries that are not built for certain architectures.
+                }
             }
         }
     }
