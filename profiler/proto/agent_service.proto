@@ -60,6 +60,8 @@ message AgentConfig {
   message CpuConfig {
     // Waiting time in Seconds for ART when stopping the ongoing ART profiling.
     int32 art_stop_timeout_sec = 1;
+    // equivalent to StudioFlags.PROFILER_SIMPLEPERF_HOST
+    bool simpleperf_host = 2;
   }
 
   MemoryConfig mem_config = 1;

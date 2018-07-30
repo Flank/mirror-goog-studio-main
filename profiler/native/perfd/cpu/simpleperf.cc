@@ -91,7 +91,7 @@ void Simpleperf::Record(int pid, const string& pkg_name, const string& abi_arch,
 
 bool Simpleperf::ReportSample(const string& input_path,
                               const string& output_path, const string& abi_arch,
-                              string* output) const {
+                              string* output) {
   string simpleperf_binary_abspath = GetSimpleperfPath(abi_arch);
   BashCommandRunner simpleperf_report(simpleperf_binary_abspath);
   ostringstream parameters;

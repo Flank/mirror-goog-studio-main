@@ -38,7 +38,8 @@ class FakeSimpleperf final : public Simpleperf {
         enable_profiling_success_(true),
         kill_simpleperf_success_(true),
         report_sample_success_(true),
-        kill_simpleperf_called_(false) {}
+        kill_simpleperf_called_(false),
+        report_sample_called_(false) {}
 
   bool EnableProfiling() const { return enable_profiling_success_; }
 
@@ -48,7 +49,8 @@ class FakeSimpleperf final : public Simpleperf {
   }
 
   bool ReportSample(const string& input_path, const string& output_path,
-                    const string& abi_arch, string* output) const {
+                    const string& abi_arch, string* output) {
+    report_sample_called_ = true;
     return report_sample_success_;
   }
 
@@ -66,11 +68,14 @@ class FakeSimpleperf final : public Simpleperf {
 
   bool GetKillSimpleperfCalled() { return kill_simpleperf_called_; }
 
+  bool GetReportSampleCalled() { return report_sample_called_; }
+
  private:
   bool enable_profiling_success_;
   bool kill_simpleperf_success_;
   bool report_sample_success_;
   bool kill_simpleperf_called_;
+  bool report_sample_called_;
 };
 
 }  // namespace profiler

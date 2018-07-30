@@ -71,8 +71,7 @@ class Simpleperf {
   // simpleperf binary to use. The binary must match the abi of the app.
   virtual bool ReportSample(const std::string& input_path,
                             const std::string& output_path,
-                            const std::string& abi_arch,
-                            std::string* output) const;
+                            const std::string& abi_arch, std::string* output);
 
  protected:
   // Returns a string with the full `simpleperf record` command, containing all
