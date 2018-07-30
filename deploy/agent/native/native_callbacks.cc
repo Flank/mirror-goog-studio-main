@@ -1,15 +1,28 @@
+/*
+ * Copyright (C) 2018 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "native_callbacks.h"
 
 #include "capabilities.h"
+#include "config.h"
 #include "hotswap.h"
 #include "jni/jni_class.h"
 #include "jni/jni_util.h"
-#include "proto/config.pb.h"
-
-using swapper::proto::Config;
 
 namespace swapper {
-extern const Config* config;
 
 bool RegisterNatives(JNIEnv* jni, const vector<NativeBinding>& bindings) {
   for (auto& binding : bindings) {
@@ -46,14 +59,13 @@ bool Native_TryRedefineClasses(JNIEnv* jni, jobject object) {
 
   HotSwap code_swap(jvmti, jni);
 
-  // TODO(acleung): I don't know why we need to redo this but I was getting
-  // JVMTI_ERROR_MUST_POSSESS_CAPABILITY without it.
+  // TODO(noahz): Prevent us from creating two JVMTI instances.
   if (jvmti->AddCapabilities(&REQUIRED_CAPABILITIES) != JVMTI_ERROR_NONE) {
     return false;
   }
 
-  bool success = code_swap.DoHotSwap(swapper::config);
-  delete swapper::config;
+  const Config& config = Config::GetInstance();
+  bool success = code_swap.DoHotSwap(config.GetSwapRequest());
   jvmti->RelinquishCapabilities(&REQUIRED_CAPABILITIES);
   return success;
 }

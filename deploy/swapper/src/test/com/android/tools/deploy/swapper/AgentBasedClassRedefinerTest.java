@@ -171,7 +171,7 @@ public class AgentBasedClassRedefinerTest extends ClassRedefinerTestBase {
         }
 
         @Override
-        protected String pushToDevice(Common.Config message) {
+        protected String pushToDevice(Common.AgentConfig message) {
             try {
                 File pb = Files.createTempFile("messageDir", "msg.pb").toFile();
                 FileOutputStream out = new FileOutputStream(pb);

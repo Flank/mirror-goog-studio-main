@@ -15,7 +15,9 @@
  */
 package com.android.tools.deploy.swapper;
 
-import com.android.tools.deploy.proto.Common;
+import com.android.tools.deploy.proto.Common.AgentConfig;
+import com.android.tools.deploy.proto.Common.ClassDef;
+import com.android.tools.deploy.proto.Common.SwapRequest;
 import com.google.protobuf.ByteString;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -39,7 +41,7 @@ class AgentBasedClassRedefiner extends ClassRedefiner {
         this.instrumentationLocation = instrumentationLocation;
     }
 
-    protected String pushToDevice(Common.Config message) {
+    protected String pushToDevice(AgentConfig message) {
         String tmpLoc =
                 System.getProperty("java.io.tmpdir")
                         + File.pathSeparator
@@ -71,19 +73,22 @@ class AgentBasedClassRedefiner extends ClassRedefiner {
         return tmpLoc;
     }
 
-    private Common.Config createMessage(Map<String, byte[]> classesToRedefine) {
-        Common.Config.Builder cfg = Common.Config.newBuilder();
+    private AgentConfig createMessage(Map<String, byte[]> classesToRedefine) {
+        AgentConfig.Builder agentConfig = AgentConfig.newBuilder();
+        agentConfig.setInstrumentDex(instrumentationLocation);
+
+        SwapRequest.Builder swapRequest = SwapRequest.newBuilder();
+        swapRequest.setPackageName(packageName);
+        swapRequest.setRestartActivity(shouldRestart);
         for (Map.Entry<String, byte[]> entry : classesToRedefine.entrySet()) {
-            cfg.addClasses(
-                    Common.ClassDef.newBuilder()
+            swapRequest.addClasses(
+                    ClassDef.newBuilder()
                             .setName(entry.getKey())
                             .setDex(ByteString.copyFrom(entry.getValue()))
                             .build());
         }
-        cfg.setPackageName(packageName);
-        cfg.setRestartActivity(shouldRestart);
-        cfg.setInstrumentationJar(instrumentationLocation);
-        return cfg.build();
+
+        return agentConfig.setSwapRequest(swapRequest).build();
     }
 
     @Override

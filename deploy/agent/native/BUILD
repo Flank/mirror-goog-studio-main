@@ -12,6 +12,8 @@ cc_binary(
         "android_wrapper.cc",
         "android_wrapper.h",
         "capabilities.h",
+        "config.cc",
+        "config.h",
         "hotswap.cc",
         "hotswap.h",
         "instant.cc",
@@ -20,19 +22,19 @@ cc_binary(
         "native_callbacks.cc",
         "native_callbacks.h",
     ],
-    copts = ANDROID_COPTS + ["-I$(GENDIR)/tools/base/deploy/agent/native"],
+    copts = ANDROID_COPTS + ["-I$(GENDIR)/tools/base/deploy/proto"],
     linkopts = ANDROID_LINKOPTS,
     linkshared = 1,
     tags = [
         "no_windows",
     ],
-    visibility = ["//tools/base/deploy/swapper:__pkg__"],
+    visibility = ["//tools/base/deploy:__subpackages__"],
     deps = [
         "//external:slicer",
         "//prebuilts/studio/jdk:jni_headers",
         "//tools/base/deploy/agent/native/jni:agent_jni",
-        "//tools/base/deploy/agent/native/proto:agent_cc_proto",
         "//tools/base/deploy/agent/native/utils:agent_utils",
+        "//tools/base/deploy/proto:cc_proto",
     ],
 )
 

@@ -23,14 +23,14 @@ jobject GetThreadClassLoader(JNIEnv* env) {
           {"getContextClassLoader", "()Ljava/lang/ClassLoader;"});
 }
 
-bool HotSwap::DoHotSwap(const swapper::proto::Config* config) const {
+bool HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
   bool success = true;
-  size_t total_classes = config->classes_size();
+  size_t total_classes = swap_request.classes_size();
   jvmtiClassDefinition* def = new jvmtiClassDefinition[total_classes];
   JniObject gClassLoader(jni_, GetThreadClassLoader(jni_));
 
   for (size_t i = 0; i < total_classes; i++) {
-    const swapper::proto::ClassDef& classDef = config->classes(i);
+    const proto::ClassDef& classDef = swap_request.classes(i);
     const string name = classDef.name();
     const string code = classDef.dex();
     jvalue java_name = {.l = jni_->NewStringUTF(name.c_str())};

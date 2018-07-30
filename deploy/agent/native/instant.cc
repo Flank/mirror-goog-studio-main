@@ -24,10 +24,10 @@
 
 #include "android_wrapper.h"
 #include "capabilities.h"
+#include "config.h"
 #include "hotswap.h"
 #include "instrumenter.h"
 #include "native_callbacks.h"
-#include "proto/config.pb.h"
 
 #include "jni/jni_class.h"
 #include "jni/jni_object.h"
@@ -39,14 +39,7 @@ using std::string;
 using std::unique_ptr;
 using std::vector;
 
-using swapper::proto::Config;
-
 namespace swapper {
-
-// We keep a global (for now) reference to the PB that contains of the all
-// the info we need to swapping.
-extern const Config* config;
-const Config* config;
 
 const char* kBreadcrumbClass = "com/android/tools/deploy/instrument/Breadcrumb";
 const char* kHandlerWrapperClass =
@@ -144,14 +137,15 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni,
 
     // Mark that we've finished instrumentation.
     breadcrumb.CallStaticMethod<void>({"setFinishedInstrumenting", "()V"});
+    Log::V("Finished instrumenting");
   }
 
   return true;
 }
 
-jint DoHotSwap(jvmtiEnv* jvmti, JNIEnv* jni) {
+jint DoHotSwap(jvmtiEnv* jvmti, JNIEnv* jni, const Config& config) {
   HotSwap code_swap(jvmti, jni);
-  if (!code_swap.DoHotSwap(config)) {
+  if (!code_swap.DoHotSwap(config.GetSwapRequest())) {
     // TODO: Log meaningful error.
     Log::E("Hot swap failed.");
     return JNI_ERR;
@@ -159,7 +153,7 @@ jint DoHotSwap(jvmtiEnv* jvmti, JNIEnv* jni) {
   return JNI_OK;
 }
 
-jint DoHotSwapAndRestart(jvmtiEnv* jvmti, JNIEnv* jni) {
+jint DoHotSwapAndRestart(jvmtiEnv* jvmti, JNIEnv* jni, const Config& config) {
   jvmtiEventCallbacks callbacks;
   callbacks.ClassFileLoadHook = Agent_ClassFileLoadHook;
 
@@ -169,13 +163,12 @@ jint DoHotSwapAndRestart(jvmtiEnv* jvmti, JNIEnv* jni) {
     return JNI_ERR;
   }
 
-  if (!LoadInstrumentationJar(jvmti, jni,
-                              config->instrumentation_jar().c_str())) {
-    Log::E("Error loading instrumentation jar.");
+  if (!LoadInstrumentationJar(jvmti, jni, config.GetInstrumentationPath())) {
+    Log::E("Error loading instrumentation dex.");
     return JNI_ERR;
   }
 
-  if (!Instrument(jvmti, jni, config->instrumentation_jar().c_str())) {
+  if (!Instrument(jvmti, jni, config.GetInstrumentationPath())) {
     Log::E("Error instrumenting application.");
     return JNI_ERR;
   }
@@ -186,18 +179,9 @@ jint DoHotSwapAndRestart(jvmtiEnv* jvmti, JNIEnv* jni) {
 
   // Perform hot swap through the activity restart callback path.
   AndroidWrapper wrapper(jni);
-  wrapper.RestartActivity(config->package_name().c_str());
+  wrapper.RestartActivity(config.GetSwapRequest().package_name().c_str());
 
   return JNI_OK;
-}
-
-void ParseConfig(char* file_location) {
-  Config* cfg = new Config();
-  std::fstream stream(file_location, std::ios::in | std::ios::binary);
-  if (!cfg->ParseFromIstream(&stream)) {
-    Log::E("Could not parse config in %s", file_location);
-  }
-  config = cfg;
 }
 
 // Event that fires when the agent hooks onto a running VM.
@@ -206,9 +190,8 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* input,
   jvmtiEnv* jvmti;
   JNIEnv* jni;
 
-  ParseConfig(input);
-  if (!config) {
-    Log::E("Could not parse config");
+  if (!Config::ParseFromFile(input)) {
+    Log::E("Could not parse swap request");
     return JNI_ERR;
   }
 
@@ -227,12 +210,13 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* input,
     return JNI_ERR;
   }
 
+  const Config& config = Config::GetInstance();
+
   jint ret = JNI_ERR;
-  if (config->restart_activity()) {
-    ret = DoHotSwapAndRestart(jvmti, jni);
+  if (config.GetSwapRequest().restart_activity()) {
+    ret = DoHotSwapAndRestart(jvmti, jni, config);
   } else {
-    ret = DoHotSwap(jvmti, jni);
-    delete config;
+    ret = DoHotSwap(jvmti, jni, config);
     jvmti->RelinquishCapabilities(&REQUIRED_CAPABILITIES);
     Log::V("Finished.");
   }

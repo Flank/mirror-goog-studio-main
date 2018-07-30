@@ -10,7 +10,7 @@ java_library(
         "//prebuilts/r8:d8-master",
         "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.4.0:jar",
         "//tools/base/bazel:langtools",
-        "//tools/base/deploy/agent/native/proto:libagent_java_proto.jar",
+        "//tools/base/deploy/proto:libjava_proto.jar",
     ],
 )
 
@@ -50,7 +50,7 @@ fake_android_test(
         "//tools/base/bazel:langtools",
         "//tools/base/deploy/agent/instrumentation",
         "//tools/base/deploy/agent/native:libswap.so",
-        "//tools/base/deploy/agent/native/proto:libagent_java_proto.jar",
+        "//tools/base/deploy/proto:libjava_proto.jar",
         "//tools/base/deploy/swapper/src/apk1:apk",
         "//tools/base/deploy/swapper/src/apk2:apk",
         "//tools/base/fakeandroid",

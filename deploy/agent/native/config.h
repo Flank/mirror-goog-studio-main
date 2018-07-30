@@ -12,30 +12,31 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
-#ifndef HOTSWAP_H
-#define HOTSWAP_H
 
-#include "jni.h"
-#include "jvmti.h"
-#include "swap.pb.h"
+#ifndef AGENT_CONFIG_H
+#define AGENT_CONFIG_H
 
+#include <memory>
 #include <string>
 
+#include "swap.pb.h"
+
 namespace swapper {
-
-class HotSwap {
+class Config {
  public:
-  HotSwap(jvmtiEnv* jvmti, JNIEnv* jni) : jvmti_(jvmti), jni_(jni) {}
+  static bool ParseFromFile(const std::string& file_location);
+  static const Config& GetInstance();
 
-  // Invokes JVMTI RedefineClasses with class definitions in the message.
-  bool DoHotSwap(const proto::SwapRequest& message) const;
+  const proto::SwapRequest& GetSwapRequest() const;
+  const std::string& GetInstrumentationPath() const;
 
  private:
-  jvmtiEnv* jvmti_;
-  JNIEnv* jni_;
+  static Config instance_;
+  Config() {}
+  Config(proto::AgentConfig* agent_config) : agent_config_(agent_config) {}
+  std::unique_ptr<proto::AgentConfig> agent_config_;
 };
-
 }  // namespace swapper
+
 #endif
