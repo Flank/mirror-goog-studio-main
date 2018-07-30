@@ -80,6 +80,7 @@ kotlin_test(
         "//prebuilts/studio/sdk:platforms/latest",
         "//tools/base/build-system/aapt2:aapt2_for_tests",
     ],
+    friends = [":builder"],
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
     resources = glob(["src/test/resources/**"]),
     tags = [

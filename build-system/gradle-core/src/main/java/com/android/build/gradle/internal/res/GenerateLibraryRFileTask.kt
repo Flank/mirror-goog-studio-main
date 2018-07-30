@@ -93,6 +93,10 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
     lateinit var inputResourcesDir: BuildableArtifact
         private set
 
+    @get:Input
+    var namespacedRClass: Boolean = false
+        private set
+
     @Throws(IOException::class)
     override fun doFullTaskAction() {
         val manifest = Iterables.getOnlyElement(
@@ -117,7 +121,7 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
                 proguardOut = proguardOutputFile,
                 mergedResources = inputResourcesDir.single(),
                 platformSymbols = androidAttrSymbol,
-                disableMergeInLib = true)
+                namespacedRClass = namespacedRClass)
 
         SymbolIo.writeSymbolListWithPackageName(
                 textSymbolOutputFile.toPath(),
@@ -190,6 +194,8 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
 
             task.inputResourcesDir = variantScope.artifacts.getFinalArtifactFiles(
                 InternalArtifactType.PACKAGED_RES)
+
+            task.namespacedRClass = variantScope.globalScope.projectOptions[BooleanOption.NAMESPACED_R_CLASS]
 
             task.outputScope = variantScope.outputScope
         }

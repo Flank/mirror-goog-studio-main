@@ -56,7 +56,7 @@ public class RGeneration {
             boolean finalIds) {
         Preconditions.checkArgument(out.isDirectory(), "!out.iDirectory");
 
-        for (SymbolTable symbolTable : generateLibrarySymbolTablesToWrite(main, libraries)) {
+        for (SymbolTable symbolTable : generateLibrarySymbolTablesToWrite(main, main, libraries)) {
             SymbolIo.exportToJava(symbolTable, out, finalIds);
         }
     }
@@ -68,19 +68,24 @@ public class RGeneration {
      *
      * <p>The {@code R.java} file for the main symbol table is assumed to be generated already.
      *
+     * @param allSymbols the symbol table containing the merged resources from all dependencies.
      * @param main the main symbol file
      * @param dependencies the symbol tables from the dependencies
      */
     public static List<SymbolTable> generateAllSymbolTablesToWrite(
-            @NonNull SymbolTable main, @NonNull Collection<SymbolTable> dependencies) {
+            @NonNull SymbolTable allSymbols,
+            @NonNull SymbolTable main,
+            @NonNull Collection<SymbolTable> dependencies) {
         return ImmutableList.<SymbolTable>builder()
                 .add(main)
-                .addAll(generateLibrarySymbolTablesToWrite(main, dependencies))
+                .addAll(generateLibrarySymbolTablesToWrite(main, allSymbols, dependencies))
                 .build();
     }
 
     private static List<SymbolTable> generateLibrarySymbolTablesToWrite(
-            @NonNull SymbolTable main, @NonNull Collection<SymbolTable> dependencies) {
+            @NonNull SymbolTable main,
+            @NonNull SymbolTable allSymbols,
+            @NonNull Collection<SymbolTable> dependencies) {
         /*
          * First we need to make a few changes to the actual symbol tables we are going to write.
          *
@@ -110,7 +115,7 @@ public class RGeneration {
          */
         for (String pkg : new HashSet<>(toWrite.keySet())) {
             SymbolTable st = toWrite.get(pkg);
-            st = main.filter(st).rename(st.getTablePackage());
+            st = allSymbols.filter(st).rename(st.getTablePackage());
             toWrite.put(pkg, st);
 
             /*

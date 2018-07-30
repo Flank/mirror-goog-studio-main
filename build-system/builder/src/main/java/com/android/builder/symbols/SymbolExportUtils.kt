@@ -17,6 +17,7 @@
 
 package com.android.builder.symbols
 
+import com.android.annotations.VisibleForTesting
 import com.android.ide.common.symbols.RGeneration
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
@@ -29,6 +30,7 @@ import com.android.utils.FileUtils
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
+import java.nio.file.Path
 
 /**
  * Processes the symbol table and generates necessary files: R.txt, R.java and proguard rules
@@ -44,6 +46,9 @@ import java.nio.file.Files
  * @param symbolFileOut R.txt file location
  * @param proguardOut directory to contain proguard rules
  * @param mergedResources directory containing merged resources
+ * @param namespacedRClass if true, the generated R class for this library and the  R.txt will
+ *                         contain only the resources defined in this library, otherwise they will
+ *                         contain all the resources merged from the transitive dependencies.
  */
 @Throws(IOException::class)
 fun processLibraryMainSymbolTable(
@@ -57,7 +62,7 @@ fun processLibraryMainSymbolTable(
         proguardOut: File?,
         mergedResources: File?,
         platformSymbols: SymbolTable,
-        disableMergeInLib: Boolean) {
+        namespacedRClass: Boolean) {
 
     // Parse the manifest only when necessary.
     val finalPackageName = if (mainPackageName == null || proguardOut != null) {
@@ -75,24 +80,15 @@ fun processLibraryMainSymbolTable(
 
     // Get symbol tables of the libraries we depend on.
     val depSymbolTables = loadDependenciesSymbolTables(libraries)
-
-    val mainSymbolTable: SymbolTable
-    mainSymbolTable = if (disableMergeInLib) {
-        // Merge all the symbols together.
-        // We have to rewrite the IDs because some published R.txt inside AARs are using the
-        // wrong value for some types, and we need to ensure there is no collision in the
-        // file we are creating.
-        mergeAndRenumberSymbols(
-                finalPackageName, librarySymbols, depSymbolTables, platformSymbols)
-    } else {
-        librarySymbols.rename(finalPackageName)
-    }
-
-    // Generate R.txt file.
-    Files.createDirectories(symbolFileOut.toPath().parent)
-    SymbolIo.writeForAar(mainSymbolTable, symbolFileOut)
-
-    val tablesToWrite = RGeneration.generateAllSymbolTablesToWrite(mainSymbolTable, depSymbolTables)
+    val tablesToWrite =
+        processLibraryMainSymbolTable(
+            finalPackageName,
+            librarySymbols,
+            depSymbolTables,
+            platformSymbols,
+            namespacedRClass,
+            symbolFileOut.toPath()
+        )
 
     if (sourceOut != null) {
         FileUtils.cleanOutputDir(sourceOut)
@@ -104,5 +100,33 @@ fun processLibraryMainSymbolTable(
         FileUtils.deleteIfExists(rClassOutputJar)
         exportToCompiledJava(tablesToWrite, rClassOutputJar.toPath())
     }
+}
+
+@VisibleForTesting
+internal fun processLibraryMainSymbolTable(
+    finalPackageName: String,
+    librarySymbols: SymbolTable,
+    depSymbolTables: Set<SymbolTable>,
+    platformSymbols: SymbolTable,
+    namespacedRClass: Boolean,
+    symbolFileOut: Path
+): List<SymbolTable> {
+    // Merge all the symbols together.
+    // We have to rewrite the IDs because some published R.txt inside AARs are using the
+    // wrong value for some types, and we need to ensure there is no collision in the
+    // file we are creating.
+    val allSymbols: SymbolTable = mergeAndRenumberSymbols(
+        finalPackageName, librarySymbols, depSymbolTables, platformSymbols
+    )
+
+    val mainSymbolTable = if (namespacedRClass) allSymbols.filter(librarySymbols) else allSymbols
+
+    // Generate R.txt file.
+    Files.createDirectories(symbolFileOut.parent)
+    SymbolIo.writeForAar(mainSymbolTable, symbolFileOut)
+
+    val tablesToWrite =
+        RGeneration.generateAllSymbolTablesToWrite(allSymbols, mainSymbolTable, depSymbolTables)
+    return tablesToWrite
 }
 
