@@ -149,7 +149,8 @@ class Aapt2DaemonImpl(
                 is WaitForTaskCompletion.Result.Succeeded -> {}
                 is WaitForTaskCompletion.Result.Failed -> {
                     val args = makeCompileCommand(request).joinToString(" \\\n        ")
-                    throw Aapt2Exception(
+                    throw Aapt2Exception.create(
+                        logger = logger,
                         description = "Android resource compilation failed",
                         output = result.stdErr,
                         processName = displayName,
@@ -184,7 +185,8 @@ class Aapt2DaemonImpl(
                     val args =
                         makeLinkCommand(configWithResourcesListed).joinToString("\\\n        ")
 
-                    throw Aapt2Exception(
+                    throw Aapt2Exception.create(
+                        logger = logger,
                         description = "Android resource linking failed",
                         output = result.stdErr,
                         processName = displayName,

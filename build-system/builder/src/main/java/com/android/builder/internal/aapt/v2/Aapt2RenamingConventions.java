@@ -39,7 +39,7 @@ public final class Aapt2RenamingConventions {
 
         File fileParent = f.getParentFile();
         if (fileParent == null) {
-            throw new Aapt2Exception("Could not get parent of file '" + f.getAbsolutePath() + "'");
+            throw Aapt2Exception.create("Could not get parent of file '" + f.getAbsolutePath() + "'");
         }
 
         String parentName = fileParent.getName();

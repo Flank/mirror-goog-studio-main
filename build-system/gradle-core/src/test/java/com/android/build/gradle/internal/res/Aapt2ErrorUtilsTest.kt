@@ -37,7 +37,7 @@ class Aapt2ErrorUtilsTest {
             originalInputFile = temporaryFolder.newFile("original")
         )
 
-        val aaptException = Aapt2Exception(
+        val aaptException = Aapt2Exception.create(
             description = "desc inputFile=" + request.inputFile.absolutePath,
             cause = null,
             output = "output inputFile=" + request.inputFile.absolutePath,

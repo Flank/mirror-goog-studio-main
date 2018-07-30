@@ -141,6 +141,9 @@ class Aapt2DaemonImplTest {
         }
         assertThat(exception.message).contains("error: invalid file path")
         assertThat(exception.message).contains("foo.txt")
+
+        assertThat(logger.messages.joinToString("\n")).contains("command =")
+        logger.clear()
     }
 
     @Test
@@ -210,8 +213,11 @@ class Aapt2DaemonImplTest {
         assertThat(exception.message).contains("Android resource linking failed")
         assertThat(exception.message).contains("AndroidManifest.xml")
         assertThat(exception.message).contains("error: unclosed token.")
+
+
         // Compiled resources should be listed in a file.
-        assertThat(exception.message).contains("@")
+        assertThat(logger.messages.joinToString("\n")).contains("@")
+        logger.clear()
 
         val exception2 = assertFailsWith(Aapt2Exception::class) {
             daemon.link(request, logger)
@@ -220,8 +226,9 @@ class Aapt2DaemonImplTest {
         assertThat(exception2.message).contains("AndroidManifest.xml")
         assertThat(exception2.message).contains("error: unclosed token.")
         // Compiled resources should not be listed in a file.
-        assertThat(exception2.message).doesNotContain("@")
-        assertThat(exception2.message).contains("foo.txt")
+        assertThat(logger.messages.joinToString("\n")).doesNotContain("@")
+        assertThat(logger.messages.joinToString("\n")).contains("foo.txt")
+        logger.clear()
     }
 
     @Test

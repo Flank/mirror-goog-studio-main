@@ -41,7 +41,7 @@ fun rewriteCompileException(e: Aapt2Exception, request: CompileResourceRequest):
         return if (request.inputFile == request.originalInputFile) {
             e // Nothing to rewrite.
         } else {
-            Aapt2Exception(
+            Aapt2Exception.create(
                 description = "Failed to compile android resource " +
                         "'${request.originalInputFile.absolutePath}'.",
                 cause = e,
@@ -94,8 +94,8 @@ private fun rewriteException(
             // No messages were parsed, so nothing to rewrite.
             return e
         }
-        return Aapt2Exception(
-            description = e.message!!,
+        return Aapt2Exception.create(
+            description = e.description,
             cause = e,
             output = messages.map { message ->
                 message.copy(
