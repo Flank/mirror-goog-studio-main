@@ -21,10 +21,8 @@ import com.android.ide.common.xml.ManifestData.UsesLibrary;
 import com.android.resources.Keyboard;
 import com.android.resources.Navigation;
 import com.android.resources.TouchScreen;
-
-import junit.framework.TestCase;
-
 import java.io.InputStream;
+import junit.framework.TestCase;
 
 /**
  * Tests for {@link AndroidManifestParser}
@@ -38,6 +36,7 @@ public class AndroidManifestParserTest extends TestCase {
     private static final String ACTIVITY_ALIAS_XML = "/AndroidManifest-activityalias.xml";  //$NON-NLS-1$
     private static final String PACKAGE_NAME =  "com.android.testapp"; //$NON-NLS-1$
     private static final Integer VERSION_CODE = 42;
+    private static final String VERSION_NAME = "1.42";
     private static final String ACTIVITY_NAME = "com.android.testapp.MainActivity"; //$NON-NLS-1$
     private static final String LIBRARY_NAME = "android.test.runner"; //$NON-NLS-1$
     private static final String LIBRARY_NAME2 = "android.test.runner2"; //$NON-NLS-1$
@@ -73,7 +72,12 @@ public class AndroidManifestParserTest extends TestCase {
 
     public void testGetVersionCode() {
         assertEquals(VERSION_CODE, mManifestTestApp.getVersionCode());
-        assertEquals(null, mManifestInstrumentation.getVersionCode());
+        assertNull(mManifestInstrumentation.getVersionCode());
+    }
+
+    public void testGetVersionName() {
+        assertEquals(VERSION_NAME, mManifestTestApp.getVersionName());
+        assertNull(mManifestInstrumentation.getVersionName());
     }
 
     public void testMinSdkVersion() {
@@ -124,7 +128,7 @@ public class AndroidManifestParserTest extends TestCase {
         assertEquals(TouchScreen.FINGER, usesConfig.getReqTouchScreen());
     }
 
-    private void assertEquals(ManifestData.Activity lhs, ManifestData.Activity rhs) {
+    private static void assertEquals(ManifestData.Activity lhs, ManifestData.Activity rhs) {
         assertTrue(lhs == rhs || (lhs != null && rhs != null));
         if (lhs != null && rhs != null) {
             assertEquals(lhs.getName(),        rhs.getName());

@@ -44,8 +44,10 @@ public final class ManifestData {
 
     /** Application package */
     String mPackage;
-    /** Application version Code, null if the attribute is not present. */
+    /** Application version code, null if the attribute is not present. */
     Integer mVersionCode = null;
+    /** Application version name, null if the attribute is not present. */
+    String mVersionName = null;
     /** Default Dex process */
     String mDefaultProcess;
     /** List of all activities */
@@ -595,6 +597,15 @@ public final class ManifestData {
      */
     public Integer getVersionCode() {
         return mVersionCode;
+    }
+
+    /**
+     * Returns the versionName value defined in the manifest, if found, null otherwise.
+     *
+     * @return the versionName or null if not found.
+     */
+    public String getVersionName() {
+        return mVersionName;
     }
 
     /**

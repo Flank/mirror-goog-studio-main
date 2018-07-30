@@ -141,13 +141,18 @@ public class AndroidManifestParser {
                         case LEVEL_TOP:
                             if (AndroidManifest.NODE_MANIFEST.equals(localName)) {
                                 // lets get the package name.
-                                mManifestData.mPackage = getAttributeValue(attributes,
-                                        AndroidManifest.ATTRIBUTE_PACKAGE,
-                                        false /* hasNamespace */);
+                                mManifestData.mPackage =
+                                        getAttributeValue(
+                                                attributes,
+                                                AndroidManifest.ATTRIBUTE_PACKAGE,
+                                                false /* hasNamespace */);
 
                                 // and the versionCode
-                                String tmp = getAttributeValue(attributes,
-                                        AndroidManifest.ATTRIBUTE_VERSIONCODE, true);
+                                String tmp =
+                                        getAttributeValue(
+                                                attributes,
+                                                AndroidManifest.ATTRIBUTE_VERSIONCODE,
+                                                true);
                                 if (tmp != null) {
                                     try {
                                         mManifestData.mVersionCode = Integer.valueOf(tmp);
@@ -155,6 +160,12 @@ public class AndroidManifestParser {
                                         // keep null in the field.
                                     }
                                 }
+                                // and the versionName
+                                mManifestData.mVersionName =
+                                        getAttributeValue(
+                                                attributes,
+                                                AndroidManifest.ATTRIBUTE_VERSIONNAME,
+                                                true /* hasNamespace */);
                                 mValidLevel++;
                             }
                             break;

@@ -44,7 +44,7 @@ public class AndroidApplicationInfo {
                     "package: name='(.*)' versionCode='(.*)' versionName='(.*)' platformBuildVersionName='(.*)'");
     private final Set<String> permissions;
 
-    private AndroidApplicationInfo(
+    public AndroidApplicationInfo(
             @NonNull String packageId, @NonNull String versionName, long versionCode) {
         this.packageId = packageId;
         this.versionName = versionName;
