@@ -11,10 +11,10 @@ public class MemoryTaskCategory extends TaskCategory {
     private final int ITERATION_COUNT = 5;
     private final int DELTA_SIZE = (1 << 22);
     private final int DELTA_OBJECT_COUNT = 10000;
-    private final int TEST_OBJECT_SIZE_SMALL = 10;
-    private final int TEST_OBJECT_SIZE_LARGE = 100000;
-    private final int TEST_OBJECT_COUNT_MANY = 1000000;
-    private final int TEST_OBJECT_COUNT_FEW = 100;
+    private final int TEST_OBJECT_SIZE_SMALL = 100;
+    private final int TEST_OBJECT_SIZE_LARGE = 10000;
+    private final int TEST_OBJECT_COUNT_MANY = 100000;
+    private final int TEST_OBJECT_COUNT_FEW = 1000;
 
     private final List<? extends Task> mTasks =
             Arrays.asList(
