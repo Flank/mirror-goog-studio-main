@@ -20,13 +20,12 @@ import com.android.tools.build.apkzlib.zfile.ApkCreator
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory
 import com.android.tools.build.apkzlib.zip.StoredEntry
 import com.android.tools.build.apkzlib.zip.ZFile
-import com.google.common.base.Predicate
+import com.android.tools.build.apkzlib.zip.ZFileOptions
 import com.google.common.base.Function
+import com.google.common.base.Predicate
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
-import java.util.zip.ZipEntry
-import java.util.zip.ZipFile
 
 /**
  * Implementation of [ApkCreator] that outputs to a folder.
@@ -43,7 +42,7 @@ class FolderBasedApkCreator(private val creationData: ApkCreatorFactory.Creation
 
     companion object {
         fun proccessZipEntry(zip: File, isIgnored: Predicate<String>?, action: (StoredEntry) -> Unit) {
-            ZFile(zip).use {
+            ZFile(zip, ZFileOptions(), true).use {
                 it.entries().forEach { entry ->
                     if (isIgnored?.test(entry.centralDirectoryHeader.name) != true) {
                         action.invoke(entry)

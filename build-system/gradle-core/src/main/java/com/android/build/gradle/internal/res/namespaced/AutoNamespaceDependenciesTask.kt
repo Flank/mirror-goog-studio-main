@@ -35,6 +35,7 @@ import com.android.ide.common.symbols.SymbolTable
 import com.android.sdklib.IAndroidTarget
 import com.android.tools.build.apkzlib.zip.StoredEntryType
 import com.android.tools.build.apkzlib.zip.ZFile
+import com.android.tools.build.apkzlib.zip.ZFileOptions
 import com.android.utils.FileUtils
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
@@ -243,10 +244,10 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
     }
 
     private fun jarOutputs(outputJar: File, inputDirectory: File) {
-        ZFile(outputJar).use { jar ->
+        ZFile(outputJar, ZFileOptions(), false).use { jar ->
             Files.walk(inputDirectory.toPath()).use { paths ->
                 paths.filter { p -> p.toFile().isFile}.forEach { it ->
-                    ZFile(it.toFile()).use { classesJar ->
+                    ZFile(it.toFile(), ZFileOptions(), true).use { classesJar ->
                         classesJar.entries().forEach { entry ->
                             val name = entry.centralDirectoryHeader.name
                             if (entry.type == StoredEntryType.FILE && name.endsWith(".class")) {

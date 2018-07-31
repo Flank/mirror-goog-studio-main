@@ -25,6 +25,7 @@ import com.android.ide.common.xml.XmlPrettyPrinter
 import com.android.resources.ResourceType
 import com.android.tools.build.apkzlib.zip.StoredEntryType
 import com.android.tools.build.apkzlib.zip.ZFile
+import com.android.tools.build.apkzlib.zip.ZFileOptions
 import com.android.utils.PathUtils
 import com.android.utils.PositionXmlParser
 import com.google.common.base.Joiner
@@ -85,8 +86,8 @@ class NamespaceRewriter(
      * contains only the namespaced classes.
      */
     fun rewriteJar(classesJar: File, outputJar: File) {
-        ZFile(classesJar).use { classes ->
-            ZFile(outputJar).use { output ->
+        ZFile(classesJar, ZFileOptions(), true).use { classes ->
+            ZFile(outputJar, ZFileOptions(), false).use { output ->
                 classes.entries().forEach { entry ->
                     val name = entry.centralDirectoryHeader.name
                     if (entry.type == StoredEntryType.FILE && name.endsWith(".class")) {
