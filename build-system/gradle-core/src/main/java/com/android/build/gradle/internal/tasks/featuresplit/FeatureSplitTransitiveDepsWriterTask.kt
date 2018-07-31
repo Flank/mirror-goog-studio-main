@@ -47,7 +47,8 @@ open class FeatureSplitTransitiveDepsWriterTask : AndroidVariantTask() {
     private lateinit var runtimeJars: ArtifactCollection
 
     @get:OutputFile
-    private lateinit var outputFile: File
+    lateinit var outputFile: File
+        private set
 
     // use CompileClasspath to get as little notifications as possible.
     // technically we only care when the list changes, not the content but there's no way

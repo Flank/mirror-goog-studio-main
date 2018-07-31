@@ -32,6 +32,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
@@ -63,7 +64,7 @@ open class BundleToStandaloneApkTask @Inject constructor(workerExecutor: WorkerE
 
     private lateinit var outputFile: Provider<RegularFile>
 
-    @get:Input
+    @get:OutputDirectory
     val outputDirectory: File
        get() = outputFile.get().asFile.parentFile!!
 

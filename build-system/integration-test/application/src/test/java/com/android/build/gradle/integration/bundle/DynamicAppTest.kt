@@ -354,6 +354,11 @@ class DynamicAppTest {
             Truth.assertThat(it.entries.map { it.toString() })
                 .containsAllOf("/META-INF/CERT.RSA", "/META-INF/CERT.SF")
         }
+
+        val result = project
+            .executor()
+            .run(":app:packageDebugUniversalApk")
+        assertThat(result.didWorkTasks).isEmpty()
     }
 
 
