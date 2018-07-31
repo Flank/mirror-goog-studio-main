@@ -99,12 +99,15 @@ public class PerfDriver implements TestRule {
                                 start(myActivityClass);
                             }
 
-                            private void after() throws Throwable {
-                                if (mySession != null) {
-                                    getGrpc().endSession(mySession.getSessionId());
+                            private void after() {
+                                try {
+                                    if (mySession != null) {
+                                        getGrpc().endSession(mySession.getSessionId());
+                                    }
+                                } finally {
+                                    myMockApp.stop();
+                                    myPerfdDriver.stop();
                                 }
-                                myMockApp.stop();
-                                myPerfdDriver.stop();
                                 // Logs in perf-test output to track the sdk level and test end.
                                 System.out.println(
                                         String.format(

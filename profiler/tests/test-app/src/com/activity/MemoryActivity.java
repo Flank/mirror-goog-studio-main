@@ -66,17 +66,14 @@ public class MemoryActivity extends PerfdTestActivity {
         }
         long end = System.currentTimeMillis();
         System.out.println("MemoryActivity.allocate");
-        System.out.printf("allocation_count=%d", entities.size());
-        System.out.println();
-        System.out.printf("allocation_timing=%d", end - start);
-        System.out.println();
+        System.out.println("allocation_count=" + entities.size());
+        System.out.println("allocation_timing=" + (end - start));
     }
 
     public void free() {
         entities.clear();
         System.out.println("MemoryActivity.free");
-        System.out.printf("free_count=%d", entities.size());
-        System.out.println();
+        System.out.println("free_count=" + entities.size());
     }
 
     public void gc() {
