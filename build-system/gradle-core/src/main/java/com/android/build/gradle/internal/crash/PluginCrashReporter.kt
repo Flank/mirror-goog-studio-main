@@ -33,12 +33,7 @@ object PluginCrashReporter {
     private val reporter: CrashReporter?
 
     init {
-        reporter =
-                getCrashReporter(
-                    AnalyticsSettings.getInstance(
-                        LoggerWrapper.getLogger(PluginCrashReporter::class.java)
-                    )
-                )
+        reporter = getCrashReporter()
     }
 
     /**
@@ -49,14 +44,13 @@ object PluginCrashReporter {
     fun maybeReportException(ex: Throwable): Boolean = maybeReportExceptionImpl(reporter, ex)
 
     @VisibleForTesting
-    fun maybeReportExceptionForTest(ex: Throwable, settings: AnalyticsSettings): Boolean {
-        val crashReporter = getCrashReporter(settings, forTest = true)
+    fun maybeReportExceptionForTest(ex: Throwable): Boolean {
+        val crashReporter = getCrashReporter(forTest = true)
         return maybeReportExceptionImpl(crashReporter, ex)
     }
 
-    private fun getCrashReporter(
-        analyticsSettings: AnalyticsSettings, forTest: Boolean = false): CrashReporter? {
-        return if (analyticsSettings.optedIn) {
+    private fun getCrashReporter(forTest: Boolean = false): CrashReporter? {
+        return if (AnalyticsSettings.optedIn) {
             val isDebugBuild = Version.ANDROID_GRADLE_PLUGIN_VERSION.endsWith("-dev")
             GoogleCrashReporter(false, isDebugBuild || forTest)
         } else {

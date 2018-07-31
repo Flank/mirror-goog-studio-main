@@ -19,6 +19,7 @@ package com.android.tools.lint
 import com.android.testutils.TestUtils
 import com.android.testutils.VirtualTimeScheduler
 import com.android.tools.analytics.AnalyticsSettings
+import com.android.tools.analytics.AnalyticsSettingsData
 import com.android.tools.analytics.TestUsageTracker
 import com.android.tools.analytics.UsageTracker
 import com.android.tools.lint.checks.AbstractCheckTest
@@ -39,7 +40,7 @@ class LintBatchAnalyticsTest : AbstractCheckTest() {
     override fun setUp() {
         super.setUp()
         scheduler = VirtualTimeScheduler()
-        val analyticsSettings = AnalyticsSettings()
+        val analyticsSettings = AnalyticsSettingsData()
         analyticsSettings.optedIn = true
         AnalyticsSettings.setInstanceForTest(analyticsSettings)
         usageTracker = TestUsageTracker(scheduler)
