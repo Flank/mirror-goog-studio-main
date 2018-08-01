@@ -42,7 +42,7 @@ public final class ValueResourceParser extends DefaultHandler {
 
     private boolean inResources;
     private int mDepth;
-    private ResourceValue mCurrentValue;
+    private ResourceValueImpl mCurrentValue;
     private ArrayResourceValueImpl mArrayResourceValue;
     private StyleResourceValueImpl mCurrentStyle;
     private StyleableResourceValueImpl mCurrentDeclareStyleable;

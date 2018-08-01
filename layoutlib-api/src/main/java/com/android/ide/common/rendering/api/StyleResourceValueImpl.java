@@ -75,6 +75,19 @@ public class StyleResourceValueImpl extends ResourceValueImpl implements StyleRe
         mParentStyle = parentStyle;
     }
 
+    /** Creates a copy of the given style. */
+    public StyleResourceValueImpl(@NonNull StyleResourceValue style) {
+        this(
+                style.getNamespace(),
+                style.getResourceType(),
+                style.getName(),
+                style.getParentStyleName(),
+                style.getLibraryName());
+        for (StyleItemResourceValue item : style.getDefinedItems()) {
+            addItem(item);
+        }
+    }
+
     @Override
     @Nullable
     public String getParentStyleName() {
@@ -120,18 +133,22 @@ public class StyleResourceValueImpl extends ResourceValueImpl implements StyleRe
         return mItems.get(attr.getNamespace(), attr.getName());
     }
 
+    @Override
+    @NotNull
+    public Collection<StyleItemResourceValue> getDefinedItems() {
+        return mItems.values();
+    }
+
     /**
      * Adds a style item to this style.
      *
      * @param item the style item to add
      */
-    @Override
     public void addItem(@NotNull StyleItemResourceValue item) {
         ResourceReference attr = item.getAttr();
-        if (attr == null) {
-            return;
+        if (attr != null) {
+            mItems.put(attr.getNamespace(), attr.getName(), item);
         }
-        mItems.put(attr.getNamespace(), attr.getName(), item);
     }
 
     @Override
@@ -145,11 +162,5 @@ public class StyleResourceValueImpl extends ResourceValueImpl implements StyleRe
             mItems.clear();
             mItems.putAll(((StyleResourceValueImpl) style).mItems);
         }
-    }
-
-    @Override
-    @NotNull
-    public Collection<StyleItemResourceValue> getDefinedItems() {
-        return mItems.values();
     }
 }

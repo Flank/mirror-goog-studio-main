@@ -159,7 +159,6 @@ public class ResourceValueImpl implements ResourceValue {
      *
      * @param value the resource value
      */
-    @Override
     public void replaceWith(@NonNull ResourceValue value) {
         this.value = value.getValue();
     }

@@ -84,13 +84,6 @@ public interface ResourceValue extends Serializable {
      */
     void setValue(@Nullable String value);
 
-    /**
-     * Sets the value from another resource.
-     *
-     * @param value the resource value
-     */
-    void replaceWith(@NonNull ResourceValue value);
-
     @NonNull
     ResourceNamespace.Resolver getNamespaceResolver();
 

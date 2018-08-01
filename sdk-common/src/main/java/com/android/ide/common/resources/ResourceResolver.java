@@ -249,10 +249,7 @@ public class ResourceResolver extends RenderResources {
             StyleResourceValue to = (StyleResourceValue)map.get(parentName);
 
             if (from != null && to != null) {
-                StyleResourceValue newStyle =
-                        new StyleResourceValueImpl(
-                                from.asReference(), parentName, from.getLibraryName());
-                newStyle.replaceWith(from);
+                StyleResourceValueImpl newStyle = new StyleResourceValueImpl(from);
                 mStyleInheritanceMap.put(newStyle, to);
                 mReverseStyleInheritanceMap.clear();
             }

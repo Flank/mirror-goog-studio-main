@@ -49,16 +49,6 @@ public interface StyleResourceValue extends ResourceValue {
     StyleItemResourceValue getItem(@NonNull ResourceReference attr);
 
     /**
-     * Adds a style item to this style.
-     *
-     * @param item the style item to add
-     */
-    void addItem(@NonNull StyleItemResourceValue item);
-
-    @Override
-    void replaceWith(@NonNull ResourceValue style);
-
-    /**
      * Returns a list of all items defined in this Style. This doesn't return items inherited from
      * the parent.
      */

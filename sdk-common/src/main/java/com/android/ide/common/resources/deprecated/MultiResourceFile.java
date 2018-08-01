@@ -17,6 +17,7 @@
 package com.android.ide.common.resources.deprecated;
 
 import com.android.ide.common.rendering.api.ResourceValue;
+import com.android.ide.common.rendering.api.ResourceValueImpl;
 import com.android.ide.common.resources.ResourceValueMap;
 import com.android.ide.common.resources.deprecated.ValueResourceParser.IValueResourceRepository;
 import com.android.io.IAbstractFile;
@@ -191,8 +192,8 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
             // look for a possible value already existing.
             ResourceValue oldValue = list.get(value.getName());
 
-            if (oldValue != null) {
-                oldValue.replaceWith(value);
+            if (oldValue instanceof ResourceValueImpl) {
+                ((ResourceValueImpl) oldValue).replaceWith(value);
                 return;
             }
         }
