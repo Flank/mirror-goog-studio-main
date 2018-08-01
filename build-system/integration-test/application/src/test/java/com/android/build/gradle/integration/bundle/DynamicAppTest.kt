@@ -458,6 +458,74 @@ class DynamicAppTest {
 
 
     @Test
+    fun `test extracting instant APKs from bundle`() {
+        val apkFromBundleTaskName = getApkFromBundleTaskName("debug")
+
+        // -------------
+        // build apks for API 27
+        // create a small json file with device filtering
+        var jsonFile = getJsonFile(27)
+
+        val appProject = project.getSubproject(":app")
+        TestFileUtils.searchAndReplace(
+            File(appProject.mainSrcDir.parent, "/AndroidManifest.xml"),
+            "package=",
+            "xmlns:dist=\"http://schemas.android.com/apk/distribution\" package=")
+        TestFileUtils.searchAndReplace(
+            File(appProject.mainSrcDir.parent, "AndroidManifest.xml"),
+            "<application>",
+            "<dist:module dist:instant=\"true\" /> <application>")
+
+        TestFileUtils.searchAndReplace(
+            File(project.getSubproject(":feature1").mainSrcDir.parent, "AndroidManifest.xml"),
+            "dist:title=",
+            "dist:instant=\"false\" dist:title=")
+
+        TestFileUtils.searchAndReplace(
+            File(project.getSubproject(":feature2").mainSrcDir.parent, "AndroidManifest.xml"),
+            "dist:onDemand=\"true\"",
+            "dist:onDemand=\"false\" dist:instant=\"true\"")
+
+        project
+            .executor()
+            .with(StringOption.IDE_APK_SELECT_CONFIG, jsonFile.toString())
+            .run("app:$apkFromBundleTaskName")
+
+        // fetch the build output model
+        var apkFolder = getApkFolderOutput("debug").apkFolder
+        FileSubject.assertThat(apkFolder).isDirectory()
+
+        var apkFileArray = apkFolder.list() ?: fail("No Files at $apkFolder")
+        Truth.assertThat(apkFileArray.toList()).named("APK List when extract instant is false")
+            .containsExactly(
+                "base-master_2.apk",
+                "base-xxhdpi_2.apk",
+                "feature1-master.apk",
+                "feature1-xxhdpi.apk",
+                "feature2-master_2.apk",
+                "feature2-xxhdpi_2.apk")
+
+        project
+            .executor()
+            .with(StringOption.IDE_APK_SELECT_CONFIG, jsonFile.toString())
+            .with(BooleanOption.IDE_EXTRACT_INSTANT, true)
+            .run("app:$apkFromBundleTaskName")
+
+        // fetch the build output model
+        apkFolder = getApkFolderOutput("debug").apkFolder
+        FileSubject.assertThat(apkFolder).isDirectory()
+
+        apkFileArray = apkFolder.list() ?: fail("No Files at $apkFolder")
+        Truth.assertThat(apkFileArray.toList()).named("APK List when extract instant is true")
+            .containsExactly(
+                "instant-base-master.apk",
+                "instant-base-xxhdpi.apk",
+                "instant-feature2-master.apk",
+                "instant-feature2-xxhdpi.apk")
+    }
+
+
+    @Test
     fun `test overriding bundle output location`() {
         for (projectPath in listOf(":app", ":feature1", ":feature2")) {
             project.getSubproject(projectPath).buildFile.appendText(

@@ -98,6 +98,8 @@ public interface AndroidProject {
 
     String PROPERTY_APK_SELECT_CONFIG = "android.inject.apkselect.config";
 
+    String PROPERTY_EXTRACT_INSTANT_APK = "android.inject.bundle.extractinstant";
+
     /** Version code to be used in the built APK. */
     String PROPERTY_VERSION_CODE = "android.injected.version.code";
 

@@ -21,11 +21,13 @@ import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.bundle.Devices.DeviceSpec
 import com.android.tools.build.bundletool.commands.ExtractApksCommand
 import com.android.utils.FileUtils
 import com.google.protobuf.util.JsonFormat
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
@@ -66,6 +68,10 @@ open class ExtractApksTask @Inject constructor(workerExecutor: WorkerExecutor) :
     lateinit var outputDir: File
         private set
 
+    @get:Input
+    var extractInstant = false
+        private set
+
     @TaskAction
     fun generateApk() {
 
@@ -76,7 +82,8 @@ open class ExtractApksTask @Inject constructor(workerExecutor: WorkerExecutor) :
                     apkSetArchive.singleFile(),
                     deviceConfig
                             ?: throw RuntimeException("Calling ExtractApk with no device config"),
-                    outputDir
+                    outputDir,
+                    extractInstant
                 )
             )
         }
@@ -85,7 +92,8 @@ open class ExtractApksTask @Inject constructor(workerExecutor: WorkerExecutor) :
     private data class Params(
         val apkSetArchive: File,
         val deviceConfig: File,
-        val outputDir: File
+        val outputDir: File,
+        val extractInstant: Boolean
     ) : Serializable
 
     private class BundleToolRunnable @Inject constructor(private val params: Params): Runnable {
@@ -103,6 +111,7 @@ open class ExtractApksTask @Inject constructor(workerExecutor: WorkerExecutor) :
                 .setApksArchivePath(params.apkSetArchive.toPath())
                 .setDeviceSpec(builder.build())
                 .setOutputDirectory(params.outputDir.toPath())
+                .setInstant(params.extractInstant)
 
             command.build().execute()
         }
@@ -133,6 +142,8 @@ open class ExtractApksTask @Inject constructor(workerExecutor: WorkerExecutor) :
             if (devicePath != null) {
                 task.deviceConfig = File(devicePath)
             }
+
+            task.extractInstant = variantScope.globalScope.projectOptions.get(BooleanOption.IDE_EXTRACT_INSTANT)
         }
     }
 }

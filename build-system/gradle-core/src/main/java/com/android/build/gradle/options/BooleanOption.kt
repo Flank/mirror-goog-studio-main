@@ -68,6 +68,10 @@ enum class BooleanOption(
             AndroidProject.PROPERTY_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES, status = Option.Status.STABLE),
     IDE_REFRESH_EXTERNAL_NATIVE_MODEL(AndroidProject.PROPERTY_REFRESH_EXTERNAL_NATIVE_MODEL, status = Option.Status.STABLE),
     IDE_GENERATE_SOURCES_ONLY(AndroidProject.PROPERTY_GENERATE_SOURCES_ONLY, status = Option.Status.STABLE),
+
+    // tell bundletool to only extract instant APKs.
+    IDE_EXTRACT_INSTANT(AndroidProject.PROPERTY_EXTRACT_INSTANT_APK),
+
     ENABLE_SEPARATE_APK_RESOURCES("android.enableSeparateApkRes", true),
     ENABLE_EXPERIMENTAL_FEATURE_DATABINDING("android.enableExperimentalFeatureDatabinding", false),
     ENABLE_SEPARATE_R_CLASS_COMPILATION(AndroidProject.PROPERTY_SEPARATE_R_CLASS_COMPILATION, status = Option.Status.STABLE),
