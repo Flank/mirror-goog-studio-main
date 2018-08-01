@@ -101,8 +101,13 @@ public class InstantAppBundleArchive implements Archive {
         @Override
         public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
                 throws IOException {
-            Files.createDirectories(destination.resolve(source.relativize(dir).toString()));
-            return FileVisitResult.CONTINUE;
+            Path resolved = destination.resolve(source.relativize(dir).toString()).normalize();
+            if (resolved.startsWith(destination)) {
+                Files.createDirectories(resolved);
+                return FileVisitResult.CONTINUE;
+            } else {
+                return FileVisitResult.SKIP_SUBTREE;
+            }
         }
 
         @Override
