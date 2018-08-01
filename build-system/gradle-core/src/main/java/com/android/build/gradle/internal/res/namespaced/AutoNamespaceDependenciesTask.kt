@@ -80,10 +80,12 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
     lateinit var dependencies: ResolvableDependencies private set
     lateinit var externalNotNamespacedResources: ArtifactCollection private set
     lateinit var externalResStaticLibraries: ArtifactCollection private set
+    lateinit var publicFiles: ArtifactCollection private set
 
     @InputFiles fun getRDefFiles(): FileCollection = rFiles.artifactFiles
     @InputFiles fun getManifestsFiles(): FileCollection = nonNamespacedManifests.artifactFiles
     @InputFiles fun getClassesJarFiles(): FileCollection = jarFiles.artifactFiles
+    @InputFiles fun getPublicFilesArtifactFiles(): FileCollection = publicFiles.artifactFiles
     @InputFiles
     fun getNonNamespacedResourcesFiles(): FileCollection =
         externalNotNamespacedResources.artifactFiles
@@ -137,20 +139,24 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
         outputStaticLibraries: File = this.outputStaticLibraries,
         outputClassesJar: File = this.outputClassesJar,
         outputRClassesJar: File = this.outputRClassesJar,
-        outputManifests: File = this.outputRewrittenManifests
+        outputManifests: File = this.outputRewrittenManifests,
+        publicFiles: ArtifactCollection = this.publicFiles
     ) {
 
         try {
+            val fileMaps =
+                ImmutableMap.builder<ArtifactType, ImmutableMap<String, ImmutableCollection<File>>>()
+                    .put(ArtifactType.DEFINED_ONLY_SYMBOL_LIST, rFiles.toMap())
+                    .put(ArtifactType.NON_NAMESPACED_CLASSES, jarFiles.toMap())
+                    .put(ArtifactType.NON_NAMESPACED_MANIFEST, manifests.toMap())
+                    .put(ArtifactType.ANDROID_RES, notNamespacedResources.toMap())
+                    .put(ArtifactType.RES_STATIC_LIBRARY, staticLibraryDependencies.toMap())
+                    .put(ArtifactType.PUBLIC_RES, publicFiles.toMap())
+                    .build()
+
             val graph = DependenciesGraph.create(
                 dependencies,
-                ImmutableMap.of(
-                    ArtifactType.DEFINED_ONLY_SYMBOL_LIST, rFiles.toMap(),
-                    ArtifactType.NON_NAMESPACED_CLASSES, jarFiles.toMap(),
-                    ArtifactType.NON_NAMESPACED_MANIFEST, manifests.toMap(),
-                    ArtifactType.ANDROID_RES, notNamespacedResources.toMap(),
-                    ArtifactType.RES_STATIC_LIBRARY, staticLibraryDependencies
-                        .toMap()
-                )
+                fileMaps
             )
 
             val rewrittenResources = File(intermediateDirectory, "namespaced_res")
@@ -271,6 +277,7 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
         val inputClasses = dependency.getFiles(ArtifactType.NON_NAMESPACED_CLASSES)
         val manifest = dependency.getFile(ArtifactType.NON_NAMESPACED_MANIFEST)
         val resources = dependency.getFile(ArtifactType.ANDROID_RES)
+        val publicTxt = dependency.getFile(ArtifactType.PUBLIC_RES)
 
         // Only convert external nodes and non-namespaced libraries. Already namespaced libraries
         // and JAR files can be present in the graph, but they will not contain the
@@ -308,7 +315,8 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
                     resources.toPath(),
                     outputResourcesDirectory!!.toPath()
                 )
-                generatePublicFile(getDefinedSymbols(dependency), outputResourcesDirectory.toPath())
+                generatePublicFile(
+                    getDefinedSymbols(dependency), publicTxt, outputResourcesDirectory.toPath())
             }
 
             logger.info("Finished rewriting $dependency")
@@ -427,6 +435,12 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
                     ConsumedConfigType.RUNTIME_CLASSPATH,
                     ArtifactScope.EXTERNAL,
                     ArtifactType.NON_NAMESPACED_MANIFEST
+            )
+
+            task.publicFiles = variantScope.getArtifactCollection(
+                    ConsumedConfigType.RUNTIME_CLASSPATH,
+                    ArtifactScope.EXTERNAL,
+                    ArtifactType.PUBLIC_RES
             )
 
             task.outputRewrittenManifests = variantScope.artifacts.appendArtifact(

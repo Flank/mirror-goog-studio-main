@@ -285,17 +285,17 @@ class NamespaceRewriterTest {
             """<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.module"
-    android:versionCode="@com.example.module:integer/version_code"
-    android:versionName="@com.example.module:string/version_name" >
+    android:versionCode="@*com.example.module:integer/version_code"
+    android:versionName="@*com.example.module:string/version_name" >
 
     <application
         android:allowBackup="true"
-        android:icon="@com.example.dependency:drawable/ic_launcher"
-        android:label="@com.example.dependency:string/app_name"
-        android:theme="@com.example.dependency:style/Theme.Simple" >
+        android:icon="@*com.example.dependency:drawable/ic_launcher"
+        android:label="@*com.example.dependency:string/app_name"
+        android:theme="@*com.example.dependency:style/Theme.Simple" >
         <activity
-            android:name="@com.example.module:string/activity_name"
-            android:label="@com.example.dependency:string/app_name" >
+            android:name="@*com.example.module:string/activity_name"
+            android:label="@*com.example.dependency:string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -369,27 +369,27 @@ class NamespaceRewriterTest {
             """<?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">@com.example.module:string/string</string>
+    <string name="app_name">@*com.example.module:string/string</string>
     <string name="string">string</string>
     <string name="activity_name">foo</string>
-    <string name="activity_ref">@com.example.module:string/activity_name</string>
+    <string name="activity_ref">@*com.example.module:string/activity_name</string>
 
-    <integer name="version_code">@com.example.dependency:integer/remote_value</integer>
+    <integer name="version_code">@*com.example.dependency:integer/remote_value</integer>
 
-    <style name="MyStyle" parent="@com.example.dependency:style/StyleParent">
+    <style name="MyStyle" parent="@*com.example.dependency:style/StyleParent">
         <item name="android:textSize">20sp</item>
         <item name="android:textColor">#008</item>
     </style>
 
-    <style name="MyStyle2" parent="@com.example.dependency:style/StyleParent">
+    <style name="MyStyle2" parent="@*com.example.dependency:style/StyleParent">
         <item name="android:textSize">20sp</item>
         <item name="android:textColor">#008</item>
-        <item name="com.example.module:showText">true</item>
+        <item name="*com.example.module:showText">true</item>
     </style>
 
-    <declare-styleable name="PieChart" parent="@com.example.dependency:styleable/StyleableParent">
-        <attr name="com.example.module:showText" format="boolean" />
-        <attr name="com.example.module:labelPosition" format="enum">
+    <declare-styleable name="PieChart" parent="@*com.example.dependency:styleable/StyleableParent">
+        <attr name="*com.example.module:showText" format="boolean" />
+        <attr name="*com.example.module:labelPosition" format="enum">
             <enum name="left" value="0" />
             <enum name="right" value="1" />
         </attr>
@@ -467,11 +467,11 @@ class NamespaceRewriterTest {
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    ns0:layout_behavior="@com.example.dependency:string/appbar_scrolling_view_behavior"
+    ns0:layout_behavior="@*com.example.dependency:string/appbar_scrolling_view_behavior"
     xmlns:ns0="http://schemas.android.com/apk/res/androidx.coordinatorlayout"
     xmlns:ns1="http://schemas.android.com/apk/res/android.support.constraint"
     tools:context=".MainActivity"
-    tools:showIn="@com.example.module:layout/activity_main" >
+    tools:showIn="@*com.example.module:layout/activity_main" >
 
     <TextView
         android:layout_width="wrap_content"
@@ -480,7 +480,7 @@ class NamespaceRewriterTest {
         ns1:layout_constraintLeft_toLeftOf="parent"
         ns1:layout_constraintRight_toRightOf="parent"
         ns1:layout_constraintTop_toTopOf="parent"
-        android:text="@com.example.module:string/text" />
+        android:text="@*com.example.module:string/text" />
 
     <com.example.module.PieChart
         custom:labelPosition="left"
@@ -519,7 +519,7 @@ class NamespaceRewriterTest {
             </resources>"""
         val to = """<?xml version="1.0" encoding="utf-8"?>
             <resources>
-                <string name="app_name">@com.example.module:string/text</string>
+                <string name="app_name">@*com.example.module:string/text</string>
             </resources>""".xmlFormat()
         checkAarRewrite(namespaceRewriter, "values/strings.xml", from, to)
         checkAarRewrite(namespaceRewriter, "values-en/strings.xml", from, to)
@@ -550,9 +550,9 @@ class NamespaceRewriterTest {
                 </resources>"""
         val to = """<?xml version="1.0" encoding="utf-8"?>
                 <resources>
-                    <style name="Base.Widget.Design.TabLayout" parent="@com.example.foo:style/Base.Widget.Design">
-                        <item name="com.example.module:tabMaxWidth">@com.example.foo:dimen/design_tab_max_width</item>
-                        <item name="com.example.module:tabIndicatorColor">?com.example.foo:attr/colorAccent</item>
+                    <style name="Base.Widget.Design.TabLayout" parent="@*com.example.foo:style/Base.Widget.Design">
+                        <item name="*com.example.module:tabMaxWidth">@*com.example.foo:dimen/design_tab_max_width</item>
+                        <item name="*com.example.module:tabIndicatorColor">?com.example.foo:attr/colorAccent</item>
                     </style>
                 </resources>""".xmlFormat()
         checkAarRewrite(namespaceRewriter, "values/styles.xml", from, to)
@@ -599,7 +599,7 @@ class NamespaceRewriterTest {
     android:width="24dp" >
 
     <path
-        android:fillColor="@com.example.module:color/dotfill"
+        android:fillColor="@*com.example.module:color/dotfill"
         android:pathData="M12,12m-10,0a10,10 0,1 1,20 0a10,10 0,1 1,-20 0" />
 
 </vector>
@@ -648,7 +648,7 @@ class NamespaceRewriterTest {
             -->
 
             <ripple xmlns:android="http://schemas.android.com/apk/res/android"
-                    android:color="@com.example.module:color/abc_color_highlight_material"
+                    android:color="@*com.example.module:color/abc_color_highlight_material"
                     android:radius="20dp" />
             """.xmlFormat()
 
@@ -678,10 +678,17 @@ class NamespaceRewriterTest {
             .tablePackage("com.example.module")
             .add(symbol("color", "abc_color_highlight_material"))
             .add(symbol("style", "Base.Widget.Design.TabLayout"))
+            .add(symbol("string", "private"))
+            .build()
+
+        val publicTable = SymbolTable.builder()
+            .tablePackage("com.example.module")
+            .add(symbol("color", "abc_color_highlight_material"))
+            .add(symbol("style", "Base_Widget_Design_TabLayout"))
             .build()
 
         val result = StringWriter().apply {
-            writePublicFile(this, moduleTable)
+            writePublicFile(this, moduleTable, publicTable)
         }.toString().trim()
 
         assertThat(result).isEqualTo("""
@@ -716,17 +723,17 @@ class NamespaceRewriterTest {
 <levelone xmlns:android="http://schemas.android.com/apk/res/android"
           xmlns:ns0="http://schemas.android.com/apk/res/dependency.one"
           xmlns:ns1="http://schemas.android.com/apk/res/dependency.two"
-          ns0:attr1="@com.example.module:bool/value" >
+          ns0:attr1="@*com.example.module:bool/value" >
 
     <leveltwo
-        android:attr1="@com.example.module:bool/value"
-        ns0:attr1="@com.example.module:bool/value"
-        ns1:attr2="@com.example.module:bool/value" >
+        android:attr1="@*com.example.module:bool/value"
+        ns0:attr1="@*com.example.module:bool/value"
+        ns1:attr2="@*com.example.module:bool/value" >
 
         <levelthree
-            android:attr3="@com.example.module:bool/value"
-            ns0:attr3="@com.example.module:bool/value"
-            ns1:attr4="@com.example.module:bool/value" />
+            android:attr3="@*com.example.module:bool/value"
+            ns0:attr3="@*com.example.module:bool/value"
+            ns1:attr4="@*com.example.module:bool/value" />
     </leveltwo>
 
 </levelone>""".xmlFormat()
@@ -772,11 +779,11 @@ class NamespaceRewriterTest {
     xmlns:ns0="http://schemas.android.com/apk/res/dep.a"
     xmlns:ns1="http://schemas.android.com/apk/res/dep.b"
     xmlns:ns2="http://schemas.android.com/apk/res/dep.c"
-    ns0:attr1="@com.module:bool/value"
-    ns1:attr2="@com.module:bool/value" >
+    ns0:attr1="@*com.module:bool/value"
+    ns1:attr2="@*com.module:bool/value" >
 
-    <node2 ns0:attr1="@com.module:bool/value" >
-        <node3 ns2:attr3="@com.module:bool/value" />
+    <node2 ns0:attr1="@*com.module:bool/value" >
+        <node3 ns2:attr3="@*com.module:bool/value" />
     </node2>
 
 </node1>"""

@@ -144,7 +144,7 @@ class AutoNamespaceDependenciesTaskTest {
         assertThat(namespacedManifest).exists()
         val loadManifestFileContent =
             FileUtils.loadFileWithUnixLineSeparators(namespacedManifest)
-        com.google.common.truth.Truth.assertThat(loadManifestFileContent).isEqualTo(
+        Truth.assertThat(loadManifestFileContent).isEqualTo(
             """<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.mymodule"
@@ -153,10 +153,10 @@ class AutoNamespaceDependenciesTaskTest {
 
     <application
         android:allowBackup="true"
-        android:label="@com.example.mymodule:string/s1" >
+        android:label="@*com.example.mymodule:string/s1" >
         <activity
             android:name=".MainActivity"
-            android:label="@com.example.mymodule:string/s2" >
+            android:label="@*com.example.mymodule:string/s2" >
         </activity>
     </application>
 
@@ -410,8 +410,11 @@ class AutoNamespaceDependenciesTaskTest {
         val manifest = File(directory, "${libName}_AndroidManifest.xml")
         // Sanity check that the rewritten manifest exists.
         assertThat(manifest).exists()
-        // Make sure the string reference was properly rewritten.
-        assertThat(manifest).contains("@com.example.$expectedPackage:string/s1")
+        // Make sure the string reference was properly rewritten - including private reference.
+        assertThat(manifest).contains("@*com.example.$expectedPackage:string/s1")
+        assertThat(manifest).doesNotContain("@com.example.$expectedPackage:string/s1")
+        assertThat(manifest).doesNotContain("@*string/s1")
+        assertThat(manifest).doesNotContain("@string/s1")
     }
 
     /**

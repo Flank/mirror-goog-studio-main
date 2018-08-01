@@ -17,6 +17,8 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.annotations.VisibleForTesting
+import com.android.ide.common.symbols.Symbol
+import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
 import com.android.ide.common.symbols.canonicalizeValueResourceName
 import com.android.ide.common.xml.XmlFormatPreferences
@@ -29,6 +31,7 @@ import com.android.tools.build.apkzlib.zip.ZFileOptions
 import com.android.utils.PathUtils
 import com.android.utils.PositionXmlParser
 import com.google.common.base.Joiner
+import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
@@ -254,7 +257,7 @@ class NamespaceRewriter(
                     symbolTables
                 )
                 if (possiblePackage != null) {
-                    parent = "@$possiblePackage:style/$possibleParent"
+                    parent = "@*$possiblePackage:$type/$possibleParent"
                 }
             }
         } else if (originalParent.isEmpty()) {
@@ -289,8 +292,9 @@ class NamespaceRewriter(
                         // TODO(b/110088465): use a better heuristic for finding the package.
                         val namespacedContent = rewritePossibleReference(content)
                         if (content != namespacedContent) {
-                            val foundPackage =
-                                    namespacedContent.substring(1, namespacedContent.indexOf(":"))
+                            // Remove only the "@" symbol, the "*" needs to stay for visibility.
+                            Preconditions.checkState(namespacedContent.startsWith("@*"))
+                            val foundPackage = namespacedContent.substringBefore(':').drop(1)
                             it.nodeValue = "$foundPackage:${it.nodeValue}"
                         }
                     }
@@ -329,9 +333,9 @@ class NamespaceRewriter(
         val content = "@attr/${attribute.nodeValue}"
         val namespacedContent = rewritePossibleReference(content)
         if (content != namespacedContent) {
-            // Prepend the package to the content
-            val foundPackage =
-                namespacedContent.substring(1, namespacedContent.indexOf(":"))
+            // Prepend the package to the content, keep the "*" symbol for visibility.
+            Preconditions.checkState(namespacedContent.startsWith("@*"))
+            val foundPackage = namespacedContent.substringBefore(':').drop(1)
             attribute.nodeValue = "$foundPackage:${attribute.nodeValue}"
         }
     }
@@ -429,7 +433,7 @@ class NamespaceRewriter(
                 val attr = it.item(i)
                 if (attr.nodeName.startsWith("xmlns:")
                         && attr.nodeValue == "http://schemas.android.com/apk/res-auto") {
-                    namespacesToFix.add(attr.nodeName.substring(6))
+                    namespacesToFix.add(attr.nodeName.drop(6))
                 }
             }
         }
@@ -486,14 +490,13 @@ class NamespaceRewriter(
         } else if (node.nodeType == Node.ATTRIBUTE_NODE && node.nodeName.contains(":")) {
             // Only fix res-auto.
             if (namespacesToFix.any { node.nodeName.startsWith("$it:")}) {
-                val name =
-                        node.nodeName.substring(
-                                node.nodeName.indexOf(':') + 1, node.nodeName.length)
+                val name = node.nodeName.substringAfter(':')
                 val content = "@attr/$name"
                 val namespacedContent = rewritePossibleReference(content)
                 if (content != namespacedContent) {
                     // Prepend the package to the content
-                    val foundPackage = namespacedContent.substring(1, namespacedContent.indexOf(":"))
+                    Preconditions.checkState(namespacedContent.startsWith("@*"))
+                    val foundPackage = namespacedContent.substringBefore(':').drop(2)
                     usedNamespaces.computeIfAbsent(foundPackage, {"ns${usedNamespaces.size}"})
                     document.renameNode(
                             node,
@@ -532,11 +535,11 @@ class NamespaceRewriter(
             return content
         }
 
-        val prefixChar = content[0]
+        // Make all regular references (not '?') able to access private resources.
+        val prefixChar = if (content.startsWith('@')) "@*" else "?"
         val trimmedContent = content.trim()
-        val slashIndex = trimmedContent.indexOf('/')
-        val type = trimmedContent.substring(1, slashIndex)
-        val name = trimmedContent.substring(slashIndex + 1, trimmedContent.length)
+        val type = trimmedContent.substringBefore('/').drop(1)
+        val name = trimmedContent.substringAfter('/')
 
         val pckg = findPackage(type, name, logger, symbolTables)
 
@@ -594,10 +597,10 @@ class NamespaceRewriter(
 
             for (innerClass in innerClasses) {
                 cv.visitInnerClass(
-                        innerClass,
-                        innerClass.substring(0, innerClass.lastIndexOf('$')),
-                        innerClass.substring(innerClass.lastIndexOf('$') + 1, innerClass.length),
-                        ACC_PUBLIC + ACC_STATIC
+                    innerClass,
+                    innerClass.substringBeforeLast('$'),
+                    innerClass.substringAfterLast('$'),
+                    ACC_PUBLIC + ACC_STATIC
                 )
             }
         }
@@ -626,7 +629,7 @@ class NamespaceRewriter(
 
         override fun visitFieldInsn(opcode: Int, owner: String, name: String, desc: String?) {
             if (owner.contains("/R$")) {
-                val type = owner.substring(owner.lastIndexOf('$') + 1, owner.length)
+                val type = owner.substringAfterLast('$')
                 val newPkg = crw.findPackage(type, name).replace('.', '/')
 
                 // We need to visit the inner class later. It could happen that the [newOwner]
@@ -722,31 +725,64 @@ private fun getResourceType(typeString: String): ResourceType =
     ResourceType.fromClassName(typeString) ?: error("Unknown type '$typeString'")
 
 
-fun generatePublicFile(symbols: SymbolTable, outputDirectory: Path) {
+fun generatePublicFile(
+    symbols: SymbolTable,
+    publicTxt: File?,
+    outputDirectory: Path
+) {
     val values = outputDirectory.resolve("values")
     Files.createDirectories(values)
-    val publicFile = values.resolve("auto-namespace-public.xml")
-    if (Files.exists(publicFile)) {
-        error("Internal error: Auto namespaced public file already exists")
+    val publicXml = values.resolve("auto-namespace-public.xml")
+    if (Files.exists(publicXml)) {
+        error("Internal error: Auto namespaced public XML file already exists: " +
+                {publicXml.toAbsolutePath()})
     }
-    Files.newBufferedWriter(publicFile).use {
-        writePublicFile(it, symbols)
+
+    // If the public.txt exists we will use these Symbols for creating the public.xml files (only
+    // the resources specified in the public.txt will be accessible to namespaced dependencies).
+    // But if the public.txt does not exist, all of the Symbols in this package will be public.
+    val publicSymbols: SymbolTable =
+        if (publicTxt != null && Files.exists(publicTxt.toPath()))
+            SymbolIo.readFromPublicTxtFile(publicTxt, symbols.tablePackage)
+        else
+            symbols
+
+    // If there are no public symbols (empty public.txt or no symbols present in this lib), don't
+    // waste time going through all symbols
+    if (publicSymbols.symbols.isEmpty) {
+        return
+    }
+
+    Files.newBufferedWriter(publicXml).use {
+        // If there was no public.txt file, 'symbols' and 'publicSymbols' will be the same.
+        writePublicFile(it, symbols, publicSymbols)
     }
 }
 
 @VisibleForTesting
-internal fun writePublicFile(writer: Writer, symbols: SymbolTable) {
+internal fun writePublicFile(writer: Writer, symbols: SymbolTable, publicSymbols: SymbolTable) {
     writer.write("""<?xml version="1.0" encoding="utf-8"?>""")
     writer.write("\n<resources>\n\n")
+
+    // If everything is public, then there's no need to call the 'isPublic' method.
+    val allPublic = symbols == publicSymbols
+
+    // Sadly we cannot simply iterate through the public symbols table since the public.txt had
+    // the resource names already canonicalized.
     symbols.resourceTypes.forEach { resourceType ->
         symbols.getSymbolByResourceType(resourceType).forEach { symbol ->
-            writer.write("    <public name=\"")
-            writer.write(symbol.name)
-            writer.write("\" type=\"")
-            writer.write(resourceType.getName())
-            writer.write("\" />\n")
+            if (allPublic || isPublic(symbol, publicSymbols)) {
+                writer.write("    <public name=\"")
+                writer.write(symbol.name)
+                writer.write("\" type=\"")
+                writer.write(resourceType.getName())
+                writer.write("\" />\n")
+            }
         }
-
     }
     writer.write("\n</resources>\n")
+}
+
+fun isPublic(symbol: Symbol, publicSymbols: SymbolTable): Boolean {
+    return publicSymbols.containsSymbol(symbol.resourceType, symbol.canonicalName)
 }
