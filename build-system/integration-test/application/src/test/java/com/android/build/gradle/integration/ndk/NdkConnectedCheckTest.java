@@ -21,7 +21,7 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
+import com.android.build.gradle.integration.common.fixture.app.AndroidTestModule;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -38,7 +38,7 @@ import org.junit.experimental.categories.Category;
                 + "doesn't support assembleAndroidTest")
 public class NdkConnectedCheckTest {
 
-    private static AndroidTestApp app = new HelloWorldJniApp();
+    private static AndroidTestModule app = new HelloWorldJniApp();
     static {
         app.addFile(new TestSourceFile("src/androidTest/jni", "hello-jni-test.c",
                 "#include <string.h>\n"

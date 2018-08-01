@@ -16,10 +16,8 @@
 
 package com.android.build.gradle.integration.common.fixture.app;
 
-/**
- * An empty app.
- */
-public class EmptyAndroidTestApp extends AbstractAndroidTestApp implements AndroidTestApp {
+/** An empty app. */
+public class EmptyAndroidTestApp extends AbstractAndroidTestModule implements AndroidTestModule {
 
     public EmptyAndroidTestApp() {
 

@@ -17,7 +17,7 @@
 package com.android.build.gradle.integration.nativebuild
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp
+import com.android.build.gradle.integration.common.fixture.app.AndroidTestModule
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
@@ -39,7 +39,7 @@ class InjectedAbiNativeLibraryTest {
         .create()
 
     init {
-        val lib = testapp.getSubproject(":lib") as AndroidTestApp
+        val lib = testapp.getSubproject(":lib") as AndroidTestModule
         lib.addFile(HelloWorldJniApp.cmakeLists(""))
         lib.addFile(HelloWorldJniApp.cSource("src/main/cpp"))
     }

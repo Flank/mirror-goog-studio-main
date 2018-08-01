@@ -19,7 +19,7 @@ package com.android.build.gradle.integration.dependencies;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
+import com.android.build.gradle.integration.common.fixture.app.AndroidTestModule;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -31,7 +31,7 @@ import org.junit.Test;
  */
 public class TestWithSameDepAsAppWithProguard {
 
-    private static AndroidTestApp testApp = HelloWorldApp.noBuildFile();
+    private static AndroidTestModule testApp = HelloWorldApp.noBuildFile();
 
     @ClassRule
     public static GradleTestProject project = GradleTestProject.builder()

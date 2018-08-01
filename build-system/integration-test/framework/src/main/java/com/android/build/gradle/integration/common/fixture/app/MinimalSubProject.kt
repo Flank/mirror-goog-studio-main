@@ -20,7 +20,8 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 
 /** An empty subproject.  */
 class MinimalSubProject private constructor(plugin: String, packageName: String?) :
-    AbstractAndroidTestApp(), AndroidTestApp {
+    AbstractAndroidTestModule(),
+    AndroidTestModule {
 
     init {
         var content = "\napply plugin: '$plugin'\n"

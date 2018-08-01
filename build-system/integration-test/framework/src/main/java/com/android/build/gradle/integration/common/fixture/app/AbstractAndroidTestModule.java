@@ -28,10 +28,8 @@ import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 
-/**
- * Abstract class implementing AndroidTestApp.
- */
-public abstract class AbstractAndroidTestApp implements AndroidTestApp {
+/** Abstract class implementing AndroidTestModule. */
+public abstract class AbstractAndroidTestModule implements AndroidTestModule {
 
     private Multimap<String, TestSourceFile> sourceFiles = ArrayListMultimap.create();
 

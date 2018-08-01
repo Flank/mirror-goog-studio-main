@@ -5,7 +5,7 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
+import com.android.build.gradle.integration.common.fixture.app.AndroidTestModule;
 import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
@@ -27,8 +27,8 @@ import org.junit.Test;
  */
 public class ProguardAarPackagingTest {
 
-    public static AndroidTestApp testApp = HelloWorldApp.noBuildFile();
-    public static AndroidTestApp libraryInJar = new EmptyAndroidTestApp();
+    public static AndroidTestModule testApp = HelloWorldApp.noBuildFile();
+    public static AndroidTestModule libraryInJar = new EmptyAndroidTestApp();
 
     static {
         TestSourceFile oldHelloWorld = testApp.getFile("HelloWorld.java");

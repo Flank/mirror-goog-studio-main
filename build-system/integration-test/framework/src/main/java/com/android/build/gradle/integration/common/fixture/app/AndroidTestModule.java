@@ -22,9 +22,9 @@ import java.util.Collection;
 /**
  * Interface for an single module Android test application.
  *
- * A test application is a collection of source code that may be reused for multiple tests.
+ * <p>A test application is a collection of source code that may be reused for multiple tests.
  */
-public interface AndroidTestApp extends TestProject {
+public interface AndroidTestModule extends TestProject {
     /**
      * Return a source file in the test app with the specified filename.
      */

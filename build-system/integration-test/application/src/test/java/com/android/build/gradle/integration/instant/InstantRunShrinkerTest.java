@@ -20,7 +20,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
+import com.android.build.gradle.integration.common.fixture.app.AndroidTestModule;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -34,7 +34,8 @@ import org.junit.Test;
 /** Check that the shrinker does not run when Instant run is used. */
 public class InstantRunShrinkerTest {
 
-    private static final AndroidTestApp TEST_APP = HelloWorldApp.forPlugin("com.android.application");
+    private static final AndroidTestModule TEST_APP =
+            HelloWorldApp.forPlugin("com.android.application");
 
     static {
         TEST_APP.addFile(new TestSourceFile("src/main/java/com/example/helloworld",

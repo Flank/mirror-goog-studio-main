@@ -24,7 +24,7 @@ import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
+import com.android.build.gradle.integration.common.fixture.app.AndroidTestModule;
 import com.android.build.gradle.integration.common.fixture.app.AnnotationProcessorLib;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject;
@@ -72,7 +72,7 @@ public class AnnotationProcessorTest {
                                                                 .createCompiler())))
                         .create();
     }
-    private static AndroidTestApp sApp = HelloWorldApp.noBuildFile();
+    private static AndroidTestModule sApp = HelloWorldApp.noBuildFile();
     static {
         sApp.removeFile(sApp.getFile("HelloWorld.java"));
         sApp.addFile(

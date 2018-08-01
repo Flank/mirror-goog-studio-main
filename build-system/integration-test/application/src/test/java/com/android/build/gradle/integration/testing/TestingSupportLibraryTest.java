@@ -18,7 +18,7 @@ package com.android.build.gradle.integration.testing;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
+import com.android.build.gradle.integration.common.fixture.app.AndroidTestModule;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -36,7 +36,7 @@ public class TestingSupportLibraryTest {
     public GradleTestProject project =
             GradleTestProject.builder().fromTestApp(helloWorldApp).create();
 
-    public static final AndroidTestApp helloWorldApp = HelloWorldApp.noBuildFile();
+    public static final AndroidTestModule helloWorldApp = HelloWorldApp.noBuildFile();
 
     static {
         /* Junit 4 now maps tests annotated with @Ignore and tests that throw

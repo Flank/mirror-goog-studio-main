@@ -21,7 +21,7 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
+import com.android.build.gradle.integration.common.fixture.app.AndroidTestModule;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.DexInProcessHelper;
@@ -43,7 +43,7 @@ public class DexLimitTest {
         return Arrays.asList(new Object[][] {{false}, {true}});
     }
 
-    private static final AndroidTestApp TEST_APP =
+    private static final AndroidTestModule TEST_APP =
             HelloWorldApp.forPlugin("com.android.application");
 
     static {

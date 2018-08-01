@@ -98,31 +98,31 @@ public class MultiModuleTestProject implements TestProject {
 
     public static class Builder {
 
-        private BiMap<String, AndroidTestApp> projects = HashBiMap.create();
+        private BiMap<String, AndroidTestModule> projects = HashBiMap.create();
 
         @NonNull
-        public Builder subproject(@NonNull String name, @NonNull AndroidTestApp testProject) {
+        public Builder subproject(@NonNull String name, @NonNull AndroidTestModule testProject) {
             projects.put(name, testProject);
             return this;
         }
 
         @NonNull
-        public Builder dependency(@NonNull AndroidTestApp from, @NonNull String to) {
+        public Builder dependency(@NonNull AndroidTestModule from, @NonNull String to) {
             String snippet = "\ndependencies {\n    " + "implementation '" + to + "'\n}\n";
             from.replaceFile(from.getFile("build.gradle", "").appendContent(snippet));
             return this;
         }
 
         @NonNull
-        public Builder dependency(@NonNull AndroidTestApp from, @NonNull AndroidTestApp to) {
+        public Builder dependency(@NonNull AndroidTestModule from, @NonNull AndroidTestModule to) {
             return dependency("implementation", from, to);
         }
 
         @NonNull
         public Builder dependency(
                 @NonNull String configuration,
-                @NonNull AndroidTestApp from,
-                @NonNull AndroidTestApp to) {
+                @NonNull AndroidTestModule from,
+                @NonNull AndroidTestModule to) {
             String snippet =
                     "\ndependencies {\n    "
                             + configuration

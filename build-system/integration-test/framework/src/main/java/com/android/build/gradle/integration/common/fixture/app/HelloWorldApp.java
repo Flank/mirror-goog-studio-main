@@ -25,6 +25,7 @@ import com.android.build.gradle.integration.common.fixture.TestVersions;
  * Simple test application that prints "hello world!".
  *
  * <p>Using this in a test application as a rule is usually done as:
+ *
  * <pre>
  * {@literal @}Rule
  * public GradleTestProject project = GradleTestProject.builder()
@@ -32,7 +33,7 @@ import com.android.build.gradle.integration.common.fixture.TestVersions;
  *     .create();
  * </pre>
  */
-public class HelloWorldApp extends AbstractAndroidTestApp implements AndroidTestApp {
+public class HelloWorldApp extends AbstractAndroidTestModule implements AndroidTestModule {
 
     public static final String APP_ID = "com.example.helloworld";
 

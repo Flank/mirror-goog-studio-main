@@ -21,7 +21,7 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
+import com.android.build.gradle.integration.common.fixture.app.AndroidTestModule;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.google.common.base.Charsets;
@@ -41,7 +41,7 @@ public class JacocoTest {
             "package com.example;\n"
                     + "public class B { }";
 
-    private static final AndroidTestApp TEST_APP =
+    private static final AndroidTestModule TEST_APP =
             HelloWorldApp.forPlugin("com.android.application");
 
     @Rule

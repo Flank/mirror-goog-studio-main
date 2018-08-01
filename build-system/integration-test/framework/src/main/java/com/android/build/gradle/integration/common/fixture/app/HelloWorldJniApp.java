@@ -21,9 +21,9 @@ import com.android.annotations.NonNull;
 /**
  * Simple test application that uses JNI to print a "hello world!".
  *
- * NOTE: Android project must create an NDK module named "hello-jni".
+ * <p>NOTE: Android project must create an NDK module named "hello-jni".
  */
-public class HelloWorldJniApp extends AbstractAndroidTestApp implements AndroidTestApp {
+public class HelloWorldJniApp extends AbstractAndroidTestModule implements AndroidTestModule {
 
     private static final TestSourceFile javaSource = new TestSourceFile(
             "src/main/java/com/example/hellojni", "HelloJni.java",

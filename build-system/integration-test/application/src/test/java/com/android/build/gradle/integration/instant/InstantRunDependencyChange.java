@@ -20,7 +20,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
+import com.android.build.gradle.integration.common.fixture.app.AndroidTestModule;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
@@ -37,7 +37,7 @@ import org.junit.Test;
  */
 public class InstantRunDependencyChange {
 
-    private static final AndroidTestApp TEST_APP =
+    private static final AndroidTestModule TEST_APP =
             HelloWorldApp.forPlugin("com.android.application");
 
     @Rule
