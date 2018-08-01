@@ -76,7 +76,7 @@ public class Metric {
 
 
     // Our perf data upload script does not permit a certain set of characters in the file names.
-    private static final String INVALID_CHARACTERS = "[\\[\\]]";
+    private static final String INVALID_CHARACTERS = "[\\[\\]\\s]";
     private static final String REPLACEMENT_CHARACTER = "-";
 
     @NonNull private final String myMetricName;

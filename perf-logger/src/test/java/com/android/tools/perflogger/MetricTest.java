@@ -45,6 +45,8 @@ public class MetricTest {
     public void testMetricNameRenamed() throws Exception {
         Metric logger = new Metric("DEAD[BEEF]");
         assertThat(logger.getMetricName()).isEqualTo("DEAD-BEEF-");
+        logger = new Metric("DEAD BEEF");
+        assertThat(logger.getMetricName()).isEqualTo("DEAD-BEEF");
     }
 
     @Test
