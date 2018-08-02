@@ -16,29 +16,24 @@
 
 package com.android.build.gradle.internal.scope
 
-import com.android.build.gradle.internal.pipeline.TransformTask
 import com.android.build.gradle.internal.tasks.CheckManifest
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
-import com.android.build.gradle.internal.tasks.GenerateApkDataTask
 import com.android.build.gradle.tasks.AidlCompile
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator
 import com.android.build.gradle.tasks.ExtractAnnotations
 import com.android.build.gradle.tasks.GenerateBuildConfig
-import com.android.build.gradle.tasks.GenerateResValues
 import com.android.build.gradle.tasks.ManifestProcessorTask
 import com.android.build.gradle.tasks.MergeResources
 import com.android.build.gradle.tasks.MergeSourceSetFolders
 import com.android.build.gradle.tasks.NdkCompile
 import com.android.build.gradle.tasks.PackageAndroidArtifact
-import com.android.build.gradle.tasks.PackageSplitAbi
-import com.android.build.gradle.tasks.PackageSplitRes
 import com.android.build.gradle.tasks.ProcessAndroidResources
 import com.android.build.gradle.tasks.RenderscriptCompile
-import com.android.build.gradle.tasks.ShaderCompile
 import org.gradle.api.DefaultTask
 import org.gradle.api.Task
 import org.gradle.api.tasks.Sync
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Zip
 import org.gradle.api.tasks.compile.JavaCompile
 
@@ -73,7 +68,7 @@ class MutableTaskContainer : TaskContainer {
     override var ndkCompileTask: NdkCompile? = null
     override var obfuscationTask: Task? = null
     override var processAndroidResTask: ProcessAndroidResources? = null
-    override var processManifestTask: ManifestProcessorTask? = null
+    override var processManifestTask: TaskProvider<out ManifestProcessorTask>? = null
     override var packageAndroidTask: PackageAndroidArtifact? = null
     override var bundleLibraryTask: Zip? = null
 
@@ -94,13 +89,13 @@ class MutableTaskContainer : TaskContainer {
     var resourceGenTask: Task? = null
     var assetGenTask: Task? = null
     var connectedTask: Task? = null
-    var microApkTask: GenerateApkDataTask? = null
+    var microApkTask: Task? = null
     var externalNativeBuildTask: ExternalNativeBuildTask? = null
     var externalNativeJsonGenerator: ExternalNativeJsonGenerator? = null
-    var packageSplitResourcesTask: PackageSplitRes? = null
-    var packageSplitAbiTask: PackageSplitAbi? = null
-    var generateResValuesTask: GenerateResValues? = null
-    var generateApkDataTask: GenerateApkDataTask? = null
+    var packageSplitResourcesTask: Task? = null
+    var packageSplitAbiTask: Task? = null
+    var generateResValuesTask: Task? = null
+    var generateApkDataTask: Task? = null
     var coverageReportTask: Task? = null
     var dataBindingExportBuildInfoTask: Task? = null
 }

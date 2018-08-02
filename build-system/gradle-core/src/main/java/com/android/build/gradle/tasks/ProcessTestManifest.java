@@ -57,6 +57,8 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.TaskProvider;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A task that processes the manifest for test modules and tests in androidTest.
@@ -286,8 +288,25 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         }
 
         @Override
-        public void execute(@NonNull final ProcessTestManifest processTestManifestTask) {
-            super.execute(processTestManifestTask);
+        public void preConfigure(@NotNull String taskName) {
+            super.preConfigure(taskName);
+            scope.getArtifacts()
+                    .appendArtifact(
+                            InternalArtifactType.MANIFEST_METADATA,
+                            scope.getArtifacts()
+                                    .getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS));
+        }
+
+        @Override
+        public void handleProvider(
+                @NotNull TaskProvider<? extends ProcessTestManifest> taskProvider) {
+            super.handleProvider(taskProvider);
+            scope.getTaskContainer().setProcessManifestTask(taskProvider);
+        }
+
+        @Override
+        public void configure(@NonNull final ProcessTestManifest processTestManifestTask) {
+            super.configure(processTestManifestTask);
 
             final VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> config =
                     scope.getVariantConfiguration();
@@ -303,7 +322,6 @@ public class ProcessTestManifest extends ManifestProcessorTask {
 
             processTestManifestTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
             processTestManifestTask.setVariantName(config.getFullName());
-
 
             processTestManifestTask.minSdkVersion =
                     TaskInputHelper.memoize(() -> config.getMinSdkVersion().getApiString());
@@ -336,13 +354,6 @@ public class ProcessTestManifest extends ManifestProcessorTask {
 
             processTestManifestTask.placeholdersValues =
                     TaskInputHelper.memoize(config::getManifestPlaceholders);
-
-            scope.getArtifacts().appendArtifact(
-                    InternalArtifactType.MANIFEST_METADATA,
-                    scope.getArtifacts().getFinalArtifactFiles(
-                            InternalArtifactType.MERGED_MANIFESTS));
-
-            scope.getTaskContainer().setProcessManifestTask(processTestManifestTask);
         }
     }
 }

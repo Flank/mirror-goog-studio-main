@@ -51,6 +51,7 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /**
@@ -215,8 +216,9 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
     /** Creates the merge manifests task. */
     @Override
     @NonNull
-    protected ManifestProcessorTask createMergeManifestTask(@NonNull VariantScope variantScope) {
-        return taskFactory.eagerCreate(
+    protected TaskProvider<? extends ManifestProcessorTask> createMergeManifestTask(
+            @NonNull VariantScope variantScope) {
+        return taskFactory.lazyCreate(
                 new ProcessTestManifest.CreationAction(
                         variantScope,
                         new BuildableArtifactImpl(

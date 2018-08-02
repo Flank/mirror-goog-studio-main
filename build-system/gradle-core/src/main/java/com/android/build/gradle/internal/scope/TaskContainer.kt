@@ -32,6 +32,7 @@ import com.android.build.gradle.tasks.RenderscriptCompile
 import org.gradle.api.DefaultTask
 import org.gradle.api.Task
 import org.gradle.api.tasks.Sync
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Zip
 import org.gradle.api.tasks.compile.JavaCompile
 
@@ -55,7 +56,7 @@ interface TaskContainer {
     val ndkCompileTask: NdkCompile?
     val obfuscationTask: Task?
     val processAndroidResTask: ProcessAndroidResources?
-    val processManifestTask: ManifestProcessorTask?
+    val processManifestTask: TaskProvider<out ManifestProcessorTask>?
     val packageAndroidTask: PackageAndroidArtifact?
     val bundleLibraryTask: Zip?
 

@@ -54,7 +54,7 @@ class OutputFileProviderImpl(
         }
 
         val newFile = if (artifactsTypesForFile.size == 1) {
-            artifactsHolder.createFile(task, Iterables.getOnlyElement(artifactsTypesForFile), filename)
+            artifactsHolder.createFile(task.name, Iterables.getOnlyElement(artifactsTypesForFile), filename)
         } else {
             artifactsHolder.createFile(task, filename)
         }

@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+*/
 
 package com.android.build.gradle.internal.tasks.factory
 
@@ -20,35 +20,75 @@ import org.gradle.api.Action
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskProvider
 
-/** Task Creation/Configuration Action for tasks
+/**
+ * Basic task information for creation
+ */
+interface TaskInformation<T: Task> {
+    /** The name of the task to be created.  */
+    val name: String
+
+    /** The class type of the task to created.  */
+    val type: Class<T>
+}
+
+/** Eager Creation Action for tasks
  *
  * This contains both meta-data to create the task ([name], [type])
- * and actions to configure the task ([preConfigure], [execute])
+ * and the action to configure the task ([execute])
  */
-abstract class EagerTaskCreationAction<T : Task> : PreConfigAction<T>() {
+abstract class EagerTaskCreationAction<T : Task> : TaskInformation<T>, Action<T> {
 
-    /** Returns the name of the task to be created.  */
-    abstract val name: String
+    /** Configures the task. */
+    abstract override fun execute(task: T)
 
-    /** Returns the class type of the task to created.  */
-    abstract val type: Class<T>
+}
+
+/** Lazy Creation Action for tasks
+ *
+ * This contains both meta-data to create the task ([name], [type])
+ * and actions to configure the task ([preConfigure], [configure], [handleProvider])
+ */
+abstract class LazyTaskCreationAction<T : Task> : TaskInformation<T>, PreConfigAction,
+    TaskConfigAction<T>, TaskProviderCallback<T> {
+
+    override fun preConfigure(taskName: String) {
+        // default does nothing
+    }
+
+    override fun handleProvider(taskProvider: TaskProvider<out T>) {
+        // default does nothing
+    }
 }
 
 /**
- * Configuration Actions for tasks.
+ * Configuration Action for tasks.
  */
-abstract class PreConfigAction<T: Task>: Action<T> {
+interface TaskConfigAction<T: Task> {
+
+    /** Configures the task. */
+    fun configure(task: T)
+}
+
+/**
+ * Pre-Configuration Action for lazily created tasks.
+ */
+interface PreConfigAction {
     /**
-     * Pre-configures the task, acting on the [TaskProvider].
+     * Pre-configures the task, acting on the taskName.
      *
      * This is meant to handle configuration that must happen always, even when the task
      * is configured lazily.
      *
-     * @param taskProvider the task provider
      * @param taskName the task name
      */
-    open fun preConfigure(taskProvider: TaskProvider<out T>, taskName: String) {}
+    fun preConfigure(taskName: String)
+}
 
-    /** Configures the task. */
-    abstract override fun execute(task: T)
+/**
+ * Callback for [TaskProvider]
+ *
+ * Once a TaskProvider is created this is called to process it.
+ */
+interface TaskProviderCallback<T: Task> {
+    fun handleProvider(taskProvider: TaskProvider<out T>)
 }

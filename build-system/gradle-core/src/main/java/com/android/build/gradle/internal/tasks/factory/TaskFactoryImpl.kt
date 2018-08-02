@@ -17,17 +17,19 @@
 package com.android.build.gradle.internal.tasks.factory
 
 import org.gradle.api.Action
-import org.gradle.api.DefaultTask
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.TaskProvider
 
+@Suppress("OverridingDeprecatedMember", "DEPRECATION")
 class TaskFactoryImpl(private val taskContainer: TaskContainer):
     TaskFactory {
 
     override fun containsKey(name: String): Boolean {
         return taskContainer.findByName(name) != null
     }
+
+    // --- Direct Creation ---
 
     override fun eagerCreate(name: String): Task {
         return taskContainer.create(name)
@@ -37,30 +39,54 @@ class TaskFactoryImpl(private val taskContainer: TaskContainer):
         return taskContainer.create(name, type)
     }
 
-    override fun eagerConfigure(name: String, configAction: Action<in Task>) {
-        val task = taskContainer.getByName(name)
-        configAction.execute(task)
+    override fun <T : Task> eagerCreate(creationAction: EagerTaskCreationAction<T>): T {
+        return taskContainer.create(creationAction.name, creationAction.type, creationAction)
+    }
+
+    override fun <T : Task> eagerCreate(
+        taskName: String, taskClass: Class<T>, action: Action<in T>): T {
+        return taskContainer.create(taskName, taskClass, action)
+    }
+
+    override fun eagerCreate(taskName: String, action: Action<in Task>): Task {
+        return eagerCreate(taskName, Task::class.java, action)
     }
 
     override fun findByName(name: String): Task? {
         return taskContainer.findByName(name)
     }
 
-    override fun <T : Task> eagerCreate(creationAction: EagerTaskCreationAction<T>): T {
-        val task = taskContainer.create(creationAction.name, creationAction.type)
-        @Suppress("UNCHECKED_CAST")
-        val taskProvider = taskContainer.named(task.name) as TaskProvider<T>
-        creationAction.preConfigure(taskProvider, task.name)
-        creationAction.execute(task)
-        return task
+    override fun eagerConfigure(name: String, configAction: Action<in Task>) {
+        val task = taskContainer.getByName(name)
+        configAction.execute(task)
     }
 
-    override fun <T : Task> eagerCreate(
-            taskName: String, taskClass: Class<T>, configAction: Action<T>): T {
-        return taskContainer.create(taskName, taskClass, configAction)
+    // --- Lazy Creation ---
+
+    override fun lazyCreate(name: String): TaskProvider<Task> = taskContainer.register(name)
+
+    override fun <T : Task> lazyCreate(creationAction: LazyTaskCreationAction<T>): TaskProvider<T> =
+        taskContainer.lazyCreate(creationAction, null, null)
+
+    override fun <T : Task> lazyCreate(
+        creationAction: LazyTaskCreationAction<T>,
+        secondaryPreConfigAction: PreConfigAction?,
+        secondaryAction: TaskConfigAction<in T>?
+    ): TaskProvider<T> =
+        taskContainer.lazyCreate(creationAction, secondaryPreConfigAction, secondaryAction)
+
+    override fun lazyCreate(
+        taskName: String,
+        preConfigAction: PreConfigAction?,
+        action: TaskConfigAction<in Task>?
+    ): TaskProvider<Task> {
+        return taskContainer.lazyCreate(taskName, Task::class.java, preConfigAction, action)
+    }
+    override fun lazyConfigure(name: String, action: Action<in Task>) {
+        taskContainer.named(name).configure(action)
     }
 
-    override fun eagerCreate(taskName: String, configAction: Action<DefaultTask>): DefaultTask {
-        return eagerCreate(taskName, DefaultTask::class.java, configAction)
+    override fun <T : Task> lazyConfigure(name: String, type: Class<T>, action: Action<in T>) {
+        taskContainer.withType(type).named(name).configure(action)
     }
 }

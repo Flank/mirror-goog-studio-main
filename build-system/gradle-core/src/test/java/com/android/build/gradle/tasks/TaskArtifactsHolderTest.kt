@@ -206,9 +206,9 @@ class TaskArtifactsHolderTest {
 
         setupMock(taskProvider)
 
-        configAction.preConfigure(taskProvider, configAction.name)
+        configAction.preConfigure(taskProvider.name)
         val task = taskProvider.get()
-        configAction.execute(task)
+        configAction.configure(task)
 
         task.executeTask(*parameters)
     }

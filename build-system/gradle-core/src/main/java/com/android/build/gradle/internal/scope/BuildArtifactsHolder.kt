@@ -235,12 +235,35 @@ abstract class BuildArtifactsHolder(
      * @param task [Task] that responsible for producing or updating the new files.
      * @return BuildableFiles containing files that the specified task should create.
      */
+    @Deprecated("Use TaskProvider version instead")
     fun appendArtifact(
             artifactType: ArtifactType,
             newFiles : Collection<Any>,
             task : Task) : BuildableArtifact {
         return doAppendArtifact(artifactType,
             createFileCollection(artifactRecordMap[artifactType], newFiles).builtBy(task))
+    }
+
+    /**
+     * Append output to the specified artifactType. The [newFiles] will be added after any
+     * existing content.
+     *
+     * After invoking this method, [getArtifactFiles] will return a [BuildableArtifact] that
+     * contains both the new files and the original files.
+     * The path of File are created from the supplied filenames and the name of the Task that will
+     * generate these files.
+     *
+     * @param artifactType [ArtifactType] the new files will be classified under.
+     * @param newFiles names of the new files.
+     * @param taskProvider [TaskProvider] that responsible for producing or updating the new files.
+     * @return BuildableFiles containing files that the specified task should create.
+     */
+    fun appendArtifact(
+        artifactType: ArtifactType,
+        newFiles : Collection<Any>,
+        taskName: String) : BuildableArtifact {
+        return doAppendArtifact(artifactType,
+            createFileCollection(artifactRecordMap[artifactType], newFiles).builtBy(taskName))
     }
 
     /**
@@ -280,12 +303,32 @@ abstract class BuildArtifactsHolder(
      * @return [File] handle to use to create the file or folder (potentially with subfolders
      * or multiple files)
      */
+    @Deprecated("Use Task Provider instead")
     fun appendArtifact(
         artifactType: ArtifactType,
         task : Task,
         fileName: String = "out") : File {
-        val output = createFile(task, artifactType, fileName)
+        val output = createFile(task.name, artifactType, fileName)
         appendArtifact(artifactType, listOf(output), task)
+        return output
+    }
+
+    /**
+     * Append a new file or folder to a specified artifact type. The new content will be added
+     * after any existing content.
+     *
+     * @param artifactType [ArtifactType] the new file or folder will be classified under.
+     * @param task [Task] producing the file or folder.
+     * @param fileName expected file name for the file (location is determined by the build)
+     * @return [File] handle to use to create the file or folder (potentially with subfolders
+     * or multiple files)
+     */
+    fun appendArtifact(
+        artifactType: ArtifactType,
+        taskName: String,
+        fileName: String = "out") : File {
+        val output = createFile(taskName, artifactType, fileName)
+        appendArtifact(artifactType, listOf(output), taskName)
         return output
     }
 
@@ -546,10 +589,10 @@ abstract class BuildArtifactsHolder(
      * @param artifactType artifact type that will be associated with the file.
      * @param filename desired file name.
      */
-    internal fun createFile(task: Task, artifactType: ArtifactType, filename: String) =
+    internal fun createFile(taskName: String, artifactType: ArtifactType, filename: String) =
             FileUtils.join(artifactType.getOutputDir(rootOutputDir()),
                 getIdentifier(),
-                task.name,
+                taskName,
                 filename)
 
 

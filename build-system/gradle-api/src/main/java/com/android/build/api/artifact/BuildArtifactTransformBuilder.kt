@@ -116,7 +116,7 @@ interface BuildArtifactTransformBuilder<out T : Task> {
      * @param action action that configures the resulting Task. This action will not run when
      * this function return but will be run at a later stage when the DSL objects are sealed.
      */
-    fun create(action : ConfigurationAction<T>) : T
+    fun create(action : ConfigurationAction<T>)
 
     /**
      * Creates the task and uses the supplied function to configure it.
@@ -126,5 +126,5 @@ interface BuildArtifactTransformBuilder<out T : Task> {
      * @param function function that configures the resulting Task. his action will not run when
      * this function return but will be run at a later stage when the DSL objects are sealed.
      */
-    fun create(function : T.(InputArtifactProvider, OutputFileProvider) -> Unit) : T
+    fun create(function : T.(InputArtifactProvider, OutputFileProvider) -> Unit)
 }

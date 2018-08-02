@@ -79,9 +79,7 @@ import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
-import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
@@ -90,7 +88,9 @@ import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier;
+import org.jetbrains.annotations.NotNull;
 
 /** A task that processes the manifest */
 @CacheableTask
@@ -502,7 +502,8 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
 
         protected final VariantScope variantScope;
         protected final boolean isAdvancedProfilingOn;
-        @Nullable private Provider<Directory> manifestOutputFolder;
+        private File reportFile;
+        private File instantRunManifestOutputDirectory;
 
         public CreationAction(
                 @NonNull VariantScope scope,
@@ -517,16 +518,63 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
         }
 
         @Override
-        public void execute(@NonNull ProcessApplicationManifest processManifestTask) {
-            super.execute(processManifestTask);
+        public void preConfigure(@NonNull String taskName) {
+            super.preConfigure(taskName);
+
+            reportFile =
+                    FileUtils.join(
+                            variantScope.getGlobalScope().getOutputsDir(),
+                            "logs",
+                            "manifest-merger-"
+                                    + variantScope.getVariantConfiguration().getBaseName()
+                                    + "-report.txt");
+
+            // set outputs.
+            variantScope
+                    .getArtifacts()
+                    .appendArtifact(
+                            InternalArtifactType.MANIFEST_MERGE_REPORT,
+                            ImmutableList.of(reportFile),
+                            taskName);
+
+            VariantType variantType = variantScope.getType();
+            Preconditions.checkState(!variantType.isTestComponent());
+            BuildArtifactsHolder artifacts = variantScope.getArtifacts();
+
+            // when dealing with a non-base feature, output is under a different type.
+            if (variantType.isFeatureSplit()) {
+                artifacts.appendArtifact(
+                        InternalArtifactType.METADATA_FEATURE_MANIFEST,
+                        artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS));
+            }
+
+            artifacts.appendArtifact(
+                    InternalArtifactType.MANIFEST_METADATA,
+                    artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS));
+
+            instantRunManifestOutputDirectory =
+                    artifacts.appendArtifact(
+                            InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS,
+                            taskName,
+                            "instant-run");
+        }
+
+        @Override
+        public void handleProvider(
+                @NotNull TaskProvider<? extends ProcessApplicationManifest> taskProvider) {
+            super.handleProvider(taskProvider);
+            variantScope.getTaskContainer().setProcessManifestTask(taskProvider);
+        }
+
+        @Override
+        public void configure(@NonNull ProcessApplicationManifest processManifestTask) {
+            super.configure(processManifestTask);
             final BaseVariantData variantData = variantScope.getVariantData();
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
             GlobalScope globalScope = variantScope.getGlobalScope();
             AndroidBuilder androidBuilder = globalScope.getAndroidBuilder();
 
             VariantType variantType = variantScope.getType();
-            Preconditions.checkState(!variantType.isTestComponent());
-
 
             processManifestTask.setAndroidBuilder(androidBuilder);
             processManifestTask.setVariantName(config.getFullName());
@@ -585,18 +633,7 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
                     TaskInputHelper.memoize(config.getMergedFlavor()::getMaxSdkVersion);
 
             processManifestTask.setInstantRunManifestOutputDirectory(
-                    artifacts.appendArtifact(
-                            InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS,
-                            processManifestTask,
-                            "instant-run"));
-
-            File reportFile =
-                    FileUtils.join(
-                            variantScope.getGlobalScope().getOutputsDir(),
-                            "logs",
-                            "manifest-merger-"
-                                    + variantScope.getVariantConfiguration().getBaseName()
-                                    + "-report.txt");
+                    instantRunManifestOutputDirectory);
 
             processManifestTask.setReportFile(reportFile);
             processManifestTask.optionalFeatures =
@@ -625,27 +662,6 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
                         variantScope.getArtifactFileCollection(
                                 COMPILE_CLASSPATH, MODULE, FEATURE_APPLICATION_ID_DECLARATION);
             }
-
-            // set outputs.
-            variantScope
-                    .getArtifacts()
-                    .appendArtifact(
-                            InternalArtifactType.MANIFEST_MERGE_REPORT,
-                            ImmutableList.of(reportFile),
-                            processManifestTask);
-
-            // when dealing with a non-base feature, output is under a different type.
-            if (variantType.isFeatureSplit()) {
-                artifacts.appendArtifact(
-                        InternalArtifactType.METADATA_FEATURE_MANIFEST,
-                        artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS));
-            }
-
-            artifacts.appendArtifact(
-                    InternalArtifactType.MANIFEST_METADATA,
-                    artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS));
-
-            variantScope.getTaskContainer().setProcessManifestTask(processManifestTask);
         }
 
         /**

@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
 import com.android.build.gradle.internal.transforms.DexMergerTransformCallable
 import com.android.builder.dexing.DexMergerTool
 import com.android.builder.dexing.DexingType
@@ -138,7 +139,7 @@ open class DexMergingTask : AndroidVariantTask() {
         private val action: DexMergingAction,
         private val dexingType: DexingType,
         private val outputType: InternalArtifactType = InternalArtifactType.DEX
-    ) : EagerTaskCreationAction<DexMergingTask>() {
+    ) : LazyTaskCreationAction<DexMergingTask>() {
 
         private val internalName: String = when (action) {
             DexMergingAction.MERGE_LIBRARY_PROJECTS -> scope.getTaskName("mergeLibDex")
@@ -152,15 +153,11 @@ open class DexMergingTask : AndroidVariantTask() {
 
         private lateinit var output: File
 
-        override fun preConfigure(
-            taskProvider: TaskProvider<out DexMergingTask>,
-            taskName: String
-        ) {
-            super.preConfigure(taskProvider, taskName)
-            output = scope.artifacts.appendArtifact(outputType, taskProvider.get())
+        override fun preConfigure(taskName: String) {
+            output = scope.artifacts.appendArtifact(outputType, taskName)
         }
 
-        override fun execute(task: DexMergingTask) {
+        override fun configure(task: DexMergingTask) {
             task.dexFiles = getDexFiles(action)
             task.mergingThreshold = getMergingThreshold(action, task)
 

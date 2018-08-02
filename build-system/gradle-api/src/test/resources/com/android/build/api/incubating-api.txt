@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-7bd0cd2259689320d9d81352e259baf381fd0700f22d623e87fa979095b6af64
+85d4fa4b424544218cb9a11773f2e554d53ff5ec151d9e1adc9e943104c7bded
 -------------------------------------------------------------------------
 com.android.build.api.artifact.ArtifactConfigurationException
 com.android.build.api.artifact.ArtifactConfigurationException.<init>: com.android.build.api.artifact.ArtifactConfigurationException (java.lang.String)
@@ -18,8 +18,8 @@ com.android.build.api.artifact.BuildArtifactTransformBuilder
 com.android.build.api.artifact.BuildArtifactTransformBuilder$ConfigurationAction
 com.android.build.api.artifact.BuildArtifactTransformBuilder$ConfigurationAction.accept: void (T, com.android.build.api.artifact.InputArtifactProvider, com.android.build.api.artifact.OutputFileProvider)
 com.android.build.api.artifact.BuildArtifactTransformBuilder.append: com.android.build.api.artifact.BuildArtifactTransformBuilder<T> (com.android.build.api.artifact.ArtifactType) throws com.android.build.api.artifact.ArtifactConfigurationException
-com.android.build.api.artifact.BuildArtifactTransformBuilder.create: T (com.android.build.api.artifact.BuildArtifactTransformBuilder.com.android.build.api.artifact.BuildArtifactTransformBuilder$ConfigurationAction<? super T>)
-com.android.build.api.artifact.BuildArtifactTransformBuilder.create: T (kotlin.jvm.functions.Function3<? super T, ? super com.android.build.api.artifact.InputArtifactProvider, ? super com.android.build.api.artifact.OutputFileProvider, kotlin.Unit>)
+com.android.build.api.artifact.BuildArtifactTransformBuilder.create: void (com.android.build.api.artifact.BuildArtifactTransformBuilder.com.android.build.api.artifact.BuildArtifactTransformBuilder$ConfigurationAction<? super T>)
+com.android.build.api.artifact.BuildArtifactTransformBuilder.create: void (kotlin.jvm.functions.Function3<? super T, ? super com.android.build.api.artifact.InputArtifactProvider, ? super com.android.build.api.artifact.OutputFileProvider, kotlin.Unit>)
 com.android.build.api.artifact.BuildArtifactTransformBuilder.input: com.android.build.api.artifact.BuildArtifactTransformBuilder<T> (com.android.build.api.artifact.ArtifactType) throws com.android.build.api.artifact.ArtifactConfigurationException
 com.android.build.api.artifact.BuildArtifactTransformBuilder.replace: com.android.build.api.artifact.BuildArtifactTransformBuilder<T> (com.android.build.api.artifact.ArtifactType) throws com.android.build.api.artifact.ArtifactConfigurationException
 com.android.build.api.artifact.BuildArtifactType

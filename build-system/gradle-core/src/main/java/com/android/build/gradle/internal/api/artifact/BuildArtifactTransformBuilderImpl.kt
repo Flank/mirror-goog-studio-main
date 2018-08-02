@@ -108,12 +108,12 @@ class BuildArtifactTransformBuilderImpl<out T : Task>(
         return this
     }
 
-    override fun create(action : BuildArtifactTransformBuilder.ConfigurationAction<T>) : T {
-        return create(action, null)
+    override fun create(action : BuildArtifactTransformBuilder.ConfigurationAction<T>) {
+        create(action, null)
     }
 
-    override fun create(function: T.(InputArtifactProvider, OutputFileProvider) -> Unit): T {
-        return create(null, function)
+    override fun create(function: T.(InputArtifactProvider, OutputFileProvider) -> Unit) {
+        create(null, function)
     }
 
     private fun create(
@@ -175,7 +175,7 @@ class BuildArtifactTransformBuilderImpl<out T : Task>(
     }
 
     @JvmName("simpleCreate")
-    fun create(function : T.(BuildableArtifact, File) -> Unit) : T {
-        return create(convertFunction(function))
+    fun create(function : T.(BuildableArtifact, File) -> Unit) {
+        create(convertFunction(function))
     }
 }

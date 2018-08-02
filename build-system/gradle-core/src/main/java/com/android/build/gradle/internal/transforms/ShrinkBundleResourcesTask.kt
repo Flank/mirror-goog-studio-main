@@ -21,9 +21,9 @@ import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer
 import com.android.ide.common.build.ApkData
 import com.android.utils.FileUtils
@@ -34,7 +34,6 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
-import org.gradle.api.tasks.TaskProvider
 import org.xml.sax.SAXException
 import java.io.File
 import java.io.IOException
@@ -157,27 +156,25 @@ open class ShrinkBundleResourcesTask : AndroidVariantTask() {
         }
     }
 
-    class CreationAction(val scope: VariantScope) : EagerTaskCreationAction<ShrinkBundleResourcesTask>() {
+    class CreationAction(val scope: VariantScope) :
+        LazyTaskCreationAction<ShrinkBundleResourcesTask>() {
         override val name: String = scope.getTaskName("shrink", "Resources")
         override val type: Class<ShrinkBundleResourcesTask>
             get() = ShrinkBundleResourcesTask::class.java
 
         private lateinit var outputLocation: File
 
-        override fun preConfigure(
-            taskProvider: TaskProvider<out ShrinkBundleResourcesTask>,
-            taskName: String
-        ) {
+        override fun preConfigure(taskName: String) {
             outputLocation =
                     scope.artifacts
                         .appendArtifact(
                             InternalArtifactType.SHRUNK_LINKED_RES_FOR_BUNDLE,
-                            taskProvider.get(),
+                            taskName,
                             "shrunk-bundled-res.ap_"
                         )
         }
 
-        override fun execute(task: ShrinkBundleResourcesTask) {
+        override fun configure(task: ShrinkBundleResourcesTask) {
             task.compressedResourceFile = outputLocation
             task.uncompressedResources = scope.artifacts.getFinalArtifactFiles(
                 InternalArtifactType.LINKED_RES_FOR_BUNDLE

@@ -228,7 +228,9 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
             extends AnnotationProcessingTaskCreationAction<ProcessLibraryManifest> {
 
         Provider<RegularFile> manifestOutputFile;
+        File aaptFriendlyManifestOutputDirectory;
         VariantScope scope;
+        private File reportFile;
 
         /**
          * {@code EagerTaskCreationAction} for the library process manifest task.
@@ -241,10 +243,8 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
         }
 
         @Override
-        public void preConfigure(
-                @NotNull TaskProvider<? extends ProcessLibraryManifest> taskProvider,
-                @NotNull String taskName) {
-            super.preConfigure(taskProvider, taskName);
+        public void preConfigure(@NonNull String taskName) {
+            super.preConfigure(taskName);
 
             manifestOutputFile =
                     scope.getArtifacts()
@@ -252,11 +252,41 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
                                     InternalArtifactType.LIBRARY_MANIFEST,
                                     taskName,
                                     SdkConstants.ANDROID_MANIFEST_XML);
+
+            aaptFriendlyManifestOutputDirectory =
+                    getScope()
+                            .getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
+                                    taskName,
+                                    "aapt");
+
+            reportFile =
+                    FileUtils.join(
+                            getScope().getGlobalScope().getOutputsDir(),
+                            "logs",
+                            "manifest-merger-"
+                                    + getScope().getVariantConfiguration().getBaseName()
+                                    + "-report.txt");
+
+            getScope()
+                    .getArtifacts()
+                    .appendArtifact(
+                            InternalArtifactType.MANIFEST_MERGE_REPORT,
+                            ImmutableList.of(reportFile),
+                            taskName);
         }
 
         @Override
-        public void execute(@NonNull ProcessLibraryManifest processManifest) {
-            super.execute(processManifest);
+        public void handleProvider(
+                @NotNull TaskProvider<? extends ProcessLibraryManifest> taskProvider) {
+            super.handleProvider(taskProvider);
+            getScope().getTaskContainer().setProcessManifestTask(taskProvider);
+        }
+
+        @Override
+        public void configure(@NonNull ProcessLibraryManifest processManifest) {
+            super.configure(processManifest);
             VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> config =
                     getScope().getVariantConfiguration();
             final AndroidBuilder androidBuilder = getScope().getGlobalScope().getAndroidBuilder();
@@ -291,34 +321,13 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
             processManifest.maxSdkVersion = TaskInputHelper.memoize(mergedFlavor::getMaxSdkVersion);
 
             processManifest.setAaptFriendlyManifestOutputDirectory(
-                    getScope()
-                            .getArtifacts()
-                            .appendArtifact(
-                                    InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
-                                    processManifest,
-                                    "aapt"));
+                    aaptFriendlyManifestOutputDirectory);
 
             processManifest.manifestOutputFile = manifestOutputFile;
 
             processManifest.outputScope = getScope().getOutputScope();
 
-            File reportFile =
-                    FileUtils.join(
-                            getScope().getGlobalScope().getOutputsDir(),
-                            "logs",
-                            "manifest-merger-"
-                                    + getScope().getVariantConfiguration().getBaseName()
-                                    + "-report.txt");
-
             processManifest.setReportFile(reportFile);
-            getScope()
-                    .getArtifacts()
-                    .appendArtifact(
-                            InternalArtifactType.MANIFEST_MERGE_REPORT,
-                            ImmutableList.of(reportFile),
-                            processManifest);
-
-            getScope().getTaskContainer().setProcessManifestTask(processManifest);
         }
     }
 }

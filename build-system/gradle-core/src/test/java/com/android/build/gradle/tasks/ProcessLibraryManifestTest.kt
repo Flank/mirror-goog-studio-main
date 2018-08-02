@@ -100,9 +100,9 @@ class ProcessLibraryManifestTest {
         `when`(mergedManifests.file(SdkConstants.FN_ANDROID_MANIFEST_XML))
             .thenReturn(androidManifest)
 
-        configAction.preConfigure(taskProvider, "processManifest")
-                task = taskProvider.get()
-                configAction.execute(task)
+        configAction.preConfigure(taskProvider.name)
+        task = taskProvider.get()
+        configAction.configure(task)
     }
 
     @Test

@@ -74,6 +74,7 @@ import com.android.build.gradle.internal.coverage.JacocoReportTask;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
+import com.android.build.gradle.internal.dsl.DataBindingOptions;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.incremental.BuildInfoLoaderTask;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
@@ -127,6 +128,7 @@ import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeGenCl
 import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import com.android.build.gradle.internal.tasks.factory.TaskFactory;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl;
+import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.test.AbstractTestDataImpl;
 import com.android.build.gradle.internal.test.TestDataImpl;
 import com.android.build.gradle.internal.transforms.CustomClassTransform;
@@ -203,7 +205,6 @@ import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
 import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter.Type;
-import com.android.builder.model.DataBindingOptions;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
 import com.android.builder.testing.ConnectedDeviceProvider;
@@ -261,6 +262,7 @@ import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -763,13 +765,14 @@ public abstract class TaskManager {
         taskFactory.eagerCreate(
                 new CompatibleScreensManifest.CreationAction(variantScope, screenSizes));
 
-        ManifestProcessorTask processManifestTask = createMergeManifestTask(variantScope);
+        TaskProvider<? extends ManifestProcessorTask> processManifestTask =
+                createMergeManifestTask(variantScope);
 
         final MutableTaskContainer taskContainer = variantScope.getTaskContainer();
 
-        processManifestTask.dependsOn(taskContainer.getCheckManifestTask());
+        TaskFactoryUtils.dependsOn(processManifestTask, taskContainer.getCheckManifestTask());
         if (taskContainer.getMicroApkTask() != null) {
-            processManifestTask.dependsOn(taskContainer.getMicroApkTask());
+            TaskFactoryUtils.dependsOn(processManifestTask, taskContainer.getMicroApkTask());
         }
     }
 
@@ -784,18 +787,21 @@ public abstract class TaskManager {
 
     /** Creates the merge manifests task. */
     @NonNull
-    protected ManifestProcessorTask createMergeManifestTask(@NonNull VariantScope variantScope) {
-        return taskFactory.eagerCreate(
+    protected TaskProvider<? extends ManifestProcessorTask> createMergeManifestTask(
+            @NonNull VariantScope variantScope) {
+        return taskFactory.lazyCreate(
                 new ProcessApplicationManifest.CreationAction(
                         variantScope, !getAdvancedProfilingTransforms(projectOptions).isEmpty()));
     }
 
-    public ProcessLibraryManifest createMergeLibManifestsTask(@NonNull VariantScope scope) {
+    public TaskProvider<? extends ManifestProcessorTask> createMergeLibManifestsTask(
+            @NonNull VariantScope scope) {
 
-        ProcessLibraryManifest processManifest =
-                taskFactory.eagerCreate(new ProcessLibraryManifest.CreationAction(scope));
+        TaskProvider<ProcessLibraryManifest> processManifest =
+                taskFactory.lazyCreate(new ProcessLibraryManifest.CreationAction(scope));
 
-        processManifest.dependsOn(scope.getTaskContainer().getCheckManifestTask());
+        TaskFactoryUtils.dependsOn(
+                processManifest, scope.getTaskContainer().getCheckManifestTask());
 
         scope.getTaskContainer().setProcessManifestTask(processManifest);
 
@@ -806,8 +812,8 @@ public abstract class TaskManager {
             @NonNull VariantScope scope,
             @NonNull VariantScope testedScope) {
 
-        ProcessTestManifest processTestManifestTask =
-                taskFactory.eagerCreate(
+        TaskProvider<ProcessTestManifest> processTestManifestTask =
+                taskFactory.lazyCreate(
                         new ProcessTestManifest.CreationAction(
                                 scope,
                                 testedScope
@@ -815,7 +821,8 @@ public abstract class TaskManager {
                                         .getFinalArtifactFiles(MERGED_MANIFESTS)));
 
         if (scope.getTaskContainer().getCheckManifestTask() != null) {
-            processTestManifestTask.dependsOn(scope.getTaskContainer().getCheckManifestTask());
+            TaskFactoryUtils.dependsOn(
+                    processTestManifestTask, scope.getTaskContainer().getCheckManifestTask());
         }
 
         scope.getTaskContainer().setProcessManifestTask(processTestManifestTask);
@@ -2516,7 +2523,7 @@ public abstract class TaskManager {
         boolean produceSeparateOutputs =
                 dexingType == DexingType.NATIVE_MULTIDEX
                         && variantScope.getVariantConfiguration().getBuildType().isDebuggable();
-        taskFactory.eagerCreate(
+        taskFactory.lazyCreate(
                 new DexMergingTask.CreationAction(
                         variantScope,
                         DexMergingAction.MERGE_EXTERNAL_LIBS,
@@ -2529,7 +2536,7 @@ public abstract class TaskManager {
             DexMergingTask.CreationAction mergeProject =
                     new DexMergingTask.CreationAction(
                             variantScope, DexMergingAction.MERGE_PROJECT, dexingType);
-            taskFactory.eagerCreate(mergeProject);
+            taskFactory.lazyCreate(mergeProject);
 
             DexMergingTask.CreationAction mergeLibraries =
                     new DexMergingTask.CreationAction(
@@ -2537,12 +2544,12 @@ public abstract class TaskManager {
                             DexMergingAction.MERGE_LIBRARY_PROJECTS,
                             dexingType,
                             InternalArtifactType.DEX);
-            taskFactory.eagerCreate(mergeLibraries);
+            taskFactory.lazyCreate(mergeLibraries);
         } else {
             DexMergingTask.CreationAction configAction =
                     new DexMergingTask.CreationAction(
                             variantScope, DexMergingAction.MERGE_ALL, dexingType);
-            taskFactory.eagerCreate(configAction);
+            taskFactory.lazyCreate(configAction);
         }
 
         variantScope
@@ -2930,8 +2937,8 @@ public abstract class TaskManager {
         Consumer<Task> configureResourcesAndAssetsDependencies =
                 task -> {
                     task.dependsOn(taskContainer.getMergeAssetsTask());
-                    if (variantScope.getTaskContainer().getProcessAndroidResTask() != null) {
-                        task.dependsOn(variantScope.getTaskContainer().getProcessAndroidResTask());
+                    if (taskContainer.getProcessAndroidResTask() != null) {
+                        task.dependsOn(taskContainer.getProcessAndroidResTask());
                     }
                 };
 
@@ -3519,7 +3526,7 @@ public abstract class TaskManager {
         }
 
         // And for the bundle
-        taskFactory.eagerCreate(new ShrinkBundleResourcesTask.CreationAction(scope));
+        taskFactory.lazyCreate(new ShrinkBundleResourcesTask.CreationAction(scope));
     }
 
     public void createReportTasks(final List<VariantScope> variantScopes) {
