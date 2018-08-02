@@ -659,25 +659,29 @@ public class InstrumentationResultParser extends MultiLineReceiver {
                         INCOMPLETE_RUN_ERR_MSG_PREFIX, mNumTestsExpected, mNumTestsRun);
             handleTestRunFailed(message);
         } else {
-            for (ITestRunListener listener : mTestListeners) {
-                if (!mTestStartReported) {
-                    // test run wasn't started, but it finished successfully. Must be a run with
-                    // no tests
+            if (!mTestStartReported) {
+                // test run wasn't started, but it finished successfully. Must be a run with
+                // no tests
+                for (ITestRunListener listener : mTestListeners) {
                     listener.testRunStarted(mTestRunName, 0);
                 }
-                if (mTestTime == null) {
-                    // Report a test run failure since the output was invalid
-                    if (mEnforceTimeStamp) {
+            }
+            if (mTestTime == null) {
+                // Report a test run failure since the output was invalid
+                if (mEnforceTimeStamp) {
+                    for (ITestRunListener listener : mTestListeners) {
                         if (mStreamError == null) {
                             listener.testRunFailed(INVALID_OUTPUT_ERR_MSG);
                         } else {
                             listener.testRunFailed(
                                     String.format("%s: %s", INVALID_OUTPUT_ERR_MSG, mStreamError));
                         }
-                        mTestRunFailReported = true;
                     }
-                    mTestTime = 0l;
+                    mTestRunFailReported = true;
                 }
+                mTestTime = 0l;
+            }
+            for (ITestRunListener listener : mTestListeners) {
                 // If we haven't reported a failure yet
                 if (!mTestRunFailReported
                         && mStreamError != null

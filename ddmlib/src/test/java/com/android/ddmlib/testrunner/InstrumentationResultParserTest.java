@@ -16,6 +16,7 @@
 
 package com.android.ddmlib.testrunner;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import junit.framework.TestCase;
@@ -83,6 +84,32 @@ public class InstrumentationResultParserTest extends TestCase {
         mMockListener.testRunEnded(1, Collections.EMPTY_MAP);
 
         injectAndVerifyTestString(output.toString());
+    }
+
+    /** Ensure that all reporters receive the same events. */
+    public void testParse_multiReceiver() {
+        ITestRunListener mMockListener = EasyMock.createStrictMock(ITestRunListener.class);
+        ITestRunListener mMockListener2 = EasyMock.createStrictMock(ITestRunListener.class);
+        mParser =
+                new InstrumentationResultParser(
+                        RUN_NAME, Arrays.asList(mMockListener, mMockListener2));
+        mParser.setEnforceTimeStamp(true);
+        StringBuilder output = new StringBuilder();
+        addLine(output, "INSTRUMENTATION_RESULT: com.android.cts.launcherapps:other=true");
+        addLine(output, "INSTRUMENTATION_CODE: -1");
+
+        mMockListener.testRunStarted(RUN_NAME, 0);
+        mMockListener2.testRunStarted(RUN_NAME, 0);
+        mMockListener.testRunFailed(InstrumentationResultParser.INVALID_OUTPUT_ERR_MSG);
+        mMockListener2.testRunFailed(InstrumentationResultParser.INVALID_OUTPUT_ERR_MSG);
+        mMockListener.testRunEnded(EasyMock.anyLong(), EasyMock.anyObject());
+        mMockListener2.testRunEnded(EasyMock.anyLong(), EasyMock.anyObject());
+
+        EasyMock.replay(mMockListener, mMockListener2);
+        byte[] data = output.toString().getBytes();
+        mParser.addOutput(data, 0, data.length);
+        mParser.flush();
+        EasyMock.verify(mMockListener, mMockListener2);
     }
 
     /**
