@@ -126,6 +126,7 @@ import com.android.build.gradle.internal.tasks.databinding.DataBindingGenBaseCla
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeDependencyArtifactsTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeGenClassLogTransform;
 import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.build.gradle.internal.tasks.factory.TaskFactory;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
@@ -844,10 +845,12 @@ public abstract class TaskManager {
             taskContainer.getRenderscriptCompileTask().dependsOn(taskContainer.getPreBuildTask());
         }
 
-        taskContainer.getResourceGenTask().dependsOn(taskContainer.getRenderscriptCompileTask());
+        TaskFactoryUtils.dependsOn(
+                taskContainer.getResourceGenTask(), taskContainer.getRenderscriptCompileTask());
         // only put this dependency if rs will generate Java code
         if (!config.getRenderscriptNdkModeEnabled()) {
-            taskContainer.getSourceGenTask().dependsOn(taskContainer.getRenderscriptCompileTask());
+            TaskFactoryUtils.dependsOn(
+                    taskContainer.getSourceGenTask(), taskContainer.getRenderscriptCompileTask());
         }
 
     }
@@ -1094,25 +1097,19 @@ public abstract class TaskManager {
     }
 
     public void createBuildConfigTask(@NonNull VariantScope scope) {
-        GenerateBuildConfig generateBuildConfigTask =
-                taskFactory.eagerCreate(new GenerateBuildConfig.CreationAction(scope));
-        scope.getTaskContainer().setGenerateBuildConfigTask(generateBuildConfigTask);
-        scope.getTaskContainer().getSourceGenTask().dependsOn(generateBuildConfigTask.getName());
-        if (scope.getVariantConfiguration().getType().isTestComponent()) {
-            // in case of a test project, the manifest is generated so we need to depend
-            // on its creation.
+        TaskProvider<GenerateBuildConfig> generateBuildConfigTask =
+                taskFactory.lazyCreate(new GenerateBuildConfig.CreationAction(scope));
 
-            generateBuildConfigTask.dependsOn(scope.getTaskContainer().getProcessManifestTask());
-        } else {
-            generateBuildConfigTask.dependsOn(scope.getTaskContainer().getCheckManifestTask());
-        }
+        TaskFactoryUtils.dependsOn(
+                scope.getTaskContainer().getSourceGenTask(), generateBuildConfigTask);
     }
 
     public void createGenerateResValuesTask(
             @NonNull VariantScope scope) {
-        GenerateResValues generateResValuesTask =
-                taskFactory.eagerCreate(new GenerateResValues.CreationAction(scope));
-        scope.getTaskContainer().getResourceGenTask().dependsOn(generateResValuesTask);
+        TaskProvider<GenerateResValues> generateResValuesTask =
+                taskFactory.lazyCreate(new GenerateResValues.CreationAction(scope));
+        TaskFactoryUtils.dependsOn(
+                scope.getTaskContainer().getResourceGenTask(), generateResValuesTask);
     }
 
     public void createApkProcessResTask(
@@ -1224,7 +1221,7 @@ public abstract class TaskManager {
                 InternalArtifactType.SYMBOL_LIST, ImmutableList.of(symbolFile), task);
 
         // Needed for the IDE
-        scope.getTaskContainer().getSourceGenTask().dependsOn(task);
+        TaskFactoryUtils.dependsOn(scope.getTaskContainer().getSourceGenTask(), task);
 
         // Synthetic output for AARs (see SymbolTableWithPackageNameTransform), and created in
         // process resources for local subprojects.
@@ -1430,11 +1427,14 @@ public abstract class TaskManager {
     }
 
     public AidlCompile createAidlTask(@NonNull VariantScope scope) {
+        MutableTaskContainer taskContainer = scope.getTaskContainer();
+
         AidlCompile aidlCompileTask =
                 taskFactory.eagerCreate(new AidlCompile.CreationAction(scope));
-        scope.getTaskContainer().setAidlCompileTask(aidlCompileTask);
-        scope.getTaskContainer().getSourceGenTask().dependsOn(aidlCompileTask);
-        aidlCompileTask.dependsOn(scope.getTaskContainer().getPreBuildTask());
+
+        taskContainer.setAidlCompileTask(aidlCompileTask);
+        TaskFactoryUtils.dependsOn(taskContainer.getSourceGenTask(), aidlCompileTask);
+        aidlCompileTask.dependsOn(taskContainer.getPreBuildTask());
 
         return aidlCompileTask;
     }
@@ -1452,7 +1452,7 @@ public abstract class TaskManager {
                 taskFactory.eagerCreate(new ShaderCompile.CreationAction(scope));
         shaderCompileTask.dependsOn(mergeShadersTask);
 
-        scope.getTaskContainer().getAssetGenTask().dependsOn(shaderCompileTask);
+        TaskFactoryUtils.dependsOn(scope.getTaskContainer().getAssetGenTask(), shaderCompileTask);
     }
 
     protected abstract void postJavacCreation(@NonNull final VariantScope scope);
@@ -1555,9 +1555,7 @@ public abstract class TaskManager {
 
     private static void setupCompileTaskDependencies(
             @NonNull VariantScope scope, @NonNull Task compileTask) {
-        if (scope.getTaskContainer().getSourceGenTask() != null) {
-            compileTask.dependsOn(scope.getTaskContainer().getSourceGenTask());
-        }
+        compileTask.dependsOn(scope.getTaskContainer().getSourceGenTask());
     }
 
     protected void createCompileTask(@NonNull VariantScope variantScope) {
@@ -1594,7 +1592,8 @@ public abstract class TaskManager {
         scope.getTaskContainer().setMicroApkTask(generateMicroApkTask);
 
         // the merge res task will need to run after this one.
-        scope.getTaskContainer().getResourceGenTask().dependsOn(generateMicroApkTask);
+        TaskFactoryUtils.dependsOn(
+                scope.getTaskContainer().getResourceGenTask(), generateMicroApkTask);
     }
 
     public void createExternalNativeBuildJsonGenerators(@NonNull VariantScope scope) {
@@ -1822,7 +1821,8 @@ public abstract class TaskManager {
         createRunUnitTestTask(variantScope);
 
         // This hides the assemble unit test task from the task list.
-        variantScope.getTaskContainer().getAssembleTask().setGroup(null);
+
+        variantScope.getTaskContainer().getAssembleTask().configure(task -> task.setGroup(null));
     }
 
     /** Creates the tasks to build android tests. */
@@ -1934,7 +1934,8 @@ public abstract class TaskManager {
                 taskFactory.eagerCreate(new LintPerVariantTask.VitalCreationAction(variantScope));
         lintReleaseCheck.dependsOn(variantData.getTaskContainer().getJavacTask());
 
-        variantScope.getTaskContainer().getAssembleTask().dependsOn(lintReleaseCheck);
+        TaskFactoryUtils.dependsOn(
+                variantScope.getTaskContainer().getAssembleTask(), lintReleaseCheck);
 
         // If lint is being run, we do not need to run lint vital.
         project.getGradle()
@@ -2080,7 +2081,7 @@ public abstract class TaskManager {
 
         // create the check tasks for this test
         // first the connected one.
-        ImmutableList<Task> artifactsTasks =
+        ImmutableList<TaskProvider<? extends Task>> artifactsTasks =
                 ImmutableList.of(
                         testVariantData.getTaskContainer().getAssembleTask(),
                         baseVariantData.getTaskContainer().getAssembleTask());
@@ -2214,7 +2215,8 @@ public abstract class TaskManager {
 
                                 // if the task is a no-op then we make assemble task depend on it.
                                 if (transform.getScopes().isEmpty()) {
-                                    variantScope.getTaskContainer().getAssembleTask().dependsOn(t);
+                                    TaskFactoryUtils.dependsOn(
+                                            variantScope.getTaskContainer().getAssembleTask(), t);
                                 }
                             });
         }
@@ -2634,9 +2636,8 @@ public abstract class TaskManager {
                         variantScope.getBootClasspath(),
                         androidBuilder.getMessageReceiver());
 
-        if (variantScope.getTaskContainer().getSourceGenTask() != null) {
-            variantScope.getTaskContainer().getSourceGenTask().dependsOn(buildInfoLoaderTask);
-        }
+        TaskFactoryUtils.dependsOn(
+                variantScope.getTaskContainer().getSourceGenTask(), buildInfoLoaderTask);
 
         return allActionAnchorTask;
     }
@@ -2969,14 +2970,15 @@ public abstract class TaskManager {
         //}
 
         variantScope.setPackageApplicationTask(packageApp);
-        taskContainer.getAssembleTask().dependsOn(packageApp.getName());
+        TaskFactoryUtils.dependsOn(taskContainer.getAssembleTask(), packageApp.getName());
 
         if (fullBuildInfoGeneratorTask != null) {
             fullBuildInfoGeneratorTask.mustRunAfter(packageApp.getName());
             if (packageInstantRunResources != null) {
                 fullBuildInfoGeneratorTask.mustRunAfter(packageInstantRunResources);
             }
-            taskContainer.getAssembleTask().dependsOn(fullBuildInfoGeneratorTask.getName());
+            TaskFactoryUtils.dependsOn(
+                    taskContainer.getAssembleTask(), fullBuildInfoGeneratorTask.getName());
         }
 
         if (splitsArePossible) {
@@ -2987,7 +2989,7 @@ public abstract class TaskManager {
             variantScope.getArtifacts().appendArtifact(InternalArtifactType.APK,
                     ImmutableList.of(finalApkLocation),
                     copyOutputsTask);
-            taskContainer.getAssembleTask().dependsOn(copyOutputsTask);
+            TaskFactoryUtils.dependsOn(taskContainer.getAssembleTask(), copyOutputsTask);
         }
 
         // create install task for the variant Data. This will deal with finding the
@@ -3023,41 +3025,50 @@ public abstract class TaskManager {
         return validateSigningTask;
     }
 
-    public Task createAssembleTask(@NonNull final BaseVariantData variantData) {
+    public TaskProvider<Task> createAssembleTask(@NonNull final BaseVariantData variantData) {
         final VariantScope scope = variantData.getScope();
-        return taskFactory.eagerCreate(
+        return taskFactory.lazyCreate(
                 scope.getTaskName("assemble"),
-                task -> scope.getTaskContainer().setAssembleTask(task));
+                null /*preConfigAction*/,
+                null /*action*/,
+                taskProvider -> scope.getTaskContainer().setAssembleTask(taskProvider));
     }
 
-    public Task createBundleTask(@NonNull final BaseVariantData variantData) {
+    public TaskProvider<Task> createBundleTask(@NonNull final BaseVariantData variantData) {
         final VariantScope scope = variantData.getScope();
-        return taskFactory.eagerCreate(
-                scope.getTaskName("bundle"), task -> scope.getTaskContainer().setBundleTask(task));
+        return taskFactory.lazyCreate(
+                scope.getTaskName("bundle"),
+                null,
+                null,
+                taskProvider -> scope.getTaskContainer().setBundleTask(taskProvider));
     }
 
     @NonNull
-    public Task createAssembleTask(@NonNull VariantDimensionData dimensionData) {
+    public TaskProvider<Task> createAssembleTask(@NonNull VariantDimensionData dimensionData) {
         final String sourceSetName =
                 StringHelper.capitalize(dimensionData.getSourceSet().getName());
-        return taskFactory.eagerCreate(
+        return taskFactory.lazyCreate(
                 "assemble" + sourceSetName,
+                null /*preConfigAction*/,
                 assembleTask -> {
                     assembleTask.setDescription("Assembles all " + sourceSetName + " builds.");
                     assembleTask.setGroup(BasePlugin.BUILD_GROUP);
-                });
+                },
+                null /*providerCallback*/);
     }
 
     @NonNull
-    public Task createBundleTask(@NonNull VariantDimensionData dimensionData) {
+    public TaskProvider<Task> createBundleTask(@NonNull VariantDimensionData dimensionData) {
         final String sourceSetName =
                 StringHelper.capitalize(dimensionData.getSourceSet().getName());
-        return taskFactory.eagerCreate(
+        return taskFactory.lazyCreate(
                 "bundle" + sourceSetName,
+                null /*preConfigAction*/,
                 assembleTask -> {
                     assembleTask.setDescription("Creates all " + sourceSetName + " bundles.");
                     assembleTask.setGroup(BasePlugin.BUILD_GROUP);
-                });
+                },
+                null /*providerCallback*/);
     }
 
     /** Returns created shrinker type, or null if none was created. */
@@ -3550,28 +3561,24 @@ public abstract class TaskManager {
     }
 
     public void createAnchorTasks(@NonNull VariantScope scope) {
-        createPreBuildTasks(scope);
+        createVariantPreBuildTask(scope);
 
         // also create sourceGenTask
         final BaseVariantData variantData = scope.getVariantData();
         scope.getTaskContainer()
                 .setSourceGenTask(
-                        taskFactory.eagerCreate(
+                        taskFactory.lazyCreate(
                                 scope.getTaskName("generate", "Sources"),
-                                Task.class,
-                                task -> {
-                                    task.dependsOn(PrepareLintJar.NAME);
-                                }));
+                                null /*preConfigAction*/,
+                                task -> task.dependsOn(PrepareLintJar.NAME),
+                                null /*providerCallback*/));
         // and resGenTask
         scope.getTaskContainer()
                 .setResourceGenTask(
-                        taskFactory.eagerCreate(
-                                scope.getTaskName("generate", "Resources"), Task.class));
+                        taskFactory.lazyCreate(scope.getTaskName("generate", "Resources")));
 
         scope.getTaskContainer()
-                .setAssetGenTask(
-                        taskFactory.eagerCreate(
-                                scope.getTaskName("generate", "Assets"), Task.class));
+                .setAssetGenTask(taskFactory.lazyCreate(scope.getTaskName("generate", "Assets")));
 
         if (!variantData.getType().isForTesting()
                 && variantData.getVariantConfiguration().getBuildType().isTestCoverageEnabled()) {
@@ -3593,23 +3600,55 @@ public abstract class TaskManager {
         createCompileAnchorTask(scope);
     }
 
-    protected Task createVariantPreBuildTask(@NonNull VariantScope scope) {
+    protected void createVariantPreBuildTask(@NonNull VariantScope scope) {
         // default pre-built task.
-        return createDefaultPreBuildTask(scope);
+        createDefaultPreBuildTask(scope);
     }
 
-    protected Task createDefaultPreBuildTask(@NonNull VariantScope scope) {
-        return taskFactory.eagerCreate(scope.getTaskName("pre", "Build"));
+    protected void createDefaultPreBuildTask(@NonNull VariantScope scope) {
+        taskFactory.lazyCreate(new PreBuildCreationAction(scope));
     }
 
-    private void createPreBuildTasks(@NonNull VariantScope scope) {
-        final Task preBuildTask = createVariantPreBuildTask(scope);
-        scope.getTaskContainer().setPreBuildTask(preBuildTask);
+    public abstract static class AbstractPreBuildCreationAction<T extends Task>
+            extends LazyTaskCreationAction<T> {
 
-        preBuildTask.dependsOn(MAIN_PREBUILD);
+        protected final VariantScope variantScope;
 
-        if (scope.getCodeShrinker() != null) {
-            preBuildTask.dependsOn(EXTRACT_PROGUARD_FILES);
+        @NonNull
+        @Override
+        public String getName() {
+            return variantScope.getTaskName("pre", "Build");
+        }
+
+        public AbstractPreBuildCreationAction(VariantScope variantScope) {
+            this.variantScope = variantScope;
+        }
+
+        @Override
+        public void handleProvider(@NonNull TaskProvider<? extends T> taskProvider) {
+            super.handleProvider(taskProvider);
+            variantScope.getTaskContainer().setPreBuildTask(taskProvider);
+        }
+
+        @Override
+        public void configure(@NonNull T task) {
+            task.dependsOn(MAIN_PREBUILD);
+
+            if (variantScope.getCodeShrinker() != null) {
+                task.dependsOn(EXTRACT_PROGUARD_FILES);
+            }
+        }
+    }
+
+    private static class PreBuildCreationAction extends AbstractPreBuildCreationAction<Task> {
+        public PreBuildCreationAction(VariantScope variantScope) {
+            super(variantScope);
+        }
+
+        @NonNull
+        @Override
+        public Class<Task> getType() {
+            return Task.class;
         }
     }
 
@@ -3622,9 +3661,9 @@ public abstract class TaskManager {
                                 task -> task.setGroup(BUILD_GROUP)));
 
         // FIXME is that really needed?
-        scope.getTaskContainer()
-                .getAssembleTask()
-                .dependsOn(scope.getTaskContainer().getCompileTask());
+        TaskFactoryUtils.dependsOn(
+                scope.getTaskContainer().getAssembleTask(),
+                scope.getTaskContainer().getCompileTask());
     }
 
     public void createCheckManifestTask(@NonNull VariantScope scope) {

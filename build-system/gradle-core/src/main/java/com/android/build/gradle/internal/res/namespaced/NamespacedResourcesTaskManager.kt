@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.android.build.gradle.options.BooleanOption
 
 /**
@@ -55,7 +56,7 @@ class NamespacedResourcesTaskManager(
         if (globalScope.projectOptions.get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
             val task = taskFactory.eagerCreate(AutoNamespaceDependenciesTask.CreationAction(variantScope))
             // Needed for the IDE
-            variantScope.taskContainer.sourceGenTask!!.dependsOn(task)
+            variantScope.taskContainer.sourceGenTask.dependsOn(task)
         }
 
         // Compile

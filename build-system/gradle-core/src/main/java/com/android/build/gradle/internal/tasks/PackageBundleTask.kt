@@ -23,8 +23,8 @@ import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.process.JarSigner
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
 import com.android.build.gradle.options.StringOption
 import com.android.builder.packaging.PackagingUtils
 import com.android.bundle.Config
@@ -53,7 +53,7 @@ import javax.inject.Inject
 /**
  * Task that generates the final bundle (.aab) with all the modules.
  */
-open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : AndroidVariantTask() {
+open class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecutor) : AndroidVariantTask() {
 
     private val workers = Workers.getWorker(workerExecutor)
 
@@ -225,31 +225,39 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
         @get:Optional
         val enableLanguage: Boolean?) : Serializable
 
-    class CreationAction(private val scope: VariantScope) : EagerTaskCreationAction<BundleTask>() {
+    class CreationAction(private val scope: VariantScope) : LazyTaskCreationAction<PackageBundleTask>() {
         override val name: String
             get() = scope.getTaskName("package", "Bundle")
-        override val type: Class<BundleTask>
-            get() = BundleTask::class.java
+        override val type: Class<PackageBundleTask>
+            get() = PackageBundleTask::class.java
 
-        override fun execute(task: BundleTask) {
-            task.variantName = scope.fullVariantName
+        private lateinit var bundleFile: Provider<RegularFile>
+
+        override fun preConfigure(taskName: String) {
+            super.preConfigure(taskName)
 
             val apkLocationOverride =
                 scope.globalScope.projectOptions.get(StringOption.IDE_APK_LOCATION)
 
             val bundleName = "${scope.globalScope.projectBaseName}.aab"
 
-            task.bundleFile = if (apkLocationOverride == null)
-                scope.artifacts.setArtifactFile(InternalArtifactType.BUNDLE, task, bundleName)
+            bundleFile = if (apkLocationOverride == null)
+                scope.artifacts.setArtifactFile(InternalArtifactType.BUNDLE, taskName, bundleName)
             else
                 scope.artifacts.setArtifactFile(
                     InternalArtifactType.BUNDLE,
-                    task,
+                    taskName,
                     FileUtils.join(
                         scope.globalScope.project.file(apkLocationOverride),
                         scope.variantConfiguration.dirName,
                         bundleName))
 
+        }
+
+        override fun configure(task: PackageBundleTask) {
+            task.variantName = scope.fullVariantName
+
+            task.bundleFile = bundleFile
             task.baseModuleZip = scope.artifacts.getFinalArtifactFiles(InternalArtifactType.MODULE_BUNDLE)
 
             task.featureZips = scope.getArtifactFileCollection(
@@ -295,7 +303,7 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
 }
 
 private fun com.android.build.gradle.internal.dsl.BundleOptions.convert() =
-    BundleTask.BundleOptions(
+    PackageBundleTask.BundleOptions(
         enableAbi = abi.enableSplit,
         enableDensity = density.enableSplit,
         enableLanguage = language.enableSplit

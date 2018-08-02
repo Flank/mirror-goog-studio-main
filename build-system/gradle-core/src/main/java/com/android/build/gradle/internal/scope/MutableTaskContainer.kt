@@ -54,17 +54,17 @@ import org.gradle.api.tasks.compile.JavaCompile
 class MutableTaskContainer : TaskContainer {
 
     // implementation of the API setter/getters as required by our current APIs.
-    override lateinit var assembleTask: Task
+    override lateinit var assembleTask: TaskProvider<out Task>
     override lateinit var javacTask: JavaCompile
     override lateinit var compileTask: Task
-    override lateinit var preBuildTask: Task
+    override lateinit var preBuildTask: TaskProvider<out Task>
     override var checkManifestTask: CheckManifest? = null
     override var aidlCompileTask: AidlCompile? = null
     override var renderscriptCompileTask: RenderscriptCompile? = null
     override lateinit var mergeResourcesTask: MergeResources
     override lateinit var mergeAssetsTask: MergeSourceSetFolders
     override lateinit var processJavaResourcesTask: Sync
-    override var generateBuildConfigTask: GenerateBuildConfig? = null
+    override var generateBuildConfigTask: TaskProvider<out GenerateBuildConfig>? = null
     override var ndkCompileTask: NdkCompile? = null
     override var obfuscationTask: Task? = null
     override var processAndroidResTask: ProcessAndroidResources? = null
@@ -82,19 +82,21 @@ class MutableTaskContainer : TaskContainer {
 
     override val externalNativeBuildTasks: MutableCollection<ExternalNativeBuildTask> = mutableListOf()
 
+    // required by the model.
+    lateinit var sourceGenTask: TaskProvider<out Task>
+
     // anything below is scheduled for removal, using BuildableArtifact to link tasks.
 
-    var bundleTask: Task? = null
-    var sourceGenTask: Task? = null
-    var resourceGenTask: Task? = null
-    var assetGenTask: Task? = null
+    var bundleTask: TaskProvider<out Task>? = null
+    lateinit var resourceGenTask: TaskProvider<Task>
+    lateinit var assetGenTask: TaskProvider<Task>
     var connectedTask: Task? = null
     var microApkTask: Task? = null
     var externalNativeBuildTask: ExternalNativeBuildTask? = null
     var externalNativeJsonGenerator: ExternalNativeJsonGenerator? = null
     var packageSplitResourcesTask: Task? = null
     var packageSplitAbiTask: Task? = null
-    var generateResValuesTask: Task? = null
+    var generateResValuesTask: TaskProvider<out Task>? = null
     var generateApkDataTask: Task? = null
     var coverageReportTask: Task? = null
     var dataBindingExportBuildInfoTask: Task? = null

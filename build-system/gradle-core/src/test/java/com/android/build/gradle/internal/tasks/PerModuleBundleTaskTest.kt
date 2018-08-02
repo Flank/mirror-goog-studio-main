@@ -121,12 +121,13 @@ class PerModuleBundleTaskTest {
         task = project.tasks.create("test", PerModuleBundleTask::class.java)
 
         Mockito.`when`(featureSetMetadata.singleFile).thenReturn(featureMetadata)
-        Mockito.`when`(artifacts.appendArtifact(InternalArtifactType.MODULE_BUNDLE, task))
+        Mockito.`when`(artifacts.appendArtifact(InternalArtifactType.MODULE_BUNDLE, task.name))
             .thenReturn(testFolder.newFolder("out"))
 
 
         val configAction = PerModuleBundleTask.CreationAction(variantScope)
-        configAction.execute(task)
+        configAction.preConfigure(task.name)
+        configAction.configure(task)
     }
 
     @Test

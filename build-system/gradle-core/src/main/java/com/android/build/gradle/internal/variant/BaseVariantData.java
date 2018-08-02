@@ -40,6 +40,7 @@ import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.scope.VariantScopeImpl;
+import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.SourceProvider;
@@ -320,7 +321,7 @@ public abstract class BaseVariantData {
         final JavaCompile javacTask = taskContainer.getJavacTask();
         Preconditions.checkNotNull(javacTask);
 
-        taskContainer.getSourceGenTask().dependsOn(task);
+        TaskFactoryUtils.dependsOn(taskContainer.getSourceGenTask(), task);
 
         final Project project = scope.getGlobalScope().getProject();
         if (extraGeneratedSourceFileTrees == null) {

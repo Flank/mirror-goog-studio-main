@@ -18,6 +18,7 @@
 package com.android.build.gradle.internal.tasks.factory
 
 import org.gradle.api.Action
+import org.gradle.api.Buildable
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.TaskProvider
@@ -46,9 +47,10 @@ fun <T : Task> TaskContainer.lazyCreate(
     taskName: String,
     taskType: Class<T>,
     preConfigAction: PreConfigAction?,
-    action: TaskConfigAction<in T>?
+    action: TaskConfigAction<in T>?,
+    providerCallback: TaskProviderCallback<T>? = null
 ): TaskProvider<T> {
-    val actionWrapper = TaskAction2(action, preConfigAction)
+    val actionWrapper = TaskAction2(preConfigAction, action, providerCallback)
     return this.register(taskName, taskType, actionWrapper)
         .also { provider ->
             actionWrapper.postRegisterHook(provider)
@@ -107,8 +109,8 @@ private class TaskAction<T: Task>(
  * alongside [TaskProviderCallback.handleProvider]
  */
 private class TaskAction2<T: Task>(
-    val action: TaskConfigAction<in T>? = null,
     val preConfigAction: PreConfigAction? = null,
+    val action: TaskConfigAction<in T>? = null,
     val taskProviderCallback: TaskProviderCallback<T>? = null
 ) : Action<T> {
 
@@ -164,6 +166,19 @@ fun <T: Task> TaskProvider<out T>?.dependsOn(taskName: String): TaskProvider<out
 }
 
 /**
+ * Sets dependency between a [TaskProvider] and a [Buildable], as an extension method on [TaskProvider].
+ *
+ * This handles if the provider is null or not present.
+ */
+fun <T: Task> TaskProvider<out T>?.dependsOn(buildable: Buildable): TaskProvider<out T>? {
+    this?.letIfPresent { nonNullThis ->
+        nonNullThis.configure { it.dependsOn(buildable) }
+    }
+
+    return this
+}
+
+/**
  * Sets dependency between a [TaskProvider] and a [Task], as an extension method on [TaskProvider].
  *
  * This handles if the provider or the task are null or not present.
@@ -171,7 +186,7 @@ fun <T: Task> TaskProvider<out T>?.dependsOn(taskName: String): TaskProvider<out
  * @deprecated This is meant to be replaced with the version using 2 [TaskProvider] as [Task]
  * get replaced with [TaskProvider]
  */
-@Deprecated("Use dependsOn(TaskProvider)")
+@Deprecated("Use TaskProvider.dependsOn(TaskProvider)")
 fun <T: Task> TaskProvider<out T>?.dependsOn(task: Task?): TaskProvider<out T>? {
     this?.letIfPresent { nonNullThis ->
         task?.let { nonNullTask ->

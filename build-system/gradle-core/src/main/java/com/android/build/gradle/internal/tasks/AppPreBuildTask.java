@@ -23,8 +23,8 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.HashSet;
@@ -160,18 +160,11 @@ public class AppPreBuildTask extends AndroidVariantTask {
         }
     }
 
-    public static class CreationAction extends EagerTaskCreationAction<AppPreBuildTask> {
-
-        @NonNull private final VariantScope variantScope;
+    public static class CreationAction
+            extends TaskManager.AbstractPreBuildCreationAction<AppPreBuildTask> {
 
         public CreationAction(@NonNull VariantScope variantScope) {
-            this.variantScope = variantScope;
-        }
-
-        @NonNull
-        @Override
-        public String getName() {
-            return variantScope.getTaskName("pre", "Build");
+            super(variantScope);
         }
 
         @NonNull
@@ -181,7 +174,8 @@ public class AppPreBuildTask extends AndroidVariantTask {
         }
 
         @Override
-        public void execute(@NonNull AppPreBuildTask task) {
+        public void configure(@NonNull AppPreBuildTask task) {
+            super.configure(task);
             task.setVariantName(variantScope.getFullVariantName());
 
             task.isBaseModule = variantScope.getType().isBaseModule();
@@ -201,7 +195,6 @@ public class AppPreBuildTask extends AndroidVariantTask {
                             variantScope.getGlobalScope().getIntermediatesDir(),
                             "prebuild/" + variantScope.getVariantConfiguration().getDirName());
 
-            variantScope.getTaskContainer().setPreBuildTask(task);
         }
     }
 }

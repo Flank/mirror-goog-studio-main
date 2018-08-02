@@ -342,11 +342,12 @@ abstract class BuildArtifactsHolder(
      * @return [Provider<RegularFile] object that will resolve during execution phase to the final
      * location to write the [task] output to.
      */
+    @Deprecated("Use setArtifactFile(ArtifactType String, String")
     fun setArtifactFile(
         artifactType: ArtifactType,
         task : Task,
         fileName: String = "out") : Provider<RegularFile> =
-        setArtifactFile(artifactType, task, File(FileUtils.join(
+        setArtifactFile(artifactType, task.name, File(FileUtils.join(
             artifactType.getOutputPath(),
             artifactType.name().toLowerCase(),
             getIdentifier(),
@@ -357,14 +358,34 @@ abstract class BuildArtifactsHolder(
      * after any existing content.
      *
      * @param artifactType [ArtifactType] the new file will be classified under.
-     * @param task [Task] producing the file.
+     * @param taskName the name of the task producing the file.
+     * @param fileName expected file name for the file (location is determined by the build)
+     * @return [Provider<RegularFile] object that will resolve during execution phase to the final
+     * location to write the [task] output to.
+     */
+    fun setArtifactFile(
+        artifactType: ArtifactType,
+        taskName : String,
+        fileName: String = "out") : Provider<RegularFile> =
+        setArtifactFile(artifactType, taskName, File(FileUtils.join(
+            artifactType.getOutputPath(),
+            artifactType.name().toLowerCase(),
+            getIdentifier(),
+            fileName)))
+
+    /**
+     * set a new file to a specified artifact type. The new content will be added
+     * after any existing content.
+     *
+     * @param artifactType [ArtifactType] the new file will be classified under.
+     * @param task the name of the task producing the file.
      * @param requestedFileLocation expected location for the file
      * @return [Provider<RegularFile] object that will resolve during execution phase to the final
      * location to write the [task] output to.
      */
     fun setArtifactFile(
         artifactType: ArtifactType,
-        task : Task,
+        taskName : String,
         requestedFileLocation: File) : Provider<RegularFile> {
 
         // TODO : split this method in 2, replaceArtifactFile, and setArtifactFile.
@@ -400,7 +421,7 @@ abstract class BuildArtifactsHolder(
                     intermediatesOutput,
                     artifactType.name().toLowerCase(),
                     getIdentifier(),
-                    task.name,
+                    taskName,
                     requestedFileLocation.name
                 )
             }
@@ -409,12 +430,12 @@ abstract class BuildArtifactsHolder(
         val fileProperty = project.layout.fileProperty(provider)
         createOutput(artifactType,
             BuildableArtifactImpl(
-                project.files(fileProperty).builtBy(task),
+                project.files(fileProperty).builtBy(taskName),
                 dslScope),
             @Suppress("UNCHECKED_CAST")
             BuildableProducer(
                 fileProperty as Property<in FileSystemLocation>,
-                task.name,
+                taskName,
                 requestedFileLocation.name))
         return fileProperty
     }

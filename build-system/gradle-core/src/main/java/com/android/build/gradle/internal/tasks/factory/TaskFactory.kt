@@ -38,14 +38,6 @@ interface TaskFactory {
     @Deprecated("Use lazyFindByName(...)")
     fun findByName(name: String): Task?
 
-    /** Creates a task with the given name.  */
-    @Deprecated("Use lazyCreate(...)")
-    fun eagerCreate(name: String): Task
-
-    /** Creates a task with the given name and type.  */
-    @Deprecated("Use lazyCreate(...)")
-    fun <S : Task> eagerCreate(name: String, type: Class<S>): S
-
     /** Creates a task with the given [EagerTaskCreationAction]  */
     @Deprecated("Use lazyCreate(...)")
     fun <T : Task> eagerCreate(creationAction: EagerTaskCreationAction<T>): T
@@ -81,7 +73,8 @@ interface TaskFactory {
     fun lazyCreate(
         taskName: String,
         preConfigAction: PreConfigAction? = null,
-        action: TaskConfigAction<in Task>? = null
+        action: TaskConfigAction<in Task>? = null,
+        providerCallback: TaskProviderCallback<Task>? = null
     ): TaskProvider<Task>
 
     fun lazyConfigure(name: String, action: Action<in Task>)

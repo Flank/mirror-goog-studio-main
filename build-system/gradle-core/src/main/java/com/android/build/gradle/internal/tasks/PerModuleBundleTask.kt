@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.MODULE_PATH
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.builder.files.NativeLibraryAbiPredicate
 import com.android.builder.packaging.JarMerger
@@ -168,14 +169,24 @@ open class PerModuleBundleTask : AndroidVariantTask() {
 
     class CreationAction(
         private val variantScope: VariantScope
-    ) : EagerTaskCreationAction<PerModuleBundleTask>() {
+    ) : LazyTaskCreationAction<PerModuleBundleTask>() {
 
         override val name: String
             get() = variantScope.getTaskName("build", "PreBundle")
         override val type: Class<PerModuleBundleTask>
             get() = PerModuleBundleTask::class.java
 
-        override fun execute(task: PerModuleBundleTask) {
+        private lateinit var outputDir: File
+
+        override fun preConfigure(taskName: String) {
+            super.preConfigure(taskName)
+
+            outputDir = variantScope.artifacts.appendArtifact(
+                InternalArtifactType.MODULE_BUNDLE, taskName)
+
+        }
+
+        override fun configure(task: PerModuleBundleTask) {
             task.variantName = variantScope.fullVariantName
 
             val artifacts = variantScope.artifacts
@@ -187,8 +198,7 @@ open class PerModuleBundleTask : AndroidVariantTask() {
                 Supplier { "${featureName.get()}.zip"}
             }
 
-            task.outputDir = artifacts.appendArtifact(
-                InternalArtifactType.MODULE_BUNDLE, task)
+            task.outputDir = outputDir
 
             task.assetsFiles = artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_ASSETS)
             task.resFiles = artifacts.getFinalArtifactFiles(

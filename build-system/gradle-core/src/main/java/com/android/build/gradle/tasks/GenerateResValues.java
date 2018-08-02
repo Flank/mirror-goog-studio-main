@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.builder.compiling.ResValueGenerator;
 import com.android.builder.model.ClassField;
 import com.android.utils.FileUtils;
@@ -35,6 +35,8 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.TaskProvider;
+import org.jetbrains.annotations.NotNull;
 
 @CacheableTask
 public class GenerateResValues extends AndroidBuilderTask {
@@ -100,7 +102,7 @@ public class GenerateResValues extends AndroidBuilderTask {
     }
 
 
-    public static class CreationAction extends EagerTaskCreationAction<GenerateResValues> {
+    public static class CreationAction extends LazyTaskCreationAction<GenerateResValues> {
 
         @NonNull
         private final VariantScope scope;
@@ -122,8 +124,14 @@ public class GenerateResValues extends AndroidBuilderTask {
         }
 
         @Override
-        public void execute(@NonNull GenerateResValues generateResValuesTask) {
-            scope.getTaskContainer().setGenerateResValuesTask(generateResValuesTask);
+        public void handleProvider(
+                @NotNull TaskProvider<? extends GenerateResValues> taskProvider) {
+            super.handleProvider(taskProvider);
+            scope.getTaskContainer().setGenerateResValuesTask(taskProvider);
+        }
+
+        @Override
+        public void configure(@NonNull GenerateResValues generateResValuesTask) {
 
             final GradleVariantConfiguration variantConfiguration =
                     scope.getVariantData().getVariantConfiguration();

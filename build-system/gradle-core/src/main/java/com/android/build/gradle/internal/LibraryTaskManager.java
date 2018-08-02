@@ -40,6 +40,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesCreationAction;
 import com.android.build.gradle.internal.tasks.PackageRenderscriptCreationAction;
+import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.transforms.LibraryAarJarsTransform;
 import com.android.build.gradle.internal.transforms.LibraryBaseTransform;
 import com.android.build.gradle.internal.transforms.LibraryIntermediateJarsTransform;
@@ -236,7 +237,8 @@ public class LibraryTaskManager extends TaskManager {
                                 // if the task is a no-op then we make assemble task
                                 // depend on it.
                                 if (transform.getScopes().isEmpty()) {
-                                    variantScope.getTaskContainer().getAssembleTask().dependsOn(t);
+                                    TaskFactoryUtils.dependsOn(
+                                            variantScope.getTaskContainer().getAssembleTask(), t);
                                 }
                             });
         }
@@ -378,7 +380,7 @@ public class LibraryTaskManager extends TaskManager {
         final BundleAar bundle =
                 taskFactory.eagerCreate(new BundleAar.CreationAction(extension, variantScope));
 
-        variantScope.getTaskContainer().getAssembleTask().dependsOn(bundle);
+        TaskFactoryUtils.dependsOn(variantScope.getTaskContainer().getAssembleTask(), bundle);
 
         // if the variant is the default published, then publish the aar
         // FIXME: only generate the tasks if this is the default published variant?
@@ -526,6 +528,7 @@ public class LibraryTaskManager extends TaskManager {
         VerifyLibraryResourcesTask verifyLibraryResources =
                 taskFactory.eagerCreate(new VerifyLibraryResourcesTask.CreationAction(scope));
 
-        scope.getTaskContainer().getAssembleTask().dependsOn(verifyLibraryResources);
+        TaskFactoryUtils.dependsOn(
+                scope.getTaskContainer().getAssembleTask(), verifyLibraryResources);
     }
 }

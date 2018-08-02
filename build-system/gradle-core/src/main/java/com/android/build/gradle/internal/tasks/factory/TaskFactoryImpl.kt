@@ -31,14 +31,6 @@ class TaskFactoryImpl(private val taskContainer: TaskContainer):
 
     // --- Direct Creation ---
 
-    override fun eagerCreate(name: String): Task {
-        return taskContainer.create(name)
-    }
-
-    override fun <S : Task> eagerCreate(name: String, type: Class<S>): S {
-        return taskContainer.create(name, type)
-    }
-
     override fun <T : Task> eagerCreate(creationAction: EagerTaskCreationAction<T>): T {
         return taskContainer.create(creationAction.name, creationAction.type, creationAction)
     }
@@ -78,10 +70,11 @@ class TaskFactoryImpl(private val taskContainer: TaskContainer):
     override fun lazyCreate(
         taskName: String,
         preConfigAction: PreConfigAction?,
-        action: TaskConfigAction<in Task>?
-    ): TaskProvider<Task> {
-        return taskContainer.lazyCreate(taskName, Task::class.java, preConfigAction, action)
-    }
+        action: TaskConfigAction<in Task>?,
+        providerCallback: TaskProviderCallback<Task>?
+    ): TaskProvider<Task> =
+        taskContainer.lazyCreate(taskName, Task::class.java, preConfigAction, action, providerCallback)
+
     override fun lazyConfigure(name: String, action: Action<in Task>) {
         taskContainer.named(name).configure(action)
     }

@@ -41,7 +41,7 @@ public class AppPlugin extends AbstractAppPlugin {
     @Override
     protected void pluginSpecificApply(@NonNull Project project) {
         // root bundle task
-        taskManager.getTaskFactory().eagerCreate("bundle");
+        taskManager.getTaskFactory().lazyCreate("bundle");
     }
 
     @Override

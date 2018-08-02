@@ -73,6 +73,7 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
@@ -120,6 +121,7 @@ import org.gradle.api.attributes.AttributeMatchingStrategy;
 import org.gradle.api.attributes.AttributesSchema;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.tasks.TaskProvider;
 
 /**
  * Class to create, manage variants.
@@ -416,19 +418,20 @@ public class VariantManager implements VariantModel {
                     taskContainer.setBundleTask(buildTypeData.getBundleTask());
                 }
             } else {
-                Task variantAssembleTask = taskManager.createAssembleTask(variantData);
+                TaskProvider<Task> variantAssembleTask =
+                        taskManager.createAssembleTask(variantData);
                 taskContainer.setAssembleTask(variantAssembleTask);
 
                 // setup the task dependencies
                 // build type
-                buildTypeData.getAssembleTask().dependsOn(variantAssembleTask);
+                TaskFactoryUtils.dependsOn(buildTypeData.getAssembleTask(), variantAssembleTask);
 
-                Task variantBundleTask = null;
+                TaskProvider<Task> variantBundleTask = null;
                 if (needBundleTask) {
                     variantBundleTask = taskManager.createBundleTask(variantData);
                     taskContainer.setBundleTask(variantBundleTask);
 
-                    buildTypeData.getBundleTask().dependsOn(variantBundleTask);
+                    TaskFactoryUtils.dependsOn(buildTypeData.getBundleTask(), variantBundleTask);
                 }
 
                 // each flavor
@@ -436,20 +439,20 @@ public class VariantManager implements VariantModel {
                 for (CoreProductFlavor flavor : variantConfig.getProductFlavors()) {
                     ProductFlavorData productFlavorData = productFlavors.get(flavor.getName());
 
-                    Task flavorAssembleTask = productFlavorData.getAssembleTask();
+                    TaskProvider<Task> flavorAssembleTask = productFlavorData.getAssembleTask();
                     if (flavorAssembleTask == null) {
                         flavorAssembleTask = taskManager.createAssembleTask(productFlavorData);
                         productFlavorData.setAssembleTask(flavorAssembleTask);
                     }
-                    flavorAssembleTask.dependsOn(variantAssembleTask);
+                    TaskFactoryUtils.dependsOn(flavorAssembleTask, variantAssembleTask);
 
                     if (needBundleTask) {
-                        Task flavorBundleTask = productFlavorData.getBundleTask();
+                        TaskProvider<Task> flavorBundleTask = productFlavorData.getBundleTask();
                         if (flavorBundleTask == null) {
                             flavorBundleTask = taskManager.createBundleTask(productFlavorData);
                             productFlavorData.setBundleTask(flavorBundleTask);
                         }
-                        flavorBundleTask.dependsOn(variantBundleTask);
+                        TaskFactoryUtils.dependsOn(flavorBundleTask, variantBundleTask);
                     }
                 }
 
@@ -459,11 +462,21 @@ public class VariantManager implements VariantModel {
                     final String variantAssembleTaskName =
                             StringHelper.appendCapitalized("assemble", name);
                     if (!taskManager.getTaskFactory().containsKey(variantAssembleTaskName)) {
-                        Task task =
-                                taskManager.getTaskFactory().eagerCreate(variantAssembleTaskName);
-                        task.setDescription("Assembles all builds for flavor combination: " + name);
-                        task.setGroup("Build");
-                        task.dependsOn(taskContainer.getAssembleTask().getName());
+
+                        taskManager
+                                .getTaskFactory()
+                                .lazyCreate(
+                                        variantAssembleTaskName,
+                                        null /*preConfigAction*/,
+                                        task -> {
+                                            task.setDescription(
+                                                    "Assembles all builds for flavor combination: "
+                                                            + name);
+                                            task.setGroup("Build");
+                                            task.dependsOn(
+                                                    taskContainer.getAssembleTask().getName());
+                                        },
+                                        null /*providerCallback*/);
                     }
 
                     taskManager
@@ -476,12 +489,20 @@ public class VariantManager implements VariantModel {
                         final String variantBundleTaskName =
                                 StringHelper.appendCapitalized("bundle", name);
                         if (!taskManager.getTaskFactory().containsKey(variantBundleTaskName)) {
-                            Task task =
-                                    taskManager.getTaskFactory().eagerCreate(variantBundleTaskName);
-                            task.setDescription(
-                                    "Assembles all bundles for flavor combination: " + name);
-                            task.setGroup("Build");
-                            task.dependsOn(taskContainer.getBundleTask().getName());
+                            taskManager
+                                    .getTaskFactory()
+                                    .lazyCreate(
+                                            variantBundleTaskName,
+                                            null /*preConfigAction*/,
+                                            task -> {
+                                                task.setDescription(
+                                                        "Assembles all bundles for flavor combination: "
+                                                                + name);
+                                                task.setGroup("Build");
+                                                task.dependsOn(
+                                                        taskContainer.getBundleTask().getName());
+                                            },
+                                            null /*providerCallback*/);
                         }
 
                         taskManager
@@ -520,7 +541,7 @@ public class VariantManager implements VariantModel {
 
             if (variantType.isHybrid()
                     && taskManager.getTaskFactory().findByName("bundle") == null) {
-                taskManager.getTaskFactory().eagerCreate("bundle");
+                taskManager.getTaskFactory().lazyCreate("bundle");
             }
 
             if (buildTypeData.getBundleTask() == null) {

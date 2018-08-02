@@ -857,11 +857,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
                 variantConfiguration.isSigningReady() || variantData.outputsAreSigned,
                 signingConfigName,
                 applicationId,
-                // TODO: Need to determine the tasks' name when the tasks may not be created
-                // in component plugin.
-                taskContainer.getSourceGenTask() == null
-                        ? scope.getTaskName("generate", "Sources")
-                        : taskContainer.getSourceGenTask().getName(),
+                taskContainer.getSourceGenTask().getName(),
                 taskContainer.getCompileTask().getName(),
                 getGeneratedSourceFolders(variantData),
                 getGeneratedResourceFolders(variantData),

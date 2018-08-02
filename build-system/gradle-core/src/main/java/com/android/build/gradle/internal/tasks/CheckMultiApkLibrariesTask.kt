@@ -20,6 +20,7 @@ import com.android.annotations.NonNull
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
 import com.android.utils.FileUtils
 import com.google.common.io.Files
 import org.apache.commons.io.Charsets
@@ -96,14 +97,14 @@ open class CheckMultiApkLibrariesTask : AndroidVariantTask() {
     }
 
     class CreationAction(val scope: VariantScope) :
-        EagerTaskCreationAction<CheckMultiApkLibrariesTask>() {
+        LazyTaskCreationAction<CheckMultiApkLibrariesTask>() {
 
         override val name: String
             get() = scope.getTaskName("check", "Libraries")
         override val type: Class<CheckMultiApkLibrariesTask>
             get() = CheckMultiApkLibrariesTask::class.java
 
-        override fun execute(task: CheckMultiApkLibrariesTask) {
+        override fun configure(task: CheckMultiApkLibrariesTask) {
             task.variantName = scope.fullVariantName
             task.featureTransitiveDeps =
                     scope.getArtifactCollection(

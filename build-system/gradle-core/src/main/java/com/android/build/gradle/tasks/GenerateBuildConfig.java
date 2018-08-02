@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.compiling.BuildConfigGenerator;
 import com.android.builder.model.ClassField;
@@ -37,6 +37,8 @@ import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.TaskProvider;
+import org.jetbrains.annotations.NotNull;
 
 @CacheableTask
 public class GenerateBuildConfig extends AndroidBuilderTask {
@@ -188,7 +190,7 @@ public class GenerateBuildConfig extends AndroidBuilderTask {
 
     // ----- Config Action -----
 
-    public static final class CreationAction extends EagerTaskCreationAction<GenerateBuildConfig> {
+    public static final class CreationAction extends LazyTaskCreationAction<GenerateBuildConfig> {
 
         @NonNull
         private final VariantScope scope;
@@ -209,46 +211,55 @@ public class GenerateBuildConfig extends AndroidBuilderTask {
             return GenerateBuildConfig.class;
         }
 
+        @Override
+        public void handleProvider(
+                @NotNull TaskProvider<? extends GenerateBuildConfig> taskProvider) {
+            super.handleProvider(taskProvider);
+            scope.getTaskContainer().setGenerateBuildConfigTask(taskProvider);
+        }
 
         @Override
-        public void execute(@NonNull GenerateBuildConfig generateBuildConfigTask) {
+        public void configure(@NonNull GenerateBuildConfig task) {
             BaseVariantData variantData = scope.getVariantData();
-
-            scope.getTaskContainer().setGenerateBuildConfigTask(generateBuildConfigTask);
 
             final GradleVariantConfiguration variantConfiguration =
                     variantData.getVariantConfiguration();
 
-            generateBuildConfigTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
-            generateBuildConfigTask.setVariantName(scope.getVariantConfiguration().getFullName());
+            task.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
+            task.setVariantName(scope.getVariantConfiguration().getFullName());
 
-            generateBuildConfigTask.buildConfigPackageName =
+            task.buildConfigPackageName =
                     TaskInputHelper.memoize(variantConfiguration::getOriginalApplicationId);
 
-            generateBuildConfigTask.appPackageName =
-                    TaskInputHelper.memoize(variantConfiguration::getApplicationId);
+            task.appPackageName = TaskInputHelper.memoize(variantConfiguration::getApplicationId);
 
-            generateBuildConfigTask.versionName =
-                    TaskInputHelper.memoize(variantConfiguration::getVersionName);
-            generateBuildConfigTask.versionCode =
-                    TaskInputHelper.memoize(variantConfiguration::getVersionCode);
+            task.versionName = TaskInputHelper.memoize(variantConfiguration::getVersionName);
+            task.versionCode = TaskInputHelper.memoize(variantConfiguration::getVersionCode);
 
-            generateBuildConfigTask.debuggable =
+            task.debuggable =
                     TaskInputHelper.memoize(
                             () -> variantConfiguration.getBuildType().isDebuggable());
 
-            generateBuildConfigTask.buildTypeName = variantConfiguration.getBuildType().getName();
+            task.buildTypeName = variantConfiguration.getBuildType().getName();
 
             // no need to memoize, variant configuration does that already.
-            generateBuildConfigTask.flavorName = variantConfiguration::getFlavorName;
+            task.flavorName = variantConfiguration::getFlavorName;
 
-            generateBuildConfigTask.flavorNamesWithDimensionNames =
+            task.flavorNamesWithDimensionNames =
                     TaskInputHelper.memoize(variantConfiguration::getFlavorNamesWithDimensionNames);
 
-            generateBuildConfigTask.items =
-                    TaskInputHelper.memoize(variantConfiguration::getBuildConfigItems);
+            task.items = TaskInputHelper.memoize(variantConfiguration::getBuildConfigItems);
 
-            generateBuildConfigTask.setSourceOutputDir(scope.getBuildConfigSourceOutputDir());
+            task.setSourceOutputDir(scope.getBuildConfigSourceOutputDir());
+
+            if (scope.getVariantConfiguration().getType().isTestComponent()) {
+                // in case of a test project, the manifest is generated so we need to depend
+                // on its creation.
+                task.dependsOn(scope.getTaskContainer().getProcessManifestTask());
+            } else {
+                task.dependsOn(scope.getTaskContainer().getCheckManifestTask());
+            }
+
         }
     }
 }

@@ -227,7 +227,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
     }
 
     @Override
-    protected Task createVariantPreBuildTask(@NonNull VariantScope scope) {
-        return createDefaultPreBuildTask(scope);
+    protected void createVariantPreBuildTask(@NonNull VariantScope scope) {
+        createDefaultPreBuildTask(scope);
     }
 }

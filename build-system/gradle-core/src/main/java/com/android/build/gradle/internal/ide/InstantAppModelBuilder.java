@@ -71,7 +71,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
 import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder;
 
 /** Builder for the custom instantApp model. */
@@ -304,7 +303,7 @@ public class InstantAppModelBuilder
                         syncIssues,
                         modelLevel,
                         modelWithFullDependency);
-        Task assembleTask = variantScope.getTaskContainer().getAssembleTask();
+
         File outputLocation = variantScope.getApkLocation();
         String baseName =
                 variantScope.getGlobalScope().getProjectBaseName()
@@ -315,9 +314,7 @@ public class InstantAppModelBuilder
                 new AndroidArtifactImpl(
                         ARTIFACT_MAIN,
                         baseName,
-                        assembleTask == null
-                                ? variantScope.getTaskName("assemble")
-                                : assembleTask.getName(),
+                        variantScope.getTaskContainer().getAssembleTask().getName(),
                         false,
                         null,
                         "unused",
