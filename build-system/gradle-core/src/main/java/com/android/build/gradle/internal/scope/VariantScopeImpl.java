@@ -1167,13 +1167,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @NonNull
-    public File getProguardComponentsJarFile() {
-        return new File(globalScope.getIntermediatesDir(), "multi-dex/" + getVariantConfiguration().getDirName()
-                + "/componentClasses.jar");
-    }
-
-    @Override
-    @NonNull
     public File getRenderscriptLibOutputDir() {
         return new File(globalScope.getIntermediatesDir(),
                 "rs/" + variantData.getVariantConfiguration().getDirName() + "/lib");
@@ -1235,17 +1228,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 globalScope.getGeneratedDir(),
                 StringHelper.toStrings(
                         "res",
-                        name,
-                        getDirectorySegments()));
-    }
-
-    @NonNull
-    @Override
-    public File getGeneratedAssetsDir(@NonNull String name) {
-        return FileUtils.join(
-                globalScope.getGeneratedDir(),
-                StringHelper.toStrings(
-                        "assets",
                         name,
                         getDirectorySegments()));
     }
@@ -1345,14 +1327,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 "proguard-rules",
                 getVariantConfiguration().getDirName(),
                 SdkConstants.FN_AAPT_RULES);
-    }
-
-    @Override
-    @NonNull
-    public File getSplitSupportDirectory() {
-        return new File(
-                globalScope.getIntermediatesDir(),
-                "splits-support/" + getVariantConfiguration().getDirName());
     }
 
     @NonNull
@@ -1663,12 +1637,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         }
 
         return result;
-    }
-
-    @NonNull
-    @Override
-    public File getProcessResourcePackageOutputDirectory() {
-        return FileUtils.join(getGlobalScope().getIntermediatesDir(), FD_RES, getDirName());
     }
 
     ProcessAndroidResources processAndroidResourcesTask;

@@ -195,9 +195,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getIntermediateJarOutputFolder();
 
     @NonNull
-    File getProguardComponentsJarFile();
-
-    @NonNull
     File getRenderscriptLibOutputDir();
 
     @NonNull
@@ -217,9 +214,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getBuildConfigSourceOutputDir();
-
-    @NonNull
-    File getGeneratedAssetsDir(@NonNull String name);
 
     @NonNull
     File getGeneratedResOutputDir();
@@ -268,9 +262,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getFullApkPackagesOutputDirectory();
 
     @NonNull
-    File getSplitSupportDirectory();
-
-    @NonNull
     File getMicroApkManifestFile();
 
     @NonNull
@@ -293,9 +284,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     @Nullable
     InstantRunTaskManager getInstantRunTaskManager();
     void setInstantRunTaskManager(InstantRunTaskManager taskManager);
-
-    @NonNull
-    File getProcessResourcePackageOutputDirectory();
 
     void setProcessResourcesTask(ProcessAndroidResources processAndroidResourcesAndroidTask);
 
