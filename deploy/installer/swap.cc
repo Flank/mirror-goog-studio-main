@@ -36,7 +36,9 @@ const std::string kConfig = "config.pb";
 
 void SwapCommand::ParseParameters(int argc, char** argv) {
   // Always assume it's coming from standard input, for now.
-  if (!request_.ParseFromIstream(&std::cin)) {
+  std::string cin_string((std::istreambuf_iterator<char>(std::cin)),
+         std::istreambuf_iterator<char>());;
+  if (!request_.ParseFromString(cin_string)) {
     std::cerr << "Could not parse swap configuration proto." << std::endl;
     return;
   }
@@ -75,10 +77,12 @@ bool SwapCommand::Run(const Workspace& workspace) {
 
   // Write out the configuration file.
   std::ofstream ofile(source_dir + kConfig, std::ios::binary);
-  if (!agent_config.SerializeToOstream(&ofile)) {
+  std::string configurationString;
+  if (!agent_config.SerializeToString(&configurationString)) {
     std::cerr << "Could not write agent configuration proto." << std::endl;
     return false;
   }
+  ofile << configurationString;
   ofile.close();
 
   // Copy to agent directory.

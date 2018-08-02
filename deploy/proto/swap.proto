@@ -4,6 +4,8 @@ package proto;
 option java_package = "com.android.tools.deploy.proto";
 option java_outer_classname = "Common";
 
+option optimize_for = LITE_RUNTIME;
+
 // A request to hot-swap a particular application package.
 message SwapRequest {
   // The application package.

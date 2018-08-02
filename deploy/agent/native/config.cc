@@ -27,7 +27,9 @@ Config Config::instance_;
 bool Config::ParseFromFile(const std::string& file_location) {
   proto::AgentConfig* config = new proto::AgentConfig();
   std::fstream stream(file_location, std::ios::in | std::ios::binary);
-  if (config->ParseFromIstream(&stream)) {
+  std::string config_string((std::istreambuf_iterator<char>(stream)),
+          std::istreambuf_iterator<char>());
+  if (config->ParseFromString(config_string)) {
     instance_ = Config(config);
     return true;
   }

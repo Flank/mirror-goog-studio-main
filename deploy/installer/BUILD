@@ -55,7 +55,7 @@ android_cc_binary(
         "armeabi-v7a",
         "arm64-v8a",
     ],
-    binary = ":ir2_installer",
+    binary = ":ir2_installer.stripped",
     filename = "ir2_installer",
     tags = ["no_windows"],
     visibility = ["//visibility:public"],

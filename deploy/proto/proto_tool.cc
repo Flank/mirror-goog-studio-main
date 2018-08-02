@@ -54,7 +54,9 @@ int main(int argc, char** argv) {
   std::getline(std::cin, file_name);
 
   std::ofstream out_file(file_name, std::ios::binary);
-  swap_request.SerializeToOstream(&out_file);
+  std::string swap_request_string;
+  swap_request.SerializeToString(&swap_request_string);
+  out_file << swap_request_string;
   out_file.close();
 
   return 0;
