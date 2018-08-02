@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal
+package com.android.build.gradle.internal.tasks.factory
 
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import org.gradle.api.Action
@@ -23,7 +23,8 @@ import org.gradle.api.Task
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.TaskProvider
 
-class TaskFactoryImpl(private val taskContainer: TaskContainer): TaskFactory {
+class TaskFactoryImpl(private val taskContainer: TaskContainer):
+    TaskFactory {
 
     override fun containsKey(name: String): Boolean {
         return taskContainer.findByName(name) != null
