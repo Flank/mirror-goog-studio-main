@@ -20,7 +20,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
 import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
-import com.android.build.gradle.options.BooleanOption
 import com.android.tools.build.apkzlib.zip.CompressionMethod
 import com.android.tools.build.apkzlib.zip.ZFile
 import com.android.utils.FileUtils
@@ -47,12 +46,12 @@ class NoCompressTest {
             MinimalSubProject.app("com.example.test")
                 .appendToBuild("android.aaptOptions.noCompress = ['.no']")
                 .appendToBuild("android.defaultConfig.versionCode 1")
-                .withFile(TestSourceFile("src/main/resources", "jres.yes", content))
-                .withFile(TestSourceFile("src/main/resources", "jres.no", content))
-                .withFile(TestSourceFile("src/main/assets", "a.yes", content))
-                .withFile(TestSourceFile("src/main/assets", "a.no", content))
-                .withFile(TestSourceFile("src/main/res/raw", "r_yes.yes", content))
-                .withFile(TestSourceFile("src/main/res/raw", "r_no.no", content))
+                .withFile("src/main/resources/jres.yes", content)
+                .withFile("src/main/resources/jres.no", content)
+                .withFile("src/main/assets/a.yes", content)
+                .withFile("src/main/assets/a.no", content)
+                .withFile("src/main/res/raw/r_yes.yes", content)
+                .withFile("src/main/res/raw/r_no.no", content)
         ).create()
 
     @Test

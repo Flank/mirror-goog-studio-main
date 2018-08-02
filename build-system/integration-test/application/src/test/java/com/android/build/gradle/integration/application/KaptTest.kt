@@ -48,8 +48,7 @@ class KaptTest() {
     }
 
     fun initApp() {
-        sApp.removeFile(sApp.getFile("HelloWorld.java"))
-        sApp.addFile(TestSourceFile ("src/main/java/com/example/helloworld", "HelloWorld.java",
+        sApp.replaceFile(TestSourceFile ("src/main/java/com/example/helloworld/HelloWorld.java",
                 "package com.example.helloworld;\n" + "\n"
                         + "import android.app.Activity;\n"
                         + "import android.widget.TextView;\n"

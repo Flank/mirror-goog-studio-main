@@ -366,12 +366,9 @@ public final class GradleTestProjectBuilder {
     private static void addAllFiles(AndroidTestModule app, File projectDir) {
         try {
             for (String filePath : TestFileUtils.listFiles(projectDir.toPath())) {
-                File file = new File(filePath);
                 app.addFile(
                         new TestSourceFile(
-                                file.getParent(),
-                                file.getName(),
-                                Files.toByteArray(new File(projectDir, filePath))));
+                                filePath, Files.toByteArray(new File(projectDir, filePath))));
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);

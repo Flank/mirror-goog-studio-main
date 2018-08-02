@@ -49,7 +49,7 @@ public class TestFileUtils {
 
         return Files.walk(base)
                 .filter(Files::isRegularFile)
-                .map(path -> path.toString().substring(base.toString().length()))
+                .map(path -> path.toString().substring(base.toString().length() + 1))
                 .collect(Collectors.toList());
     }
 

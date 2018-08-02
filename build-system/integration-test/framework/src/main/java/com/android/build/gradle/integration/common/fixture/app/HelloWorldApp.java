@@ -160,7 +160,6 @@ public class HelloWorldApp extends AbstractAndroidTestModule implements AndroidT
 
         TestSourceFile buildFile =
                 new TestSourceFile(
-                        "",
                         "build.gradle",
                         ""
                                 + "apply plugin: '"

@@ -36,7 +36,7 @@ import org.junit.Test;
 public class ResValueTypeTest {
     public static AndroidTestModule app = HelloWorldApp.noBuildFile();
     static {
-        app.removeFile(app.getFile("HelloWorldTest.java"));
+        app.removeFileByName("HelloWorldTest.java");
         app.addFile(
                 new TestSourceFile(
                         "src/androidTest/java/com/example/helloworld",

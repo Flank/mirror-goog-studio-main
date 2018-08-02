@@ -61,7 +61,6 @@ public class KotlinHelloWorldApp extends HelloWorldApp {
 
         TestSourceFile buildFile =
                 new TestSourceFile(
-                        "",
                         "build.gradle",
                         ""
                                 + "apply from: '../commonHeader.gradle'\n"

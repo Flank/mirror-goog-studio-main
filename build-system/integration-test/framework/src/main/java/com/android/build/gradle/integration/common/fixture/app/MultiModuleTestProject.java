@@ -109,7 +109,7 @@ public class MultiModuleTestProject implements TestProject {
         @NonNull
         public Builder dependency(@NonNull AndroidTestModule from, @NonNull String to) {
             String snippet = "\ndependencies {\n    " + "implementation '" + to + "'\n}\n";
-            from.replaceFile(from.getFile("build.gradle", "").appendContent(snippet));
+            from.replaceFile(from.getFile("build.gradle").appendContent(snippet));
             return this;
         }
 
@@ -129,7 +129,7 @@ public class MultiModuleTestProject implements TestProject {
                             + " project('"
                             + projects.inverse().get(to)
                             + "')\n}\n";
-            from.replaceFile(from.getFile("build.gradle", "").appendContent(snippet));
+            from.replaceFile(from.getFile("build.gradle").appendContent(snippet));
             return this;
         }
 

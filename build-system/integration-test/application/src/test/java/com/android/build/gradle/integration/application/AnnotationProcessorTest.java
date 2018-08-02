@@ -74,11 +74,9 @@ public class AnnotationProcessorTest {
     }
     private static AndroidTestModule sApp = HelloWorldApp.noBuildFile();
     static {
-        sApp.removeFile(sApp.getFile("HelloWorld.java"));
-        sApp.addFile(
+        sApp.replaceFile(
                 new TestSourceFile(
-                        "src/main/java/com/example/helloworld",
-                        "HelloWorld.java",
+                        "src/main/java/com/example/helloworld/HelloWorld.java",
                         "package com.example.helloworld;\n"
                                 + "\n"
                                 + "import android.app.Activity;\n"
@@ -106,12 +104,11 @@ public class AnnotationProcessorTest {
                                 + "    }\n"
                                 + "}\n"));
 
-        sApp.removeFile(sApp.getFile("HelloWorldTest.java"));
+        sApp.removeFileByName("HelloWorldTest.java");
 
         sApp.addFile(
                 new TestSourceFile(
-                        "src/test/java/com/example/helloworld",
-                        "HelloWorldTest.java",
+                        "src/test/java/com/example/helloworld/HelloWorldTest.java",
                         "package com.example.helloworld;\n"
                                 + "import com.example.annotation.ProvideString;\n"
                                 + "\n"
@@ -121,8 +118,7 @@ public class AnnotationProcessorTest {
 
         sApp.addFile(
                 new TestSourceFile(
-                        "src/androidTest/java/com/example/hellojni",
-                        "HelloWorldAndroidTest.java",
+                        "src/androidTest/java/com/example/hellojni/HelloWorldAndroidTest.java",
                         "package com.example.helloworld;\n"
                                 + "\n"
                                 + "import android.test.ActivityInstrumentationTestCase;\n"

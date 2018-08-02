@@ -138,7 +138,6 @@ public class Processor extends AbstractProcessor {
 }""")
 
         private val buildGradle = TestSourceFile(
-                "",
                 "build.gradle",
                 """
 apply plugin: "java"

@@ -79,10 +79,9 @@ public class TestingSupportLibraryTest {
                                 + "    }\n"
                                 + "}\n"));
 
-        helloWorldApp.addFile(
+        helloWorldApp.replaceFile(
                 new TestSourceFile(
-                        "src/main",
-                        "AndroidManifest.xml",
+                        "src/main/AndroidManifest.xml",
                         "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                 + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                                 + "      package=\"com.example.helloworld\"\n"

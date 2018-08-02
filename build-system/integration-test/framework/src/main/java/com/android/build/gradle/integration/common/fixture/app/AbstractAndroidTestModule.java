@@ -19,68 +19,93 @@ package com.android.build.gradle.integration.common.fixture.app;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
+import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 /** Abstract class implementing AndroidTestModule. */
 public abstract class AbstractAndroidTestModule implements AndroidTestModule {
 
-    private Multimap<String, TestSourceFile> sourceFiles = ArrayListMultimap.create();
+    /** Map from a relative path to the corresponding {@link TestSourceFile} instance. */
+    @NonNull private final Map<String, TestSourceFile> sourceFiles = new HashMap<>();
 
-    protected void addFiles(TestSourceFile... files) {
-        for (TestSourceFile file : files) {
-            sourceFiles.put(file.getName(), file);
-        }
+    @Override
+    @NonNull
+    public TestSourceFile getFile(@NonNull String relativePath) {
+        Preconditions.checkState(
+                sourceFiles.containsKey(relativePath), relativePath + " does not exist");
+        return sourceFiles.get(relativePath);
     }
 
     @Override
-    public TestSourceFile getFile(String filename) {
-        Collection<TestSourceFile> files = sourceFiles.get(filename);
-        if (files.isEmpty()) {
-            throw new NoSuchElementException("Unable to file source file: " + filename + ".");
-        } else if (files.size() > 1) {
+    @NonNull
+    public TestSourceFile getFileByName(@NonNull String fileName) {
+        List<TestSourceFile> matchedFiles =
+                sourceFiles
+                        .values()
+                        .stream()
+                        .filter(it -> it.getName().equals(fileName))
+                        .collect(Collectors.toList());
+        if (matchedFiles.isEmpty()) {
+            throw new NoSuchElementException(
+                    String.format("Found no source file named '%s'", fileName));
+        } else if (matchedFiles.size() > 1) {
             throw new IllegalArgumentException(
-                    "Multiple source files named '" + filename + "'.  Specify the path to get one "
-                            + "of the following files: \n"
-                            + Joiner.on('\n').join(files));
+                    String.format(
+                            "Found multiple source files named '%1$s':\n%2$s",
+                            fileName,
+                            Joiner.on('\n')
+                                    .join(
+                                            matchedFiles
+                                                    .stream()
+                                                    .map(TestSourceFile::getPath)
+                                                    .collect(Collectors.toList()))));
+        } else {
+            return matchedFiles.get(0);
         }
-        return files.iterator().next();
     }
 
     @Override
-    public TestSourceFile getFile(String filename, final String path) {
-        return sourceFiles.get(filename).stream()
-                .filter(testSourceFile -> path.equals(testSourceFile.getParent()))
-                .findFirst().get();
-    }
-
-    @Override
-    public void addFile(TestSourceFile file) {
-        sourceFiles.put(file.getName(), file);
-    }
-
-    @Override
-    public boolean removeFile(TestSourceFile file) {
-        return sourceFiles.remove(file.getName(), file);
-    }
-
-    @Override
-    public void replaceFile(TestSourceFile file) {
-        if (!removeFile(getFile(file.getName(), file.getParent()))) {
-            throw new IllegalArgumentException("No file to replace");
-        }
-        addFile(file);
-    }
-
-    @Override
+    @NonNull
     public Collection<TestSourceFile> getAllSourceFiles() {
         return sourceFiles.values();
+    }
+
+    @Override
+    public void addFile(@NonNull TestSourceFile file) {
+        Preconditions.checkState(
+                !sourceFiles.containsKey(file.getPath()), file.getPath() + " already exists");
+        sourceFiles.put(file.getPath(), file);
+    }
+
+    protected void addFiles(@NonNull TestSourceFile... files) {
+        for (TestSourceFile file : files) {
+            addFile(file);
+        }
+    }
+
+    @Override
+    public void removeFile(@NonNull String filePath) {
+        Preconditions.checkState(sourceFiles.containsKey(filePath), filePath + " does not exist");
+        sourceFiles.remove(filePath);
+    }
+
+    @Override
+    public void removeFileByName(@NonNull String fileName) {
+        removeFile(getFileByName(fileName).getPath());
+    }
+
+    @Override
+    public void replaceFile(@NonNull TestSourceFile file) {
+        sourceFiles.put(file.getPath(), file);
     }
 
     @Override

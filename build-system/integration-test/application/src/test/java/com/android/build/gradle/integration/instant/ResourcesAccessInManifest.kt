@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.instant
 
 import com.google.common.truth.Truth.assertThat
 
-import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.Adb
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
@@ -78,7 +77,6 @@ class ResourcesAccessInManifest {
         private val sApp = HelloWorldApp.forPlugin("com.android.application")
 
         init {
-            sApp.removeFile(sApp.getFile(SdkConstants.ANDROID_MANIFEST_XML))
             val manifestFile = TestSourceFile(
                     "src/main",
                     "AndroidManifest.xml",
@@ -98,7 +96,7 @@ class ResourcesAccessInManifest {
                             + "        </activity>\n"
                             + "    </application>\n"
                             + "</manifest>\n")
-            sApp.addFile(manifestFile)
+            sApp.replaceFile(manifestFile)
 
             val resFile = TestSourceFile(
                     "src/main/res/values",

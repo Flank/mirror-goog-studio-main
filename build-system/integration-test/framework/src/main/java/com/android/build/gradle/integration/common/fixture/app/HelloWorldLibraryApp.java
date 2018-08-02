@@ -36,7 +36,6 @@ public class HelloWorldLibraryApp extends MultiModuleTestProject implements Test
         AndroidTestModule app = (AndroidTestModule) getSubproject(":app");
         app.addFile(
                 new TestSourceFile(
-                        "",
                         "build.gradle",
                         "apply plugin: 'com.android.application'\n"
                                 + "\n"
@@ -76,7 +75,6 @@ public class HelloWorldLibraryApp extends MultiModuleTestProject implements Test
         AndroidTestModule lib = (AndroidTestModule) getSubproject(":lib");
         lib.addFile(
                 new TestSourceFile(
-                        "",
                         "build.gradle",
                         "apply plugin: 'com.android.library'\n"
                                 + "\n"

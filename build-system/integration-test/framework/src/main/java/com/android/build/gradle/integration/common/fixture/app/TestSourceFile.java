@@ -16,70 +16,59 @@
 
 package com.android.build.gradle.integration.common.fixture.app;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import com.android.annotations.NonNull;
-import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import com.google.common.primitives.Bytes;
 import java.io.File;
 import java.io.IOException;
 
-/** Describes a source file for integration test. */
+/** Describes a source file (containing source code or resources) for integration tests. */
 public final class TestSourceFile {
-    private final String parent;
-    private final String name;
-    private final byte[] content;
 
-    public TestSourceFile(@NonNull String parent, @NonNull String name, @NonNull byte[] content) {
-        this.parent = checkNotNull(parent);
-        this.name = checkNotNull(name);
-        this.content = checkNotNull(content);
+    @NonNull private final String relativePath;
+    @NonNull private final byte[] content;
+
+    public TestSourceFile(@NonNull String relativePath, @NonNull byte[] content) {
+        Preconditions.checkArgument(
+                !new File(relativePath).isAbsolute(), relativePath + " is not a relative path");
+        this.relativePath = relativePath;
+        this.content = content;
+    }
+
+    public TestSourceFile(@NonNull String relativePath, @NonNull String content) {
+        this(relativePath, content.getBytes());
     }
 
     public TestSourceFile(@NonNull String parent, @NonNull String name, @NonNull String content) {
-        this(parent, name, content.getBytes());
+        this(parent + File.separatorChar + name, content);
     }
 
-    public String getParent() {
-        return parent;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public File getFile() {
-        return new File(parent, name);
-    }
-
+    @NonNull
     public String getPath() {
-        return getFile().getPath();
+        return relativePath;
     }
 
+    @NonNull
+    public String getName() {
+        return new File(relativePath).getName();
+    }
+
+    @NonNull
     public byte[] getContent() {
         return content;
     }
 
-    public File writeToDir(File base) throws IOException {
-        File file = new File(base, Joiner.on(File.separatorChar).join(parent, name));
-        writeToFile(file);
-        return file;
+    public void writeToDir(@NonNull File baseDir) throws IOException {
+        File absoluteFile = new File(baseDir, relativePath);
+        Files.createParentDirs(absoluteFile);
+        Files.write(content, absoluteFile);
     }
 
-    public void writeToFile(File file) throws IOException {
-        if (!file.exists()) {
-            Files.createParentDirs(file);
-        }
-        Files.write(content, file);
-    }
-
-    public TestSourceFile appendContent(@NonNull byte[] additionalContent) {
-        return new TestSourceFile(parent, name, Bytes.concat(content, additionalContent));
-    }
-
+    @NonNull
     public TestSourceFile appendContent(@NonNull String additionalContent) {
-        return appendContent(additionalContent.getBytes());
+        return new TestSourceFile(
+                relativePath, Bytes.concat(content, additionalContent.getBytes()));
     }
 }
 

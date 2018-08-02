@@ -38,12 +38,12 @@ class BundleOptionsTest {
         .fromTestApp(
             MinimalSubProject.app("com.example.test")
                 .appendToBuild("android.defaultConfig.versionCode 1")
-                .withFile(TestSourceFile("src/main/jniLibs/armeabi", "abi.so", byteArrayOf(0xA)))
-                .withFile(TestSourceFile("src/main/jniLibs/x86", "abi.so", byteArrayOf(0x8, 0x6)))
-                .withFile(TestSourceFile("src/main/res/raw-hdpi", "density", byteArrayOf(0x1)))
-                .withFile(TestSourceFile("src/main/res/raw-xhdpi", "density", byteArrayOf(0x2)))
-                .withFile(TestSourceFile("src/main/res/raw-en", "language", byteArrayOf(0xE)))
-                .withFile(TestSourceFile("src/main/res/raw-fr", "language", byteArrayOf(0xF)))
+                .withFile("src/main/jniLibs/armeabi/abi.so", byteArrayOf(0xA))
+                .withFile("src/main/jniLibs/x86/abi.so", byteArrayOf(0x8, 0x6))
+                .withFile("src/main/res/raw-hdpi/density", byteArrayOf(0x1))
+                .withFile("src/main/res/raw-xhdpi/density", byteArrayOf(0x2))
+                .withFile("src/main/res/raw-en/language", byteArrayOf(0xE))
+                .withFile("src/main/res/raw-fr/language", byteArrayOf(0xF))
         ).create()
 
     @Test

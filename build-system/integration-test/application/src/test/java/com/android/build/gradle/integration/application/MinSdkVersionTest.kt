@@ -21,11 +21,8 @@ import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
-import com.android.builder.model.AndroidProject
 import com.android.builder.model.SyncIssue
 import com.google.common.collect.Iterables
-import java.io.IOException
-import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 
@@ -40,10 +37,9 @@ class MinSdkVersionTest {
     companion object {
         val helloWorldApp = HelloWorldApp.forPlugin("com.android.application")
         init {
-            helloWorldApp.addFile(
+            helloWorldApp.replaceFile(
                     TestSourceFile(
-                            "src/main",
-                            "AndroidManifest.xml",
+                            "src/main/AndroidManifest.xml",
                             "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                     + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                                     + "      package=\"com.example.helloworld\"\n"

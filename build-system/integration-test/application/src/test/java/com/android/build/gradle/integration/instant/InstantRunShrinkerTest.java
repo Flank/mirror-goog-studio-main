@@ -46,25 +46,26 @@ public class InstantRunShrinkerTest {
                 "        super.onCreate();" +
                 "    }\n" +
                 "}\n"));
-        TEST_APP.removeFile(TEST_APP.getFile("AndroidManifest.xml", "src/main"));
-        TEST_APP.addFile(new TestSourceFile("src/main", "AndroidManifest.xml",
-                "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                + "        package=\"com.example.helloworld\"\n"
-                + "        android:versionCode=\"1\"\n"
-                + "        android:versionName=\"1.0\">\n"
-                + "\n"
-                + "    <application android:label=\"@string/app_name\""
-                + "            android:name=\".MyApplication\">\n"
-                + "        <activity android:name=\".HelloWorld\"\n"
-                + "                android:label=\"@string/app_name\">\n"
-                + "            <intent-filter>\n"
-                + "                <action android:name=\"android.intent.action.MAIN\"/>\n"
-                + "                    <category android:name=\"android.intent.category.LAUNCHER\"/>\n"
-                + "            </intent-filter>\n"
-                + "        </activity>\n"
-                + "    </application>\n"
-                + "</manifest>"));
+        TEST_APP.replaceFile(
+                new TestSourceFile(
+                        "src/main/AndroidManifest.xml",
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+                                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "        package=\"com.example.helloworld\"\n"
+                                + "        android:versionCode=\"1\"\n"
+                                + "        android:versionName=\"1.0\">\n"
+                                + "\n"
+                                + "    <application android:label=\"@string/app_name\""
+                                + "            android:name=\".MyApplication\">\n"
+                                + "        <activity android:name=\".HelloWorld\"\n"
+                                + "                android:label=\"@string/app_name\">\n"
+                                + "            <intent-filter>\n"
+                                + "                <action android:name=\"android.intent.action.MAIN\"/>\n"
+                                + "                    <category android:name=\"android.intent.category.LAUNCHER\"/>\n"
+                                + "            </intent-filter>\n"
+                                + "        </activity>\n"
+                                + "    </application>\n"
+                                + "</manifest>"));
     }
 
     @Rule

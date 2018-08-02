@@ -33,7 +33,7 @@ class NoManifestTest {
 
     val app = MinimalSubProject.app("com.example.app")
     init {
-        app.removeFile(app.getFile("AndroidManifest.xml"))
+        app.removeFileByName("AndroidManifest.xml")
     }
     private val testApp = MultiModuleTestProject.builder().subproject(":app", app).build()
     @get:Rule val project = GradleTestProject.builder().fromTestApp(testApp).create()

@@ -19,31 +19,24 @@ package com.android.build.gradle.integration.common.fixture.app
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 
 /** An empty subproject.  */
-class MinimalSubProject private constructor(plugin: String, packageName: String?) :
+class MinimalSubProject private constructor(val plugin: String, val packageName: String?) :
     AbstractAndroidTestModule(),
     AndroidTestModule {
 
     init {
         var content = "\napply plugin: '$plugin'\n"
-        if (packageName != null) {
-            content = (content
-                    + "\n"
-                    + "android.compileSdkVersion "
-                    + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                    + "\n")
+        if (plugin != "java-library" && plugin != "com.android.instantapp") {
+            content += "\nandroid.compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}\n"
             val manifest = TestSourceFile(
-                "src/main",
-                "AndroidManifest.xml",
-                "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    package=\""
-                        + packageName
-                        + "\">\n"
-                        + "    <application />\n"
-                        + "</manifest>"
+                "src/main/AndroidManifest.xml", """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="${packageName!!}">
+                    <application />
+                </manifest>""".trimMargin()
             )
             addFiles(manifest)
         }
-        val build = TestSourceFile("", "build.gradle", content)
+        val build = TestSourceFile("build.gradle", content)
         addFiles(build)
     }
 
@@ -51,22 +44,18 @@ class MinimalSubProject private constructor(plugin: String, packageName: String?
         return false
     }
 
-    fun withFile(path: String, content: String): MinimalSubProject {
-        val pos = path.lastIndexOf('/')
-        return if (pos == -1) {
-            withFile(TestSourceFile("", path, content))
-        } else withFile(
-            TestSourceFile(path.substring(0, pos), path.substring(pos + 1), content)
-        )
+    fun withFile(relativePath: String, content: ByteArray): MinimalSubProject {
+        replaceFile(TestSourceFile(relativePath, content))
+        return this
     }
 
-    fun withFile(file: TestSourceFile): MinimalSubProject {
-        addFile(file)
+    fun withFile(relativePath: String, content: String): MinimalSubProject {
+        replaceFile(TestSourceFile(relativePath, content))
         return this
     }
 
     fun appendToBuild(snippet: String): MinimalSubProject {
-        replaceFile(getFile("build.gradle", "").appendContent("\n" + snippet + "\n"))
+        replaceFile(getFile("build.gradle").appendContent("\n" + snippet + "\n"))
         return this
     }
 

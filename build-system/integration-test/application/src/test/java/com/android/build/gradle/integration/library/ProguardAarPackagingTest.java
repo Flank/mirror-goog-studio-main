@@ -1,7 +1,6 @@
 package com.android.build.gradle.integration.library;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -31,12 +30,10 @@ public class ProguardAarPackagingTest {
     public static AndroidTestModule libraryInJar = new EmptyAndroidTestApp();
 
     static {
-        TestSourceFile oldHelloWorld = testApp.getFile("HelloWorld.java");
-        testApp.removeFile(oldHelloWorld);
-        testApp.addFile(
+        TestSourceFile oldHelloWorld = testApp.getFileByName("HelloWorld.java");
+        testApp.replaceFile(
                 new TestSourceFile(
-                        oldHelloWorld.getParent(),
-                        oldHelloWorld.getName(),
+                        oldHelloWorld.getPath(),
                         "package com.example.helloworld;\n"
                                 + "\n"
                                 + "import com.example.libinjar.LibInJar;\n"
@@ -54,7 +51,7 @@ public class ProguardAarPackagingTest {
                                 + "    }\n"
                                 + "}\n"));
 
-        testApp.addFile(new TestSourceFile("", "config.pro", "-keeppackagenames"));
+        testApp.addFile(new TestSourceFile("config.pro", "-keeppackagenames"));
 
         // Create simple library jar.
         libraryInJar.addFile(

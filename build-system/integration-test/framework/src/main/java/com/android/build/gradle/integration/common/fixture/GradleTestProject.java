@@ -192,7 +192,6 @@ public final class GradleTestProject implements TestRule {
     private final boolean withKotlinGradlePlugin;
     @NonNull private final List<String> withIncludedBuilds;
     @Nullable private File testDir;
-    private File sourceDir;
     private File buildFile;
     private File localProp;
     private final boolean withoutNdk;
@@ -261,7 +260,7 @@ public final class GradleTestProject implements TestRule {
         this.withAndroidGradlePlugin = withAndroidGradlePlugin;
         this.withKotlinGradlePlugin = withKotlinGradlePlugin;
         this.withIncludedBuilds = withIncludedBuilds;
-        this.buildFile = sourceDir = null;
+        this.buildFile = null;
         this.name = (name == null) ? DEFAULT_TEST_PROJECT_NAME : name;
         this.targetGradleVersion = targetGradleVersion;
         this.testProject = testProject;
@@ -300,7 +299,6 @@ public final class GradleTestProject implements TestRule {
         assertTrue("No subproject dir at " + getTestDir().toString(), getTestDir().isDirectory());
 
         buildFile = new File(getTestDir(), "build.gradle");
-        sourceDir = new File(getTestDir(), "src");
         withoutNdk = rootProject.withoutNdk;
         withDependencyChecker = rootProject.withDependencyChecker;
         gradleProperties = ImmutableList.of();
@@ -503,7 +501,6 @@ public final class GradleTestProject implements TestRule {
         }
 
         buildFile = new File(testDir, "build.gradle");
-        sourceDir = new File(testDir, "src");
 
         try {
             deleteRecursivelyIfExistsExperimental(testDir.toPath());
@@ -529,7 +526,6 @@ public final class GradleTestProject implements TestRule {
         }
 
         FileUtils.mkdirs(testDir);
-        FileUtils.mkdirs(sourceDir);
 
         Files.write(
                 generateVersions(),

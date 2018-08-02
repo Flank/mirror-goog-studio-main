@@ -46,14 +46,14 @@ public class PackagingOptionsTest {
     private static AndroidTestModule jarProject1 = new EmptyAndroidTestApp();
 
     static {
-        jarProject1.addFile(new TestSourceFile("", "build.gradle", "apply plugin: 'java'"));
+        jarProject1.addFile(new TestSourceFile("build.gradle", "apply plugin: 'java'"));
         jarProject1.addFile(new TestSourceFile("src/main/resources", "conflict.txt", "foo"));
     }
 
     private static AndroidTestModule jarProject2 = new EmptyAndroidTestApp();
 
     static {
-        jarProject2.addFile(new TestSourceFile("", "build.gradle", "apply plugin: 'java'"));
+        jarProject2.addFile(new TestSourceFile("build.gradle", "apply plugin: 'java'"));
         jarProject2.addFile(new TestSourceFile("src/main/resources", "conflict.txt", "foo"));
         // add an extra file so that jar1 is different from jar2.
         jarProject2.addFile(new TestSourceFile("src/main/resources", "dummy2.txt", "bar"));

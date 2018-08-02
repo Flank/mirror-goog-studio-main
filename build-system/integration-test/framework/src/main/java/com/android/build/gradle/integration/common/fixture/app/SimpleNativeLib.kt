@@ -22,7 +22,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 class SimpleNativeLib : AbstractAndroidTestModule() {
     private val buildGradle =
             TestSourceFile(
-                    ".",
                     "build.gradle",
                     """
 apply plugin: 'com.android.library'

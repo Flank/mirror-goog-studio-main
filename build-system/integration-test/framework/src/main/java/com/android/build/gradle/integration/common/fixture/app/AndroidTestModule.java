@@ -16,40 +16,42 @@
 
 package com.android.build.gradle.integration.common.fixture.app;
 
+import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.TestProject;
 import java.util.Collection;
 
 /**
- * Interface for an single module Android test application.
+ * Interface for a single Android test module.
  *
- * <p>A test application is a collection of source code that may be reused for multiple tests.
+ * <p>A test module is a collection of source code and resources that may be reused for multiple
+ * tests.
  */
 public interface AndroidTestModule extends TestProject {
-    /**
-     * Return a source file in the test app with the specified filename.
-     */
-    TestSourceFile getFile(String filename);
 
-    /**
-     * Return a source file in the test app matching the specified filename and path.
-     */
-    TestSourceFile getFile(String filename, String path);
+    /** Returns a source file with the specified file path. */
+    @NonNull
+    TestSourceFile getFile(@NonNull String filePath);
 
-    /**
-     * Return all source files in this test app.
-     */
+    /** Returns a source file with the specified file name. */
+    @NonNull
+    TestSourceFile getFileByName(@NonNull String fileName);
+
+    /** Returns all source files. */
+    @NonNull
     Collection<TestSourceFile> getAllSourceFiles();
 
-    /**
-     * Add an additional source file to the test app.
-     */
-    void addFile(TestSourceFile file);
+    /** Adds a source file. The file must not yet exist. */
+    void addFile(@NonNull TestSourceFile file);
+
+    /** Removes a source file with the specified file path. The file must already exist. */
+    void removeFile(@NonNull String filePath);
+
+    /** Removes a source file with the specified file name. The file must already exist. */
+    void removeFileByName(@NonNull String fileName);
 
     /**
-     * Remove a source file from the test app.
+     * Replaces a source file at the corresponding file path, or adds it if the file does not yet
+     * exist.
      */
-    boolean removeFile(TestSourceFile file);
-
-    /** Replaces a source file, searching by path and name. */
     void replaceFile(TestSourceFile file);
 }
