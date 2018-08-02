@@ -259,7 +259,7 @@ open class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: Work
 
             task.adbExe = { scope.globalScope.sdkHandler.sdkInfo?.adb!! }
 
-            (scope.variantData as ApkVariantData).installTask = task
+            scope.taskContainer.installTask = task
         }
     }
 }

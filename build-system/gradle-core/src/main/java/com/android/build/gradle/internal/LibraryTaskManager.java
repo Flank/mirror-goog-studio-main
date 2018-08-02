@@ -167,7 +167,6 @@ public class LibraryTaskManager extends TaskManager {
 
         // Add dependencies on NDK tasks if NDK plugin is applied.
         createNdkTasks(variantScope);
-        variantScope.setNdkBuildable(getNdkBuildable(variantScope.getVariantData()));
 
         // External native build
         createExternalNativeBuildJsonGenerators(variantScope);

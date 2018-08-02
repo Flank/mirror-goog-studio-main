@@ -162,7 +162,6 @@ public class ApplicationTaskManager extends TaskManager {
 
         // Add NDK tasks
         createNdkTasks(variantScope);
-        variantScope.setNdkBuildable(getNdkBuildable(variantData));
 
         // Add external native build tasks
         createExternalNativeBuildJsonGenerators(variantScope);

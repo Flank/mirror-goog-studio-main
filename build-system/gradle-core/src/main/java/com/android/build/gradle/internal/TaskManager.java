@@ -342,21 +342,6 @@ public abstract class TaskManager {
     public abstract void createTasksForVariantScope(@NonNull VariantScope variantScope);
 
     /**
-     * Returns a collection of buildables that creates native object.
-     *
-     * A buildable is considered to be any object that can be used as the argument to
-     * Task.dependsOn.  This could be a Task or a BuildableModelElement (e.g. BinarySpec).
-     */
-    protected Collection<Object> getNdkBuildable(BaseVariantData variantData) {
-        final NdkCompile ndkCompileTask =
-                variantData.getScope().getTaskContainer().getNdkCompileTask();
-        if (ndkCompileTask == null) {
-            return Collections.emptyList();
-        }
-        return Collections.singleton(ndkCompileTask);
-    }
-
-    /**
      * Override to configure NDK data in the scope.
      */
     public void configureScopeForNdk(@NonNull VariantScope scope) {
@@ -991,19 +976,20 @@ public abstract class TaskManager {
                                 .build());
 
         // create a stream that contains the content of the local NDK build
+        ConfigurableFileCollection fileCollection =
+                project.files((Callable<Collection<File>>) variantScope::getNdkSoFolder);
+        if (variantScope.getTaskContainer().getNdkCompileTask() != null) {
+            fileCollection =
+                    fileCollection.builtBy(variantScope.getTaskContainer().getNdkCompileTask());
+        }
+
         variantScope
                 .getTransformManager()
                 .addStream(
                         OriginalStream.builder(project, "local-ndk-build")
                                 .addContentType(ExtendedContentType.NATIVE_LIBS)
                                 .addScope(Scope.PROJECT)
-                                .setFileCollection(
-                                        project.files(
-                                                        (Callable<Collection<File>>)
-                                                                variantScope::getNdkSoFolder)
-                                                .builtBy(
-                                                        getNdkBuildable(
-                                                                variantScope.getVariantData())))
+                                .setFileCollection(fileCollection)
                                 .build());
 
         // create a stream that contains the content of the local external native build
@@ -1220,7 +1206,7 @@ public abstract class TaskManager {
             // create the task that creates the aapt output for the bundle.
             taskFactory.create(new LinkAndroidResForBundleTask.ConfigAction(scope));
         }
-        scope.setProcessResourcesTask(task);
+        scope.getTaskContainer().setProcessAndroidResTask(task);
         artifacts.appendArtifact(
                 InternalArtifactType.SYMBOL_LIST, ImmutableList.of(symbolFile), task);
 
@@ -1306,7 +1292,9 @@ public abstract class TaskManager {
                 taskFactory.create(new PackageSplitAbi.ConfigAction(scope));
         scope.getTaskContainer().setPackageSplitAbiTask(packageSplitAbiTask);
 
-        packageSplitAbiTask.dependsOn(scope.getNdkBuildable());
+        if (scope.getTaskContainer().getNdkCompileTask() != null) {
+            packageSplitAbiTask.dependsOn(scope.getTaskContainer().getNdkCompileTask());
+        }
 
         if (variantData.getVariantConfiguration().getSigningConfig() != null) {
             packageSplitAbiTask.dependsOn(getValidateSigningTask(variantData.getScope()));
@@ -1865,7 +1853,6 @@ public abstract class TaskManager {
 
         // Add NDK tasks
         createNdkTasks(variantScope);
-        variantScope.setNdkBuildable(getNdkBuildable(variantData));
 
         // add tasks to merge jni libs.
         createMergeJniLibFoldersTasks(variantScope);
@@ -2787,7 +2774,6 @@ public abstract class TaskManager {
 
         exportBuildInfo.dependsOn(scope.getTaskContainer().getSourceGenTask());
 
-        scope.setDataBindingExportBuildInfoTask(exportBuildInfo);
 
         taskFactory.create(new DataBindingGenBaseClassesTask.ConfigAction(scope));
 
@@ -2936,8 +2922,8 @@ public abstract class TaskManager {
         Consumer<Task> configureResourcesAndAssetsDependencies =
                 task -> {
                     task.dependsOn(taskContainer.getMergeAssetsTask());
-                    if (variantScope.getProcessResourcesTask() != null) {
-                        task.dependsOn(variantScope.getProcessResourcesTask());
+                    if (variantScope.getTaskContainer().getProcessAndroidResTask() != null) {
+                        task.dependsOn(variantScope.getTaskContainer().getProcessAndroidResTask());
                     }
                 };
 

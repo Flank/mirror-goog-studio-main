@@ -87,8 +87,7 @@ public abstract class BaseVariantData {
     private VariantDependencies variantDependency;
 
     // Needed for ModelBuilder.  Should be removed once VariantScope can replace BaseVariantData.
-    @NonNull
-    private final VariantScope scope;
+    @NonNull protected final VariantScope scope;
 
     private ImmutableList<ConfigurableFileTree> defaultJavaSources;
 
@@ -608,10 +607,13 @@ public abstract class BaseVariantData {
             }
 
             if (scope.getGlobalScope().getExtension().getDataBinding().isEnabled()
-                    && scope.getDataBindingExportBuildInfoTask() != null) {
+                    && scope.getTaskContainer().getDataBindingExportBuildInfoTask() != null) {
                 sourceSets.add(
                         project.fileTree(scope.getClassOutputForDataBinding())
-                                .builtBy(scope.getDataBindingExportBuildInfoTask().getName()));
+                                .builtBy(
+                                        scope.getTaskContainer()
+                                                .getDataBindingExportBuildInfoTask()
+                                                .getName()));
                 BuildableArtifact baseClassSource =
                         scope.getArtifacts()
                                 .getFinalArtifactFiles(

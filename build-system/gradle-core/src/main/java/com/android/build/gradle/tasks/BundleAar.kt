@@ -142,7 +142,7 @@ open class BundleAar : Zip() {
                     variantScope.outputScope.mainSplit.outputFileName)),
                 task)
 
-            libVariantData.packageLibTask = task
+            variantScope.taskContainer.bundleLibraryTask = task
         }
 
         private fun prependToCopyPath(pathSegment: String) = Action { copySpec: CopySpec ->

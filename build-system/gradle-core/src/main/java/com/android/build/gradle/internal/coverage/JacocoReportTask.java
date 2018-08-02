@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.builder.model.Version;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -234,9 +233,7 @@ public class JacocoReportTask extends DefaultTask {
 
             task.coverageDirectory =
                     TaskInputHelper.memoize(
-                            () ->
-                                    ((TestVariantData) scope.getVariantData())
-                                            .connectedTestTask.getCoverageDir());
+                            () -> scope.getTaskContainer().getConnectedTestTask().getCoverageDir());
 
             task.classFileCollection =
                     testedScope

@@ -19,7 +19,6 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.sdk.SdkInfo;
 import com.android.builder.testing.ConnectedDeviceProvider;
@@ -154,7 +153,7 @@ public class UninstallTask extends AndroidBuilderTask {
                 return (info == null ? null : info.getAdb());
             });
 
-            ((ApkVariantData) scope.getVariantData()).uninstallTask = uninstallTask;
+            scope.getTaskContainer().setUninstallTask(uninstallTask);
         }
     }
 }

@@ -37,7 +37,6 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AbstractAndroidCompile;
 import com.android.build.gradle.internal.utils.AndroidXDependency;
-import com.android.build.gradle.internal.variant.LibraryVariantData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.packaging.TypedefRemover;
 import com.android.tools.lint.gradle.api.ExtractAnnotationRequest;
@@ -371,7 +370,7 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
             // force the sdk to be parsed. (Same as in compileTask)
             task.setBootClasspath(() -> androidBuilder.getBootClasspathAsStrings(false));
 
-            ((LibraryVariantData) variantScope.getVariantData()).generateAnnotationsTask = task;
+            variantScope.getTaskContainer().setGenerateAnnotationsTask(task);
 
             task.lintClassPath = variantScope.getGlobalScope().getProject().getConfigurations()
                     .getByName(LintBaseTask.LINT_CLASS_PATH);

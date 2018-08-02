@@ -91,6 +91,8 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
                             .getProjectOptions()
                             .get(BooleanOption.USE_ANDROID_X);
             task.emptyClassOutDir = variantScope.getClassOutputForDataBinding();
+
+            variantScope.getTaskContainer().setDataBindingExportBuildInfoTask(task);
         }
     }
 }

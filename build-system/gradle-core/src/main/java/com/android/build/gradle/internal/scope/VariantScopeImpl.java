@@ -152,7 +152,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull private final GlobalScope globalScope;
     @NonNull private final BaseVariantData variantData;
     @NonNull private final TransformManager transformManager;
-    @Nullable private Collection<Object> ndkBuildable;
     @Nullable private Collection<File> ndkSoFolder;
     @NonNull private final Map<Abi, File> ndkDebuggableLibraryFolders = Maps.newHashMap();
 
@@ -164,7 +163,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     private ConfigurableFileCollection desugarTryWithResourcesRuntimeJar;
 
-    @Nullable private DataBindingExportBuildInfoTask dataBindingExportBuildInfoTask;
     @Nullable private DataBindingCompilerArguments dataBindingCompilerArguments;
 
     private FileCollection bootClasspath;
@@ -646,17 +644,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     public String getTaskName(@NonNull String prefix, @NonNull String suffix) {
         return variantData.getTaskName(prefix, suffix);
-    }
-
-    @Override
-    @Nullable
-    public Collection<Object> getNdkBuildable() {
-        return ndkBuildable;
-    }
-
-    @Override
-    public void setNdkBuildable(@NonNull Collection<Object> ndkBuildable) {
-        this.ndkBuildable = ndkBuildable;
     }
 
     @Override
@@ -1637,30 +1624,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         }
 
         return result;
-    }
-
-    ProcessAndroidResources processAndroidResourcesTask;
-
-    @Override
-    public void setProcessResourcesTask(
-            ProcessAndroidResources processAndroidResourcesAndroidTask) {
-        this.processAndroidResourcesTask = processAndroidResourcesAndroidTask;
-    }
-
-    @Override
-    public ProcessAndroidResources getProcessResourcesTask() {
-        return processAndroidResourcesTask;
-    }
-
-    @Override
-    public void setDataBindingExportBuildInfoTask(@NonNull DataBindingExportBuildInfoTask task) {
-        this.dataBindingExportBuildInfoTask = task;
-    }
-
-    @Override
-    @Nullable
-    public DataBindingExportBuildInfoTask getDataBindingExportBuildInfoTask() {
-        return dataBindingExportBuildInfoTask;
     }
 
     @Override

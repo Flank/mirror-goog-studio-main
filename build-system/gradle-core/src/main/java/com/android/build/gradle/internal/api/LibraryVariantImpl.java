@@ -89,7 +89,7 @@ public class LibraryVariantImpl extends BaseVariantImpl implements LibraryVarian
     @Override
     @Nullable
     public Zip getPackageLibrary() {
-        return variantData.packageLibTask;
+        return variantData.getTaskContainer().getBundleLibraryTask();
     }
 
 }

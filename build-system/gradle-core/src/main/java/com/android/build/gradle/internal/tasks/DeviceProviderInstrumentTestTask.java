@@ -467,11 +467,10 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
             task.setCoverageDir(project.file(rootLocation + subFolder));
 
             if (scope.getVariantData() instanceof TestVariantData) {
-                TestVariantData testVariantData = (TestVariantData) scope.getVariantData();
                 if (connected) {
-                    testVariantData.connectedTestTask = task;
+                    scope.getTaskContainer().setConnectedTestTask(task);
                 } else {
-                    testVariantData.providerTestTaskList.add(task);
+                    scope.getTaskContainer().getProviderTestTaskList().add(task);
                 }
             }
 

@@ -68,12 +68,12 @@ public class TestVariantImpl extends ApkVariantImpl implements TestVariant {
 
     @Override
     public DefaultTask getConnectedInstrumentTest() {
-        return variantData.connectedTestTask;
+        return variantData.getTaskContainer().getConnectedTestTask();
     }
 
     @NonNull
     @Override
     public List<? extends DefaultTask> getProviderInstrumentTests() {
-        return variantData.providerTestTaskList;
+        return variantData.getTaskContainer().getProviderTestTaskList();
     }
 }

@@ -27,9 +27,6 @@ import org.gradle.api.DefaultTask;
 /** Base data about a variant that is installable. */
 public abstract class InstallableVariantData extends AndroidArtifactVariantData {
 
-    public DefaultTask installTask;
-    public DefaultTask uninstallTask;
-
     protected InstallableVariantData(
             @NonNull GlobalScope globalScope,
             @NonNull AndroidConfig androidConfig,

@@ -32,8 +32,6 @@ import java.util.List;
  */
 public class TestVariantData extends ApkVariantData {
 
-    public DeviceProviderInstrumentTestTask connectedTestTask;
-    public final List<DeviceProviderInstrumentTestTask> providerTestTaskList = Lists.newArrayList();
     @NonNull
     private final TestedVariantData testedVariantData;
 

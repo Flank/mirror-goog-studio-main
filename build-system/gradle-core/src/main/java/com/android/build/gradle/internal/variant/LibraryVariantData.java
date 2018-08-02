@@ -21,7 +21,6 @@ import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.tasks.ExtractAnnotations;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
@@ -31,17 +30,11 @@ import java.io.File;
 import java.util.Collection;
 import java.util.Map;
 import org.gradle.api.Task;
-import org.gradle.api.tasks.bundling.Zip;
 
 /** Data about a variant that produce a Library bundle (.aar) */
 public class LibraryVariantData extends BaseVariantData implements TestedVariantData {
 
     private final Map<VariantType, TestVariantData> testVariants;
-
-    public Zip packageLibTask;
-
-    @Nullable
-    public ExtractAnnotations generateAnnotationsTask = null;
 
     public LibraryVariantData(
             @NonNull GlobalScope globalScope,
@@ -95,9 +88,9 @@ public class LibraryVariantData extends BaseVariantData implements TestedVariant
     public void registerJavaGeneratingTask(
             @NonNull Task task, @NonNull File... generatedSourceFolders) {
         super.registerJavaGeneratingTask(task, generatedSourceFolders);
-        if (generateAnnotationsTask != null) {
+        if (scope.getTaskContainer().getGenerateAnnotationsTask() != null) {
             for (File f : generatedSourceFolders) {
-                generateAnnotationsTask.source(f);
+                scope.getTaskContainer().getGenerateAnnotationsTask().source(f);
             }
         }
     }
@@ -107,9 +100,9 @@ public class LibraryVariantData extends BaseVariantData implements TestedVariant
     public void registerJavaGeneratingTask(
             @NonNull Task task, @NonNull Collection<File> generatedSourceFolders) {
         super.registerJavaGeneratingTask(task, generatedSourceFolders);
-        if (generateAnnotationsTask != null) {
+        if (scope.getTaskContainer().getGenerateAnnotationsTask() != null) {
             for (File f : generatedSourceFolders) {
-                generateAnnotationsTask.source(f);
+                scope.getTaskContainer().getGenerateAnnotationsTask().source(f);
             }
         }
     }

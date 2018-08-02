@@ -18,10 +18,12 @@ package com.android.build.gradle.internal.scope
 
 import com.android.build.gradle.internal.pipeline.TransformTask
 import com.android.build.gradle.internal.tasks.CheckManifest
+import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask
 import com.android.build.gradle.tasks.AidlCompile
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator
+import com.android.build.gradle.tasks.ExtractAnnotations
 import com.android.build.gradle.tasks.GenerateBuildConfig
 import com.android.build.gradle.tasks.GenerateResValues
 import com.android.build.gradle.tasks.ManifestProcessorTask
@@ -34,6 +36,7 @@ import com.android.build.gradle.tasks.PackageSplitRes
 import com.android.build.gradle.tasks.ProcessAndroidResources
 import com.android.build.gradle.tasks.RenderscriptCompile
 import com.android.build.gradle.tasks.ShaderCompile
+import org.gradle.api.DefaultTask
 import org.gradle.api.Task
 import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.bundling.Zip
@@ -74,6 +77,14 @@ class MutableTaskContainer : TaskContainer {
     override var packageAndroidTask: PackageAndroidArtifact? = null
     override var bundleLibraryTask: Zip? = null
 
+    override var installTask: DefaultTask? = null
+    override var uninstallTask: DefaultTask? = null
+
+    override var connectedTestTask: DeviceProviderInstrumentTestTask? = null
+    override val providerTestTaskList: List<DeviceProviderInstrumentTestTask> = mutableListOf()
+
+    override var generateAnnotationsTask: ExtractAnnotations? = null
+
     override val externalNativeBuildTasks: MutableCollection<ExternalNativeBuildTask> = mutableListOf()
 
     // anything below is scheduled for removal, using BuildableArtifact to link tasks.
@@ -91,4 +102,5 @@ class MutableTaskContainer : TaskContainer {
     var generateResValuesTask: GenerateResValues? = null
     var generateApkDataTask: GenerateApkDataTask? = null
     var coverageReportTask: Task? = null
+    var dataBindingExportBuildInfoTask: Task? = null
 }

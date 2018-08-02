@@ -17,8 +17,10 @@
 package com.android.build.gradle.internal.scope
 
 import com.android.build.gradle.internal.tasks.CheckManifest
+import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
 import com.android.build.gradle.tasks.AidlCompile
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
+import com.android.build.gradle.tasks.ExtractAnnotations
 import com.android.build.gradle.tasks.GenerateBuildConfig
 import com.android.build.gradle.tasks.ManifestProcessorTask
 import com.android.build.gradle.tasks.MergeResources
@@ -27,6 +29,7 @@ import com.android.build.gradle.tasks.NdkCompile
 import com.android.build.gradle.tasks.PackageAndroidArtifact
 import com.android.build.gradle.tasks.ProcessAndroidResources
 import com.android.build.gradle.tasks.RenderscriptCompile
+import org.gradle.api.DefaultTask
 import org.gradle.api.Task
 import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.bundling.Zip
@@ -55,6 +58,14 @@ interface TaskContainer {
     val processManifestTask: ManifestProcessorTask?
     val packageAndroidTask: PackageAndroidArtifact?
     val bundleLibraryTask: Zip?
+
+    val installTask: DefaultTask?
+    val uninstallTask: DefaultTask?
+
+    val connectedTestTask: DeviceProviderInstrumentTestTask?
+    val providerTestTaskList: List<DeviceProviderInstrumentTestTask>
+
+    var generateAnnotationsTask: ExtractAnnotations?
 
     val externalNativeBuildTasks: Collection<ExternalNativeBuildTask>
 }

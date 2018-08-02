@@ -30,9 +30,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments;
-import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexMergerTool;
 import com.android.builder.dexing.DexerTool;
@@ -119,11 +117,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     TransformManager getTransformManager();
-
-    @Nullable
-    Collection<Object> getNdkBuildable();
-
-    void setNdkBuildable(@NonNull Collection<Object> ndkBuildable);
 
     @Nullable
     Collection<File> getNdkSoFolder();
@@ -284,15 +277,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     @Nullable
     InstantRunTaskManager getInstantRunTaskManager();
     void setInstantRunTaskManager(InstantRunTaskManager taskManager);
-
-    void setProcessResourcesTask(ProcessAndroidResources processAndroidResourcesAndroidTask);
-
-    ProcessAndroidResources getProcessResourcesTask();
-
-    void setDataBindingExportBuildInfoTask(@NonNull DataBindingExportBuildInfoTask task);
-
-    @Nullable
-    DataBindingExportBuildInfoTask getDataBindingExportBuildInfoTask();
 
     void setDataBindingCompilerArguments(
             @NonNull DataBindingCompilerArguments dataBindingCompilerArguments);
