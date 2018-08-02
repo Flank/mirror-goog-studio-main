@@ -100,7 +100,4 @@ public interface ResourceValue extends Serializable {
      * <p>This method is meant to be called by the XML parser that created this ResourceValue.
      */
     void setNamespaceResolver(@NonNull ResourceNamespace.Resolver resolver);
-
-    @Deprecated // TODO(namespaces): Called by layoutlib.
-    void setNamespaceLookup(@NonNull ResourceNamespace.Resolver resolver);
 }

@@ -23,7 +23,7 @@ import com.android.utils.HashCodes;
 import com.google.common.base.MoreObjects;
 import java.util.Objects;
 
-/** Implementation of the {@link ResourceValue} interface. */
+/** Simple implementation of the {@link ResourceValue} interface. */
 public class ResourceValueImpl implements ResourceValue {
     @NonNull private final ResourceType resourceType;
     @NonNull private final ResourceNamespace namespace;
@@ -37,15 +37,16 @@ public class ResourceValueImpl implements ResourceValue {
             ResourceNamespace.Resolver.EMPTY_RESOLVER;
 
     public ResourceValueImpl(
-            @NonNull ResourceReference reference,
+            @NonNull ResourceNamespace namespace,
+            @NonNull ResourceType type,
+            @NonNull String name,
             @Nullable String value,
             @Nullable String libraryName) {
-        this(reference.getNamespace(), reference.getResourceType(), reference.getName(), value,
-             libraryName);
-    }
-
-    public ResourceValueImpl(@NonNull ResourceReference reference, @Nullable String value) {
-        this(reference, value, null);
+        this.namespace = namespace;
+        this.resourceType = type;
+        this.name = name;
+        this.value = value;
+        this.libraryName = libraryName;
     }
 
     public ResourceValueImpl(
@@ -57,16 +58,15 @@ public class ResourceValueImpl implements ResourceValue {
     }
 
     public ResourceValueImpl(
-            @NonNull ResourceNamespace namespace,
-            @NonNull ResourceType type,
-            @NonNull String name,
+            @NonNull ResourceReference reference,
             @Nullable String value,
             @Nullable String libraryName) {
-        this.namespace = namespace;
-        this.resourceType = type;
-        this.name = name;
-        this.value = value;
-        this.libraryName = libraryName;
+        this(reference.getNamespace(), reference.getResourceType(), reference.getName(), value,
+             libraryName);
+    }
+
+    public ResourceValueImpl(@NonNull ResourceReference reference, @Nullable String value) {
+        this(reference, value, null);
     }
 
     @Override
@@ -87,17 +87,12 @@ public class ResourceValueImpl implements ResourceValue {
         return name;
     }
 
-    /**
-     * Returns the name of the library where this resource was found or null if it is not from a
-     * library.
-     */
     @Override
     @Nullable
     public final String getLibraryName() {
         return libraryName;
     }
 
-    /** Returns true if the resource is user defined. */
     @Override
     public boolean isUserDefined() {
         // TODO: namespaces
@@ -110,10 +105,6 @@ public class ResourceValueImpl implements ResourceValue {
         return ResourceNamespace.ANDROID.equals(namespace);
     }
 
-    /**
-     * Returns the value of the resource, as defined in the XML. This can be <code>null</code>, for
-     * example for instances of {@link StyleResourceValue}.
-     */
     @Override
     @Nullable
     public String getValue() {
@@ -132,13 +123,6 @@ public class ResourceValueImpl implements ResourceValue {
         return asReference().getResourceUrl();
     }
 
-    /**
-     * If this {@link ResourceValue} references another one, returns a {@link ResourceReference} to
-     * it, otherwise null.
-     *
-     * <p>This method should be called before inspecting the textual value ({@link #getValue}), as
-     * it handles namespaces correctly.
-     */
     @Override
     @Nullable
     public ResourceReference getReference() {
@@ -154,13 +138,6 @@ public class ResourceValueImpl implements ResourceValue {
         return url.resolve(getNamespace(), mNamespaceResolver);
     }
 
-    /**
-     * Similar to {@link #getValue()}, but returns the raw XML value. This is <b>usually</b> the
-     * same as getValue, but with a few exceptions. For example, for markup strings, you can have
-     * {@code <string name="markup">This is <b>bold</b></string>}. Here, {@link #getValue()} will
-     * return "{@code This is bold}" -- e.g. just the plain text flattened. However, this method
-     * will return "{@code This is <b>bold</b>}", which preserves the XML markup elements.
-     */
     @Override
     @Nullable
     public String getRawXmlValue() {
@@ -202,25 +179,6 @@ public class ResourceValueImpl implements ResourceValue {
     @Override
     public void setNamespaceResolver(@NonNull ResourceNamespace.Resolver resolver) {
         this.mNamespaceResolver = resolver;
-    }
-
-    @Deprecated // TODO(namespaces): Called by layoutlib.
-    @Override
-    public void setNamespaceLookup(@NonNull ResourceNamespace.Resolver resolver) {
-        setNamespaceResolver(
-                new ResourceNamespace.Resolver() {
-                    @Nullable
-                    @Override
-                    public String uriToPrefix(@NonNull String namespaceUri) {
-                        return null;
-                    }
-
-                    @Nullable
-                    @Override
-                    public String prefixToUri(@NonNull String namespacePrefix) {
-                        return resolver.prefixToUri(namespacePrefix);
-                    }
-                });
     }
 
     @Override
