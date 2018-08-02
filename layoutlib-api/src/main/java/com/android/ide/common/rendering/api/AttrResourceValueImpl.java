@@ -18,24 +18,20 @@ package com.android.ide.common.rendering.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+
+import java.util.*;
 
 /**
  * A resource value representing an attr resource.
  */
 public class AttrResourceValueImpl extends ResourceValueImpl implements AttrResourceValue {
     /** The keys are enum or flag names, the values are corresponding numeric values. */
-    @Nullable private Map<String, Integer> mValueMap;
+    @Nullable private Map<String, Integer> valueMap;
     /** The keys are enum or flag names, the values are the value descriptions. */
-    @Nullable private Map<String, String> mValueDescriptionMap;
-    @Nullable private String mDescription;
-    @Nullable private String mGroupName;
-    @NonNull private Set<AttributeFormat> mFormats = EnumSet.noneOf(AttributeFormat.class);
+    @Nullable private Map<String, String> valueDescriptionMap;
+    @Nullable private String description;
+    @Nullable private String groupName;
+    @NonNull private Set<AttributeFormat> formats = EnumSet.noneOf(AttributeFormat.class);
 
     public AttrResourceValueImpl(
             @NonNull ResourceReference reference, @Nullable String libraryName) {
@@ -51,33 +47,33 @@ public class AttrResourceValueImpl extends ResourceValueImpl implements AttrReso
     }
 
     @Override
-    @NonNull
+    @Nullable
     public Map<String, Integer> getAttributeValues() {
-        return mValueMap;
+        return valueMap;
     }
 
     @Override
     @Nullable
     public String getValueDescription(@NonNull String valueName) {
-        return mValueDescriptionMap == null ? null : mValueDescriptionMap.get(valueName);
+        return valueDescriptionMap == null ? null : valueDescriptionMap.get(valueName);
     }
 
     @Override
     @Nullable
     public String getDescription() {
-        return mDescription;
+        return description;
     }
 
     @Override
     @Nullable
     public String getGroupName() {
-        return mGroupName;
+        return groupName;
     }
 
     @Override
     @NonNull
     public Set<AttributeFormat> getFormats() {
-        return mFormats;
+        return formats;
     }
 
     /**
@@ -88,18 +84,18 @@ public class AttrResourceValueImpl extends ResourceValueImpl implements AttrReso
      * @param valueName the description of the value
      */
     public void addValue(@NonNull String valueName, @Nullable Integer numericValue, @Nullable String description) {
-        if (mValueMap == null) {
-            mValueMap = new LinkedHashMap<>();
+        if (valueMap == null) {
+          valueMap = new LinkedHashMap<>();
         }
 
-        mValueMap.put(valueName, numericValue);
+        valueMap.put(valueName, numericValue);
 
         if (description != null) {
-            if (mValueDescriptionMap == null) {
-                mValueDescriptionMap = new HashMap<>();
+            if (valueDescriptionMap == null) {
+              valueDescriptionMap = new HashMap<>();
             }
 
-            mValueDescriptionMap.put(valueName, description);
+            valueDescriptionMap.put(valueName, description);
         }
     }
 
@@ -109,7 +105,7 @@ public class AttrResourceValueImpl extends ResourceValueImpl implements AttrReso
      * @param description the description to set
      */
     public void setDescription(@Nullable String description) {
-        mDescription = description;
+      this.description = description;
     }
 
     /**
@@ -118,7 +114,7 @@ public class AttrResourceValueImpl extends ResourceValueImpl implements AttrReso
      * @param groupName the name of the group to set
      */
     public void setGroupName(@Nullable String groupName) {
-        mGroupName = groupName;
+      this.groupName = groupName;
     }
 
     /**
@@ -127,6 +123,6 @@ public class AttrResourceValueImpl extends ResourceValueImpl implements AttrReso
      * @param formats the formats to set
      */
     public void setFormats(@NonNull Collection<AttributeFormat> formats) {
-        this.mFormats = EnumSet.copyOf(formats);
+        this.formats = EnumSet.copyOf(formats);
     }
 }
