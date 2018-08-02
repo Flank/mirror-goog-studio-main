@@ -45,12 +45,19 @@ open class GenerateNamespacedLibraryRFilesTask : DefaultTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var partialRFiles: BuildableArtifact private set
+    lateinit var partialRFiles: BuildableArtifact
+        private set
 
-    @get:Internal lateinit var packageForRSupplier: Supplier<String> private set
-    @get:Input val packageForR get() = packageForRSupplier.get()
+    @get:Internal
+    lateinit var packageForRSupplier: Supplier<String>
+        private set
+    @get:Input
+    val packageForR
+        get() = packageForRSupplier.get()
 
-    @get:OutputFile lateinit var rJarFile: File private set
+    @get:OutputFile
+    lateinit var rJarFile: File
+        private set
 
     @TaskAction
     fun taskAction() {

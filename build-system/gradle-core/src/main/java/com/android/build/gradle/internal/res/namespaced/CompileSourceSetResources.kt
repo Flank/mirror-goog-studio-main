@@ -48,13 +48,25 @@ open class CompileSourceSetResources
 @Inject constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var aapt2FromMaven: FileCollection private set
+    lateinit var aapt2FromMaven: FileCollection
+        private set
 
-    @get:InputFiles @get:SkipWhenEmpty lateinit var inputDirectories: BuildableArtifact private set
-    @get:Input var isPngCrunching: Boolean = false; private set
-    @get:Input var isPseudoLocalize: Boolean = false; private set
-    @get:OutputDirectory lateinit var outputDirectory: File private set
-    @get:OutputDirectory lateinit var partialRDirectory: File private set
+    @get:InputFiles
+    @get:SkipWhenEmpty
+    lateinit var inputDirectories: BuildableArtifact
+        private set
+    @get:Input
+    var isPngCrunching: Boolean = false
+        private set
+    @get:Input
+    var isPseudoLocalize: Boolean = false
+        private set
+    @get:OutputDirectory
+    lateinit var outputDirectory: File
+        private set
+    @get:OutputDirectory
+    lateinit var partialRDirectory: File
+        private set
 
     private val workers = Workers.getWorker(workerExecutor)
 
