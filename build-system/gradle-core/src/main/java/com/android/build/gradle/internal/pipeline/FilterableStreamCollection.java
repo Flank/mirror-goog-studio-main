@@ -28,6 +28,7 @@ import org.gradle.api.file.FileCollection;
  */
 public abstract class FilterableStreamCollection {
 
+    @NonNull
     abstract Project getProject();
 
     @NonNull

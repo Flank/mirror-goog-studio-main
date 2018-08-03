@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.tasks.PackageApplication;
 import com.google.common.collect.Lists;
 import java.util.List;
-import org.gradle.api.DefaultTask;
+import org.gradle.api.Task;
 
 /**
  * Partial implementation of the {@link InstantRunVariantScope} that contains generic implementation
@@ -28,15 +28,15 @@ import org.gradle.api.DefaultTask;
  */
 public abstract class GenericVariantScopeImpl implements InstantRunVariantScope {
 
-    private List<DefaultTask> coldSwapBuildTasks = Lists.newArrayList();
+    private List<Task> coldSwapBuildTasks = Lists.newArrayList();
 
     @Override
-    public List<DefaultTask> getColdSwapBuildTasks() {
+    public List<Task> getColdSwapBuildTasks() {
         return coldSwapBuildTasks;
     }
 
     @Override
-    public void addColdSwapBuildTask(@NonNull DefaultTask task) {
+    public void addColdSwapBuildTask(@NonNull Task task) {
         this.coldSwapBuildTasks.add(task);
     }
 

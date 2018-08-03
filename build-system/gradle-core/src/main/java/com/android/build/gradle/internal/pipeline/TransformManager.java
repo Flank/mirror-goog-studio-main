@@ -139,6 +139,7 @@ public class TransformManager extends FilterableStreamCollection {
         this.logger = Logging.getLogger(TransformManager.class);
     }
 
+    @NonNull
     @Override
     Project getProject() {
         return project;

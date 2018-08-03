@@ -22,7 +22,7 @@ import com.android.build.gradle.tasks.PackageApplication;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.List;
-import org.gradle.api.DefaultTask;
+import org.gradle.api.Task;
 
 /**
  * Scope for all variant scoped information related to supporting the Instant Run features.
@@ -62,9 +62,6 @@ public interface InstantRunVariantScope {
     @NonNull
     File getIncrementalRuntimeSupportJar();
 
-    @NonNull
-    File getIncrementalApplicationSupportDir();
-
     /** The {@code *.ap_} with added assets, used for hot and cold swaps. */
     @NonNull
     File getInstantRunResourcesFile();
@@ -75,9 +72,9 @@ public interface InstantRunVariantScope {
     @NonNull
     ImmutableList<File> getInstantRunBootClasspath();
 
-    List<DefaultTask> getColdSwapBuildTasks();
+    List<Task> getColdSwapBuildTasks();
 
-    void addColdSwapBuildTask(@NonNull DefaultTask task);
+    void addColdSwapBuildTask(@NonNull Task task);
 
     PackageApplication getPackageApplicationTask();
 

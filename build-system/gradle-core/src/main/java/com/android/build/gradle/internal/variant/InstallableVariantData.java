@@ -22,7 +22,6 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.profile.Recorder;
-import org.gradle.api.DefaultTask;
 
 /** Base data about a variant that is installable. */
 public abstract class InstallableVariantData extends AndroidArtifactVariantData {

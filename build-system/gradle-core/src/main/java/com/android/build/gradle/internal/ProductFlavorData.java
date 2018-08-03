@@ -19,15 +19,15 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
-import org.gradle.api.DefaultTask;
+import org.gradle.api.Task;
 
 /**
  * Class containing a ProductFlavor and associated data (sourcesets)
  */
 public class ProductFlavorData<T extends CoreProductFlavor> extends VariantDimensionData {
     @NonNull private final T productFlavor;
-    @Nullable private DefaultTask assembleTask;
-    @Nullable private DefaultTask bundleTask;
+    @Nullable private Task assembleTask;
+    @Nullable private Task bundleTask;
 
     ProductFlavorData(
             @NonNull T productFlavor,
@@ -45,20 +45,20 @@ public class ProductFlavorData<T extends CoreProductFlavor> extends VariantDimen
     }
 
     @Nullable
-    public DefaultTask getAssembleTask() {
+    public Task getAssembleTask() {
         return assembleTask;
     }
 
-    public void setAssembleTask(@NonNull DefaultTask assembleTask) {
+    public void setAssembleTask(@NonNull Task assembleTask) {
         this.assembleTask = assembleTask;
     }
 
     @Nullable
-    public DefaultTask getBundleTask() {
+    public Task getBundleTask() {
         return bundleTask;
     }
 
-    public void setBundleTask(@Nullable DefaultTask bundleTask) {
+    public void setBundleTask(@Nullable Task bundleTask) {
         this.bundleTask = bundleTask;
     }
 }

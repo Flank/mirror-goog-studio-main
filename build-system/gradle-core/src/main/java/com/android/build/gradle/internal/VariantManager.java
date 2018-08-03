@@ -111,7 +111,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.gradle.api.Action;
-import org.gradle.api.DefaultTask;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -417,14 +416,14 @@ public class VariantManager implements VariantModel {
                     taskContainer.setBundleTask(buildTypeData.getBundleTask());
                 }
             } else {
-                DefaultTask variantAssembleTask = taskManager.createAssembleTask(variantData);
+                Task variantAssembleTask = taskManager.createAssembleTask(variantData);
                 taskContainer.setAssembleTask(variantAssembleTask);
 
                 // setup the task dependencies
                 // build type
                 buildTypeData.getAssembleTask().dependsOn(variantAssembleTask);
 
-                DefaultTask variantBundleTask = null;
+                Task variantBundleTask = null;
                 if (needBundleTask) {
                     variantBundleTask = taskManager.createBundleTask(variantData);
                     taskContainer.setBundleTask(variantBundleTask);
@@ -437,7 +436,7 @@ public class VariantManager implements VariantModel {
                 for (CoreProductFlavor flavor : variantConfig.getProductFlavors()) {
                     ProductFlavorData productFlavorData = productFlavors.get(flavor.getName());
 
-                    DefaultTask flavorAssembleTask = productFlavorData.getAssembleTask();
+                    Task flavorAssembleTask = productFlavorData.getAssembleTask();
                     if (flavorAssembleTask == null) {
                         flavorAssembleTask = taskManager.createAssembleTask(productFlavorData);
                         productFlavorData.setAssembleTask(flavorAssembleTask);
@@ -445,7 +444,7 @@ public class VariantManager implements VariantModel {
                     flavorAssembleTask.dependsOn(variantAssembleTask);
 
                     if (needBundleTask) {
-                        DefaultTask flavorBundleTask = productFlavorData.getBundleTask();
+                        Task flavorBundleTask = productFlavorData.getBundleTask();
                         if (flavorBundleTask == null) {
                             flavorBundleTask = taskManager.createBundleTask(productFlavorData);
                             productFlavorData.setBundleTask(flavorBundleTask);

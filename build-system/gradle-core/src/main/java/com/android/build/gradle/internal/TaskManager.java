@@ -1960,9 +1960,9 @@ public abstract class TaskManager {
 
         // If more than one flavor, create a report aggregator task and make this the parent
         // task for all new connected tasks.  Otherwise, create a top level connectedAndroidTest
-        // DefaultTask.
+        // Task.
 
-        DefaultTask connectedAndroidTestTask;
+        Task connectedAndroidTestTask;
         if (hasFlavors) {
             connectedAndroidTestTask =
                     taskFactory.eagerCreate(
@@ -1985,7 +1985,7 @@ public abstract class TaskManager {
         taskFactory.eagerConfigure(
                 CONNECTED_CHECK, check -> check.dependsOn(connectedAndroidTestTask.getName()));
 
-        DefaultTask deviceAndroidTestTask;
+        Task deviceAndroidTestTask;
         // if more than one provider tasks, either because of several flavors, or because of
         // more than one providers, then create an aggregate report tasks for all of them.
         if (providers.size() > 1 || hasFlavors) {
@@ -2247,7 +2247,7 @@ public abstract class TaskManager {
         PreColdSwapTask preColdSwapTask = null;
         if (variantScope.getInstantRunBuildContext().isInInstantRunMode()) {
 
-            DefaultTask allActionsAnchorTask = createInstantRunAllActionsTasks(variantScope);
+            Task allActionsAnchorTask = createInstantRunAllActionsTasks(variantScope);
             assert variantScope.getInstantRunTaskManager() != null;
             preColdSwapTask =
                     variantScope.getInstantRunTaskManager().createPreColdswapTask(projectOptions);
@@ -2316,7 +2316,7 @@ public abstract class TaskManager {
         createDexTasks(variantScope, dexingType);
 
         if (preColdSwapTask != null) {
-            for (DefaultTask task : variantScope.getColdSwapBuildTasks()) {
+            for (Task task : variantScope.getColdSwapBuildTasks()) {
                 task.dependsOn(preColdSwapTask);
             }
         }
@@ -2588,9 +2588,9 @@ public abstract class TaskManager {
 
     /** Create InstantRun related tasks that should be ran right after the java compilation task. */
     @NonNull
-    private DefaultTask createInstantRunAllActionsTasks(@NonNull VariantScope variantScope) {
+    private Task createInstantRunAllActionsTasks(@NonNull VariantScope variantScope) {
 
-        DefaultTask allActionAnchorTask =
+        Task allActionAnchorTask =
                 taskFactory.eagerCreate(new InstantRunAnchorTaskCreationAction(variantScope));
 
         TransformManager transformManager = variantScope.getTransformManager();
@@ -2783,7 +2783,6 @@ public abstract class TaskManager {
                 taskFactory.eagerCreate(new DataBindingExportBuildInfoTask.CreationAction(scope));
 
         exportBuildInfo.dependsOn(scope.getTaskContainer().getSourceGenTask());
-
 
         taskFactory.eagerCreate(new DataBindingGenBaseClassesTask.CreationAction(scope));
 
@@ -3017,21 +3016,21 @@ public abstract class TaskManager {
         return validateSigningTask;
     }
 
-    public DefaultTask createAssembleTask(@NonNull final BaseVariantData variantData) {
+    public Task createAssembleTask(@NonNull final BaseVariantData variantData) {
         final VariantScope scope = variantData.getScope();
         return taskFactory.eagerCreate(
                 scope.getTaskName("assemble"),
                 task -> scope.getTaskContainer().setAssembleTask(task));
     }
 
-    public DefaultTask createBundleTask(@NonNull final BaseVariantData variantData) {
+    public Task createBundleTask(@NonNull final BaseVariantData variantData) {
         final VariantScope scope = variantData.getScope();
         return taskFactory.eagerCreate(
                 scope.getTaskName("bundle"), task -> scope.getTaskContainer().setBundleTask(task));
     }
 
     @NonNull
-    public DefaultTask createAssembleTask(@NonNull VariantDimensionData dimensionData) {
+    public Task createAssembleTask(@NonNull VariantDimensionData dimensionData) {
         final String sourceSetName =
                 StringHelper.capitalize(dimensionData.getSourceSet().getName());
         return taskFactory.eagerCreate(
@@ -3043,7 +3042,7 @@ public abstract class TaskManager {
     }
 
     @NonNull
-    public DefaultTask createBundleTask(@NonNull VariantDimensionData dimensionData) {
+    public Task createBundleTask(@NonNull VariantDimensionData dimensionData) {
         final String sourceSetName =
                 StringHelper.capitalize(dimensionData.getSourceSet().getName());
         return taskFactory.eagerCreate(

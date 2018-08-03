@@ -853,13 +853,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 variantData.getVariantConfiguration().getDirName() + "/instant-run.jar");
     }
 
-    @Override
-    @NonNull
-    public File getIncrementalApplicationSupportDir() {
-        return new File(globalScope.getIntermediatesDir(), "/incremental-classes/" +
-                variantData.getVariantConfiguration().getDirName());
-    }
-
     @NonNull
     @Override
     public File getInstantRunResourcesFile() {

@@ -19,15 +19,15 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
-import org.gradle.api.DefaultTask;
+import org.gradle.api.Task;
 
 /**
  * Class containing a BuildType and associated data (Sourceset for instance).
  */
 public class BuildTypeData extends VariantDimensionData {
     @NonNull private final CoreBuildType buildType;
-    @Nullable private DefaultTask assembleTask;
-    @Nullable private DefaultTask bundleTask;
+    @Nullable private Task assembleTask;
+    @Nullable private Task bundleTask;
 
     BuildTypeData(
             @NonNull CoreBuildType buildType,
@@ -45,20 +45,20 @@ public class BuildTypeData extends VariantDimensionData {
     }
 
     @Nullable
-    public DefaultTask getAssembleTask() {
+    public Task getAssembleTask() {
         return assembleTask;
     }
 
-    public void setAssembleTask(DefaultTask assembleTask) {
+    public void setAssembleTask(Task assembleTask) {
         this.assembleTask = assembleTask;
     }
 
     @Nullable
-    public DefaultTask getBundleTask() {
+    public Task getBundleTask() {
         return bundleTask;
     }
 
-    public void setBundleTask(DefaultTask bundleTask) {
+    public void setBundleTask(Task bundleTask) {
         this.bundleTask = bundleTask;
     }
 }

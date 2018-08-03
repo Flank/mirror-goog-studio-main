@@ -34,14 +34,16 @@ public interface TestVariant extends ApkVariant {
 
     /**
      * Returns the task to run the tests.
-     * Only valid for test project.
+     *
+     * <p>Only valid for test project.
      */
     @Nullable
     DefaultTask getConnectedInstrumentTest();
 
     /**
      * Returns the task to run the tests.
-     * Only valid for test project.
+     *
+     * <p>Only valid for test project.
      */
     @NonNull
     List<? extends DefaultTask> getProviderInstrumentTests();

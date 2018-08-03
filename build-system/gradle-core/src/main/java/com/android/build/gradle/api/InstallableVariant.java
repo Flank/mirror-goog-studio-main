@@ -24,17 +24,15 @@ import org.gradle.api.DefaultTask;
  */
 public interface InstallableVariant {
 
-    /**
-     * Returns the install task for the variant.
-     */
+    /** Returns the install task for the variant. */
     @Nullable
     DefaultTask getInstall();
 
     /**
      * Returns the uninstallation task.
      *
-     * For non-library project this is always true even if the APK is not created because
-     * signing isn't setup.
+     * <p>For non-library project this is always true even if the APK is not created because signing
+     * isn't setup.
      */
     @Nullable
     DefaultTask getUninstall();
