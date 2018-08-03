@@ -16,6 +16,8 @@
 
 package com.android.tools.deployer;
 
+import com.android.ddmlib.AndroidDebugBridge;
+import com.android.ddmlib.IDevice;
 import com.android.utils.ILogger;
 import java.util.ArrayList;
 
@@ -33,6 +35,7 @@ public class DeployerRunner {
     public static void main(String[] args) {
         DeployerRunner runner = new DeployerRunner();
         runner.run(args);
+        AndroidDebugBridge.terminate();
     }
 
     public DeployerRunner() {}
@@ -53,9 +56,15 @@ public class DeployerRunner {
             apks.add(args[i]);
         }
 
+        IDevice device = getDevice();
+        if (device == null) {
+            LOGGER.error(null, "%s", "No device found.");
+            return;
+        }
+
         // Run
         Deployer deployer =
-                new Deployer(packageName, apks, new InstallerNotifier(), new AdbCmdline());
+                new Deployer(packageName, apks, new InstallerNotifier(), new AdbClient(device));
         Deployer.RunResponse response = deployer.run();
 
         if (response.status != Deployer.RunResponse.Status.OK) {
@@ -81,6 +90,24 @@ public class DeployerRunner {
                 }
             }
         }
+    }
+
+    private IDevice getDevice() {
+        // Get an IDevice
+        AndroidDebugBridge.init(false);
+        AndroidDebugBridge bridge = AndroidDebugBridge.createBridge();
+        while (!bridge.hasInitialDeviceList()) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        IDevice[] devices = bridge.getDevices();
+        if (devices.length < 1) {
+            return null;
+        }
+        return devices[0];
     }
 
     private static void printUsage() {
