@@ -251,8 +251,16 @@ class InstantAppBundleTest {
             .run("base:$apkFromBundleTaskName")
 
         val bundleFile = getBundleFile("debug")
-        FileSubject.assertThat(File(project.getSubproject(":base").buildDir,
-            FileUtils.join("out", "test", "my-bundle", bundleFile.name))).exists()
+        FileSubject.assertThat(
+            FileUtils.join(
+                project.getSubproject(":base").testDir,
+                "out",
+                "test",
+                "my-bundle",
+                "feature",
+                "debug",
+                bundleFile.name))
+            .exists()
 
         // redo the test with an absolute output path this time.
         val absolutePath = tmpFile.newFolder("my-bundle").absolutePath
@@ -261,7 +269,9 @@ class InstantAppBundleTest {
             .with(StringOption.IDE_APK_LOCATION, absolutePath)
             .run("base:$apkFromBundleTaskName")
 
-        FileSubject.assertThat(File(absolutePath, bundleFile.name)).exists()
+        FileSubject.assertThat(
+            FileUtils.join(File(absolutePath), "feature", "debug", bundleFile.name))
+            .exists()
     }
 
     private fun getBundleTaskName(name: String): String {

@@ -364,26 +364,56 @@ class DynamicAppTest {
 
     @Test
     fun `test overriding bundle output location`() {
-        val bundleTaskName = getBundleTaskName("debug")
+        for (projectPath in listOf(":app", ":feature1", ":feature2")) {
+            project.getSubproject(projectPath).buildFile.appendText(
+                """
+                android {
+                    flavorDimensions "color"
+                    productFlavors {
+                        blue {
+                            dimension "color"
+                        }
+                        red {
+                            dimension "color"
+                        }
+                    }
+                }
+            """
+            )
+        }
 
         // use a relative path to the project build dir.
         project
             .executor()
             .with(StringOption.IDE_APK_LOCATION, "out/test/my-bundle")
-            .run("app:$bundleTaskName")
+            .run("app:bundle")
 
-        val bundleFile = getApkFolderOutput("debug").bundleFile
-        FileSubject.assertThat(File(project.getSubproject(":app").buildDir,
-            FileUtils.join("out", "test", "my-bundle", bundleFile.name))).exists()
+        val bundleFile = getApkFolderOutput("redDebug").bundleFile
+        for (flavor in listOf("red", "blue")) {
+            FileSubject.assertThat(
+                FileUtils.join(
+                    project.getSubproject(":app").testDir,
+                    "out",
+                    "test",
+                    "my-bundle",
+                    flavor,
+                    "debug",
+                    bundleFile.name))
+                .exists()
+        }
 
         // redo the test with an absolute output path this time.
         val absolutePath = tmpFile.newFolder("my-bundle").absolutePath
         project
             .executor()
             .with(StringOption.IDE_APK_LOCATION, absolutePath)
-            .run("app:$bundleTaskName")
+            .run("app:bundle")
 
-        FileSubject.assertThat(File(absolutePath, bundleFile.name)).exists()
+        for (flavor in listOf("red", "blue")) {
+            FileSubject.assertThat(
+                FileUtils.join(File(absolutePath), flavor, "debug", bundleFile.name))
+                .exists()
+        }
     }
 
     @Test

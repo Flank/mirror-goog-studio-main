@@ -242,8 +242,13 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
             task.bundleFile = if (apkLocationOverride == null)
                 scope.artifacts.setArtifactFile(InternalArtifactType.BUNDLE, task, bundleName)
             else
-                scope.artifacts.setArtifactFile(InternalArtifactType.BUNDLE, task,
-                    File(apkLocationOverride, bundleName))
+                scope.artifacts.setArtifactFile(
+                    InternalArtifactType.BUNDLE,
+                    task,
+                    FileUtils.join(
+                        scope.globalScope.project.file(apkLocationOverride),
+                        scope.variantConfiguration.dirName,
+                        bundleName))
 
             task.baseModuleZip = scope.artifacts.getFinalArtifactFiles(InternalArtifactType.MODULE_BUNDLE)
 
