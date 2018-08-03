@@ -17,8 +17,8 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
 import java.io.File;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;

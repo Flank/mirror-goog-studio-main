@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.annotations.VisibleForTesting
 import com.android.build.gradle.internal.packaging.createDefaultDebugStore
-import com.android.build.gradle.internal.scope.TaskConfigAction
+import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.core.BuilderConstants
 import com.android.builder.model.SigningConfig

@@ -29,7 +29,7 @@ import com.android.build.gradle.internal.res.namespaced.getAaptDaemon
 import com.android.build.gradle.internal.res.namespaced.getAaptPoolSize
 import com.android.build.gradle.internal.res.namespaced.registerAaptService
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.TaskConfigAction
+import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransform
 import com.android.build.gradle.internal.transforms.InstantRunSplitApkBuilder

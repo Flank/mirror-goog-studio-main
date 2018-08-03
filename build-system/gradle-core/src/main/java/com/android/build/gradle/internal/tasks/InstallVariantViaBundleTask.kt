@@ -20,9 +20,8 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.TaskConfigAction
+import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.variant.ApkVariantData
 import com.android.builder.internal.InstallUtils
 import com.android.builder.testing.ConnectedDeviceProvider
 import com.android.builder.testing.api.DeviceConnector

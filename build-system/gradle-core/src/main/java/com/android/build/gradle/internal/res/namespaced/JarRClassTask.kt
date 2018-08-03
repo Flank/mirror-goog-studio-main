@@ -16,14 +16,13 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
-import com.android.build.gradle.internal.scope.TaskConfigAction
+import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
 import com.android.build.gradle.internal.tasks.Workers
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
-import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import javax.inject.Inject

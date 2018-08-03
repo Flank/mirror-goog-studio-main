@@ -17,9 +17,9 @@
 package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
+import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
 import com.android.ide.common.process.ProcessException;
 import java.io.IOException;
 import org.gradle.api.tasks.Nested;

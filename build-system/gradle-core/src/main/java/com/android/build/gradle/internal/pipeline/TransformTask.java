@@ -27,7 +27,7 @@ import com.android.build.api.transform.Transform;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
-import com.android.build.gradle.internal.scope.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
 import com.android.builder.profile.Recorder;
 import com.android.ide.common.util.ReferenceHolder;
 import com.google.common.base.Splitter;

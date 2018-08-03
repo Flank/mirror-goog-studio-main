@@ -16,12 +16,10 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.TaskConfigAction
+import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
-import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.compile.JavaCompile
-import java.io.File
 
 /**
  * Task to compile a directory containing R.java file(s) and jar the result.

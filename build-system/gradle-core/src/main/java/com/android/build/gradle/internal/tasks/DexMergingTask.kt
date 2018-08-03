@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.dependency.getAttributeMap
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.TaskConfigAction
+import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.transforms.DexMergerTransformCallable
 import com.android.builder.dexing.DexMergerTool

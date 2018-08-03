@@ -17,10 +17,10 @@ package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
+import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
 import com.android.builder.compiling.ResValueGenerator;
 import com.android.builder.model.ClassField;
 import com.android.utils.FileUtils;

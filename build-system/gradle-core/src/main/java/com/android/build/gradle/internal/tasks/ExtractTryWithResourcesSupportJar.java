@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.scope.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
 import com.android.builder.core.DesugarProcessBuilder;
 import com.android.utils.FileUtils;
 import java.io.File;

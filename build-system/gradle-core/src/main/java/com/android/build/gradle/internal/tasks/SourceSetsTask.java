@@ -21,7 +21,7 @@ import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.api.AndroidSourceDirectorySet;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.scope.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
 import com.android.builder.core.VariantType;
 import java.io.IOException;
 import java.util.stream.Collectors;

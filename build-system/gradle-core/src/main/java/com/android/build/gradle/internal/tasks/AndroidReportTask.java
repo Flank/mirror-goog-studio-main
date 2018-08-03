@@ -24,7 +24,7 @@ import static com.android.builder.core.BuilderConstants.FD_FLAVORS_ALL;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
 import com.android.build.gradle.internal.test.report.ReportType;
 import com.android.build.gradle.internal.test.report.TestReport;
 import com.android.builder.core.VariantType;

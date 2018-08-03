@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.tasks.factory
 
-import com.android.build.gradle.internal.scope.TaskConfigAction
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.Task

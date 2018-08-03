@@ -18,8 +18,8 @@ package com.android.build.gradle.internal.incremental;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
-import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
+import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
 import com.android.builder.packaging.PackagingUtils;
 import com.android.utils.FileUtils;
 import com.google.common.base.Throwables;

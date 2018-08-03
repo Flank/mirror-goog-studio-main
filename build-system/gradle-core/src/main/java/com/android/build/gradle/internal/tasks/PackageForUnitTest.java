@@ -23,8 +23,8 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.PROCE
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
-import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
 import com.android.utils.FileUtils;
 import com.android.utils.PathUtils;
 import com.google.common.collect.Iterables;

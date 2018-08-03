@@ -18,9 +18,9 @@ package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
+import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
 import java.io.File;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFiles;

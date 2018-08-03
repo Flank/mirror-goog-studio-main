@@ -22,7 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;

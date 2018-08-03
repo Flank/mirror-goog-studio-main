@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.TaskConfigAction
+import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.Workers
 import com.google.common.base.Suppliers

@@ -17,8 +17,8 @@ package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.sdk.SdkInfo;
 import com.android.builder.testing.ConnectedDeviceProvider;

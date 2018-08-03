@@ -2,8 +2,8 @@ package com.android.build.gradle.tasks.factory;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.api.AndroidSourceSet;
-import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
 import com.android.builder.model.SourceProvider;
 import java.io.File;
 import org.gradle.api.tasks.Sync;

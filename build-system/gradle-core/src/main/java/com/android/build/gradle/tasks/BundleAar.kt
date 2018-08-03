@@ -20,7 +20,7 @@ import android.databinding.tool.DataBindingBuilder
 import com.android.SdkConstants
 import com.android.build.gradle.AndroidConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.TaskConfigAction
+import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.LibraryVariantData
 import com.android.builder.core.BuilderConstants
