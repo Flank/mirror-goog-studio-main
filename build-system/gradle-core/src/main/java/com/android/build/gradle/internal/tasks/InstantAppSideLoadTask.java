@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InstantAppOutputScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import com.android.builder.sdk.SdkInfo;
 import com.android.builder.testing.ConnectedDevice;
 import com.android.builder.testing.ConnectedDeviceProvider;
@@ -162,7 +162,7 @@ public class InstantAppSideLoadTask extends AndroidBuilderTask {
         return bundleDir;
     }
 
-    public static class CreationAction extends TaskCreationAction<InstantAppSideLoadTask> {
+    public static class CreationAction extends EagerTaskCreationAction<InstantAppSideLoadTask> {
 
         @NonNull private final VariantScope scope;
 

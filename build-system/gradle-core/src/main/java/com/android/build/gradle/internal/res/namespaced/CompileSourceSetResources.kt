@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.res.namespaced
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.IncrementalTask
 import com.android.build.gradle.internal.tasks.Workers
@@ -179,7 +179,7 @@ open class CompileSourceSetResources
         override val name: String,
         private val inputDirectories: BuildableArtifact,
         private val variantScope: VariantScope
-    ) : TaskCreationAction<CompileSourceSetResources>() {
+    ) : EagerTaskCreationAction<CompileSourceSetResources>() {
 
         override val type: Class<CompileSourceSetResources>
             get() = CompileSourceSetResources::class.java

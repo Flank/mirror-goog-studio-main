@@ -47,7 +47,7 @@ import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.KnownFilesSaveData;
 import com.android.build.gradle.internal.tasks.KnownFilesSaveData.InputSet;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -895,7 +895,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     // ----- CreationAction -----
 
     public abstract static class CreationAction<T extends PackageAndroidArtifact>
-            extends TaskCreationAction<T> {
+            extends EagerTaskCreationAction<T> {
 
         protected final Project project;
         protected final VariantScope variantScope;

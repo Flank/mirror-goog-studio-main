@@ -16,7 +16,7 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.compile.JavaCompile
@@ -32,7 +32,7 @@ import org.gradle.api.tasks.compile.JavaCompile
 @CacheableTask
 open class CompileRClassTask : JavaCompile() {
 
-    class CreationAction(private val scope: VariantScope) : TaskCreationAction<CompileRClassTask>() {
+    class CreationAction(private val scope: VariantScope) : EagerTaskCreationAction<CompileRClassTask>() {
 
         override val name: String
             get() = scope.getTaskName("compile", "FinalRClass")

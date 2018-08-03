@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.res.namespaced.registerAaptService
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.build.gradle.internal.tasks.TaskInputHelper
@@ -204,7 +204,7 @@ open class LinkAndroidResForBundleTask
         private set
 
     class CreationAction(private val variantScope: VariantScope) :
-        TaskCreationAction<LinkAndroidResForBundleTask>() {
+        EagerTaskCreationAction<LinkAndroidResForBundleTask>() {
 
         override val name: String
             get() = variantScope.getTaskName("bundle", "Resources")

@@ -20,7 +20,7 @@ import android.databinding.tool.DataBindingBuilder
 import com.android.SdkConstants
 import com.android.build.gradle.AndroidConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.LibraryVariantData
 import com.android.builder.core.BuilderConstants
@@ -42,7 +42,7 @@ open class BundleAar : Zip() {
     class CreationAction(
         private val extension: AndroidConfig,
         private val variantScope: VariantScope
-    ) : TaskCreationAction<BundleAar>() {
+    ) : EagerTaskCreationAction<BundleAar>() {
 
         override val name: String
             get() = variantScope.getTaskName("bundle", "Aar")

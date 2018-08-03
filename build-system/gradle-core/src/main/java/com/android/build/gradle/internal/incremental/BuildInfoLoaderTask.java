@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.incremental;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import com.android.builder.packaging.PackagingUtils;
 import com.android.utils.FileUtils;
 import com.google.common.base.Throwables;
@@ -109,7 +109,7 @@ public class BuildInfoLoaderTask extends AndroidVariantTask {
         }
     }
 
-    public static class CreationAction extends TaskCreationAction<BuildInfoLoaderTask> {
+    public static class CreationAction extends EagerTaskCreationAction<BuildInfoLoaderTask> {
 
         private final String taskName;
 

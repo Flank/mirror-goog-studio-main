@@ -124,7 +124,7 @@ import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuil
 import com.android.build.gradle.internal.tasks.databinding.DataBindingGenBaseClassesTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeDependencyArtifactsTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeGenClassLogTransform;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import com.android.build.gradle.internal.tasks.factory.TaskFactory;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl;
 import com.android.build.gradle.internal.test.AbstractTestDataImpl;
@@ -420,7 +420,7 @@ public abstract class TaskManager {
 
         // for testing only.
         taskFactory.eagerCreate(
-                new TaskCreationAction<ConfigAttrTask>() {
+                new EagerTaskCreationAction<ConfigAttrTask>() {
                     @NonNull
                     @Override
                     public String getName() {
@@ -440,7 +440,7 @@ public abstract class TaskManager {
                 });
 
         taskFactory.eagerCreate(
-                new TaskCreationAction<ConfigAttrTask>() {
+                new EagerTaskCreationAction<ConfigAttrTask>() {
                     @NonNull
                     @Override
                     public String getName() {
@@ -1227,7 +1227,7 @@ public abstract class TaskManager {
                 task);
     }
 
-    protected TaskCreationAction<LinkApplicationAndroidResourcesTask>
+    protected EagerTaskCreationAction<LinkApplicationAndroidResourcesTask>
             createProcessAndroidResourcesConfigAction(
                     @NonNull VariantScope scope,
                     @NonNull Supplier<File> symbolLocation,

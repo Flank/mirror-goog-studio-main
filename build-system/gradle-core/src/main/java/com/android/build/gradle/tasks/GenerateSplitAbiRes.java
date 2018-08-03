@@ -42,7 +42,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.internal.tasks.ModuleMetadata;
 import com.android.build.gradle.internal.tasks.Workers;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
@@ -298,7 +298,7 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
 
     // ----- CreationAction -----
 
-    public static class CreationAction extends TaskCreationAction<GenerateSplitAbiRes> {
+    public static class CreationAction extends EagerTaskCreationAction<GenerateSplitAbiRes> {
 
         @NonNull private final VariantScope scope;
         @NonNull private final FeatureSetMetadata.SupplierProvider provider;

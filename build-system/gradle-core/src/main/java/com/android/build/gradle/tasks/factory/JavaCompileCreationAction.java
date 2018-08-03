@@ -15,7 +15,7 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -25,7 +25,7 @@ import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
 
 /** Configuration Action for a JavaCompile task. */
-public class JavaCompileCreationAction extends TaskCreationAction<AndroidJavaCompile> {
+public class JavaCompileCreationAction extends EagerTaskCreationAction<AndroidJavaCompile> {
     private static final ILogger LOG = LoggerWrapper.getLogger(JavaCompileCreationAction.class);
 
     @NonNull private final VariantScope scope;

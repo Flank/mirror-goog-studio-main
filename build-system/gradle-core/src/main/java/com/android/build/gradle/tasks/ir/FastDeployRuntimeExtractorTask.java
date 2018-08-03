@@ -19,7 +19,7 @@ package com.android.build.gradle.tasks.ir;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import java.io.BufferedOutputStream;
@@ -97,7 +97,8 @@ public class FastDeployRuntimeExtractorTask extends AndroidVariantTask {
         return !name.startsWith("META-INF") && !name.endsWith("AppInfo.class");
     }
 
-    public static class CreationAction extends TaskCreationAction<FastDeployRuntimeExtractorTask> {
+    public static class CreationAction
+            extends EagerTaskCreationAction<FastDeployRuntimeExtractorTask> {
 
         @NonNull
         private final InstantRunVariantScope instantRunVariantScope;

@@ -30,7 +30,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexMergerTool;
@@ -232,7 +232,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     /**
      * Returns a place to store incremental build data. The {@code name} argument has to be unique
-     * per task, ideally generated with {@link TaskCreationAction#getName()}.
+     * per task, ideally generated with {@link EagerTaskCreationAction#getName()}.
      */
     @NonNull
     File getIncrementalDir(String name);

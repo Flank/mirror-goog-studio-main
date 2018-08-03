@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.incremental;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -85,7 +85,7 @@ public class BuildInfoWriterTask extends AndroidVariantTask {
                         InstantRunAnalyticsHelper.generateAnalyticsProto(buildContext));
     }
 
-    public static class CreationAction extends TaskCreationAction<BuildInfoWriterTask> {
+    public static class CreationAction extends EagerTaskCreationAction<BuildInfoWriterTask> {
 
         public static File getBuildInfoFile(@NonNull InstantRunVariantScope scope) {
             return new File(scope.getBuildInfoOutputFolder(), "build-info.xml");

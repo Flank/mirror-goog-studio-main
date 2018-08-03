@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.annotations.VisibleForTesting
 import com.android.build.gradle.internal.packaging.createDefaultDebugStore
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.core.BuilderConstants
 import com.android.builder.model.SigningConfig
@@ -127,7 +127,7 @@ open class ValidateSigningTask : AndroidVariantTask() {
         private val variantScope: VariantScope,
         private val defaultDebugKeystoreLocation: File
     ) :
-        TaskCreationAction<ValidateSigningTask>() {
+        EagerTaskCreationAction<ValidateSigningTask>() {
 
         override val name: String
             get() = variantScope.getTaskName("validateSigning")

@@ -31,7 +31,7 @@ import com.android.build.gradle.internal.dsl.CoreExternalNativeCmakeOptions;
 import com.android.build.gradle.internal.dsl.CoreExternalNativeNdkBuildOptions;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.errors.EvalIssueReporter;
@@ -362,7 +362,7 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
         this.stlSharedObjectFiles = stlSharedObjectFiles;
     }
 
-    public static class CreationAction extends TaskCreationAction<ExternalNativeBuildTask> {
+    public static class CreationAction extends EagerTaskCreationAction<ExternalNativeBuildTask> {
         @Nullable
         private final String buildTargetAbi;
         @NonNull

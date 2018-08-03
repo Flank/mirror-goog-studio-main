@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.Workers
 import com.google.common.base.Suppliers
@@ -56,7 +56,7 @@ open class StaticLibraryManifestTask @Inject constructor(workerExecutor: WorkerE
 
     class CreationAction(
         private val scope: VariantScope
-    ) : TaskCreationAction<StaticLibraryManifestTask>() {
+    ) : EagerTaskCreationAction<StaticLibraryManifestTask>() {
         override val name: String
             get() = scope.getTaskName("create", "StaticLibraryManifest")
         override val type: Class<StaticLibraryManifestTask>

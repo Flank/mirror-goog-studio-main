@@ -22,7 +22,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import java.io.File;
 import java.util.Objects;
 import org.gradle.api.GradleException;
@@ -56,7 +56,7 @@ public class TestPreBuildTask extends ClasspathComparisionTask {
         compareClasspaths();
     }
 
-    public static class CreationAction extends TaskCreationAction<TestPreBuildTask> {
+    public static class CreationAction extends EagerTaskCreationAction<TestPreBuildTask> {
 
         @NonNull private final VariantScope variantScope;
 

@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.internal.packaging.IncrementalPackager;
@@ -169,7 +169,7 @@ public class PackageSplitAbi extends AndroidBuilderTask {
 
     // ----- CreationAction -----
 
-    public static class CreationAction extends TaskCreationAction<PackageSplitAbi> {
+    public static class CreationAction extends EagerTaskCreationAction<PackageSplitAbi> {
 
         private VariantScope scope;
 

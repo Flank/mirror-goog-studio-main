@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import java.io.File;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
@@ -71,7 +71,7 @@ public class CheckManifest extends AndroidVariantTask {
         }
     }
 
-    public static class CreationAction extends TaskCreationAction<CheckManifest> {
+    public static class CreationAction extends EagerTaskCreationAction<CheckManifest> {
 
         private final VariantScope scope;
         private final boolean isManifestOptional;

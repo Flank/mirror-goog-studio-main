@@ -46,7 +46,7 @@ class TaskFactoryImpl(private val taskContainer: TaskContainer):
         return taskContainer.findByName(name)
     }
 
-    override fun <T : Task> eagerCreate(creationAction: TaskCreationAction<T>): T {
+    override fun <T : Task> eagerCreate(creationAction: EagerTaskCreationAction<T>): T {
         val task = taskContainer.create(creationAction.name, creationAction.type)
         @Suppress("UNCHECKED_CAST")
         val taskProvider = taskContainer.named(task.name) as TaskProvider<T>

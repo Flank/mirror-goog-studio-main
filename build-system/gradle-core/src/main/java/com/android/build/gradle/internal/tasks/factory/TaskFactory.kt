@@ -41,8 +41,8 @@ interface TaskFactory {
     /** Creates a task with the given name and type.  */
     fun <S : Task> eagerCreate(name: String, type: Class<S>): S
 
-    /** Creates a task with the given [TaskCreationAction]  */
-    fun <T : Task> eagerCreate(creationAction: TaskCreationAction<T>): T
+    /** Creates a task with the given [EagerTaskCreationAction]  */
+    fun <T : Task> eagerCreate(creationAction: EagerTaskCreationAction<T>): T
 
     /** Creates a task wit the given name, type and configuration action  */
     fun <T : Task> eagerCreate(

@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
@@ -137,7 +137,7 @@ public class ExternalNativeCleanTask extends AndroidBuilderTask {
         }
     }
 
-    public static class CreationAction extends TaskCreationAction<ExternalNativeCleanTask> {
+    public static class CreationAction extends EagerTaskCreationAction<ExternalNativeCleanTask> {
         @NonNull
         private final ExternalNativeJsonGenerator generator;
         @NonNull

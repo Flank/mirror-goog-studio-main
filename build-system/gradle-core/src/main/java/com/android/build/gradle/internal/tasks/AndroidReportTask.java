@@ -24,7 +24,7 @@ import static com.android.builder.core.BuilderConstants.FD_FLAVORS_ALL;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import com.android.build.gradle.internal.test.report.ReportType;
 import com.android.build.gradle.internal.test.report.TestReport;
 import com.android.builder.core.VariantType;
@@ -164,7 +164,7 @@ public class AndroidReportTask extends DefaultTask implements AndroidTestTask {
         }
     }
 
-    public static class CreationAction extends TaskCreationAction<AndroidReportTask> {
+    public static class CreationAction extends EagerTaskCreationAction<AndroidReportTask> {
 
         public enum TaskKind { CONNECTED, DEVICE_PROVIDER }
 

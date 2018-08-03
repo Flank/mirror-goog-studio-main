@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.compiling.BuildConfigGenerator;
 import com.android.builder.model.ClassField;
@@ -188,7 +188,7 @@ public class GenerateBuildConfig extends AndroidBuilderTask {
 
     // ----- Config Action -----
 
-    public static final class CreationAction extends TaskCreationAction<GenerateBuildConfig> {
+    public static final class CreationAction extends EagerTaskCreationAction<GenerateBuildConfig> {
 
         @NonNull
         private final VariantScope scope;

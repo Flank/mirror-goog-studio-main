@@ -37,7 +37,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.Workers;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.AndroidBuilder;
@@ -704,7 +704,7 @@ public class MergeResources extends IncrementalTask {
         return resourceSetList;
     }
 
-    public static class CreationAction extends TaskCreationAction<MergeResources> {
+    public static class CreationAction extends EagerTaskCreationAction<MergeResources> {
         @NonNull
         private final VariantScope scope;
         @NonNull private final TaskManager.MergeType mergeType;

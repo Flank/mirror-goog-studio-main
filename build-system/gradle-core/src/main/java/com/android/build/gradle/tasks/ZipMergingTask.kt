@@ -20,7 +20,7 @@ import com.android.SdkConstants.FN_INTERMEDIATE_FULL_JAR
 import com.android.annotations.VisibleForTesting
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.builder.packaging.JarMerger
@@ -81,7 +81,7 @@ open class ZipMergingTask : AndroidVariantTask() {
         }
     }
 
-    class CreationAction(private val scope: VariantScope) : TaskCreationAction<ZipMergingTask>() {
+    class CreationAction(private val scope: VariantScope) : EagerTaskCreationAction<ZipMergingTask>() {
 
         override val name: String
             get() = scope.getTaskName("createFullJar")

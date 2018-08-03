@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.dependency.getAttributeMap
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.transforms.DexMergerTransformCallable
 import com.android.builder.dexing.DexMergerTool
@@ -138,7 +138,7 @@ open class DexMergingTask : AndroidVariantTask() {
         private val action: DexMergingAction,
         private val dexingType: DexingType,
         private val outputType: InternalArtifactType = InternalArtifactType.DEX
-    ) : TaskCreationAction<DexMergingTask>() {
+    ) : EagerTaskCreationAction<DexMergingTask>() {
 
         private val internalName: String = when (action) {
             DexMergingAction.MERGE_LIBRARY_PROJECTS -> scope.getTaskName("mergeLibDex")

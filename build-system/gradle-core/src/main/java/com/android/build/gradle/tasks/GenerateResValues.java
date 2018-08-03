@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import com.android.builder.compiling.ResValueGenerator;
 import com.android.builder.model.ClassField;
 import com.android.utils.FileUtils;
@@ -100,7 +100,7 @@ public class GenerateResValues extends AndroidBuilderTask {
     }
 
 
-    public static class CreationAction extends TaskCreationAction<GenerateResValues> {
+    public static class CreationAction extends EagerTaskCreationAction<GenerateResValues> {
 
         @NonNull
         private final VariantScope scope;

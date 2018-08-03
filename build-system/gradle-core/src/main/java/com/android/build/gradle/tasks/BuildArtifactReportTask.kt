@@ -19,7 +19,7 @@ package com.android.build.gradle.tasks
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.Report
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.StringOption
 import com.google.gson.GsonBuilder
@@ -72,7 +72,7 @@ open class BuildArtifactReportTask : DefaultTask() {
         val globalScope: GlobalScope,
         val sourceSet: DefaultAndroidSourceSet
     ) :
-        TaskCreationAction<BuildArtifactReportTask>() {
+        EagerTaskCreationAction<BuildArtifactReportTask>() {
 
         override val name: String
             get() = "reportSourceSetTransform" + sourceSet.name.capitalize()
@@ -89,7 +89,7 @@ open class BuildArtifactReportTask : DefaultTask() {
     }
 
     class BuildArtifactReportCreationAction(val scope: VariantScope) :
-        TaskCreationAction<BuildArtifactReportTask>() {
+        EagerTaskCreationAction<BuildArtifactReportTask>() {
 
         override val name: String
             get() = scope.getTaskName("reportBuildArtifacts")

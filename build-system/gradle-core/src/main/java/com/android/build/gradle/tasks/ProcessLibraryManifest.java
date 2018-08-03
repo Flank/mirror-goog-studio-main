@@ -231,7 +231,7 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
         VariantScope scope;
 
         /**
-         * {@code TaskCreationAction} for the library process manifest task.
+         * {@code EagerTaskCreationAction} for the library process manifest task.
          *
          * @param scope The library variant scope.
          */

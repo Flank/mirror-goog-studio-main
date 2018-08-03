@@ -27,7 +27,7 @@ import com.android.build.api.transform.Transform;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import com.android.builder.profile.Recorder;
 import com.android.ide.common.util.ReferenceHolder;
 import com.google.common.base.Splitter;
@@ -489,7 +489,7 @@ public class TransformTask extends StreamBasedTask implements Context {
     }
 
     public static class CreationAction<T extends Transform>
-            extends TaskCreationAction<TransformTask> {
+            extends EagerTaskCreationAction<TransformTask> {
 
         @NonNull
         private final String variantName;

@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.internal.InstallUtils
 import com.android.builder.testing.ConnectedDeviceProvider
@@ -230,7 +230,7 @@ open class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: Work
      }
 
     internal class CreationAction(private val scope: VariantScope) :
-        TaskCreationAction<InstallVariantViaBundleTask>() {
+        EagerTaskCreationAction<InstallVariantViaBundleTask>() {
 
         override val name: String
             get() = scope.getTaskName("install")

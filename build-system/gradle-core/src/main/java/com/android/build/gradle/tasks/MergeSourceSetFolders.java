@@ -30,7 +30,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.Workers;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.SourceProvider;
@@ -336,7 +336,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
 
 
     protected abstract static class CreationAction
-            extends TaskCreationAction<MergeSourceSetFolders> {
+            extends EagerTaskCreationAction<MergeSourceSetFolders> {
         @NonNull
         protected final VariantScope scope;
 

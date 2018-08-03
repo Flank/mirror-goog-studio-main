@@ -39,7 +39,7 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import com.android.builder.model.Version;
 import com.android.sdklib.BuildToolInfo;
 import com.android.tools.lint.gradle.api.ReflectiveLintRunner;
@@ -272,7 +272,7 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
     }
 
     public abstract static class BaseCreationAction<T extends LintBaseTask>
-            extends TaskCreationAction<T> {
+            extends EagerTaskCreationAction<T> {
 
         @NonNull private final GlobalScope globalScope;
 

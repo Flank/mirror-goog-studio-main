@@ -24,7 +24,7 @@ import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.MODULE_PATH
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.builder.files.NativeLibraryAbiPredicate
@@ -168,7 +168,7 @@ open class PerModuleBundleTask : AndroidVariantTask() {
 
     class CreationAction(
         private val variantScope: VariantScope
-    ) : TaskCreationAction<PerModuleBundleTask>() {
+    ) : EagerTaskCreationAction<PerModuleBundleTask>() {
 
         override val name: String
             get() = variantScope.getTaskName("build", "PreBundle")

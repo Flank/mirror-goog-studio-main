@@ -54,7 +54,7 @@ import com.android.build.gradle.internal.tasks.PerModuleBundleTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureApplicationIdsTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureInfoTask;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadataWriterTask;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarationWriterTask;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitTransitiveDepsWriterTask;
@@ -358,7 +358,7 @@ public class ApplicationTaskManager extends TaskManager {
 
         // Create the classes artifact for uses by external test modules.
         taskFactory.eagerCreate(
-                new TaskCreationAction<Jar>() {
+                new EagerTaskCreationAction<Jar>() {
                     @NonNull
                     @Override
                     public String getName() {

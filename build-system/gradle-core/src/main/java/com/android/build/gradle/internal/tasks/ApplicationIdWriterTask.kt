@@ -22,7 +22,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import org.apache.commons.io.FileUtils
 import org.gradle.api.file.FileCollection
@@ -78,7 +78,7 @@ open class ApplicationIdWriterTask : AndroidVariantTask() {
     }
 
     class CreationAction(private val variantScope: VariantScope) :
-        TaskCreationAction<ApplicationIdWriterTask>() {
+        EagerTaskCreationAction<ApplicationIdWriterTask>() {
 
         override val name: String
             get() = variantScope.getTaskName("write", "ApplicationId")
