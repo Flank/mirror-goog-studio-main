@@ -23,16 +23,7 @@ import java.util.Objects;
 
 /** A {@link ResourceValue} intended for text nodes where we need access to the raw XML text. */
 public class TextResourceValueImpl extends ResourceValueImpl implements TextResourceValue {
-    private String mRawXmlValue;
-
-    public TextResourceValueImpl(
-            @NonNull ResourceReference reference,
-            @Nullable String textValue,
-            @Nullable String rawXmlValue,
-            @Nullable String libraryName) {
-        super(reference, textValue, libraryName);
-        mRawXmlValue = rawXmlValue;
-    }
+    @Nullable private String rawXmlValue;
 
     public TextResourceValueImpl(
             @NonNull ResourceNamespace namespace,
@@ -42,14 +33,23 @@ public class TextResourceValueImpl extends ResourceValueImpl implements TextReso
             @Nullable String rawXmlValue,
             @Nullable String libraryName) {
         super(namespace, type, name, textValue, libraryName);
-        mRawXmlValue = rawXmlValue;
+        this.rawXmlValue = rawXmlValue;
+    }
+
+    public TextResourceValueImpl(
+            @NonNull ResourceReference reference,
+            @Nullable String textValue,
+            @Nullable String rawXmlValue,
+            @Nullable String libraryName) {
+        super(reference, textValue, libraryName);
+        this.rawXmlValue = rawXmlValue;
     }
 
     @Override
     @Nullable
     public String getRawXmlValue() {
-        if (mRawXmlValue != null) {
-            return mRawXmlValue;
+        if (rawXmlValue != null) {
+            return rawXmlValue;
         }
         return super.getValue();
     }
@@ -62,12 +62,12 @@ public class TextResourceValueImpl extends ResourceValueImpl implements TextReso
      * @see #getRawXmlValue()
      */
     public void setRawXmlValue(@Nullable String value) {
-        mRawXmlValue = value;
+        rawXmlValue = value;
     }
 
     @Override
     public int hashCode() {
-        return HashCodes.mix(super.hashCode(), Objects.hashCode(mRawXmlValue));
+        return HashCodes.mix(super.hashCode(), Objects.hashCode(rawXmlValue));
     }
 
     @Override
@@ -75,6 +75,6 @@ public class TextResourceValueImpl extends ResourceValueImpl implements TextReso
         if (this == obj) return true;
         if (!super.equals(obj)) return false;
         TextResourceValueImpl other = (TextResourceValueImpl) obj;
-        return Objects.equals(mRawXmlValue, other.mRawXmlValue);
+        return Objects.equals(rawXmlValue, other.rawXmlValue);
     }
 }

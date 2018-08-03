@@ -55,7 +55,9 @@ public interface ResourceValue extends Serializable {
     ResourceReference asReference();
 
     @NonNull
-    ResourceUrl getResourceUrl();
+    default ResourceUrl getResourceUrl() {
+        return asReference().getResourceUrl();
+    }
 
     /**
      * If this {@link ResourceValue} references another one, returns a {@link ResourceReference} to
@@ -65,7 +67,19 @@ public interface ResourceValue extends Serializable {
      * it handles namespaces correctly.
      */
     @Nullable
-    ResourceReference getReference();
+    default ResourceReference getReference() {
+        String value = getValue();
+        if (value == null) {
+            return null;
+        }
+
+        ResourceUrl url = ResourceUrl.parse(value);
+        if (url == null) {
+            return null;
+        }
+
+        return url.resolve(getNamespace(), getNamespaceResolver());
+    }
 
     /**
      * Similar to {@link #getValue()}, but returns the raw XML value. This is <b>usually</b> the
@@ -75,7 +89,9 @@ public interface ResourceValue extends Serializable {
      * will return "{@code This is <b>bold</b>}", which preserves the XML markup elements.
      */
     @Nullable
-    String getRawXmlValue();
+    default String getRawXmlValue() {
+        return getValue();
+    }
 
     /**
      * Sets the value of the resource.

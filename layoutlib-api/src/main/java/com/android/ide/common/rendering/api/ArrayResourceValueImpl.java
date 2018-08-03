@@ -27,13 +27,7 @@ import java.util.List;
  * items, one for array element.
  */
 public class ArrayResourceValueImpl extends ResourceValueImpl implements ArrayResourceValue {
-    private final List<String> mItems = new ArrayList<>();
-
-    public ArrayResourceValueImpl(
-            @NonNull ResourceReference reference, @Nullable String libraryName) {
-        super(reference, null, libraryName);
-        assert reference.getResourceType() == ResourceType.ARRAY;
-    }
+    @NonNull private final List<String> elements = new ArrayList<>();
 
     public ArrayResourceValueImpl(
             @NonNull ResourceNamespace namespace,
@@ -44,26 +38,31 @@ public class ArrayResourceValueImpl extends ResourceValueImpl implements ArrayRe
         assert type == ResourceType.ARRAY;
     }
 
+    public ArrayResourceValueImpl(
+            @NonNull ResourceReference reference, @Nullable String libraryName) {
+        super(reference, null, libraryName);
+        assert reference.getResourceType() == ResourceType.ARRAY;
+    }
+
     @Override
     public int getElementCount() {
-        return mItems.size();
+        return elements.size();
     }
 
     @Override
     @NonNull
     public String getElement(int index) {
-        return mItems.get(index);
+        return elements.get(index);
     }
 
     /** Adds an element into the array. */
     public void addElement(@NonNull String value) {
-        mItems.add(value);
+        elements.add(value);
     }
 
-    /** Returns an iterator over the resource values. */
     @Override
     public Iterator<String> iterator() {
-        return mItems.iterator();
+        return elements.iterator();
     }
 
     /**
@@ -84,8 +83,8 @@ public class ArrayResourceValueImpl extends ResourceValueImpl implements ArrayRe
 
         //noinspection VariableNotUsedInsideIf
         if (super.getValue() == null) {
-            if (!mItems.isEmpty()) {
-                return mItems.get(getDefaultIndex());
+            if (!elements.isEmpty()) {
+                return elements.get(getDefaultIndex());
             }
         }
 

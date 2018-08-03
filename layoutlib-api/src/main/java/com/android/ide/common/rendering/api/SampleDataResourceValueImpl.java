@@ -30,42 +30,42 @@ public class SampleDataResourceValueImpl extends ResourceValueImpl
         implements SampleDataResourceValue {
     /**
      * This splitter is used to split back the content into lines. The content is generated always
-     * with \n as new line separator.
+     * with \n as a line separator.
      */
     private static final Splitter NEW_LINE_SPLITTER =
             Splitter.on(Pattern.compile("\r?\n")).omitEmptyStrings();
 
-    private final ImmutableList<String> myLines;
-    private final ResourceReference myReference;
+    private final ImmutableList<String> lines;
+    private final ResourceReference reference;
 
     public SampleDataResourceValueImpl(
             @NonNull ResourceReference reference, @Nullable byte[] content) {
         super(reference, null);
 
-        myReference = reference;
-        myLines =
+        this.reference = reference;
+        this.lines =
                 content != null
                         ? ImmutableList.copyOf(
                                 NEW_LINE_SPLITTER.splitToList(new String(content, Charsets.UTF_8)))
                         : ImmutableList.of();
     }
 
-    @Nullable
     @Override
+    @Nullable
     public String getValue() {
         // SampleDataResourceValue are just references. Values are returned via getValueAsLines
-        return myReference.getResourceUrl().toString();
+        return reference.getResourceUrl().toString();
     }
 
     @Override
     @NonNull
     public ImmutableList<String> getValueAsLines() {
-        return myLines;
+        return lines;
     }
 
-    @Nullable
     @Override
+    @Nullable
     public ResourceReference getReference() {
-        return myReference;
+        return reference;
     }
 }

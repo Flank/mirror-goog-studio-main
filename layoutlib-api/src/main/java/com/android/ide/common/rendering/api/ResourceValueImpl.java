@@ -18,7 +18,6 @@ package com.android.ide.common.rendering.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
-import com.android.resources.ResourceUrl;
 import com.android.utils.HashCodes;
 import com.google.common.base.MoreObjects;
 import java.util.Objects;
@@ -115,33 +114,6 @@ public class ResourceValueImpl implements ResourceValue {
     @NonNull
     public ResourceReference asReference() {
         return new ResourceReference(namespace, resourceType, name);
-    }
-
-    @Override
-    @NonNull
-    public ResourceUrl getResourceUrl() {
-        return asReference().getResourceUrl();
-    }
-
-    @Override
-    @Nullable
-    public ResourceReference getReference() {
-        if (value == null) {
-            return null;
-        }
-
-        ResourceUrl url = ResourceUrl.parse(value);
-        if (url == null) {
-            return null;
-        }
-
-        return url.resolve(getNamespace(), mNamespaceResolver);
-    }
-
-    @Override
-    @Nullable
-    public String getRawXmlValue() {
-        return getValue();
     }
 
     /**

@@ -24,31 +24,31 @@ import java.util.Objects;
 
 public class DensityBasedResourceValueImpl extends ResourceValueImpl
         implements DensityBasedResourceValue {
-    private final Density mDensity;
-
-    public DensityBasedResourceValueImpl(
-            @NonNull ResourceReference reference,
-            @Nullable String value,
-            @NonNull Density mDensity) {
-        super(reference, value);
-        this.mDensity = mDensity;
-    }
+    @NonNull private final Density density;
 
     public DensityBasedResourceValueImpl(
             @NonNull ResourceNamespace namespace,
             @NonNull ResourceType type,
             @NonNull String name,
             @Nullable String value,
-            @NonNull Density mDensity,
+            @NonNull Density density,
             @Nullable String libraryName) {
         super(namespace, type, name, value, libraryName);
-        this.mDensity = mDensity;
+        this.density = density;
+    }
+
+    public DensityBasedResourceValueImpl(
+            @NonNull ResourceReference reference,
+            @Nullable String value,
+            @NonNull Density density) {
+        super(reference, value);
+        this.density = density;
     }
 
     @Override
     @NonNull
     public final Density getResourceDensity() {
-        return mDensity;
+        return density;
     }
 
     @Override
@@ -56,12 +56,12 @@ public class DensityBasedResourceValueImpl extends ResourceValueImpl
     public String toString() {
         return "DensityBasedResourceValue ["
                + getResourceType() + "/" + getName() + " = " + getValue()
-               + " (density:" + mDensity +", framework:" + isFramework() + ")]";
+               + " (density:" + density + ", framework:" + isFramework() + ")]";
     }
 
     @Override
     public int hashCode() {
-        return HashCodes.mix(super.hashCode(), Objects.hashCode(mDensity));
+        return HashCodes.mix(super.hashCode(), Objects.hashCode(density));
     }
 
     @Override
@@ -70,6 +70,6 @@ public class DensityBasedResourceValueImpl extends ResourceValueImpl
         if (!super.equals(obj)) return false;
         if (getClass() != obj.getClass()) return false;
         DensityBasedResourceValueImpl other = (DensityBasedResourceValueImpl) obj;
-        return Objects.equals(mDensity, other.mDensity);
+        return Objects.equals(density, other.density);
     }
 }

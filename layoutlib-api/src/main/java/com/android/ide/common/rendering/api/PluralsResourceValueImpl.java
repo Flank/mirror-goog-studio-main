@@ -23,16 +23,8 @@ import java.util.List;
 
 /** Represents an Android plurals resource. */
 public class PluralsResourceValueImpl extends ResourceValueImpl implements PluralsResourceValue {
-    private final List<String> mQuantities = new ArrayList<>();
-    private final List<String> mValues = new ArrayList<>();
-
-    public PluralsResourceValueImpl(
-            @NonNull ResourceReference reference,
-            @Nullable String value,
-            @Nullable String libraryName) {
-        super(reference, value, libraryName);
-        assert reference.getResourceType() == ResourceType.PLURALS;
-    }
+    private final List<String> quantities = new ArrayList<>();
+    private final List<String> values = new ArrayList<>();
 
     public PluralsResourceValueImpl(
             @NonNull ResourceNamespace namespace,
@@ -44,36 +36,44 @@ public class PluralsResourceValueImpl extends ResourceValueImpl implements Plura
         assert type == ResourceType.PLURALS;
     }
 
-    /** Adds an element into the array */
-    public void addPlural(String quantity, String value) {
-        mQuantities.add(quantity);
-        mValues.add(value);
+    public PluralsResourceValueImpl(
+            @NonNull ResourceReference reference,
+            @Nullable String value,
+            @Nullable String libraryName) {
+        super(reference, value, libraryName);
+        assert reference.getResourceType() == ResourceType.PLURALS;
+    }
+
+    /** Adds an element into the array. */
+    public void addPlural(@NonNull String quantity, @NonNull String value) {
+        quantities.add(quantity);
+        values.add(value);
     }
 
     @Override
     public int getPluralsCount() {
-        return mQuantities.size();
+        return quantities.size();
     }
 
-    @NonNull
     @Override
+    @NonNull
     public String getQuantity(int index) {
-        return mQuantities.get(index);
+        return quantities.get(index);
     }
 
     @Override
     @NonNull
     public String getValue(int index) {
-        return mValues.get(index);
+        return values.get(index);
     }
 
     @Override
     @Nullable
     public String getValue(@NonNull String quantity) {
-        assert mQuantities.size() == mValues.size();
-        for (int i = 0, n = mQuantities.size(); i < n; i++) {
-            if (quantity.equals(mQuantities.get(i))) {
-                return mValues.get(i);
+        assert quantities.size() == values.size();
+        for (int i = 0, n = quantities.size(); i < n; i++) {
+            if (quantity.equals(quantities.get(i))) {
+                return values.get(i);
             }
         }
 
@@ -89,7 +89,7 @@ public class PluralsResourceValueImpl extends ResourceValueImpl implements Plura
 
         //noinspection VariableNotUsedInsideIf
         if (super.getValue() == null) {
-            if (!mValues.isEmpty()) {
+            if (!values.isEmpty()) {
                 return getValue(0);
             }
         }

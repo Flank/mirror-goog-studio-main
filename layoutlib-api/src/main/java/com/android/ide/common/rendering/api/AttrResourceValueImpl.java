@@ -18,8 +18,12 @@ package com.android.ide.common.rendering.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
-
-import java.util.*;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * A resource value representing an attr resource.
@@ -34,16 +38,16 @@ public class AttrResourceValueImpl extends ResourceValueImpl implements AttrReso
     @NonNull private Set<AttributeFormat> formats = EnumSet.noneOf(AttributeFormat.class);
 
     public AttrResourceValueImpl(
-            @NonNull ResourceReference reference, @Nullable String libraryName) {
-        super(reference, null, libraryName);
-    }
-
-    public AttrResourceValueImpl(
             @NonNull ResourceNamespace namespace,
             @NonNull ResourceType type,
             @NonNull String name,
             @Nullable String libraryName) {
         super(namespace, type, name, null, libraryName);
+    }
+
+    public AttrResourceValueImpl(
+            @NonNull ResourceReference reference, @Nullable String libraryName) {
+        super(reference, null, libraryName);
     }
 
     @Override
