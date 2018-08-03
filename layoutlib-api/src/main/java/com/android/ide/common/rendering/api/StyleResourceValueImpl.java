@@ -74,16 +74,18 @@ public class StyleResourceValueImpl extends ResourceValueImpl implements StyleRe
     }
 
     /** Creates a copy of the given style. */
-    public StyleResourceValueImpl(@NonNull StyleResourceValue style) {
-        this(
+    @NonNull
+    public static StyleResourceValueImpl copyOf(@NonNull StyleResourceValue style) {
+        StyleResourceValueImpl copy = new StyleResourceValueImpl(
                 style.getNamespace(),
                 style.getResourceType(),
                 style.getName(),
                 style.getParentStyleName(),
                 style.getLibraryName());
         for (StyleItemResourceValue item : style.getDefinedItems()) {
-            addItem(item);
+            copy.addItem(item);
         }
+        return copy;
     }
 
     @Override
