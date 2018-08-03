@@ -78,32 +78,27 @@ open class DefaultAndroidSourceSet @Inject constructor(
         get() = buildArtifactsHolder.createReport()
 
     init {
-        val javaSrcDisplayName = displayName + " Java source"
         javaSource = DefaultAndroidSourceDirectorySet(
-                javaSrcDisplayName, project, SourceArtifactType.JAVA_SOURCES, dslScope
+            "$displayName Java source", project, SourceArtifactType.JAVA_SOURCES, dslScope
         )
         javaSource.getFilter().include("**/*.java")
 
-        val javaResourcesDisplayName = displayName + " Java resources"
         javaResources = DefaultAndroidSourceDirectorySet(
-                javaResourcesDisplayName,
+            "$displayName Java resources",
                 project,
                 SourceArtifactType.JAVA_RESOURCES,
                 dslScope
         )
         javaResources.getFilter().exclude("**/*.java")
 
-        val manifestDisplayName = displayName + " manifest"
-        manifest = DefaultAndroidSourceFile(manifestDisplayName, project)
+        manifest = DefaultAndroidSourceFile("$displayName manifest", project)
 
-        val assetsDisplayName = displayName + " assets"
         assets = DefaultAndroidSourceDirectorySet(
-                assetsDisplayName, project, SourceArtifactType.ASSETS, dslScope
+            "$displayName assets", project, SourceArtifactType.ASSETS, dslScope
         )
 
-        val resourcesDisplayName = displayName + " resources"
         res = DefaultAndroidSourceDirectorySet(
-                resourcesDisplayName,
+            "$displayName resources",
                 project,
                 SourceArtifactType.ANDROID_RESOURCES,
                 dslScope,
@@ -111,35 +106,30 @@ open class DefaultAndroidSourceSet @Inject constructor(
                 delayedActionsExecutor
         )
 
-        val aidlDisplayName = displayName + " aidl"
         aidl = DefaultAndroidSourceDirectorySet(
-                aidlDisplayName, project, SourceArtifactType.AIDL, dslScope
+            "$displayName aidl", project, SourceArtifactType.AIDL, dslScope
         )
 
-        val renderscriptDisplayName = displayName + " renderscript"
         renderscript = DefaultAndroidSourceDirectorySet(
-                renderscriptDisplayName,
+            "$displayName renderscript",
                 project,
                 SourceArtifactType.RENDERSCRIPT,
                 dslScope
         )
 
-        val jniDisplayName = displayName + " jni"
         jni = DefaultAndroidSourceDirectorySet(
-                jniDisplayName, project, SourceArtifactType.JNI, dslScope
+            "$displayName jni", project, SourceArtifactType.JNI, dslScope
         )
 
-        val libsDisplayName = displayName + " jniLibs"
         jniLibs = DefaultAndroidSourceDirectorySet(
-                libsDisplayName, project, SourceArtifactType.JNI_LIBS, dslScope
+            "$displayName jniLibs", project, SourceArtifactType.JNI_LIBS, dslScope
         )
 
-        val shaderDisplayName = displayName + " shaders"
         shaders = DefaultAndroidSourceDirectorySet(
-                shaderDisplayName, project, SourceArtifactType.SHADERS, dslScope
+            "$displayName shaders", project, SourceArtifactType.SHADERS, dslScope
         )
 
-        initRoot("src/" + name)
+        initRoot("src/$name")
     }
 
     override fun getName(): String {
@@ -147,91 +137,44 @@ open class DefaultAndroidSourceSet @Inject constructor(
     }
 
     override fun toString(): String {
-        return "source set " + displayName
+        return "source set $displayName"
     }
 
-    override fun getApiConfigurationName(): String {
+    private fun getName(config: String): String {
         return if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
-            CONFIG_NAME_API
+            config
         } else {
-            name + "Api"
+            name + config.capitalize()
         }
     }
 
-    override fun getCompileOnlyConfigurationName(): String {
-        return if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
-            CONFIG_NAME_COMPILE_ONLY
-        } else {
-            name + "CompileOnly"
-        }
-    }
+    override fun getApiConfigurationName() = getName(CONFIG_NAME_API)
 
-    override fun getImplementationConfigurationName(): String {
-        return if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
-            CONFIG_NAME_IMPLEMENTATION
-        } else {
-            name + "Implementation"
-        }
-    }
+    override fun getCompileOnlyConfigurationName() = getName(CONFIG_NAME_COMPILE_ONLY)
 
-    override fun getRuntimeOnlyConfigurationName(): String {
-        return if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
-            CONFIG_NAME_RUNTIME_ONLY
-        } else {
-            name + "RuntimeOnly"
-        }
-    }
+    override fun getImplementationConfigurationName() = getName(CONFIG_NAME_IMPLEMENTATION)
+
+    override fun getRuntimeOnlyConfigurationName() = getName(CONFIG_NAME_RUNTIME_ONLY)
 
     @Suppress("OverridingDeprecatedMember")
-    override fun getCompileConfigurationName(): String {
-        return if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
-            CONFIG_NAME_COMPILE
-        } else {
-            name + "Compile"
-        }
-    }
+    override fun getCompileConfigurationName() = getName(CONFIG_NAME_COMPILE)
 
     @Suppress("OverridingDeprecatedMember")
     override fun getPackageConfigurationName(): String {
         if (publishPackage) {
-            return if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
-                CONFIG_NAME_PUBLISH
-            } else {
-                name + "Publish"
-            }
+            return getName(CONFIG_NAME_PUBLISH)
         }
 
-        return if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
-            CONFIG_NAME_APK
-        } else {
-            name + "Apk"
-        }
+        return getName(CONFIG_NAME_APK)
     }
 
     @Suppress("OverridingDeprecatedMember")
-    override fun getProvidedConfigurationName(): String {
-        return if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
-            CONFIG_NAME_PROVIDED
-        } else {
-            name + "Provided"
-        }
-    }
+    override fun getProvidedConfigurationName() = getName(CONFIG_NAME_PROVIDED)
 
-    override fun getWearAppConfigurationName(): String {
-        return if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
-            CONFIG_NAME_WEAR_APP
-        } else {
-            name + "WearApp"
-        }
-    }
+    override fun getWearAppConfigurationName() = getName(CONFIG_NAME_WEAR_APP)
 
-    override fun getAnnotationProcessorConfigurationName(): String {
-        return if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
-            CONFIG_NAME_ANNOTATION_PROCESSOR
-        } else {
-            name + "AnnotationProcessor"
-        }
-    }
+    override fun getAnnotationProcessorConfigurationName()
+            = getName(CONFIG_NAME_ANNOTATION_PROCESSOR)
 
     override fun getManifest(): AndroidSourceFile {
         return manifest
@@ -328,16 +271,16 @@ open class DefaultAndroidSourceSet @Inject constructor(
     }
 
     private fun initRoot(path: String): AndroidSourceSet {
-        javaSource.setSrcDirs(listOf(path + "/java"))
-        javaResources.setSrcDirs(listOf(path + "/resources"))
-        res.setSrcDirs(listOf(path + "/" + SdkConstants.FD_RES))
-        assets.setSrcDirs(listOf(path + "/" + SdkConstants.FD_ASSETS))
-        manifest.srcFile(path + "/" + SdkConstants.FN_ANDROID_MANIFEST_XML)
-        aidl.setSrcDirs(listOf(path + "/aidl"))
-        renderscript.setSrcDirs(listOf(path + "/rs"))
-        jni.setSrcDirs(listOf(path + "/jni"))
-        jniLibs.setSrcDirs(listOf(path + "/jniLibs"))
-        shaders.setSrcDirs(listOf(path + "/shaders"))
+        javaSource.setSrcDirs(listOf("$path/java"))
+        javaResources.setSrcDirs(listOf("$path/resources"))
+        res.setSrcDirs(listOf("$path/${SdkConstants.FD_RES}"))
+        assets.setSrcDirs(listOf("$path/${SdkConstants.FD_ASSETS}"))
+        manifest.srcFile("$path/${SdkConstants.FN_ANDROID_MANIFEST_XML}")
+        aidl.setSrcDirs(listOf("$path/aidl"))
+        renderscript.setSrcDirs(listOf("$path/rs"))
+        jni.setSrcDirs(listOf("$path/jni"))
+        jniLibs.setSrcDirs(listOf("$path/jniLibs"))
+        shaders.setSrcDirs(listOf("$path/shaders"))
         return this
     }
 
