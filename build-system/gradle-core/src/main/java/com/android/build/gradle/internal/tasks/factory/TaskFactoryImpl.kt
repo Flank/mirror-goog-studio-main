@@ -29,15 +29,15 @@ class TaskFactoryImpl(private val taskContainer: TaskContainer):
         return taskContainer.findByName(name) != null
     }
 
-    override fun create(name: String): Task {
+    override fun eagerCreate(name: String): Task {
         return taskContainer.create(name)
     }
 
-    override fun <S : Task> create(name: String, type: Class<S>): S {
+    override fun <S : Task> eagerCreate(name: String, type: Class<S>): S {
         return taskContainer.create(name, type)
     }
 
-    override fun configure(name: String, configAction: Action<in Task>) {
+    override fun eagerConfigure(name: String, configAction: Action<in Task>) {
         val task = taskContainer.getByName(name)
         configAction.execute(task)
     }
@@ -46,7 +46,7 @@ class TaskFactoryImpl(private val taskContainer: TaskContainer):
         return taskContainer.findByName(name)
     }
 
-    override fun <T : Task> create(creationAction: TaskCreationAction<T>): T {
+    override fun <T : Task> eagerCreate(creationAction: TaskCreationAction<T>): T {
         val task = taskContainer.create(creationAction.name, creationAction.type)
         @Suppress("UNCHECKED_CAST")
         val taskProvider = taskContainer.named(task.name) as TaskProvider<T>
@@ -55,12 +55,12 @@ class TaskFactoryImpl(private val taskContainer: TaskContainer):
         return task
     }
 
-    override fun <T : Task> create(
+    override fun <T : Task> eagerCreate(
             taskName: String, taskClass: Class<T>, configAction: Action<T>): T {
         return taskContainer.create(taskName, taskClass, configAction)
     }
 
-    override fun create(taskName: String, configAction: Action<DefaultTask>): DefaultTask {
-        return create(taskName, DefaultTask::class.java, configAction)
+    override fun eagerCreate(taskName: String, configAction: Action<DefaultTask>): DefaultTask {
+        return eagerCreate(taskName, DefaultTask::class.java, configAction)
     }
 }

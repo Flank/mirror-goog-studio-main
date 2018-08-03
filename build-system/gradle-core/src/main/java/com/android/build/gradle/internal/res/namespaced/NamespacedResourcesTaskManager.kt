@@ -53,17 +53,17 @@ class NamespacedResourcesTaskManager(
 
         // Process dependencies making sure everything we consume will be fully namespaced.
         if (globalScope.projectOptions.get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
-            val task = taskFactory.create(AutoNamespaceDependenciesTask.CreationAction(variantScope))
+            val task = taskFactory.eagerCreate(AutoNamespaceDependenciesTask.CreationAction(variantScope))
             // Needed for the IDE
             variantScope.taskContainer.sourceGenTask!!.dependsOn(task)
         }
 
         // Compile
         createCompileResourcesTask()
-        taskFactory.create(StaticLibraryManifestTask.CreationAction(variantScope))
-        taskFactory.create(LinkLibraryAndroidResourcesTask.CreationAction(variantScope))
+        taskFactory.eagerCreate(StaticLibraryManifestTask.CreationAction(variantScope))
+        taskFactory.eagerCreate(LinkLibraryAndroidResourcesTask.CreationAction(variantScope))
         // TODO: also generate a private R.jar holding private resources.
-        taskFactory.create(GenerateNamespacedLibraryRFilesTask.CreationAction(variantScope))
+        taskFactory.eagerCreate(GenerateNamespacedLibraryRFilesTask.CreationAction(variantScope))
         if (variantScope.type.isTestComponent) {
             if (variantScope.testedVariantData!!.type.isAar) {
                 createNamespacedLibraryTestProcessResourcesTask(
@@ -83,14 +83,14 @@ class NamespacedResourcesTaskManager(
                 useAaptToGenerateLegacyMultidexMainDexProguardRules = useAaptToGenerateLegacyMultidexMainDexProguardRules
             )
         }
-        taskFactory.create(CompileRClassTask.CreationAction(variantScope))
+        taskFactory.eagerCreate(CompileRClassTask.CreationAction(variantScope))
     }
 
     private fun createNamespacedAppProcessTask(
             packageOutputType: InternalArtifactType?,
             baseName: String,
             useAaptToGenerateLegacyMultidexMainDexProguardRules: Boolean) {
-       taskFactory.create(
+       taskFactory.eagerCreate(
            LinkApplicationAndroidResourcesTask.NamespacedCreationAction(
                variantScope,
                useAaptToGenerateLegacyMultidexMainDexProguardRules,
@@ -106,7 +106,7 @@ class NamespacedResourcesTaskManager(
 
     private fun createNamespacedLibraryTestProcessResourcesTask(
             packageOutputType: InternalArtifactType?) {
-        taskFactory.create(ProcessAndroidAppResourcesTask.CreationAction(variantScope))
+        taskFactory.eagerCreate(ProcessAndroidAppResourcesTask.CreationAction(variantScope))
         if (packageOutputType != null) {
             variantScope.artifacts.appendArtifact(
                 packageOutputType,
@@ -119,7 +119,7 @@ class NamespacedResourcesTaskManager(
             val name = "compile${sourceSetName.capitalize()}" +
                     "ResourcesFor${variantScope.fullVariantName.capitalize()}"
             // TODO : figure out when we need explicit task dependency and potentially remove it.
-            taskFactory.create(CompileSourceSetResources.CreationAction(
+            taskFactory.eagerCreate(CompileSourceSetResources.CreationAction(
                     name = name,
                     inputDirectories = artifacts,
                     variantScope = variantScope))

@@ -460,7 +460,8 @@ public class VariantManager implements VariantModel {
                     final String variantAssembleTaskName =
                             StringHelper.appendCapitalized("assemble", name);
                     if (!taskManager.getTaskFactory().containsKey(variantAssembleTaskName)) {
-                        Task task = taskManager.getTaskFactory().create(variantAssembleTaskName);
+                        Task task =
+                                taskManager.getTaskFactory().eagerCreate(variantAssembleTaskName);
                         task.setDescription("Assembles all builds for flavor combination: " + name);
                         task.setGroup("Build");
                         task.dependsOn(taskContainer.getAssembleTask().getName());
@@ -468,7 +469,7 @@ public class VariantManager implements VariantModel {
 
                     taskManager
                             .getTaskFactory()
-                            .configure(
+                            .eagerConfigure(
                                     "assemble", task1 -> task1.dependsOn(variantAssembleTaskName));
 
                     if (needBundleTask) {
@@ -476,7 +477,8 @@ public class VariantManager implements VariantModel {
                         final String variantBundleTaskName =
                                 StringHelper.appendCapitalized("bundle", name);
                         if (!taskManager.getTaskFactory().containsKey(variantBundleTaskName)) {
-                            Task task = taskManager.getTaskFactory().create(variantBundleTaskName);
+                            Task task =
+                                    taskManager.getTaskFactory().eagerCreate(variantBundleTaskName);
                             task.setDescription(
                                     "Assembles all bundles for flavor combination: " + name);
                             task.setGroup("Build");
@@ -485,7 +487,7 @@ public class VariantManager implements VariantModel {
 
                         taskManager
                                 .getTaskFactory()
-                                .configure(
+                                .eagerConfigure(
                                         "bundle", task1 -> task1.dependsOn(variantBundleTaskName));
                     }
                 }
@@ -508,7 +510,7 @@ public class VariantManager implements VariantModel {
         // Add dependency of assemble task on assemble build type task.
         taskManager
                 .getTaskFactory()
-                .configure(
+                .eagerConfigure(
                         "assemble",
                         task -> {
                             assert buildTypeData.getAssembleTask() != null;
@@ -519,7 +521,7 @@ public class VariantManager implements VariantModel {
 
             if (variantType.isHybrid()
                     && taskManager.getTaskFactory().findByName("bundle") == null) {
-                taskManager.getTaskFactory().create("bundle");
+                taskManager.getTaskFactory().eagerCreate("bundle");
             }
 
             if (buildTypeData.getBundleTask() == null) {
@@ -528,7 +530,7 @@ public class VariantManager implements VariantModel {
 
             taskManager
                     .getTaskFactory()
-                    .configure(
+                    .eagerConfigure(
                             "bundle",
                             task -> {
                                 assert buildTypeData.getBundleTask() != null;

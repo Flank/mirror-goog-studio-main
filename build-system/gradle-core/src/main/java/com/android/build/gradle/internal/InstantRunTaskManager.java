@@ -108,7 +108,8 @@ public class InstantRunTaskManager {
         TransformVariantScope transformVariantScope = variantScope.getTransformVariantScope();
 
         buildInfoLoaderTask =
-                taskFactory.create(new BuildInfoLoaderTask.CreationAction(variantScope, logger));
+                taskFactory.eagerCreate(
+                        new BuildInfoLoaderTask.CreationAction(variantScope, logger));
 
         // always run the verifier first, since if it detects incompatible changes, we
         // should skip bytecode enhancements of the changed classes.
@@ -162,7 +163,7 @@ public class InstantRunTaskManager {
             // will eventually get packaged in the main APK.
             // We need to pass the published resource type as the generated manifest can use
             // a String resource for its version name (so AAPT can check for resources existence).
-            taskFactory.create(
+            taskFactory.eagerCreate(
                     new InstantRunMainApkResourcesBuilder.CreationAction(
                             variantScope, resourceFilesInputType));
         }
@@ -172,7 +173,8 @@ public class InstantRunTaskManager {
         // that the processAndroidResources task ran in a previous non InstantRun enabled
         // invocation.
         CheckManifestInInstantRunMode checkManifestTask =
-                taskFactory.create(new CheckManifestInInstantRunMode.CreationAction(variantScope));
+                taskFactory.eagerCreate(
+                        new CheckManifestInInstantRunMode.CreationAction(variantScope));
 
         instantRunTask.ifPresent(t ->
                 t.dependsOn(
@@ -203,7 +205,8 @@ public class InstantRunTaskManager {
 
 
         FastDeployRuntimeExtractorTask extractorTask =
-                taskFactory.create(new FastDeployRuntimeExtractorTask.CreationAction(variantScope));
+                taskFactory.eagerCreate(
+                        new FastDeployRuntimeExtractorTask.CreationAction(variantScope));
         extractorTask.dependsOn(buildInfoLoaderTask);
 
         // also add a new stream for the extractor task output.
@@ -218,7 +221,7 @@ public class InstantRunTaskManager {
 
         // create the AppInfo.class for this variant.
         GenerateInstantRunAppInfoTask generateInstantRunAppInfoTask =
-                taskFactory.create(
+                taskFactory.eagerCreate(
                         new GenerateInstantRunAppInfoTask.CreationAction(
                                 transformVariantScope, variantScope, instantRunMergedManifests));
 
@@ -272,7 +275,7 @@ public class InstantRunTaskManager {
         }
 
         PreColdSwapTask preColdSwapTask =
-                taskFactory.create(
+                taskFactory.eagerCreate(
                         new PreColdSwapTask.CreationAction(
                                 "preColdswap", transformVariantScope, variantScope));
 

@@ -67,7 +67,8 @@ public class InstantAppTaskManager extends TaskManager {
         // Create the bundling task.
         File bundleDir = variantScope.getApkLocation();
         BundleInstantApp bundleTask =
-                taskFactory.create(new BundleInstantApp.CreationAction(variantScope, bundleDir));
+                taskFactory.eagerCreate(
+                        new BundleInstantApp.CreationAction(variantScope, bundleDir));
         variantScope.getTaskContainer().getAssembleTask().dependsOn(bundleTask);
         variantScope
                 .getArtifacts()
@@ -76,17 +77,17 @@ public class InstantAppTaskManager extends TaskManager {
                         ImmutableList.of(variantScope.getApkLocation()),
                         bundleTask);
 
-        taskFactory.create(new InstantAppSideLoadTask.CreationAction(variantScope));
+        taskFactory.eagerCreate(new InstantAppSideLoadTask.CreationAction(variantScope));
 
         // FIXME: Stop creating a dummy task just to make the IDE sync shut up.
-        taskFactory.create(variantScope.getTaskName("dummy"));
+        taskFactory.eagerCreate(variantScope.getTaskName("dummy"));
     }
 
     @Override
     public void createTasksBeforeEvaluate() {
         super.createTasksBeforeEvaluate();
 
-        taskFactory.create(new InstantAppProvisionTask.CreationAction(globalScope));
+        taskFactory.eagerCreate(new InstantAppProvisionTask.CreationAction(globalScope));
     }
 
     @NonNull

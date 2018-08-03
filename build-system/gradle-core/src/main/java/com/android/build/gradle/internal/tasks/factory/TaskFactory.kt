@@ -36,22 +36,22 @@ interface TaskFactory {
     fun findByName(name: String): Task?
 
     /** Creates a task with the given name.  */
-    fun create(name: String): Task
+    fun eagerCreate(name: String): Task
 
     /** Creates a task with the given name and type.  */
-    fun <S : Task> create(name: String, type: Class<S>): S
+    fun <S : Task> eagerCreate(name: String, type: Class<S>): S
 
     /** Creates a task with the given [TaskCreationAction]  */
-    fun <T : Task> create(creationAction: TaskCreationAction<T>): T
+    fun <T : Task> eagerCreate(creationAction: TaskCreationAction<T>): T
 
     /** Creates a task wit the given name, type and configuration action  */
-    fun <T : Task> create(
+    fun <T : Task> eagerCreate(
         taskName: String, taskClass: Class<T>, configAction: Action<T>
     ): T
 
     /** Creates a task with the given name and config action.  */
-    fun create(taskName: String, configAction: Action<DefaultTask>): DefaultTask
+    fun eagerCreate(taskName: String, configAction: Action<DefaultTask>): DefaultTask
 
     /** Applies the given configAction to the task with given name.  */
-    fun configure(name: String, configAction: Action<in Task>)
+    fun eagerConfigure(name: String, configAction: Action<in Task>)
 }
