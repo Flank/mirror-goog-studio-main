@@ -20,8 +20,7 @@ import org.gradle.api.internal.DefaultDomainObjectSet;
 /**
  * The {@code android} extension for application plugins.
  *
- * <p>For the base module, see @{link {@link
- * com.android.build.gradle.internal.dsl.BaseAppModuleExtension}
+ * <p>For the base module, see {@link com.android.build.gradle.BaseExtension}
  *
  * <p>For optional apks, this class is used directly.
  */
