@@ -108,7 +108,7 @@ open class InstantRunMainApkResourcesBuilderTest {
     @Test
     fun testConfigAction() {
         task = project.tasks.create("test", InstantRunMainApkResourcesBuilder::class.java)
-        val configAction = InstantRunMainApkResourcesBuilder.ConfigAction(
+        val configAction = InstantRunMainApkResourcesBuilder.CreationAction(
                 variantScope,
                 InternalArtifactType.MERGED_RES)
 
@@ -140,7 +140,7 @@ open class InstantRunMainApkResourcesBuilderTest {
     fun testSingleApkData() {
         task = project.tasks.create("test", InstantRunMainApkResourcesBuilderForTest::class.java)
 
-        val configAction = InstantRunMainApkResourcesBuilder.ConfigAction(
+        val configAction = InstantRunMainApkResourcesBuilder.CreationAction(
                 variantScope,
                 InternalArtifactType.MERGED_RES)
 

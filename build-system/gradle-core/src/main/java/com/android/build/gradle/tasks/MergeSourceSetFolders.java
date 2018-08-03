@@ -30,7 +30,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.Workers;
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.SourceProvider;
@@ -335,11 +335,12 @@ public class MergeSourceSetFolders extends IncrementalTask {
     }
 
 
-    protected abstract static class ConfigAction extends TaskConfigAction<MergeSourceSetFolders> {
+    protected abstract static class CreationAction
+            extends TaskCreationAction<MergeSourceSetFolders> {
         @NonNull
         protected final VariantScope scope;
 
-        protected ConfigAction(@NonNull VariantScope scope) {
+        protected CreationAction(@NonNull VariantScope scope) {
             this.scope = scope;
         }
 
@@ -360,12 +361,12 @@ public class MergeSourceSetFolders extends IncrementalTask {
         }
     }
 
-    public static class MergeAssetBaseConfigAction extends ConfigAction {
+    public static class MergeAssetBaseCreationAction extends CreationAction {
 
         final boolean includeDependencies;
         final ArtifactType outputArtifactType;
 
-        public MergeAssetBaseConfigAction(
+        public MergeAssetBaseCreationAction(
                 @NonNull VariantScope scope,
                 @NonNull ArtifactType outputArtifactType,
                 boolean includeDependencies) {
@@ -414,8 +415,8 @@ public class MergeSourceSetFolders extends IncrementalTask {
         }
     }
 
-    public static class MergeAppAssetConfigAction extends MergeAssetBaseConfigAction {
-        public MergeAppAssetConfigAction(@NonNull VariantScope scope) {
+    public static class MergeAppAssetCreationAction extends MergeAssetBaseCreationAction {
+        public MergeAppAssetCreationAction(@NonNull VariantScope scope) {
             super(scope, InternalArtifactType.MERGED_ASSETS, true);
         }
 
@@ -426,8 +427,8 @@ public class MergeSourceSetFolders extends IncrementalTask {
         }
     }
 
-    public static class LibraryAssetConfigAction extends MergeAssetBaseConfigAction {
-        public LibraryAssetConfigAction(@NonNull VariantScope scope) {
+    public static class LibraryAssetCreationAction extends MergeAssetBaseCreationAction {
+        public LibraryAssetCreationAction(@NonNull VariantScope scope) {
             super(scope, InternalArtifactType.LIBRARY_ASSETS, false);
         }
 
@@ -438,9 +439,9 @@ public class MergeSourceSetFolders extends IncrementalTask {
         }
     }
 
-    public static class MergeJniLibFoldersConfigAction extends ConfigAction {
+    public static class MergeJniLibFoldersCreationAction extends CreationAction {
 
-        public MergeJniLibFoldersConfigAction(@NonNull VariantScope scope) {
+        public MergeJniLibFoldersCreationAction(@NonNull VariantScope scope) {
             super(scope);
         }
 
@@ -467,9 +468,9 @@ public class MergeSourceSetFolders extends IncrementalTask {
         }
     }
 
-    public static class MergeShaderSourceFoldersConfigAction extends ConfigAction {
+    public static class MergeShaderSourceFoldersCreationAction extends CreationAction {
 
-        public MergeShaderSourceFoldersConfigAction(@NonNull VariantScope scope) {
+        public MergeShaderSourceFoldersCreationAction(@NonNull VariantScope scope) {
             super(scope);
         }
 

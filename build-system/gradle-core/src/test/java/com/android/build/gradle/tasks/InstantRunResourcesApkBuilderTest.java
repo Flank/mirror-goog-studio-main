@@ -136,8 +136,8 @@ public class InstantRunResourcesApkBuilderTest {
     @Test
     public void testConfigAction() {
 
-        InstantRunResourcesApkBuilder.ConfigAction configAction =
-                new InstantRunResourcesApkBuilder.ConfigAction(
+        InstantRunResourcesApkBuilder.CreationAction configAction =
+                new InstantRunResourcesApkBuilder.CreationAction(
                         InternalArtifactType.PROCESSED_RES, variantScope);
 
         configAction.execute(task);
@@ -152,8 +152,8 @@ public class InstantRunResourcesApkBuilderTest {
     @Test
     public void testNoSplitExecution() {
 
-        InstantRunResourcesApkBuilder.ConfigAction configAction =
-                new InstantRunResourcesApkBuilder.ConfigAction(
+        InstantRunResourcesApkBuilder.CreationAction configAction =
+                new InstantRunResourcesApkBuilder.CreationAction(
                         InternalArtifactType.PROCESSED_RES, variantScope);
 
         configAction.execute(task);
@@ -166,8 +166,8 @@ public class InstantRunResourcesApkBuilderTest {
 
     @Test
     public void testOtherPatchingPolicy() throws IOException {
-        InstantRunResourcesApkBuilder.ConfigAction configAction =
-                new InstantRunResourcesApkBuilder.ConfigAction(
+        InstantRunResourcesApkBuilder.CreationAction configAction =
+                new InstantRunResourcesApkBuilder.CreationAction(
                         InternalArtifactType.PROCESSED_RES, variantScope);
 
         when(buildContext.getPatchingPolicy()).thenReturn(InstantRunPatchingPolicy.MULTI_APK);
@@ -224,8 +224,8 @@ public class InstantRunResourcesApkBuilderTest {
     private void testExecution(int numberOfSplits)
             throws IOException, PackagerException, KeytoolException {
 
-        InstantRunResourcesApkBuilder.ConfigAction configAction =
-                new InstantRunResourcesApkBuilder.ConfigAction(
+        InstantRunResourcesApkBuilder.CreationAction configAction =
+                new InstantRunResourcesApkBuilder.CreationAction(
                         InternalArtifactType.PROCESSED_RES, variantScope);
 
         configAction.execute(task);

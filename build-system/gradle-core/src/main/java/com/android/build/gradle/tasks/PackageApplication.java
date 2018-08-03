@@ -81,18 +81,17 @@ public class PackageApplication extends PackageAndroidArtifact {
         }
     }
 
-    // ----- ConfigAction -----
+    // ----- CreationAction -----
 
     /**
      * Configures the task to perform the "standard" packaging, including all files that should end
      * up in the APK.
      */
-    public static class StandardConfigAction
-            extends PackageAndroidArtifact.ConfigAction<PackageApplication> {
+    public static class StandardCreationAction extends CreationAction<PackageApplication> {
 
         private final InternalArtifactType expectedOutputType;
 
-        public StandardConfigAction(
+        public StandardCreationAction(
                 @NonNull VariantScope packagingScope,
                 @NonNull File outputDirectory,
                 @NonNull InternalArtifactType inputResourceFilesType,
@@ -131,16 +130,14 @@ public class PackageApplication extends PackageAndroidArtifact {
         }
     }
 
-    /**
-     * Configures the task to only package resources and assets.
-     */
-    public static class InstantRunResourcesConfigAction
-            extends PackageAndroidArtifact.ConfigAction<PackageApplication> {
+    /** Configures the task to only package resources and assets. */
+    public static class InstantRunResourcesCreationAction
+            extends CreationAction<PackageApplication> {
 
         @NonNull
         private final File mOutputFile;
 
-        public InstantRunResourcesConfigAction(
+        public InstantRunResourcesCreationAction(
                 @NonNull File outputFile,
                 @NonNull VariantScope scope,
                 @NonNull InternalArtifactType inputResourceFilesType,

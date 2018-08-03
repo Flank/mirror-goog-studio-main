@@ -30,7 +30,7 @@ import com.android.annotations.NonNull;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.internal.test.AbstractTestDataImpl;
 import com.android.build.gradle.internal.test.report.ReportType;
 import com.android.build.gradle.internal.test.report.TestReport;
@@ -332,7 +332,8 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
         return testData.getTestedApksDir();
     }
 
-    public static class ConfigAction extends TaskConfigAction<DeviceProviderInstrumentTestTask> {
+    public static class CreationAction
+            extends TaskCreationAction<DeviceProviderInstrumentTestTask> {
 
         @NonNull
         private final VariantScope scope;
@@ -341,7 +342,7 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
         @NonNull private final AbstractTestDataImpl testData;
         @NonNull private final FileCollection testTargetManifests;
 
-        public ConfigAction(
+        public CreationAction(
                 @NonNull VariantScope scope,
                 @NonNull DeviceProvider deviceProvider,
                 @NonNull AbstractTestDataImpl testData,

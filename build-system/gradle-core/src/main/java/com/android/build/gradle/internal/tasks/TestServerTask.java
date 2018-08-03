@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.testing.api.TestServer;
 import com.android.utils.StringHelper;
@@ -110,13 +110,13 @@ public class TestServerTask extends AndroidVariantTask {
     }
 
     /** Configuration Action for a TestServerTask. */
-    public static class TestServerTaskConfigAction extends TaskConfigAction<TestServerTask> {
+    public static class TestServerTaskCreationAction extends TaskCreationAction<TestServerTask> {
 
         private final VariantScope scope;
 
         private final TestServer testServer;
 
-        public TestServerTaskConfigAction(VariantScope scope, TestServer testServer) {
+        public TestServerTaskCreationAction(VariantScope scope, TestServer testServer) {
             this.scope = scope;
             this.testServer = testServer;
         }

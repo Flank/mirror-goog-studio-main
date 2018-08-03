@@ -786,7 +786,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
 
         InstantRunImpl instantRun =
                 new InstantRunImpl(
-                        BuildInfoWriterTask.ConfigAction.getBuildInfoFile(scope),
+                        BuildInfoWriterTask.CreationAction.getBuildInfoFile(scope),
                         variantConfiguration.getInstantRunSupportStatus(globalScope));
 
         Pair<Dependencies, DependencyGraphs> dependencies =

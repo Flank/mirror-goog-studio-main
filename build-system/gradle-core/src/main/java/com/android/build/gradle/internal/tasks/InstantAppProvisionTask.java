@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.builder.sdk.SdkInfo;
 import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.api.DeviceException;
@@ -77,11 +77,11 @@ public class InstantAppProvisionTask extends DefaultTask {
         return instantAppSdk.get();
     }
 
-    public static class ConfigAction extends TaskConfigAction<InstantAppProvisionTask> {
+    public static class CreationAction extends TaskCreationAction<InstantAppProvisionTask> {
 
         @NonNull private final GlobalScope globalScope;
 
-        public ConfigAction(@NonNull GlobalScope globalScope) {
+        public CreationAction(@NonNull GlobalScope globalScope) {
             this.globalScope = globalScope;
         }
 

@@ -20,7 +20,7 @@ import android.databinding.tool.DataBindingBuilder
 import android.databinding.tool.FeaturePackageInfo
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
@@ -87,9 +87,9 @@ open class DataBindingExportFeatureInfoTask @Inject constructor(workerExecutor: 
         }
     }
 
-    class ConfigAction(
+    class CreationAction(
         private val variantScope: VariantScope
-    ) : TaskConfigAction<DataBindingExportFeatureInfoTask>() {
+    ) : TaskCreationAction<DataBindingExportFeatureInfoTask>() {
 
         override val name: String
             get() = variantScope.getTaskName("dataBindingExportFeatureInfo")

@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.incremental;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.builder.packaging.PackagingUtils;
 import com.android.utils.FileUtils;
 import com.google.common.base.Throwables;
@@ -109,7 +109,7 @@ public class BuildInfoLoaderTask extends AndroidVariantTask {
         }
     }
 
-    public static class ConfigAction extends TaskConfigAction<BuildInfoLoaderTask> {
+    public static class CreationAction extends TaskCreationAction<BuildInfoLoaderTask> {
 
         private final String taskName;
 
@@ -117,7 +117,7 @@ public class BuildInfoLoaderTask extends AndroidVariantTask {
 
         private final Logger logger;
 
-        public ConfigAction(@NonNull InstantRunVariantScope scope, @NonNull Logger logger) {
+        public CreationAction(@NonNull InstantRunVariantScope scope, @NonNull Logger logger) {
             this.taskName = scope.getTransformVariantScope().getTaskName("buildInfo", "Loader");
             this.variantScope = scope;
             this.logger = logger;
@@ -139,9 +139,9 @@ public class BuildInfoLoaderTask extends AndroidVariantTask {
         public void execute(@NonNull BuildInfoLoaderTask task) {
             task.setDescription("InstantRun task to load and backup previous iterations artifacts");
             task.setVariantName(variantScope.getFullVariantName());
-            task.buildInfoFile = BuildInfoWriterTask.ConfigAction.getBuildInfoFile(variantScope);
+            task.buildInfoFile = BuildInfoWriterTask.CreationAction.getBuildInfoFile(variantScope);
             task.tmpBuildInfoFile =
-                    BuildInfoWriterTask.ConfigAction.getTmpBuildInfoFile(variantScope);
+                    BuildInfoWriterTask.CreationAction.getTmpBuildInfoFile(variantScope);
             task.pastBuildsFolder = variantScope.getInstantRunPastIterationsFolder();
             task.buildContext = variantScope.getInstantRunBuildContext();
             task.logger = logger;

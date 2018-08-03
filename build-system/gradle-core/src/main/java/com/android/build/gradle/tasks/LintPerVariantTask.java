@@ -61,11 +61,11 @@ public class LintPerVariantTask extends LintBaseTask {
         }
     }
 
-    public static class ConfigAction extends BaseConfigAction<LintPerVariantTask> {
+    public static class CreationAction extends BaseCreationAction<LintPerVariantTask> {
 
         private final VariantScope scope;
 
-        public ConfigAction(@NonNull VariantScope scope) {
+        public CreationAction(@NonNull VariantScope scope) {
             super(scope.getGlobalScope());
             this.scope = scope;
         }
@@ -98,11 +98,11 @@ public class LintPerVariantTask extends LintBaseTask {
         }
     }
 
-    public static class VitalConfigAction extends BaseConfigAction<LintPerVariantTask> {
+    public static class VitalCreationAction extends BaseCreationAction<LintPerVariantTask> {
 
         private final VariantScope scope;
 
-        public VitalConfigAction(@NonNull VariantScope scope) {
+        public VitalCreationAction(@NonNull VariantScope scope) {
             super(scope.getGlobalScope());
             this.scope = scope;
         }

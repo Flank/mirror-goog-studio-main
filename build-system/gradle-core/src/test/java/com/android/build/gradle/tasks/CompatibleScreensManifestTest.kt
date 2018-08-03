@@ -84,7 +84,7 @@ class CompatibleScreensManifestTest {
     @Test
     fun testConfigAction() {
 
-        val configAction = CompatibleScreensManifest.ConfigAction(
+        val configAction = CompatibleScreensManifest.CreationAction(
                 scope, setOf("xxhpi", "xxxhdpi")
         )
 

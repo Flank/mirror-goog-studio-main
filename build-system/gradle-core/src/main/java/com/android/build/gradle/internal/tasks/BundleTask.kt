@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.process.JarSigner
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.StringOption
 import com.android.builder.packaging.PackagingUtils
@@ -225,7 +225,7 @@ open class BundleTask @Inject constructor(workerExecutor: WorkerExecutor) : Andr
         @get:Optional
         val enableLanguage: Boolean?) : Serializable
 
-    class ConfigAction(private val scope: VariantScope) : TaskConfigAction<BundleTask>() {
+    class CreationAction(private val scope: VariantScope) : TaskCreationAction<BundleTask>() {
         override val name: String
             get() = scope.getTaskName("package", "Bundle")
         override val type: Class<BundleTask>

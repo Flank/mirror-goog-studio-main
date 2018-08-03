@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
 import com.android.build.gradle.internal.res.namespaced.registerAaptService
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.IncrementalTask
 import com.android.build.gradle.internal.tasks.Workers
@@ -153,9 +153,9 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
                 .build()
     }
 
-    class ConfigAction(
+    class CreationAction(
         private val scope: VariantScope
-    ) : TaskConfigAction<VerifyLibraryResourcesTask>() {
+    ) : TaskCreationAction<VerifyLibraryResourcesTask>() {
 
         override val name: String
             get() = scope.getTaskName("verify", "Resources")

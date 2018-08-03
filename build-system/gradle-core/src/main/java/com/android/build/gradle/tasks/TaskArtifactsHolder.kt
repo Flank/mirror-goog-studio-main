@@ -62,7 +62,7 @@ class TaskArtifactsHolder<T: Task>(val artifacts: BuildArtifactsHolder) {
      * called.
      *
      */
-    fun allocateArtifacts(configAction: AnnotationProcessingTaskConfigAction<T>, provider: TaskProvider<out T>) {
+    fun allocateArtifacts(configAction: AnnotationProcessingTaskCreationAction<T>, provider: TaskProvider<out T>) {
 
         configAction.type.methods.forEach {
 

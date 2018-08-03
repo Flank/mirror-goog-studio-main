@@ -47,7 +47,7 @@ import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.KnownFilesSaveData;
 import com.android.build.gradle.internal.tasks.KnownFilesSaveData.InputSet;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -892,10 +892,10 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         return (getFeatureDexFolder() != null && !getFeatureDexFolder().getFiles().isEmpty());
     }
 
-    // ----- ConfigAction -----
+    // ----- CreationAction -----
 
-    public abstract static class ConfigAction<T extends PackageAndroidArtifact>
-            extends TaskConfigAction<T> {
+    public abstract static class CreationAction<T extends PackageAndroidArtifact>
+            extends TaskCreationAction<T> {
 
         protected final Project project;
         protected final VariantScope variantScope;
@@ -906,7 +906,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         @Nullable private final FileCache fileCache;
         @NonNull private final InternalArtifactType manifestType;
 
-        public ConfigAction(
+        public CreationAction(
                 @NonNull VariantScope variantScope,
                 @NonNull File outputDirectory,
                 @NonNull InternalArtifactType inputResourceFilesType,

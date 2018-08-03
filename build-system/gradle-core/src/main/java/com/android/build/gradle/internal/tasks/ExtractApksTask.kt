@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.StringOption
 import com.android.bundle.Devices.DeviceSpec
@@ -108,7 +108,7 @@ open class ExtractApksTask @Inject constructor(workerExecutor: WorkerExecutor) :
         }
     }
 
-    class ConfigAction(private val scope: VariantScope) : TaskConfigAction<ExtractApksTask>() {
+    class CreationAction(private val scope: VariantScope) : TaskCreationAction<ExtractApksTask>() {
 
         override val name: String
             get() = getTaskName(scope)

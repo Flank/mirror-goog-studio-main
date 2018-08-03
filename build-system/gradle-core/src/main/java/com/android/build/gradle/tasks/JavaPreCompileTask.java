@@ -28,7 +28,7 @@ import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -218,11 +218,11 @@ public class JavaPreCompileTask extends AndroidBuilderTask {
                 .collect(Collectors.toList());
     }
 
-    public static class ConfigAction extends TaskConfigAction<JavaPreCompileTask> {
+    public static class CreationAction extends TaskCreationAction<JavaPreCompileTask> {
 
         private final VariantScope scope;
 
-        public ConfigAction(VariantScope scope) {
+        public CreationAction(VariantScope scope) {
             this.scope = scope;
         }
 

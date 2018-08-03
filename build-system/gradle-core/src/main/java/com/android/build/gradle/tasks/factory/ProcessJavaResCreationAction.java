@@ -3,17 +3,17 @@ package com.android.build.gradle.tasks.factory;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.builder.model.SourceProvider;
 import java.io.File;
 import org.gradle.api.tasks.Sync;
 
 /** Configuration Action for a process*JavaRes tasks. */
-public class ProcessJavaResConfigAction extends TaskConfigAction<Sync> {
+public class ProcessJavaResCreationAction extends TaskCreationAction<Sync> {
     private VariantScope scope;
     private final File destinationDir;
 
-    public ProcessJavaResConfigAction(VariantScope scope, File destinationDir) {
+    public ProcessJavaResCreationAction(VariantScope scope, File destinationDir) {
         this.scope = scope;
         this.destinationDir = destinationDir;
     }

@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.tasks.Workers
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
@@ -50,10 +50,10 @@ open class JarRClassTask @Inject constructor(workerExecutor: WorkerExecutor) : D
         }
     }
 
-    class ConfigAction(
+    class CreationAction(
                 override val name: String,
                 private val rClassClasses: FileCollection,
-                private val rClassJar: File) : TaskConfigAction<JarRClassTask>() {
+                private val rClassJar: File) : TaskCreationAction<JarRClassTask>() {
         override val type: Class<JarRClassTask>
             get() = JarRClassTask::class.java
 

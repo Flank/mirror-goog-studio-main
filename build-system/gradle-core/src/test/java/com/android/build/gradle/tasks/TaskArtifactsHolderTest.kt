@@ -197,7 +197,7 @@ class TaskArtifactsHolderTest {
      *  - preConfigure, configure and executes it.
      */
     private fun <T: TestTask> test(
-        configAction: AnnotationProcessingTaskConfigAction<T>,
+        configAction: AnnotationProcessingTaskCreationAction<T>,
         setupMock: (TaskProvider<*>) -> Unit,
         vararg parameters: Any) {
         val taskProvider = project.tasks.register<T>(
@@ -214,7 +214,7 @@ class TaskArtifactsHolderTest {
     }
 
 
-    private inline fun <reified T: TaskArtifactsHolderTest.TestTask> createConfigAction(variantScope: VariantScope): AnnotationProcessingTaskConfigAction<T> {
-        return AnnotationProcessingTaskConfigAction(variantScope, T::class.qualifiedName!!, T::class.java)
+    private inline fun <reified T: TaskArtifactsHolderTest.TestTask> createConfigAction(variantScope: VariantScope): AnnotationProcessingTaskCreationAction<T> {
+        return AnnotationProcessingTaskCreationAction(variantScope, T::class.qualifiedName!!, T::class.java)
     }
 }

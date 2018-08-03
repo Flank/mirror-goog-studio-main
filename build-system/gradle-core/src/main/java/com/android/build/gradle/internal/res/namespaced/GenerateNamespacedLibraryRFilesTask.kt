@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.symbols.exportToCompiledJava
 import com.android.ide.common.symbols.SymbolTable
@@ -76,8 +76,8 @@ open class GenerateNamespacedLibraryRFilesTask : DefaultTask() {
         exportToCompiledJava(ImmutableList.of(resources), rJarFile.toPath())
     }
 
-    class ConfigAction(private val scope: VariantScope) :
-        TaskConfigAction<GenerateNamespacedLibraryRFilesTask>() {
+    class CreationAction(private val scope: VariantScope) :
+        TaskCreationAction<GenerateNamespacedLibraryRFilesTask>() {
 
         override val name: String
             get() = scope.getTaskName("create", "RFiles")

@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.internal.InstallUtils;
 import com.android.builder.sdk.SdkInfo;
@@ -255,11 +255,11 @@ public class InstallVariantTask extends AndroidBuilderTask {
         this.variantData = variantData;
     }
 
-    public static class ConfigAction extends TaskConfigAction<InstallVariantTask> {
+    public static class CreationAction extends TaskCreationAction<InstallVariantTask> {
 
         private final VariantScope scope;
 
-        public ConfigAction(VariantScope scope) {
+        public CreationAction(VariantScope scope) {
             this.scope = scope;
         }
 

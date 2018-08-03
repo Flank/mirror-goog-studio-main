@@ -31,7 +31,7 @@ import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.ide.common.build.ApkInfo;
 import com.google.common.base.Preconditions;
@@ -180,12 +180,12 @@ public class GenerateTestConfig extends DefaultTask {
         return packageForR.get();
     }
 
-    public static class ConfigAction extends TaskConfigAction<GenerateTestConfig> {
+    public static class CreationAction extends TaskCreationAction<GenerateTestConfig> {
 
         @NonNull private final VariantScope scope;
         @NonNull private final VariantScope testedScope;
 
-        public ConfigAction(@NonNull VariantScope scope) {
+        public CreationAction(@NonNull VariantScope scope) {
             this.scope = scope;
             this.testedScope =
                     Preconditions.checkNotNull(

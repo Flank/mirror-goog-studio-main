@@ -81,7 +81,7 @@ class BundleFeatureClassesTest {
         Mockito.`when`(artifacts.getArtifactFiles(InternalArtifactType.JAVAC))
             .thenReturn(javacClasses)
 
-        val configAction = BundleFeatureClasses.ConfigAction(scope)
+        val configAction = BundleFeatureClasses.CreationAction(scope)
         configAction.execute(task)
     }
 

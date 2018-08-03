@@ -252,7 +252,7 @@ public class TransformManager extends FilterableStreamCollection {
         // create the task...
         TransformTask task =
                 taskFactory.create(
-                        new TransformTask.ConfigAction<>(
+                        new TransformTask.CreationAction<>(
                                 scope.getFullVariantName(),
                                 taskName,
                                 transform,

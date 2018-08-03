@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactSco
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
 import com.android.build.gradle.internal.res.namespaced.JarRequest
 import com.android.build.gradle.internal.res.namespaced.JarWorkerRunnable
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.Workers
@@ -103,7 +103,7 @@ open class BundleFeatureClasses @Inject constructor(workerExecutor: WorkerExecut
         }
     }
 
-    class ConfigAction(private val scope: VariantScope) : TaskConfigAction<BundleFeatureClasses>() {
+    class CreationAction(private val scope: VariantScope) : TaskCreationAction<BundleFeatureClasses>() {
 
         override val name: String
             get() = scope.getTaskName("bundle", "Classes")

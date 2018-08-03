@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.sdk.SdkInfo;
 import com.android.builder.testing.ConnectedDeviceProvider;
@@ -113,11 +113,11 @@ public class UninstallTask extends AndroidBuilderTask {
         mTimeOutInMs = timeoutInMs;
     }
 
-    public static class ConfigAction extends TaskConfigAction<UninstallTask> {
+    public static class CreationAction extends TaskCreationAction<UninstallTask> {
 
         private final VariantScope scope;
 
-        public ConfigAction(VariantScope scope) {
+        public CreationAction(VariantScope scope) {
             this.scope = scope;
         }
 

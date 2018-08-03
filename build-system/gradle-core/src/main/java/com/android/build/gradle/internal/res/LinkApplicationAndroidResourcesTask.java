@@ -50,7 +50,7 @@ import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.scope.SplitList;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -607,14 +607,14 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         return mangledName.contains("-r") ? mangledName : mangledName.replace("-", "-r");
     }
 
-    private abstract static class BaseConfigAction
-            extends TaskConfigAction<LinkApplicationAndroidResourcesTask> {
+    private abstract static class BaseCreationAction
+            extends TaskCreationAction<LinkApplicationAndroidResourcesTask> {
         protected final VariantScope variantScope;
         private final boolean generateLegacyMultidexMainDexProguardRules;
         @Nullable private final String baseName;
         private final boolean isLibrary;
 
-        public BaseConfigAction(
+        public BaseCreationAction(
                 @NonNull VariantScope scope,
                 boolean generateLegacyMultidexMainDexProguardRules,
                 @Nullable String baseName,
@@ -775,12 +775,12 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
     }
 
-    public static final class ConfigAction extends BaseConfigAction {
+    public static final class CreationAction extends BaseCreationAction {
         protected final Supplier<File> symbolLocation;
         private final File symbolsWithPackageNameOutputFile;
         private final TaskManager.MergeType sourceArtifactType;
 
-        public ConfigAction(
+        public CreationAction(
                 @NonNull VariantScope scope,
                 @NonNull Supplier<File> symbolLocation,
                 @NonNull File symbolsWithPackageNameOutputFile,
@@ -840,8 +840,8 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
      * TODO: extract in to a separate task implementation once splits are calculated in the split
      * discovery task.
      */
-    public static final class NamespacedConfigAction extends BaseConfigAction {
-        public NamespacedConfigAction(
+    public static final class NamespacedCreationAction extends BaseCreationAction {
+        public NamespacedCreationAction(
                 @NonNull VariantScope scope,
                 boolean generateLegacyMultidexMainDexProguardRules,
                 @Nullable String baseName) {

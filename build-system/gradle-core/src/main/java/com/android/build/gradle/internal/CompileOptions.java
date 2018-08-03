@@ -21,7 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
-import com.android.build.gradle.tasks.factory.JavaCompileConfigAction;
+import com.android.build.gradle.tasks.factory.JavaCompileCreationAction;
 import com.google.common.base.Charsets;
 import java.util.Locale;
 import javax.inject.Inject;
@@ -42,7 +42,7 @@ public class CompileOptions {
     @NonNull
     private String encoding = Charsets.UTF_8.name();
 
-    /** The default value is chosen in {@link JavaCompileConfigAction}. */
+    /** The default value is chosen in {@link JavaCompileCreationAction}. */
     private Boolean incremental = null;
 
     /** @see #setDefaultJavaVersion(JavaVersion) */

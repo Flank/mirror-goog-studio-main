@@ -125,6 +125,6 @@ public class FeatureTaskManager extends ApplicationTaskManager {
     @Override
     protected void postJavacCreation(@NonNull VariantScope scope) {
         // Create the classes artifact for use by dependent features.
-        taskFactory.create(new BundleFeatureClasses.ConfigAction(scope));
+        taskFactory.create(new BundleFeatureClasses.CreationAction(scope));
     }
 }

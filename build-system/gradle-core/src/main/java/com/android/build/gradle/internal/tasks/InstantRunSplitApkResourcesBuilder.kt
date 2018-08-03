@@ -29,7 +29,7 @@ import com.android.build.gradle.internal.res.namespaced.getAaptDaemon
 import com.android.build.gradle.internal.res.namespaced.getAaptPoolSize
 import com.android.build.gradle.internal.res.namespaced.registerAaptService
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransform
 import com.android.build.gradle.internal.transforms.InstantRunSplitApkBuilder
@@ -241,8 +241,8 @@ open class InstantRunSplitApkResourcesBuilder
             val outputDirectory: File): Serializable
     }
 
-    class ConfigAction(val variantScope: VariantScope) :
-        TaskConfigAction<InstantRunSplitApkResourcesBuilder>() {
+    class CreationAction(val variantScope: VariantScope) :
+        TaskCreationAction<InstantRunSplitApkResourcesBuilder>() {
 
         override val name: String
             get() = variantScope.getTaskName("instantRunSplitApkResources")

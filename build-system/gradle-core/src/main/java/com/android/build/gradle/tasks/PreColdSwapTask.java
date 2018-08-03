@@ -22,7 +22,7 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import java.io.IOException;
 import org.gradle.api.Task;
 import org.gradle.api.logging.Logger;
@@ -74,7 +74,7 @@ public class PreColdSwapTask extends AndroidVariantTask {
                 .setEnabled(false);
     }
 
-    public static class ConfigAction extends TaskConfigAction<PreColdSwapTask> {
+    public static class CreationAction extends TaskCreationAction<PreColdSwapTask> {
 
         @NonNull
         protected final TransformVariantScope transformVariantScope;
@@ -83,7 +83,8 @@ public class PreColdSwapTask extends AndroidVariantTask {
         @NonNull
         protected final String name;
 
-        public ConfigAction(@NonNull String name,
+        public CreationAction(
+                @NonNull String name,
                 @NonNull TransformVariantScope transformVariantScope,
                 @NonNull InstantRunVariantScope instantRunVariantScope) {
             this.name = name;

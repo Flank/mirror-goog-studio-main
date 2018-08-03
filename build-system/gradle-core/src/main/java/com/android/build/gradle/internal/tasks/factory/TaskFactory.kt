@@ -41,8 +41,8 @@ interface TaskFactory {
     /** Creates a task with the given name and type.  */
     fun <S : Task> create(name: String, type: Class<S>): S
 
-    /** Creates a task with the given [TaskConfigAction]  */
-    fun <T : Task> create(configAction: TaskConfigAction<T>): T
+    /** Creates a task with the given [TaskCreationAction]  */
+    fun <T : Task> create(creationAction: TaskCreationAction<T>): T
 
     /** Creates a task wit the given name, type and configuration action  */
     fun <T : Task> create(

@@ -125,7 +125,7 @@ class InstantRunSplitApkResourcesBuilderTest {
         val task =
             project.tasks.create("test", InstantRunSplitApkResourcesBuilderForTest::class.java)
 
-        val configAction = InstantRunSplitApkResourcesBuilder.ConfigAction(variantScope)
+        val configAction = InstantRunSplitApkResourcesBuilder.CreationAction(variantScope)
         Mockito.`when`(variantConfiguration.applicationId).thenReturn(
             "com.example.InstantRunSplitApkResourcesBuilderTest")
         Mockito.`when`(artifacts.appendArtifact(

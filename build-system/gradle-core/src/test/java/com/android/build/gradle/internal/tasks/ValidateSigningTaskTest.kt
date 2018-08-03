@@ -92,7 +92,7 @@ class ValidateSigningTaskTest {
         initPackagingScope(variantName = "blueRelease")
         `when`(variantConfiguration.signingConfig).thenReturn(SigningConfig("release"))
         val configAction =
-                ValidateSigningTask.ConfigAction(variantScope, defaultDebugKeystore)
+                ValidateSigningTask.CreationAction(variantScope, defaultDebugKeystore)
         val task = project!!.tasks
                 .create(configAction.name, configAction.type, configAction)
         assertThat(task.forceRerun()).named("forceRerun").isTrue()
@@ -118,7 +118,7 @@ class ValidateSigningTaskTest {
         assertThat(dslSigningConfig.isSigningReady).named("signing is ready").isTrue()
         `when`(variantConfiguration.signingConfig).thenReturn(dslSigningConfig)
         val configAction =
-                ValidateSigningTask.ConfigAction(variantScope, defaultDebugKeystore)
+                ValidateSigningTask.CreationAction(variantScope, defaultDebugKeystore)
         val task = project!!.tasks
                 .create(configAction.name, configAction.type, configAction)
         assertThat(task.forceRerun()).named("forceRerun").isTrue()
@@ -140,7 +140,7 @@ class ValidateSigningTaskTest {
                 SigningConfigFactory(project!!.objects, defaultDebugKeystore).create("debug")
         `when`(variantConfiguration.signingConfig).thenReturn(dslSigningConfig)
         val configAction =
-                ValidateSigningTask.ConfigAction(variantScope, defaultDebugKeystore)
+                ValidateSigningTask.CreationAction(variantScope, defaultDebugKeystore)
         val task = project!!.tasks
                 .create(configAction.name, configAction.type, configAction)
 

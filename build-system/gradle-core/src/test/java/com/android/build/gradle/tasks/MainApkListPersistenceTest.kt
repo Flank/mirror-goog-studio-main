@@ -60,7 +60,7 @@ open class MainApkListPersistenceTest {
     private lateinit var outputScope: OutputScope
     internal lateinit var project: Project
     internal lateinit var task: MainApkListPersistence
-    private lateinit var configAction: MainApkListPersistence.ConfigAction
+    private lateinit var configAction: MainApkListPersistence.CreationAction
     internal lateinit var testDir: File
 
     @Before
@@ -76,7 +76,7 @@ open class MainApkListPersistenceTest {
         Mockito.`when`(variantScope.artifacts).thenReturn(artifacts)
 
         task = project.tasks.create("test", MainApkListPersistence::class.java)
-        configAction = MainApkListPersistence.ConfigAction(variantScope)
+        configAction = MainApkListPersistence.CreationAction(variantScope)
         Mockito.`when`(artifacts.appendArtifact(InternalArtifactType.APK_LIST,
             task, SdkConstants.FN_APK_LIST)).thenReturn(temporaryFolder.newFolder())
     }

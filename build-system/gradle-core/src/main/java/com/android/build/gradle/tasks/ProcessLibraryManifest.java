@@ -224,18 +224,18 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
         return outputScope.getMainSplit().getFullName();
     }
 
-    public static class ConfigAction
-            extends AnnotationProcessingTaskConfigAction<ProcessLibraryManifest> {
+    public static class CreationAction
+            extends AnnotationProcessingTaskCreationAction<ProcessLibraryManifest> {
 
         Provider<RegularFile> manifestOutputFile;
         VariantScope scope;
 
         /**
-         * {@code TaskConfigAction} for the library process manifest task.
+         * {@code TaskCreationAction} for the library process manifest task.
          *
          * @param scope The library variant scope.
          */
-        public ConfigAction(@NonNull VariantScope scope) {
+        public CreationAction(@NonNull VariantScope scope) {
             super(scope, scope.getTaskName("process", "Manifest"), ProcessLibraryManifest.class);
             this.scope = scope;
         }

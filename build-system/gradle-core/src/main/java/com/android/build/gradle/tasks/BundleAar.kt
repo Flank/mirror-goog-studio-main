@@ -20,7 +20,7 @@ import android.databinding.tool.DataBindingBuilder
 import com.android.SdkConstants
 import com.android.build.gradle.AndroidConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.LibraryVariantData
 import com.android.builder.core.BuilderConstants
@@ -39,10 +39,10 @@ open class BundleAar : Zip() {
     @Input
     override fun getArchiveName() = archiveNameSupplier()
 
-    class ConfigAction(
+    class CreationAction(
         private val extension: AndroidConfig,
         private val variantScope: VariantScope
-    ) : TaskConfigAction<BundleAar>() {
+    ) : TaskCreationAction<BundleAar>() {
 
         override val name: String
             get() = variantScope.getTaskName("bundle", "Aar")

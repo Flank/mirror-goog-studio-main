@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NdkTask;
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.NdkLease;
@@ -429,11 +429,11 @@ public class NdkCompile extends NdkTask {
                 getStl() == null);
     }
 
-    public static class ConfigAction extends TaskConfigAction<NdkCompile> {
+    public static class CreationAction extends TaskCreationAction<NdkCompile> {
 
         @NonNull private final VariantScope variantScope;
 
-        public ConfigAction(@NonNull VariantScope variantScope) {
+        public CreationAction(@NonNull VariantScope variantScope) {
             this.variantScope = variantScope;
         }
 

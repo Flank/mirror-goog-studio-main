@@ -57,9 +57,9 @@ open class LintFixTask : LintBaseTask() {
         }
     }
 
-    class GlobalConfigAction(
+    class GlobalCreationAction(
         globalScope: GlobalScope, private val variantScopes: Collection<VariantScope>
-    ) : LintBaseTask.BaseConfigAction<LintFixTask>(globalScope) {
+    ) : BaseCreationAction<LintFixTask>(globalScope) {
 
         override val name: String
             get() = TaskManager.LINT_FIX

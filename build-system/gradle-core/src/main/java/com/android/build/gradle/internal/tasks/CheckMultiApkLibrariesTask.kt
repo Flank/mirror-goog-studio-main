@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.annotations.NonNull
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.utils.FileUtils
 import com.google.common.io.Files
@@ -95,8 +95,8 @@ open class CheckMultiApkLibrariesTask : AndroidVariantTask() {
         }
     }
 
-    class ConfigAction(val scope: VariantScope) :
-        TaskConfigAction<CheckMultiApkLibrariesTask>() {
+    class CreationAction(val scope: VariantScope) :
+        TaskCreationAction<CheckMultiApkLibrariesTask>() {
 
         override val name: String
             get() = scope.getTaskName("check", "Libraries")

@@ -257,7 +257,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
 
         for (ResolvedArtifactResult artifact : artifacts) {
             providers.add(
-                    new ProcessApplicationManifest.ConfigAction.ManifestProviderImpl(
+                    new ProcessApplicationManifest.CreationAction.ManifestProviderImpl(
                             artifact.getFile(),
                             ProcessApplicationManifest.getArtifactName(artifact)));
         }
@@ -270,15 +270,15 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         return manifests.getArtifactFiles();
     }
 
-    public static class ConfigAction
-            extends AnnotationProcessingTaskConfigAction<ProcessTestManifest> {
+    public static class CreationAction
+            extends AnnotationProcessingTaskCreationAction<ProcessTestManifest> {
 
         @NonNull
         private final VariantScope scope;
 
         @Nullable private final BuildableArtifact testTargetMetadata;
 
-        public ConfigAction(
+        public CreationAction(
                 @NonNull VariantScope scope, @Nullable BuildableArtifact testTargetMetadata) {
             super(scope, scope.getTaskName("process", "Manifest"), ProcessTestManifest.class);
             this.scope = scope;

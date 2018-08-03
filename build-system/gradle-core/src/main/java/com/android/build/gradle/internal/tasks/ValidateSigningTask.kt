@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.annotations.VisibleForTesting
 import com.android.build.gradle.internal.packaging.createDefaultDebugStore
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.core.BuilderConstants
 import com.android.builder.model.SigningConfig
@@ -116,18 +116,18 @@ open class ValidateSigningTask : AndroidVariantTask() {
 
     /**
      * Always re-run if the store file is not present to prevent the task being UP-TO-DATE
-     * if the keystore is deleted after the first run. (See [ConfigAction.execute])
+     * if the keystore is deleted after the first run. (See [CreationAction.execute])
      * Other changes, such as the first time it is run, or if the project is cleaned, or if
      * the plugin classpath is changed will also cause this task to be re-run.
      */
     @VisibleForTesting
     fun forceRerun() = signingConfig.storeFile?.isFile != true
 
-    class ConfigAction(
+    class CreationAction(
         private val variantScope: VariantScope,
         private val defaultDebugKeystoreLocation: File
     ) :
-        TaskConfigAction<ValidateSigningTask>() {
+        TaskCreationAction<ValidateSigningTask>() {
 
         override val name: String
             get() = variantScope.getTaskName("validateSigning")

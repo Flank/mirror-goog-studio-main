@@ -22,7 +22,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import java.io.File;
 import java.util.Objects;
 import org.gradle.api.GradleException;
@@ -56,11 +56,11 @@ public class TestPreBuildTask extends ClasspathComparisionTask {
         compareClasspaths();
     }
 
-    public static class ConfigAction extends TaskConfigAction<TestPreBuildTask> {
+    public static class CreationAction extends TaskCreationAction<TestPreBuildTask> {
 
         @NonNull private final VariantScope variantScope;
 
-        public ConfigAction(@NonNull VariantScope variantScope) {
+        public CreationAction(@NonNull VariantScope variantScope) {
             this.variantScope = variantScope;
         }
 

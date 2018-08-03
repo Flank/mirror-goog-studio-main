@@ -17,13 +17,13 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import org.gradle.api.tasks.Sync
 
 /** Configuration action for a package-renderscript task.  */
-class PackageRenderscriptConfigAction(private val variantScope: VariantScope) :
-    TaskConfigAction<Sync>() {
+class PackageRenderscriptCreationAction(private val variantScope: VariantScope) :
+    TaskCreationAction<Sync>() {
 
     override val name: String
         get() = variantScope.getTaskName("package", "Renderscript")

@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.builder.compiling.DependencyFileProcessor;
 import com.android.builder.internal.compiler.AidlProcessor;
 import com.android.builder.internal.incremental.DependencyData;
@@ -341,12 +341,12 @@ public class AidlCompile extends IncrementalTask {
         return importDirs;
     }
 
-    public static class ConfigAction extends TaskConfigAction<AidlCompile> {
+    public static class CreationAction extends TaskCreationAction<AidlCompile> {
 
         @NonNull
         VariantScope scope;
 
-        public ConfigAction(@NonNull VariantScope scope) {
+        public CreationAction(@NonNull VariantScope scope) {
             this.scope = scope;
         }
 

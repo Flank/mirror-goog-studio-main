@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.build.gradle.internal.tasks.ModuleMetadata;
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.FileInputStream;
@@ -109,9 +109,9 @@ public class BundleInstantApp extends AndroidVariantTask {
     private FileCollection applicationId;
     private FileCollection apkDirectories;
 
-    public static class ConfigAction extends TaskConfigAction<BundleInstantApp> {
+    public static class CreationAction extends TaskCreationAction<BundleInstantApp> {
 
-        public ConfigAction(@NonNull VariantScope scope, @NonNull File bundleDirectory) {
+        public CreationAction(@NonNull VariantScope scope, @NonNull File bundleDirectory) {
             this.scope = scope;
             this.bundleDirectory = bundleDirectory;
         }

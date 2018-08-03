@@ -21,7 +21,7 @@ import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.builder.dexing.DexerTool;
 import java.io.File;
 import java.io.IOException;
@@ -78,11 +78,11 @@ public class JacocoTask extends AndroidVariantTask {
         delegate.run(executor, inputs);
     }
 
-    public static class ConfigAction extends TaskConfigAction<JacocoTask> {
+    public static class CreationAction extends TaskCreationAction<JacocoTask> {
 
         @NonNull private final VariantScope scope;
 
-        public ConfigAction(@NonNull VariantScope scope) {
+        public CreationAction(@NonNull VariantScope scope) {
             this.scope = scope;
         }
 

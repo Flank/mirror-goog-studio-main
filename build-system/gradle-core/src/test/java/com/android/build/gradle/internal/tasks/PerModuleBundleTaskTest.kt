@@ -125,7 +125,7 @@ class PerModuleBundleTaskTest {
             .thenReturn(testFolder.newFolder("out"))
 
 
-        val configAction = PerModuleBundleTask.ConfigAction(variantScope)
+        val configAction = PerModuleBundleTask.CreationAction(variantScope)
         configAction.execute(task)
     }
 

@@ -22,7 +22,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.OutputScope
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.build.gradle.internal.tasks.Workers
@@ -113,8 +113,8 @@ open class ProcessAndroidAppResourcesTask
         }
     }
 
-    class ConfigAction(private val scope: VariantScope) :
-        TaskConfigAction<ProcessAndroidAppResourcesTask>() {
+    class CreationAction(private val scope: VariantScope) :
+        TaskCreationAction<ProcessAndroidAppResourcesTask>() {
 
         override val name: String
             get() = scope.getTaskName("process", "Resources")

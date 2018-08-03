@@ -338,7 +338,7 @@ public class InstantAppModelBuilder
                         variantConfiguration.getMergedBuildConfigFields(),
                         variantConfiguration.getMergedResValues(),
                         new InstantRunImpl(
-                                BuildInfoWriterTask.ConfigAction.getBuildInfoFile(variantScope),
+                                BuildInfoWriterTask.CreationAction.getBuildInfoFile(variantScope),
                                 variantConfiguration.getInstantRunSupportStatus(
                                         variantScope.getGlobalScope())),
                         (BuildOutputSupplier<Collection<EarlySyncBuildOutput>>)

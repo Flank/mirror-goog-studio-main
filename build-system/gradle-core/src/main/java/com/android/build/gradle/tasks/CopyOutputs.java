@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -108,12 +108,12 @@ public class CopyOutputs extends AndroidVariantTask {
                 .into(InternalArtifactType.APK);
     }
 
-    public static class ConfigAction extends TaskConfigAction<CopyOutputs> {
+    public static class CreationAction extends TaskCreationAction<CopyOutputs> {
 
         private final VariantScope variantScope;
         private final File outputDirectory;
 
-        public ConfigAction(VariantScope variantScope, File outputDirectory) {
+        public CreationAction(VariantScope variantScope, File outputDirectory) {
             this.variantScope = variantScope;
             this.outputDirectory = outputDirectory;
         }

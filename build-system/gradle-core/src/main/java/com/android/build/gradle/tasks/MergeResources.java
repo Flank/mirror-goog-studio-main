@@ -37,7 +37,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.Workers;
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.AndroidBuilder;
@@ -559,7 +559,7 @@ public class MergeResources extends IncrementalTask {
         this.publicFile = publicFile;
     }
 
-    // Synthetic input: the validation flag is set on the resource sets in ConfigAction.execute.
+    // Synthetic input: the validation flag is set on the resource sets in CreationAction.execute.
     @Input
     public boolean isValidateEnabled() {
         return validateEnabled;
@@ -704,7 +704,7 @@ public class MergeResources extends IncrementalTask {
         return resourceSetList;
     }
 
-    public static class ConfigAction extends TaskConfigAction<MergeResources> {
+    public static class CreationAction extends TaskCreationAction<MergeResources> {
         @NonNull
         private final VariantScope scope;
         @NonNull private final TaskManager.MergeType mergeType;
@@ -718,7 +718,7 @@ public class MergeResources extends IncrementalTask {
         private final boolean processVectorDrawables;
         @NonNull private final ImmutableSet<Flag> flags;
 
-        public ConfigAction(
+        public CreationAction(
                 @NonNull VariantScope scope,
                 @NonNull TaskManager.MergeType mergeType,
                 @NonNull String taskNamePrefix,
@@ -827,7 +827,7 @@ public class MergeResources extends IncrementalTask {
             }
 
             // In LibraryTaskManager#createMergeResourcesTasks, there are actually two
-            // MergeResources tasks sharing the same task type (MergeResources) and ConfigAction
+            // MergeResources tasks sharing the same task type (MergeResources) and CreationAction
             // code: packageResources with mergeType == PACKAGE, and mergeResources with
             // mergeType == MERGE. Since the following line of code is called for each task, the
             // latter one wins: The mergeResources task with mergeType == MERGE is the one that is

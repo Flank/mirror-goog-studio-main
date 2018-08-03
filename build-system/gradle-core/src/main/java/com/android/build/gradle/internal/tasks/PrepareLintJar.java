@@ -22,7 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
@@ -81,11 +81,11 @@ public class PrepareLintJar extends DefaultTask {
         }
     }
 
-    public static class ConfigAction extends TaskConfigAction<PrepareLintJar> {
+    public static class CreationAction extends TaskCreationAction<PrepareLintJar> {
 
         @NonNull private final GlobalScope scope;
 
-        public ConfigAction(@NonNull GlobalScope scope) {
+        public CreationAction(@NonNull GlobalScope scope) {
             this.scope = scope;
         }
 

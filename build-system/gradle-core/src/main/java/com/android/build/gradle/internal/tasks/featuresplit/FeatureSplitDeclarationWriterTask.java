@@ -21,7 +21,7 @@ import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import java.io.File;
 import java.io.IOException;
 import java.util.function.Supplier;
@@ -60,11 +60,12 @@ public class FeatureSplitDeclarationWriterTask extends AndroidVariantTask {
         declaration.save(outputDirectory);
     }
 
-    public static class ConfigAction extends TaskConfigAction<FeatureSplitDeclarationWriterTask> {
+    public static class CreationAction
+            extends TaskCreationAction<FeatureSplitDeclarationWriterTask> {
 
         @NonNull private final VariantScope variantScope;
 
-        public ConfigAction(@NonNull VariantScope variantScope) {
+        public CreationAction(@NonNull VariantScope variantScope) {
             this.variantScope = variantScope;
         }
 

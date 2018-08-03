@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.build.gradle.internal.tasks.Workers
@@ -112,9 +112,9 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecutor: W
         }
     }
 
-    class ConfigAction(
+    class CreationAction(
         private val scope: VariantScope
-    ) : TaskConfigAction<LinkLibraryAndroidResourcesTask>() {
+    ) : TaskCreationAction<LinkLibraryAndroidResourcesTask>() {
 
         override val name: String
             get() = scope.getTaskName("link", "Resources")

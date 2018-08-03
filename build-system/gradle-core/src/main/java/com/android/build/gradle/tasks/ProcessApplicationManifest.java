@@ -301,9 +301,9 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
         List<ManifestProvider> providers = Lists.newArrayListWithCapacity(artifacts.size() + 2);
 
         for (ResolvedArtifactResult artifact : artifacts) {
-            providers.add(new ConfigAction.ManifestProviderImpl(
-                    artifact.getFile(),
-                    getArtifactName(artifact)));
+            providers.add(
+                    new CreationAction.ManifestProviderImpl(
+                            artifact.getFile(), getArtifactName(artifact)));
         }
 
         if (microApkManifest != null) {
@@ -312,15 +312,15 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
             // returned by the FC but the file doesn't exist.
             File microManifest = microApkManifest.getSingleFile();
             if (microManifest.isFile()) {
-                providers.add(new ConfigAction.ManifestProviderImpl(
-                        microManifest,
-                        "Wear App sub-manifest"));
+                providers.add(
+                        new CreationAction.ManifestProviderImpl(
+                                microManifest, "Wear App sub-manifest"));
             }
         }
 
         if (compatibleScreenManifestForSplit != null) {
             providers.add(
-                    new ConfigAction.ManifestProviderImpl(
+                    new CreationAction.ManifestProviderImpl(
                             compatibleScreenManifestForSplit.getOutputFile(),
                             "Compatible-Screens sub-manifest"));
 
@@ -331,7 +331,7 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
             // based on the file name.
             for (File autoNamespacedManifest : autoNamespacedManifests.getFiles()) {
                 providers.add(
-                        new ConfigAction.ManifestProviderImpl(
+                        new CreationAction.ManifestProviderImpl(
                                 autoNamespacedManifest,
                                 getNameFromAutoNamespacedManifest(autoNamespacedManifest)));
             }
@@ -350,7 +350,7 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
                 }
 
                 providers.add(
-                        new ConfigAction.ManifestProviderImpl(
+                        new CreationAction.ManifestProviderImpl(
                                 splitOutputs.iterator().next().getOutputFile(),
                                 getArtifactName(artifact)));
             }
@@ -491,14 +491,14 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
         return apkList;
     }
 
-    public static class ConfigAction
-            extends AnnotationProcessingTaskConfigAction<ProcessApplicationManifest> {
+    public static class CreationAction
+            extends AnnotationProcessingTaskCreationAction<ProcessApplicationManifest> {
 
         protected final VariantScope variantScope;
         protected final boolean isAdvancedProfilingOn;
         @Nullable private Provider<Directory> manifestOutputFolder;
 
-        public ConfigAction(
+        public CreationAction(
                 @NonNull VariantScope scope,
                 // TODO : remove this variable and find ways to access it from scope.
                 boolean isAdvancedProfilingOn) {

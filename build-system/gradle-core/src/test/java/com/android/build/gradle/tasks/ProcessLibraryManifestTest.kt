@@ -28,13 +28,11 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.builder.core.AndroidBuilder
 import com.android.ide.common.build.ApkData
-import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.testfixtures.ProjectBuilder
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -90,7 +88,8 @@ class ProcessLibraryManifestTest {
         `when`(mainSplit.fullName).thenReturn("fooRelease")
 
         val project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()
-        val configAction = ProcessLibraryManifest.ConfigAction(variantScope)
+        val configAction =
+            ProcessLibraryManifest.CreationAction(variantScope)
         val taskProvider = project!!.tasks.register<ProcessLibraryManifest>("fooRelease", ProcessLibraryManifest::class.java)
 
         `when`(buildArtifactsHolder.appendDirectory(

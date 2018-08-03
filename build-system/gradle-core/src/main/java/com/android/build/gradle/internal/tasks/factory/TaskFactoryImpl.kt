@@ -46,12 +46,12 @@ class TaskFactoryImpl(private val taskContainer: TaskContainer):
         return taskContainer.findByName(name)
     }
 
-    override fun <T : Task> create(configAction: TaskConfigAction<T>): T {
-        val task = taskContainer.create(configAction.name, configAction.type)
+    override fun <T : Task> create(creationAction: TaskCreationAction<T>): T {
+        val task = taskContainer.create(creationAction.name, creationAction.type)
         @Suppress("UNCHECKED_CAST")
         val taskProvider = taskContainer.named(task.name) as TaskProvider<T>
-        configAction.preConfigure(taskProvider, task.name)
-        configAction.execute(task)
+        creationAction.preConfigure(taskProvider, task.name)
+        creationAction.execute(task)
         return task
     }
 

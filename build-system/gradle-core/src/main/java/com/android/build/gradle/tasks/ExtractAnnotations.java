@@ -35,7 +35,7 @@ import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AbstractAndroidCompile;
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.internal.utils.AndroidXDependency;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.packaging.TypedefRemover;
@@ -299,14 +299,13 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
         return false;
     }
 
-    public static class ConfigAction extends TaskConfigAction<ExtractAnnotations> {
+    public static class CreationAction extends TaskCreationAction<ExtractAnnotations> {
 
         @NonNull private final AndroidConfig extension;
         @NonNull private final VariantScope variantScope;
 
-        public ConfigAction(
-                @NonNull AndroidConfig extension,
-                @NonNull VariantScope variantScope) {
+        public CreationAction(
+                @NonNull AndroidConfig extension, @NonNull VariantScope variantScope) {
             this.extension = extension;
             this.variantScope = variantScope;
         }

@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
@@ -175,14 +175,14 @@ public class GenerateApkDataTask extends AndroidBuilderTask {
         return manifestFile;
     }
 
-    public static class ConfigAction extends TaskConfigAction<GenerateApkDataTask> {
+    public static class CreationAction extends TaskCreationAction<GenerateApkDataTask> {
 
         @NonNull
         VariantScope scope;
 
         @Nullable FileCollection apkFileCollection;
 
-        public ConfigAction(
+        public CreationAction(
                 @NonNull VariantScope scope, @Nullable FileCollection apkFileCollection) {
             this.scope = scope;
             this.apkFileCollection = apkFileCollection;

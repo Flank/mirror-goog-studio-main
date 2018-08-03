@@ -19,7 +19,7 @@ package com.android.build.gradle.tasks;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.ide.common.process.ProcessException;
 import java.io.IOException;
 import org.gradle.api.tasks.Nested;
@@ -41,19 +41,18 @@ public class ExternalNativeBuildJsonTask extends AndroidVariantTask {
     }
 
     @NonNull
-    public static TaskConfigAction<ExternalNativeBuildJsonTask>
-        createTaskConfigAction(
+    public static TaskCreationAction<ExternalNativeBuildJsonTask> createTaskConfigAction(
             @NonNull final ExternalNativeJsonGenerator generator,
             @NonNull final VariantScope scope) {
-        return new ConfigAction(scope, generator);
+        return new CreationAction(scope, generator);
     }
 
-    private static class ConfigAction extends TaskConfigAction<ExternalNativeBuildJsonTask> {
+    private static class CreationAction extends TaskCreationAction<ExternalNativeBuildJsonTask> {
 
         private final VariantScope scope;
         private final ExternalNativeJsonGenerator generator;
 
-        private ConfigAction(VariantScope scope, ExternalNativeJsonGenerator generator) {
+        private CreationAction(VariantScope scope, ExternalNativeJsonGenerator generator) {
             this.scope = scope;
             this.generator = generator;
         }

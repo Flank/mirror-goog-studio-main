@@ -25,7 +25,7 @@ import org.gradle.api.tasks.TaskProvider
  * This contains both meta-data to create the task ([name], [type])
  * and actions to configure the task ([preConfigure], [execute])
  */
-abstract class TaskConfigAction<T : Task> : PreConfigAction<T>() {
+abstract class TaskCreationAction<T : Task> : PreConfigAction<T>() {
 
     /** Returns the name of the task to be created.  */
     abstract val name: String

@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.tasks.featuresplit
 import com.android.build.api.attributes.VariantAttr
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.utils.FileUtils
@@ -70,8 +70,8 @@ open class FeatureSplitTransitiveDepsWriterTask : AndroidVariantTask() {
                 .write(Joiner.on(System.lineSeparator()).join(content))
     }
 
-    class ConfigAction(private val variantScope: VariantScope) :
-        TaskConfigAction<FeatureSplitTransitiveDepsWriterTask>() {
+    class CreationAction(private val variantScope: VariantScope) :
+        TaskCreationAction<FeatureSplitTransitiveDepsWriterTask>() {
 
         override val name: String
             get() = variantScope.getTaskName("generate", "FeatureTransitiveDeps")

@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
 import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.build.gradle.internal.utils.toImmutableList
@@ -377,8 +377,8 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
             }
         }.toImmutableMap { it.toImmutableList() }
 
-    class ConfigAction(private val variantScope: VariantScope) :
-        TaskConfigAction<AutoNamespaceDependenciesTask>() {
+    class CreationAction(private val variantScope: VariantScope) :
+        TaskCreationAction<AutoNamespaceDependenciesTask>() {
 
         override val name: String
             get() = variantScope.getTaskName("autoNamespace", "Dependencies")

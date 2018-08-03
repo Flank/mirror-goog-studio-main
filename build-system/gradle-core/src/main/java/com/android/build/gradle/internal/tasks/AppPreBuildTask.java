@@ -24,7 +24,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.HashSet;
@@ -160,11 +160,11 @@ public class AppPreBuildTask extends AndroidVariantTask {
         }
     }
 
-    public static class ConfigAction extends TaskConfigAction<AppPreBuildTask> {
+    public static class CreationAction extends TaskCreationAction<AppPreBuildTask> {
 
         @NonNull private final VariantScope variantScope;
 
-        public ConfigAction(@NonNull VariantScope variantScope) {
+        public CreationAction(@NonNull VariantScope variantScope) {
             this.variantScope = variantScope;
         }
 

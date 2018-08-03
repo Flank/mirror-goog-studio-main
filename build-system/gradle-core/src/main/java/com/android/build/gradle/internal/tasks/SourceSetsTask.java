@@ -21,7 +21,7 @@ import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.api.AndroidSourceDirectorySet;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.builder.core.VariantType;
 import java.io.IOException;
 import java.util.stream.Collectors;
@@ -108,11 +108,11 @@ public class SourceSetsTask extends AbstractReportTask {
     }
 
 
-    public static class ConfigAction extends TaskConfigAction<SourceSetsTask> {
+    public static class CreationAction extends TaskCreationAction<SourceSetsTask> {
 
         private final AndroidConfig extension;
 
-        public ConfigAction(@NonNull AndroidConfig extension) {
+        public CreationAction(@NonNull AndroidConfig extension) {
             this.extension = extension;
         }
 

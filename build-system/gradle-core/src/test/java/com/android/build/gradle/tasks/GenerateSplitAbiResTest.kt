@@ -217,8 +217,11 @@ class GenerateSplitAbiResTest {
         assertThat(generatedSplitManifest).contains("configForSplit=\"featureA\"")
     }
 
-    private fun initTask(initializationLambda : (GenerateSplitAbiRes.ConfigAction) -> Unit = {}) : GenerateSplitAbiRes {
-        val configAction = GenerateSplitAbiRes.ConfigAction(mockedVariantScope, provider)
+    private fun initTask(initializationLambda : (GenerateSplitAbiRes.CreationAction) -> Unit = {}) : GenerateSplitAbiRes {
+        val configAction = GenerateSplitAbiRes.CreationAction(
+            mockedVariantScope,
+            provider
+        )
 
         initCommonFields()
         initializationLambda(configAction)
