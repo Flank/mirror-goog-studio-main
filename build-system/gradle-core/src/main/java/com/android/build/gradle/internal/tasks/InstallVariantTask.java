@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.internal.InstallUtils;
 import com.android.builder.sdk.SdkInfo;
@@ -59,6 +59,8 @@ import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.TaskProvider;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Task installing an app variant. It looks at connected device and install the best matching
@@ -255,7 +257,7 @@ public class InstallVariantTask extends AndroidBuilderTask {
         this.variantData = variantData;
     }
 
-    public static class CreationAction extends EagerTaskCreationAction<InstallVariantTask> {
+    public static class CreationAction extends LazyTaskCreationAction<InstallVariantTask> {
 
         private final VariantScope scope;
 
@@ -276,7 +278,7 @@ public class InstallVariantTask extends AndroidBuilderTask {
         }
 
         @Override
-        public void execute(@NonNull InstallVariantTask installTask) {
+        public void configure(@NonNull InstallVariantTask installTask) {
             installTask.setDescription(
                     "Installs the " + scope.getVariantData().getDescription() + ".");
             installTask.setVariantName(scope.getVariantConfiguration().getFullName());
@@ -308,8 +310,13 @@ public class InstallVariantTask extends AndroidBuilderTask {
                     return null;
                 }
             });
+        }
 
-            scope.getTaskContainer().setInstallTask(installTask);
+        @Override
+        public void handleProvider(
+                @NotNull TaskProvider<? extends InstallVariantTask> taskProvider) {
+            super.handleProvider(taskProvider);
+            scope.getTaskContainer().setInstallTask(taskProvider);
         }
     }
 }

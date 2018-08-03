@@ -60,8 +60,8 @@ interface TaskContainer {
     val packageAndroidTask: PackageAndroidArtifact?
     val bundleLibraryTask: Zip?
 
-    val installTask: DefaultTask?
-    val uninstallTask: DefaultTask?
+    val installTask: TaskProvider<out DefaultTask>?
+    val uninstallTask: TaskProvider<out DefaultTask>?
 
     val connectedTestTask: DeviceProviderInstrumentTestTask?
     val providerTestTaskList: List<DeviceProviderInstrumentTestTask>

@@ -485,13 +485,13 @@ public abstract class TaskManager {
     public void configureCustomLintChecks() {
         // setup the task that reads the config and put the lint jar in the intermediate folder
         // so that the bundle tasks can copy it, and the inter-project publishing can publish it
-        taskFactory.eagerCreate(new PrepareLintJar.CreationAction(globalScope));
+        taskFactory.lazyCreate(new PrepareLintJar.CreationAction(globalScope));
     }
 
     public void createGlobalLintTask() {
-        taskFactory.eagerCreate(LINT, LintGlobalTask.class, task -> {});
-        taskFactory.eagerConfigure(JavaBasePlugin.CHECK_TASK_NAME, it -> it.dependsOn(LINT));
-        taskFactory.eagerCreate(LINT_FIX, LintFixTask.class, task -> {});
+        taskFactory.lazyCreate(LINT, LintGlobalTask.class, null, null, null);
+        taskFactory.lazyConfigure(JavaBasePlugin.CHECK_TASK_NAME, it -> it.dependsOn(LINT));
+        taskFactory.lazyCreate(LINT_FIX, LintFixTask.class, null, null, null);
     }
 
     // this is run after all the variants are created.
@@ -505,10 +505,18 @@ public abstract class TaskManager {
         }
 
         // configure the global lint tasks.
-        new LintGlobalTask.GlobalCreationAction(globalScope, filteredVariants)
-                .execute((LintGlobalTask) taskFactory.findByName(LINT));
-        new LintFixTask.GlobalCreationAction(globalScope, filteredVariants)
-                .execute((LintFixTask) taskFactory.findByName(LINT_FIX));
+        taskFactory.lazyConfigure(
+                LINT,
+                LintGlobalTask.class,
+                task ->
+                        new LintGlobalTask.GlobalCreationAction(globalScope, filteredVariants)
+                                .configure(task));
+        taskFactory.lazyConfigure(
+                LINT_FIX,
+                LintFixTask.class,
+                task ->
+                        new LintFixTask.GlobalCreationAction(globalScope, filteredVariants)
+                                .configure(task));
 
         // publish the local lint.jar to all the variants. This is not for the task output itself
         // but for the artifact publishing.
@@ -1884,7 +1892,7 @@ public abstract class TaskManager {
 
         createPackagingTask(variantScope, null /* buildInfoGeneratorTask */);
 
-        taskFactory.eagerConfigure(
+        taskFactory.lazyConfigure(
                 ASSEMBLE_ANDROID_TEST,
                 assembleTest ->
                         assembleTest.dependsOn(
@@ -1909,7 +1917,7 @@ public abstract class TaskManager {
             return;
         }
 
-        taskFactory.eagerCreate(new LintPerVariantTask.CreationAction(scope));
+        taskFactory.lazyCreate(new LintPerVariantTask.CreationAction(scope));
     }
 
     /** Returns the full path of a task given its name. */
@@ -1930,9 +1938,11 @@ public abstract class TaskManager {
             return;
         }
 
-        LintPerVariantTask lintReleaseCheck =
-                taskFactory.eagerCreate(new LintPerVariantTask.VitalCreationAction(variantScope));
-        lintReleaseCheck.dependsOn(variantData.getTaskContainer().getJavacTask());
+        TaskProvider<LintPerVariantTask> lintReleaseCheck =
+                taskFactory.lazyCreate(
+                        new LintPerVariantTask.VitalCreationAction(variantScope),
+                        null,
+                        task -> task.dependsOn(variantScope.getTaskContainer().getJavacTask()));
 
         TaskFactoryUtils.dependsOn(
                 variantScope.getTaskContainer().getAssembleTask(), lintReleaseCheck);
@@ -1955,8 +1965,7 @@ public abstract class TaskManager {
         final AndroidUnitTest runTestsTask =
                 taskFactory.eagerCreate(new AndroidUnitTest.CreationAction(variantScope));
 
-        taskFactory.eagerConfigure(
-                JavaPlugin.TEST_TASK_NAME, test -> test.dependsOn(runTestsTask.getName()));
+        taskFactory.lazyConfigure(JavaPlugin.TEST_TASK_NAME, test -> test.dependsOn(runTestsTask));
     }
 
     public void createTopLevelTestTasks(boolean hasFlavors) {
@@ -1990,7 +1999,7 @@ public abstract class TaskManager {
                             });
         }
 
-        taskFactory.eagerConfigure(
+        taskFactory.lazyConfigure(
                 CONNECTED_CHECK, check -> check.dependsOn(connectedAndroidTestTask.getName()));
 
         Task deviceAndroidTestTask;
@@ -2015,7 +2024,7 @@ public abstract class TaskManager {
                             });
         }
 
-        taskFactory.eagerConfigure(
+        taskFactory.lazyConfigure(
                 DEVICE_CHECK, check -> check.dependsOn(deviceAndroidTestTask.getName()));
 
         // Create top level unit test tasks.
@@ -2026,7 +2035,7 @@ public abstract class TaskManager {
                     unitTestTask.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
                     unitTestTask.setDescription("Run unit tests for all variants.");
                 });
-        taskFactory.eagerConfigure(
+        taskFactory.lazyConfigure(
                 JavaBasePlugin.CHECK_TASK_NAME,
                 check -> check.dependsOn(JavaPlugin.TEST_TASK_NAME));
 
@@ -2047,7 +2056,7 @@ public abstract class TaskManager {
                             taskGraph -> {
                                 for (String reportTask : reportTasks) {
                                     if (taskGraph.hasTask(getTaskPath(reportTask))) {
-                                        taskFactory.eagerConfigure(
+                                        taskFactory.lazyConfigure(
                                                 reportTask,
                                                 task -> ((AndroidReportTask) task).setWillRun());
                                     }
@@ -2101,7 +2110,7 @@ public abstract class TaskManager {
 
         testVariantScope.getTaskContainer().setConnectedTask(connectedTask);
 
-        taskFactory.eagerConfigure(
+        taskFactory.lazyConfigure(
                 CONNECTED_ANDROID_TEST,
                 connectedAndroidTest -> connectedAndroidTest.dependsOn(connectedTask.getName()));
 
@@ -2124,7 +2133,7 @@ public abstract class TaskManager {
                     .getCoverageReportTask()
                     .dependsOn(reportTask);
 
-            taskFactory.eagerConfigure(
+            taskFactory.lazyConfigure(
                     CONNECTED_ANDROID_TEST,
                     connectedAndroidTest -> connectedAndroidTest.dependsOn(reportTask.getName()));
         }
@@ -2143,7 +2152,7 @@ public abstract class TaskManager {
                                     project.files() /* testTargetMetadata */));
 
             providerTask.dependsOn(artifactsTasks.toArray());
-            taskFactory.eagerConfigure(
+            taskFactory.lazyConfigure(
                     DEVICE_ANDROID_TEST,
                     deviceAndroidTest -> deviceAndroidTest.dependsOn(providerTask.getName()));
         }
@@ -2157,7 +2166,7 @@ public abstract class TaskManager {
                                     testVariantScope, testServer));
             serverTask.dependsOn(testVariantScope.getTaskContainer().getAssembleTask());
 
-            taskFactory.eagerConfigure(
+            taskFactory.lazyConfigure(
                     DEVICE_CHECK,
                     deviceAndroidTest -> deviceAndroidTest.dependsOn(serverTask.getName()));
         }
@@ -3002,15 +3011,15 @@ public abstract class TaskManager {
         maybeCreateLintVitalTask(variantData);
 
         // add an uninstall task
-        final UninstallTask uninstallTask =
-                taskFactory.eagerCreate(new UninstallTask.CreationAction(variantScope));
+        final TaskProvider<UninstallTask> uninstallTask =
+                taskFactory.lazyCreate(new UninstallTask.CreationAction(variantScope));
 
-        taskFactory.eagerConfigure(
-                UNINSTALL_ALL, uninstallAll -> uninstallAll.dependsOn(uninstallTask.getName()));
+        taskFactory.lazyConfigure(
+                UNINSTALL_ALL, uninstallAll -> uninstallAll.dependsOn(uninstallTask));
     }
 
     protected void createInstallTask(VariantScope variantScope) {
-        taskFactory.eagerCreate(new InstallVariantTask.CreationAction(variantScope));
+        taskFactory.lazyCreate(new InstallVariantTask.CreationAction(variantScope));
     }
 
     protected Task getValidateSigningTask(@NonNull VariantScope variantScope) {

@@ -87,8 +87,8 @@ public class LintGlobalTask extends LintBaseTask {
         }
 
         @Override
-        public void execute(@NonNull LintGlobalTask lintTask) {
-            super.execute(lintTask);
+        public void configure(@NonNull LintGlobalTask lintTask) {
+            super.configure(lintTask);
 
             lintTask.setDescription("Runs lint on all variants.");
             lintTask.setVariantName("");

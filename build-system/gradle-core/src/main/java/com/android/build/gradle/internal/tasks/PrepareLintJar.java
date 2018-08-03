@@ -22,7 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
@@ -34,6 +34,7 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Task that takes the configuration result, and check that it's correct.
@@ -81,9 +82,10 @@ public class PrepareLintJar extends DefaultTask {
         }
     }
 
-    public static class CreationAction extends EagerTaskCreationAction<PrepareLintJar> {
+    public static class CreationAction extends LazyTaskCreationAction<PrepareLintJar> {
 
         @NonNull private final GlobalScope scope;
+        private File outputLintJar;
 
         public CreationAction(@NonNull GlobalScope scope) {
             this.scope = scope;
@@ -102,10 +104,16 @@ public class PrepareLintJar extends DefaultTask {
         }
 
         @Override
-        public void execute(@NonNull PrepareLintJar task) {
-            task.outputLintJar =
+        public void preConfigure(@NotNull String taskName) {
+            super.preConfigure(taskName);
+            outputLintJar =
                     scope.getArtifacts()
-                            .appendArtifact(InternalArtifactType.LINT_JAR, task, FN_LINT_JAR);
+                            .appendArtifact(InternalArtifactType.LINT_JAR, taskName, FN_LINT_JAR);
+        }
+
+        @Override
+        public void configure(@NonNull PrepareLintJar task) {
+            task.outputLintJar = outputLintJar;
             task.lintChecks = scope.getLocalCustomLintChecks();
         }
     }

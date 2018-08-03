@@ -254,7 +254,7 @@ public class ApplicationTaskManager extends TaskManager {
 
         } else {
             // use the install task that uses the App Bundle
-            taskFactory.eagerCreate(new InstallVariantViaBundleTask.CreationAction(variantScope));
+            taskFactory.lazyCreate(new InstallVariantViaBundleTask.CreationAction(variantScope));
         }
     }
 

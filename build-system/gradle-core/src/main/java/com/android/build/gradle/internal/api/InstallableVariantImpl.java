@@ -47,12 +47,20 @@ public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl 
 
     @Override
     public DefaultTask getInstall() {
-        return getVariantData().getTaskContainer().getInstallTask();
+        if (getVariantData().getTaskContainer().getInstallTask() != null) {
+            return getVariantData().getTaskContainer().getInstallTask().getOrNull();
+        }
+
+        return null;
     }
 
     @Override
     public DefaultTask getUninstall() {
-        return getVariantData().getTaskContainer().getUninstallTask();
+        if (getVariantData().getTaskContainer().getUninstallTask() != null) {
+            return getVariantData().getTaskContainer().getUninstallTask().getOrNull();
+        }
+
+        return null;
     }
 
     /**

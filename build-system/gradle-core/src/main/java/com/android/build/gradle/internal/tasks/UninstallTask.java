@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.sdk.SdkInfo;
 import com.android.builder.testing.ConnectedDeviceProvider;
@@ -33,6 +33,8 @@ import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.TaskProvider;
+import org.jetbrains.annotations.NotNull;
 
 public class UninstallTask extends AndroidBuilderTask {
 
@@ -113,7 +115,7 @@ public class UninstallTask extends AndroidBuilderTask {
         mTimeOutInMs = timeoutInMs;
     }
 
-    public static class CreationAction extends EagerTaskCreationAction<UninstallTask> {
+    public static class CreationAction extends LazyTaskCreationAction<UninstallTask> {
 
         private final VariantScope scope;
 
@@ -135,7 +137,7 @@ public class UninstallTask extends AndroidBuilderTask {
         }
 
         @Override
-        public void execute(@NonNull UninstallTask uninstallTask) {
+        public void configure(@NonNull UninstallTask uninstallTask) {
 
             uninstallTask.setDescription(
                     "Uninstalls the " + scope.getVariantData().getDescription() + ".");
@@ -153,7 +155,12 @@ public class UninstallTask extends AndroidBuilderTask {
                 return (info == null ? null : info.getAdb());
             });
 
-            scope.getTaskContainer().setUninstallTask(uninstallTask);
+        }
+
+        @Override
+        public void handleProvider(@NotNull TaskProvider<? extends UninstallTask> taskProvider) {
+            super.handleProvider(taskProvider);
+            scope.getTaskContainer().setUninstallTask(taskProvider);
         }
     }
 }

@@ -66,8 +66,8 @@ open class LintFixTask : LintBaseTask() {
         override val type: Class<LintFixTask>
             get() = LintFixTask::class.java
 
-        override fun execute(task: LintFixTask) {
-            super.execute(task)
+        override fun configure(task: LintFixTask) {
+            super.configure(task)
 
             task.description =
                     "Runs lint on all variants and applies any safe suggestions to the source code."

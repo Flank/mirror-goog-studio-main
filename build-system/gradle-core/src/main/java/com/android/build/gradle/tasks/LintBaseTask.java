@@ -39,7 +39,7 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.builder.model.Version;
 import com.android.sdklib.BuildToolInfo;
 import com.android.tools.lint.gradle.api.ReflectiveLintRunner;
@@ -272,7 +272,7 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
     }
 
     public abstract static class BaseCreationAction<T extends LintBaseTask>
-            extends EagerTaskCreationAction<T> {
+            extends LazyTaskCreationAction<T> {
 
         @NonNull private final GlobalScope globalScope;
 
@@ -286,7 +286,7 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
         }
 
         @Override
-        public void execute(@NonNull T lintTask) {
+        public void configure(@NonNull T lintTask) {
             lintTask.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
             lintTask.lintOptions = globalScope.getExtension().getLintOptions();
             File sdkFolder = globalScope.getSdkHandler().getSdkFolder();

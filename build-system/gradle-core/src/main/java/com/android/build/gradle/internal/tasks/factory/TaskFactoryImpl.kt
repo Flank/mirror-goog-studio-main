@@ -48,11 +48,6 @@ class TaskFactoryImpl(private val taskContainer: TaskContainer):
         return taskContainer.findByName(name)
     }
 
-    override fun eagerConfigure(name: String, configAction: Action<in Task>) {
-        val task = taskContainer.getByName(name)
-        configAction.execute(task)
-    }
-
     // --- Lazy Creation ---
 
     override fun lazyCreate(name: String): TaskProvider<Task> = taskContainer.register(name)
@@ -66,6 +61,15 @@ class TaskFactoryImpl(private val taskContainer: TaskContainer):
         secondaryAction: TaskConfigAction<in T>?
     ): TaskProvider<T> =
         taskContainer.lazyCreate(creationAction, secondaryPreConfigAction, secondaryAction)
+
+    override fun <T: Task> lazyCreate(
+        taskName: String,
+        taskType: Class<T>,
+        preConfigAction: PreConfigAction?,
+        action: TaskConfigAction<in T>?,
+        providerCallback: TaskProviderCallback<T>?
+    ): TaskProvider<T> =
+        taskContainer.lazyCreate(taskName, taskType, preConfigAction, action, providerCallback)
 
     override fun lazyCreate(
         taskName: String,

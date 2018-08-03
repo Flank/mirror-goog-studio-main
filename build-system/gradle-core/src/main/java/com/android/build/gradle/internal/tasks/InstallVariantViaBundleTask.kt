@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
 import com.android.builder.internal.InstallUtils
 import com.android.builder.testing.ConnectedDeviceProvider
 import com.android.builder.testing.api.DeviceConnector
@@ -38,6 +39,7 @@ import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
@@ -230,14 +232,14 @@ open class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: Work
      }
 
     internal class CreationAction(private val scope: VariantScope) :
-        EagerTaskCreationAction<InstallVariantViaBundleTask>() {
+        LazyTaskCreationAction<InstallVariantViaBundleTask>() {
 
         override val name: String
             get() = scope.getTaskName("install")
         override val type: Class<InstallVariantViaBundleTask>
             get() = InstallVariantViaBundleTask::class.java
 
-        override fun execute(task: InstallVariantViaBundleTask) {
+        override fun configure(task: InstallVariantViaBundleTask) {
             task.description = "Installs the " + scope.variantData.description + ""
             task.variantName = scope.variantConfiguration.fullName
             task.group = TaskManager.INSTALL_GROUP
@@ -258,7 +260,11 @@ open class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: Work
 
             task.adbExe = { scope.globalScope.sdkHandler.sdkInfo?.adb!! }
 
-            scope.taskContainer.installTask = task
+        }
+
+        override fun handleProvider(taskProvider: TaskProvider<out InstallVariantViaBundleTask>) {
+            super.handleProvider(taskProvider)
+            scope.taskContainer.installTask = taskProvider
         }
     }
 }
