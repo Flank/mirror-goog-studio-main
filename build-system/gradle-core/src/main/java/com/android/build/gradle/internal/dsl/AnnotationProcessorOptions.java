@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 import org.gradle.process.CommandLineArgumentProvider;
 
-/** DSL object for configuring APT options. */
+/** Options for configuring Java annotation processors. */
 @SuppressWarnings("UnnecessaryInheritDoc")
 public class AnnotationProcessorOptions
         implements com.android.build.gradle.api.AnnotationProcessorOptions {
@@ -42,7 +42,15 @@ public class AnnotationProcessorOptions
     @Nullable
     private Boolean includeCompileClasspath = null;
 
-    /** {@inheritDoc} */
+    /**
+     * Specifies the annotation processor classes to run.
+     *
+     * <p>By default, this property is empty and the plugin automatically discovers and runs
+     * annotation processors that you add to the annotation processor classpath. To learn more about
+     * adding annotation processor dependencies to your project, read <a
+     * href="https://d.android.com/studio/build/dependencies#annotation_processor">Add annotation
+     * processors</a>.
+     */
     @NonNull
     @Override
     public List<String> getClassNames() {
@@ -58,16 +66,18 @@ public class AnnotationProcessorOptions
         classNames.add(className);
     }
 
-    /**
-     * Annotation processors to run.
-     *
-     * If empty, processors will be automatically discovered.
-     */
     public void classNames(Collection<String> className) {
         classNames.addAll(className);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Specifies arguments that represent primitive types for annotation processors.
+     *
+     * <p>If one or more arguments represent files or directories, you must instead use {@link
+     * #getCompilerArgumentProviders()}.
+     *
+     * @see #getCompilerArgumentProviders()
+     */
     @NonNull
     @Override
     public Map<String, String> getArguments() {
@@ -83,14 +93,25 @@ public class AnnotationProcessorOptions
         arguments.put(key, value);
     }
 
-    /**
-     * Options for the annotation processors.
-     */
     public void arguments(Map<String, String> arguments) {
         this.arguments.putAll(arguments);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Specifies arguments for annotation processors that you want to pass to the Android plugin
+     * using the {@link CommandLineArgumentProvider} class.
+     *
+     * <p>The benefit of using this class is that it allows you or the annotation processor author
+     * to improve the correctness and performance of incremental and cached clean builds by applying
+     * <a
+     * href="https://docs.gradle.org/current/userguide/more_about_tasks.html#sec:up_to_date_checks">
+     * incremental build property type annotations</a>.
+     *
+     * <p>To learn more about how to use this class to annotate arguments for annotation processors
+     * and pass them to the Android plugin, read <a
+     * href="https://developer.android.com/studio/build/dependencies#processor-arguments">Pass
+     * arguments to annotation processors</a>.
+     */
     @NonNull
     @Override
     public List<CommandLineArgumentProvider> getCompilerArgumentProviders() {
@@ -113,7 +134,27 @@ public class AnnotationProcessorOptions
         this.compilerArgumentProviders.addAll(compilerArgumentProviders);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Whether to include compile classpath in the processor path.
+     *
+     * <p>By default, the Android plugin throws a build error when you add annotation processors to
+     * your project's compile classpath. You must instead <a
+     * href="https://developer.android.com/studio/build/dependencies#annotation_processor">add
+     * annotation processors</a> to the processor classpath using the <code>annotationProcessor
+     * </code> dependency configuration. This behavior exists to improve build performance by
+     * separating the compile classpath from the annotation processor classpath.
+     *
+     * <p>If, however, you still want to add a dependency that includes an annotation processor to
+     * the compile classpath, but you don't need to run the processor, you can disable the error
+     * check by setting this property to <code>false</code>.
+     *
+     * <p>If you experience issues after migrating your project's annotation processors to the
+     * processor classpath, you can allow annotation processors on the compile classpath by setting
+     * this property to <code>true</code>. However, setting this property to <code>true</code> is
+     * not recommended, and the option to do so will be removed in a future update.
+     *
+     * <p>By default, this property is <code>null</code>.
+     */
     @Override
     @Nullable
     public Boolean getIncludeCompileClasspath() {
