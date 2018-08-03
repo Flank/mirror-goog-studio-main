@@ -42,16 +42,6 @@ interface TaskFactory {
     @Deprecated("Use lazyCreate(...)")
     fun <T : Task> eagerCreate(creationAction: EagerTaskCreationAction<T>): T
 
-    /** Creates a task wit the given name, type and configuration action  */
-    @Deprecated("Use lazyCreate(...)")
-    fun <T : Task> eagerCreate(
-        taskName: String, taskClass: Class<T>, action: Action<in T>
-    ): T
-
-    /** Creates a task with the given name and config action.  */
-    @Deprecated("Use lazyCreate(...)")
-    fun eagerCreate(taskName: String, action: Action<in Task>): Task
-
     // --- Lazy Actions ---
 
     fun lazyCreate(name: String): TaskProvider<Task>
@@ -79,6 +69,17 @@ interface TaskFactory {
         preConfigAction: PreConfigAction? = null,
         action: TaskConfigAction<in Task>? = null,
         providerCallback: TaskProviderCallback<Task>? = null
+    ): TaskProvider<Task>
+
+    fun <T: Task> lazyCreate(
+        taskName: String,
+        taskType: Class<T>,
+        action: Action<in T>
+    ): TaskProvider<T>
+
+    fun lazyCreate(
+        taskName: String,
+        action: Action<in Task>
     ): TaskProvider<Task>
 
     fun lazyConfigure(name: String, action: Action<in Task>)

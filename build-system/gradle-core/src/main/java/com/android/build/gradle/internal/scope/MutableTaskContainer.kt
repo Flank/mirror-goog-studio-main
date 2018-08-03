@@ -56,7 +56,7 @@ class MutableTaskContainer : TaskContainer {
     // implementation of the API setter/getters as required by our current APIs.
     override lateinit var assembleTask: TaskProvider<out Task>
     override lateinit var javacTask: JavaCompile
-    override lateinit var compileTask: Task
+    override lateinit var compileTask: TaskProvider<out Task>
     override lateinit var preBuildTask: TaskProvider<out Task>
     override var checkManifestTask: CheckManifest? = null
     override var aidlCompileTask: AidlCompile? = null
@@ -98,6 +98,6 @@ class MutableTaskContainer : TaskContainer {
     var packageSplitAbiTask: Task? = null
     var generateResValuesTask: TaskProvider<out Task>? = null
     var generateApkDataTask: Task? = null
-    var coverageReportTask: Task? = null
+    var coverageReportTask: TaskProvider<out Task>? = null
     var dataBindingExportBuildInfoTask: Task? = null
 }

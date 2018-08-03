@@ -24,7 +24,7 @@ import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.builder.model.Version;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -54,6 +54,7 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.workers.IsolationMode;
 import org.gradle.workers.WorkerExecutor;
 import org.jacoco.core.analysis.Analyzer;
@@ -69,6 +70,7 @@ import org.jacoco.report.MultiReportVisitor;
 import org.jacoco.report.MultiSourceFileLocator;
 import org.jacoco.report.html.HTMLFormatter;
 import org.jacoco.report.xml.XMLFormatter;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Simple Jacoco report task that calls the Ant version.
@@ -195,7 +197,7 @@ public class JacocoReportTask extends DefaultTask {
                 });
     }
 
-    public static class CreationAction extends EagerTaskCreationAction<JacocoReportTask> {
+    public static class CreationAction extends LazyTaskCreationAction<JacocoReportTask> {
         @NonNull private VariantScope scope;
         @NonNull private final Configuration jacocoAntConfiguration;
 
@@ -218,7 +220,13 @@ public class JacocoReportTask extends DefaultTask {
         }
 
         @Override
-        public void execute(@NonNull JacocoReportTask task) {
+        public void handleProvider(@NotNull TaskProvider<? extends JacocoReportTask> taskProvider) {
+            super.handleProvider(taskProvider);
+            scope.getTaskContainer().setCoverageReportTask(taskProvider);
+        }
+
+        @Override
+        public void configure(@NonNull JacocoReportTask task) {
 
             task.setDescription("Creates JaCoCo test coverage report from data gathered on the "
                     + "device.");
@@ -244,6 +252,8 @@ public class JacocoReportTask extends DefaultTask {
                     () -> testedScope.getVariantData().getJavaSourceFoldersForCoverage();
 
             task.setReportDir(testedScope.getCoverageReportDir());
+
+            task.dependsOn(scope.getTaskContainer().getConnectedTask());
         }
     }
 

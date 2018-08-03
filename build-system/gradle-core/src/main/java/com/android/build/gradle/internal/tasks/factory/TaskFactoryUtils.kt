@@ -230,3 +230,21 @@ fun <T: Task> TaskProvider<out T>.dependsOn(tasks: Collection<TaskProvider<out T
 
     return this
 }
+
+fun <T: Task> TaskProvider<out T>.dependsOn(vararg tasks: TaskProvider<out Task>): TaskProvider<out T> {
+    if (tasks.isEmpty().not()) {
+        // FIXME remove task.get() when dependsOn supports TaskReference (gradle 4.8)?
+        configure { it.dependsOn(tasks.map { it.get() }) }
+    }
+
+    return this
+}
+
+@Deprecated("Use TaskProvider.dependsOn(Collection<TaskProvider>)")
+fun <T: Task> TaskProvider<out T>.dependsOn(vararg tasks: Task): TaskProvider<out T> {
+    if (tasks.isEmpty().not()) {
+        configure { it.dependsOn(*tasks) }
+    }
+
+    return this
+}

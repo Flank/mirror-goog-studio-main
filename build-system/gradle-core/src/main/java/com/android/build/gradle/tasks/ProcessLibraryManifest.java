@@ -285,20 +285,20 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
         }
 
         @Override
-        public void configure(@NonNull ProcessLibraryManifest processManifest) {
-            super.configure(processManifest);
+        public void configure(@NonNull ProcessLibraryManifest task) {
+            super.configure(task);
             VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> config =
                     getScope().getVariantConfiguration();
             final AndroidBuilder androidBuilder = getScope().getGlobalScope().getAndroidBuilder();
 
-            processManifest.setAndroidBuilder(androidBuilder);
-            processManifest.setVariantName(config.getFullName());
+            task.setAndroidBuilder(androidBuilder);
+            task.setVariantName(config.getFullName());
 
-            processManifest.variantConfiguration = config;
+            task.variantConfiguration = config;
 
             final ProductFlavor mergedFlavor = config.getMergedFlavor();
 
-            processManifest.minSdkVersion =
+            task.minSdkVersion =
                     TaskInputHelper.memoize(
                             () -> {
                                 ApiVersion minSdkVersion1 = mergedFlavor.getMinSdkVersion();
@@ -308,7 +308,7 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
                                 return minSdkVersion1.getApiString();
                             });
 
-            processManifest.targetSdkVersion =
+            task.targetSdkVersion =
                     TaskInputHelper.memoize(
                             () -> {
                                 ApiVersion targetSdkVersion = mergedFlavor.getTargetSdkVersion();
@@ -318,16 +318,19 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
                                 return targetSdkVersion.getApiString();
                             });
 
-            processManifest.maxSdkVersion = TaskInputHelper.memoize(mergedFlavor::getMaxSdkVersion);
+            task.maxSdkVersion = TaskInputHelper.memoize(mergedFlavor::getMaxSdkVersion);
 
-            processManifest.setAaptFriendlyManifestOutputDirectory(
-                    aaptFriendlyManifestOutputDirectory);
+            task.setAaptFriendlyManifestOutputDirectory(aaptFriendlyManifestOutputDirectory);
 
-            processManifest.manifestOutputFile = manifestOutputFile;
+            task.manifestOutputFile = manifestOutputFile;
 
-            processManifest.outputScope = getScope().getOutputScope();
+            task.outputScope = getScope().getOutputScope();
 
-            processManifest.setReportFile(reportFile);
+            task.setReportFile(reportFile);
+
+            if (scope.getTaskContainer().getCheckManifestTask() != null) {
+                task.dependsOn(scope.getTaskContainer().getCheckManifestTask());
+            }
         }
     }
 }

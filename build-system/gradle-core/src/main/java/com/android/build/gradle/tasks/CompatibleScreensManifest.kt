@@ -22,10 +22,10 @@ import com.android.build.gradle.internal.scope.BuildElements
 import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST
 import com.android.build.gradle.internal.scope.OutputScope
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.tasks.TaskInputHelper
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
 import com.android.ide.common.build.ApkData
 import com.android.resources.Density
 import com.android.utils.FileUtils
@@ -140,22 +140,29 @@ open class CompatibleScreensManifest : AndroidVariantTask() {
     }
 
     class CreationAction(private val scope: VariantScope, private val screenSizes: Set<String>) :
-        EagerTaskCreationAction<CompatibleScreensManifest>() {
+        LazyTaskCreationAction<CompatibleScreensManifest>() {
 
         override val name: String
             get() = scope.getTaskName("create", "CompatibleScreenManifests")
         override val type: Class<CompatibleScreensManifest>
             get() = CompatibleScreensManifest::class.java
 
-        override fun execute(csmTask: CompatibleScreensManifest) {
-            csmTask.outputScope = scope.outputScope
-            csmTask.variantName = scope.fullVariantName
-            csmTask.screenSizes = screenSizes
-            csmTask.outputFolder = scope.artifacts
-                .appendArtifact(COMPATIBLE_SCREEN_MANIFEST, csmTask)
+        private lateinit var outputFolder: File
+
+        override fun preConfigure(taskName: String) {
+            super.preConfigure(taskName)
+            outputFolder = scope.artifacts
+                .appendArtifact(COMPATIBLE_SCREEN_MANIFEST, taskName)
+        }
+
+        override fun configure(task: CompatibleScreensManifest) {
+            task.outputScope = scope.outputScope
+            task.variantName = scope.fullVariantName
+            task.screenSizes = screenSizes
+            task.outputFolder = outputFolder
 
             val config = scope.variantConfiguration
-            csmTask.minSdkVersion = TaskInputHelper.memoize {
+            task.minSdkVersion = TaskInputHelper.memoize {
                 val minSdk = config.mergedFlavor.minSdkVersion
                 minSdk?.apiString
             }

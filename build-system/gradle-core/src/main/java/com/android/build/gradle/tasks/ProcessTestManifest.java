@@ -305,55 +305,52 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         }
 
         @Override
-        public void configure(@NonNull final ProcessTestManifest processTestManifestTask) {
-            super.configure(processTestManifestTask);
+        public void configure(@NonNull final ProcessTestManifest task) {
+            super.configure(task);
 
             final VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> config =
                     scope.getVariantConfiguration();
 
-            processTestManifestTask.setTestManifestFile(config.getMainManifest());
-            processTestManifestTask.outputScope = scope.getOutputScope();
+            task.setTestManifestFile(config.getMainManifest());
+            task.outputScope = scope.getOutputScope();
 
-            processTestManifestTask.setTmpDir(FileUtils.join(
-                    scope.getGlobalScope().getIntermediatesDir(),
-                    "tmp",
-                    "manifest",
-                    scope.getDirName()));
+            task.setTmpDir(
+                    FileUtils.join(
+                            scope.getGlobalScope().getIntermediatesDir(),
+                            "tmp",
+                            "manifest",
+                            scope.getDirName()));
 
-            processTestManifestTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
-            processTestManifestTask.setVariantName(config.getFullName());
+            task.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
+            task.setVariantName(config.getFullName());
 
-            processTestManifestTask.minSdkVersion =
+            task.minSdkVersion =
                     TaskInputHelper.memoize(() -> config.getMinSdkVersion().getApiString());
 
-            processTestManifestTask.targetSdkVersion =
+            task.targetSdkVersion =
                     TaskInputHelper.memoize(() -> config.getTargetSdkVersion().getApiString());
 
-            processTestManifestTask.testTargetMetadata = testTargetMetadata;
-            processTestManifestTask.testApplicationId =
-                    TaskInputHelper.memoize(config::getTestApplicationId);
+            task.testTargetMetadata = testTargetMetadata;
+            task.testApplicationId = TaskInputHelper.memoize(config::getTestApplicationId);
 
             // will only be used if testTargetMetadata is null.
-            processTestManifestTask.testedApplicationId =
-                    TaskInputHelper.memoize(config::getTestedApplicationId);
+            task.testedApplicationId = TaskInputHelper.memoize(config::getTestedApplicationId);
 
             VariantConfiguration testedConfig = config.getTestedConfig();
-            processTestManifestTask.onlyTestApk =
-                    testedConfig != null && testedConfig.getType().isAar();
+            task.onlyTestApk = testedConfig != null && testedConfig.getType().isAar();
 
-            processTestManifestTask.instrumentationRunner =
-                    TaskInputHelper.memoize(config::getInstrumentationRunner);
-            processTestManifestTask.handleProfiling =
-                    TaskInputHelper.memoize(config::getHandleProfiling);
-            processTestManifestTask.functionalTest =
-                    TaskInputHelper.memoize(config::getFunctionalTest);
-            processTestManifestTask.testLabel = TaskInputHelper.memoize(config::getTestLabel);
+            task.instrumentationRunner = TaskInputHelper.memoize(config::getInstrumentationRunner);
+            task.handleProfiling = TaskInputHelper.memoize(config::getHandleProfiling);
+            task.functionalTest = TaskInputHelper.memoize(config::getFunctionalTest);
+            task.testLabel = TaskInputHelper.memoize(config::getTestLabel);
 
-            processTestManifestTask.manifests = scope.getArtifactCollection(
-                    RUNTIME_CLASSPATH, ALL, MANIFEST);
+            task.manifests = scope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
 
-            processTestManifestTask.placeholdersValues =
-                    TaskInputHelper.memoize(config::getManifestPlaceholders);
+            task.placeholdersValues = TaskInputHelper.memoize(config::getManifestPlaceholders);
+
+            if (scope.getTaskContainer().getCheckManifestTask() != null) {
+                task.dependsOn(scope.getTaskContainer().getCheckManifestTask());
+            }
         }
     }
 }

@@ -44,7 +44,7 @@ interface TaskContainer {
     val assembleTask: TaskProvider<out Task>
     val javacTask: JavaCompile
     // empty anchor compile task to set all compilations tasks as dependents.
-    val compileTask: Task
+    val compileTask: TaskProvider<out Task>
     val preBuildTask: TaskProvider<out Task>
     val checkManifestTask: CheckManifest?
     val aidlCompileTask: AidlCompile?

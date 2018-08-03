@@ -73,7 +73,7 @@ class CompatibleScreensManifestTest {
         `when`(scope.outputScope).thenReturn(outputScope)
         `when`(scope.artifacts).thenReturn(buildArtifactsHolder)
         `when`(buildArtifactsHolder.appendArtifact(
-                        InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST, task))
+                        InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST, task.name))
             .thenReturn(temporaryFolder.root)
         `when`<ApiVersion>(productFlavor.minSdkVersion).thenReturn(DefaultApiVersion(21))
         `when`<ProductFlavor>(variantConfiguration.mergedFlavor).thenReturn(productFlavor)
@@ -88,7 +88,8 @@ class CompatibleScreensManifestTest {
                 scope, setOf("xxhpi", "xxxhdpi")
         )
 
-        configAction.execute(task)
+        configAction.preConfigure(task.name)
+        configAction.configure(task)
 
         assertThat(task.variantName).isEqualTo("fullVariantName")
         assertThat(task.name).isEqualTo("test")

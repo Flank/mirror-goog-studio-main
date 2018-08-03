@@ -467,7 +467,6 @@ public class VariantManager implements VariantModel {
                                 .getTaskFactory()
                                 .lazyCreate(
                                         variantAssembleTaskName,
-                                        null /*preConfigAction*/,
                                         task -> {
                                             task.setDescription(
                                                     "Assembles all builds for flavor combination: "
@@ -475,8 +474,7 @@ public class VariantManager implements VariantModel {
                                             task.setGroup("Build");
                                             task.dependsOn(
                                                     taskContainer.getAssembleTask().getName());
-                                        },
-                                        null /*providerCallback*/);
+                                        });
                     }
 
                     taskManager
@@ -493,7 +491,6 @@ public class VariantManager implements VariantModel {
                                     .getTaskFactory()
                                     .lazyCreate(
                                             variantBundleTaskName,
-                                            null /*preConfigAction*/,
                                             task -> {
                                                 task.setDescription(
                                                         "Assembles all bundles for flavor combination: "
@@ -501,8 +498,7 @@ public class VariantManager implements VariantModel {
                                                 task.setGroup("Build");
                                                 task.dependsOn(
                                                         taskContainer.getBundleTask().getName());
-                                            },
-                                            null /*providerCallback*/);
+                                            });
                         }
 
                         taskManager

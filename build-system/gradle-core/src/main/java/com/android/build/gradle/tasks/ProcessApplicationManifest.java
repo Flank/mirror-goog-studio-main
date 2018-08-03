@@ -567,8 +567,8 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
         }
 
         @Override
-        public void configure(@NonNull ProcessApplicationManifest processManifestTask) {
-            super.configure(processManifestTask);
+        public void configure(@NonNull ProcessApplicationManifest task) {
+            super.configure(task);
             final BaseVariantData variantData = variantScope.getVariantData();
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
             GlobalScope globalScope = variantScope.getGlobalScope();
@@ -576,17 +576,16 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
 
             VariantType variantType = variantScope.getType();
 
-            processManifestTask.setAndroidBuilder(androidBuilder);
-            processManifestTask.setVariantName(config.getFullName());
-            processManifestTask.outputScope = variantData.getOutputScope();
+            task.setAndroidBuilder(androidBuilder);
+            task.setVariantName(config.getFullName());
+            task.outputScope = variantData.getOutputScope();
 
-            processManifestTask.setVariantConfiguration(config);
+            task.setVariantConfiguration(config);
 
             Project project = globalScope.getProject();
 
             // This includes the dependent libraries.
-            processManifestTask.manifests =
-                    variantScope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
+            task.manifests = variantScope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
 
             // Also include rewritten auto-namespaced manifests if there are any
             if (variantType
@@ -596,32 +595,30 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
                             .getGlobalScope()
                             .getProjectOptions()
                             .get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
-                processManifestTask.autoNamespacedManifests =
+                task.autoNamespacedManifests =
                         variantScope
                                 .getArtifacts()
                                 .getFinalArtifactFiles(InternalArtifactType.NAMESPACED_MANIFESTS);
             }
 
-
             // optional manifest files too.
             if (variantScope.getTaskContainer().getMicroApkTask() != null
                     && config.getBuildType().isEmbedMicroApp()) {
-                processManifestTask.microApkManifest = project.files(
-                        variantScope.getMicroApkManifestFile());
+                task.microApkManifest = project.files(variantScope.getMicroApkManifestFile());
             }
             BuildArtifactsHolder artifacts = variantScope.getArtifacts();
-            processManifestTask.compatibleScreensManifest =
+            task.compatibleScreensManifest =
                     artifacts.getFinalArtifactFiles(
                             InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST);
 
-            processManifestTask.minSdkVersion =
+            task.minSdkVersion =
                     TaskInputHelper.memoize(
                             () -> {
                                 ApiVersion minSdk = config.getMergedFlavor().getMinSdkVersion();
                                 return minSdk == null ? null : minSdk.getApiString();
                             });
 
-            processManifestTask.targetSdkVersion =
+            task.targetSdkVersion =
                     TaskInputHelper.memoize(
                             () -> {
                                 ApiVersion targetSdk =
@@ -629,39 +626,40 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
                                 return targetSdk == null ? null : targetSdk.getApiString();
                             });
 
-            processManifestTask.maxSdkVersion =
+            task.maxSdkVersion =
                     TaskInputHelper.memoize(config.getMergedFlavor()::getMaxSdkVersion);
 
-            processManifestTask.setInstantRunManifestOutputDirectory(
-                    instantRunManifestOutputDirectory);
+            task.setInstantRunManifestOutputDirectory(instantRunManifestOutputDirectory);
 
-            processManifestTask.setReportFile(reportFile);
-            processManifestTask.optionalFeatures =
+            task.setReportFile(reportFile);
+            task.optionalFeatures =
                     TaskInputHelper.memoize(
                             () -> getOptionalFeatures(variantScope, isAdvancedProfilingOn));
 
-            processManifestTask.apkList =
-                    artifacts.getFinalArtifactFiles(InternalArtifactType.APK_LIST);
+            task.apkList = artifacts.getFinalArtifactFiles(InternalArtifactType.APK_LIST);
 
             // set optional inputs per module type
             if (variantType.isBaseModule()) {
-                processManifestTask.packageManifest =
+                task.packageManifest =
                         variantScope.getArtifactFileCollection(
                                 METADATA_VALUES, MODULE, METADATA_BASE_MODULE_DECLARATION);
 
                 // This includes the other features.
-                processManifestTask.featureManifests =
+                task.featureManifests =
                         variantScope.getArtifactCollection(
                                 METADATA_VALUES, MODULE, METADATA_FEATURE_MANIFEST);
             } else if (variantType.isFeatureSplit()) {
-                processManifestTask.featureNameSupplier =
+                task.featureNameSupplier =
                         FeatureSetMetadata.getInstance()
-                                .getFeatureNameSupplierForTask(variantScope, processManifestTask);
+                                .getFeatureNameSupplierForTask(variantScope, task);
 
-                processManifestTask.packageManifest =
+                task.packageManifest =
                         variantScope.getArtifactFileCollection(
                                 COMPILE_CLASSPATH, MODULE, FEATURE_APPLICATION_ID_DECLARATION);
             }
+
+            task.dependsOn(variantScope.getTaskContainer().getCheckManifestTask());
+
         }
 
         /**

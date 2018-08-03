@@ -109,7 +109,7 @@ public class LibraryTaskManager extends TaskManager {
 
         createCheckManifestTask(variantScope);
 
-        taskFactory.eagerCreate(
+        taskFactory.lazyCreate(
                 new BuildArtifactReportTask.BuildArtifactReportCreationAction(variantScope));
 
         createGenerateResValuesTask(variantScope);

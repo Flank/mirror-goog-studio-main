@@ -368,14 +368,14 @@ public abstract class TaskManager {
      * referenced by custom build logic.
      */
     public void createTasksBeforeEvaluate() {
-        taskFactory.eagerCreate(
+        taskFactory.lazyCreate(
                 UNINSTALL_ALL,
                 uninstallAllTask -> {
                     uninstallAllTask.setDescription("Uninstall all applications.");
                     uninstallAllTask.setGroup(INSTALL_GROUP);
                 });
 
-        taskFactory.eagerCreate(
+        taskFactory.lazyCreate(
                 DEVICE_CHECK,
                 deviceCheckTask -> {
                     deviceCheckTask.setDescription(
@@ -383,7 +383,7 @@ public abstract class TaskManager {
                     deviceCheckTask.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
                 });
 
-        taskFactory.eagerCreate(
+        taskFactory.lazyCreate(
                 CONNECTED_CHECK,
                 connectedCheckTask -> {
                     connectedCheckTask.setDescription(
@@ -391,24 +391,24 @@ public abstract class TaskManager {
                     connectedCheckTask.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
                 });
 
-        taskFactory.eagerCreate(MAIN_PREBUILD, task -> {});
-
-        ExtractProguardFiles extractProguardFiles =
-                taskFactory.eagerCreate(
-                        EXTRACT_PROGUARD_FILES, ExtractProguardFiles.class, task -> {});
         // Make sure MAIN_PREBUILD runs first:
-        extractProguardFiles.dependsOn(MAIN_PREBUILD);
+        taskFactory.lazyCreate(MAIN_PREBUILD);
 
-        taskFactory.eagerCreate(new SourceSetsTask.CreationAction(extension));
+        taskFactory.lazyCreate(
+                EXTRACT_PROGUARD_FILES,
+                ExtractProguardFiles.class,
+                task -> task.dependsOn(MAIN_PREBUILD));
 
-        taskFactory.eagerCreate(
+        taskFactory.lazyCreate(new SourceSetsTask.CreationAction(extension));
+
+        taskFactory.lazyCreate(
                 ASSEMBLE_ANDROID_TEST,
                 assembleAndroidTestTask -> {
                     assembleAndroidTestTask.setGroup(BasePlugin.BUILD_GROUP);
                     assembleAndroidTestTask.setDescription("Assembles all the Test applications.");
                 });
 
-        taskFactory.eagerCreate(new LintCompile.CreationAction(globalScope));
+        taskFactory.lazyCreate(new LintCompile.CreationAction(globalScope));
 
         // Lint task is configured in afterEvaluate, but created upfront as it is used as an
         // anchor task.
@@ -418,49 +418,14 @@ public abstract class TaskManager {
         globalScope.setAndroidJarConfig(createAndroidJarConfig(project));
 
         if (buildCache != null) {
-            taskFactory.eagerCreate(new CleanBuildCache.CreationAction(globalScope));
+            taskFactory.lazyCreate(new CleanBuildCache.CreationAction(globalScope));
         }
 
         // for testing only.
-        taskFactory.eagerCreate(
-                new EagerTaskCreationAction<ConfigAttrTask>() {
-                    @NonNull
-                    @Override
-                    public String getName() {
-                        return "resolveConfigAttr";
-                    }
-
-                    @NonNull
-                    @Override
-                    public Class<ConfigAttrTask> getType() {
-                        return ConfigAttrTask.class;
-                    }
-
-                    @Override
-                    public void execute(@NonNull ConfigAttrTask task) {
-                        task.resolvable = true;
-                    }
-                });
-
-        taskFactory.eagerCreate(
-                new EagerTaskCreationAction<ConfigAttrTask>() {
-                    @NonNull
-                    @Override
-                    public String getName() {
-                        return "consumeConfigAttr";
-                    }
-
-                    @NonNull
-                    @Override
-                    public Class<ConfigAttrTask> getType() {
-                        return ConfigAttrTask.class;
-                    }
-
-                    @Override
-                    public void execute(@NonNull ConfigAttrTask task) {
-                        task.consumable = true;
-                    }
-                });
+        taskFactory.lazyCreate(
+                "resolveConfigAttr", ConfigAttrTask.class, task -> task.resolvable = true);
+        taskFactory.lazyCreate(
+                "consumeConfigAttr", ConfigAttrTask.class, task -> task.consumable = true);
     }
 
     private void configureCustomLintChecksConfig() {
@@ -489,9 +454,9 @@ public abstract class TaskManager {
     }
 
     public void createGlobalLintTask() {
-        taskFactory.lazyCreate(LINT, LintGlobalTask.class, null, null, null);
+        taskFactory.lazyCreate(LINT, LintGlobalTask.class, task -> {});
         taskFactory.lazyConfigure(JavaBasePlugin.CHECK_TASK_NAME, it -> it.dependsOn(LINT));
-        taskFactory.lazyCreate(LINT_FIX, LintFixTask.class, null, null, null);
+        taskFactory.lazyCreate(LINT_FIX, LintFixTask.class, task -> {});
     }
 
     // this is run after all the variants are created.
@@ -752,14 +717,14 @@ public abstract class TaskManager {
     }
 
     public void createBuildArtifactReportTask(@NonNull VariantScope scope) {
-        taskFactory.eagerCreate(
+        taskFactory.lazyCreate(
                 new BuildArtifactReportTask.BuildArtifactReportCreationAction(scope));
     }
 
     public void createSourceSetArtifactReportTask(@NonNull GlobalScope scope) {
         for (AndroidSourceSet sourceSet : scope.getExtension().getSourceSets()) {
             if (sourceSet instanceof DefaultAndroidSourceSet) {
-                taskFactory.eagerCreate(
+                taskFactory.lazyCreate(
                         new BuildArtifactReportTask.SourceSetReportCreationAction(
                                 scope, (DefaultAndroidSourceSet) sourceSet));
             }
@@ -771,15 +736,13 @@ public abstract class TaskManager {
                 (AndroidArtifactVariantData) variantScope.getVariantData();
         Set<String> screenSizes = androidArtifactVariantData.getCompatibleScreens();
 
-        taskFactory.eagerCreate(
+        taskFactory.lazyCreate(
                 new CompatibleScreensManifest.CreationAction(variantScope, screenSizes));
 
         TaskProvider<? extends ManifestProcessorTask> processManifestTask =
                 createMergeManifestTask(variantScope);
 
         final MutableTaskContainer taskContainer = variantScope.getTaskContainer();
-
-        TaskFactoryUtils.dependsOn(processManifestTask, taskContainer.getCheckManifestTask());
         if (taskContainer.getMicroApkTask() != null) {
             TaskFactoryUtils.dependsOn(processManifestTask, taskContainer.getMicroApkTask());
         }
@@ -806,15 +769,7 @@ public abstract class TaskManager {
     public TaskProvider<? extends ManifestProcessorTask> createMergeLibManifestsTask(
             @NonNull VariantScope scope) {
 
-        TaskProvider<ProcessLibraryManifest> processManifest =
-                taskFactory.lazyCreate(new ProcessLibraryManifest.CreationAction(scope));
-
-        TaskFactoryUtils.dependsOn(
-                processManifest, scope.getTaskContainer().getCheckManifestTask());
-
-        scope.getTaskContainer().setProcessManifestTask(processManifest);
-
-        return processManifest;
+        return taskFactory.lazyCreate(new ProcessLibraryManifest.CreationAction(scope));
     }
 
     protected void createProcessTestManifestTask(
@@ -828,13 +783,6 @@ public abstract class TaskManager {
                                 testedScope
                                         .getArtifacts()
                                         .getFinalArtifactFiles(MERGED_MANIFESTS)));
-
-        if (scope.getTaskContainer().getCheckManifestTask() != null) {
-            TaskFactoryUtils.dependsOn(
-                    processTestManifestTask, scope.getTaskContainer().getCheckManifestTask());
-        }
-
-        scope.getTaskContainer().setProcessManifestTask(processTestManifestTask);
     }
 
     public void createRenderscriptTask(@NonNull VariantScope scope) {
@@ -962,7 +910,8 @@ public abstract class TaskManager {
         mergeResourcesTask.dependsOn(scope.getTaskContainer().getResourceGenTask());
 
         if (extension.getTestOptions().getUnitTests().isIncludeAndroidResources()) {
-            scope.getTaskContainer().getCompileTask().dependsOn(mergeResourcesTask);
+            TaskFactoryUtils.dependsOn(
+                    scope.getTaskContainer().getCompileTask(), mergeResourcesTask);
         }
 
         return mergeResourcesTask;
@@ -1578,7 +1527,7 @@ public abstract class TaskManager {
     public static void setJavaCompilerTask(
             @NonNull Task javaCompilerTask, @NonNull VariantScope scope) {
 
-        scope.getTaskContainer().getCompileTask().dependsOn(javaCompilerTask);
+        TaskFactoryUtils.dependsOn(scope.getTaskContainer().getCompileTask(), javaCompilerTask);
     }
 
     /**
@@ -1669,7 +1618,7 @@ public abstract class TaskManager {
         buildTask.dependsOn(
                 generateTask, scope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, JNI));
         taskContainer.setExternalNativeBuildTask(buildTask);
-        taskContainer.getCompileTask().dependsOn(buildTask);
+        TaskFactoryUtils.dependsOn(taskContainer.getCompileTask(), buildTask);
 
         // Set up clean tasks
         Task cleanTask = checkNotNull(taskFactory.findByName("clean"));
@@ -1697,7 +1646,7 @@ public abstract class TaskManager {
                         .getRenderscriptNdkModeEnabled())) {
             ndkCompileTask.dependsOn(scope.getTaskContainer().getRenderscriptCompileTask());
         }
-        scope.getTaskContainer().getCompileTask().dependsOn(ndkCompileTask);
+        TaskFactoryUtils.dependsOn(scope.getTaskContainer().getCompileTask(), ndkCompileTask);
     }
 
     /** Create transform for stripping debug symbols from native libraries before deploying. */
@@ -1803,13 +1752,15 @@ public abstract class TaskManager {
 
             GenerateTestConfig generateTestConfig =
                     taskFactory.eagerCreate(new GenerateTestConfig.CreationAction(variantScope));
-            variantScope.getTaskContainer().getCompileTask().dependsOn(generateTestConfig);
+            TaskFactoryUtils.dependsOn(
+                    variantScope.getTaskContainer().getCompileTask(), generateTestConfig);
         }
 
         // :app:compileDebugUnitTestSources should be enough for running tests from AS, so add
         // dependencies on tasks that prepare necessary data files.
-        Task compileTask = variantScope.getTaskContainer().getCompileTask();
-        compileTask.dependsOn(
+        TaskProvider<? extends Task> compileTask = variantScope.getTaskContainer().getCompileTask();
+        TaskFactoryUtils.dependsOn(
+                compileTask,
                 variantScope.getTaskContainer().getProcessJavaResourcesTask(),
                 testedVariantScope.getTaskContainer().getProcessJavaResourcesTask());
 
@@ -1979,17 +1930,17 @@ public abstract class TaskManager {
         // task for all new connected tasks.  Otherwise, create a top level connectedAndroidTest
         // Task.
 
-        Task connectedAndroidTestTask;
+        TaskProvider<? extends Task> connectedAndroidTestTask;
         if (hasFlavors) {
             connectedAndroidTestTask =
-                    taskFactory.eagerCreate(
+                    taskFactory.lazyCreate(
                             new AndroidReportTask.CreationAction(
                                     globalScope,
                                     AndroidReportTask.CreationAction.TaskKind.CONNECTED));
             reportTasks.add(connectedAndroidTestTask.getName());
         } else {
             connectedAndroidTestTask =
-                    taskFactory.eagerCreate(
+                    taskFactory.lazyCreate(
                             CONNECTED_ANDROID_TEST,
                             connectedTask -> {
                                 connectedTask.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
@@ -2002,19 +1953,19 @@ public abstract class TaskManager {
         taskFactory.lazyConfigure(
                 CONNECTED_CHECK, check -> check.dependsOn(connectedAndroidTestTask.getName()));
 
-        Task deviceAndroidTestTask;
+        TaskProvider<? extends Task> deviceAndroidTestTask;
         // if more than one provider tasks, either because of several flavors, or because of
         // more than one providers, then create an aggregate report tasks for all of them.
         if (providers.size() > 1 || hasFlavors) {
             deviceAndroidTestTask =
-                    taskFactory.eagerCreate(
+                    taskFactory.lazyCreate(
                             new AndroidReportTask.CreationAction(
                                     globalScope,
                                     AndroidReportTask.CreationAction.TaskKind.DEVICE_PROVIDER));
             reportTasks.add(deviceAndroidTestTask.getName());
         } else {
             deviceAndroidTestTask =
-                    taskFactory.eagerCreate(
+                    taskFactory.lazyCreate(
                             DEVICE_ANDROID_TEST,
                             providerTask -> {
                                 providerTask.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
@@ -2029,7 +1980,7 @@ public abstract class TaskManager {
 
         // Create top level unit test tasks.
 
-        taskFactory.eagerCreate(
+        taskFactory.lazyCreate(
                 JavaPlugin.TEST_TASK_NAME,
                 unitTestTask -> {
                     unitTestTask.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
@@ -2119,23 +2070,18 @@ public abstract class TaskManager {
             Configuration jacocoAntConfiguration =
                     JacocoConfigurations.getJacocoAntTaskConfiguration(
                             project, JacocoTask.getJacocoVersion(testVariantScope));
-            JacocoReportTask reportTask =
-                    taskFactory.eagerCreate(
+            TaskProvider<JacocoReportTask> reportTask =
+                    taskFactory.lazyCreate(
                             new JacocoReportTask.CreationAction(
                                     testVariantScope, jacocoAntConfiguration));
 
-            reportTask.dependsOn(connectedTask.getName());
-
-            testVariantData.getScope().getTaskContainer().setCoverageReportTask(reportTask);
-            baseVariantData
-                    .getScope()
-                    .getTaskContainer()
-                    .getCoverageReportTask()
-                    .dependsOn(reportTask);
+            TaskFactoryUtils.dependsOn(
+                    baseVariantData.getScope().getTaskContainer().getCoverageReportTask(),
+                    reportTask);
 
             taskFactory.lazyConfigure(
                     CONNECTED_ANDROID_TEST,
-                    connectedAndroidTest -> connectedAndroidTest.dependsOn(reportTask.getName()));
+                    connectedAndroidTest -> connectedAndroidTest.dependsOn(reportTask));
         }
 
         List<DeviceProvider> providers = extension.getDeviceProviders();
@@ -3058,12 +3004,10 @@ public abstract class TaskManager {
                 StringHelper.capitalize(dimensionData.getSourceSet().getName());
         return taskFactory.lazyCreate(
                 "assemble" + sourceSetName,
-                null /*preConfigAction*/,
                 assembleTask -> {
                     assembleTask.setDescription("Assembles all " + sourceSetName + " builds.");
                     assembleTask.setGroup(BasePlugin.BUILD_GROUP);
-                },
-                null /*providerCallback*/);
+                });
     }
 
     @NonNull
@@ -3072,12 +3016,10 @@ public abstract class TaskManager {
                 StringHelper.capitalize(dimensionData.getSourceSet().getName());
         return taskFactory.lazyCreate(
                 "bundle" + sourceSetName,
-                null /*preConfigAction*/,
                 assembleTask -> {
                     assembleTask.setDescription("Creates all " + sourceSetName + " bundles.");
                     assembleTask.setGroup(BasePlugin.BUILD_GROUP);
-                },
-                null /*providerCallback*/);
+                });
     }
 
     /** Returns created shrinker type, or null if none was created. */
@@ -3550,7 +3492,7 @@ public abstract class TaskManager {
     }
 
     public void createReportTasks(final List<VariantScope> variantScopes) {
-        taskFactory.eagerCreate(
+        taskFactory.lazyCreate(
                 "androidDependencies",
                 DependencyReportTask.class,
                 task -> {
@@ -3559,7 +3501,7 @@ public abstract class TaskManager {
                     task.setGroup(ANDROID_GROUP);
                 });
 
-        taskFactory.eagerCreate(
+        taskFactory.lazyCreate(
                 "signingReport",
                 SigningReportTask.class,
                 task -> {
@@ -3578,9 +3520,7 @@ public abstract class TaskManager {
                 .setSourceGenTask(
                         taskFactory.lazyCreate(
                                 scope.getTaskName("generate", "Sources"),
-                                null /*preConfigAction*/,
-                                task -> task.dependsOn(PrepareLintJar.NAME),
-                                null /*providerCallback*/));
+                                task -> task.dependsOn(PrepareLintJar.NAME)));
         // and resGenTask
         scope.getTaskContainer()
                 .setResourceGenTask(
@@ -3593,9 +3533,8 @@ public abstract class TaskManager {
                 && variantData.getVariantConfiguration().getBuildType().isTestCoverageEnabled()) {
             scope.getTaskContainer()
                     .setCoverageReportTask(
-                            taskFactory.eagerCreate(
+                            taskFactory.lazyCreate(
                                     scope.getTaskName("create", "CoverageReport"),
-                                    Task.class,
                                     task -> {
                                         task.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
                                         task.setDescription(
@@ -3664,9 +3603,8 @@ public abstract class TaskManager {
     private void createCompileAnchorTask(@NonNull final VariantScope scope) {
         scope.getTaskContainer()
                 .setCompileTask(
-                        taskFactory.eagerCreate(
+                        taskFactory.lazyCreate(
                                 scope.getTaskName("compile", "Sources"),
-                                Task.class,
                                 task -> task.setGroup(BUILD_GROUP)));
 
         // FIXME is that really needed?
