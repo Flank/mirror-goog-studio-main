@@ -143,7 +143,6 @@ import com.android.build.gradle.internal.transforms.DexSplitterTransform;
 import com.android.build.gradle.internal.transforms.ExternalLibsMergerTransform;
 import com.android.build.gradle.internal.transforms.ExtractJarsTransform;
 import com.android.build.gradle.internal.transforms.FixStackFramesTransform;
-import com.android.build.gradle.internal.transforms.MainDexListWriter;
 import com.android.build.gradle.internal.transforms.MergeClassesTransform;
 import com.android.build.gradle.internal.transforms.MergeJavaResourcesTransform;
 import com.android.build.gradle.internal.transforms.ProGuardTransform;
@@ -927,7 +926,7 @@ public abstract class TaskManager {
     }
 
     @NonNull
-    public Optional<TransformTask> createMergeJniLibFoldersTasks(
+    public Optional<TaskProvider<TransformTask>> createMergeJniLibFoldersTasks(
             @NonNull final VariantScope variantScope) {
         // merge the source folders together using the proper priority.
         MergeSourceSetFolders mergeJniLibFoldersTask =
@@ -1362,25 +1361,27 @@ public abstract class TaskManager {
                         DefaultContentType.RESOURCES,
                         "mergeJavaRes",
                         variantScope);
-        Optional<TransformTask> transformTask =
-                transformManager.addTransform(taskFactory, variantScope, mergeTransform);
-
-        File mergeJavaResOutput =
-                FileUtils.join(
-                        globalScope.getIntermediatesDir(),
-                        "transforms",
-                        "mergeJavaRes",
-                        variantScope.getVariantConfiguration().getDirName(),
-                        "0.jar");
-
-        if (transformTask.isPresent()) {
-            variantScope
-                    .getArtifacts()
-                    .appendArtifact(
-                            InternalArtifactType.FEATURE_AND_RUNTIME_DEPS_JAVA_RES,
-                            ImmutableList.of(mergeJavaResOutput),
-                            transformTask.get());
-        }
+        transformManager.addTransform(
+                taskFactory,
+                variantScope,
+                mergeTransform,
+                taskName -> {
+                    File mergeJavaResOutput =
+                            FileUtils.join(
+                                    globalScope.getIntermediatesDir(),
+                                    "transforms",
+                                    "mergeJavaRes",
+                                    variantScope.getVariantConfiguration().getDirName(),
+                                    "0.jar");
+                    variantScope
+                            .getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.FEATURE_AND_RUNTIME_DEPS_JAVA_RES,
+                                    ImmutableList.of(mergeJavaResOutput),
+                                    taskName);
+                },
+                null,
+                null);
     }
 
     public AidlCompile createAidlTask(@NonNull VariantScope scope) {
@@ -1893,7 +1894,8 @@ public abstract class TaskManager {
                 taskFactory.lazyCreate(
                         new LintPerVariantTask.VitalCreationAction(variantScope),
                         null,
-                        task -> task.dependsOn(variantScope.getTaskContainer().getJavacTask()));
+                        task -> task.dependsOn(variantScope.getTaskContainer().getJavacTask()),
+                        null);
 
         TaskFactoryUtils.dependsOn(
                 variantScope.getTaskContainer().getAssembleTask(), lintReleaseCheck);
@@ -2160,20 +2162,24 @@ public abstract class TaskManager {
             Transform transform = customTransforms.get(i);
 
             List<Object> deps = customTransformsDependencies.get(i);
-            transformManager
-                    .addTransform(taskFactory, variantScope, transform)
-                    .ifPresent(
-                            t -> {
-                                if (!deps.isEmpty()) {
-                                    t.dependsOn(deps);
-                                }
-
-                                // if the task is a no-op then we make assemble task depend on it.
-                                if (transform.getScopes().isEmpty()) {
-                                    TaskFactoryUtils.dependsOn(
-                                            variantScope.getTaskContainer().getAssembleTask(), t);
-                                }
-                            });
+            transformManager.addTransform(
+                    taskFactory,
+                    variantScope,
+                    transform,
+                    null,
+                    task -> {
+                        if (!deps.isEmpty()) {
+                            task.dependsOn(deps);
+                        }
+                    },
+                    taskProvider -> {
+                        // if the task is a no-op then we make assemble task depend on it.
+                        if (transform.getScopes().isEmpty()) {
+                            TaskFactoryUtils.dependsOn(
+                                    variantScope.getTaskContainer().getAssembleTask(),
+                                    taskProvider);
+                        }
+                    });
         }
 
         // Add transform to create merged runtime classes if this is a feature or dynamic-feature.
@@ -2238,23 +2244,24 @@ public abstract class TaskManager {
             // ---------
             // create the transform that's going to take the code and the proguard keep list
             // from above and compute the main class list.
-            Transform multiDexTransform = new D8MainDexListTransform(variantScope);
-            transformManager
-                    .addTransform(taskFactory, variantScope, multiDexTransform)
-                    .ifPresent(
-                            task -> {
-                                variantScope.addColdSwapBuildTask(task);
-                                File mainDexListFile =
-                                        variantScope
-                                                .getArtifacts()
-                                                .appendArtifact(
-                                                        InternalArtifactType
-                                                                .LEGACY_MULTIDEX_MAIN_DEX_LIST,
-                                                        task,
-                                                        "mainDexList.txt");
-                                ((MainDexListWriter) multiDexTransform)
-                                        .setMainDexListOutputFile(mainDexListFile);
-                            });
+            D8MainDexListTransform multiDexTransform = new D8MainDexListTransform(variantScope);
+
+            transformManager.addTransform(
+                    taskFactory,
+                    variantScope,
+                    multiDexTransform,
+                    taskName -> {
+                        File mainDexListFile =
+                                variantScope
+                                        .getArtifacts()
+                                        .appendArtifact(
+                                                InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST,
+                                                taskName,
+                                                "mainDexList.txt");
+                        multiDexTransform.setMainDexListOutputFile(mainDexListFile);
+                    },
+                    null,
+                    variantScope::addColdSwapBuildTask);
         }
 
         if (variantScope.getNeedsMainDexListForBundle()) {
@@ -2262,26 +2269,30 @@ public abstract class TaskManager {
                     new D8MainDexListTransform(variantScope, true);
             variantScope
                     .getTransformManager()
-                    .addTransform(taskFactory, variantScope, bundleMultiDexTransform)
-                    .ifPresent(
-                            task -> {
+                    .addTransform(
+                            taskFactory,
+                            variantScope,
+                            bundleMultiDexTransform,
+                            taskName -> {
                                 File mainDexListFile =
                                         variantScope
                                                 .getArtifacts()
                                                 .appendArtifact(
                                                         InternalArtifactType
                                                                 .MAIN_DEX_LIST_FOR_BUNDLE,
-                                                        task,
+                                                        taskName,
                                                         "mainDexList.txt");
                                 bundleMultiDexTransform.setMainDexListOutputFile(mainDexListFile);
-                            });
+                            },
+                            null,
+                            null);
         }
 
         createDexTasks(variantScope, dexingType);
 
         if (preColdSwapTask != null) {
-            for (Task task : variantScope.getColdSwapBuildTasks()) {
-                task.dependsOn(preColdSwapTask);
+            for (TaskProvider<? extends Task> task : variantScope.getColdSwapBuildTasks()) {
+                TaskFactoryUtils.dependsOn(task, preColdSwapTask);
             }
         }
         maybeCreateResourcesShrinkerTransform(variantScope);
@@ -2452,11 +2463,15 @@ public abstract class TaskManager {
                         isDebuggable,
                         variantScope.consumesFeatureJars(),
                         variantScope.getInstantRunBuildContext().isInInstantRunMode());
-        Optional<TransformTask> dexTask =
-                variantScope
-                        .getTransformManager()
-                        .addTransform(taskFactory, variantScope, dexTransform);
-        dexTask.ifPresent(variantScope::addColdSwapBuildTask);
+        variantScope
+                .getTransformManager()
+                .addTransform(
+                        taskFactory,
+                        variantScope,
+                        dexTransform,
+                        null,
+                        null,
+                        variantScope::addColdSwapBuildTask);
     }
 
     /**
@@ -2563,7 +2578,7 @@ public abstract class TaskManager {
                 new ExtractJarsTransform(
                         ImmutableSet.of(DefaultContentType.CLASSES),
                         ImmutableSet.of(Scope.SUB_PROJECTS));
-        Optional<TransformTask> extractJarsTask =
+        Optional<TaskProvider<TransformTask>> extractJarsTask =
                 transformManager.addTransform(taskFactory, variantScope, extractJarsTransform);
 
         InstantRunTaskManager instantRunTaskManager =
@@ -2706,21 +2721,21 @@ public abstract class TaskManager {
         File outFolder =
                 variantScope.getIntermediateDir(DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS);
 
-        Optional<TransformTask> mergeBaseClassesTask;
-        mergeBaseClassesTask =
-                variantScope
-                        .getTransformManager()
-                        .addTransform(
-                                taskFactory,
-                                variantScope,
-                                new DataBindingMergeGenClassLogTransform(getLogger(), outFolder));
-
-        mergeBaseClassesTask.ifPresent(
-                task ->
-                        variantScope.getArtifacts().appendArtifact(
-                                DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS,
-                                ImmutableList.of(outFolder),
-                                task));
+        variantScope
+                .getTransformManager()
+                .addTransform(
+                        taskFactory,
+                        variantScope,
+                        new DataBindingMergeGenClassLogTransform(getLogger(), outFolder),
+                        taskName ->
+                                variantScope
+                                        .getArtifacts()
+                                        .appendArtifact(
+                                                DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS,
+                                                ImmutableList.of(outFolder),
+                                                taskName),
+                        null,
+                        null);
     }
 
     protected void createDataBindingTasksIfNecessary(
@@ -3049,7 +3064,7 @@ public abstract class TaskManager {
             @NonNull final VariantScope variantScope,
             @NonNull CodeShrinker codeShrinker,
             @Nullable FileCollection mappingFileCollection) {
-        Optional<TransformTask> transformTask;
+        Optional<TaskProvider<TransformTask>> transformTask;
         if (variantScope.getInstantRunBuildContext().isInInstantRunMode()) {
             logger.warn(
                     "{} is disabled for variant {} because it is not compatible with Instant Run. "
@@ -3072,22 +3087,24 @@ public abstract class TaskManager {
                     transformTask = createProguardTransform(variantScope, mappingFileCollection);
                     createdShrinker = CodeShrinker.PROGUARD;
                 } else {
-                    transformTask = createR8Transform(variantScope, mappingFileCollection);
-                    transformTask.ifPresent(
-                            task -> {
-                                if (variantScope.getNeedsMainDexListForBundle()) {
-                                    File mainDexListFile =
-                                            variantScope
-                                                    .getArtifacts()
-                                                    .appendArtifact(
-                                                            InternalArtifactType
-                                                                    .MAIN_DEX_LIST_FOR_BUNDLE,
-                                                            task,
-                                                            "mainDexList.txt");
-                                    ((R8Transform) task.getTransform())
-                                            .setMainDexListOutput(mainDexListFile);
-                                }
-                            });
+                    transformTask =
+                            createR8Transform(
+                                    variantScope,
+                                    mappingFileCollection,
+                                    (transform, taskName) -> {
+                                        if (variantScope.getNeedsMainDexListForBundle()) {
+                                            File mainDexListFile =
+                                                    variantScope
+                                                            .getArtifacts()
+                                                            .appendArtifact(
+                                                                    InternalArtifactType
+                                                                            .MAIN_DEX_LIST_FOR_BUNDLE,
+                                                                    taskName,
+                                                                    "mainDexList.txt");
+                                            ((R8Transform) transform)
+                                                    .setMainDexListOutput(mainDexListFile);
+                                        }
+                                    });
                 }
                 break;
             default:
@@ -3097,14 +3114,14 @@ public abstract class TaskManager {
             CheckProguardFiles checkFilesTask =
                     taskFactory.eagerCreate(new CheckProguardFiles.CreationAction(variantScope));
 
-            transformTask.get().dependsOn(checkFilesTask);
+            TaskFactoryUtils.dependsOn(transformTask.get(), checkFilesTask);
         }
 
         return createdShrinker;
     }
 
     @NonNull
-    private Optional<TransformTask> createProguardTransform(
+    private Optional<TaskProvider<TransformTask>> createProguardTransform(
             @NonNull VariantScope variantScope, @Nullable FileCollection mappingFileCollection) {
         final BaseVariantData testedVariantData = variantScope.getTestedVariantData();
 
@@ -3129,16 +3146,22 @@ public abstract class TaskManager {
                 inputProguardMapping,
                 transform.getMappingFile(),
                 testedVariantData,
-                transform);
+                transform,
+                null);
+    }
+
+    private interface ProGuardTransformCallback {
+        void execute(@NonNull ProguardConfigurable transform, @NonNull String taskName);
     }
 
     @NonNull
-    private Optional<TransformTask> applyProguardRules(
+    private Optional<TaskProvider<TransformTask>> applyProguardRules(
             @NonNull VariantScope variantScope,
             @Nullable FileCollection inputProguardMapping,
             @Nullable File outputProguardMapping,
             BaseVariantData testedVariantData,
-            ProguardConfigurable transform) {
+            @NonNull ProguardConfigurable transform,
+            @Nullable ProGuardTransformCallback callback) {
 
         if (testedVariantData != null) {
             final VariantScope testedScope = testedVariantData.getScope();
@@ -3171,31 +3194,36 @@ public abstract class TaskManager {
             applyProguardConfigForNonTest(transform, variantScope);
         }
 
-        Optional<TransformTask> task =
-                variantScope
-                        .getTransformManager()
-                        .addTransform(taskFactory, variantScope, transform);
+        return variantScope
+                .getTransformManager()
+                .addTransform(
+                        taskFactory,
+                        variantScope,
+                        transform,
+                        taskName -> {
+                            variantScope
+                                    .getArtifacts()
+                                    .appendArtifact(
+                                            InternalArtifactType.APK_MAPPING,
+                                            ImmutableList.of(checkNotNull(outputProguardMapping)),
+                                            taskName);
 
-        // FIXME remove once the transform support secondary file as a FileCollection.
-        task.ifPresent(
-                t -> {
-                    variantScope
-                            .getArtifacts()
-                            .appendArtifact(
-                                    InternalArtifactType.APK_MAPPING,
-                                    ImmutableList.of(checkNotNull(outputProguardMapping)),
-                                    t);
+                            if (callback != null) {
+                                callback.execute(transform, taskName);
+                            }
+                        },
+                        t -> {
+                            if (inputProguardMapping != null) {
+                                t.dependsOn(inputProguardMapping);
+                            }
 
-                    if (inputProguardMapping != null) {
-                        t.dependsOn(inputProguardMapping);
-                    }
-
-                    if (testedVariantData != null) {
-                        // We need the mapping file for the app code to exist by the time we run.
-                        t.dependsOn(testedVariantData.getTaskContainer().getAssembleTask());
-                    }
-                });
-        return task;
+                            if (testedVariantData != null) {
+                                // We need the mapping file for the app code to exist by the time we run.
+                                // FIXME consume the BA!
+                                t.dependsOn(testedVariantData.getTaskContainer().getAssembleTask());
+                            }
+                        },
+                        null);
     }
 
     private static void applyProguardDefaultsForTest(ProguardConfigurable transform) {
@@ -3266,8 +3294,10 @@ public abstract class TaskManager {
     }
 
     @NonNull
-    private Optional<TransformTask> createR8Transform(
-            @NonNull VariantScope variantScope, @Nullable FileCollection mappingFileCollection) {
+    private Optional<TaskProvider<TransformTask>> createR8Transform(
+            @NonNull VariantScope variantScope,
+            @Nullable FileCollection mappingFileCollection,
+            @Nullable ProGuardTransformCallback callback) {
         final BaseVariantData testedVariantData = variantScope.getTestedVariantData();
 
         File multiDexKeepProguard =
@@ -3313,7 +3343,8 @@ public abstract class TaskManager {
                 inputProguardMapping,
                 variantScope.getOutputProguardMappingFile(),
                 testedVariantData,
-                transform);
+                transform,
+                callback);
     }
 
     private void maybeCreateDexSplitterTransform(@NonNull VariantScope variantScope) {
@@ -3338,18 +3369,24 @@ public abstract class TaskManager {
         DexSplitterTransform transform =
                 new DexSplitterTransform(dexSplitterOutput, featureJars, mappingFileSrc);
 
-        Optional<TransformTask> transformTask =
+        Optional<TaskProvider<TransformTask>> transformTask =
                 variantScope
                         .getTransformManager()
-                        .addTransform(taskFactory, variantScope, transform);
+                        .addTransform(
+                                taskFactory,
+                                variantScope,
+                                transform,
+                                taskName ->
+                                        variantScope
+                                                .getArtifacts()
+                                                .appendArtifact(
+                                                        InternalArtifactType.FEATURE_DEX,
+                                                        ImmutableList.of(dexSplitterOutput),
+                                                        taskName),
+                                null,
+                                null);
 
         if (transformTask.isPresent()) {
-            variantScope
-                    .getArtifacts()
-                    .appendArtifact(
-                            InternalArtifactType.FEATURE_DEX,
-                            ImmutableList.of(dexSplitterOutput),
-                            transformTask.get());
             publishFeatureDex(variantScope);
         } else {
             androidBuilder
@@ -3422,19 +3459,26 @@ public abstract class TaskManager {
         MergeClassesTransform transform =
                 new MergeClassesTransform(outputJar, globalScope.getProject().getPath());
 
-        Optional<TransformTask> transformTask =
+        Optional<TaskProvider<TransformTask>> transformTask =
                 variantScope
                         .getTransformManager()
-                        .addTransform(taskFactory, variantScope, transform);
+                        .addTransform(
+                                taskFactory,
+                                variantScope,
+                                transform,
+                                taskName -> {
+                                    variantScope
+                                            .getArtifacts()
+                                            .appendArtifact(
+                                                    InternalArtifactType
+                                                            .FEATURE_AND_RUNTIME_DEPS_CLASSES,
+                                                    ImmutableList.of(outputJar),
+                                                    taskName);
+                                },
+                                null,
+                                null);
 
-        if (transformTask.isPresent()) {
-            variantScope
-                    .getArtifacts()
-                    .appendArtifact(
-                            InternalArtifactType.FEATURE_AND_RUNTIME_DEPS_CLASSES,
-                            ImmutableList.of(outputJar),
-                            transformTask.get());
-        } else {
+        if (!transformTask.isPresent()) {
             androidBuilder
                     .getIssueReporter()
                     .reportError(
@@ -3469,16 +3513,22 @@ public abstract class TaskManager {
                         shrinkerOutput,
                         logger);
 
-        Optional<TransformTask> shrinkTask =
-                scope.getTransformManager().addTransform(taskFactory, scope, shrinkResTransform);
+        Optional<TaskProvider<TransformTask>> shrinkTask =
+                scope.getTransformManager()
+                        .addTransform(
+                                taskFactory,
+                                scope,
+                                shrinkResTransform,
+                                taskName ->
+                                        scope.getArtifacts()
+                                                .appendArtifact(
+                                                        InternalArtifactType.SHRUNK_PROCESSED_RES,
+                                                        ImmutableList.of(shrinkerOutput),
+                                                        taskName),
+                                null,
+                                null);
 
-        if (shrinkTask.isPresent()) {
-            scope.getArtifacts()
-                    .appendArtifact(
-                            InternalArtifactType.SHRUNK_PROCESSED_RES,
-                            ImmutableList.of(shrinkerOutput),
-                            shrinkTask.get());
-        } else {
+        if (!shrinkTask.isPresent()) {
             androidBuilder
                     .getIssueReporter()
                     .reportError(

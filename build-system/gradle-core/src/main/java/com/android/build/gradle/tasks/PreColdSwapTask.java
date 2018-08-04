@@ -56,7 +56,9 @@ public class PreColdSwapTask extends AndroidVariantTask {
         switch (instantRunContext.getBuildMode()) {
             case HOT_WARM:
                 // We can hot swap, don't produce the full apk.
-                instantRunVariantScope.getColdSwapBuildTasks().forEach(this::disableTask);
+                instantRunVariantScope
+                        .getColdSwapBuildTasks()
+                        .forEach(taskProvider -> taskProvider.configure(this::disableTask));
                 disableTask(instantRunVariantScope.getPackageApplicationTask());
                 break;
             case COLD:

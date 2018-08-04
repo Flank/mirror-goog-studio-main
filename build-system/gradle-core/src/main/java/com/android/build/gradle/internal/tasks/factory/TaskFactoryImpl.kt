@@ -44,14 +44,15 @@ class TaskFactoryImpl(private val taskContainer: TaskContainer):
     override fun lazyCreate(name: String): TaskProvider<Task> = taskContainer.register(name)
 
     override fun <T : Task> lazyCreate(creationAction: LazyTaskCreationAction<T>): TaskProvider<T> =
-        taskContainer.lazyCreate(creationAction, null, null)
+        taskContainer.lazyCreate(creationAction, null, null, null)
 
     override fun <T : Task> lazyCreate(
         creationAction: LazyTaskCreationAction<T>,
         secondaryPreConfigAction: PreConfigAction?,
-        secondaryAction: TaskConfigAction<in T>?
+        secondaryAction: TaskConfigAction<in T>?,
+        secondaryProviderCallback: TaskProviderCallback<T>?
     ): TaskProvider<T> =
-        taskContainer.lazyCreate(creationAction, secondaryPreConfigAction, secondaryAction)
+        taskContainer.lazyCreate(creationAction, secondaryPreConfigAction, secondaryAction, secondaryProviderCallback)
 
     override fun <T: Task> lazyCreate(
         taskName: String,

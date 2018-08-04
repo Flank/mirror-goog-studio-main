@@ -32,6 +32,7 @@ import java.util.Optional;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.Before;
 import org.junit.Rule;
@@ -75,7 +76,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .build();
 
         // add the transform
-        TransformTask task =
+        TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
                         .orElseThrow(mTransformTaskFailed);
@@ -166,7 +167,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .build();
 
         // add the transform
-        TransformTask task =
+        TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
                         .orElseThrow(mTransformTaskFailed);
@@ -211,7 +212,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .build();
 
         // add the transform
-        TransformTask task =
+        TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
                         .orElseThrow(mTransformTaskFailed);
@@ -277,7 +278,7 @@ public class TransformManagerTest extends TaskTestUtils {
                         .build();
 
         // add the transform
-        TransformTask task =
+        TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
                         .orElseThrow(mTransformTaskFailed);
@@ -386,7 +387,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .build();
 
         // add the transform
-        TransformTask task =
+        TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
                         .orElseThrow(mTransformTaskFailed);
@@ -453,7 +454,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .build();
 
         // add the transform
-        TransformTask task =
+        TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
                         .orElseThrow(mTransformTaskFailed);
@@ -499,7 +500,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .build();
 
         // add the transform
-        TransformTask task =
+        TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
                         .orElseThrow(mTransformTaskFailed);
@@ -541,7 +542,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .build();
 
         // add the transform
-        TransformTask task =
+        TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
                         .orElseThrow(mTransformTaskFailed);
@@ -591,7 +592,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .build();
 
         // add the transform
-        TransformTask task =
+        TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
                         .orElseThrow(mTransformTaskFailed);
@@ -647,7 +648,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .build();
 
         // add the transform
-        TransformTask task =
+        TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
                         .orElseThrow(mTransformTaskFailed);
@@ -698,7 +699,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .build();
 
         // add the transform
-        TransformTask task =
+        TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
                         .orElseThrow(mTransformTaskFailed);
@@ -754,7 +755,8 @@ public class TransformManagerTest extends TaskTestUtils {
                 .build();
 
         // add the transform
-        Optional<TransformTask> task = transformManager.addTransform(taskFactory, scope, t);
+        Optional<TaskProvider<TransformTask>> task =
+                transformManager.addTransform(taskFactory, scope, t);
 
         assertThat(task.isPresent()).isFalse();
 
@@ -777,7 +779,8 @@ public class TransformManagerTest extends TaskTestUtils {
                 .build();
 
         // add the transform
-        Optional<TransformTask> task = transformManager.addTransform(taskFactory, scope, t);
+        Optional<TaskProvider<TransformTask>> task =
+                transformManager.addTransform(taskFactory, scope, t);
 
         assertThat(task.isPresent()).isFalse();
 
@@ -799,7 +802,8 @@ public class TransformManagerTest extends TaskTestUtils {
                 .build();
 
         // add the transform
-        Optional<TransformTask> task = transformManager.addTransform(taskFactory, scope, t);
+        Optional<TaskProvider<TransformTask>> task =
+                transformManager.addTransform(taskFactory, scope, t);
 
         assertThat(task.isPresent()).isFalse();
 
@@ -819,7 +823,8 @@ public class TransformManagerTest extends TaskTestUtils {
                 .build();
 
         // add the transform
-        Optional<TransformTask> task = transformManager.addTransform(taskFactory, scope, t);
+        Optional<TaskProvider<TransformTask>> task =
+                transformManager.addTransform(taskFactory, scope, t);
 
         assertThat(task.isPresent()).isFalse();
 

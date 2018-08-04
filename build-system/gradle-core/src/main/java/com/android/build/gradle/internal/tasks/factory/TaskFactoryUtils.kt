@@ -30,9 +30,10 @@ import org.gradle.api.tasks.TaskProvider
 fun <T : Task> TaskContainer.lazyCreate(
     creationAction: LazyTaskCreationAction<T>,
     secondaryPreConfigAction: PreConfigAction?,
-    secondaryAction: TaskConfigAction<in T>?
+    secondaryAction: TaskConfigAction<in T>?,
+    secondaryProviderCallback: TaskProviderCallback<T>?
 ): TaskProvider<T> {
-    val actionWrapper = TaskAction(creationAction, secondaryPreConfigAction, secondaryAction)
+    val actionWrapper = TaskAction(creationAction, secondaryPreConfigAction, secondaryAction, secondaryProviderCallback)
     return this.register(creationAction.name, creationAction.type, actionWrapper)
         .also { provider ->
             actionWrapper.postRegisterHook(provider)
@@ -70,7 +71,8 @@ fun <T : Task> TaskContainer.lazyCreate(
 private class TaskAction<T: Task>(
     val creationAction: LazyTaskCreationAction<T>,
     val secondaryPreConfigAction: PreConfigAction? = null,
-    val secondaryAction: TaskConfigAction<in T>? = null
+    val secondaryAction: TaskConfigAction<in T>? = null,
+    val secondaryProviderCallback: TaskProviderCallback<T>? = null
 ) : Action<T> {
 
     var hasRunPreConfig = false
@@ -86,6 +88,7 @@ private class TaskAction<T: Task>(
         doPreConfig(taskProvider.name)
 
         creationAction.handleProvider(taskProvider)
+        secondaryProviderCallback?.handleProvider(taskProvider)
     }
 
     private fun doPreConfig(taskName: String) {
@@ -144,7 +147,6 @@ private class TaskAction2<T: Task>(
 fun <T: Task> TaskProvider<out T>?.dependsOn(task: TaskProvider<out T>?): TaskProvider<out T>? {
     this?.letIfPresent { nonNullThis ->
         task?.letIfPresent { nonNullTask ->
-            // FIXME remove task.get() when dependsOn supports TaskReference (gradle 4.8)?
             nonNullThis.configure { it.dependsOn(nonNullTask.get()) }
         }
     }
@@ -224,7 +226,6 @@ inline fun <T: Task> TaskProvider<out T>?.letIfPresent(block: (TaskProvider<out 
 
 fun <T: Task> TaskProvider<out T>.dependsOn(tasks: Collection<TaskProvider<out Task>>): TaskProvider<out T> {
     if (tasks.isEmpty().not()) {
-        // FIXME remove task.get() when dependsOn supports TaskReference (gradle 4.8)?
         configure { it.dependsOn(tasks.map { it.get() }) }
     }
 
@@ -233,7 +234,6 @@ fun <T: Task> TaskProvider<out T>.dependsOn(tasks: Collection<TaskProvider<out T
 
 fun <T: Task> TaskProvider<out T>.dependsOn(vararg tasks: TaskProvider<out Task>): TaskProvider<out T> {
     if (tasks.isEmpty().not()) {
-        // FIXME remove task.get() when dependsOn supports TaskReference (gradle 4.8)?
         configure { it.dependsOn(tasks.map { it.get() }) }
     }
 

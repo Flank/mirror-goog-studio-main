@@ -58,8 +58,6 @@ class TaskArtifactsHolder<T: Task>(val artifacts: BuildArtifactsHolder) {
      *
      * @param configAction the configuration object pointing the task with inputs and outputs
      * definitions.
-     * @param provider the task provider, to set dependencies. [TaskProvider.get] must not be
-     * called.
      *
      */
     fun allocateArtifacts(configAction: AnnotationProcessingTaskCreationAction<T>) {

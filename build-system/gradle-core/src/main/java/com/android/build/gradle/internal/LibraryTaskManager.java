@@ -32,7 +32,6 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -64,7 +63,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -226,21 +224,25 @@ public class LibraryTaskManager extends TaskManager {
             }
 
             List<Object> deps = customTransformsDependencies.get(i);
-            transformManager
-                    .addTransform(taskFactory, variantScope, transform)
-                    .ifPresent(
-                            t -> {
-                                if (!deps.isEmpty()) {
-                                    t.dependsOn(deps);
-                                }
-
-                                // if the task is a no-op then we make assemble task
-                                // depend on it.
-                                if (transform.getScopes().isEmpty()) {
-                                    TaskFactoryUtils.dependsOn(
-                                            variantScope.getTaskContainer().getAssembleTask(), t);
-                                }
-                            });
+            transformManager.addTransform(
+                    taskFactory,
+                    variantScope,
+                    transform,
+                    null,
+                    task -> {
+                        if (!deps.isEmpty()) {
+                            task.dependsOn(deps);
+                        }
+                    },
+                    taskProvider -> {
+                        // if the task is a no-op then we make assemble task
+                        // depend on it.
+                        if (transform.getScopes().isEmpty()) {
+                            TaskFactoryUtils.dependsOn(
+                                    variantScope.getTaskContainer().getAssembleTask(),
+                                    taskProvider);
+                        }
+                    });
         }
 
         // Now add transforms for intermediate publishing (projects to projects).
@@ -255,21 +257,26 @@ public class LibraryTaskManager extends TaskManager {
                         extension.getPackageBuildConfig());
         excludeDataBindingClassesIfNecessary(variantScope, intermediateTransform);
 
-        Optional<TransformTask> intermediateTransformTask =
-                transformManager.addTransform(taskFactory, variantScope, intermediateTransform);
-
         BuildArtifactsHolder artifacts = variantScope.getArtifacts();
-        intermediateTransformTask.ifPresent(
-                t -> {
+        transformManager.addTransform(
+                taskFactory,
+                variantScope,
+                intermediateTransform,
+                taskName -> {
                     // publish the intermediate classes.jar
                     artifacts.appendArtifact(
                             InternalArtifactType.LIBRARY_CLASSES,
                             ImmutableList.of(mainClassJar),
-                            t);
+                            taskName);
                     // publish the res jar
                     artifacts.appendArtifact(
-                            InternalArtifactType.LIBRARY_JAVA_RES, ImmutableList.of(mainResJar), t);
-                });
+                            InternalArtifactType.LIBRARY_JAVA_RES,
+                            ImmutableList.of(mainResJar),
+                            taskName);
+                },
+                null,
+                null);
+
 
         // Create a jar with both classes and java resources.  This artifact is not
         // used by the Android application plugin and the task usually don't need to
@@ -287,18 +294,21 @@ public class LibraryTaskManager extends TaskManager {
                         "intermediateJniLibs",
                         intermediateJniLibsFolder,
                         TransformManager.PROJECT_ONLY);
-        Optional<TransformTask> task =
-                transformManager.addTransform(taskFactory, variantScope, intermediateJniTransform);
-        task.ifPresent(
-                t -> {
+        transformManager.addTransform(
+                taskFactory,
+                variantScope,
+                intermediateJniTransform,
+                taskName -> {
                     // publish the jni folder as intermediate
                     variantScope
                             .getArtifacts()
                             .appendArtifact(
                                     InternalArtifactType.LIBRARY_JNI,
                                     ImmutableList.of(intermediateJniLibsFolder),
-                                    t);
-                });
+                                    taskName);
+                },
+                null,
+                null);
 
         // Now go back to fill the pipeline with transforms used when
         // publishing the AAR
@@ -334,23 +344,26 @@ public class LibraryTaskManager extends TaskManager {
 
         excludeDataBindingClassesIfNecessary(variantScope, transform);
 
-        Optional<TransformTask> libraryJarTransformTask =
-                transformManager.addTransform(taskFactory, variantScope, transform);
-        libraryJarTransformTask.ifPresent(
-                t -> {
+        transformManager.addTransform(
+                taskFactory,
+                variantScope,
+                transform,
+                taskName -> {
                     variantScope
                             .getArtifacts()
                             .appendArtifact(
                                     InternalArtifactType.AAR_MAIN_JAR,
                                     ImmutableList.of(classesJar),
-                                    t);
+                                    taskName);
                     variantScope
                             .getArtifacts()
                             .appendArtifact(
                                     InternalArtifactType.AAR_LIBS_DIRECTORY,
                                     ImmutableList.of(libsDirectory),
-                                    t);
-                });
+                                    taskName);
+                },
+                null,
+                null);
 
         // now add a transform that will take all the native libs and package
         // them into the libs folder of the bundle. This processes both the PROJECT
@@ -362,16 +375,20 @@ public class LibraryTaskManager extends TaskManager {
                         "syncJniLibs",
                         jniLibsFolder,
                         TransformManager.SCOPE_FULL_LIBRARY_WITH_LOCAL_JARS);
-        Optional<TransformTask> jniPackagingTask =
-                transformManager.addTransform(taskFactory, variantScope, jniTransform);
-        jniPackagingTask.ifPresent(
-                t ->
+        transformManager.addTransform(
+                taskFactory,
+                variantScope,
+                jniTransform,
+                taskName ->
                         variantScope
                                 .getArtifacts()
                                 .appendArtifact(
                                         InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI,
                                         ImmutableList.of(jniLibsFolder),
-                                        t));
+                                        taskName),
+                null,
+                null);
+
         createLintTasks(variantScope);
         createBundleTask(variantScope);
     }

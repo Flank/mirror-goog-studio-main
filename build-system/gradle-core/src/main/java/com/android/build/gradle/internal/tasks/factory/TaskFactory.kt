@@ -53,7 +53,8 @@ interface TaskFactory {
     fun <T : Task> lazyCreate(
         creationAction: LazyTaskCreationAction<T>,
         secondaryPreConfigAction: PreConfigAction? = null,
-        secondaryAction: TaskConfigAction<in T>? = null
+        secondaryAction: TaskConfigAction<in T>? = null,
+        secondaryProviderCallback: TaskProviderCallback<T>? = null
     ): TaskProvider<T>
 
     fun <T: Task> lazyCreate(

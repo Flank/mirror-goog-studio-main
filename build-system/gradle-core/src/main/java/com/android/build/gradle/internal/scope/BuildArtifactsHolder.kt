@@ -255,7 +255,7 @@ abstract class BuildArtifactsHolder(
      *
      * @param artifactType [ArtifactType] the new files will be classified under.
      * @param newFiles names of the new files.
-     * @param taskProvider [TaskProvider] that responsible for producing or updating the new files.
+     * @param taskName the name of the task responsible for producing or updating the new files.
      * @return BuildableFiles containing files that the specified task should create.
      */
     fun appendArtifact(

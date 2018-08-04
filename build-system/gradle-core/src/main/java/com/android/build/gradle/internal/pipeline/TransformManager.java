@@ -30,7 +30,10 @@ import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.internal.InternalScope;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
+import com.android.build.gradle.internal.tasks.factory.PreConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
 import com.android.build.gradle.internal.tasks.factory.TaskFactory;
+import com.android.build.gradle.internal.tasks.factory.TaskProviderCallback;
 import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
@@ -53,6 +56,7 @@ import org.gradle.api.Project;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
+import org.gradle.api.tasks.TaskProvider;
 
 /**
  * Manages the transforms for a variant.
@@ -166,11 +170,11 @@ public class TransformManager extends FilterableStreamCollection {
      *     create it
      */
     @NonNull
-    public <T extends Transform> Optional<TransformTask> addTransform(
+    public <T extends Transform> Optional<TaskProvider<TransformTask>> addTransform(
             @NonNull TaskFactory taskFactory,
             @NonNull TransformVariantScope scope,
             @NonNull T transform) {
-        return addTransform(taskFactory, scope, transform, null /*callback*/);
+        return addTransform(taskFactory, scope, transform, null, null, null);
     }
 
     /**
@@ -185,17 +189,18 @@ public class TransformManager extends FilterableStreamCollection {
      * @param taskFactory the task factory
      * @param scope the current scope
      * @param transform the transform to add
-     * @param callback a callback that is run when the task is actually configured
      * @param <T> the type of the transform
-     * @return {@code Optional<AndroidTask<Transform>>} containing the AndroidTask for the given
-     *     transform task if it was able to create it
+     * @return {@code Optional<AndroidTask<TaskProvider<TransformTask>>>} containing the AndroidTask
+     *     for the given transform task if it was able to create it
      */
     @NonNull
-    public <T extends Transform> Optional<TransformTask> addTransform(
+    public <T extends Transform> Optional<TaskProvider<TransformTask>> addTransform(
             @NonNull TaskFactory taskFactory,
             @NonNull TransformVariantScope scope,
             @NonNull T transform,
-            @Nullable TransformTask.ConfigActionCallback<T> callback) {
+            @Nullable PreConfigAction preConfigAction,
+            @Nullable TaskConfigAction<TransformTask> configAction,
+            @Nullable TaskProviderCallback<TransformTask> providerCallback) {
 
         if (!validateTransform(transform)) {
             // validate either throws an exception, or records the problem during sync
@@ -251,8 +256,8 @@ public class TransformManager extends FilterableStreamCollection {
         transforms.add(transform);
 
         // create the task...
-        TransformTask task =
-                taskFactory.eagerCreate(
+        return Optional.of(
+                taskFactory.lazyCreate(
                         new TransformTask.CreationAction<>(
                                 scope.getFullVariantName(),
                                 taskName,
@@ -260,10 +265,10 @@ public class TransformManager extends FilterableStreamCollection {
                                 inputStreams,
                                 referencedStreams,
                                 outputStream,
-                                recorder,
-                                callback));
-
-        return Optional.ofNullable(task);
+                                recorder),
+                        preConfigAction,
+                        configAction,
+                        providerCallback));
     }
 
     @Override

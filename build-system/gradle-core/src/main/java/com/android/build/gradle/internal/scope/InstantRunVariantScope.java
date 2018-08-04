@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.List;
 import org.gradle.api.Task;
+import org.gradle.api.tasks.TaskProvider;
 
 /**
  * Scope for all variant scoped information related to supporting the Instant Run features.
@@ -72,9 +73,9 @@ public interface InstantRunVariantScope {
     @NonNull
     ImmutableList<File> getInstantRunBootClasspath();
 
-    List<Task> getColdSwapBuildTasks();
+    List<TaskProvider<? extends Task>> getColdSwapBuildTasks();
 
-    void addColdSwapBuildTask(@NonNull Task task);
+    void addColdSwapBuildTask(@NonNull TaskProvider<? extends Task> task);
 
     PackageApplication getPackageApplicationTask();
 

@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.res.Aapt2MavenUtils;
 import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
@@ -71,7 +70,6 @@ import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
 import com.google.common.collect.Sets;
 import java.io.File;
-import java.util.Optional;
 import java.util.Set;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
@@ -301,13 +299,16 @@ public class ApplicationTaskManager extends TaskManager {
                         artifacts.getFinalArtifactFiles(InternalArtifactType.APK_LIST),
                         variantScope.getOutputScope().getMainSplit());
 
-        Optional<TransformTask> dependenciesApkBuilderTask =
-                variantScope
-                        .getTransformManager()
-                        .addTransform(taskFactory, variantScope, dependenciesApkBuilder);
+        variantScope
+                .getTransformManager()
+                .addTransform(
+                        taskFactory,
+                        variantScope,
+                        dependenciesApkBuilder,
+                        null,
+                        task -> task.dependsOn(getValidateSigningTask(variantScope)),
+                        null);
 
-        dependenciesApkBuilderTask.ifPresent(
-                task -> task.dependsOn(getValidateSigningTask(variantScope)));
 
         taskFactory.eagerCreate(
                 new InstantRunSplitApkResourcesBuilder.CreationAction(variantScope));
@@ -332,17 +333,20 @@ public class ApplicationTaskManager extends TaskManager {
                                 InternalArtifactType.INSTANT_RUN_SPLIT_APK_RESOURCES),
                         variantScope.getOutputScope().getMainSplit());
 
-        Optional<TransformTask> transformTaskAndroidTask =
-                variantScope
-                        .getTransformManager()
-                        .addTransform(taskFactory, variantScope, slicesApkBuilder);
-
-        if (transformTaskAndroidTask.isPresent()) {
-            TransformTask splitApk = transformTaskAndroidTask.get();
-            splitApk.dependsOn(getValidateSigningTask(variantScope));
-            TaskFactoryUtils.dependsOn(variantScope.getTaskContainer().getAssembleTask(), splitApk);
-            buildInfoGeneratorTask.mustRunAfter(splitApk.getName());
-        }
+        variantScope
+                .getTransformManager()
+                .addTransform(
+                        taskFactory,
+                        variantScope,
+                        slicesApkBuilder,
+                        null,
+                        task -> task.dependsOn(getValidateSigningTask(variantScope)),
+                        taskProvider -> {
+                            TaskFactoryUtils.dependsOn(
+                                    variantScope.getTaskContainer().getAssembleTask(),
+                                    taskProvider);
+                            buildInfoGeneratorTask.mustRunAfter(taskProvider);
+                        });
 
         // if the assembleVariant task run, make sure it also runs the task to generate
         // the build-info.xml.
