@@ -79,6 +79,8 @@ class ResourceUrlTest {
         assertTrue(ResourceUrl.parse("?android:foo", false)!!.isFramework)
         assertTrue(ResourceUrl.parse("?foo", true)!!.isFramework)
         assertTrue(ResourceUrl.parse("?attr/foo", true)!!.isFramework)
+        assertFalse(ResourceUrl.parse("@my_package:layout/my_name")!!.isPrivateAccessOverride)
+        assertTrue(ResourceUrl.parse("@*my_package:layout/my_name")!!.isPrivateAccessOverride)
     }
 
     @Test
@@ -145,6 +147,7 @@ class ResourceUrlTest {
                 ResourceUrl.create("com.app", STYLE, "foo"),
                 ResourceUrl.parseStyleParentReference("@com.app:style/foo")
         )
+        assertEquals("@*com.app:style/foo", ResourceUrl.parseStyleParentReference("*com.app:foo")!!.toString())
     }
 
     @Test
@@ -177,10 +180,8 @@ class ResourceUrlTest {
         assertEquals("@+id/foo", ResourceUrl.parse("@+id/foo")!!.toString())
         assertEquals("@layout/foo", ResourceUrl.parse("@layout/foo")!!.toString())
         assertEquals("?android:attr/foo", ResourceUrl.parse("?android:foo")!!.toString())
-        assertEquals(
-                "@android:layout/foo",
-                ResourceUrl.parse("@android:layout/foo")!!.toString()
-        )
+        assertEquals("@android:layout/foo", ResourceUrl.parse("@android:layout/foo")!!.toString())
+        assertEquals("@*my_package:layout/my_name", ResourceUrl.parse("@*my_package:layout/my_name")!!.toString())
         assertEquals("foo", ResourceUrl.parseAttrReference("foo")!!.toString())
         assertEquals("android:foo", ResourceUrl.parseAttrReference("android:foo")!!.toString())
         assertEquals("androidx:foo", ResourceUrl.parseAttrReference("androidx:foo")!!.toString())
@@ -192,5 +193,6 @@ class ResourceUrlTest {
         assertEquals("MyStyle", ResourceUrl.parse("@style/MyStyle")!!.qualifiedName)
         assertEquals("myColor", ResourceUrl.parse("?myColor")!!.qualifiedName)
         assertEquals("android:colorPrimary", ResourceUrl.parse("?android:colorPrimary")!!.qualifiedName)
+        assertEquals("my_package:my_name", ResourceUrl.parse("@*my_package:layout/my_name")!!.qualifiedName)
     }
 }

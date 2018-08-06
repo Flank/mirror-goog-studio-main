@@ -35,30 +35,38 @@ import java.util.Objects;
  */
 @Immutable
 public class ResourceUrl implements Serializable {
-    /** Type of resource */
+    /** Type of resource. */
     @NonNull public final ResourceType type;
 
-    /** Name of resource */
+    /** Name of resource. */
     @NonNull public final String name;
 
-    /** The namespace, or null if it's in the project namespace */
+    /** The namespace, or null if it's in the project namespace. */
     @Nullable public final String namespace;
 
     @NonNull public final UrlType urlType;
 
-    /** If true, the resource is in the android: framework */
+    /** The URL requests access to a private resource. */
+    public final boolean privateAccessOverride;
+
+    /** If true, the resource is in the android: framework. */
     public boolean isFramework() {
         return SdkConstants.ANDROID_NS_NAME.equals(namespace);
     }
 
-    /** Whether an id resource is of the form {@code @+id} rather than just {@code @id} */
+    /** Whether an id resource is of the form {@code @+id} rather than just {@code @id}. */
     public boolean isCreate() {
         return urlType == UrlType.CREATE;
     }
 
-    /** Whether this is a theme resource reference */
+    /** Whether this is a theme resource reference. */
     public boolean isTheme() {
         return urlType == UrlType.THEME;
+    }
+
+    /** Whether this is a theme resource reference. */
+    public boolean isPrivateAccessOverride() {
+        return privateAccessOverride;
     }
 
     public enum UrlType {
@@ -79,11 +87,13 @@ public class ResourceUrl implements Serializable {
             @NonNull ResourceType type,
             @NonNull String name,
             @Nullable String namespace,
-            @NonNull UrlType urlType) {
+            @NonNull UrlType urlType,
+            boolean privateAccessOverride) {
         this.type = type;
         this.name = name;
         this.namespace = namespace;
         this.urlType = urlType;
+        this.privateAccessOverride = privateAccessOverride;
     }
 
     /**
@@ -100,7 +110,7 @@ public class ResourceUrl implements Serializable {
     public static ResourceUrl create(
             @NonNull ResourceType type, @NonNull String name, boolean framework) {
         return new ResourceUrl(
-                type, name, framework ? SdkConstants.ANDROID_NS_NAME : null, UrlType.NORMAL);
+                type, name, framework ? SdkConstants.ANDROID_NS_NAME : null, UrlType.NORMAL, false);
     }
 
     /**
@@ -114,7 +124,7 @@ public class ResourceUrl implements Serializable {
     @NonNull
     public static ResourceUrl create(
             @Nullable String namespace, @NonNull ResourceType type, @NonNull String name) {
-        return new ResourceUrl(type, name, namespace, UrlType.NORMAL);
+        return new ResourceUrl(type, name, namespace, UrlType.NORMAL, false);
     }
 
     /**
@@ -128,7 +138,7 @@ public class ResourceUrl implements Serializable {
     @NonNull
     public static ResourceUrl createThemeReference(
             @Nullable String namespace, @NonNull ResourceType type, @NonNull String name) {
-        return new ResourceUrl(type, name, namespace, UrlType.THEME);
+        return new ResourceUrl(type, name, namespace, UrlType.THEME, false);
     }
 
     /**
@@ -141,14 +151,15 @@ public class ResourceUrl implements Serializable {
     @NonNull
     public static ResourceUrl createAttrReference(
             @Nullable String namespace, @NonNull String name) {
-        return new ResourceUrl(ResourceType.ATTR, name, namespace, UrlType.ATTR);
+        return new ResourceUrl(ResourceType.ATTR, name, namespace, UrlType.ATTR, false);
     }
 
     /**
-     * Returns a {@link ResourceUrl} representation of the given string, or null if it's not a valid
-     * resource reference. This method works only for strings of type {@link UrlType#NORMAL}, {@link
-     * UrlType#CREATE} and {@link UrlType#THEME}, see dedicated methods for parsing references to
-     * style parents and to {@code attr} resources in the {@code name} XML attribute of style items.
+     * Returns a {@linkplain ResourceUrl} representation of the given string, or null if it's not a
+     * valid resource reference. This method works only for strings of type {@link UrlType#NORMAL},
+     * {@link UrlType#CREATE} and {@link UrlType#THEME}, see dedicated methods for parsing
+     * references to style parents and to {@code attr} resources in the {@code name} XML attribute
+     * of style items.
      *
      * @param url the resource url to be parsed
      * @return a pair of the resource type and the resource name
@@ -159,10 +170,11 @@ public class ResourceUrl implements Serializable {
     }
 
     /**
-     * Returns a {@link ResourceUrl} representation of the given string, or null if it's not a valid
-     * resource reference. This method works only for strings of type {@link UrlType#NORMAL}, {@link
-     * UrlType#CREATE} and {@link UrlType#THEME}, see dedicated methods for parsing references to
-     * style parents and to {@code attr} resources in the {@code name} XML attribute of style items.
+     * Returns a {@linkplain ResourceUrl} representation of the given string, or null if it's not a
+     * valid resource reference. This method works only for strings of type {@link UrlType#NORMAL},
+     * {@link UrlType#CREATE} and {@link UrlType#THEME}, see dedicated methods for parsing
+     * references to style parents and to {@code attr} resources in the {@code name} XML attribute
+     * of style items.
      *
      * @param url the resource url to be parsed
      * @param forceFramework force the returned value to be a framework resource.
@@ -171,6 +183,7 @@ public class ResourceUrl implements Serializable {
     @Nullable
     public static ResourceUrl parse(@NonNull String url, boolean forceFramework) {
         UrlType urlType = UrlType.NORMAL;
+        boolean privateAccessOverride = false;
         // Handle theme references
         if (url.startsWith(SdkConstants.PREFIX_THEME_REF)) {
             urlType = UrlType.THEME;
@@ -223,6 +236,11 @@ public class ResourceUrl implements Serializable {
             typeBegin = 1;
         }
 
+        if (url.startsWith("*", typeBegin)) {
+            typeBegin += 1;
+            privateAccessOverride = true;
+        }
+
         int colon = url.lastIndexOf(':', typeEnd);
         String namespace = forceFramework ? SdkConstants.ANDROID_NS_NAME : null;
         if (colon >= 0) {
@@ -246,11 +264,11 @@ public class ResourceUrl implements Serializable {
         if (name.isEmpty()) {
             return null;
         }
-        return new ResourceUrl(type, name, namespace, urlType);
+        return new ResourceUrl(type, name, namespace, urlType, privateAccessOverride);
     }
 
     /**
-     * Returns a {@link ResourceUrl} representation of the given reference to an {@code attr}
+     * Returns a {@linkplain ResourceUrl} representation of the given reference to an {@code attr}
      * resources, most likely the contents of {@code <item name="..." >}.
      */
     @Nullable
@@ -285,20 +303,28 @@ public class ResourceUrl implements Serializable {
             return null;
         }
 
-        return new ResourceUrl(ResourceType.ATTR, name, namespace, UrlType.ATTR);
+        return new ResourceUrl(ResourceType.ATTR, name, namespace, UrlType.ATTR, false);
     }
 
-    /** Returns a {@link ResourceUrl} representation of the given reference to a style's parent. */
+    /**
+     * Returns a {@linkplain ResourceUrl} representation of the given reference to a style's parent.
+     */
     @Nullable
     public static ResourceUrl parseStyleParentReference(@NonNull String input) {
         if (input.isEmpty()) {
             return null;
         }
 
+        boolean privateAccessOverride = false;
         int pos = 0;
 
         if (input.charAt(pos) == '@' || input.charAt(pos) == '?') {
             pos++;
+        }
+
+        if (input.startsWith("*", pos)) {
+            pos += 1;
+            privateAccessOverride = true;
         }
 
         String namespace = null;
@@ -326,7 +352,8 @@ public class ResourceUrl implements Serializable {
             return null;
         }
 
-        return new ResourceUrl(ResourceType.STYLE, name, namespace, UrlType.NORMAL);
+        return new ResourceUrl(
+                ResourceType.STYLE, name, namespace, UrlType.NORMAL, privateAccessOverride);
     }
 
     /** Returns if the resource url is @null, @empty or @undefined. */
@@ -370,9 +397,9 @@ public class ResourceUrl implements Serializable {
     }
 
     /**
-     * Tries to resolve this {@link ResourceUrl} into a valid {@link ResourceReference} by expanding
-     * the namespace alias (or lack thereof) based on the context in which this {@link ResourceUrl}
-     * was used.
+     * Tries to resolve this {@linkplain ResourceUrl} into a valid {@link ResourceReference} by
+     * expanding the namespace alias (or lack thereof) based on the context in which this
+     * {@linkplain ResourceUrl} was used.
      *
      * @param contextNamespace aapt namespace of the module in which this URL was used
      * @param resolver logic for expanding namespaces aliases, most likely by walking up the XML
@@ -409,6 +436,9 @@ public class ResourceUrl implements Serializable {
                 // No prefix.
                 break;
         }
+        if (privateAccessOverride) {
+            sb.append('*');
+        }
         if (namespace != null) {
             sb.append(namespace);
             sb.append(':');
@@ -425,7 +455,7 @@ public class ResourceUrl implements Serializable {
 
     /**
      * Returns a short string representation, which includes just the namespace (if defined in this
-     * {@link ResourceUrl} and name, separated by a colon. For example {@code
+     * {@linkplain ResourceUrl} and name, separated by a colon. For example {@code
      * ResourceUrl.parse("@android:style/Theme").getQualifiedName()} returns {@code "android:Theme"}
      * and {@code ResourceUrl.parse("?myColor").getQualifiedName()} returns {@code "myColor"}.
      *
@@ -459,9 +489,9 @@ public class ResourceUrl implements Serializable {
     @Override
     public int hashCode() {
         return HashCodes.mix(
+                urlType.hashCode(),
                 type.hashCode(),
                 Objects.hashCode(name),
-                Objects.hashCode(namespace),
-                urlType.hashCode());
+                Objects.hashCode(namespace));
     }
 }
