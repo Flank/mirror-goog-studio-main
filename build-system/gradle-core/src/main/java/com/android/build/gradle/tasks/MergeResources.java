@@ -37,7 +37,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.Workers;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.AndroidBuilder;
@@ -92,7 +92,9 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.workers.WorkerExecutor;
+import org.jetbrains.annotations.NotNull;
 
 @CacheableTask
 public class MergeResources extends IncrementalTask {
@@ -704,7 +706,7 @@ public class MergeResources extends IncrementalTask {
         return resourceSetList;
     }
 
-    public static class CreationAction extends EagerTaskCreationAction<MergeResources> {
+    public static class CreationAction extends LazyTaskCreationAction<MergeResources> {
         @NonNull
         private final VariantScope scope;
         @NonNull private final TaskManager.MergeType mergeType;
@@ -717,6 +719,7 @@ public class MergeResources extends IncrementalTask {
         private final boolean processResources;
         private final boolean processVectorDrawables;
         @NonNull private final ImmutableSet<Flag> flags;
+        private File dataBindingLayoutInfoOutFolder;
 
         public CreationAction(
                 @NonNull VariantScope scope,
@@ -751,7 +754,37 @@ public class MergeResources extends IncrementalTask {
         }
 
         @Override
-        public void execute(@NonNull MergeResources mergeResourcesTask) {
+        public void preConfigure(@NotNull String taskName) {
+            super.preConfigure(taskName);
+
+            if (scope.getGlobalScope().getExtension().getDataBinding().isEnabled()) {
+                // Keep as an output.
+                dataBindingLayoutInfoOutFolder =
+                        scope.getArtifacts()
+                                .appendArtifact(
+                                        mergeType == MERGE
+                                                ? DATA_BINDING_LAYOUT_INFO_TYPE_MERGE
+                                                : DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE,
+                                        taskName,
+                                        "out");
+            }
+        }
+
+        @Override
+        public void handleProvider(@NotNull TaskProvider<? extends MergeResources> taskProvider) {
+            super.handleProvider(taskProvider);
+            // In LibraryTaskManager#createMergeResourcesTasks, there are actually two
+            // MergeResources tasks sharing the same task type (MergeResources) and CreationAction
+            // code: packageResources with mergeType == PACKAGE, and mergeResources with
+            // mergeType == MERGE. Since the following line of code is called for each task, the
+            // latter one wins: The mergeResources task with mergeType == MERGE is the one that is
+            // finally registered in the current scope.
+            // Filed https://issuetracker.google.com//110412851 to clean this up at some point.
+            scope.getTaskContainer().setMergeResourcesTask(taskProvider);
+        }
+
+        @Override
+        public void configure(@NonNull MergeResources mergeResourcesTask) {
             BaseVariantData variantData = scope.getVariantData();
             Project project = scope.getGlobalScope().getProject();
 
@@ -826,25 +859,9 @@ public class MergeResources extends IncrementalTask {
                 mergeResourcesTask.generatedPngsOutputDir = scope.getGeneratedPngsOutputDir();
             }
 
-            // In LibraryTaskManager#createMergeResourcesTasks, there are actually two
-            // MergeResources tasks sharing the same task type (MergeResources) and CreationAction
-            // code: packageResources with mergeType == PACKAGE, and mergeResources with
-            // mergeType == MERGE. Since the following line of code is called for each task, the
-            // latter one wins: The mergeResources task with mergeType == MERGE is the one that is
-            // finally registered in the current scope.
-            // Filed https://issuetracker.google.com//110412851 to clean this up at some point.
-            scope.getTaskContainer().setMergeResourcesTask(mergeResourcesTask);
-
             if (scope.getGlobalScope().getExtension().getDataBinding().isEnabled()) {
                 // Keep as an output.
-                mergeResourcesTask.dataBindingLayoutInfoOutFolder =
-                        scope.getArtifacts()
-                                .appendArtifact(
-                                        mergeType == MERGE
-                                                ? DATA_BINDING_LAYOUT_INFO_TYPE_MERGE
-                                                : DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE,
-                                        mergeResourcesTask,
-                                        "out");
+                mergeResourcesTask.dataBindingLayoutInfoOutFolder = dataBindingLayoutInfoOutFolder;
                 mergeResourcesTask.dataBindingLayoutProcessor =
                         new SingleFileProcessor() {
 
@@ -886,6 +903,9 @@ public class MergeResources extends IncrementalTask {
                             .getBuildType()
                             .isPseudoLocalesEnabled();
             mergeResourcesTask.flags = flags;
+
+            mergeResourcesTask.dependsOn(scope.getTaskContainer().getResourceGenTask());
+
         }
     }
 

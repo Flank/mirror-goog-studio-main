@@ -127,6 +127,8 @@ import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeDepen
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeGenClassLogTransform;
 import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.PreConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
 import com.android.build.gradle.internal.tasks.factory.TaskFactory;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
@@ -775,13 +777,9 @@ public abstract class TaskManager {
             @NonNull VariantScope scope,
             @NonNull VariantScope testedScope) {
 
-        TaskProvider<ProcessTestManifest> processTestManifestTask =
-                taskFactory.lazyCreate(
-                        new ProcessTestManifest.CreationAction(
-                                scope,
-                                testedScope
-                                        .getArtifacts()
-                                        .getFinalArtifactFiles(MERGED_MANIFESTS)));
+        taskFactory.lazyCreate(
+                new ProcessTestManifest.CreationAction(
+                        scope, testedScope.getArtifacts().getFinalArtifactFiles(MERGED_MANIFESTS)));
     }
 
     public void createRenderscriptTask(@NonNull VariantScope scope) {
@@ -810,7 +808,7 @@ public abstract class TaskManager {
 
     }
 
-    public MergeResources createMergeResourcesTask(
+    public TaskProvider<MergeResources> createMergeResourcesTask(
             @NonNull VariantScope scope,
             boolean processResources,
             ImmutableSet<MergeResources.Flag> flags) {
@@ -835,7 +833,9 @@ public abstract class TaskManager {
                 true /*includeDependencies*/,
                 processResources,
                 alsoOutputNotCompiledResources,
-                flags);
+                flags,
+                null /*preConfigCallback*/,
+                null /*configCallback*/);
     }
 
     /** Defines the merge type for {@link #basicCreateMergeResourcesTask} */
@@ -862,14 +862,16 @@ public abstract class TaskManager {
         public abstract InternalArtifactType getOutputType();
     }
 
-    public MergeResources basicCreateMergeResourcesTask(
+    public TaskProvider<MergeResources> basicCreateMergeResourcesTask(
             @NonNull VariantScope scope,
             @NonNull MergeType mergeType,
             @Nullable File outputLocation,
             final boolean includeDependencies,
             final boolean processResources,
             boolean alsoOutputNotCompiledResources,
-            @NonNull ImmutableSet<MergeResources.Flag> flags) {
+            @NonNull ImmutableSet<MergeResources.Flag> flags,
+            @Nullable PreConfigAction preConfigCallback,
+            @Nullable TaskConfigAction<MergeResources> configCallback) {
 
         File mergedOutputDir = MoreObjects
                 .firstNonNull(outputLocation, scope.getDefaultMergeResourcesOutputDir());
@@ -884,8 +886,8 @@ public abstract class TaskManager {
                                         + scope.getVariantConfiguration().getDirName())
                         : null;
 
-        MergeResources mergeResourcesTask =
-                taskFactory.eagerCreate(
+        TaskProvider<MergeResources> mergeResourcesTask =
+                taskFactory.lazyCreate(
                         new MergeResources.CreationAction(
                                 scope,
                                 mergeType,
@@ -894,19 +896,24 @@ public abstract class TaskManager {
                                 mergedNotCompiledDir,
                                 includeDependencies,
                                 processResources,
-                                flags));
+                                flags),
+                        preConfigCallback,
+                        configCallback,
+                        null);
 
-        scope.getArtifacts().appendArtifact(mergeType.getOutputType(),
-                ImmutableList.of(mergedOutputDir), mergeResourcesTask);
+        scope.getArtifacts()
+                .appendArtifact(
+                        mergeType.getOutputType(),
+                        ImmutableList.of(mergedOutputDir),
+                        mergeResourcesTask.getName());
 
         if (alsoOutputNotCompiledResources) {
-            scope.getArtifacts().appendArtifact(
-                    InternalArtifactType.MERGED_NOT_COMPILED_RES,
-                    ImmutableList.of(mergedNotCompiledDir),
-                    mergeResourcesTask);
+            scope.getArtifacts()
+                    .appendArtifact(
+                            InternalArtifactType.MERGED_NOT_COMPILED_RES,
+                            ImmutableList.of(mergedNotCompiledDir),
+                            mergeResourcesTask.getName());
         }
-
-        mergeResourcesTask.dependsOn(scope.getTaskContainer().getResourceGenTask());
 
         if (extension.getTestOptions().getUnitTests().isIncludeAndroidResources()) {
             TaskFactoryUtils.dependsOn(
@@ -917,23 +924,17 @@ public abstract class TaskManager {
     }
 
     public void createMergeAssetsTask(@NonNull VariantScope scope) {
-        MergeSourceSetFolders mergeAssetsTask =
-                taskFactory.eagerCreate(
-                        new MergeSourceSetFolders.MergeAppAssetCreationAction(scope));
-
-        mergeAssetsTask.dependsOn(scope.getTaskContainer().getAssetGenTask());
-        scope.getTaskContainer().setMergeAssetsTask(mergeAssetsTask);
+        taskFactory.lazyCreate(new MergeSourceSetFolders.MergeAppAssetCreationAction(scope));
     }
 
     @NonNull
     public Optional<TaskProvider<TransformTask>> createMergeJniLibFoldersTasks(
             @NonNull final VariantScope variantScope) {
         // merge the source folders together using the proper priority.
-        MergeSourceSetFolders mergeJniLibFoldersTask =
-                taskFactory.eagerCreate(
+        TaskProvider<MergeSourceSetFolders> mergeJniLibFoldersTask =
+                taskFactory.lazyCreate(
                         new MergeSourceSetFolders.MergeJniLibFoldersCreationAction(variantScope));
         final MutableTaskContainer taskContainer = variantScope.getTaskContainer();
-        mergeJniLibFoldersTask.dependsOn(taskContainer.getAssetGenTask());
 
         // create the stream generated from this task
         variantScope
@@ -1399,16 +1400,14 @@ public abstract class TaskManager {
 
     public void createShaderTask(@NonNull VariantScope scope) {
         // merge the shader folders together using the proper priority.
-        MergeSourceSetFolders mergeShadersTask =
-                taskFactory.eagerCreate(
+        TaskProvider<MergeSourceSetFolders> mergeShadersTask =
+                taskFactory.lazyCreate(
                         new MergeSourceSetFolders.MergeShaderSourceFoldersCreationAction(scope));
-        // TODO do we support non compiled shaders in aars?
-        //mergeShadersTask.dependsOn( scope.getVariantData().prepareDependenciesTask);
 
         // compile the shaders
-        ShaderCompile shaderCompileTask =
-                taskFactory.eagerCreate(new ShaderCompile.CreationAction(scope));
-        shaderCompileTask.dependsOn(mergeShadersTask);
+        TaskProvider<ShaderCompile> shaderCompileTask =
+                taskFactory.lazyCreate(new ShaderCompile.CreationAction(scope));
+        TaskFactoryUtils.dependsOn(shaderCompileTask, mergeShadersTask);
 
         TaskFactoryUtils.dependsOn(scope.getTaskContainer().getAssetGenTask(), shaderCompileTask);
     }

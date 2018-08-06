@@ -39,6 +39,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesCreationAction;
 import com.android.build.gradle.internal.tasks.PackageRenderscriptCreationAction;
+import com.android.build.gradle.internal.tasks.factory.PreConfigAction;
+import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.transforms.LibraryAarJarsTransform;
 import com.android.build.gradle.internal.transforms.LibraryBaseTransform;
@@ -68,6 +70,7 @@ import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
+import org.jetbrains.annotations.NotNull;
 
 /** TaskManager for creating tasks in an Android library project. */
 public class LibraryTaskManager extends TaskManager {
@@ -443,6 +446,30 @@ public class LibraryTaskManager extends TaskManager {
                                 .build());
     }
 
+    private static class MergeResourceCallback
+            implements PreConfigAction, TaskConfigAction<MergeResources> {
+        private final VariantScope variantScope;
+        private File publicFile;
+
+        private MergeResourceCallback(VariantScope variantScope) {
+            this.variantScope = variantScope;
+        }
+
+        @Override
+        public void preConfigure(@NotNull String taskName) {
+            publicFile =
+                    variantScope
+                            .getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.PUBLIC_RES, taskName, FN_PUBLIC_TXT);
+        }
+
+        @Override
+        public void configure(@NotNull MergeResources task) {
+            task.setPublicFile(publicFile);
+        }
+    }
+
     private void createMergeResourcesTasks(@NonNull VariantScope variantScope) {
         ImmutableSet<MergeResources.Flag> flags;
         if (variantScope.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
@@ -454,25 +481,21 @@ public class LibraryTaskManager extends TaskManager {
             flags = Sets.immutableEnumSet(MergeResources.Flag.PROCESS_VECTOR_DRAWABLES);
         }
 
+        MergeResourceCallback callback = new MergeResourceCallback(variantScope);
+
         // Create a merge task to only merge the resources from this library and not
         // the dependencies. This is what gets packaged in the aar.
-        MergeResources packageResourcesTask =
-                basicCreateMergeResourcesTask(
-                        variantScope,
-                        MergeType.PACKAGE,
-                        variantScope.getIntermediateDir(InternalArtifactType.PACKAGED_RES),
-                        false,
-                        false,
-                        false,
-                        flags);
+        basicCreateMergeResourcesTask(
+                variantScope,
+                MergeType.PACKAGE,
+                variantScope.getIntermediateDir(InternalArtifactType.PACKAGED_RES),
+                false,
+                false,
+                false,
+                flags,
+                callback,
+                callback);
 
-        packageResourcesTask.setPublicFile(
-                variantScope
-                        .getArtifacts()
-                        .appendArtifact(
-                                InternalArtifactType.PUBLIC_RES,
-                                packageResourcesTask,
-                                FN_PUBLIC_TXT));
 
         // This task merges all the resources, including the dependencies of this library.
         // This should be unused, except that external libraries might consume it.
@@ -518,13 +541,7 @@ public class LibraryTaskManager extends TaskManager {
     }
 
     public void createLibraryAssetsTask(@NonNull VariantScope scope) {
-
-        MergeSourceSetFolders mergeAssetsTask =
-                taskFactory.eagerCreate(
-                        new MergeSourceSetFolders.LibraryAssetCreationAction(scope));
-
-        mergeAssetsTask.dependsOn(scope.getTaskContainer().getAssetGenTask());
-        scope.getTaskContainer().setMergeAssetsTask(mergeAssetsTask);
+        taskFactory.lazyCreate(new MergeSourceSetFolders.LibraryAssetCreationAction(scope));
     }
 
     @NonNull

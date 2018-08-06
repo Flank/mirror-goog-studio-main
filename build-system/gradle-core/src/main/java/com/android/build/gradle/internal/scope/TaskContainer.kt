@@ -49,8 +49,8 @@ interface TaskContainer {
     val checkManifestTask: CheckManifest?
     val aidlCompileTask: AidlCompile?
     val renderscriptCompileTask: RenderscriptCompile?
-    val mergeResourcesTask: MergeResources
-    val mergeAssetsTask: MergeSourceSetFolders
+    val mergeResourcesTask: TaskProvider<out MergeResources>
+    val mergeAssetsTask: TaskProvider<out MergeSourceSetFolders>
     val processJavaResourcesTask: Sync
     val generateBuildConfigTask: TaskProvider<out GenerateBuildConfig>?
     val ndkCompileTask: NdkCompile?

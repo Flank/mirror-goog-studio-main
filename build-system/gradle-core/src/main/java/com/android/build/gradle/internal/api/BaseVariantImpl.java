@@ -241,12 +241,12 @@ public abstract class BaseVariantImpl implements BaseVariant {
 
     @Override
     public MergeResources getMergeResources() {
-        return getVariantData().getTaskContainer().getMergeResourcesTask();
+        return getVariantData().getTaskContainer().getMergeResourcesTask().getOrNull();
     }
 
     @Override
     public MergeSourceSetFolders getMergeAssets() {
-        return getVariantData().getTaskContainer().getMergeAssetsTask();
+        return getVariantData().getTaskContainer().getMergeAssetsTask().getOrNull();
     }
 
     @Override
