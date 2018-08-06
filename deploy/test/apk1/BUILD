@@ -4,7 +4,7 @@ dex_library(
     name = "apk",
     jars = [":apk_java_deploy.jar"],
     output = "out.apk",
-    visibility = ["//tools/base/deploy/swapper:__pkg__"],
+    visibility = ["//tools/base/deploy/test:__pkg__"],
 )
 
 java_binary(

@@ -17,6 +17,7 @@ java_proto_library(
     srcs = glob(["*.proto"]),
     # Seems to be ok here.
     grpc_support = 0,
+    visibility = ["//visibility:public"],
 )
 
 cc_binary(

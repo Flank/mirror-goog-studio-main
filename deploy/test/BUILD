@@ -3,27 +3,16 @@ load("//tools/base/fakeandroid:fakeandroid.bzl", "fake_android_test")
 
 package(default_testonly = True)
 
-java_library(
-    name = "libhotswap",
-    srcs = glob(["src/main/com/android/tools/deploy/swapper/*.java"]),
-    deps = [
-        "//prebuilts/r8:d8-master",
-        "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.4.0:jar",
-        "//tools/base/bazel:langtools",
-        "//tools/base/deploy/proto:libjava_proto.jar",
-    ],
-)
-
 fake_android_test(
     name = "BasicTest",
     size = "medium",
-    srcs = glob(["src/test/com/android/tools/deploy/swapper/*.java"]),
+    srcs = glob(["java/com/android/tools/deploy/swapper/*.java"]),
     data = [
         ":test-app",
         "//tools/base/deploy/agent/instrumentation",
         "//tools/base/deploy/agent/native:libswap.so",
-        "//tools/base/deploy/swapper/src/apk1:apk",
-        "//tools/base/deploy/swapper/src/apk2:apk",
+        "//tools/base/deploy/test/apk1:apk",
+        "//tools/base/deploy/test/apk2:apk",
     ],
     jvm_flags = [
         # Location of the inital test app.
@@ -36,23 +25,23 @@ fake_android_test(
         "-Dswap.agent.location=$(location //tools/base/deploy/agent/native:libswap.so)",
 
         # APKs for testing the DexArchiveComparator
-        "-Dapk1.location=$(location //tools/base/deploy/swapper/src/apk1:apk)",
-        "-Dapk2.location=$(location //tools/base/deploy/swapper/src/apk2:apk)",
+        "-Dapk1.location=$(location //tools/base/deploy/test/apk1:apk)",
+        "-Dapk2.location=$(location //tools/base/deploy/test/apk2:apk)",
 
         # Instrumentation support jar location.
         "-Dapp.instrumentation.location=$(location //tools/base/deploy/agent/instrumentation:instrumentation)",
     ],
     deps = [
-        ":libhotswap",
         ":test-app",
         ":test-app-swap",
         "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.4.0:jar",
         "//tools/base/bazel:langtools",
         "//tools/base/deploy/agent/instrumentation",
         "//tools/base/deploy/agent/native:libswap.so",
+        "//tools/base/deploy/deployer:tools.deployer",
         "//tools/base/deploy/proto:libjava_proto.jar",
-        "//tools/base/deploy/swapper/src/apk1:apk",
-        "//tools/base/deploy/swapper/src/apk2:apk",
+        "//tools/base/deploy/test/apk1:apk",
+        "//tools/base/deploy/test/apk2:apk",
         "//tools/base/fakeandroid",
         "//tools/idea/.idea/libraries:JUnit4",
     ],
@@ -66,7 +55,7 @@ dex_library(
 
 java_binary(
     name = "test-app_java",
-    srcs = glob(["src/test/com/android/tools/deploy/swapper/testapp/**/*.java"]),
+    srcs = glob(["java/com/android/tools/deploy/swapper/testapp/**/*.java"]),
     create_executable = 0,
     deps = ["//tools/base/fakeandroid:android-mock"],
 )
@@ -81,8 +70,8 @@ dex_library(
 java_binary(
     name = "test-app-swap_java",
     srcs =
-        glob(["src/test_swap/com/android/tools/deploy/swapper/testapp/**/*.java"]) + [
-            "src/test/com/android/tools/deploy/swapper/testapp/TestActivity.java",
+        glob(["test_swap/com/android/tools/deploy/swapper/testapp/**/*.java"]) + [
+            "java/com/android/tools/deploy/swapper/testapp/TestActivity.java",
         ],
     create_executable = 0,
     deps = [

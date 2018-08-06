@@ -1,2 +1,0 @@
-rule com.google.protobuf.** com.android.tools.deploy.protobuf3jarjar.@1
-rule io.netty.** io.nettyjarjar.@1

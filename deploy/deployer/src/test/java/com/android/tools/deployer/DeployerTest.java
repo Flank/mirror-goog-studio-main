@@ -31,7 +31,7 @@ import org.junit.Test;
 
 public class DeployerTest {
 
-    private static final String BASE = "tools/base/deploy/deployer/test/resource/";
+    private static final String BASE = "tools/base/deploy/deployer/src/test/resource/";
 
     @Test
     public void testCentralDirectoryParse() throws IOException {
