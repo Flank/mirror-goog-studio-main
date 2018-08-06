@@ -608,7 +608,11 @@ public class VariantManager implements VariantModel {
                 project.getDependencies()
                         .add(
                                 variantDep.getCompileClasspath().getName(),
-                                project.files(androidBuilder.getRenderScriptSupportJar()));
+                                project.files(
+                                        androidBuilder.getRenderScriptSupportJar(
+                                                globalScope
+                                                        .getProjectOptions()
+                                                        .get(BooleanOption.USE_ANDROID_X))));
             }
 
             if (variantType.isApk()) { // ANDROID_TEST
@@ -1212,7 +1216,9 @@ public class VariantManager implements VariantModel {
         }
 
         if (variantConfig.getRenderscriptSupportModeEnabled()) {
-            File renderScriptSupportJar = androidBuilder.getRenderScriptSupportJar();
+            File renderScriptSupportJar =
+                    androidBuilder.getRenderScriptSupportJar(
+                            globalScope.getProjectOptions().get(BooleanOption.USE_ANDROID_X));
 
             final ConfigurableFileCollection fileCollection = project.files(renderScriptSupportJar);
             project.getDependencies()

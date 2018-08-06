@@ -357,17 +357,17 @@ public class AndroidBuilder {
     /**
      * Returns the jar file for the renderscript mode.
      *
-     * This may return null if the SDK has not been loaded yet.
+     * <p>This may return null if the SDK has not been loaded yet.
      *
+     * @param useAndroidX whether to use AndroidX dependencies
      * @return the jar file, or null.
-     *
      * @see #setTargetInfo(TargetInfo)
      */
     @Nullable
-    public File getRenderScriptSupportJar() {
+    public File getRenderScriptSupportJar(boolean useAndroidX) {
         if (mTargetInfo != null) {
             return RenderScriptProcessor.getSupportJar(
-                    mTargetInfo.getBuildTools().getLocation().getAbsolutePath());
+                    mTargetInfo.getBuildTools().getLocation().getAbsolutePath(), useAndroidX);
         }
 
         return null;

@@ -299,7 +299,13 @@ public final class SdkConstants {
     /** properties file for the SDK */
     public static final String FN_SDK_PROP = "sdk.properties"; //$NON-NLS-1$
 
+    public static final String FN_ANDROIDX_RS_JAR = "androidx-rs.jar"; //$NON-NLS-1$
     public static final String FN_RENDERSCRIPT_V8_JAR = "renderscript-v8.jar"; //$NON-NLS-1$
+
+    public static final String FN_ANDROIDX_RENDERSCRIPT_PACKAGE =
+            "androidx.renderscript"; //$NON-NLS-1$
+    public static final String FN_RENDERSCRIPT_V8_PACKAGE =
+            "android.support.v8.renderscript"; //$NON-NLS-1$
 
     /** filename for gdbserver. */
     public static final String FN_GDBSERVER = "gdbserver"; //$NON-NLS-1$
