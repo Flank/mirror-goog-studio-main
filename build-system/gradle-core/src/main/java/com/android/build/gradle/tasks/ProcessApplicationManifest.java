@@ -29,6 +29,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact.ExtraComponentIdentifier;
@@ -329,7 +330,12 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
         if (autoNamespacedManifests != null) {
             // We do not have resolved artifact results here, we need to find the artifact name
             // based on the file name.
-            for (File autoNamespacedManifest : autoNamespacedManifests.getFiles()) {
+            File directory = BuildableArtifactUtil.singleFile(autoNamespacedManifests);
+            Preconditions.checkState(
+                    directory.isDirectory(),
+                    "Auto namespaced manifests should be a directory.",
+                    directory);
+            for (File autoNamespacedManifest : Preconditions.checkNotNull(directory.listFiles())) {
                 providers.add(
                         new CreationAction.ManifestProviderImpl(
                                 autoNamespacedManifest,
@@ -535,9 +541,13 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
                     variantScope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
 
             // Also include rewritten auto-namespaced manifests if there are any
-            if (variantScope
-                    .getArtifacts()
-                    .hasArtifact(InternalArtifactType.NAMESPACED_MANIFESTS)) {
+            if (variantType
+                            .isBaseModule() // TODO(b/112251836): Auto namespacing for dynamic features.
+                    && variantScope.getGlobalScope().getExtension().getAaptOptions().getNamespaced()
+                    && variantScope
+                            .getGlobalScope()
+                            .getProjectOptions()
+                            .get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
                 processManifestTask.autoNamespacedManifests =
                         variantScope
                                 .getArtifacts()
