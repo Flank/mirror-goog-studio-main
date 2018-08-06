@@ -20,9 +20,17 @@ import com.android.annotations.NonNull;
 import com.android.tools.apk.analyzer.internal.ArchiveTreeNode;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.DirectoryStream;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Stack;
 import javax.swing.tree.MutableTreeNode;
 
 public class ArchiveTreeStructure {
@@ -35,43 +43,39 @@ public class ArchiveTreeStructure {
     private static final FileVisitor<Path> fileVisitor =
             new FileVisitor<Path>() {
                 @Override
-                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
-                        throws IOException {
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
                     dir.toFile().deleteOnExit();
                     return FileVisitResult.CONTINUE;
                 }
 
                 @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                        throws IOException {
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
                     file.toFile().deleteOnExit();
                     return FileVisitResult.CONTINUE;
                 }
 
                 @Override
-                public FileVisitResult visitFileFailed(Path file, IOException exc)
-                        throws IOException {
+                public FileVisitResult visitFileFailed(Path file, IOException exc) {
                     return FileVisitResult.CONTINUE;
                 }
 
                 @Override
-                public FileVisitResult postVisitDirectory(Path dir, IOException exc)
-                        throws IOException {
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
                     return FileVisitResult.CONTINUE;
                 }
             };
 
+    @NonNull
     public static ArchiveNode create(@NonNull Archive archive) throws IOException {
-        return create(archive, "");
+        return createWorker(archive, "");
     }
 
-    public static ArchiveNode create(@NonNull Archive archive, @NonNull String fullPathString)
+    @NonNull
+    private static ArchiveNode createWorker(@NonNull Archive archive, @NonNull String pathPrefix)
             throws IOException {
         Path contentRoot = archive.getContentRoot();
         ArchiveTreeNode rootNode =
-                new ArchiveTreeNode(
-                        new ArchiveEntry(
-                                archive, contentRoot, fullPathString + contentRoot.toString()));
+                new ArchiveTreeNode(new ArchiveEntry(archive, contentRoot, pathPrefix));
 
         Stack<ArchiveTreeNode> stack = new Stack<>();
         stack.push(rootNode);
@@ -88,6 +92,12 @@ public class ArchiveTreeStructure {
                     if (INNER_ZIP_EXTENSIONS
                             .stream()
                             .anyMatch(ext -> childPath.getFileName().toString().endsWith(ext))) {
+                        // The entry is a "zip" type entry that need to be extracted into a temporary
+                        // directory to allow for recursive extraction if needed, so we extract the
+                        // entry into a temp file, and wrap it with a new Archive instance.
+                        //
+                        // Note: Temporary files are deleted using the "deleteOnExit" mechanism, it should
+                        //       be more deterministic and reliable than that.
                         if (tempFolder == null) {
                             tempFolder =
                                     Files.createTempDirectory(
@@ -98,26 +108,26 @@ public class ArchiveTreeStructure {
                         Files.createDirectories(tempFile.getParent());
                         Files.copy(childPath, tempFile);
                         Archive tempArchive = Archives.openInnerZip(tempFile);
+
+                        // Create inner tree for temp archive file
                         ArchiveTreeNode newArchiveNode =
                                 (ArchiveTreeNode)
-                                        create(tempArchive, fullPathString + childPath.toString());
+                                        createWorker(
+                                                tempArchive, pathPrefix + childPath.toString());
+
+                        // Create root node for temp archive file, and append children
                         childNode =
                                 new ArchiveTreeNode(
                                         new InnerArchiveEntry(
-                                                archive,
-                                                childPath,
-                                                fullPathString + childPath.toString(),
-                                                tempArchive));
+                                                archive, childPath, pathPrefix, tempArchive));
+
                         for (ArchiveNode archiveNodeChild : newArchiveNode.getChildren()) {
                             childNode.add((MutableTreeNode) archiveNodeChild);
                         }
                     } else {
                         childNode =
                                 new ArchiveTreeNode(
-                                        new ArchiveEntry(
-                                                archive,
-                                                childPath,
-                                                fullPathString + childPath.toString()));
+                                        new ArchiveEntry(archive, childPath, pathPrefix));
                         if (Files.isDirectory(childPath)) {
                             stack.push(childNode);
                         }

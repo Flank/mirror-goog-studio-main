@@ -23,7 +23,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.android.testutils.TestResources;
-import com.android.tools.apk.analyzer.internal.AppBundleArtifact;
+import com.android.tools.apk.analyzer.internal.AppBundleArchive;
 import com.android.utils.FileUtils;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
@@ -123,7 +123,7 @@ public class ArchivesTest {
         Path archivePath = getArchivePath("android-app-bundle.aab");
 
         try (Archive archive = Archives.open(archivePath)) {
-            assertThat(archive).isInstanceOf(AppBundleArtifact.class);
+            assertThat(archive).isInstanceOf(AppBundleArchive.class);
             ArchiveNode node = ArchiveTreeStructure.create(archive);
             ArchiveEntry entry = Archives.getFirstManifestArchiveEntry(node);
             assertNotNull(entry);

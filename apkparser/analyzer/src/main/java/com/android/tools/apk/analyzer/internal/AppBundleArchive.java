@@ -24,39 +24,44 @@ import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 
-public class AppBundleArtifact implements Archive {
+/**
+ * Implementation of {@link Archive} for an &quot;Android App Bundle&quot; zip file.
+ *
+ * <p>The archive is opened as a <code>zip</code> {@link FileSystem} until the {@link #close()}
+ * method is called.
+ */
+public class AppBundleArchive implements Archive {
     /** The first byte of a proto XML file is always 0x0A. */
     public static final byte PROTO_XML_LEAD_BYTE = 0x0A;
 
-    private final Path artifact;
-    private final FileSystem fileSystem;
+    @NonNull private final Path appBundlePath;
+    @NonNull private final FileSystem zipFileSystem;
 
-    private AppBundleArtifact(@NonNull Path artifact, @NonNull FileSystem fileSystem) {
-        this.artifact = artifact;
-        this.fileSystem = fileSystem;
+    private AppBundleArchive(@NonNull Path appBundlePath) throws IOException {
+        this.appBundlePath = appBundlePath;
+        this.zipFileSystem = FileUtils.createZipFilesystem(appBundlePath);
     }
 
     @NonNull
-    public static AppBundleArtifact fromBundleFile(@NonNull Path artifact) throws IOException {
-        FileSystem fileSystem = FileUtils.createZipFilesystem(artifact);
-        return new AppBundleArtifact(artifact, fileSystem);
+    public static AppBundleArchive fromBundleFile(@NonNull Path artifact) throws IOException {
+        return new AppBundleArchive(artifact);
     }
 
     @NonNull
     @Override
     public Path getPath() {
-        return artifact;
+        return appBundlePath;
     }
 
     @Override
     @NonNull
     public Path getContentRoot() {
-        return fileSystem.getPath("/");
+        return zipFileSystem.getPath("/");
     }
 
     @Override
     public void close() throws IOException {
-        fileSystem.close();
+        zipFileSystem.close();
     }
 
     @Override
@@ -84,6 +89,11 @@ public class AppBundleArtifact implements Archive {
         }
 
         return (content.length > 0) && (content[0] == PROTO_XML_LEAD_BYTE);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s: path=\"%s\"", getClass().getSimpleName(), appBundlePath);
     }
 
     private static boolean isManifestFile(@NonNull Path p) {

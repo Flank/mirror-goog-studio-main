@@ -16,18 +16,18 @@
 
 package com.android.tools.apk.analyzer;
 
+import static com.android.SdkConstants.EXT_ANDROID_PACKAGE;
 import static com.android.SdkConstants.EXT_APP_BUNDLE;
 import static com.android.SdkConstants.EXT_ZIP;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.tools.apk.analyzer.internal.AndroidArtifact;
-import com.android.tools.apk.analyzer.internal.AppBundleArtifact;
-import com.android.tools.apk.analyzer.internal.ZipArtifact;
-import com.android.utils.FileUtils;
+import com.android.tools.apk.analyzer.internal.ApkArchive;
+import com.android.tools.apk.analyzer.internal.AppBundleArchive;
+import com.android.tools.apk.analyzer.internal.InstantAppBundleArchive;
+import com.android.tools.apk.analyzer.internal.ZipArchive;
 import java.io.IOException;
-import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.Objects;
 
@@ -38,14 +38,15 @@ public class Archives {
     public static Archive open(@NonNull Path archive) throws IOException {
         if (hasFileExtension(archive, EXT_ZIP)) {
             // We assume this is an AIA bundle, which we give special handling
-            return ZipArtifact.fromZippedBundle(archive);
+            return InstantAppBundleArchive.fromZippedBundle(archive);
         } else if (hasFileExtension(archive, EXT_APP_BUNDLE)) {
             // Android App Bundle (.aab) archive
-            return AppBundleArtifact.fromBundleFile(archive);
-        } else {
+            return AppBundleArchive.fromBundleFile(archive);
+        } else if (hasFileExtension(archive, EXT_ANDROID_PACKAGE)) {
             // APK file archive
-            FileSystem fileSystem = FileUtils.createZipFilesystem(archive);
-            return new AndroidArtifact(archive, fileSystem);
+            return new ApkArchive(archive);
+        } else {
+            return new ZipArchive(archive);
         }
     }
 
@@ -57,8 +58,11 @@ public class Archives {
      */
     @NonNull
     static Archive openInnerZip(@NonNull Path archive) throws IOException {
-        FileSystem fileSystem = FileUtils.createZipFilesystem(archive);
-        return new AndroidArtifact(archive, fileSystem);
+        if (hasFileExtension(archive, EXT_ANDROID_PACKAGE)) {
+            return new ApkArchive(archive);
+        } else {
+            return new ZipArchive(archive);
+        }
     }
 
     /**
@@ -68,14 +72,14 @@ public class Archives {
     @Nullable
     public static ArchiveEntry getFirstManifestArchiveEntry(@NonNull ArchiveNode input) {
         // APK file has their manifest in the top level node
-        if (input.getData().getArchive() instanceof AndroidArtifact) {
+        if (input.getData().getArchive() instanceof ApkArchive) {
             Archive archive = input.getData().getArchive();
             return getTopLevelManifestEntry(input, archive);
         }
 
         // AIA bundle files contain multiple APK files. Look for the first one that contains
         // a manifest at the top level
-        if (input.getData().getArchive() instanceof ZipArtifact) {
+        if (input.getData().getArchive() instanceof InstantAppBundleArchive) {
             return input.getChildren()
                     .stream()
                     .map(
@@ -94,8 +98,8 @@ public class Archives {
 
         // App bundle contain one node for the base module and one for each dynamic feature
         // module. The "main" manifest is the one of the base module.
-        if (input.getData().getArchive() instanceof AppBundleArtifact) {
-            AppBundleArtifact appBundleArchive = (AppBundleArtifact) input.getData().getArchive();
+        if (input.getData().getArchive() instanceof AppBundleArchive) {
+            AppBundleArchive appBundleArchive = (AppBundleArchive) input.getData().getArchive();
             ArchiveNode baseDir =
                     getChild(input, appBundleArchive.getContentRoot().resolve("base/"));
             if (baseDir == null) {

@@ -25,14 +25,14 @@ public class InnerArchiveEntry extends ArchiveEntry {
     public InnerArchiveEntry(
             @NonNull Archive archive,
             @NonNull Path path,
-            @NonNull String fullPathString,
+            @NonNull String pathPrefix,
             @NonNull Archive innerArchive) {
-        super(archive, path, fullPathString);
+        super(archive, path, pathPrefix);
         this.innerArchive = innerArchive;
     }
 
     @NonNull
     public ArchiveEntry asArchiveEntry() {
-        return new ArchiveEntry(innerArchive, innerArchive.getContentRoot(), getFullPathString());
+        return new ArchiveEntry(innerArchive, innerArchive.getContentRoot(), getPathPrefix());
     }
 }

@@ -24,30 +24,15 @@ import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 
-public class AndroidArtifact implements Archive {
-    private final Path artifact;
-    private final FileSystem contents;
-
-    public AndroidArtifact(@NonNull Path artifact, @NonNull FileSystem contents) {
-        this.artifact = artifact;
-        this.contents = contents;
-    }
-
-    @NonNull
-    @Override
-    public Path getPath() {
-        return artifact;
-    }
-
-    @Override
-    @NonNull
-    public Path getContentRoot() {
-        return contents.getPath("/");
-    }
-
-    @Override
-    public void close() throws IOException {
-        contents.close();
+/**
+ * Implementation of {@link Archive} for an &quot;apk&quot; file.
+ *
+ * <p>The archive is opened as a {@code zip} {@link FileSystem} until the {@link #close()} method is
+ * called.
+ */
+public class ApkArchive extends ZipArchive {
+    public ApkArchive(@NonNull Path artifact) throws IOException {
+        super(artifact);
     }
 
     @Override
@@ -61,10 +46,12 @@ public class AndroidArtifact implements Archive {
             return false;
         }
 
-        boolean manifest = p.equals(contents.getPath("/", SdkConstants.FN_ANDROID_MANIFEST_XML));
-        boolean insideResFolder = p.startsWith(contents.getPath("/", SdkConstants.FD_RES));
+        Path contents = this.getContentRoot();
+        boolean manifest = p.equals(contents.resolve(SdkConstants.FN_ANDROID_MANIFEST_XML));
+        boolean insideResFolder = p.startsWith(contents.resolve(SdkConstants.FD_RES));
         boolean insideResRaw =
-                p.startsWith(contents.getPath("/", SdkConstants.FD_RES, SdkConstants.FD_RES_RAW));
+                p.startsWith(
+                        contents.resolve(SdkConstants.FD_RES).resolve(SdkConstants.FD_RES_RAW));
         boolean xmlResource = insideResFolder && !insideResRaw;
         if (!manifest && !xmlResource) {
             return false;

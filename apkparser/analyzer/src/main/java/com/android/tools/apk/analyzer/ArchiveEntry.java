@@ -20,28 +20,40 @@ import com.android.annotations.NonNull;
 import java.nio.file.Path;
 
 public class ArchiveEntry {
+    /** The archive containing this entry. */
     @NonNull private final Archive archive;
-
     /**
      * This is the relative path in the archive. For inner archive root nodes, it's the relative
      * path in the outer archive. For inner archive non-root nodes, it's the relative path in the
      * inner archive.
      */
     @NonNull private final Path path;
-    @NonNull private final String fullPathString;
+    /**
+     * This is an arbitrary path prefix string used to build the display path returned by the {@link
+     * #getFullPathString()} method. The string can be empty, in which case {@link
+     * #getFullPathString()} returns the same string as <code>{@link #getPath()}.toString()</code>.
+     */
+    @NonNull private final String pathPrefix;
+
     private long rawFileSize = -1;
     private long downloadFileSize = -1;
 
-    public ArchiveEntry(
-            @NonNull Archive archive, @NonNull Path path, @NonNull String fullPathString) {
+    public ArchiveEntry(@NonNull Archive archive, @NonNull Path path, @NonNull String pathPrefix) {
+        assert archive.getContentRoot().getFileSystem() == path.getFileSystem();
+
         this.archive = archive;
-        this.path = path.normalize();
-        this.fullPathString = fullPathString;
+        this.path = path;
+        this.pathPrefix = pathPrefix;
     }
 
     @NonNull
     public Path getPath() {
         return path;
+    }
+
+    @NonNull
+    public String getPathPrefix() {
+        return pathPrefix;
     }
 
     public void setRawFileSize(long rawFileSize) {
@@ -67,6 +79,12 @@ public class ArchiveEntry {
 
     @NonNull
     public String getFullPathString() {
-        return fullPathString;
+        return pathPrefix + path.toString();
+    }
+
+    @Override
+    public String toString() {
+        return String.format(
+                "%s: pathPrefix=\"%s\", path=\"%s\"", getClass().getSimpleName(), pathPrefix, path);
     }
 }

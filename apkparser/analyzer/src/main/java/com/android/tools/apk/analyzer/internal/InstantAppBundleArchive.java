@@ -23,42 +23,55 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 
-public class ZipArtifact implements Archive {
-    private final Path artifact;
-    private final Path contents;
+/**
+ * Implementation of {@link Archive} for an Instant App bundle zip file.
+ *
+ * <p>The contents of the <code>zip</code> file (i.e. <code>APK</code> files) are extracted into a
+ * temporary directory. The {@link #close()} method deletes this temporary directory.
+ */
+public class InstantAppBundleArchive implements Archive {
+    @NonNull private final Path bundleFilePath;
+    @NonNull private final Path extractedFilesPath;
 
-    private ZipArtifact(@NonNull Path artifact, @NonNull FileSystem zipFileSystem)
-            throws IOException {
-        this.artifact = artifact;
-        this.contents = Files.createTempDirectory(artifact.getFileName().toString());
-        //for zip archives (which are AIA bundles), we unzip the outer zip contents to a temp folder
-        //so that we show accurate file sizes for the top-level APKs in the ZIP file
-        Files.walkFileTree(
-                zipFileSystem.getPath("/"), new CopyPathFileVisitor(contents, zipFileSystem));
+    private InstantAppBundleArchive(@NonNull Path bundleFilePath) throws IOException {
+        this.bundleFilePath = bundleFilePath;
+        this.extractedFilesPath =
+                Files.createTempDirectory(bundleFilePath.getFileName().toString());
+
+        // For zip archives (which are AIA bundles), we unzip the outer zip contents to a temp folder
+        // so that we show accurate file sizes for the top-level APKs in the ZIP file.
+        extractArchiveContents(bundleFilePath);
+    }
+
+    private void extractArchiveContents(@NonNull Path artifact) throws IOException {
+        try (FileSystem fileSystem = FileUtils.createZipFilesystem(artifact)) {
+            Files.walkFileTree(
+                    fileSystem.getPath("/"),
+                    new CopyPathFileVisitor(fileSystem, extractedFilesPath));
+        }
     }
 
     @NonNull
-    public static ZipArtifact fromZippedBundle(@NonNull Path artifact) throws IOException {
-        try (FileSystem fileSystem = FileUtils.createZipFilesystem(artifact)) {
-            return new ZipArtifact(artifact, fileSystem);
-        }
+    public static InstantAppBundleArchive fromZippedBundle(@NonNull Path artifact)
+            throws IOException {
+        return new InstantAppBundleArchive(artifact);
     }
 
     @NonNull
     @Override
     public Path getPath() {
-        return artifact;
+        return bundleFilePath;
     }
 
     @Override
     @NonNull
     public Path getContentRoot() {
-        return contents;
+        return extractedFilesPath;
     }
 
     @Override
     public void close() throws IOException {
-        FileUtils.deletePath(contents.toFile());
+        FileUtils.deletePath(extractedFilesPath.toFile());
     }
 
     @Override
@@ -71,11 +84,16 @@ public class ZipArtifact implements Archive {
         return false;
     }
 
+    @Override
+    public String toString() {
+        return String.format("%s: path=\"%s\"", getClass().getSimpleName(), bundleFilePath);
+    }
+
     private static class CopyPathFileVisitor implements FileVisitor<Path> {
         private final Path source;
         private final Path destination;
 
-        public CopyPathFileVisitor(@NonNull Path destination, @NonNull FileSystem source) {
+        public CopyPathFileVisitor(@NonNull FileSystem source, @NonNull Path destination) {
             this.source = source.getPath("/");
             this.destination = destination;
         }
