@@ -15,20 +15,24 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import java.io.File;
 import java.util.Map;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.tasks.TaskProvider;
+import org.jetbrains.annotations.NotNull;
 
 /** Configuration Action for a JavaCompile task. */
-public class JavaCompileCreationAction extends EagerTaskCreationAction<AndroidJavaCompile> {
+public class JavaCompileCreationAction extends LazyTaskCreationAction<AndroidJavaCompile> {
     private static final ILogger LOG = LoggerWrapper.getLogger(JavaCompileCreationAction.class);
 
     @NonNull private final VariantScope scope;
+    private File destinationDir;
 
     public JavaCompileCreationAction(@NonNull VariantScope scope) {
         this.scope = scope;
@@ -47,12 +51,33 @@ public class JavaCompileCreationAction extends EagerTaskCreationAction<AndroidJa
     }
 
     @Override
-    public void execute(@NonNull final AndroidJavaCompile javacTask) {
-        scope.getTaskContainer().setJavacTask(javacTask);
+    public void preConfigure(@NotNull String taskName) {
+        super.preConfigure(taskName);
+
+        BuildArtifactsHolder artifacts = scope.getArtifacts();
+        destinationDir = artifacts.appendArtifact(InternalArtifactType.JAVAC, taskName, "classes");
+
+        if (scope.getGlobalScope().getExtension().getDataBinding().isEnabled()) {
+            // The data binding artifact is created through annotation processing, which is invoked
+            // by the JavaCompile task. Therefore, we register JavaCompile as the generating task.
+            artifacts.appendArtifact(
+                    InternalArtifactType.DATA_BINDING_ARTIFACT,
+                    ImmutableList.of(scope.getBundleArtifactFolderForDataBinding()),
+                    taskName);
+        }
+    }
+
+    @Override
+    public void handleProvider(@NotNull TaskProvider<? extends AndroidJavaCompile> taskProvider) {
+        super.handleProvider(taskProvider);
+        scope.getTaskContainer().setJavacTask(taskProvider);
+    }
+
+    @Override
+    public void configure(@NonNull final AndroidJavaCompile javacTask) {
         final GlobalScope globalScope = scope.getGlobalScope();
         final Project project = globalScope.getProject();
         BuildArtifactsHolder artifacts = scope.getArtifacts();
-        boolean isDataBindingEnabled = globalScope.getExtension().getDataBinding().isEnabled();
 
         javacTask.compileSdkVersion = globalScope.getExtension().getCompileSdkVersion();
         javacTask.mInstantRunBuildContext = scope.getInstantRunBuildContext();
@@ -67,9 +92,7 @@ public class JavaCompileCreationAction extends EagerTaskCreationAction<AndroidJa
         javacTask.getOptions().setBootstrapClasspath(scope.getBootClasspath());
         javacTask.setClasspath(scope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES));
 
-        javacTask.setDestinationDir(
-                artifacts
-                        .appendArtifact(InternalArtifactType.JAVAC, javacTask, "classes"));
+        javacTask.setDestinationDir(destinationDir);
 
         CompileOptions compileOptions = globalScope.getExtension().getCompileOptions();
 
@@ -141,17 +164,10 @@ public class JavaCompileCreationAction extends EagerTaskCreationAction<AndroidJa
                         scope.getAnnotationProcessorOutputDir());
         javacTask.annotationProcessorOutputFolder = scope.getAnnotationProcessorOutputDir();
 
-        if (isDataBindingEnabled) {
-            // The data binding artifact is created through annotation processing, which is invoked
-            // by the JavaCompile task. Therefore, we register JavaCompile as the generating task.
-            artifacts.appendArtifact(
-                    InternalArtifactType.DATA_BINDING_ARTIFACT,
-                    ImmutableList.of(scope.getBundleArtifactFolderForDataBinding()),
-                    javacTask);
-        }
-
         javacTask.processorListFile =
                 artifacts.getFinalArtifactFiles(ANNOTATION_PROCESSOR_LIST);
         javacTask.variantName = scope.getFullVariantName();
+
+        javacTask.dependsOn(scope.getTaskContainer().getSourceGenTask());
     }
 }

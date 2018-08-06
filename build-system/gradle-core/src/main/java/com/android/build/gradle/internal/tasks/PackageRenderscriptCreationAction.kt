@@ -17,25 +17,34 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
 import org.gradle.api.tasks.Sync
+import java.io.File
 
 /** Configuration action for a package-renderscript task.  */
 class PackageRenderscriptCreationAction(private val variantScope: VariantScope) :
-    EagerTaskCreationAction<Sync>() {
+    LazyTaskCreationAction<Sync>() {
 
     override val name: String
         get() = variantScope.getTaskName("package", "Renderscript")
     override val type: Class<Sync>
         get() = Sync::class.java
 
-    override fun execute(task: Sync) {
+    private lateinit var into: File
+
+    override fun preConfigure(taskName: String) {
+        super.preConfigure(taskName)
+
+        into = variantScope.artifacts.appendArtifact(
+            InternalArtifactType.RENDERSCRIPT_HEADERS, taskName, "out")
+    }
+
+    override fun configure(task: Sync) {
         // package from 3 sources. the order is important to make sure the override works well.
         task
             .from(variantScope.variantConfiguration.renderscriptSourceList)
             .include("**/*.rsh")
-        task.into(variantScope.artifacts.appendArtifact(
-            InternalArtifactType.RENDERSCRIPT_HEADERS, task, "out"))
+        task.into(into)
     }
 }

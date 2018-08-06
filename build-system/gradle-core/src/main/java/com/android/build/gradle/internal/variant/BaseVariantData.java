@@ -75,6 +75,7 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.resources.TextResource;
 import org.gradle.api.tasks.Sync;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 
 /** Base data about a variant. */
@@ -318,7 +319,7 @@ public abstract class BaseVariantData {
     }
 
     public void registerJavaGeneratingTask(@NonNull Task task, @NonNull Collection<File> generatedSourceFolders) {
-        final JavaCompile javacTask = taskContainer.getJavacTask();
+        TaskProvider<? extends JavaCompile> javacTask = taskContainer.getJavacTask();
         Preconditions.checkNotNull(javacTask);
 
         TaskFactoryUtils.dependsOn(taskContainer.getSourceGenTask(), task);
@@ -331,7 +332,8 @@ public abstract class BaseVariantData {
         for (File f : generatedSourceFolders) {
             ConfigurableFileTree fileTree = project.fileTree(f).builtBy(task);
             extraGeneratedSourceFileTrees.add(fileTree);
-            javacTask.source(fileTree);
+            // FIXME we need to revise this API as it force-configure the tasks
+            javacTask.get().source(fileTree);
         }
 
         addJavaSourceFoldersToModel(generatedSourceFolders);
@@ -340,7 +342,8 @@ public abstract class BaseVariantData {
     public void registerExternalAptJavaOutput(@NonNull ConfigurableFileTree folder) {
         Preconditions.checkNotNull(taskContainer.getJavacTask());
 
-        taskContainer.getJavacTask().source(folder);
+        // FIXME we need to revise this API as it force-configure the tasks
+        taskContainer.getJavacTask().get().source(folder);
         addJavaSourceFoldersToModel(folder.getDir());
     }
 
@@ -691,7 +694,8 @@ public abstract class BaseVariantData {
 
     @NonNull
     public File getJavaResourcesForUnitTesting() {
-        Sync processJavaResourcesTask = taskContainer.getProcessJavaResourcesTask();
+        // FIXME we need to revise this API as it force-configure the tasks
+        Sync processJavaResourcesTask = taskContainer.getProcessJavaResourcesTask().get();
         if (processJavaResourcesTask != null) {
             return processJavaResourcesTask.getOutputs().getFiles().getSingleFile();
         } else {

@@ -55,17 +55,17 @@ class MutableTaskContainer : TaskContainer {
 
     // implementation of the API setter/getters as required by our current APIs.
     override lateinit var assembleTask: TaskProvider<out Task>
-    override lateinit var javacTask: JavaCompile
+    override lateinit var javacTask: TaskProvider<out JavaCompile>
     override lateinit var compileTask: TaskProvider<out Task>
     override lateinit var preBuildTask: TaskProvider<out Task>
     override var checkManifestTask: CheckManifest? = null
-    override var aidlCompileTask: AidlCompile? = null
-    override var renderscriptCompileTask: RenderscriptCompile? = null
+    override var aidlCompileTask: TaskProvider<out AidlCompile>? = null
+    override var renderscriptCompileTask: TaskProvider<out RenderscriptCompile>? = null
     override lateinit var mergeResourcesTask: TaskProvider<out MergeResources>
     override lateinit var mergeAssetsTask: TaskProvider<out MergeSourceSetFolders>
-    override lateinit var processJavaResourcesTask: Sync
+    override lateinit var processJavaResourcesTask: TaskProvider<out Sync>
     override var generateBuildConfigTask: TaskProvider<out GenerateBuildConfig>? = null
-    override var ndkCompileTask: NdkCompile? = null
+    override var ndkCompileTask: TaskProvider<out NdkCompile>? = null
     override var obfuscationTask: Task? = null
     override var processAndroidResTask: ProcessAndroidResources? = null
     override var processManifestTask: TaskProvider<out ManifestProcessorTask>? = null

@@ -392,6 +392,13 @@ public class ModelBuilder<Extension extends AndroidConfig>
             }
         }
 
+        // FIXME we should not have to configure the javac task to have proper values in extension.getCompileOptions()
+        // b/112356059
+        VariantScope variant = Iterables.getFirst(variantManager.getVariantScopes(), null);
+        if (variant != null) {
+            variant.getTaskContainer().getCompileTask().get();
+        }
+
         return new DefaultAndroidProject(
                 project.getName(),
                 defaultConfig,

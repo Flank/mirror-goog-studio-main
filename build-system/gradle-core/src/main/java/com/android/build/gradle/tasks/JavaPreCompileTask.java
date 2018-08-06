@@ -28,7 +28,7 @@ import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -51,6 +51,7 @@ import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
+import org.jetbrains.annotations.NotNull;
 
 /** Tasks to perform necessary action before a JavaCompile. */
 @CacheableTask
@@ -218,9 +219,10 @@ public class JavaPreCompileTask extends AndroidBuilderTask {
                 .collect(Collectors.toList());
     }
 
-    public static class CreationAction extends EagerTaskCreationAction<JavaPreCompileTask> {
+    public static class CreationAction extends LazyTaskCreationAction<JavaPreCompileTask> {
 
         private final VariantScope scope;
+        private File apList;
 
         public CreationAction(VariantScope scope) {
             this.scope = scope;
@@ -239,13 +241,20 @@ public class JavaPreCompileTask extends AndroidBuilderTask {
         }
 
         @Override
-        public void execute(@NonNull JavaPreCompileTask task) {
-            task.init(
+        public void preConfigure(@NotNull String taskName) {
+            super.preConfigure(taskName);
+            apList =
                     scope.getArtifacts()
                             .appendArtifact(
                                     InternalArtifactType.ANNOTATION_PROCESSOR_LIST,
-                                    task,
-                                    "annotationProcessors.json"),
+                                    taskName,
+                                    "annotationProcessors.json");
+        }
+
+        @Override
+        public void configure(@NonNull JavaPreCompileTask task) {
+            task.init(
+                    apList,
                     scope.getVariantData().getType().isTestComponent()
                             ? scope.getVariantData().getType().getPrefix() + "AnnotationProcessor"
                             : "annotationProcessor",
@@ -257,6 +266,8 @@ public class JavaPreCompileTask extends AndroidBuilderTask {
                     scope.getVariantData().getType().isTestComponent(),
                     false);
             task.setVariantName(scope.getFullVariantName());
+
+            task.dependsOn(scope.getTaskContainer().getPreBuildTask());
         }
     }
 }

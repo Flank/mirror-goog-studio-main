@@ -68,6 +68,7 @@ import java.util.List;
 import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 import org.jetbrains.annotations.NotNull;
@@ -163,7 +164,7 @@ public class LibraryTaskManager extends TaskManager {
         createDataBindingTasksIfNecessary(variantScope, MergeType.PACKAGE);
 
         // Add a compile task
-        JavaCompile javacTask = createJavacTask(variantScope);
+        TaskProvider<? extends JavaCompile> javacTask = createJavacTask(variantScope);
         addJavacClassesStream(variantScope);
         TaskManager.setJavaCompilerTask(javacTask, variantScope);
 
@@ -178,7 +179,7 @@ public class LibraryTaskManager extends TaskManager {
         createMergeJniLibFoldersTasks(variantScope);
         createStripNativeLibraryTask(taskFactory, variantScope);
 
-        taskFactory.eagerCreate(new PackageRenderscriptCreationAction(variantScope));
+        taskFactory.lazyCreate(new PackageRenderscriptCreationAction(variantScope));
 
         // merge consumer proguard files from different build types and flavors
         taskFactory.eagerCreate(new MergeConsumerProguardFilesCreationAction(variantScope));

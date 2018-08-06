@@ -42,18 +42,18 @@ import org.gradle.api.tasks.compile.JavaCompile
 interface TaskContainer {
 
     val assembleTask: TaskProvider<out Task>
-    val javacTask: JavaCompile
+    val javacTask: TaskProvider<out JavaCompile>
     // empty anchor compile task to set all compilations tasks as dependents.
     val compileTask: TaskProvider<out Task>
     val preBuildTask: TaskProvider<out Task>
     val checkManifestTask: CheckManifest?
-    val aidlCompileTask: AidlCompile?
-    val renderscriptCompileTask: RenderscriptCompile?
+    val aidlCompileTask: TaskProvider<out AidlCompile>?
+    val renderscriptCompileTask: TaskProvider<out RenderscriptCompile>?
     val mergeResourcesTask: TaskProvider<out MergeResources>
     val mergeAssetsTask: TaskProvider<out MergeSourceSetFolders>
-    val processJavaResourcesTask: Sync
+    val processJavaResourcesTask: TaskProvider<out Sync>
     val generateBuildConfigTask: TaskProvider<out GenerateBuildConfig>?
-    val ndkCompileTask: NdkCompile?
+    val ndkCompileTask: TaskProvider<out NdkCompile>?
     val obfuscationTask: Task?
     val processAndroidResTask: ProcessAndroidResources?
     val processManifestTask: TaskProvider<out ManifestProcessorTask>?

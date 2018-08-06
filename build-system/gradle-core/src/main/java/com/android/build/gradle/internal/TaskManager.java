@@ -785,27 +785,16 @@ public abstract class TaskManager {
     public void createRenderscriptTask(@NonNull VariantScope scope) {
         final MutableTaskContainer taskContainer = scope.getTaskContainer();
 
-        taskContainer.setRenderscriptCompileTask(
-                taskFactory.eagerCreate(new RenderscriptCompile.CreationAction(scope)));
+        TaskProvider<RenderscriptCompile> rsTask =
+                taskFactory.lazyCreate(new RenderscriptCompile.CreationAction(scope));
 
         GradleVariantConfiguration config = scope.getVariantConfiguration();
 
-        if (config.getType().isTestComponent()) {
-            taskContainer
-                    .getRenderscriptCompileTask()
-                    .dependsOn(taskContainer.getProcessManifestTask());
-        } else {
-            taskContainer.getRenderscriptCompileTask().dependsOn(taskContainer.getPreBuildTask());
-        }
-
-        TaskFactoryUtils.dependsOn(
-                taskContainer.getResourceGenTask(), taskContainer.getRenderscriptCompileTask());
+        TaskFactoryUtils.dependsOn(taskContainer.getResourceGenTask(), rsTask);
         // only put this dependency if rs will generate Java code
         if (!config.getRenderscriptNdkModeEnabled()) {
-            TaskFactoryUtils.dependsOn(
-                    taskContainer.getSourceGenTask(), taskContainer.getRenderscriptCompileTask());
+            TaskFactoryUtils.dependsOn(taskContainer.getSourceGenTask(), rsTask);
         }
-
     }
 
     public TaskProvider<MergeResources> createMergeResourcesTask(
@@ -1315,12 +1304,9 @@ public abstract class TaskManager {
         // TODO: move this file computation completely out of VariantScope.
         File destinationDir = variantScope.getSourceFoldersJavaResDestinationDir();
 
-        Sync processJavaResourcesTask =
-                taskFactory.eagerCreate(
+        TaskProvider<Sync> processJavaResourcesTask =
+                taskFactory.lazyCreate(
                         new ProcessJavaResCreationAction(variantScope, destinationDir));
-        variantScope.getTaskContainer().setProcessJavaResourcesTask(processJavaResourcesTask);
-
-        processJavaResourcesTask.dependsOn(variantScope.getTaskContainer().getPreBuildTask());
 
         // create the task outputs for others to consume
         BuildableArtifact javaRes =
@@ -1329,7 +1315,7 @@ public abstract class TaskManager {
                         .appendArtifact(
                                 InternalArtifactType.JAVA_RES,
                                 ImmutableList.of(destinationDir),
-                                processJavaResourcesTask);
+                                processJavaResourcesTask.getName());
 
         // create the stream generated from this task
         variantScope
@@ -1385,15 +1371,13 @@ public abstract class TaskManager {
                 null);
     }
 
-    public AidlCompile createAidlTask(@NonNull VariantScope scope) {
+    public TaskProvider<AidlCompile> createAidlTask(@NonNull VariantScope scope) {
         MutableTaskContainer taskContainer = scope.getTaskContainer();
 
-        AidlCompile aidlCompileTask =
-                taskFactory.eagerCreate(new AidlCompile.CreationAction(scope));
+        TaskProvider<AidlCompile> aidlCompileTask =
+                taskFactory.lazyCreate(new AidlCompile.CreationAction(scope));
 
-        taskContainer.setAidlCompileTask(aidlCompileTask);
         TaskFactoryUtils.dependsOn(taskContainer.getSourceGenTask(), aidlCompileTask);
-        aidlCompileTask.dependsOn(taskContainer.getPreBuildTask());
 
         return aidlCompileTask;
     }
@@ -1419,15 +1403,11 @@ public abstract class TaskManager {
      * of whether Jack is used or not, but assemble will not depend on them if it is. They are
      * always used when running unit tests.
      */
-    public JavaCompile createJavacTask(@NonNull final VariantScope scope) {
-        JavaPreCompileTask preCompileTask =
-                taskFactory.eagerCreate(new JavaPreCompileTask.CreationAction(scope));
-        preCompileTask.dependsOn(scope.getTaskContainer().getPreBuildTask());
+    public TaskProvider<? extends JavaCompile> createJavacTask(@NonNull final VariantScope scope) {
+        taskFactory.lazyCreate(new JavaPreCompileTask.CreationAction(scope));
 
-        final JavaCompile javacTask = taskFactory.eagerCreate(new JavaCompileCreationAction(scope));
-        scope.getTaskContainer().setJavacTask(javacTask);
-
-        setupCompileTaskDependencies(scope, javacTask);
+        final TaskProvider<? extends JavaCompile> javacTask =
+                taskFactory.lazyCreate(new JavaCompileCreationAction(scope));
 
         postJavacCreation(scope);
 
@@ -1510,13 +1490,8 @@ public abstract class TaskManager {
         }
     }
 
-    private static void setupCompileTaskDependencies(
-            @NonNull VariantScope scope, @NonNull Task compileTask) {
-        compileTask.dependsOn(scope.getTaskContainer().getSourceGenTask());
-    }
-
     protected void createCompileTask(@NonNull VariantScope variantScope) {
-        JavaCompile javacTask = createJavacTask(variantScope);
+        TaskProvider<? extends JavaCompile> javacTask = createJavacTask(variantScope);
         addJavacClassesStream(variantScope);
         setJavaCompilerTask(javacTask, variantScope);
         createPostCompilationTasks(variantScope);
@@ -1525,8 +1500,8 @@ public abstract class TaskManager {
 
     /** Makes the given task the one used by top-level "compile" task. */
     public static void setJavaCompilerTask(
-            @NonNull Task javaCompilerTask, @NonNull VariantScope scope) {
-
+            @NonNull TaskProvider<? extends JavaCompile> javaCompilerTask,
+            @NonNull VariantScope scope) {
         TaskFactoryUtils.dependsOn(scope.getTaskContainer().getCompileTask(), javaCompilerTask);
     }
 
@@ -1636,16 +1611,9 @@ public abstract class TaskManager {
             return;
         }
 
-        NdkCompile ndkCompileTask = taskFactory.eagerCreate(new NdkCompile.CreationAction(scope));
+        TaskProvider<NdkCompile> ndkCompileTask =
+                taskFactory.lazyCreate(new NdkCompile.CreationAction(scope));
 
-        ndkCompileTask.dependsOn(scope.getTaskContainer().getPreBuildTask());
-        if (Boolean.TRUE.equals(
-                scope.getVariantData()
-                        .getVariantConfiguration()
-                        .getMergedFlavor()
-                        .getRenderscriptNdkModeEnabled())) {
-            ndkCompileTask.dependsOn(scope.getTaskContainer().getRenderscriptCompileTask());
-        }
         TaskFactoryUtils.dependsOn(scope.getTaskContainer().getCompileTask(), ndkCompileTask);
     }
 
@@ -1770,10 +1738,11 @@ public abstract class TaskManager {
                 .appendArtifact(
                         InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR, project.files());
 
-        JavaCompile javacTask = createJavacTask(variantScope);
+        TaskProvider<? extends JavaCompile> javacTask = createJavacTask(variantScope);
         addJavacClassesStream(variantScope);
         setJavaCompilerTask(javacTask, variantScope);
-        javacTask.dependsOn(testedVariantScope.getTaskContainer().getJavacTask());
+        // This should be done automatically by the classpath
+        //        TaskFactoryUtils.dependsOn(javacTask, testedVariantScope.getTaskContainer().getJavacTask());
 
         createMergeJavaResTransform(variantScope);
 
@@ -1836,7 +1805,7 @@ public abstract class TaskManager {
         createDataBindingTasksIfNecessary(variantScope, MergeType.MERGE);
 
         // Add a task to compile the test application
-        JavaCompile javacTask = createJavacTask(variantScope);
+        TaskProvider<? extends JavaCompile> javacTask = createJavacTask(variantScope);
         addJavacClassesStream(variantScope);
         setJavaCompilerTask(javacTask, variantScope);
         createPostCompilationTasks(variantScope);

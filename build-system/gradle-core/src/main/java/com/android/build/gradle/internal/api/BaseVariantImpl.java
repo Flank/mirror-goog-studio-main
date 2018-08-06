@@ -230,13 +230,13 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @NonNull
     public AidlCompile getAidlCompile() {
-        return getVariantData().getTaskContainer().getAidlCompileTask();
+        return getVariantData().getTaskContainer().getAidlCompileTask().get();
     }
 
     @Override
     @NonNull
     public RenderscriptCompile getRenderscriptCompile() {
-        return getVariantData().getTaskContainer().getRenderscriptCompileTask();
+        return getVariantData().getTaskContainer().getRenderscriptCompileTask().get();
     }
 
     @Override
@@ -257,19 +257,19 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @Nullable
     public JavaCompile getJavaCompile() {
-        return getVariantData().getTaskContainer().getJavacTask();
+        return getVariantData().getTaskContainer().getJavacTask().getOrNull();
     }
 
     @NonNull
     @Override
     public Task getJavaCompiler() {
-        return getVariantData().getTaskContainer().getJavacTask();
+        return getVariantData().getTaskContainer().getJavacTask().getOrNull();
     }
 
     @NonNull
     @Override
     public NdkCompile getNdkCompile() {
-        return getVariantData().getTaskContainer().getNdkCompileTask();
+        return getVariantData().getTaskContainer().getNdkCompileTask().get();
     }
 
     @Override
@@ -299,7 +299,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @NonNull
     public Sync getProcessJavaResources() {
-        return getVariantData().getTaskContainer().getProcessJavaResourcesTask();
+        return getVariantData().getTaskContainer().getProcessJavaResourcesTask().get();
     }
 
     @Override

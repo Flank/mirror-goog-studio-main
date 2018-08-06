@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
+import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.test.TestApplicationTestData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.ProjectOptions;
@@ -186,7 +187,8 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                     taskFactory.eagerCreate(
                             new CheckTestedAppObfuscation.CreationAction(variantScope));
             Preconditions.checkNotNull(variantScope.getTaskContainer().getJavacTask());
-            variantScope.getTaskContainer().getJavacTask().dependsOn(checkObfuscation);
+            TaskFactoryUtils.dependsOn(
+                    variantScope.getTaskContainer().getJavacTask(), checkObfuscation);
             return null;
         }
     }

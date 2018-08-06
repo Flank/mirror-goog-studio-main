@@ -25,9 +25,10 @@ import static com.android.build.gradle.options.NdkLease.DEPRECATED_NDK_COMPILE_L
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
+import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NdkTask;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.NdkLease;
@@ -52,7 +53,6 @@ import java.util.concurrent.Callable;
 import org.gradle.api.Action;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -61,9 +61,11 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
 import org.gradle.api.tasks.incremental.InputFileDetails;
 import org.gradle.api.tasks.util.PatternSet;
+import org.jetbrains.annotations.NotNull;
 
 public class NdkCompile extends NdkTask {
 
@@ -87,7 +89,7 @@ public class NdkCompile extends NdkTask {
                 urlSuffix, generatedAndridMk);
     }
 
-    private FileCollection sourceFolders;
+    private ConfigurableFileCollection sourceFolders;
     private File generatedMakefile;
 
     private boolean debuggable;
@@ -429,7 +431,7 @@ public class NdkCompile extends NdkTask {
                 getStl() == null);
     }
 
-    public static class CreationAction extends EagerTaskCreationAction<NdkCompile> {
+    public static class CreationAction extends LazyTaskCreationAction<NdkCompile> {
 
         @NonNull private final VariantScope variantScope;
 
@@ -450,8 +452,15 @@ public class NdkCompile extends NdkTask {
         }
 
         @Override
-        public void execute(@NonNull NdkCompile ndkCompile) {
+        public void handleProvider(@NotNull TaskProvider<? extends NdkCompile> taskProvider) {
+            super.handleProvider(taskProvider);
+            variantScope.getTaskContainer().setNdkCompileTask(taskProvider);
+        }
+
+        @Override
+        public void configure(@NonNull NdkCompile ndkCompile) {
             final BaseVariantData variantData = variantScope.getVariantData();
+            MutableTaskContainer taskContainer = variantScope.getTaskContainer();
 
             ndkCompile.setAndroidBuilder(variantScope.getGlobalScope().getAndroidBuilder());
             ndkCompile.setVariantName(variantData.getName());
@@ -466,30 +475,13 @@ public class NdkCompile extends NdkTask {
             ndkCompile.isDeprecatedNdkCompileLeaseExpired =
                     NdkLease.isDeprecatedNdkCompileLeaseExpired(
                             variantScope.getGlobalScope().getProjectOptions());
-            variantScope.getTaskContainer().setNdkCompileTask(ndkCompile);
 
             final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
 
-            if (Boolean.TRUE
-                    .equals(variantConfig.getMergedFlavor().getRenderscriptNdkModeEnabled())) {
-                ndkCompile.setNdkRenderScriptMode(true);
-            } else {
-                ndkCompile.setNdkRenderScriptMode(false);
-            }
 
             final Callable<Collection<File>> callable = variantConfig::getJniSourceList;
 
-            ConfigurableFileCollection sourceFoldersFC =
-                    variantScope.getGlobalScope().getProject().files(callable);
-            if (Boolean.TRUE.equals(
-                    variantConfig.getMergedFlavor().getRenderscriptNdkModeEnabled())) {
-                sourceFoldersFC.from(
-                        variantScope
-                                .getArtifacts()
-                                .getFinalArtifactFiles(RENDERSCRIPT_SOURCE_OUTPUT_DIR));
-            }
-
-            ndkCompile.sourceFolders = sourceFoldersFC;
+            ndkCompile.sourceFolders = variantScope.getGlobalScope().getProject().files(callable);
 
             ndkCompile.setGeneratedMakefile(
                     new File(
@@ -510,6 +502,21 @@ public class NdkCompile extends NdkTask {
             if (ndkSoFolder != null && !ndkSoFolder.isEmpty()) {
                 ndkCompile.setSoFolder(ndkSoFolder.iterator().next());
             }
+
+            if (Boolean.TRUE.equals(
+                    variantConfig.getMergedFlavor().getRenderscriptNdkModeEnabled())) {
+                ndkCompile.sourceFolders.from(
+                        variantScope
+                                .getArtifacts()
+                                .getFinalArtifactFiles(RENDERSCRIPT_SOURCE_OUTPUT_DIR));
+                ndkCompile.setNdkRenderScriptMode(true);
+                ndkCompile.dependsOn(taskContainer.getRenderscriptCompileTask());
+            } else {
+                ndkCompile.setNdkRenderScriptMode(false);
+            }
+
+            ndkCompile.dependsOn(taskContainer.getPreBuildTask());
+
         }
     }
 }
