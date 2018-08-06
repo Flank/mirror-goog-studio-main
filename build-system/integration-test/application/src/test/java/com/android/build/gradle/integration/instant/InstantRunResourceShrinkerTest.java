@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.instant;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.testutils.truth.MoreTruth.assertThatZip;
-import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
@@ -89,7 +88,8 @@ public class InstantRunResourceShrinkerTest {
 
         assertThatZip(apk)
                 .containsFileWithContent(
-                        "res/drawable-anydpi-v21/not_used.xml", ResourceUsageAnalyzer.TINY_XML);
+                        "res/drawable-anydpi-v21/not_used.xml",
+                        ResourceUsageAnalyzer.TINY_BINARY_XML);
 
         assertThat(project.getApk(GradleTestProject.ApkType.DEBUG)).doesNotExist();
     }

@@ -1254,18 +1254,12 @@ public class LintCliClient extends LintClient {
                 files.addAll(project.getTestLibraries());
             }
 
-            // Don't include all class folders:
+            // Don't include the class folders:
             //  files.addAll(project.getJavaClassFolders());
             // These are the outputs from the sources and generated sources, which we will
             // parse directly with PSI/UAST anyway. Including them here leads lint to do
             // a lot more work (e.g. when resolving symbols it looks at both .java and .class
-            // matches).
-            // However, we *do* need them for libraries; otherwise, type resolution into
-            // compiled libraries will not work; see
-            // https://issuetracker.google.com/72032121
-            if (project.isLibrary()) {
-                files.addAll(project.getJavaClassFolders());
-            }
+            // matches)
         }
 
         addBootClassPath(knownProjects, files);
@@ -1699,6 +1693,16 @@ public class LintCliClient extends LintClient {
                 }
             }
 
+            // We also need Kotlin files in dependencies; see issue
+            //  https://issuetracker.google.com/72032121
+            Project first = findProject(contexts, testContexts);
+            if (first != null) {
+                for (Project dependency : first.getAllLibraries()) {
+                    addKotlinFiles(kotlinFiles, dependency.getJavaSourceFolders());
+                    addKotlinFiles(kotlinFiles, dependency.getTestSourceFolders());
+                }
+            }
+
             // We unconditionally invoke the KotlinLintAnalyzerFacade, even
             // if kotlinFiles is empty -- without this, the machinery in
             // the project (such as the CliLightClassGenerationSupport and
@@ -1726,6 +1730,39 @@ public class LintCliClient extends LintClient {
             }
 
             return ok;
+        }
+
+        private void addKotlinFiles(List<File> kotlinFiles, List<File> sourceFolders) {
+            for (File dir : sourceFolders) {
+                addKotlinFiles(kotlinFiles, dir);
+            }
+        }
+
+        private void addKotlinFiles(List<File> kotlinFiles, File file) {
+            String path = file.getPath();
+            if (path.endsWith(DOT_KT)) {
+                kotlinFiles.add(file);
+            } else if (!path.endsWith(DOT_JAVA) && file.isDirectory()) {
+                File[] files = file.listFiles();
+                if (files != null) {
+                    for (File sub : files) {
+                        addKotlinFiles(kotlinFiles, sub);
+                    }
+                }
+            }
+        }
+
+        @Nullable
+        private Project findProject(
+                @NonNull List<? extends JavaContext> contexts,
+                @NonNull List<? extends JavaContext> testContexts) {
+            if (!contexts.isEmpty()) {
+                return contexts.get(0).getProject();
+            } else if (!testContexts.isEmpty()) {
+                return testContexts.get(0).getProject();
+            } else {
+                return null;
+            }
         }
     }
 }

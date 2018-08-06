@@ -88,6 +88,7 @@ public enum InternalArtifactType implements ArtifactType {
     INSTANT_RUN_SPLIT_APK_RESOURCES,
     // linked res for the unified bundle
     LINKED_RES_FOR_BUNDLE,
+    SHRUNK_LINKED_RES_FOR_BUNDLE,
 
     // Artifacts for legacy multidex
     LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES,
@@ -208,6 +209,8 @@ public enum InternalArtifactType implements ArtifactType {
     APKS_FROM_BUNDLE,
     // output of ExtractApks applied to APKS_FROM_BUNDLE and a device config.
     EXTRACTED_APKS,
+    // Universal APK from the bundle
+    UNIVERSAL_APK(Category.OUTPUTS),
 
     // file containing the metadata for the full feature set. This contains the feature names,
     // the res ID offset, both tied to the feature module path. Published by the base for the

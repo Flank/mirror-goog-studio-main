@@ -20,6 +20,7 @@ public class FakeAndroidDriver extends ProcessRunner {
 
     public FakeAndroidDriver(String address) {
         super(
+                "bash",
                 ART_PATH,
                 "--64",
                 "--verbose",
