@@ -420,19 +420,10 @@ public class MissingClassDetectorTest extends AbstractCheckTest {
     }
 
     public void testInnerClass() throws Exception {
-        mScopes = null;
-        mEnabled = Sets.newHashSet(MISSING, INSTANTIATABLE, INNERCLASS);
-        //noinspection all // Sample code
-        assertEquals(
-                ""
-                        + "AndroidManifest.xml:14: Error: Class referenced in the manifest, test.pkg.Foo.Bar, was not found in the project or the libraries [MissingRegistered]\n"
-                        + "        <activity\n"
-                        + "        ^\n"
-                        + "AndroidManifest.xml:23: Error: Class referenced in the manifest, test.pkg.Foo.Baz, was not found in the project or the libraries [MissingRegistered]\n"
-                        + "        <activity\n"
-                        + "        ^\n"
-                        + "2 errors, 0 warnings\n",
-                lintProject(mAndroidManifest, classpath(), mApiCallTest, mFoo));
+        lint().files(mAndroidManifest, classpath(), mApiCallTest, mFoo)
+                .issues(MISSING, INSTANTIATABLE, INNERCLASS)
+                .run()
+                .expectClean();
     }
 
     public void testInnerClass2() throws Exception {

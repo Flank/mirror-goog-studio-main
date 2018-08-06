@@ -18,10 +18,28 @@ package com.android.tools.lint.client.api
 
 import com.android.SdkConstants
 import com.android.SdkConstants.ANDROID_PKG
+import com.android.SdkConstants.ID_PREFIX
+import com.android.SdkConstants.NEW_ID_PREFIX
 import com.android.resources.ResourceType
+import com.android.tools.lint.detector.api.isKotlin
+import com.android.tools.lint.detector.api.stripIdPrefix
 import com.google.common.base.Joiner
-import com.intellij.psi.*
-import org.jetbrains.uast.*
+import com.intellij.psi.PsiArrayType
+import com.intellij.psi.PsiField
+import com.intellij.psi.PsiJavaFile
+import com.intellij.psi.PsiModifier
+import com.intellij.psi.PsiType
+import com.intellij.psi.PsiVariable
+import org.jetbrains.uast.UElement
+import org.jetbrains.uast.UExpression
+import org.jetbrains.uast.UQualifiedReferenceExpression
+import org.jetbrains.uast.UResolvable
+import org.jetbrains.uast.USimpleNameReferenceExpression
+import org.jetbrains.uast.UVariable
+import org.jetbrains.uast.asQualifiedPath
+import org.jetbrains.uast.getContainingClass
+import org.jetbrains.uast.getContainingUFile
+import org.jetbrains.uast.getQualifiedParentOrThis
 import org.jetbrains.uast.java.JavaAbstractUExpression
 import org.jetbrains.uast.java.JavaUDeclarationsExpression
 
@@ -115,6 +133,52 @@ class ResourceReference(
             }
 
             if (declaration !is PsiVariable) {
+                // Synthetic import?
+
+                // In the IDE, this will resolved into XML PSI. Attempt to use reflection to
+                // pick out the relevant attribute.
+                if (declaration != null &&
+                    declaration::class.java.name == "com.intellij.psi.impl.source.xml.XmlAttributeValueImpl" &&
+                    element is UExpression
+                ) {
+                    try {
+                        val method = declaration::class.java.getDeclaredMethod("getValue")
+                        val value = method.invoke(declaration)?.toString() ?: ""
+                        if (value.startsWith(ID_PREFIX) || value.startsWith(NEW_ID_PREFIX)) {
+                            return ResourceReference(
+                                element,
+                                "",
+                                ResourceType.ID,
+                                stripIdPrefix(value)
+                            )
+                        }
+                    } catch (ignore: Throwable) {
+                    }
+                }
+
+                if (declaration == null &&
+                    element is USimpleNameReferenceExpression &&
+                    isKotlin(element.sourcePsi)
+                ) {
+                    // If we have any synthetic imports in this class, this unresolved symbol is
+                    // probably referring to it
+                    element.getContainingUFile()?.imports?.forEach {
+                        val expression = it.importReference as? USimpleNameReferenceExpression
+                        val resolved = expression?.resolvedName
+                        if (resolved != null &&
+                            (resolved.startsWith("import kotlinx.android.synthetic.") ||
+                                    resolved.startsWith("kotlinx.android.synthetic."))
+                        ) {
+                            return ResourceReference(
+                                element,
+                                "",
+                                ResourceType.ID,
+                                element.identifier
+                            )
+                        }
+                    }
+                }
+
                 return null
             }
 
@@ -150,7 +214,8 @@ class ResourceReference(
                 return null
             }
 
-            val resourceType = ResourceType.fromClassName(resTypeClass.name ?: return null) ?: return null
+            val resourceType =
+                ResourceType.fromClassName(resTypeClass.name ?: return null) ?: return null
             val resourceName = variable.name
             val node: UExpression = when (element) {
                 is UExpression -> element

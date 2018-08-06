@@ -57,6 +57,7 @@ import com.android.utils.SdkUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.intellij.psi.PsiClass;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -356,7 +357,7 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
                     continue;
                 }
 
-                // Last sanity check: make sure we can't find the missing class as source
+                // Sanity check: make sure we can't find the missing class as source
                 // anywhere either. This is relevant for example if we're running lint
                 // from Gradle across all variants but the source code hasn't been
                 // compiled for all the variants we're checking.
@@ -369,6 +370,21 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
                         if (source.exists()) {
                             continue classLoop;
                         }
+                    }
+                }
+
+                // One last sanity check:
+                PsiClass cls =
+                        context.getClient()
+                                .getUastParser(mainProject)
+                                .getEvaluator()
+                                .findClass(fqcn);
+
+                if (cls != null) {
+                    String expectedName = owner.substring(owner.lastIndexOf('/') + 1);
+                    if (owner.contains("$") && cls.getContainingClass() != null
+                            || expectedName.equals(cls.getName())) {
+                        continue;
                     }
                 }
 

@@ -67,7 +67,7 @@ class StringCasingDetector : ResourceXmlDetector() {
      * Map of all locale,strings in lower case, to their raw elements to ensure that there are no
      * duplicate strings.
      */
-    private val allStrings = HashMap<Pair<String, String>, MutableList<Pair<String,Handle>>>()
+    private val allStrings = HashMap<Pair<String, String>, MutableList<Pair<String, Handle>>>()
 
     override fun appliesTo(folderType: ResourceFolderType): Boolean {
         return folderType == ResourceFolderType.VALUES
@@ -102,8 +102,8 @@ class StringCasingDetector : ResourceXmlDetector() {
     private fun checkTextNode(context: XmlContext, element: Element, text: String) {
         val locale = getLocale(context)
         val key = if (locale != null)
-                Pair.of(locale.full, text.toLowerCase(Locale.forLanguageTag(locale.tag)))
-            else Pair.of("default", text.toLowerCase(Locale.US))
+            Pair.of(locale.full, text.toLowerCase(Locale.forLanguageTag(locale.tag)))
+        else Pair.of("default", text.toLowerCase(Locale.US))
         val handle = context.createLocationHandle(element)
         handle.clientData = element
         val handleList = allStrings.getOrDefault(key, ArrayList())

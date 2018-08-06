@@ -33,6 +33,7 @@ import com.intellij.psi.PsiMethodCallExpression
 import com.intellij.psi.PsiNewExpression
 import com.intellij.psi.PsiReferenceExpression
 import com.intellij.psi.PsiSwitchStatement
+import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UDeclaration
@@ -328,8 +329,14 @@ open class JavaContext(
         message: String,
         quickfixData: LintFix? = null
     ) {
-        if (scope != null && driver.isSuppressed(this, issue, scope)) {
-            return
+        if (scope != null) {
+            if (scope is UAnnotated) {
+                if (driver.isSuppressed(this, issue, scope as UAnnotated)) {
+                    return
+                }
+            } else if (driver.isSuppressed(this, issue, scope)) {
+                return
+            }
         }
         super.doReport(issue, location, message, quickfixData)
     }
@@ -372,7 +379,11 @@ open class JavaContext(
         message: String,
         quickfixData: LintFix? = null
     ) {
-        if (scope != null && driver.isSuppressed(this, issue, scope)) {
+        if (scope is UAnnotated) {
+            if (driver.isSuppressed(this, issue, scope)) {
+                return
+            }
+        } else if (driver.isSuppressed(this, issue, scope)) {
             return
         }
         super.doReport(issue, location, message, quickfixData)

@@ -16,8 +16,11 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_WIDTH;
 import static com.android.SdkConstants.NS_RESOURCES;
 import static com.android.SdkConstants.TAG_VECTOR;
+import static com.android.SdkConstants.UNIT_DIP;
+import static com.android.SdkConstants.UNIT_DP;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -115,6 +118,8 @@ public class VectorDetector extends ResourceXmlDetector {
 
     @Override
     public void visitDocument(@NonNull XmlContext context, @NonNull Document document) {
+        checkSize(context, document);
+
         // If minSdkVersion >= 24, we're not generating compatibility bitmap icons.
         int apiThreshold = 24;
         Project project = context.getMainProject();
@@ -170,6 +175,57 @@ public class VectorDetector extends ResourceXmlDetector {
         }
 
         checkSupported(context, root, apiThreshold);
+    }
+
+    private static void checkSize(XmlContext context, Document document) {
+        Element root = document.getDocumentElement();
+        if (root == null) {
+            return;
+        }
+
+        Attr widthAttribute = root.getAttributeNodeNS(ANDROID_URI, ATTR_WIDTH);
+        Attr heightAttribute = root.getAttributeNodeNS(ANDROID_URI, ATTR_WIDTH);
+        if (widthAttribute == null || heightAttribute == null) {
+            return;
+        }
+        try {
+            int width = getDipSize(widthAttribute);
+            int height = getDipSize(heightAttribute);
+            Attr wrong;
+            if (width > 200) {
+                wrong = widthAttribute;
+            } else if (height > 200) {
+                wrong = heightAttribute;
+            } else {
+                return;
+            }
+            context.report(
+                    ISSUE,
+                    wrong,
+                    context.getValueLocation(wrong),
+                    "Limit vector icons sizes to 200\u00D7200 to keep icon drawing "
+                            + "fast; see https://developer.android.com/studio/write/vector-asset-studio#when for more");
+        } catch (NumberFormatException ignore) {
+        }
+    }
+
+    private static int getDipSize(Attr attribute) {
+        String s = attribute.getValue();
+        if (s.isEmpty() || !Character.isDigit(s.charAt(0))) {
+            return -1;
+        }
+        if (s.endsWith(UNIT_DP)) {
+            s = s.substring(0, s.length() - UNIT_DP.length());
+        } else if (s.endsWith(UNIT_DIP)) {
+            s = s.substring(0, s.length() - UNIT_DIP.length());
+        } else {
+            return -1;
+        }
+        try {
+            return Integer.parseInt(s);
+        } catch (NumberFormatException ignore) {
+            return -1;
+        }
     }
 
     private static boolean containsGradient(@NonNull Document document) {

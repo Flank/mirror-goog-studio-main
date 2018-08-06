@@ -757,4 +757,61 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
             """
         )
     }
+
+    fun testSkipDeprecated() {
+        // Regression test for https://issuetracker.google.com/112126735
+        val result = lint().files(
+            java(
+                """
+                package test.pkg;
+
+                @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class DeprecatedNullnessTest {
+                    @Deprecated
+                    public Object error1() { return null; }
+
+                    @Deprecated
+                    public class Inner {
+                        public void error2(Integer error2) { return null; }
+                    }
+                }
+            """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).issues(PLATFORM_NULLNESS).run()
+        if (InteroperabilityDetector.IGNORE_DEPRECATED) {
+            result.expectClean()
+        } else {
+            result.expect(
+                """
+                src/test/pkg/DeprecatedNullnessTest.java:6: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://android.github.io/kotlin-guides/interop.html#nullability-annotations [UnknownNullness]
+                    public Object error1() { return null; }
+                           ~~~~~~
+                src/test/pkg/DeprecatedNullnessTest.java:10: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://android.github.io/kotlin-guides/interop.html#nullability-annotations [UnknownNullness]
+                        public void error2(Integer error2) { return null; }
+                                           ~~~~~~~
+                0 errors, 2 warnings
+                """
+            )
+        }
+    }
+
+    fun testAnnotationMemberNonNull() {
+        // Regression test for https://issuetracker.google.com/112185120
+        lint().files(
+            // Don't flag annotation members as platform types
+            java(
+                """
+                package test.pkg;
+                @SuppressWarnings("ClassNameDiffersFromFileName")
+                public @interface ClassType {
+                    Class value();
+                }
+            """
+            ),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).issues(InteroperabilityDetector.PLATFORM_NULLNESS).run().expectClean()
+    }
 }

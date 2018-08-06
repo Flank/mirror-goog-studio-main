@@ -5486,6 +5486,29 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "1 errors, 0 warnings");
     }
 
+    public void testIgnoreAttributesWithinVector() {
+        lint().files(
+                        xml(
+                                "res/drawable/ic_drawable.xml",
+                                ""
+                                        + "<selector xmlns:android=\"http://schemas.android.com/apk/res/android\" xmlns:aapt=\"http://schemas.android.com/aapt\">\n"
+                                        + "<item>\n"
+                                        + "<aapt:attr name=\"android:drawable\">\n"
+                                        + "<vector android:width=\"24dp\" android:height=\"24dp\" android:viewportHeight=\"24.0\" android:viewportWidth=\"24.0\">\n"
+                                        + "<path android:pathData=\"M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-0.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z\" android:strokeColor=\"@color/colorAccent\" android:strokeWidth=\"1\"/>\n"
+                                        + "</vector>\n"
+                                        + "</aapt:attr>\n"
+                                        + "</item>\n"
+                                        + "</selector>"))
+                .run()
+                .expect(
+                        ""
+                                + "res/drawable/ic_drawable.xml:4: Error: <vector> requires API level 21 (current min is 1) or building with Android Gradle plugin 1.4 or higher [NewApi]\n"
+                                + "<vector android:width=\"24dp\" android:height=\"24dp\" android:viewportHeight=\"24.0\" android:viewportWidth=\"24.0\">\n"
+                                + " ~~~~~~\n"
+                                + "1 errors, 0 warnings");
+    }
+
     @Override
     protected boolean ignoreSystemErrors() {
         //noinspection SimplifiableIfStatement

@@ -52,6 +52,7 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.LoggerProgressIndicatorWrapper;
 import com.android.tools.lint.checks.HardcodedValuesDetector;
+import com.android.tools.lint.checks.WrongThreadInterproceduralDetector;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.DefaultConfiguration;
 import com.android.tools.lint.client.api.GradleVisitor;
@@ -822,6 +823,13 @@ public class LintCliClient extends LintClient {
         @Override
         protected Severity getDefaultSeverity(@NonNull Issue issue) {
             if (flags.isCheckAllWarnings()) {
+                // Exclude the interprocedural check from the "enable all warnings" flag;
+                // it's much slower and still triggers various bugs in UAST that can affect
+                // other checks.
+                if (issue == WrongThreadInterproceduralDetector.ISSUE) {
+                    return super.getDefaultSeverity(issue);
+                }
+
                 return issue.getDefaultSeverity();
             }
 

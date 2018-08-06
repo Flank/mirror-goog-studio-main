@@ -99,8 +99,8 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
         val id = when {
             value.startsWith(ID_PREFIX) -> value.substring(ID_PREFIX.length)
             value.startsWith(NEW_ID_PREFIX) -> value.substring(NEW_ID_PREFIX.length)
-        // keep tags in the same map for simplicity but add prefix such that we don't
-        // accidentally mix tags and id names together
+            // keep tags in the same map for simplicity but add prefix such that we don't
+            // accidentally mix tags and id names together
             ATTR_TAG == attribute.localName -> TAG_NAME_PREFIX + value
             else -> return // usually some @android:id where we don't enforce casts
         }
@@ -356,6 +356,11 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
             return
         }
 
+        val returnType = resolvedMethod.returnType as? PsiClassType ?: return
+        if (returnType.resolve() !is PsiTypeParameter) {
+            return
+        }
+
         val callName = findViewByIdCall.methodName ?: return
         val fix = LintFix.create()
             .replace()
@@ -399,11 +404,9 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
                 if (parser != null) {
                     addTags(parser, map)
                 }
-            }
-            catch (ignore: XmlPullParserException) {
+            } catch (ignore: XmlPullParserException) {
                 // Users might be editing these files in the IDE; don't flag
-            }
-            catch (ignore: IOException) {
+            } catch (ignore: IOException) {
                 // Users might be editing these files in the IDE; don't flag
             }
         }

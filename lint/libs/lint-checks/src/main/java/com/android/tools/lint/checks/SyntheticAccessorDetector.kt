@@ -195,8 +195,11 @@ class SyntheticAccessorDetector : Detector(), SourceCodeScanner {
             return
         }
         val location =
-            if (node is UCallExpression) { context.getCallLocation(node, true, false) }
-            else { context.getLocation(node) }
+            if (node is UCallExpression) {
+                context.getCallLocation(node, true, false)
+            } else {
+                context.getLocation(node)
+            }
 
         val isKotlin = isKotlin(member)
         val name = if (isKotlin) "Make internal" else "Make package protected"

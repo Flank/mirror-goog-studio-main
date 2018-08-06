@@ -138,25 +138,25 @@ class BlacklistedDeps(val project: Project) {
         artifactId: String
     ): Boolean {
         when (groupId) {
-        // org.apache.http.*
+            // org.apache.http.*
             "org.apache.httpcomponents" -> return "httpclient" == artifactId
 
-        // org.xmlpull.v1.*
+            // org.xmlpull.v1.*
             "xpp3" -> return "xpp3" == artifactId
 
-        // org.apache.commons.logging
+            // org.apache.commons.logging
             "commons-logging" -> return "commons-logging" == artifactId
 
-        // org.xml.sax.*, org.w3c.dom.*
+            // org.xml.sax.*, org.w3c.dom.*
             "xerces" -> return "xmlParserAPIs" == artifactId
 
-        // org.json.*
+            // org.json.*
             "org.json" -> return "json" == artifactId
 
-        // javax.microedition.khronos.*
+            // javax.microedition.khronos.*
             "org.khronos" -> return "opengl-api" == artifactId
 
-        // all of the above
+            // all of the above
             "com.google.android" -> return "android" == artifactId
         }
 

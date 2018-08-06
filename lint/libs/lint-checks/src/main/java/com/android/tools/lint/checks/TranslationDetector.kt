@@ -33,6 +33,7 @@ import com.android.ide.common.resources.configuration.VersionQualifier
 import com.android.ide.common.resources.usage.ResourceUsageModel
 import com.android.ide.common.resources.usage.ResourceUsageModel.getResourceFieldName
 import com.android.resources.FolderTypeRelationship
+import com.android.resources.ResourceFolderType
 import com.android.resources.ResourceFolderType.VALUES
 import com.android.resources.ResourceType
 import com.android.resources.ResourceType.AAPT
@@ -167,6 +168,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
     override fun checkFolder(context: ResourceContext, folderName: String) {
         if (context.driver.scope.contains(Scope.ALL_RESOURCE_FILES) &&
             context.driver.phase == 1 &&
+            context.resourceFolderType == ResourceFolderType.VALUES &&
             // Only count locales from non-reporting libraries
             context.project.reportIssues
         ) {
@@ -419,8 +421,8 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
 
                     val language =
                         getLanguageTagFromFolder(folderName)
-                                ?: getLanguageTagFromQualifiers(defaultLocale)
-                                ?: ""
+                            ?: getLanguageTagFromQualifiers(defaultLocale)
+                            ?: ""
 
                     recordTranslation(name, language)
                 }

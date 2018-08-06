@@ -99,16 +99,18 @@ abstract class DataFlowAnalyzer(
             }
         } else {
             val lambda = node.uastParent as? ULambdaExpression
-                    ?: node.uastParent?.uastParent as? ULambdaExpression
+                ?: node.uastParent?.uastParent as? ULambdaExpression
             if (lambda != null && lambda.uastParent is UCallExpression &&
-                isKotlinScopingFunction(lambda.uastParent as UCallExpression)) {
+                isKotlinScopingFunction(lambda.uastParent as UCallExpression)
+            ) {
                 if (instances.contains(node)) {
                     matched = true
                 }
             } else if (getMethodName(node) == "with") {
                 val args = node.valueArguments
                 if (args.size == 2 && instances.contains(args[0]) &&
-                        args[1] is ULambdaExpression) {
+                    args[1] is ULambdaExpression
+                ) {
                     val body = (args[1] as ULambdaExpression).body
                     instances.add(body)
                     if (body is UBlockExpression) {

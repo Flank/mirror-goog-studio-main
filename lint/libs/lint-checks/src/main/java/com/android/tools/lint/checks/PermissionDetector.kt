@@ -158,8 +158,9 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     }
 
                     if (name == "Builder.setPersisted" && node is UCallExpression &&
-                            node.valueArguments.size == 1 &&
-                            ConstantEvaluator.evaluate(context, node.valueArguments[0]) == false) {
+                        node.valueArguments.size == 1 &&
+                        ConstantEvaluator.evaluate(context, node.valueArguments[0]) == false
+                    ) {
                         // Special case the JobInfo.Builder permission requirement: it only
                         // applies if the argument is true. If we're not sure, default to
                         // flagging it.

@@ -394,4 +394,25 @@ public class LeakDetectorTest extends AbstractCheckTest {
                 .run()
                 .expectClean();
     }
+
+    public void testKotlinPropertySuppress() {
+        // Regression test for https://issuetracker.google.com/112191486
+        //noinspection all // Sample code
+        lint().files(
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "import android.annotation.SuppressLint\n"
+                                        + "import android.content.Context\n"
+                                        + "\n"
+                                        + "@Suppress(\"PropertyName\")\n"
+                                        + "val Test\n"
+                                        + "    get() = _globalContext\n"
+                                        + "@SuppressLint(\"StaticFieldLeak\")\n"
+                                        + "@Suppress(\"ObjectPropertyName\")\n"
+                                        + "lateinit var _globalContext: Context\n"))
+                .run()
+                .expectClean();
+    }
 }

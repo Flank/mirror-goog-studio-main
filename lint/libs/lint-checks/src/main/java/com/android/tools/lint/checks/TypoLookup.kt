@@ -333,7 +333,7 @@ class TypoLookup private constructor(
             name: String
         ): TypoLookup? {
             val cacheDir = client.getCacheDir(null, true)
-                    ?: return null // should not happen since create=true above
+                ?: return null // should not happen since create=true above
 
             val binaryData = File(
                 cacheDir,

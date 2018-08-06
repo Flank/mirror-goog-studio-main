@@ -19,9 +19,6 @@ package com.android.tools.lint.gradle;
 import static com.android.SdkConstants.ANDROIDX_APPCOMPAT_LIB_ARTIFACT;
 import static com.android.SdkConstants.ANDROIDX_LEANBACK_ARTIFACT;
 import static com.android.SdkConstants.ANDROIDX_SUPPORT_LIB_ARTIFACT;
-import static com.android.SdkConstants.APPCOMPAT_LIB_ARTIFACT;
-import static com.android.SdkConstants.LEANBACK_V17_ARTIFACT;
-import static com.android.SdkConstants.SUPPORT_LIB_ARTIFACT;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -34,6 +31,7 @@ import com.android.builder.model.BuildType;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
+import com.android.builder.model.Library;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
@@ -42,6 +40,7 @@ import com.android.builder.model.Variant;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
+import com.android.support.AndroidxNameUtils;
 import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.gradle.api.ToolingRegistryProvider;
@@ -188,19 +187,24 @@ public class LintGradleProject extends Project {
                 return true;
             }
         }
+        for (JavaLibrary library : dependencies.getJavaLibraries()) {
+            if (libraryMatches(artifact, library)) { // TODO: Transitive dependencies
+                return true;
+            }
+        }
         return false;
     }
 
-    protected static boolean dependsOn(@NonNull AndroidLibrary library, @NonNull String artifact) {
-        if (SUPPORT_LIB_ARTIFACT.equals(artifact)) {
-            if (library.getJarFile().getName().startsWith("support-v4-")) {
-                return true;
-            }
+    private static boolean libraryMatches(@NonNull String artifact, Library lib) {
+        MavenCoordinates coordinates = lib.getResolvedCoordinates();
+        String c = coordinates.getGroupId() + ':' + coordinates.getArtifactId();
+        c = AndroidxNameUtils.getCoordinateMapping(c);
+        return artifact.equals(c);
+    }
 
-        } else if (APPCOMPAT_LIB_ARTIFACT.equals(artifact)) {
-            if (library.getName() != null && library.getName().startsWith(artifact)) {
-                return true;
-            }
+    protected static boolean dependsOn(@NonNull AndroidLibrary library, @NonNull String artifact) {
+        if (libraryMatches(artifact, library)) {
+            return true;
         }
 
         for (AndroidLibrary dependency : library.getLibraryDependencies()) {
@@ -594,34 +598,27 @@ public class LintGradleProject extends Project {
         @Nullable
         @Override
         public Boolean dependsOn(@NonNull String artifact) {
+            artifact = AndroidxNameUtils.getCoordinateMapping(artifact);
+
             switch (artifact) {
-                case SUPPORT_LIB_ARTIFACT:
                 case ANDROIDX_SUPPORT_LIB_ARTIFACT:
                     if (supportLib == null) {
                         // OR,
                         // androidx.legacy:legacy-support-v4
                         Dependencies dependencies = mVariant.getMainArtifact().getDependencies();
-                        supportLib =
-                                dependsOn(dependencies, SUPPORT_LIB_ARTIFACT)
-                                        || dependsOn(dependencies, ANDROIDX_SUPPORT_LIB_ARTIFACT);
+                        supportLib = dependsOn(dependencies, ANDROIDX_SUPPORT_LIB_ARTIFACT);
                     }
                     return supportLib;
-                case APPCOMPAT_LIB_ARTIFACT:
                 case ANDROIDX_APPCOMPAT_LIB_ARTIFACT:
                     if (appCompat == null) {
                         Dependencies dependencies = mVariant.getMainArtifact().getDependencies();
-                        appCompat =
-                                dependsOn(dependencies, APPCOMPAT_LIB_ARTIFACT)
-                                        || dependsOn(dependencies, ANDROIDX_APPCOMPAT_LIB_ARTIFACT);
+                        appCompat = dependsOn(dependencies, ANDROIDX_APPCOMPAT_LIB_ARTIFACT);
                     }
                     return appCompat;
-                case LEANBACK_V17_ARTIFACT:
                 case ANDROIDX_LEANBACK_ARTIFACT:
                     if (leanback == null) {
                         Dependencies dependencies = mVariant.getMainArtifact().getDependencies();
-                        leanback =
-                                dependsOn(dependencies, LEANBACK_V17_ARTIFACT)
-                                        || dependsOn(dependencies, ANDROIDX_LEANBACK_ARTIFACT);
+                        leanback = dependsOn(dependencies, ANDROIDX_LEANBACK_ARTIFACT);
                     }
                     return leanback;
                 default:
@@ -774,29 +771,22 @@ public class LintGradleProject extends Project {
         @Nullable
         @Override
         public Boolean dependsOn(@NonNull String artifact) {
+            artifact = AndroidxNameUtils.getCoordinateMapping(artifact);
+
             switch (artifact) {
-                case SUPPORT_LIB_ARTIFACT:
                 case ANDROIDX_SUPPORT_LIB_ARTIFACT:
                     if (supportLib == null) {
-                        supportLib =
-                                dependsOn(mLibrary, SUPPORT_LIB_ARTIFACT)
-                                        || dependsOn(mLibrary, ANDROIDX_SUPPORT_LIB_ARTIFACT);
+                        supportLib = dependsOn(mLibrary, ANDROIDX_SUPPORT_LIB_ARTIFACT);
                     }
                     return supportLib;
-                case APPCOMPAT_LIB_ARTIFACT:
                 case ANDROIDX_APPCOMPAT_LIB_ARTIFACT:
                     if (appCompat == null) {
-                        appCompat =
-                                dependsOn(mLibrary, APPCOMPAT_LIB_ARTIFACT)
-                                        || dependsOn(mLibrary, ANDROIDX_APPCOMPAT_LIB_ARTIFACT);
+                        appCompat = dependsOn(mLibrary, ANDROIDX_APPCOMPAT_LIB_ARTIFACT);
                     }
                     return appCompat;
-                case LEANBACK_V17_ARTIFACT:
                 case ANDROIDX_LEANBACK_ARTIFACT:
                     if (leanback == null) {
-                        leanback =
-                                dependsOn(mLibrary, LEANBACK_V17_ARTIFACT)
-                                        || dependsOn(mLibrary, ANDROIDX_LEANBACK_ARTIFACT);
+                        leanback = dependsOn(mLibrary, ANDROIDX_LEANBACK_ARTIFACT);
                     }
                     return leanback;
                 default:

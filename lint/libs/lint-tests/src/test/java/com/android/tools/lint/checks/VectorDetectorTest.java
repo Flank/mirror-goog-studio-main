@@ -336,4 +336,32 @@ public class VectorDetectorTest extends AbstractCheckTest {
                 .run()
                 .expectClean();
     }
+
+    public void testLargeIcon() {
+        // Regression test for https://issuetracker.google.com/112147574
+        // Check that images are at most 200x200
+        String expected =
+                ""
+                        + "res/drawable/foo.xml:4: Warning: Limit vector icons sizes to 200\u00D7200 to keep icon drawing fast; see https://developer.android.com/studio/write/vector-asset-studio#when for more [VectorRaster]\n"
+                        + "        android:width=\"276dp\"\n"
+                        + "                       ~~~~~\n"
+                        + "0 errors, 1 warnings";
+
+        //noinspection all // Sample code
+        lint().files(
+                        manifest().minSdk(23),
+                        xml(
+                                "res/drawable/foo.xml",
+                                ""
+                                        + "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "        xmlns:aapt=\"http://schemas.android.com/aapt\"\n"
+                                        + "        android:height=\"276dp\"\n"
+                                        + "        android:width=\"276dp\"\n"
+                                        + "        android:viewportHeight=\"48\"\n"
+                                        + "        android:viewportWidth=\"48\"\n"
+                                        + "        android:autoMirrored=\"true\"\n"
+                                        + "        android:tint=\"?attr/colorControlActivated\"/>\n"))
+                .run()
+                .expect(expected);
+    }
 }

@@ -176,7 +176,6 @@ class ResolveTest : TestCase() {
     )
 }
 
-
 private fun UFile.asResolveString() = ResolveLogger().apply {
     this@asResolveString.accept(this)
 }.toString()

@@ -532,12 +532,23 @@ public class ApiDetector extends ResourceXmlDetector
         // flagged the root drawable type as being unsupported
         if (context.getResourceFolderType() == ResourceFolderType.DRAWABLE
                 && attributeApiLevel == 21) {
-            String root = attribute.getOwnerDocument().getDocumentElement().getTagName();
-            if (TAG_RIPPLE.equals(root)
-                    || TAG_VECTOR.equals(root)
-                    || TAG_ANIMATED_VECTOR.equals(root)
-                    || TAG_ANIMATED_SELECTOR.equals(root)) {
-                return true;
+            Element element = attribute.getOwnerElement();
+            while (element != null) {
+                // Can't just look at the root document tag: in the middle of the hierarchy
+                // we could have a virtual root via <aapt:attr>
+                String root = element.getTagName();
+                if (TAG_RIPPLE.equals(root)
+                        || TAG_VECTOR.equals(root)
+                        || TAG_ANIMATED_VECTOR.equals(root)
+                        || TAG_ANIMATED_SELECTOR.equals(root)) {
+                    return true;
+                }
+                Node parentNode = element.getParentNode();
+                if (parentNode instanceof Element) {
+                    element = (Element) parentNode;
+                } else {
+                    break;
+                }
             }
         }
 

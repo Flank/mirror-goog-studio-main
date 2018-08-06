@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks
 
+import com.android.SdkConstants.VALUE_TRUE
 import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
@@ -30,6 +31,7 @@ import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.isKotlin
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiCompiledElement
+import com.intellij.psi.PsiDocCommentOwner
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiKeyword
 import com.intellij.psi.PsiMethod
@@ -45,7 +47,6 @@ import org.jetbrains.uast.UField
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UParameter
 import org.jetbrains.uast.UVariable
-import org.jetbrains.uast.getContainingMethod
 import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.getContainingUMethod
 import org.jetbrains.uast.getParentOfType
@@ -62,6 +63,10 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             InteroperabilityDetector::class.java,
             Scope.JAVA_FILE_SCOPE
         )
+
+        val IGNORE_DEPRECATED =
+            VALUE_TRUE == System.getenv("ANDROID_LINT_NULLNESS_IGNORE_DEPRECATED") ||
+                    VALUE_TRUE == System.getProperty("lint.nullness.ignore-deprecated")
 
         @JvmField
         val NO_HARD_KOTLIN_KEYWORDS = Issue.create(
@@ -111,6 +116,11 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             explanation = """
             To improve referencing this code from Kotlin, consider adding
             explicit nullness information here with either `@NonNull` or `@Nullable`.
+
+            You can set the environment variable
+                `ANDROID_LINT_NULLNESS_IGNORE_DEPRECATED=true`
+            if you want lint to ignore classes and members that have been annotated with
+            `@Deprecated`.
             """,
             moreInfo = "https://android.github.io/kotlin-guides/interop.html#nullability-annotations",
             category = Category.INTEROPERABILITY_KOTLIN,
@@ -336,8 +346,10 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                     val message =
                         "This getter should not be static such that `$propertyName` can " +
                                 "be accessed as a property from Kotlin; see https://android.github.io/kotlin-guides/interop.html#property-prefixes"
-                    context.report(KOTLIN_PROPERTY,
-                        location.source as? PsiElement ?: setter, location, message)
+                    context.report(
+                        KOTLIN_PROPERTY,
+                        location.source as? PsiElement ?: setter, location, message
+                    )
                     return
                 }
 
@@ -350,8 +362,10 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                         "The getter return type (`${getter.returnType?.presentableText}`) and setter parameter type (`${setterParameterType.presentableText}`) getter and setter methods for property `$propertyName` should have exactly the same type to allow " +
                                 "be accessed as a property from Kotlin; see https://android.github.io/kotlin-guides/interop.html#property-prefixes"
                     val location = getPropertyLocation(getter, setter)
-                    context.report(KOTLIN_PROPERTY,
-                        location.source as? PsiElement ?: setter, location, message)
+                    context.report(
+                        KOTLIN_PROPERTY,
+                        location.source as? PsiElement ?: setter, location, message
+                    )
                     return
                 }
 
@@ -370,8 +384,10 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                                         "be accessed as a property from Kotlin; see " +
                                         "https://android.github.io/kotlin-guides/interop.html#property-prefixes"
                             val location = getPropertyLocation(getter, setter)
-                            context.report(KOTLIN_PROPERTY,
-                                location.source as? PsiElement ?: setter, location, message)
+                            context.report(
+                                KOTLIN_PROPERTY,
+                                location.source as? PsiElement ?: setter, location, message
+                            )
                             return
                         }
                     }
@@ -476,7 +492,8 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                 if (isNonNullAnnotation(name)) {
                     if (isEqualsParameter(node)) {
                         val location = context.getLocation(annotation)
-                        val message = "Unexpected @NonNull: The `equals` contract allows the parameter to be null"
+                        val message =
+                            "Unexpected @NonNull: The `equals` contract allows the parameter to be null"
                         context.report(PLATFORM_NULLNESS, node as UElement, location, message)
                     }
                     return
@@ -486,6 +503,35 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             // Known nullability: don't complain
             if (isEqualsParameter(node) || isToStringMethod(node)) {
                 return
+            }
+
+            // Annotation members cannot be null
+            if (node is UMethod) {
+                node.getContainingUClass()?.let {
+                    if (it.isAnnotationType) {
+                        return
+                    }
+                }
+            }
+
+            // Skip deprecated members?
+            if (IGNORE_DEPRECATED) {
+                val deprecatedNode =
+                    if (node is UParameter) {
+                        node.uastParent
+                    } else {
+                        node
+                    }
+                if ((deprecatedNode?.sourcePsi as? PsiDocCommentOwner)?.isDeprecated == true) {
+                    return
+                }
+                var curr = deprecatedNode
+                while (curr != null) {
+                    curr = curr.getContainingUClass() ?: break
+                    if ((curr.sourcePsi as? PsiDocCommentOwner)?.isDeprecated == true) {
+                        return
+                    }
+                }
             }
 
             val location: Location =

@@ -99,6 +99,7 @@ import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.ULiteralExpression
+import org.jetbrains.uast.getParentOfType
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.AbstractInsnNode
@@ -2537,6 +2538,8 @@ class LintDriver
         issue: Issue,
         scope: PsiElement?
     ): Boolean {
+        scope ?: return false
+
         var currentScope = scope
         val checkComments = client.checkForSuppressComments() &&
                 context != null && context.containsCommentSuppress()
@@ -2558,6 +2561,31 @@ class LintDriver
         }
 
         return false
+    }
+
+    fun isSuppressed(
+        context: JavaContext?,
+        issue: Issue,
+        scope: UAnnotated?
+    ): Boolean {
+        scope ?: return false
+
+        var currentScope: UAnnotated = scope
+        val checkComments = client.checkForSuppressComments() &&
+                context != null && context.containsCommentSuppress()
+        while (true) {
+            if (isSuppressed(issue, currentScope)) {
+                return true
+            }
+
+            if (checkComments && context!!.isSuppressedWithComment(currentScope, issue)) {
+                return true
+            }
+            currentScope = currentScope.getParentOfType(UAnnotated::class.java) ?: return false
+            if (currentScope is PsiFile) {
+                return false
+            }
+        }
     }
 
     /**
@@ -3065,6 +3093,12 @@ class LintDriver
                 val literalValue = value.value
                 if (literalValue is String) {
                     if (isSuppressed(issue, literalValue)) {
+                        return true
+                    }
+                } else if (literalValue == null) {
+                    // Kotlin UAST workaround
+                    val v = value.text.removeSurrounding("\"")
+                    if (v.isNotEmpty() && isSuppressed(issue, v)) {
                         return true
                     }
                 }

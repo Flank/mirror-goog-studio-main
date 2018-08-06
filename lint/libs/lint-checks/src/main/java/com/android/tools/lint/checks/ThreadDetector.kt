@@ -141,7 +141,8 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             }
 
             if (targetThreads.contains(ANY_THREAD_ANNOTATION.oldName()) ||
-                    targetThreads.contains(ANY_THREAD_ANNOTATION.newName())) {
+                targetThreads.contains(ANY_THREAD_ANNOTATION.newName())
+            ) {
                 // Any thread allowed? Then we're good!
                 return
             }

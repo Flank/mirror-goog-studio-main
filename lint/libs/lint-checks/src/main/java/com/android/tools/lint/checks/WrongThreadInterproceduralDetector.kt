@@ -47,13 +47,18 @@ data class AnnotatedCallPath(
 )
 
 /** Returns a collection of call paths that violate thread annotations found in source code. */
-fun searchForInterproceduralThreadAnnotationViolations( // public because accessed from tools/adt/idea tests
+// public because accessed from tools/adt/idea tests
+fun searchForInterproceduralThreadAnnotationViolations(
     callGraph: CallGraph,
     receiverEval: IntraproceduralDispatchReceiverEvaluator
 ): Collection<AnnotatedCallPath> {
 
     fun PsiModifierListOwner.isAnnotatedWith(annotation: String) =
-        AnnotationUtil.isAnnotated(this, annotation, AnnotationUtil.CHECK_HIERARCHY xor AnnotationUtil.CHECK_EXTERNAL)
+        AnnotationUtil.isAnnotated(
+            this,
+            annotation,
+            AnnotationUtil.CHECK_HIERARCHY xor AnnotationUtil.CHECK_EXTERNAL
+        )
 
     fun CallTarget.isAnnotatedWith(annotation: String) = when (this) {
         is CallTarget.Method -> {

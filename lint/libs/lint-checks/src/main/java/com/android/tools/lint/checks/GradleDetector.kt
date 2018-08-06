@@ -183,9 +183,9 @@ open class GradleDetector : Detector(), GradleScanner {
 
                             val alreadySuppressed = context.containsCommentSuppress() &&
                                     context.isSuppressedWithComment(
-                                valueCookie,
-                                EXPIRING_TARGET_SDK_VERSION
-                            )
+                                        valueCookie,
+                                        EXPIRING_TARGET_SDK_VERSION
+                                    )
 
                             if (!alreadySuppressed) {
                                 report(

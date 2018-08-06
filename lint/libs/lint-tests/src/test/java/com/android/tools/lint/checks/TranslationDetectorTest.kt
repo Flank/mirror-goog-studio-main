@@ -64,7 +64,11 @@ class TranslationDetectorTest : AbstractCheckTest() {
                 "res/values/public.xml",
                 // Make sure we don't flag missing name here
                 "<resources><public /></resources>"
-            )
+            ),
+
+            // Regression test for https://issuetracker.google.com/111819105
+            xml("res/layout/foo.xml", "<LinearLayout/>"),
+            xml("res/layout-ja/foo.xml", "<LinearLayout/>")
         ).run().expect(expected)
     }
 

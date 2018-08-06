@@ -540,6 +540,45 @@ class ViewTypeDetectorTest : AbstractCheckTest() {
             )
     }
 
+    fun testCastNeeded2() {
+        // Regression test for https://issuetracker.google.com/112024656
+
+        lint().files(
+            java(
+                "" +
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import android.content.Context;\n" +
+                        "import android.widget.FrameLayout;\n" +
+                        "import android.widget.LinearLayout;\n" +
+                        "\n" +
+                        "import java.util.ArrayList;\n" +
+                        "import java.util.List;\n" +
+                        "\n" +
+                        "public class FindViewByIdTest extends LinearLayout {\n" +
+                        "    public FindViewByIdTest(Context context) {\n" +
+                        "        super(context);\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    List<FrameLayout> views = new ArrayList<>();\n" +
+                        "\n" +
+                        "    void bar(int id) {\n" +
+                        "        views.add(findViewById(id));\n" +
+                        "    }\n" +
+                        "}\n"
+            ),
+            gradle(
+                "" +
+                        "android {\n" +
+                        "    compileOptions {\n" +
+                        "        sourceCompatibility JavaVersion.VERSION_1_8\n" +
+                        "        targetCompatibility JavaVersion.VERSION_1_8\n" +
+                        "    }\n" +
+                        "}"
+            )
+        ).run().expectClean()
+    }
+
     fun testFindViewByIdNotCastDirectly() {
         // Regression test for issue 68280786
 

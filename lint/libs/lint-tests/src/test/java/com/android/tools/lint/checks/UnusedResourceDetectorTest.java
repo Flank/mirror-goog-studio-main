@@ -1305,6 +1305,34 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testSyntheticImports() {
+        // Regression test for https://issuetracker.google.com/110175594
+        // UnusedIds triggered when using Kotlin Synthetic Properties
+        lint().files(
+                        gradle("" + "apply plugin: 'com.android.application'\n"),
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "import kotlinx.android.synthetic.main.fragment_team_list.*\n"
+                                        + "class Test : android.app.Activity {\n"
+                                        + "    fun test() {\n"
+                                        + "        val s = fab.toString()\n"
+                                        + "    }\n"
+                                        + "}"),
+                        xml(
+                                "res/values/ids.xml",
+                                ""
+                                        + "<resources>\n"
+                                        + "    <item name=\"fab\" type=\"id\"/>\n"
+                                        + "</resources>\n"))
+                .client(
+                        new com.android.tools.lint.checks.infrastructure.TestLintClient(
+                                CLIENT_GRADLE))
+                .issues(UnusedResourceDetector.ISSUE_IDS)
+                .run()
+                .expectClean();
+    }
+
     @SuppressWarnings("all") // Sample code
     private TestFile mAccessibility =
             xml(
