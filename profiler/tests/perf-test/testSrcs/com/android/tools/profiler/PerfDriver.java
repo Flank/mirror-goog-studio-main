@@ -19,7 +19,8 @@ package com.android.tools.profiler;
 import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.fakeandroid.ProcessRunner;
 import com.android.tools.profiler.proto.Agent;
-import com.android.tools.profiler.proto.Common.*;
+import com.android.tools.profiler.proto.Common.Session;
+import io.grpc.StatusRuntimeException;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -100,14 +101,15 @@ public class PerfDriver implements TestRule {
                             }
 
                             private void after() {
-                                try {
-                                    if (mySession != null) {
+                                if (mySession != null) {
+                                    try {
                                         getGrpc().endSession(mySession.getSessionId());
+                                    } catch (StatusRuntimeException e) {
+                                        // TODO(b/112274301): fix "connection refused" error.
                                     }
-                                } finally {
-                                    myMockApp.stop();
-                                    myPerfdDriver.stop();
                                 }
+                                myMockApp.stop();
+                                myPerfdDriver.stop();
                                 // Logs in perf-test output to track the sdk level and test end.
                                 System.out.println(
                                         String.format(
