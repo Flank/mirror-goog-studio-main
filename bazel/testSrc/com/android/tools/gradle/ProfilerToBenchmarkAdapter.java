@@ -19,12 +19,15 @@ package com.android.tools.gradle;
 import com.android.annotations.NonNull;
 import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType;
 import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType;
+import com.android.tools.perflogger.Analyzer;
 import com.android.tools.perflogger.Benchmark;
+import com.android.tools.perflogger.MedianWindowDeviationAnalyzer;
 import com.android.tools.perflogger.Metric;
 import com.google.wireless.android.sdk.stats.GradleBuildProfile;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -54,6 +57,20 @@ public class ProfilerToBenchmarkAdapter {
     @NonNull private final Benchmark benchmark;
     @NonNull private final BenchmarkRun benchmarkRun;
     @NonNull private final Map<String, Metric> metrics;
+
+    @NonNull
+    private static final Analyzer ANALYZER =
+            new MedianWindowDeviationAnalyzer.Builder()
+                    .setMetricAggregate(Analyzer.MetricAggregate.MEDIAN)
+                    .setRunInfoQueryLimit(50)
+                    .setRecentWindowSize(11)
+                    // constant term of 10.0 ms to ignore regressions in trivial tasks
+                    .setConstTerm(10.0)
+                    // half of recommended value
+                    .setMadCoeff(0.5)
+                    // flag 2.5% regressions
+                    .setMedianCoeff(0.025)
+                    .build();
 
     @NonNull
     private final List<ConsolidatedRunTimings> consolidatedTimingsPerIterations = new ArrayList<>();
@@ -126,6 +143,7 @@ public class ProfilerToBenchmarkAdapter {
                                                     consolidatedRunTimings.startTime,
                                                     timing));
                         });
+        metrics.values().forEach(it -> it.setAnalyzers(benchmark, Arrays.asList(ANALYZER)));
         metrics.values().forEach(Metric::commit);
         totalBuildTime.commit();
     }
