@@ -58,10 +58,8 @@ public class PreColdSwapTask extends AndroidVariantTask {
         switch (instantRunContext.getBuildMode()) {
             case HOT_WARM:
                 // We can hot swap, don't produce the full apk.
-                instantRunVariantScope
-                        .getColdSwapBuildTasks()
-                        .forEach(taskProvider -> taskProvider.configure(this::disableTask));
-                disableTask(instantRunVariantScope.getPackageApplicationTask());
+                instantRunVariantScope.getColdSwapBuildTasks().forEach(this::disableTask);
+                disableTask(instantRunVariantScope.getTaskContainer().getPackageAndroidTask());
                 break;
             case COLD:
             case FULL:
@@ -72,10 +70,9 @@ public class PreColdSwapTask extends AndroidVariantTask {
         }
     }
 
-    private void disableTask(Task task) {
+    private void disableTask(TaskProvider<? extends Task> task) {
         LOG.info("Disabling task {}", task.getName());
-        transformVariantScope.getGlobalScope().getProject().getTasks().getByName(task.getName())
-                .setEnabled(false);
+        task.configure(t -> t.setEnabled(false));
     }
 
     public static class CreationAction extends LazyTaskCreationAction<PreColdSwapTask> {

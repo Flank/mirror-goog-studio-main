@@ -30,7 +30,7 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.packaging.PackagerException;
 import com.android.ide.common.build.ApkInfo;
@@ -173,7 +173,7 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
     }
 
     public static class CreationAction
-            extends EagerTaskCreationAction<InstantRunResourcesApkBuilder> {
+            extends LazyTaskCreationAction<InstantRunResourcesApkBuilder> {
 
         protected final VariantScope variantScope;
         private final InternalArtifactType resInputType;
@@ -197,7 +197,7 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
         }
 
         @Override
-        public void execute(@NonNull InstantRunResourcesApkBuilder resourcesApkBuilder) {
+        public void configure(@NonNull InstantRunResourcesApkBuilder resourcesApkBuilder) {
             resourcesApkBuilder.setVariantName(variantScope.getFullVariantName());
             resourcesApkBuilder.resInputType = resInputType;
             resourcesApkBuilder.supportDirectory = variantScope.getIncrementalDir(getName());

@@ -70,7 +70,7 @@ class MutableTaskContainer : TaskContainer {
     override var obfuscationTask: Task? = null
     override var processAndroidResTask: TaskProvider<out ProcessAndroidResources>? = null
     override var processManifestTask: TaskProvider<out ManifestProcessorTask>? = null
-    override var packageAndroidTask: PackageAndroidArtifact? = null
+    override var packageAndroidTask: TaskProvider<out PackageAndroidArtifact>? = null
     override var bundleLibraryTask: TaskProvider<out Zip>? = null
 
     override var installTask: TaskProvider<out DefaultTask>? = null

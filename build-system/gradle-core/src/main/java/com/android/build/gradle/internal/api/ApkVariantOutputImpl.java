@@ -48,7 +48,7 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
     @Nullable
     @Override
     public PackageAndroidArtifact getPackageApplication() {
-        return taskContainer.getPackageAndroidTask();
+        return taskContainer.getPackageAndroidTask().getOrNull();
     }
 
     @NonNull

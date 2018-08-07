@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
 import com.android.ide.common.build.ApkData
 import com.android.utils.FileUtils
 import org.gradle.api.tasks.Input
@@ -56,22 +57,27 @@ open class MainApkListPersistence : AndroidVariantTask() {
     class CreationAction(
         val scope: VariantScope
     ) :
-        EagerTaskCreationAction<MainApkListPersistence>() {
+        LazyTaskCreationAction<MainApkListPersistence>() {
 
         override val name: String
             get() = scope.getTaskName("mainApkListPersistence")
         override val type: Class<MainApkListPersistence>
             get() = MainApkListPersistence::class.java
 
-        override fun execute(task: MainApkListPersistence) {
+        private lateinit var outputFile: File
 
+        override fun preConfigure(taskName: String) {
+            super.preConfigure(taskName)
+            outputFile = scope.artifacts.appendArtifact(
+                InternalArtifactType.APK_LIST,
+                taskName,
+                SdkConstants.FN_APK_LIST)
+        }
+
+        override fun configure(task: MainApkListPersistence) {
             task.variantName = scope.fullVariantName
             task.apkData = scope.outputScope.apkDatas
-
-            task.outputFile = scope.artifacts.appendArtifact(
-                InternalArtifactType.APK_LIST,
-                task,
-                SdkConstants.FN_APK_LIST)
+            task.outputFile = outputFile
         }
     }
 }

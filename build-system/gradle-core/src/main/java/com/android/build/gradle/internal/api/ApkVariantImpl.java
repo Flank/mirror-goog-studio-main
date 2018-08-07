@@ -52,6 +52,6 @@ public abstract class ApkVariantImpl extends InstallableVariantImpl implements A
     @Nullable
     @Override
     public PackageAndroidArtifact getPackageApplication() {
-        return getVariantData().getTaskContainer().getPackageAndroidTask();
+        return getVariantData().getTaskContainer().getPackageAndroidTask().getOrNull();
     }
 }

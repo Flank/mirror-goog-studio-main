@@ -47,7 +47,7 @@ import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.KnownFilesSaveData;
 import com.android.build.gradle.internal.tasks.KnownFilesSaveData.InputSet;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -895,7 +895,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     // ----- CreationAction -----
 
     public abstract static class CreationAction<T extends PackageAndroidArtifact>
-            extends EagerTaskCreationAction<T> {
+            extends LazyTaskCreationAction<T> {
 
         protected final Project project;
         protected final VariantScope variantScope;
@@ -925,7 +925,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         }
 
         @Override
-        public void execute(@NonNull final T packageAndroidArtifact) {
+        public void configure(@NonNull final T packageAndroidArtifact) {
             GlobalScope globalScope = variantScope.getGlobalScope();
             GradleVariantConfiguration variantConfiguration =
                     variantScope.getVariantConfiguration();
@@ -979,17 +979,16 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                             ? projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)
                             : null;
 
-            variantScope.getTaskContainer().setPackageAndroidTask(packageAndroidArtifact);
             packageAndroidArtifact.apkFormat =
                     projectOptions.get(BooleanOption.DEPLOYMENT_USES_DIRECTORY)
                             ? IncrementalPackagerBuilder.ApkFormat.DIRECTORY
                             : projectOptions.get(BooleanOption.DEPLOYMENT_PROVIDES_LIST_OF_CHANGES)
                                     ? IncrementalPackagerBuilder.ApkFormat.FILE_WITH_LIST_OF_CHANGES
                                     : IncrementalPackagerBuilder.ApkFormat.FILE;
-            configure(packageAndroidArtifact);
+            finalConfigure(packageAndroidArtifact);
         }
 
-        protected void configure(T task) {
+        protected void finalConfigure(T task) {
             GlobalScope globalScope = variantScope.getGlobalScope();
             GradleVariantConfiguration variantConfiguration =
                     variantScope.getVariantConfiguration();

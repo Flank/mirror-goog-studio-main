@@ -57,7 +57,7 @@ interface TaskContainer {
     val obfuscationTask: Task?
     val processAndroidResTask: TaskProvider<out ProcessAndroidResources>?
     val processManifestTask: TaskProvider<out ManifestProcessorTask>?
-    val packageAndroidTask: PackageAndroidArtifact?
+    val packageAndroidTask: TaskProvider<out PackageAndroidArtifact>?
     val bundleLibraryTask: TaskProvider<out Zip>?
 
     val installTask: TaskProvider<out DefaultTask>?

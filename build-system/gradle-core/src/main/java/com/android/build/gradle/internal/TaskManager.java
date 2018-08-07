@@ -238,7 +238,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.gradle.api.Action;
@@ -1160,7 +1159,7 @@ public abstract class TaskManager {
             }
 
             // create the task that creates the aapt output for the bundle.
-            taskFactory.eagerCreate(new LinkAndroidResForBundleTask.CreationAction(scope));
+            taskFactory.lazyCreate(new LinkAndroidResForBundleTask.CreationAction(scope));
         }
         artifacts.appendArtifact(
                 InternalArtifactType.SYMBOL_LIST, ImmutableList.of(symbolFile), task.getName());
@@ -1762,7 +1761,7 @@ public abstract class TaskManager {
         createDependencyStreams(variantScope);
 
         // persist variant's output
-        taskFactory.eagerCreate(new MainApkListPersistence.CreationAction(variantScope));
+        taskFactory.lazyCreate(new MainApkListPersistence.CreationAction(variantScope));
 
         // Add a task to process the manifest
         createProcessTestManifestTask(
@@ -2782,6 +2781,7 @@ public abstract class TaskManager {
             @NonNull VariantScope variantScope,
             @Nullable TaskProvider<BuildInfoWriterTask> fullBuildInfoGeneratorTask) {
         ApkVariantData variantData = (ApkVariantData) variantScope.getVariantData();
+        final MutableTaskContainer taskContainer = variantData.getScope().getTaskContainer();
 
         boolean signedApk = variantData.isSigned();
 
@@ -2824,8 +2824,19 @@ public abstract class TaskManager {
                         ? InternalArtifactType.SHRUNK_PROCESSED_RES
                         : InternalArtifactType.PROCESSED_RES;
 
-        PackageApplication packageApp =
-                taskFactory.eagerCreate(
+        CoreSigningConfig signingConfig = variantScope.getVariantConfiguration().getSigningConfig();
+
+        // Common code for both packaging tasks.
+        Action<Task> configureResourcesAndAssetsDependencies =
+                task -> {
+                    task.dependsOn(taskContainer.getMergeAssetsTask());
+                    if (taskContainer.getProcessAndroidResTask() != null) {
+                        task.dependsOn(taskContainer.getProcessAndroidResTask());
+                    }
+                };
+
+        TaskProvider<PackageApplication> packageApp =
+                taskFactory.lazyCreate(
                         new PackageApplication.StandardCreationAction(
                                 variantScope,
                                 outputDirectory,
@@ -2836,27 +2847,50 @@ public abstract class TaskManager {
                                 manifestType,
                                 variantScope.getOutputScope(),
                                 globalScope.getBuildCache(),
-                                taskOutputType));
-        variantScope.getArtifacts().appendArtifact(taskOutputType,
-                ImmutableList.of(outputDirectory),
-                packageApp);
+                                taskOutputType),
+                        null,
+                        task -> {
+                            //noinspection VariableNotUsedInsideIf - we use the whole packaging scope below.
+                            if (signingConfig != null) {
+                                task.dependsOn(getValidateSigningTask(variantScope));
+                            }
 
-        Task packageInstantRunResources = null;
+                            task.dependsOn(taskContainer.getJavacTask());
+
+                            if (taskContainer.getPackageSplitResourcesTask() != null) {
+                                task.dependsOn(taskContainer.getPackageSplitResourcesTask());
+                            }
+                            if (taskContainer.getPackageSplitAbiTask() != null) {
+                                task.dependsOn(taskContainer.getPackageSplitAbiTask());
+                            }
+
+                            // FIX ME : Reinstate once ShrinkResourcesTransform is converted.
+                            //if ( variantOutputScope.getShrinkResourcesTask() != null) {
+                            //    packageApp.dependsOn( variantOutputScope.getShrinkResourcesTask());
+                            //}
+
+                            configureResourcesAndAssetsDependencies.execute(task);
+                        },
+                        null);
+
+        TaskProvider<? extends Task> packageInstantRunResources = null;
 
         if (variantScope.getInstantRunBuildContext().isInInstantRunMode()) {
             packageInstantRunResources =
-                    taskFactory.eagerCreate(
+                    taskFactory.lazyCreate(
                             new InstantRunResourcesApkBuilder.CreationAction(
                                     resourceFilesInputType, variantScope));
-            packageInstantRunResources.dependsOn(getValidateSigningTask(variantScope));
+            TaskFactoryUtils.dependsOn(
+                    packageInstantRunResources, getValidateSigningTask(variantScope));
+
             // make sure the task run even if none of the files we consume are available,
             // this is necessary so we can clean up output.
-            packageApp.dependsOn(packageInstantRunResources);
+            TaskFactoryUtils.dependsOn(packageApp, packageInstantRunResources);
 
             if (!useSeparateApkForResources) {
                 // in instantRunMode, there is no user configured splits, only one apk.
                 packageInstantRunResources =
-                        taskFactory.eagerCreate(
+                        taskFactory.lazyCreate(
                                 new PackageApplication.InstantRunResourcesCreationAction(
                                         variantScope.getInstantRunResourcesFile(),
                                         variantScope,
@@ -2868,51 +2902,18 @@ public abstract class TaskManager {
             }
 
             // Make sure the MAIN artifact is registered after the RESOURCES one.
-            packageApp.dependsOn(packageInstantRunResources);
+            TaskFactoryUtils.dependsOn(packageApp, packageInstantRunResources);
         }
 
-        final MutableTaskContainer taskContainer = variantData.getScope().getTaskContainer();
-
-        // Common code for both packaging tasks.
-        Consumer<Task> configureResourcesAndAssetsDependencies =
-                task -> {
-                    task.dependsOn(taskContainer.getMergeAssetsTask());
-                    if (taskContainer.getProcessAndroidResTask() != null) {
-                        task.dependsOn(taskContainer.getProcessAndroidResTask());
-                    }
-                };
-
-        configureResourcesAndAssetsDependencies.accept(packageApp);
         if (packageInstantRunResources != null) {
-            configureResourcesAndAssetsDependencies.accept(packageInstantRunResources);
+            packageInstantRunResources.configure(configureResourcesAndAssetsDependencies);
         }
 
-        CoreSigningConfig signingConfig = variantScope.getVariantConfiguration().getSigningConfig();
-
-        //noinspection VariableNotUsedInsideIf - we use the whole packaging scope below.
-        if (signingConfig != null) {
-            packageApp.dependsOn(getValidateSigningTask(variantScope));
-        }
-
-        packageApp.dependsOn(taskContainer.getJavacTask());
-
-        if (taskContainer.getPackageSplitResourcesTask() != null) {
-            packageApp.dependsOn(taskContainer.getPackageSplitResourcesTask());
-        }
-        if (taskContainer.getPackageSplitAbiTask() != null) {
-            packageApp.dependsOn(taskContainer.getPackageSplitAbiTask());
-        }
-
-        // FIX ME : Reinstate once ShrinkResourcesTransform is converted.
-        //if ( variantOutputScope.getShrinkResourcesTask() != null) {
-        //    packageApp.dependsOn( variantOutputScope.getShrinkResourcesTask());
-        //}
-
-        variantScope.setPackageApplicationTask(packageApp);
         TaskFactoryUtils.dependsOn(taskContainer.getAssembleTask(), packageApp.getName());
 
         if (fullBuildInfoGeneratorTask != null) {
-            final Task fPackageInstantRunResources = packageInstantRunResources;
+            final TaskProvider<? extends Task> fPackageInstantRunResources =
+                    packageInstantRunResources;
             fullBuildInfoGeneratorTask.configure(
                     t -> {
                         t.mustRunAfter(packageApp);
@@ -2920,8 +2921,7 @@ public abstract class TaskManager {
                             t.mustRunAfter(fPackageInstantRunResources);
                         }
                     });
-            TaskFactoryUtils.dependsOn(
-                    taskContainer.getAssembleTask(), fullBuildInfoGeneratorTask.getName());
+            TaskFactoryUtils.dependsOn(taskContainer.getAssembleTask(), fullBuildInfoGeneratorTask);
         }
 
         if (splitsArePossible) {

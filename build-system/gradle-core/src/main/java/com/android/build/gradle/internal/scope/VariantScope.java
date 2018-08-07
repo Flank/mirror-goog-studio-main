@@ -276,6 +276,8 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     @NonNull
     File getApkLocation();
 
+    @Override
+    @NonNull
     MutableTaskContainer getTaskContainer();
 
     @Nullable

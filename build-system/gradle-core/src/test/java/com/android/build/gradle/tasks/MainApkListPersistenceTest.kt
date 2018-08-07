@@ -78,7 +78,7 @@ open class MainApkListPersistenceTest {
         task = project.tasks.create("test", MainApkListPersistence::class.java)
         configAction = MainApkListPersistence.CreationAction(variantScope)
         Mockito.`when`(artifacts.appendArtifact(InternalArtifactType.APK_LIST,
-            task, SdkConstants.FN_APK_LIST)).thenReturn(temporaryFolder.newFolder())
+            task.name, SdkConstants.FN_APK_LIST)).thenReturn(temporaryFolder.newFolder())
     }
 
     @Test
@@ -90,7 +90,8 @@ open class MainApkListPersistenceTest {
                 ImmutableList.of(com.android.utils.Pair.of(VariantOutput.FilterType.ABI,
                         "armeabi")))
 
-        configAction.execute(task)
+        configAction.preConfigure(task.name)
+        configAction.configure(task)
         assertThat(task.apkData).containsAllIn(outputScope.apkDatas)
         assertThat(task.outputFile.absolutePath).startsWith(temporaryFolder.root.absolutePath)
 
@@ -117,7 +118,8 @@ open class MainApkListPersistenceTest {
                 ImmutableList.of(com.android.utils.Pair.of(VariantOutput.FilterType.ABI,
                         "armeabi"))).disable()
 
-        configAction.execute(task)
+        configAction.preConfigure(task.name)
+        configAction.configure(task)
         assertThat(task.apkData).containsAllIn(outputScope.apkDatas)
         assertThat(task.outputFile.absolutePath).startsWith(temporaryFolder.root.absolutePath)
 

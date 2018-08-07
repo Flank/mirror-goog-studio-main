@@ -40,16 +40,4 @@ public abstract class GenericVariantScopeImpl implements InstantRunVariantScope 
     public void addColdSwapBuildTask(@NonNull TaskProvider<? extends Task> task) {
         this.coldSwapBuildTasks.add(task);
     }
-
-    private PackageApplication packageApplicationTask;
-
-    @Override
-    public PackageApplication getPackageApplicationTask() {
-        return packageApplicationTask;
-    }
-
-    @Override
-    public void setPackageApplicationTask(PackageApplication packageApplicationTask) {
-        this.packageApplicationTask = packageApplicationTask;
-    }
 }

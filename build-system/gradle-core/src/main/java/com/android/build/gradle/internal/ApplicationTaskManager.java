@@ -125,7 +125,7 @@ public class ApplicationTaskManager extends TaskManager {
         // Add a task to publish the applicationId.
         createApplicationIdWriterTask(variantScope);
 
-        taskFactory.eagerCreate(new MainApkListPersistence.CreationAction(variantScope));
+        taskFactory.lazyCreate(new MainApkListPersistence.CreationAction(variantScope));
         createBuildArtifactReportTask(variantScope);
 
         // Add a task to process the manifest(s)

@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.Workers
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.options.StringOption
 import com.android.builder.core.VariantTypeImpl
@@ -204,14 +205,24 @@ open class LinkAndroidResForBundleTask
         private set
 
     class CreationAction(private val variantScope: VariantScope) :
-        EagerTaskCreationAction<LinkAndroidResForBundleTask>() {
+        LazyTaskCreationAction<LinkAndroidResForBundleTask>() {
 
         override val name: String
             get() = variantScope.getTaskName("bundle", "Resources")
         override val type: Class<LinkAndroidResForBundleTask>
             get() = LinkAndroidResForBundleTask::class.java
 
-        override fun execute(task: LinkAndroidResForBundleTask) {
+        private lateinit var bundledResFile: File
+
+        override fun preConfigure(taskName: String) {
+            super.preConfigure(taskName)
+            bundledResFile = variantScope.artifacts
+                .appendArtifact(InternalArtifactType.LINKED_RES_FOR_BUNDLE,
+                    taskName,
+                    "bundled-res.ap_")
+        }
+
+        override fun configure(task: LinkAndroidResForBundleTask) {
             val variantData = variantScope.variantData
 
             val projectOptions = variantScope.globalScope.projectOptions
@@ -220,10 +231,7 @@ open class LinkAndroidResForBundleTask
 
             task.setAndroidBuilder(variantScope.globalScope.androidBuilder)
             task.variantName = config.fullName
-            task.bundledResFile = variantScope.artifacts
-                .appendArtifact(InternalArtifactType.LINKED_RES_FOR_BUNDLE,
-                    task,
-                    "bundled-res.ap_")
+            task.bundledResFile = bundledResFile
 
             task.incrementalFolder = variantScope.getIncrementalDir(name)
 

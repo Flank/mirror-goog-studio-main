@@ -25,11 +25,14 @@ import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.utils.FileCache;
+import com.google.common.collect.ImmutableList;
 import com.google.wireless.android.sdk.stats.GradleBuildProjectMetrics;
 import java.io.File;
 import java.io.IOException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.TaskProvider;
+import org.jetbrains.annotations.NotNull;
 
 /** Task to package an Android application (APK). */
 public class PackageApplication extends PackageAndroidArtifact {
@@ -124,8 +127,24 @@ public class PackageApplication extends PackageAndroidArtifact {
         }
 
         @Override
-        protected void configure(PackageApplication task) {
-            super.configure(task);
+        public void preConfigure(@NotNull String taskName) {
+            super.preConfigure(taskName);
+            variantScope
+                    .getArtifacts()
+                    .appendArtifact(
+                            expectedOutputType, ImmutableList.of(outputDirectory), taskName);
+        }
+
+        @Override
+        public void handleProvider(
+                @NotNull TaskProvider<? extends PackageApplication> taskProvider) {
+            super.handleProvider(taskProvider);
+            variantScope.getTaskContainer().setPackageAndroidTask(taskProvider);
+        }
+
+        @Override
+        protected void finalConfigure(PackageApplication task) {
+            super.finalConfigure(task);
             task.expectedOutputType = expectedOutputType;
         }
     }
@@ -169,7 +188,7 @@ public class PackageApplication extends PackageAndroidArtifact {
         }
 
         @Override
-        protected void configure(@NonNull PackageApplication packageApplication) {
+        protected void finalConfigure(@NonNull PackageApplication packageApplication) {
             packageApplication.expectedOutputType =
                     InternalArtifactType.INSTANT_RUN_PACKAGED_RESOURCES;
             packageApplication.instantRunFileType = FileType.RESOURCES;

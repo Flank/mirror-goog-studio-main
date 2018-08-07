@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
-import com.android.build.gradle.tasks.PackageApplication;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.List;
@@ -77,7 +76,6 @@ public interface InstantRunVariantScope {
 
     void addColdSwapBuildTask(@NonNull TaskProvider<? extends Task> task);
 
-    PackageApplication getPackageApplicationTask();
-
-    void setPackageApplicationTask(PackageApplication packageApplicationTask);
+    @NonNull
+    MutableTaskContainer getTaskContainer();
 }

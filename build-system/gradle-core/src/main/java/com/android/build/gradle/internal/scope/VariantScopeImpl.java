@@ -198,6 +198,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return variantPublishingSpec;
     }
 
+    @NonNull
     @Override
     public MutableTaskContainer getTaskContainer() {
         return taskContainer;

@@ -54,7 +54,6 @@ import java.util.ArrayList;
 import java.util.List;
 import kotlin.jvm.functions.Function2;
 import org.gradle.api.Project;
-import org.gradle.api.file.FileCollection;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.junit.After;
@@ -77,7 +76,6 @@ public class InstantRunResourcesApkBuilderTest {
     File testDir;
 
     @Mock BuildableArtifact buildableArtifact;
-    @Mock FileCollection fileCollection;
     @Mock VariantScope variantScope;
     @Mock BuildArtifactsHolder artifacts;
     @Mock GradleVariantConfiguration variantConfiguration;
@@ -140,7 +138,8 @@ public class InstantRunResourcesApkBuilderTest {
                 new InstantRunResourcesApkBuilder.CreationAction(
                         InternalArtifactType.PROCESSED_RES, variantScope);
 
-        configAction.execute(task);
+        configAction.preConfigure(task.getName());
+        configAction.configure(task);
 
         assertThat(task.getResInputType()).isEqualTo(InternalArtifactType.PROCESSED_RES.name());
         assertThat(task.getResourcesFile()).isEqualTo(buildableArtifact);
@@ -156,7 +155,8 @@ public class InstantRunResourcesApkBuilderTest {
                 new InstantRunResourcesApkBuilder.CreationAction(
                         InternalArtifactType.PROCESSED_RES, variantScope);
 
-        configAction.execute(task);
+        configAction.preConfigure(task.getName());
+        configAction.configure(task);
 
         task.doFullTaskAction();
         verify(buildContext).getPatchingPolicy();
@@ -172,7 +172,8 @@ public class InstantRunResourcesApkBuilderTest {
 
         when(buildContext.getPatchingPolicy()).thenReturn(InstantRunPatchingPolicy.MULTI_APK);
 
-        configAction.execute(task);
+        configAction.preConfigure(task.getName());
+        configAction.configure(task);
 
         List<ApkData> apkDatas = new ArrayList<>();
         List<File> resourcesFiles = new ArrayList<>();
@@ -228,7 +229,8 @@ public class InstantRunResourcesApkBuilderTest {
                 new InstantRunResourcesApkBuilder.CreationAction(
                         InternalArtifactType.PROCESSED_RES, variantScope);
 
-        configAction.execute(task);
+        configAction.preConfigure(task.getName());
+        configAction.configure(task);
 
         List<ApkData> apkDatas = new ArrayList<>();
         List<File> resourcesFiles = new ArrayList<>();
