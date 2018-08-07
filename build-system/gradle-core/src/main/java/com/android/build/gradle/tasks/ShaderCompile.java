@@ -40,7 +40,6 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.util.PatternSet;
-import org.jetbrains.annotations.NotNull;
 
 /** Task to compile Shaders */
 @CacheableTask
@@ -158,7 +157,7 @@ public class ShaderCompile extends AndroidBuilderTask {
         }
 
         @Override
-        public void preConfigure(@NotNull String taskName) {
+        public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
             outputDir =
                     scope.getArtifacts()

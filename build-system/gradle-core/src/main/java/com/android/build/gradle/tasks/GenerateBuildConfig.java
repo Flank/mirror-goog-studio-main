@@ -38,7 +38,6 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
-import org.jetbrains.annotations.NotNull;
 
 @CacheableTask
 public class GenerateBuildConfig extends AndroidBuilderTask {
@@ -213,7 +212,7 @@ public class GenerateBuildConfig extends AndroidBuilderTask {
 
         @Override
         public void handleProvider(
-                @NotNull TaskProvider<? extends GenerateBuildConfig> taskProvider) {
+                @NonNull TaskProvider<? extends GenerateBuildConfig> taskProvider) {
             super.handleProvider(taskProvider);
             scope.getTaskContainer().setGenerateBuildConfigTask(taskProvider);
         }

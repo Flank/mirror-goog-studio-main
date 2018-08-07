@@ -34,7 +34,6 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Task that takes the configuration result, and check that it's correct.
@@ -104,7 +103,7 @@ public class PrepareLintJar extends DefaultTask {
         }
 
         @Override
-        public void preConfigure(@NotNull String taskName) {
+        public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
             outputLintJar =
                     scope.getArtifacts()

@@ -58,7 +58,6 @@ import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskProvider;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * A task that processes the manifest for test modules and tests in androidTest.
@@ -288,7 +287,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         }
 
         @Override
-        public void preConfigure(@NotNull String taskName) {
+        public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
             scope.getArtifacts()
                     .appendArtifact(
@@ -299,7 +298,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
 
         @Override
         public void handleProvider(
-                @NotNull TaskProvider<? extends ProcessTestManifest> taskProvider) {
+                @NonNull TaskProvider<? extends ProcessTestManifest> taskProvider) {
             super.handleProvider(taskProvider);
             scope.getTaskContainer().setProcessManifestTask(taskProvider);
         }

@@ -90,7 +90,6 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier;
-import org.jetbrains.annotations.NotNull;
 
 /** A task that processes the manifest */
 @CacheableTask
@@ -561,7 +560,7 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
 
         @Override
         public void handleProvider(
-                @NotNull TaskProvider<? extends ProcessApplicationManifest> taskProvider) {
+                @NonNull TaskProvider<? extends ProcessApplicationManifest> taskProvider) {
             super.handleProvider(taskProvider);
             variantScope.getTaskContainer().setProcessManifestTask(taskProvider);
         }

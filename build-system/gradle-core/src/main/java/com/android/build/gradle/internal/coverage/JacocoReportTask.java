@@ -70,7 +70,6 @@ import org.jacoco.report.MultiReportVisitor;
 import org.jacoco.report.MultiSourceFileLocator;
 import org.jacoco.report.html.HTMLFormatter;
 import org.jacoco.report.xml.XMLFormatter;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Simple Jacoco report task that calls the Ant version.
@@ -220,7 +219,7 @@ public class JacocoReportTask extends DefaultTask {
         }
 
         @Override
-        public void handleProvider(@NotNull TaskProvider<? extends JacocoReportTask> taskProvider) {
+        public void handleProvider(@NonNull TaskProvider<? extends JacocoReportTask> taskProvider) {
             super.handleProvider(taskProvider);
             scope.getTaskContainer().setCoverageReportTask(taskProvider);
         }

@@ -77,7 +77,6 @@ import java.util.regex.PatternSyntaxException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import javax.xml.parsers.ParserConfigurationException;
-import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -1450,7 +1449,7 @@ public class ResourceUsageAnalyzer {
             AnalysisCallback callback =
                     new AnalysisCallback() {
                         @Override
-                        public boolean shouldProcess(@NotNull String internalName) {
+                        public boolean shouldProcess(@NonNull String internalName) {
                             return !isResourceClass(internalName + DOT_CLASS);
                         }
 
@@ -1460,13 +1459,13 @@ public class ResourceUsageAnalyzer {
                         }
 
                         @Override
-                        public void referencedString(@NotNull String value) {
+                        public void referencedString(@NonNull String value) {
                             ResourceUsageAnalyzer.this.referencedString(value);
                         }
 
                         @Override
                         public void referencedStaticField(
-                                @NotNull String internalName, @NotNull String fieldName) {
+                                @NonNull String internalName, @NonNull String fieldName) {
                             Resource resource = getResourceFromCode(internalName, fieldName);
                             if (resource != null) {
                                 ResourceUsageModel.markReachable(resource);
@@ -1475,9 +1474,9 @@ public class ResourceUsageAnalyzer {
 
                         @Override
                         public void referencedMethod(
-                                @NotNull String internalName,
-                                @NotNull String methodName,
-                                @NotNull String methodDescriptor) {
+                                @NonNull String internalName,
+                                @NonNull String methodName,
+                                @NonNull String methodDescriptor) {
                             ResourceUsageAnalyzer.this.referencedMethodInvocation(
                                     internalName,
                                     methodName,

@@ -61,7 +61,6 @@ import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.util.PatternSet;
-import org.jetbrains.annotations.NotNull;
 
 /** Task to compile aidl files. Supports incremental update. */
 @CacheableTask
@@ -367,7 +366,7 @@ public class AidlCompile extends IncrementalTask {
         }
 
         @Override
-        public void preConfigure(@NotNull String taskName) {
+        public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
 
             sourceOutputDir =
@@ -383,7 +382,7 @@ public class AidlCompile extends IncrementalTask {
         }
 
         @Override
-        public void handleProvider(@NotNull TaskProvider<? extends AidlCompile> taskProvider) {
+        public void handleProvider(@NonNull TaskProvider<? extends AidlCompile> taskProvider) {
             super.handleProvider(taskProvider);
             scope.getTaskContainer().setAidlCompileTask(taskProvider);
         }

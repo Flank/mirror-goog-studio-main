@@ -58,7 +58,6 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
 import org.gradle.testfixtures.ProjectBuilder;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
@@ -133,19 +132,19 @@ public class TaskTestUtils {
             return reportIssue(type, severity, msg, null);
         }
 
-        @NotNull
+        @NonNull
         @Override
         public SyncIssue reportIssue(
-                @NotNull Type type,
-                @NotNull Severity severity,
-                @NotNull String msg,
+                @NonNull Type type,
+                @NonNull Severity severity,
+                @NonNull String msg,
                 @Nullable String data) {
             return reportIssue(type, severity, new EvalIssueException(msg, data));
         }
 
-        @NotNull
+        @NonNull
         @Override
-        public SyncIssue reportError(@NotNull Type type, @NotNull EvalIssueException exception) {
+        public SyncIssue reportError(@NonNull Type type, @NonNull EvalIssueException exception) {
             return reportIssue(type, Severity.ERROR, exception);
         }
 

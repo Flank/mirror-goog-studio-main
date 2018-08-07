@@ -55,7 +55,6 @@ import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
-import org.jetbrains.annotations.NotNull;
 
 /** a Task that only merge a single manifest with its overlays. */
 @CacheableTask
@@ -279,7 +278,7 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
 
         @Override
         public void handleProvider(
-                @NotNull TaskProvider<? extends ProcessLibraryManifest> taskProvider) {
+                @NonNull TaskProvider<? extends ProcessLibraryManifest> taskProvider) {
             super.handleProvider(taskProvider);
             getScope().getTaskContainer().setProcessManifestTask(taskProvider);
         }

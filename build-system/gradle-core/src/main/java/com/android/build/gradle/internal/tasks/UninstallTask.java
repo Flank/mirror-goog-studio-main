@@ -34,7 +34,6 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
-import org.jetbrains.annotations.NotNull;
 
 public class UninstallTask extends AndroidBuilderTask {
 
@@ -158,7 +157,7 @@ public class UninstallTask extends AndroidBuilderTask {
         }
 
         @Override
-        public void handleProvider(@NotNull TaskProvider<? extends UninstallTask> taskProvider) {
+        public void handleProvider(@NonNull TaskProvider<? extends UninstallTask> taskProvider) {
             super.handleProvider(taskProvider);
             scope.getTaskContainer().setUninstallTask(taskProvider);
         }

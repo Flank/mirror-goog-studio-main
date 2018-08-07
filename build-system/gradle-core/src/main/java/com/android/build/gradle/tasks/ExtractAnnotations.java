@@ -71,7 +71,6 @@ import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Task which extracts annotations from the source files, and writes them to one of two possible
@@ -327,7 +326,7 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
         }
 
         @Override
-        public void preConfigure(@NotNull String taskName) {
+        public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
 
             output =
@@ -349,7 +348,7 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
 
         @Override
         public void handleProvider(
-                @NotNull TaskProvider<? extends ExtractAnnotations> taskProvider) {
+                @NonNull TaskProvider<? extends ExtractAnnotations> taskProvider) {
             super.handleProvider(taskProvider);
             variantScope.getTaskContainer().setGenerateAnnotationsTask(taskProvider);
         }

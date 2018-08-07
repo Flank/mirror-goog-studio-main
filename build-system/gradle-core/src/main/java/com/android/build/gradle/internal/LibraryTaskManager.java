@@ -71,7 +71,6 @@ import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
-import org.jetbrains.annotations.NotNull;
 
 /** TaskManager for creating tasks in an Android library project. */
 public class LibraryTaskManager extends TaskManager {
@@ -457,7 +456,7 @@ public class LibraryTaskManager extends TaskManager {
         }
 
         @Override
-        public void preConfigure(@NotNull String taskName) {
+        public void preConfigure(@NonNull String taskName) {
             publicFile =
                     variantScope
                             .getArtifacts()
@@ -466,7 +465,7 @@ public class LibraryTaskManager extends TaskManager {
         }
 
         @Override
-        public void configure(@NotNull MergeResources task) {
+        public void configure(@NonNull MergeResources task) {
             task.setPublicFile(publicFile);
         }
     }

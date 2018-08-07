@@ -36,7 +36,6 @@ import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
-import org.jetbrains.annotations.NotNull;
 
 @CacheableTask
 public class GenerateResValues extends AndroidBuilderTask {
@@ -125,7 +124,7 @@ public class GenerateResValues extends AndroidBuilderTask {
 
         @Override
         public void handleProvider(
-                @NotNull TaskProvider<? extends GenerateResValues> taskProvider) {
+                @NonNull TaskProvider<? extends GenerateResValues> taskProvider) {
             super.handleProvider(taskProvider);
             scope.getTaskContainer().setGenerateResValuesTask(taskProvider);
         }

@@ -25,6 +25,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
 import com.android.build.VariantOutput;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
@@ -55,7 +56,6 @@ import java.util.List;
 import kotlin.jvm.functions.Function2;
 import org.gradle.api.Project;
 import org.gradle.testfixtures.ProjectBuilder;
-import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -88,10 +88,10 @@ public class InstantRunResourcesApkBuilderTest {
         @Override
         protected BuildElements getResInputBuildArtifacts() {
             return new BuildElements(super.getResInputBuildArtifacts().getElements()) {
-                @NotNull
+                @NonNull
                 @Override
                 public BuildElementActionScheduler transform(
-                        @NotNull Function2<? super ApkInfo, ? super File, ? extends File> action) {
+                        @NonNull Function2<? super ApkInfo, ? super File, ? extends File> action) {
                     return new BuildElementActionScheduler.Synchronous(this, action);
                 }
             };

@@ -32,7 +32,6 @@ import java.io.IOException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.TaskProvider;
-import org.jetbrains.annotations.NotNull;
 
 /** Task to package an Android application (APK). */
 public class PackageApplication extends PackageAndroidArtifact {
@@ -127,7 +126,7 @@ public class PackageApplication extends PackageAndroidArtifact {
         }
 
         @Override
-        public void preConfigure(@NotNull String taskName) {
+        public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
             variantScope
                     .getArtifacts()
@@ -137,7 +136,7 @@ public class PackageApplication extends PackageAndroidArtifact {
 
         @Override
         public void handleProvider(
-                @NotNull TaskProvider<? extends PackageApplication> taskProvider) {
+                @NonNull TaskProvider<? extends PackageApplication> taskProvider) {
             super.handleProvider(taskProvider);
             variantScope.getTaskContainer().setPackageAndroidTask(taskProvider);
         }

@@ -8,7 +8,6 @@ import com.android.builder.model.SourceProvider;
 import java.io.File;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.TaskProvider;
-import org.jetbrains.annotations.NotNull;
 
 /** Configuration Action for a process*JavaRes tasks. */
 public class ProcessJavaResCreationAction extends LazyTaskCreationAction<Sync> {
@@ -33,7 +32,7 @@ public class ProcessJavaResCreationAction extends LazyTaskCreationAction<Sync> {
     }
 
     @Override
-    public void handleProvider(@NotNull TaskProvider<? extends Sync> taskProvider) {
+    public void handleProvider(@NonNull TaskProvider<? extends Sync> taskProvider) {
         super.handleProvider(taskProvider);
         scope.getTaskContainer().setProcessJavaResourcesTask(taskProvider);
     }

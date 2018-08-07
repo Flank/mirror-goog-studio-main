@@ -65,7 +65,6 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.workers.WorkerExecutor;
-import org.jetbrains.annotations.NotNull;
 
 @CacheableTask
 public class MergeSourceSetFolders extends IncrementalTask {
@@ -385,14 +384,14 @@ public class MergeSourceSetFolders extends IncrementalTask {
         }
 
         @Override
-        public void preConfigure(@NotNull String taskName) {
+        public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
             outputDir = scope.getArtifacts().appendArtifact(outputArtifactType, taskName, "out");
         }
 
         @Override
         public void handleProvider(
-                @NotNull TaskProvider<? extends MergeSourceSetFolders> taskProvider) {
+                @NonNull TaskProvider<? extends MergeSourceSetFolders> taskProvider) {
             super.handleProvider(taskProvider);
             scope.getTaskContainer().setMergeAssetsTask(taskProvider);
         }

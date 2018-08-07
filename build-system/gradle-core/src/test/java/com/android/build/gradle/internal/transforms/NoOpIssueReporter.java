@@ -22,7 +22,6 @@ import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.SyncIssue;
 import java.util.List;
-import org.jetbrains.annotations.NotNull;
 
 public class NoOpIssueReporter implements EvalIssueReporter {
 
@@ -87,16 +86,16 @@ public class NoOpIssueReporter implements EvalIssueReporter {
         return FAKE_ISSUE;
     }
 
-    @NotNull
+    @NonNull
     @Override
     public SyncIssue reportIssue(
-            @NotNull Type type, @NotNull Severity severity, @NotNull EvalIssueException exception) {
+            @NonNull Type type, @NonNull Severity severity, @NonNull EvalIssueException exception) {
         return FAKE_ISSUE;
     }
 
-    @NotNull
+    @NonNull
     @Override
-    public SyncIssue reportError(@NotNull Type type, @NotNull EvalIssueException exception) {
+    public SyncIssue reportError(@NonNull Type type, @NonNull EvalIssueException exception) {
         return FAKE_ISSUE;
     }
 }

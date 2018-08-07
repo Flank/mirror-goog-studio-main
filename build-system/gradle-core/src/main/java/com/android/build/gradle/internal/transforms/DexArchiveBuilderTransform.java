@@ -98,7 +98,6 @@ import javax.annotation.Nonnull;
 import javax.inject.Inject;
 import org.gradle.tooling.BuildException;
 import org.gradle.workers.IsolationMode;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Transform that converts CLASS files to dex archives, {@link
@@ -123,7 +122,7 @@ public class DexArchiveBuilderTransform extends Transform {
             this.id = id;
         }
 
-        @NotNull
+        @NonNull
         @Override
         public Class<ClassFileProviderFactory> getType() {
             return ClassFileProviderFactory.class;
@@ -157,7 +156,7 @@ public class DexArchiveBuilderTransform extends Transform {
             this.providerFactory = providerFactory;
         }
 
-        @NotNull
+        @NonNull
         @Override
         public ClassFileProviderFactory getService() {
             return providerFactory;

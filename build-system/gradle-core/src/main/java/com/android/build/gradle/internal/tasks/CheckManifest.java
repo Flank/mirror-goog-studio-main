@@ -25,7 +25,6 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
-import org.jetbrains.annotations.NotNull;
 
 /** Class that checks the presence of the manifest. */
 public class CheckManifest extends AndroidVariantTask {
@@ -96,7 +95,7 @@ public class CheckManifest extends AndroidVariantTask {
         }
 
         @Override
-        public void handleProvider(@NotNull TaskProvider<? extends CheckManifest> taskProvider) {
+        public void handleProvider(@NonNull TaskProvider<? extends CheckManifest> taskProvider) {
             super.handleProvider(taskProvider);
             scope.getTaskContainer().setCheckManifestTask(taskProvider);
         }

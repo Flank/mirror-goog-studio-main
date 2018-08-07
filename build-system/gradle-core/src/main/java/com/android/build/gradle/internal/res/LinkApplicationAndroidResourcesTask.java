@@ -103,7 +103,6 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.tooling.BuildException;
-import org.jetbrains.annotations.NotNull;
 
 @CacheableTask
 public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources {
@@ -646,7 +645,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         protected void preconditionsCheck(BaseVariantData variantData) {}
 
         @Override
-        public void preConfigure(@NotNull String taskName) {
+        public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
 
             resPackageOutputFolder =
@@ -678,7 +677,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
         @Override
         public void handleProvider(
-                @NotNull TaskProvider<? extends LinkApplicationAndroidResourcesTask> taskProvider) {
+                @NonNull TaskProvider<? extends LinkApplicationAndroidResourcesTask> taskProvider) {
             super.handleProvider(taskProvider);
             variantScope.getTaskContainer().setProcessAndroidResTask(taskProvider);
         }
@@ -828,7 +827,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         }
 
         @Override
-        public void preConfigure(@NotNull String taskName) {
+        public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
             sourceOutputDir =
                     variantScope
@@ -879,7 +878,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
 
         @Override
-        public void preConfigure(@NotNull String taskName) {
+        public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
 
             sourceOutputDir =

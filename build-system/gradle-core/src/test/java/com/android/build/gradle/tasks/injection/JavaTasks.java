@@ -28,7 +28,6 @@ import org.gradle.api.file.Directory;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
-import org.jetbrains.annotations.NotNull;
 
 public class JavaTasks {
 
@@ -60,7 +59,7 @@ public class JavaTasks {
         private Provider<Directory> classes;
 
         @Override
-        public void executeTask(@NotNull Object... parameters) {
+        public void executeTask(@NonNull Object... parameters) {
             assertThat(classes).isNotNull();
             assertThat(classes).isEqualTo(parameters[0]);
         }

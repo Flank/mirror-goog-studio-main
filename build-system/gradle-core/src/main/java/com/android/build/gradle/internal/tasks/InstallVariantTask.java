@@ -60,7 +60,6 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Task installing an app variant. It looks at connected device and install the best matching
@@ -314,7 +313,7 @@ public class InstallVariantTask extends AndroidBuilderTask {
 
         @Override
         public void handleProvider(
-                @NotNull TaskProvider<? extends InstallVariantTask> taskProvider) {
+                @NonNull TaskProvider<? extends InstallVariantTask> taskProvider) {
             super.handleProvider(taskProvider);
             scope.getTaskContainer().setInstallTask(taskProvider);
         }

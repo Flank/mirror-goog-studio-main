@@ -33,7 +33,6 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
 import org.gradle.workers.WorkerExecutor;
-import org.jetbrains.annotations.NotNull;
 
 @CacheableTask
 public class JacocoTask extends AndroidVariantTask {
@@ -86,20 +85,20 @@ public class JacocoTask extends AndroidVariantTask {
             this.scope = scope;
         }
 
-        @NotNull
+        @NonNull
         @Override
         public String getName() {
             return scope.getTaskName("jacoco");
         }
 
-        @NotNull
+        @NonNull
         @Override
         public Class<JacocoTask> getType() {
             return JacocoTask.class;
         }
 
         @Override
-        public void execute(@NotNull JacocoTask task) {
+        public void execute(@NonNull JacocoTask task) {
             task.inputClasses =
                     scope.getArtifacts().getFinalArtifactFiles(AnchorOutputType.ALL_CLASSES);
             task.jacocoAntTaskConfiguration =

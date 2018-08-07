@@ -50,7 +50,6 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
-import org.jetbrains.annotations.NotNull;
 
 /** Task to compile Renderscript files. Supports incremental update. */
 @CacheableTask
@@ -271,7 +270,7 @@ public class RenderscriptCompile extends NdkTask {
         }
 
         @Override
-        public void preConfigure(@NotNull String taskName) {
+        public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
 
             sourceOutputDir =
@@ -281,7 +280,7 @@ public class RenderscriptCompile extends NdkTask {
 
         @Override
         public void handleProvider(
-                @NotNull TaskProvider<? extends RenderscriptCompile> taskProvider) {
+                @NonNull TaskProvider<? extends RenderscriptCompile> taskProvider) {
             super.handleProvider(taskProvider);
             scope.getTaskContainer().setRenderscriptCompileTask(taskProvider);
         }

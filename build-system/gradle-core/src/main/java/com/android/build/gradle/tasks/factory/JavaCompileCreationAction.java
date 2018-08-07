@@ -25,7 +25,6 @@ import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.TaskProvider;
-import org.jetbrains.annotations.NotNull;
 
 /** Configuration Action for a JavaCompile task. */
 public class JavaCompileCreationAction extends LazyTaskCreationAction<AndroidJavaCompile> {
@@ -51,7 +50,7 @@ public class JavaCompileCreationAction extends LazyTaskCreationAction<AndroidJav
     }
 
     @Override
-    public void preConfigure(@NotNull String taskName) {
+    public void preConfigure(@NonNull String taskName) {
         super.preConfigure(taskName);
 
         BuildArtifactsHolder artifacts = scope.getArtifacts();
@@ -68,7 +67,7 @@ public class JavaCompileCreationAction extends LazyTaskCreationAction<AndroidJav
     }
 
     @Override
-    public void handleProvider(@NotNull TaskProvider<? extends AndroidJavaCompile> taskProvider) {
+    public void handleProvider(@NonNull TaskProvider<? extends AndroidJavaCompile> taskProvider) {
         super.handleProvider(taskProvider);
         scope.getTaskContainer().setJavacTask(taskProvider);
     }

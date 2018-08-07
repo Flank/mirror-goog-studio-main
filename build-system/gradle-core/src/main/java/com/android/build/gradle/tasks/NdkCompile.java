@@ -65,7 +65,6 @@ import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
 import org.gradle.api.tasks.incremental.InputFileDetails;
 import org.gradle.api.tasks.util.PatternSet;
-import org.jetbrains.annotations.NotNull;
 
 public class NdkCompile extends NdkTask {
 
@@ -452,7 +451,7 @@ public class NdkCompile extends NdkTask {
         }
 
         @Override
-        public void handleProvider(@NotNull TaskProvider<? extends NdkCompile> taskProvider) {
+        public void handleProvider(@NonNull TaskProvider<? extends NdkCompile> taskProvider) {
             super.handleProvider(taskProvider);
             variantScope.getTaskContainer().setNdkCompileTask(taskProvider);
         }

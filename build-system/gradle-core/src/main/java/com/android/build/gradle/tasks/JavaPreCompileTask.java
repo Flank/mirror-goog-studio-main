@@ -51,7 +51,6 @@ import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
-import org.jetbrains.annotations.NotNull;
 
 /** Tasks to perform necessary action before a JavaCompile. */
 @CacheableTask
@@ -241,7 +240,7 @@ public class JavaPreCompileTask extends AndroidBuilderTask {
         }
 
         @Override
-        public void preConfigure(@NotNull String taskName) {
+        public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
             apList =
                     scope.getArtifacts()
