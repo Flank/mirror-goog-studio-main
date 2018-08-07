@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
 import com.android.tools.build.bundletool.commands.BuildApksCommand
 import com.android.tools.build.bundletool.model.Aapt2Command
 import com.android.utils.FileUtils
@@ -181,23 +182,31 @@ open class BundleToStandaloneApkTask @Inject constructor(workerExecutor: WorkerE
         }
     }
 
-    class CreationAction(private val scope: VariantScope) : EagerTaskCreationAction<BundleToStandaloneApkTask>() {
+    class CreationAction(private val scope: VariantScope) : LazyTaskCreationAction<BundleToStandaloneApkTask>() {
 
         override val name: String
             get() = scope.getTaskName("package", "UniversalApk")
         override val type: Class<BundleToStandaloneApkTask>
             get() = BundleToStandaloneApkTask::class.java
 
-        override fun execute(task: BundleToStandaloneApkTask) {
-            task.variantName = scope.fullVariantName
+        private lateinit var outputFile: Provider<RegularFile>
+
+        override fun preConfigure(taskName: String) {
+            super.preConfigure(taskName)
+
             // Mirrors logic in OutputFactory.getOutputFileName, but without splits.
             val suffix = if (scope.variantConfiguration.isSigningReady) SdkConstants.DOT_ANDROID_PACKAGE else "-unsigned.apk"
-
-            task.outputFile = scope.artifacts.setArtifactFile(
+            outputFile = scope.artifacts.setArtifactFile(
                 InternalArtifactType.UNIVERSAL_APK,
-                task,
+                taskName,
                 "${scope.globalScope.projectBaseName}-${scope.variantConfiguration.baseName}-universal$suffix"
             )
+        }
+
+        override fun configure(task: BundleToStandaloneApkTask) {
+            task.variantName = scope.fullVariantName
+
+            task.outputFile = outputFile
             task.bundle = scope.artifacts.getFinalArtifactFiles(InternalArtifactType.BUNDLE)
             task.aapt2FromMaven = getAapt2FromMaven(scope.globalScope)
             task.tempDirectory = scope.getIncrementalDir(name)

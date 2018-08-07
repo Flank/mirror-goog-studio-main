@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.tasks.Workers
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
 import com.android.build.gradle.options.IntegerOption
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.CacheableTask
@@ -110,22 +111,29 @@ open class FeatureSetMetadataWriterTask @Inject constructor(workerExecutor: Work
     }
 
     class CreationAction(private val variantScope: VariantScope) :
-        EagerTaskCreationAction<FeatureSetMetadataWriterTask>() {
+        LazyTaskCreationAction<FeatureSetMetadataWriterTask>() {
 
         override val name: String
             get() = variantScope.getTaskName("generate", "FeatureMetadata")
         override val type: Class<FeatureSetMetadataWriterTask>
             get() = FeatureSetMetadataWriterTask::class.java
 
-        override fun execute(task: FeatureSetMetadataWriterTask) {
+        private lateinit var outputFile: File
+
+        override fun preConfigure(taskName: String) {
+            super.preConfigure(taskName)
+
+            outputFile = variantScope.artifacts.appendArtifact(
+                InternalArtifactType.FEATURE_SET_METADATA,
+                taskName,
+                FeatureSetMetadata.OUTPUT_FILE_NAME)
+        }
+
+        override fun configure(task: FeatureSetMetadataWriterTask) {
             task.variantName = variantScope.fullVariantName
             task.minSdkVersion = variantScope.minSdkVersion.apiLevel
 
-            task.outputFile = variantScope.artifacts.appendArtifact(
-                    InternalArtifactType.FEATURE_SET_METADATA,
-                    task,
-                    FeatureSetMetadata.OUTPUT_FILE_NAME)
-
+            task.outputFile = outputFile
             task.inputFiles = variantScope.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.METADATA_VALUES,
                 AndroidArtifacts.ArtifactScope.MODULE,

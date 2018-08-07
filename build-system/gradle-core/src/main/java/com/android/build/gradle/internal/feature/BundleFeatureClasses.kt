@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.Workers
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
 import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
@@ -103,16 +104,24 @@ open class BundleFeatureClasses @Inject constructor(workerExecutor: WorkerExecut
         }
     }
 
-    class CreationAction(private val scope: VariantScope) : EagerTaskCreationAction<BundleFeatureClasses>() {
+    class CreationAction(private val scope: VariantScope) : LazyTaskCreationAction<BundleFeatureClasses>() {
 
         override val name: String
             get() = scope.getTaskName("bundle", "Classes")
         override val type: Class<BundleFeatureClasses>
             get() = BundleFeatureClasses::class.java
 
-        override fun execute(task: BundleFeatureClasses) {
-            task.outputJar = scope.artifacts.appendArtifact(
-                InternalArtifactType.FEATURE_CLASSES, task, "classes.jar")
+        private lateinit var outputJar: File
+
+        override fun preConfigure(taskName: String) {
+            super.preConfigure(taskName)
+
+            outputJar = scope.artifacts.appendArtifact(
+                InternalArtifactType.FEATURE_CLASSES, taskName, "classes.jar")
+        }
+
+        override fun configure(task: BundleFeatureClasses) {
+            task.outputJar = outputJar
             task.javacClasses =
                     scope.artifacts.getArtifactFiles(InternalArtifactType.JAVAC)
             task.preJavacClasses = scope.variantData.allPreJavacGeneratedBytecode

@@ -19,28 +19,37 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
+import java.io.File
 
 /** Configuration action for a task to merge aapt proguard files  */
 class MergeAaptProguardFilesCreationAction(private val scope: VariantScope) :
-    EagerTaskCreationAction<MergeFileTask>() {
+    LazyTaskCreationAction<MergeFileTask>() {
 
     override val name: String
         get() = scope.getTaskName("merge", "AaptProguardFiles")
     override val type: Class<MergeFileTask>
         get() = MergeFileTask::class.java
 
-    override fun execute(task: MergeFileTask) {
-        task.variantName = scope.variantConfiguration.fullName
-        task.outputFile =
+    private lateinit var outputFile: File
+
+    override fun preConfigure(taskName: String) {
+        super.preConfigure(taskName)
+        outputFile =
                 scope
                     .artifacts
                     .appendArtifact(
                         InternalArtifactType.MERGED_AAPT_PROGUARD_FILE,
-                        task,
+                        taskName,
                         SdkConstants.FN_MERGED_AAPT_RULES
                     )
+
+    }
+
+    override fun configure(task: MergeFileTask) {
+        task.variantName = scope.variantConfiguration.fullName
+        task.outputFile = outputFile
         val project = scope.globalScope.project
         val inputFiles =
             project

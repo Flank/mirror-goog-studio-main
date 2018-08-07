@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -94,14 +95,35 @@ open class ModuleMetadataWriterTask : AndroidVariantTask() {
     }
 
     class CreationAction(private val variantScope: VariantScope) :
-        EagerTaskCreationAction<ModuleMetadataWriterTask>() {
+        LazyTaskCreationAction<ModuleMetadataWriterTask>() {
 
         override val name: String
             get() = variantScope.getTaskName("write", "ModuleMetadata")
         override val type: Class<ModuleMetadataWriterTask>
             get() = ModuleMetadataWriterTask::class.java
 
-        override fun execute(task: ModuleMetadataWriterTask) {
+        private lateinit var outputFile: File
+
+        override fun preConfigure(taskName: String) {
+            super.preConfigure(taskName)
+
+            outputFile = variantScope.artifacts.appendArtifact(
+                InternalArtifactType.METADATA_BASE_MODULE_DECLARATION,
+                taskName,
+                ModuleMetadata.PERSISTED_FILE_NAME
+            )
+
+            if (!variantScope.type.isHybrid) {
+                //if this is the base application, publish the feature to the metadata config
+                variantScope.artifacts.appendArtifact(
+                    InternalArtifactType.METADATA_INSTALLED_BASE_DECLARATION,
+                    listOf(outputFile),
+                    taskName
+                )
+            }
+        }
+
+        override fun configure(task: ModuleMetadataWriterTask) {
             task.variantName = variantScope.fullVariantName
 
             // default value of the app ID to publish. This may get overwritten by something
@@ -115,22 +137,12 @@ open class ModuleMetadataWriterTask : AndroidVariantTask() {
             task.debuggable = variantScope.variantConfiguration.buildType.isDebuggable
 
             // publish the ID for the dynamic features (whether it's hybrid or not) to consume.
-            task.outputFile = variantScope.artifacts.appendArtifact(
-                InternalArtifactType.METADATA_BASE_MODULE_DECLARATION,
-                task,
-                ModuleMetadata.PERSISTED_FILE_NAME
-            )
+            task.outputFile = outputFile
+
             if (variantScope.type.isHybrid) {
                 //if this is a feature, get the Application ID from the metadata config
                 task.metadataFromInstalledModule = variantScope.getArtifactFileCollection(
                     METADATA_VALUES, MODULE, METADATA_BASE_MODULE_DECLARATION
-                )
-            } else {
-                //if this is the base application, publish the feature to the metadata config
-                variantScope.artifacts.appendArtifact(
-                    InternalArtifactType.METADATA_INSTALLED_BASE_DECLARATION,
-                    listOf(task.outputFile),
-                    task
                 )
             }
         }

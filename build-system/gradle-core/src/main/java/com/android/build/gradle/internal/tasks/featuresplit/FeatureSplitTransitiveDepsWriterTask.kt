@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
 import com.android.utils.FileUtils
 import com.google.common.base.Charsets
 import com.google.common.base.Joiner
@@ -71,19 +72,27 @@ open class FeatureSplitTransitiveDepsWriterTask : AndroidVariantTask() {
     }
 
     class CreationAction(private val variantScope: VariantScope) :
-        EagerTaskCreationAction<FeatureSplitTransitiveDepsWriterTask>() {
+        LazyTaskCreationAction<FeatureSplitTransitiveDepsWriterTask>() {
 
         override val name: String
             get() = variantScope.getTaskName("generate", "FeatureTransitiveDeps")
         override val type: Class<FeatureSplitTransitiveDepsWriterTask>
             get() = FeatureSplitTransitiveDepsWriterTask::class.java
 
-        override fun execute(task: FeatureSplitTransitiveDepsWriterTask) {
-            task.variantName = variantScope.fullVariantName
-            task.outputFile = variantScope.artifacts
+        private lateinit var outputFile: File
+
+        override fun preConfigure(taskName: String) {
+            super.preConfigure(taskName)
+
+            outputFile = variantScope.artifacts
                 .appendArtifact(InternalArtifactType.FEATURE_TRANSITIVE_DEPS,
-                    task,
+                    taskName,
                     "deps.txt")
+        }
+
+        override fun configure(task: FeatureSplitTransitiveDepsWriterTask) {
+            task.variantName = variantScope.fullVariantName
+            task.outputFile = outputFile
             task.runtimeJars = variantScope.getArtifactCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.ALL,

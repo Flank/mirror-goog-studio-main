@@ -77,12 +77,13 @@ class BundleFeatureClassesTest {
 
         Mockito.`when`(globalScope.project).thenReturn(project)
         Mockito.`when`(artifacts.appendArtifact(InternalArtifactType.FEATURE_CLASSES,
-            task, "classes.jar")).thenReturn(testFolder.newFile("classes.jar"))
+            task.name, "classes.jar")).thenReturn(testFolder.newFile("classes.jar"))
         Mockito.`when`(artifacts.getArtifactFiles(InternalArtifactType.JAVAC))
             .thenReturn(javacClasses)
 
         val configAction = BundleFeatureClasses.CreationAction(scope)
-        configAction.execute(task)
+        configAction.preConfigure(task.name)
+        configAction.configure(task)
     }
 
     @Test

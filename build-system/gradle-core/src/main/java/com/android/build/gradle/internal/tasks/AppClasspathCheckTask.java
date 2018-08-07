@@ -23,7 +23,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.ide.common.repository.GradleVersion;
@@ -88,7 +88,7 @@ public class AppClasspathCheckTask extends ClasspathComparisionTask {
         compareClasspaths();
     }
 
-    public static class CreationAction extends EagerTaskCreationAction<AppClasspathCheckTask> {
+    public static class CreationAction extends LazyTaskCreationAction<AppClasspathCheckTask> {
 
         @NonNull private final VariantScope variantScope;
 
@@ -109,7 +109,7 @@ public class AppClasspathCheckTask extends ClasspathComparisionTask {
         }
 
         @Override
-        public void execute(@NonNull AppClasspathCheckTask task) {
+        public void configure(@NonNull AppClasspathCheckTask task) {
             task.setVariantName(variantScope.getFullVariantName());
 
             task.runtimeClasspath =

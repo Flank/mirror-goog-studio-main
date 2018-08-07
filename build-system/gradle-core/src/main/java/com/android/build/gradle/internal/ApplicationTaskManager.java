@@ -173,7 +173,7 @@ public class ApplicationTaskManager extends TaskManager {
         // Add feature related tasks if necessary
         if (variantScope.getType().isBaseModule()) {
             // Base feature specific tasks.
-            taskFactory.eagerCreate(new FeatureSetMetadataWriterTask.CreationAction(variantScope));
+            taskFactory.lazyCreate(new FeatureSetMetadataWriterTask.CreationAction(variantScope));
 
             if (extension.getDataBinding().isEnabled()) {
                 // Create a task that will package the manifest ids(the R file packages) of all
@@ -226,7 +226,7 @@ public class ApplicationTaskManager extends TaskManager {
         // Create the lint tasks, if enabled
         createLintTasks(variantScope);
 
-        taskFactory.eagerCreate(
+        taskFactory.lazyCreate(
                 new FeatureSplitTransitiveDepsWriterTask.CreationAction(variantScope));
 
         createDynamicBundleTask(variantScope);
@@ -415,8 +415,8 @@ public class ApplicationTaskManager extends TaskManager {
         final VariantType variantType = scope.getVariantConfiguration().getType();
 
         if (variantType.isApk()) {
-            AppClasspathCheckTask classpathCheck =
-                    taskFactory.eagerCreate(new AppClasspathCheckTask.CreationAction(scope));
+            TaskProvider<AppClasspathCheckTask> classpathCheck =
+                    taskFactory.lazyCreate(new AppClasspathCheckTask.CreationAction(scope));
 
             TaskProvider<? extends Task> task =
                     (variantType.isTestComponent()
@@ -480,11 +480,11 @@ public class ApplicationTaskManager extends TaskManager {
 
     private void createApplicationIdWriterTask(@NonNull VariantScope variantScope) {
         if (variantScope.getType().isBaseModule()) {
-            taskFactory.eagerCreate(new ModuleMetadataWriterTask.CreationAction(variantScope));
+            taskFactory.lazyCreate(new ModuleMetadataWriterTask.CreationAction(variantScope));
         }
 
-        Task applicationIdWriterTask =
-                taskFactory.eagerCreate(new ApplicationIdWriterTask.CreationAction(variantScope));
+        TaskProvider<? extends Task> applicationIdWriterTask =
+                taskFactory.lazyCreate(new ApplicationIdWriterTask.CreationAction(variantScope));
 
         TextResourceFactory resources = project.getResources().getText();
         // this builds the dependencies from the task, and its output is the textResource.
@@ -517,20 +517,20 @@ public class ApplicationTaskManager extends TaskManager {
                     scope.getTaskContainer().getBundleTask(),
                     scope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.BUNDLE));
 
-            BundleToApkTask splitAndMultiApkTask =
-                    taskFactory.eagerCreate(new BundleToApkTask.CreationAction(scope));
-            BundleToStandaloneApkTask universalApkTask =
-                    taskFactory.eagerCreate(new BundleToStandaloneApkTask.CreationAction(scope));
+            TaskProvider<BundleToApkTask> splitAndMultiApkTask =
+                    taskFactory.lazyCreate(new BundleToApkTask.CreationAction(scope));
+            TaskProvider<BundleToStandaloneApkTask> universalApkTask =
+                    taskFactory.lazyCreate(new BundleToStandaloneApkTask.CreationAction(scope));
             // make the tasks depend on the validate signing task to ensure that the keystore
             // is created if it's a debug one.
             if (scope.getVariantConfiguration().getSigningConfig() != null) {
                 TaskProvider<? extends Task> validateSigningTask = getValidateSigningTask(scope);
-                splitAndMultiApkTask.dependsOn(validateSigningTask);
+                TaskFactoryUtils.dependsOn(splitAndMultiApkTask, validateSigningTask);
                 TaskFactoryUtils.dependsOn(packageBundleTask, validateSigningTask);
-                universalApkTask.dependsOn(validateSigningTask);
+                TaskFactoryUtils.dependsOn(universalApkTask, validateSigningTask);
             }
 
-            taskFactory.eagerCreate(new ExtractApksTask.CreationAction(scope));
+            taskFactory.lazyCreate(new ExtractApksTask.CreationAction(scope));
         }
     }
 }

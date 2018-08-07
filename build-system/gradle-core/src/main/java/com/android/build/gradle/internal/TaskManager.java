@@ -1066,7 +1066,7 @@ public abstract class TaskManager {
         createApkProcessResTask(scope, packageOutputType);
 
         if (scope.consumesFeatureJars()) {
-            taskFactory.eagerCreate(new MergeAaptProguardFilesCreationAction(scope));
+            taskFactory.lazyCreate(new MergeAaptProguardFilesCreationAction(scope));
         }
     }
 

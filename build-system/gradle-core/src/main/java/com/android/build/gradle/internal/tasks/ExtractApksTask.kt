@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
 import com.android.build.gradle.options.StringOption
 import com.android.bundle.Devices.DeviceSpec
 import com.android.tools.build.bundletool.commands.ExtractApksCommand
@@ -108,16 +109,23 @@ open class ExtractApksTask @Inject constructor(workerExecutor: WorkerExecutor) :
         }
     }
 
-    class CreationAction(private val scope: VariantScope) : EagerTaskCreationAction<ExtractApksTask>() {
+    class CreationAction(private val scope: VariantScope) : LazyTaskCreationAction<ExtractApksTask>() {
 
         override val name: String
             get() = getTaskName(scope)
         override val type: Class<ExtractApksTask>
             get() = ExtractApksTask::class.java
 
-        override fun execute(task: ExtractApksTask) {
+        private lateinit var outputDir: File
+
+        override fun preConfigure(taskName: String) {
+            super.preConfigure(taskName)
+            outputDir = scope.artifacts.appendArtifact(InternalArtifactType.EXTRACTED_APKS, taskName)
+        }
+
+        override fun configure(task: ExtractApksTask) {
             task.variantName = scope.fullVariantName
-            task.outputDir = scope.artifacts.appendArtifact(InternalArtifactType.EXTRACTED_APKS, task)
+            task.outputDir = outputDir
             task.apkSetArchive = scope.artifacts.getFinalArtifactFiles(InternalArtifactType.APKS_FROM_BUNDLE)
 
             val devicePath = scope.globalScope.projectOptions.get(StringOption.IDE_APK_SELECT_CONFIG)

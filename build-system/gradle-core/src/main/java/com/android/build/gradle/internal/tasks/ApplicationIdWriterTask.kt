@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
 import org.apache.commons.io.FileUtils
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
@@ -78,21 +79,29 @@ open class ApplicationIdWriterTask : AndroidVariantTask() {
     }
 
     class CreationAction(private val variantScope: VariantScope) :
-        EagerTaskCreationAction<ApplicationIdWriterTask>() {
+        LazyTaskCreationAction<ApplicationIdWriterTask>() {
 
         override val name: String
             get() = variantScope.getTaskName("write", "ApplicationId")
         override val type: Class<ApplicationIdWriterTask>
             get() = ApplicationIdWriterTask::class.java
 
-        override fun execute(task: ApplicationIdWriterTask) {
-            task.variantName = variantScope.fullVariantName
+        private lateinit var outputFile: File
 
-            task.outputFile = variantScope.artifacts.appendArtifact(
+        override fun preConfigure(taskName: String) {
+            super.preConfigure(taskName)
+
+            outputFile = variantScope.artifacts.appendArtifact(
                 InternalArtifactType.METADATA_APPLICATION_ID,
-                task,
+                taskName,
                 "application-id.txt"
             )
+        }
+
+        override fun configure(task: ApplicationIdWriterTask) {
+            task.variantName = variantScope.fullVariantName
+
+            task.outputFile = outputFile
             // if BASE_FEATURE get the app ID from the app module
             if (variantScope.type.isBaseModule && variantScope.type.isHybrid) {
                 task.appMetadata = variantScope.getArtifactFileCollection(
