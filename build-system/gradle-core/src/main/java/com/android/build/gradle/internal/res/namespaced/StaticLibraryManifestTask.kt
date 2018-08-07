@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.Workers
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
 import com.google.common.base.Suppliers
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.CacheableTask
@@ -56,16 +57,23 @@ open class StaticLibraryManifestTask @Inject constructor(workerExecutor: WorkerE
 
     class CreationAction(
         private val scope: VariantScope
-    ) : EagerTaskCreationAction<StaticLibraryManifestTask>() {
+    ) : LazyTaskCreationAction<StaticLibraryManifestTask>() {
         override val name: String
             get() = scope.getTaskName("create", "StaticLibraryManifest")
         override val type: Class<StaticLibraryManifestTask>
             get() = StaticLibraryManifestTask::class.java
 
-        override fun execute(task: StaticLibraryManifestTask) {
-            task.manifestFile = scope.artifacts.appendArtifact(InternalArtifactType.STATIC_LIBRARY_MANIFEST,
-                task,
+        private lateinit var manifestFile: File
+
+        override fun preConfigure(taskName: String) {
+            super.preConfigure(taskName)
+            manifestFile = scope.artifacts.appendArtifact(InternalArtifactType.STATIC_LIBRARY_MANIFEST,
+                taskName,
                 SdkConstants.ANDROID_MANIFEST_XML)
+        }
+
+        override fun configure(task: StaticLibraryManifestTask) {
+            task.manifestFile = manifestFile
             task.packageNameSupplier =
                     Suppliers.memoize(scope.variantConfiguration::getOriginalApplicationId)
         }

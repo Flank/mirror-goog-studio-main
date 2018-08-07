@@ -16,10 +16,11 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.compile.JavaCompile
+import java.io.File
 
 /**
  * Task to compile a directory containing R.java file(s) and jar the result.
@@ -32,20 +33,31 @@ import org.gradle.api.tasks.compile.JavaCompile
 @CacheableTask
 open class CompileRClassTask : JavaCompile() {
 
-    class CreationAction(private val scope: VariantScope) : EagerTaskCreationAction<CompileRClassTask>() {
+    class CreationAction(private val scope: VariantScope) :
+        LazyTaskCreationAction<CompileRClassTask>() {
 
         override val name: String
             get() = scope.getTaskName("compile", "FinalRClass")
         override val type: Class<CompileRClassTask>
             get() = CompileRClassTask::class.java
 
-        override fun execute(task: CompileRClassTask) {
+        private lateinit var destinationDir: File
+
+        override fun preConfigure(taskName: String) {
+            super.preConfigure(taskName)
+            destinationDir =
+                    scope.artifacts.appendArtifact(
+                        InternalArtifactType.RUNTIME_R_CLASS_CLASSES,
+                        taskName
+                    )
+        }
+
+        override fun configure(task: CompileRClassTask) {
             val artifacts = scope.artifacts
             task.classpath = task.project.files()
             task.source(
                 artifacts.getFinalArtifactFiles(InternalArtifactType.RUNTIME_R_CLASS_SOURCES))
-            task.destinationDir =
-                    artifacts.appendArtifact(InternalArtifactType.RUNTIME_R_CLASS_CLASSES, task)
+            task.destinationDir = destinationDir
         }
     }
 

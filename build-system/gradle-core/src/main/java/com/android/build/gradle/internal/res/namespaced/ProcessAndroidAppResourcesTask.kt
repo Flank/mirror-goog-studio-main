@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.build.gradle.internal.tasks.Workers
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
@@ -114,14 +115,34 @@ open class ProcessAndroidAppResourcesTask
     }
 
     class CreationAction(private val scope: VariantScope) :
-        EagerTaskCreationAction<ProcessAndroidAppResourcesTask>() {
+        LazyTaskCreationAction<ProcessAndroidAppResourcesTask>() {
 
         override val name: String
             get() = scope.getTaskName("process", "Resources")
         override val type: Class<ProcessAndroidAppResourcesTask>
             get() = ProcessAndroidAppResourcesTask::class.java
 
-        override fun execute(task: ProcessAndroidAppResourcesTask) {
+        private lateinit var resourceApUnderscore: File
+        private lateinit var rClassSource: File
+
+        override fun preConfigure(taskName: String) {
+            super.preConfigure(taskName)
+
+            val artifacts = scope.artifacts
+
+            rClassSource = artifacts.appendArtifact(
+                InternalArtifactType.RUNTIME_R_CLASS_SOURCES,
+                taskName)
+
+            resourceApUnderscore = scope.artifacts
+                .appendArtifact(
+                    InternalArtifactType.PROCESSED_RES,
+                    taskName,
+                    "res.apk")
+
+        }
+
+        override fun configure(task: ProcessAndroidAppResourcesTask) {
             task.variantName = scope.fullVariantName
             val artifacts = scope.artifacts
             task.manifestFileDirectory =
@@ -155,14 +176,8 @@ open class ProcessAndroidAppResourcesTask
             task.aaptIntermediateDir =
                     FileUtils.join(
                             scope.globalScope.intermediatesDir, "res-process-intermediate", scope.variantConfiguration.dirName)
-            task.rClassSource = artifacts.appendArtifact(
-                InternalArtifactType.RUNTIME_R_CLASS_SOURCES,
-                task)
-            task.resourceApUnderscore = scope.artifacts
-                .appendArtifact(
-                    InternalArtifactType.PROCESSED_RES,
-                    task,
-                    "res.apk")
+            task.rClassSource = rClassSource
+            task.resourceApUnderscore = resourceApUnderscore
             task.setAndroidBuilder(scope.globalScope.androidBuilder)
             task.aapt2FromMaven = getAapt2FromMaven(scope.globalScope)
         }

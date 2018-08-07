@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.build.gradle.internal.tasks.Workers
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
@@ -114,14 +115,26 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecutor: W
 
     class CreationAction(
         private val scope: VariantScope
-    ) : EagerTaskCreationAction<LinkLibraryAndroidResourcesTask>() {
+    ) : LazyTaskCreationAction<LinkLibraryAndroidResourcesTask>() {
 
         override val name: String
             get() = scope.getTaskName("link", "Resources")
         override val type: Class<LinkLibraryAndroidResourcesTask>
             get() = LinkLibraryAndroidResourcesTask::class.java
 
-        override fun execute(task: LinkLibraryAndroidResourcesTask) {
+        private lateinit var staticLibApk: File
+
+        override fun preConfigure(taskName: String) {
+            super.preConfigure(taskName)
+
+            staticLibApk = scope.artifacts.appendArtifact(
+                InternalArtifactType.RES_STATIC_LIBRARY,
+                taskName,
+                "res.apk")
+
+        }
+
+        override fun configure(task: LinkLibraryAndroidResourcesTask) {
             task.variantName = scope.fullVariantName
             task.manifestFile = scope.artifacts.getFinalArtifactFiles(
                 InternalArtifactType.STATIC_LIBRARY_MANIFEST)
@@ -152,10 +165,7 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecutor: W
             task.aaptIntermediateDir =
                     FileUtils.join(
                             scope.globalScope.intermediatesDir, "res-link-intermediate", scope.variantConfiguration.dirName)
-            task.staticLibApk = scope.artifacts.appendArtifact(
-                InternalArtifactType.RES_STATIC_LIBRARY,
-                task,
-                "res.apk")
+            task.staticLibApk = staticLibApk
             task.setAndroidBuilder(scope.globalScope.androidBuilder)
             task.packageForRSupplier = Suppliers.memoize(scope.variantConfiguration::getOriginalApplicationId)
             task.aapt2FromMaven = getAapt2FromMaven(scope.globalScope)

@@ -18,8 +18,8 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
 import com.android.builder.symbols.exportToCompiledJava
 import com.android.ide.common.symbols.SymbolTable
 import com.android.utils.FileUtils
@@ -77,22 +77,31 @@ open class GenerateNamespacedLibraryRFilesTask : DefaultTask() {
     }
 
     class CreationAction(private val scope: VariantScope) :
-        EagerTaskCreationAction<GenerateNamespacedLibraryRFilesTask>() {
+        LazyTaskCreationAction<GenerateNamespacedLibraryRFilesTask>() {
 
         override val name: String
             get() = scope.getTaskName("create", "RFiles")
         override val type: Class<GenerateNamespacedLibraryRFilesTask>
             get() = GenerateNamespacedLibraryRFilesTask::class.java
 
-        override fun execute(task: GenerateNamespacedLibraryRFilesTask) {
+        private lateinit var rJarFile: File
+
+        override fun preConfigure(taskName: String) {
+            super.preConfigure(taskName)
+            rJarFile = scope.artifacts
+                .appendArtifact(
+                    InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
+                    taskName, "R.jar"
+                )
+        }
+
+        override fun configure(task: GenerateNamespacedLibraryRFilesTask) {
 
             task.partialRFiles = scope.artifacts.getFinalArtifactFiles(
                 InternalArtifactType.PARTIAL_R_FILES)
             task.packageForRSupplier =
                     Suppliers.memoize(scope.variantConfiguration::getOriginalApplicationId)
-            task.rJarFile = scope.artifacts
-                .appendArtifact(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
-                    task, "R.jar")
+            task.rJarFile = rJarFile
         }
     }
 }
