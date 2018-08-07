@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.IncrementalTask
 import com.android.build.gradle.internal.tasks.Workers
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptException
 import com.android.builder.internal.aapt.AaptOptions
@@ -155,7 +156,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
 
     class CreationAction(
         private val scope: VariantScope
-    ) : EagerTaskCreationAction<VerifyLibraryResourcesTask>() {
+    ) : LazyTaskCreationAction<VerifyLibraryResourcesTask>() {
 
         override val name: String
             get() = scope.getTaskName("verify", "Resources")
@@ -163,7 +164,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
             get() = VerifyLibraryResourcesTask::class.java
 
         /** Configure the given newly-created task object.  */
-        override fun execute(task: VerifyLibraryResourcesTask) {
+        override fun configure(task: VerifyLibraryResourcesTask) {
             val variantData = scope.variantData
             val config = variantData.variantConfiguration
             task.variantName = config.fullName

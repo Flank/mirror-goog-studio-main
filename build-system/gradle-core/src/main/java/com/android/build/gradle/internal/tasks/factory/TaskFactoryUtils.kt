@@ -226,7 +226,7 @@ inline fun <T: Task> TaskProvider<out T>?.letIfPresent(block: (TaskProvider<out 
 
 fun <T: Task> TaskProvider<out T>.dependsOn(tasks: Collection<TaskProvider<out Task>>): TaskProvider<out T> {
     if (tasks.isEmpty().not()) {
-        configure { it.dependsOn(tasks.map { it.get() }) }
+        configure { it.dependsOn(tasks) }
     }
 
     return this
@@ -234,7 +234,7 @@ fun <T: Task> TaskProvider<out T>.dependsOn(tasks: Collection<TaskProvider<out T
 
 fun <T: Task> TaskProvider<out T>.dependsOn(vararg tasks: TaskProvider<out Task>): TaskProvider<out T> {
     if (tasks.isEmpty().not()) {
-        configure { it.dependsOn(tasks.map { it.get() }) }
+        configure { it.dependsOn(*tasks) }
     }
 
     return this

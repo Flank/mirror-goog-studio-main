@@ -76,8 +76,8 @@ class MutableTaskContainer : TaskContainer {
     override var installTask: TaskProvider<out DefaultTask>? = null
     override var uninstallTask: TaskProvider<out DefaultTask>? = null
 
-    override var connectedTestTask: DeviceProviderInstrumentTestTask? = null
-    override val providerTestTaskList: List<DeviceProviderInstrumentTestTask> = mutableListOf()
+    override var connectedTestTask: TaskProvider<out DeviceProviderInstrumentTestTask>? = null
+    override val providerTestTaskList: List<TaskProvider<out DeviceProviderInstrumentTestTask>> = mutableListOf()
 
     override var generateAnnotationsTask: TaskProvider<out ExtractAnnotations>? = null
 
@@ -91,7 +91,7 @@ class MutableTaskContainer : TaskContainer {
     var bundleTask: TaskProvider<out Task>? = null
     lateinit var resourceGenTask: TaskProvider<Task>
     lateinit var assetGenTask: TaskProvider<Task>
-    var connectedTask: Task? = null
+    var connectedTask: TaskProvider<out Task>? = null
     var microApkTask: Task? = null
     var externalNativeBuildTask: ExternalNativeBuildTask? = null
     var externalNativeJsonGenerator: ExternalNativeJsonGenerator? = null

@@ -559,8 +559,8 @@ public class LibraryTaskManager extends TaskManager {
     }
 
     public void createVerifyLibraryResTask(@NonNull VariantScope scope) {
-        VerifyLibraryResourcesTask verifyLibraryResources =
-                taskFactory.eagerCreate(new VerifyLibraryResourcesTask.CreationAction(scope));
+        TaskProvider<VerifyLibraryResourcesTask> verifyLibraryResources =
+                taskFactory.lazyCreate(new VerifyLibraryResourcesTask.CreationAction(scope));
 
         TaskFactoryUtils.dependsOn(
                 scope.getTaskContainer().getAssembleTask(), verifyLibraryResources);

@@ -27,13 +27,16 @@ import static com.android.sdklib.BuildToolInfo.PathId.SPLIT_SELECT;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.build.gradle.internal.test.AbstractTestDataImpl;
 import com.android.build.gradle.internal.test.report.ReportType;
 import com.android.build.gradle.internal.test.report.TestReport;
+import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
@@ -69,7 +72,6 @@ import java.util.stream.Collectors;
 import javax.xml.parsers.ParserConfigurationException;
 import org.gradle.api.GradleException;
 import org.gradle.api.InvalidUserDataException;
-import org.gradle.api.Nullable;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.JavaBasePlugin;
@@ -78,7 +80,9 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.internal.logging.ConsoleRenderer;
+import org.jetbrains.annotations.NotNull;
 import org.xml.sax.SAXException;
 
 /** Run instrumentation tests for a given variant */
@@ -241,8 +245,11 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
         return coverageDir;
     }
 
+    @Deprecated
     public void setCoverageDir(File coverageDir) {
-        this.coverageDir = coverageDir;
+        getLogger()
+                .info(
+                        "DeviceProviderInstrumentTestTask.setCoverageDir is deprecated and has no effect.");
     }
 
     public String getFlavorName() {
@@ -333,7 +340,7 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
     }
 
     public static class CreationAction
-            extends EagerTaskCreationAction<DeviceProviderInstrumentTestTask> {
+            extends LazyTaskCreationAction<DeviceProviderInstrumentTestTask> {
 
         @NonNull
         private final VariantScope scope;
@@ -341,6 +348,7 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
         private final DeviceProvider deviceProvider;
         @NonNull private final AbstractTestDataImpl testData;
         @NonNull private final FileCollection testTargetManifests;
+        private File coverageDir;
 
         public CreationAction(
                 @NonNull VariantScope scope,
@@ -366,13 +374,46 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
         }
 
         @Override
-        public void execute(@NonNull DeviceProviderInstrumentTestTask task) {
+        public void preConfigure(@NotNull String taskName) {
+            super.preConfigure(taskName);
+
+            coverageDir =
+                    scope.getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.JACOCO_COVERAGE_DIR,
+                                    taskName,
+                                    "code-coverage");
+        }
+
+        @Override
+        public void handleProvider(
+                @NonNull TaskProvider<? extends DeviceProviderInstrumentTestTask> taskProvider) {
+            super.handleProvider(taskProvider);
+            if (scope.getVariantData() instanceof TestVariantData) {
+                if (deviceProvider instanceof ConnectedDeviceProvider) {
+                    scope.getTaskContainer().setConnectedTestTask(taskProvider);
+                    // possible redundant with setConnectedTestTask?
+                    scope.getTaskContainer().setConnectedTask(taskProvider);
+                } else {
+                    scope.getTaskContainer().getProviderTestTaskList().add(taskProvider);
+                }
+            }
+        }
+
+        @Override
+        public void configure(@NonNull DeviceProviderInstrumentTestTask task) {
             Project project = scope.getGlobalScope().getProject();
             ProjectOptions projectOptions = scope.getGlobalScope().getProjectOptions();
 
             final boolean connected = deviceProvider instanceof ConnectedDeviceProvider;
-            String variantName = scope.getTestedVariantData() != null ?
-                    scope.getTestedVariantData().getName() : scope.getVariantData().getName();
+
+
+            BaseVariantData testedVariantData = scope.getTestedVariantData();
+
+            String variantName =
+                    testedVariantData != null
+                            ? testedVariantData.getName()
+                            : scope.getVariantData().getName();
             if (connected) {
                 task.setDescription("Installs and runs the tests for " + variantName +
                         " on connected devices.");
@@ -463,17 +504,7 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
             }
             task.reportsDir = project.file(rootLocation + subFolder);
 
-            rootLocation = scope.getGlobalScope().getBuildDir() + "/" + FD_OUTPUTS
-                    + "/code-coverage";
-            task.setCoverageDir(project.file(rootLocation + subFolder));
-
-            if (scope.getVariantData() instanceof TestVariantData) {
-                if (connected) {
-                    scope.getTaskContainer().setConnectedTestTask(task);
-                } else {
-                    scope.getTaskContainer().getProviderTestTaskList().add(task);
-                }
-            }
+            task.coverageDir = coverageDir;
 
             // The configuration is not created by the experimental plugin, so just create an empty
             // FileCollection in this case.
@@ -488,6 +519,24 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
 
             // outputs are never up-to-date
             task.getOutputs().upToDateWhen(t -> false);
+
+            // FIXME these should be task inputs!
+            // depends on the test APK
+            task.dependsOn(scope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.APK));
+
+            if (testedVariantData != null) {
+                task.dependsOn(
+                        testedVariantData
+                                .getScope()
+                                .getArtifacts()
+                                .getFinalArtifactFiles(InternalArtifactType.APK));
+
+            } else {
+                // this is a separate the test project, we should consume the BA for the tested
+                // app
+                // FIXME handle separate test project BA
+
+            }
         }
     }
 }

@@ -17,16 +17,20 @@
 package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.builder.core.AndroidBuilder;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.TaskProvider;
 
 /**
  * implementation of the {@link TestVariant} interface around an {@link TestVariantData} object.
@@ -67,13 +71,20 @@ public class TestVariantImpl extends ApkVariantImpl implements TestVariant {
     }
 
     @Override
+    @Nullable
     public DefaultTask getConnectedInstrumentTest() {
-        return variantData.getTaskContainer().getConnectedTestTask();
+        return variantData.getTaskContainer().getConnectedTestTask().getOrNull();
     }
 
     @NonNull
     @Override
     public List<? extends DefaultTask> getProviderInstrumentTests() {
-        return variantData.getTaskContainer().getProviderTestTaskList();
+        return variantData
+                .getTaskContainer()
+                .getProviderTestTaskList()
+                .stream()
+                .filter(TaskProvider::isPresent)
+                .map(Provider::get)
+                .collect(Collectors.toList());
     }
 }

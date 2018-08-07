@@ -125,8 +125,8 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
         configureTestData(testData);
 
         // create the test connected check task.
-        DeviceProviderInstrumentTestTask instrumentTestTask =
-                taskFactory.eagerCreate(
+        TaskProvider<DeviceProviderInstrumentTestTask> instrumentTestTask =
+                taskFactory.lazyCreate(
                         new DeviceProviderInstrumentTestTask.CreationAction(
                                 variantScope,
                                 new ConnectedDeviceProvider(

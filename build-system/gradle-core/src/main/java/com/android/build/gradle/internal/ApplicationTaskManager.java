@@ -53,7 +53,7 @@ import com.android.build.gradle.internal.tasks.PerModuleBundleTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureApplicationIdsTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureInfoTask;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadataWriterTask;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarationWriterTask;
@@ -365,8 +365,10 @@ public class ApplicationTaskManager extends TaskManager {
                 scope.getVariantData().getAllPostJavacGeneratedBytecode();
 
         // Create the classes artifact for uses by external test modules.
-        taskFactory.eagerCreate(
-                new EagerTaskCreationAction<Jar>() {
+        taskFactory.lazyCreate(
+                new LazyTaskCreationAction<Jar>() {
+                    private File outputFile;
+
                     @NonNull
                     @Override
                     public String getName() {
@@ -380,13 +382,18 @@ public class ApplicationTaskManager extends TaskManager {
                     }
 
                     @Override
-                    public void execute(@NonNull Jar task) {
-                        File outputFile =
+                    public void preConfigure(@NonNull String taskName) {
+                        super.preConfigure(taskName);
+                        outputFile =
                                 scope.getArtifacts()
                                         .appendArtifact(
                                                 InternalArtifactType.APP_CLASSES,
-                                                task,
+                                                taskName,
                                                 "classes.jar");
+                    }
+
+                    @Override
+                    public void configure(@NonNull Jar task) {
                         task.from(javacOutput);
                         task.from(preJavacGeneratedBytecode);
                         task.from(postJavacGeneratedBytecode);

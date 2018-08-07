@@ -2007,17 +2007,10 @@ public abstract class TaskManager {
 
         configureTestData(testData);
 
-        // create the check tasks for this test
-        // first the connected one.
-        ImmutableList<TaskProvider<? extends Task>> artifactsTasks =
-                ImmutableList.of(
-                        testVariantData.getTaskContainer().getAssembleTask(),
-                        baseVariantData.getTaskContainer().getAssembleTask());
-
-        DeviceProviderInstrumentTestTask connectedTask =
-                taskFactory.eagerCreate(
+        TaskProvider<DeviceProviderInstrumentTestTask> connectedTask =
+                taskFactory.lazyCreate(
                         new DeviceProviderInstrumentTestTask.CreationAction(
-                                testVariantData.getScope(),
+                                testVariantScope,
                                 new ConnectedDeviceProvider(
                                         sdkHandler.getSdkInfo().getAdb(),
                                         extension.getAdbOptions().getTimeOutInMs(),
@@ -2025,13 +2018,9 @@ public abstract class TaskManager {
                                 testData,
                                 project.files() /* testTargetMetadata */));
 
-        connectedTask.dependsOn(artifactsTasks.toArray());
-
-        testVariantScope.getTaskContainer().setConnectedTask(connectedTask);
-
         taskFactory.lazyConfigure(
                 CONNECTED_ANDROID_TEST,
-                connectedAndroidTest -> connectedAndroidTest.dependsOn(connectedTask.getName()));
+                connectedAndroidTest -> connectedAndroidTest.dependsOn(connectedTask));
 
         if (baseVariantData.getVariantConfiguration().getBuildType().isTestCoverageEnabled()) {
 
@@ -2057,32 +2046,31 @@ public abstract class TaskManager {
         // now the providers.
         for (DeviceProvider deviceProvider : providers) {
 
-            final DeviceProviderInstrumentTestTask providerTask =
-                    taskFactory.eagerCreate(
+            final TaskProvider<DeviceProviderInstrumentTestTask> providerTask =
+                    taskFactory.lazyCreate(
                             new DeviceProviderInstrumentTestTask.CreationAction(
                                     testVariantData.getScope(),
                                     deviceProvider,
                                     testData,
                                     project.files() /* testTargetMetadata */));
 
-            providerTask.dependsOn(artifactsTasks.toArray());
             taskFactory.lazyConfigure(
                     DEVICE_ANDROID_TEST,
-                    deviceAndroidTest -> deviceAndroidTest.dependsOn(providerTask.getName()));
+                    deviceAndroidTest -> deviceAndroidTest.dependsOn(providerTask));
         }
 
         // now the test servers
         List<TestServer> servers = extension.getTestServers();
         for (final TestServer testServer : servers) {
-            final TestServerTask serverTask =
-                    taskFactory.eagerCreate(
+            final TaskProvider<TestServerTask> serverTask =
+                    taskFactory.lazyCreate(
                             new TestServerTask.TestServerTaskCreationAction(
                                     testVariantScope, testServer));
-            serverTask.dependsOn(testVariantScope.getTaskContainer().getAssembleTask());
+            TaskFactoryUtils.dependsOn(
+                    serverTask, testVariantScope.getTaskContainer().getAssembleTask());
 
             taskFactory.lazyConfigure(
-                    DEVICE_CHECK,
-                    deviceAndroidTest -> deviceAndroidTest.dependsOn(serverTask.getName()));
+                    DEVICE_CHECK, deviceAndroidTest -> deviceAndroidTest.dependsOn(serverTask));
         }
     }
 
