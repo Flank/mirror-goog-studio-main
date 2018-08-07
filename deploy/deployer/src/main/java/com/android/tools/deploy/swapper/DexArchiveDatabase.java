@@ -15,6 +15,7 @@
  */
 package com.android.tools.deploy.swapper;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +43,7 @@ public abstract class DexArchiveDatabase {
         return new DexArchive(checksum, dexFiles);
     }
 
-    protected static class DexFileEntry {
+    protected static class DexFileEntry implements Serializable {
         public final int index;
         public final long checksum;
         public final String name;

@@ -15,6 +15,7 @@
  */
 package com.android.tools.deploy.swapper;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,7 +23,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /** Provide a very basic implmentation of an {@link DexArchiveDatabase}. */
-public class InMemoryDexArchiveDatabase extends DexArchiveDatabase {
+public class InMemoryDexArchiveDatabase extends DexArchiveDatabase implements Serializable {
     private List<InMemoryDexFileEntry> dexFilesTable = new ArrayList<>();
     private Map<Long, Integer> dexFileHashToIndex = new HashMap<>();
     private Map<String, List<Integer>> archiveTable = new HashMap<>();
@@ -64,7 +65,7 @@ public class InMemoryDexArchiveDatabase extends DexArchiveDatabase {
         archiveTable.put(archiveChecksum, dexFilesIndex);
     }
 
-    private static final class InMemoryDexFileEntry extends DexFileEntry {
+    private static final class InMemoryDexFileEntry extends DexFileEntry implements Serializable {
         private final Map<String, Long> classesChecksum = new HashMap<>();
 
         public InMemoryDexFileEntry(int index, long checksum, String name) {

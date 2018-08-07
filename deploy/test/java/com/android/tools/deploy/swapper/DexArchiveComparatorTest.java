@@ -15,12 +15,12 @@
  */
 package com.android.tools.deploy.swapper;
 
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.*;
 import java.util.List;
 import java.util.zip.ZipInputStream;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class DexArchiveComparatorTest {
 
@@ -36,8 +36,7 @@ public class DexArchiveComparatorTest {
      */
     @Test
     public void testDiffApk() throws Exception {
-        DexArchiveDatabase db = new InMemoryDexArchiveDatabase();
-
+        InMemoryDexArchiveDatabase db = new InMemoryDexArchiveDatabase();
         String apk1Location = getProcessPath("apk1.location");
         String apk2Location = getProcessPath("apk2.location");
 
@@ -51,6 +50,19 @@ public class DexArchiveComparatorTest {
         // Cache the APK in the in memory database.
         apk1.cache(db);
         DexArchive apk1Cache = DexArchive.buildFromDatabase(db, apk1Checksum);
+
+        // Test a disk write
+        TemporaryFolder tmpDir = new TemporaryFolder();
+        tmpDir.create();
+        File dbSerialized = tmpDir.newFile("InMemoryDb.serialized");
+        ObjectOutputStream outputStream =
+                new ObjectOutputStream(new FileOutputStream(dbSerialized));
+        outputStream.writeObject(db);
+        outputStream.close();
+
+        ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(dbSerialized));
+        db = (InMemoryDexArchiveDatabase) inputStream.readObject();
+        inputStream.close();
 
         // Run some basic asserts on the database.
         // TODO: May be move this to a seperate tests?
