@@ -69,7 +69,7 @@ public class InstantRunTaskManager {
 
     @Nullable private TaskProvider<TransformTask> verifierTask;
     @Nullable private TaskProvider<TransformTask> reloadDexTask;
-    @Nullable private BuildInfoLoaderTask buildInfoLoaderTask;
+    @Nullable private TaskProvider<BuildInfoLoaderTask> buildInfoLoaderTask;
 
     @NonNull
     private final Logger logger;
@@ -95,7 +95,7 @@ public class InstantRunTaskManager {
         this.recorder = recorder;
     }
 
-    public BuildInfoLoaderTask createInstantRunAllTasks(
+    public TaskProvider<BuildInfoLoaderTask> createInstantRunAllTasks(
             @Nullable TaskProvider<? extends Task> preTask,
             TaskProvider<? extends Task> anchorTask,
             Set<? super QualifiedContent.Scope> resMergingScopes,
@@ -110,7 +110,7 @@ public class InstantRunTaskManager {
         TransformVariantScope transformVariantScope = variantScope.getTransformVariantScope();
 
         buildInfoLoaderTask =
-                taskFactory.eagerCreate(
+                taskFactory.lazyCreate(
                         new BuildInfoLoaderTask.CreationAction(variantScope, logger));
 
         // always run the verifier first, since if it detects incompatible changes, we
@@ -159,8 +159,8 @@ public class InstantRunTaskManager {
         // processAndroidResources task did not run. It is possible (through an IDE sync mainly)
         // that the processAndroidResources task ran in a previous non InstantRun enabled
         // invocation.
-        CheckManifestInInstantRunMode checkManifestTask =
-                taskFactory.eagerCreate(
+        TaskProvider<CheckManifestInInstantRunMode> checkManifestTask =
+                taskFactory.lazyCreate(
                         new CheckManifestInInstantRunMode.CreationAction(variantScope));
 
         InstantRunTransform instantRunTransform = new InstantRunTransform(
@@ -191,7 +191,7 @@ public class InstantRunTaskManager {
             // will eventually get packaged in the main APK.
             // We need to pass the published resource type as the generated manifest can use
             // a String resource for its version name (so AAPT can check for resources existence).
-            taskFactory.eagerCreate(
+            taskFactory.lazyCreate(
                     new InstantRunMainApkResourcesBuilder.CreationAction(
                             variantScope, resourceFilesInputType));
         }
@@ -223,10 +223,10 @@ public class InstantRunTaskManager {
         }
 
 
-        FastDeployRuntimeExtractorTask extractorTask =
-                taskFactory.eagerCreate(
-                        new FastDeployRuntimeExtractorTask.CreationAction(variantScope));
-        extractorTask.dependsOn(buildInfoLoaderTask);
+        TaskProvider<FastDeployRuntimeExtractorTask> extractorTask =
+                taskFactory.lazyCreate(
+                        new FastDeployRuntimeExtractorTask.CreationAction(
+                                variantScope, buildInfoLoaderTask));
 
         // also add a new stream for the extractor task output.
         transformManager.addStream(
@@ -239,10 +239,9 @@ public class InstantRunTaskManager {
                         .build());
 
         // create the AppInfo.class for this variant.
-        GenerateInstantRunAppInfoTask generateInstantRunAppInfoTask =
-                taskFactory.eagerCreate(
-                        new GenerateInstantRunAppInfoTask.CreationAction(
-                                transformVariantScope, variantScope, instantRunMergedManifests));
+        taskFactory.lazyCreate(
+                new GenerateInstantRunAppInfoTask.CreationAction(
+                        transformVariantScope, variantScope, instantRunMergedManifests));
 
         // also add a new stream for the injector task output.
         transformManager.addStream(
@@ -281,7 +280,8 @@ public class InstantRunTaskManager {
 
     /** Creates all InstantRun related transforms after compilation. */
     @NonNull
-    public PreColdSwapTask createPreColdswapTask(@NonNull ProjectOptions projectOptions) {
+    public TaskProvider<PreColdSwapTask> createPreColdswapTask(
+            @NonNull ProjectOptions projectOptions) {
 
         TransformVariantScope transformVariantScope = variantScope.getTransformVariantScope();
         InstantRunBuildContext context = variantScope.getInstantRunBuildContext();
@@ -293,16 +293,9 @@ public class InstantRunTaskManager {
             context.setVerifierStatus(InstantRunVerifierStatus.COLD_SWAP_REQUESTED);
         }
 
-        PreColdSwapTask preColdSwapTask =
-                taskFactory.eagerCreate(
-                        new PreColdSwapTask.CreationAction(
-                                "preColdswap", transformVariantScope, variantScope));
-
-        if (verifierTask != null) {
-            preColdSwapTask.dependsOn(verifierTask);
-        }
-
-        return preColdSwapTask;
+        return taskFactory.lazyCreate(
+                new PreColdSwapTask.CreationAction(
+                        "preColdswap", transformVariantScope, variantScope, verifierTask));
     }
 
     /**
@@ -319,19 +312,22 @@ public class InstantRunTaskManager {
      * @param buildInfoWriterTask the task instance.
      */
     public void configureBuildInfoWriterTask(
-            @NonNull BuildInfoWriterTask buildInfoWriterTask, Task... dependencies) {
+            @NonNull TaskProvider<BuildInfoWriterTask> buildInfoWriterTask, Task... dependencies) {
         Preconditions.checkNotNull(buildInfoLoaderTask,
                 "createInstantRunAllTasks() should have been called first ");
-        buildInfoLoaderTask.finalizedBy(buildInfoWriterTask.getName());
+        buildInfoLoaderTask.configure(t -> t.finalizedBy(buildInfoWriterTask));
 
-        if (reloadDexTask != null) {
-            buildInfoWriterTask.mustRunAfter(reloadDexTask.getName());
-        }
-        if (dependencies != null) {
-            for (Task dependency : dependencies) {
-                buildInfoWriterTask.mustRunAfter(dependency.getName());
-            }
-        }
+        buildInfoWriterTask.configure(
+                t -> {
+                    if (reloadDexTask != null) {
+                        t.mustRunAfter(reloadDexTask);
+                    }
+                    if (dependencies != null) {
+                        for (Task dependency : dependencies) {
+                            t.mustRunAfter(dependency);
+                        }
+                    }
+                });
 
         // Register a task execution listener to allow the writer task to write the temp build info
         // on build failure, which will get merged into the next build.

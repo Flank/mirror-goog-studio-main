@@ -19,15 +19,17 @@ package com.android.build.gradle.tasks;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
+import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import java.io.IOException;
 import org.gradle.api.Task;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.TaskProvider;
 
 /**
  * Task to disable execution of the InstantRun slicer, dexer and packager when they are not needed.
@@ -76,22 +78,25 @@ public class PreColdSwapTask extends AndroidVariantTask {
                 .setEnabled(false);
     }
 
-    public static class CreationAction extends EagerTaskCreationAction<PreColdSwapTask> {
+    public static class CreationAction extends LazyTaskCreationAction<PreColdSwapTask> {
 
         @NonNull
         protected final TransformVariantScope transformVariantScope;
         @NonNull
         protected final InstantRunVariantScope instantRunVariantScope;
+        private final TaskProvider<TransformTask> verifierTask;
         @NonNull
         protected final String name;
 
         public CreationAction(
                 @NonNull String name,
                 @NonNull TransformVariantScope transformVariantScope,
-                @NonNull InstantRunVariantScope instantRunVariantScope) {
+                @NonNull InstantRunVariantScope instantRunVariantScope,
+                TaskProvider<TransformTask> verifierTask) {
             this.name = name;
             this.transformVariantScope = transformVariantScope;
             this.instantRunVariantScope = instantRunVariantScope;
+            this.verifierTask = verifierTask;
         }
 
         @Override
@@ -107,11 +112,12 @@ public class PreColdSwapTask extends AndroidVariantTask {
         }
 
         @Override
-        public void execute(@NonNull PreColdSwapTask task) {
+        public void configure(@NonNull PreColdSwapTask task) {
             task.setVariantName(instantRunVariantScope.getFullVariantName());
             task.transformVariantScope = transformVariantScope;
             task.instantRunVariantScope = instantRunVariantScope;
             task.instantRunContext = instantRunVariantScope.getInstantRunBuildContext();
+            task.dependsOn(verifierTask);
         }
     }
 }

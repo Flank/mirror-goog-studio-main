@@ -118,10 +118,11 @@ open class InstantRunMainApkResourcesBuilderTest {
             InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS)).thenReturn(manifestFiles)
         `when`(buildArtifactsHolder.appendArtifact(
             InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES,
-            task,
+            task.name,
             "out")).thenReturn(outDir)
 
-        configAction.execute(task)
+        configAction.preConfigure(task.name)
+        configAction.configure(task)
         assertThat(task.resourceFiles).isEqualTo(resources)
         assertThat(task.manifestFiles).isEqualTo(manifestFiles)
         assertThat(task.outputDirectory).isEqualTo(outDir)
@@ -166,10 +167,11 @@ open class InstantRunMainApkResourcesBuilderTest {
             InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS)).thenReturn(manifestFiles)
         `when`(buildArtifactsHolder.appendArtifact(
             InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES,
-            task,
+            task.name,
             "out")).thenReturn(outDir)
 
-        configAction.execute(task)
+        configAction.preConfigure(task.name)
+        configAction.configure(task)
 
         task.doFullTaskAction()
         val resultingFiles = outDir.listFiles()

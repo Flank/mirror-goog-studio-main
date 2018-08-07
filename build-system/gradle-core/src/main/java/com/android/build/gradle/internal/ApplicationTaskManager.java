@@ -219,7 +219,8 @@ public class ApplicationTaskManager extends TaskManager {
         }
 
 
-        BuildInfoWriterTask buildInfoWriterTask = createInstantRunPackagingTasks(variantScope);
+        TaskProvider<BuildInfoWriterTask> buildInfoWriterTask =
+                createInstantRunPackagingTasks(variantScope);
         createPackagingTask(variantScope, buildInfoWriterTask);
 
         // Create the lint tasks, if enabled
@@ -258,15 +259,16 @@ public class ApplicationTaskManager extends TaskManager {
 
     /** Create tasks related to creating pure split APKs containing sharded dex files. */
     @Nullable
-    private BuildInfoWriterTask createInstantRunPackagingTasks(@NonNull VariantScope variantScope) {
+    private TaskProvider<BuildInfoWriterTask> createInstantRunPackagingTasks(
+            @NonNull VariantScope variantScope) {
 
         if (!variantScope.getInstantRunBuildContext().isInInstantRunMode()
                 || variantScope.getInstantRunTaskManager() == null) {
             return null;
         }
 
-        BuildInfoWriterTask buildInfoGeneratorTask =
-                taskFactory.eagerCreate(
+        TaskProvider<BuildInfoWriterTask> buildInfoGeneratorTask =
+                taskFactory.lazyCreate(
                         new BuildInfoWriterTask.CreationAction(variantScope, getLogger()));
 
         variantScope.getInstantRunTaskManager()
@@ -310,8 +312,7 @@ public class ApplicationTaskManager extends TaskManager {
                         null);
 
 
-        taskFactory.eagerCreate(
-                new InstantRunSplitApkResourcesBuilder.CreationAction(variantScope));
+        taskFactory.lazyCreate(new InstantRunSplitApkResourcesBuilder.CreationAction(variantScope));
 
         // and now the transform that will create a split FULL_APK for each slice.
         InstantRunSliceSplitApkBuilder slicesApkBuilder =
@@ -345,7 +346,7 @@ public class ApplicationTaskManager extends TaskManager {
                             TaskFactoryUtils.dependsOn(
                                     variantScope.getTaskContainer().getAssembleTask(),
                                     taskProvider);
-                            buildInfoGeneratorTask.mustRunAfter(taskProvider);
+                            buildInfoGeneratorTask.configure(t -> t.mustRunAfter(taskProvider));
                         });
 
         // if the assembleVariant task run, make sure it also runs the task to generate

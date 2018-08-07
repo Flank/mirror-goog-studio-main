@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_
 import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder
 import com.android.build.gradle.internal.transforms.InstantRunSplitApkBuilder
 import com.android.builder.internal.aapt.BlockingResourceLinker
@@ -114,14 +115,22 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
         val variantScope: VariantScope,
         private val taskInputType: ArtifactType
     ) :
-        EagerTaskCreationAction<InstantRunMainApkResourcesBuilder>() {
+        LazyTaskCreationAction<InstantRunMainApkResourcesBuilder>() {
 
         override val name: String
             get() = variantScope.getTaskName("instantRunMainApkResources")
         override val type: Class<InstantRunMainApkResourcesBuilder>
             get() = InstantRunMainApkResourcesBuilder::class.java
 
-        override fun execute(task: InstantRunMainApkResourcesBuilder) {
+        private lateinit var outputDirectory: File
+
+        override fun preConfigure(taskName: String) {
+            super.preConfigure(taskName)
+            outputDirectory =
+                    variantScope.artifacts.appendArtifact(INSTANT_RUN_MAIN_APK_RESOURCES, taskName, "out")
+        }
+
+        override fun configure(task: InstantRunMainApkResourcesBuilder) {
             task.variantName = variantScope.fullVariantName
             task.setAndroidBuilder(variantScope.globalScope.androidBuilder)
 
@@ -129,10 +138,8 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
             task.resourceFiles = artifacts.getFinalArtifactFiles(taskInputType)
             task.manifestFiles = artifacts
                 .getFinalArtifactFiles(INSTANT_RUN_MERGED_MANIFESTS)
-            task.outputDirectory =
-                    artifacts.appendArtifact(INSTANT_RUN_MAIN_APK_RESOURCES, task, "out")
+            task.outputDirectory = outputDirectory
             task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
-
         }
 
     }

@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.res.namespaced.registerAaptService
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
 import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransform
 import com.android.build.gradle.internal.transforms.InstantRunSplitApkBuilder
 import com.android.builder.core.AndroidBuilder
@@ -242,14 +243,23 @@ open class InstantRunSplitApkResourcesBuilder
     }
 
     class CreationAction(val variantScope: VariantScope) :
-        EagerTaskCreationAction<InstantRunSplitApkResourcesBuilder>() {
+        LazyTaskCreationAction<InstantRunSplitApkResourcesBuilder>() {
 
         override val name: String
             get() = variantScope.getTaskName("instantRunSplitApkResources")
         override val type: Class<InstantRunSplitApkResourcesBuilder>
             get() = InstantRunSplitApkResourcesBuilder::class.java
 
-        override fun execute(task: InstantRunSplitApkResourcesBuilder) {
+        private lateinit var outputDir: File
+
+        override fun preConfigure(taskName: String) {
+            super.preConfigure(taskName)
+            outputDir = variantScope.artifacts.appendArtifact(
+                InternalArtifactType.INSTANT_RUN_SPLIT_APK_RESOURCES,
+                taskName)
+        }
+
+        override fun configure(task: InstantRunSplitApkResourcesBuilder) {
             val artifacts = variantScope.artifacts
             val globalScope = variantScope.globalScope
             task.resources = artifacts.getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES)
@@ -263,10 +273,7 @@ open class InstantRunSplitApkResourcesBuilder
 
             task.dependsOn(task.resources, task.resourcesWithMainManifest)
 
-
-            task.outputDir = artifacts.appendArtifact(
-                InternalArtifactType.INSTANT_RUN_SPLIT_APK_RESOURCES,
-                task)
+            task.outputDir = outputDir
 
             task.aapt2FromMaven = getAapt2FromMaven(globalScope)
             task.applicationId = variantScope.variantConfiguration.applicationId

@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.incremental;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.builder.packaging.PackagingUtils;
 import com.android.utils.FileUtils;
 import com.google.common.base.Throwables;
@@ -109,7 +109,7 @@ public class BuildInfoLoaderTask extends AndroidVariantTask {
         }
     }
 
-    public static class CreationAction extends EagerTaskCreationAction<BuildInfoLoaderTask> {
+    public static class CreationAction extends LazyTaskCreationAction<BuildInfoLoaderTask> {
 
         private final String taskName;
 
@@ -136,7 +136,7 @@ public class BuildInfoLoaderTask extends AndroidVariantTask {
         }
 
         @Override
-        public void execute(@NonNull BuildInfoLoaderTask task) {
+        public void configure(@NonNull BuildInfoLoaderTask task) {
             task.setDescription("InstantRun task to load and backup previous iterations artifacts");
             task.setVariantName(variantScope.getFullVariantName());
             task.buildInfoFile = BuildInfoWriterTask.CreationAction.getBuildInfoFile(variantScope);

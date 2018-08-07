@@ -130,11 +130,12 @@ class InstantRunSplitApkResourcesBuilderTest {
             "com.example.InstantRunSplitApkResourcesBuilderTest")
         Mockito.`when`(artifacts.appendArtifact(
             InternalArtifactType.INSTANT_RUN_SPLIT_APK_RESOURCES,
-            task)).thenReturn(temporaryFolder.newFolder())
+            task.name)).thenReturn(temporaryFolder.newFolder())
         Mockito.`when`(resources.get()).thenReturn(project.files())
         Mockito.`when`(globalScope.project).thenReturn(project)
 
-        configAction.execute(task)
+        configAction.preConfigure(task.name)
+        configAction.configure(task)
 
         task.poolSize = 0
         if (requestedBucketSize != 0) {

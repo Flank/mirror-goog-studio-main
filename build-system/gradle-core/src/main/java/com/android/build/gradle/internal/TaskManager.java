@@ -2181,7 +2181,7 @@ public abstract class TaskManager {
         }
 
         // ----- 10x support
-        PreColdSwapTask preColdSwapTask = null;
+        TaskProvider<PreColdSwapTask> preColdSwapTask = null;
         if (variantScope.getInstantRunBuildContext().isInInstantRunMode()) {
 
             TaskProvider<? extends Task> allActionsAnchorTask =
@@ -2189,7 +2189,7 @@ public abstract class TaskManager {
             assert variantScope.getInstantRunTaskManager() != null;
             preColdSwapTask =
                     variantScope.getInstantRunTaskManager().createPreColdswapTask(projectOptions);
-            preColdSwapTask.dependsOn(allActionsAnchorTask);
+            TaskFactoryUtils.dependsOn(preColdSwapTask, allActionsAnchorTask);
         }
 
         // ----- Multi-Dex support
@@ -2563,7 +2563,7 @@ public abstract class TaskManager {
 
         variantScope.setInstantRunTaskManager(instantRunTaskManager);
         AndroidVersion minSdkForDx = variantScope.getMinSdkVersion();
-        BuildInfoLoaderTask buildInfoLoaderTask =
+        TaskProvider<BuildInfoLoaderTask> buildInfoLoaderTask =
                 instantRunTaskManager.createInstantRunAllTasks(
                         extractJarsTask.orElse(null),
                         allActionAnchorTask,
@@ -2780,7 +2780,7 @@ public abstract class TaskManager {
      */
     public void createPackagingTask(
             @NonNull VariantScope variantScope,
-            @Nullable BuildInfoWriterTask fullBuildInfoGeneratorTask) {
+            @Nullable TaskProvider<BuildInfoWriterTask> fullBuildInfoGeneratorTask) {
         ApkVariantData variantData = (ApkVariantData) variantScope.getVariantData();
 
         boolean signedApk = variantData.isSigned();
@@ -2912,10 +2912,14 @@ public abstract class TaskManager {
         TaskFactoryUtils.dependsOn(taskContainer.getAssembleTask(), packageApp.getName());
 
         if (fullBuildInfoGeneratorTask != null) {
-            fullBuildInfoGeneratorTask.mustRunAfter(packageApp.getName());
-            if (packageInstantRunResources != null) {
-                fullBuildInfoGeneratorTask.mustRunAfter(packageInstantRunResources);
-            }
+            final Task fPackageInstantRunResources = packageInstantRunResources;
+            fullBuildInfoGeneratorTask.configure(
+                    t -> {
+                        t.mustRunAfter(packageApp);
+                        if (fPackageInstantRunResources != null) {
+                            t.mustRunAfter(fPackageInstantRunResources);
+                        }
+                    });
             TaskFactoryUtils.dependsOn(
                     taskContainer.getAssembleTask(), fullBuildInfoGeneratorTask.getName());
         }
