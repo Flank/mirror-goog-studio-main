@@ -22,7 +22,6 @@ import static com.android.SdkConstants.ANDROID_LIBRARY;
 import static com.android.SdkConstants.ANDROID_LIBRARY_REFERENCE_FORMAT;
 import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.ANDROID_URI;
-import static com.android.SdkConstants.APPCOMPAT_LIB_ARTIFACT;
 import static com.android.SdkConstants.ATTR_MIN_SDK_VERSION;
 import static com.android.SdkConstants.ATTR_PACKAGE;
 import static com.android.SdkConstants.ATTR_TARGET_SDK_VERSION;
@@ -40,7 +39,6 @@ import static com.android.SdkConstants.OLD_PROGUARD_FILE;
 import static com.android.SdkConstants.PROGUARD_CONFIG;
 import static com.android.SdkConstants.PROJECT_PROPERTIES;
 import static com.android.SdkConstants.RES_FOLDER;
-import static com.android.SdkConstants.SUPPORT_LIB_ARTIFACT;
 import static com.android.SdkConstants.TAG_USES_SDK;
 import static com.android.SdkConstants.VALUE_TRUE;
 import static com.android.sdklib.SdkVersionInfo.HIGHEST_KNOWN_API;
@@ -70,6 +68,7 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkVersionInfo;
+import com.android.support.AndroidxNameUtils;
 import com.android.tools.lint.client.api.CircularDependencyException;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.LintClient;
@@ -1468,8 +1467,9 @@ public class Project {
      */
     @Nullable
     public Boolean dependsOn(@NonNull String artifact) {
-        if (SUPPORT_LIB_ARTIFACT.equals(artifact)
-                || ANDROIDX_SUPPORT_LIB_ARTIFACT.equals(artifact)) {
+        artifact = AndroidxNameUtils.getCoordinateMapping(artifact);
+
+        if (ANDROIDX_SUPPORT_LIB_ARTIFACT.equals(artifact)) {
             if (supportLib == null) {
                 for (File file : getJavaLibraries(true)) {
                     String name = file.getName();
@@ -1495,8 +1495,7 @@ public class Project {
             }
 
             return supportLib;
-        } else if (APPCOMPAT_LIB_ARTIFACT.equals(artifact)
-                || ANDROIDX_APPCOMPAT_LIB_ARTIFACT.equals(artifact)) {
+        } else if (ANDROIDX_APPCOMPAT_LIB_ARTIFACT.equals(artifact)) {
             if (appCompat == null) {
                 for (File file : getJavaLibraries(true)) {
                     String name = file.getName();
