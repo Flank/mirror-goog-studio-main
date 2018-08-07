@@ -1,7 +1,7 @@
 //tools/...
 -//tools/idea[/:]
 -//tools/base/fakeandroid[:/]
--//tools/base/deploy/swapper:test-app*
+-//tools/base/deploy/test:test-app*
 -//tools/base/deploy/agent/native[:/]
 -//tools/base/deploy/agent/instrumentation[:/]
 -//tools/base/deploy/installer[:/]
