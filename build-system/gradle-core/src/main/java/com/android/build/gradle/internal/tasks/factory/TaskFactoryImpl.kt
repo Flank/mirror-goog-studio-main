@@ -31,10 +31,6 @@ class TaskFactoryImpl(private val taskContainer: TaskContainer):
 
     // --- Direct Creation ---
 
-    override fun <T : Task> eagerCreate(creationAction: EagerTaskCreationAction<T>): T {
-        return taskContainer.create(creationAction.name, creationAction.type, creationAction)
-    }
-
     override fun findByName(name: String): Task? {
         return taskContainer.findByName(name)
     }

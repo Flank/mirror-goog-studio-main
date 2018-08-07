@@ -1574,13 +1574,12 @@ public abstract class TaskManager {
         TaskProvider<ExternalNativeBuildTask> buildTask =
                 taskFactory.lazyCreate(
                         new ExternalNativeBuildTask.CreationAction(
-                                targetAbi, generator, scope, androidBuilder));
+                                targetAbi, generator, generateTask, scope, androidBuilder));
 
-        TaskFactoryUtils.dependsOn(buildTask, generateTask);
         TaskFactoryUtils.dependsOn(taskContainer.getCompileTask(), buildTask);
 
         // Set up clean tasks
-        TaskProvider<Task> cleanTask = checkNotNull(taskFactory.named("clean"));
+        TaskProvider<Task> cleanTask = taskFactory.named("clean");
         TaskFactoryUtils.dependsOn(
                 cleanTask,
                 taskFactory.lazyCreate(
@@ -2698,11 +2697,7 @@ public abstract class TaskManager {
 
         dataBindingBuilder.setDebugLogEnabled(getLogger().isDebugEnabled());
 
-        TaskProvider<DataBindingExportBuildInfoTask> exportBuildInfo =
-                taskFactory.lazyCreate(new DataBindingExportBuildInfoTask.CreationAction(scope));
-
-        TaskFactoryUtils.dependsOn(exportBuildInfo, scope.getTaskContainer().getSourceGenTask());
-
+        taskFactory.lazyCreate(new DataBindingExportBuildInfoTask.CreationAction(scope));
         taskFactory.lazyCreate(new DataBindingGenBaseClassesTask.CreationAction(scope));
 
         setDataBindingAnnotationProcessorParams(scope, mergeType);

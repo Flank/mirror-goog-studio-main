@@ -238,7 +238,6 @@ public class PackageSplitAbi extends AndroidBuilderTask {
             if (taskContainer.getExternalNativeBuildTask() != null) {
                 task.dependsOn(taskContainer.getExternalNativeBuildTask());
             }
-
         }
     }
 }

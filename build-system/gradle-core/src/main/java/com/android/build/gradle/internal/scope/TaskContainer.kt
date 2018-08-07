@@ -54,7 +54,6 @@ interface TaskContainer {
     val processJavaResourcesTask: TaskProvider<out Sync>
     val generateBuildConfigTask: TaskProvider<out GenerateBuildConfig>?
     val ndkCompileTask: TaskProvider<out NdkCompile>?
-    val obfuscationTask: Task?
     val processAndroidResTask: TaskProvider<out ProcessAndroidResources>?
     val processManifestTask: TaskProvider<out ManifestProcessorTask>?
     val packageAndroidTask: TaskProvider<out PackageAndroidArtifact>?

@@ -67,7 +67,6 @@ class MutableTaskContainer : TaskContainer {
     override lateinit var processJavaResourcesTask: TaskProvider<out Sync>
     override var generateBuildConfigTask: TaskProvider<out GenerateBuildConfig>? = null
     override var ndkCompileTask: TaskProvider<out NdkCompile>? = null
-    override var obfuscationTask: Task? = null
     override var processAndroidResTask: TaskProvider<out ProcessAndroidResources>? = null
     override var processManifestTask: TaskProvider<out ManifestProcessorTask>? = null
     override var packageAndroidTask: TaskProvider<out PackageAndroidArtifact>? = null
@@ -98,7 +97,7 @@ class MutableTaskContainer : TaskContainer {
     var packageSplitResourcesTask: TaskProvider<out Task>? = null
     var packageSplitAbiTask: TaskProvider<out Task>? = null
     var generateResValuesTask: TaskProvider<out Task>? = null
-    var generateApkDataTask: Task? = null
+    var generateApkDataTask: TaskProvider<out Task>? = null
     var coverageReportTask: TaskProvider<out Task>? = null
     var dataBindingExportBuildInfoTask: TaskProvider<out Task>? = null
 

@@ -288,7 +288,9 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Nullable
     @Override
     public Task getObfuscation() {
-        return getVariantData().getTaskContainer().getObfuscationTask();
+        // This has returned null since before the TaskContainer changes.
+        // This is to be removed with the old Variant API.
+        return null;
     }
 
     @Nullable

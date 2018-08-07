@@ -31,18 +31,6 @@ interface TaskInformation<T: Task> {
     val type: Class<T>
 }
 
-/** Eager Creation Action for tasks
- *
- * This contains both meta-data to create the task ([name], [type])
- * and the action to configure the task ([execute])
- */
-abstract class EagerTaskCreationAction<T : Task> : TaskInformation<T>, Action<T> {
-
-    /** Configures the task. */
-    abstract override fun execute(task: T)
-
-}
-
 /** Lazy Creation Action for tasks
  *
  * This contains both meta-data to create the task ([name], [type])

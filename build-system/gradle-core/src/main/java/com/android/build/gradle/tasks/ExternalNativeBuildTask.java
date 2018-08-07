@@ -57,6 +57,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.GradleException;
+import org.gradle.api.Task;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 
@@ -367,22 +368,21 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
     }
 
     public static class CreationAction extends LazyTaskCreationAction<ExternalNativeBuildTask> {
-        @Nullable
-        private final String buildTargetAbi;
-        @NonNull
-        private final ExternalNativeJsonGenerator generator;
-        @NonNull
-        private final VariantScope scope;
-        @NonNull
-        private final AndroidBuilder androidBuilder;
+        @Nullable private final String buildTargetAbi;
+        @NonNull private final ExternalNativeJsonGenerator generator;
+        @NonNull private final TaskProvider<? extends Task> generateTask;
+        @NonNull private final VariantScope scope;
+        @NonNull private final AndroidBuilder androidBuilder;
 
         public CreationAction(
                 @Nullable String buildTargetAbi,
                 @NonNull ExternalNativeJsonGenerator generator,
+                @NonNull TaskProvider<? extends Task> generateTask,
                 @NonNull VariantScope scope,
                 @NonNull AndroidBuilder androidBuilder) {
             this.buildTargetAbi = buildTargetAbi;
             this.generator = generator;
+            this.generateTask = generateTask;
             this.scope = scope;
             this.androidBuilder = androidBuilder;
         }
@@ -482,7 +482,8 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
 
             task.setAndroidBuilder(androidBuilder);
 
-            task.dependsOn(scope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, JNI));
+            task.dependsOn(
+                    generateTask, scope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, JNI));
         }
     }
 }
