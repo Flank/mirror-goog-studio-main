@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.SigningConfigFactory
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.factory.lazyCreate
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.capitalize
 import com.google.common.hash.Hashing
@@ -41,6 +42,7 @@ import org.mockito.Mockito.anyString
 import org.mockito.junit.MockitoJUnit
 import java.io.File
 import java.nio.file.Files
+import com.android.build.gradle.internal.tasks.factory.lazyCreate
 
 class ValidateSigningTaskTest {
 
@@ -93,8 +95,7 @@ class ValidateSigningTaskTest {
         `when`(variantConfiguration.signingConfig).thenReturn(SigningConfig("release"))
         val configAction =
                 ValidateSigningTask.CreationAction(variantScope, defaultDebugKeystore)
-        val task = project!!.tasks
-                .create(configAction.name, configAction.type, configAction)
+        val task = project!!.tasks.lazyCreate(configAction, null, null, null).get()
         assertThat(task.forceRerun()).named("forceRerun").isTrue()
         // If no config file set, throws InvalidUserDataException
         try {
@@ -119,8 +120,7 @@ class ValidateSigningTaskTest {
         `when`(variantConfiguration.signingConfig).thenReturn(dslSigningConfig)
         val configAction =
                 ValidateSigningTask.CreationAction(variantScope, defaultDebugKeystore)
-        val task = project!!.tasks
-                .create(configAction.name, configAction.type, configAction)
+        val task = project!!.tasks.lazyCreate(configAction, null, null, null).get()
         assertThat(task.forceRerun()).named("forceRerun").isTrue()
         // If no config file set, throws InvalidUserDataException
         try {
@@ -141,8 +141,7 @@ class ValidateSigningTaskTest {
         `when`(variantConfiguration.signingConfig).thenReturn(dslSigningConfig)
         val configAction =
                 ValidateSigningTask.CreationAction(variantScope, defaultDebugKeystore)
-        val task = project!!.tasks
-                .create(configAction.name, configAction.type, configAction)
+        val task = project!!.tasks.lazyCreate(configAction, null, null, null).get()
 
         // Sanity check
         assertThat(defaultDebugKeystore).doesNotExist()

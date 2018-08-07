@@ -90,7 +90,8 @@ public class LibraryVariantData extends BaseVariantData implements TestedVariant
         super.registerJavaGeneratingTask(task, generatedSourceFolders);
         if (scope.getTaskContainer().getGenerateAnnotationsTask() != null) {
             for (File f : generatedSourceFolders) {
-                scope.getTaskContainer().getGenerateAnnotationsTask().source(f);
+                // FIXME we need to revise this API as it force-configure the tasks
+                scope.getTaskContainer().getGenerateAnnotationsTask().get().source(f);
             }
         }
     }
@@ -102,7 +103,8 @@ public class LibraryVariantData extends BaseVariantData implements TestedVariant
         super.registerJavaGeneratingTask(task, generatedSourceFolders);
         if (scope.getTaskContainer().getGenerateAnnotationsTask() != null) {
             for (File f : generatedSourceFolders) {
-                scope.getTaskContainer().getGenerateAnnotationsTask().source(f);
+                // FIXME we need to revise this API as it force-configure the tasks
+                scope.getTaskContainer().getGenerateAnnotationsTask().get().source(f);
             }
         }
     }

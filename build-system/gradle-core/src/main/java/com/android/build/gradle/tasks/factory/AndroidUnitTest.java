@@ -27,7 +27,7 @@ import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.options.BooleanOption;
@@ -77,7 +77,7 @@ public class AndroidUnitTest extends Test {
     }
 
     /** Configuration Action for a JavaCompile task. */
-    public static class CreationAction extends EagerTaskCreationAction<AndroidUnitTest> {
+    public static class CreationAction extends LazyTaskCreationAction<AndroidUnitTest> {
 
         private final VariantScope scope;
 
@@ -98,7 +98,7 @@ public class AndroidUnitTest extends Test {
         }
 
         @Override
-        public void execute(@NonNull AndroidUnitTest runTestsTask) {
+        public void configure(@NonNull AndroidUnitTest runTestsTask) {
             final TestVariantData variantData = (TestVariantData) scope.getVariantData();
             final BaseVariantData testedVariantData =
                     (BaseVariantData) variantData.getTestedVariantData();

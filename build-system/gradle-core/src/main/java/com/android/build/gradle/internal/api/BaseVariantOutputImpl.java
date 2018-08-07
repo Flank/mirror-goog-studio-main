@@ -75,7 +75,7 @@ public abstract class BaseVariantOutputImpl implements BaseVariantOutput {
     @Nullable
     @Override
     public ProcessAndroidResources getProcessResources() {
-        return taskContainer.getProcessAndroidResTask();
+        return taskContainer.getProcessAndroidResTask().getOrNull();
     }
 
     @Override

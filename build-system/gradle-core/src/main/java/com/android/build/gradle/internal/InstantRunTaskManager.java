@@ -97,7 +97,7 @@ public class InstantRunTaskManager {
 
     public BuildInfoLoaderTask createInstantRunAllTasks(
             @Nullable TaskProvider<? extends Task> preTask,
-            Task anchorTask,
+            TaskProvider<? extends Task> anchorTask,
             Set<? super QualifiedContent.Scope> resMergingScopes,
             BuildableArtifact instantRunMergedManifests,
             boolean addDependencyChangeChecker,
@@ -256,7 +256,7 @@ public class InstantRunTaskManager {
                                         .get()) // FIXME the file collection returned does not survives Artifact transform/append b/110709212
                         .build());
 
-        instantRunTask.ifPresent(anchorTask::dependsOn);
+        instantRunTask.ifPresent(provider -> TaskFactoryUtils.dependsOn(anchorTask, provider));
 
         // we always produce the reload.dex irrespective of the targeted version,
         // and if we are not in incremental mode, we need to still need to clean our output state.
@@ -273,7 +273,7 @@ public class InstantRunTaskManager {
                         .addTransform(taskFactory, transformVariantScope, reloadDexTransform)
                         .orElse(null);
         if (reloadDexTask != null) {
-            anchorTask.dependsOn(reloadDexTask);
+            TaskFactoryUtils.dependsOn(anchorTask, reloadDexTask);
         }
 
         return buildInfoLoaderTask;
