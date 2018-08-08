@@ -30,6 +30,7 @@ import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiModifier
 import com.intellij.psi.PsiType
 import com.intellij.psi.PsiVariable
+import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
@@ -134,7 +135,6 @@ class ResourceReference(
 
             if (declaration !is PsiVariable) {
                 // Synthetic import?
-
                 // In the IDE, this will resolved into XML PSI. Attempt to use reflection to
                 // pick out the relevant attribute.
                 if (declaration != null &&
@@ -156,9 +156,21 @@ class ResourceReference(
                     }
                 }
 
+                val parent = element.uastParent
+                if (parent is UQualifiedReferenceExpression && parent.selector === element) {
+                    // synthetic import reference is usually not qualified
+                    return null
+                }
+                if (parent is UCallExpression && parent.classReference === element) {
+                    return null
+                }
+
                 if (declaration == null &&
+                    // In the IDE we have proper reference resolving for synthetic imports
+                    !LintClient.isStudio &&
                     element is USimpleNameReferenceExpression &&
-                    isKotlin(element.sourcePsi)
+                    isKotlin(element.sourcePsi) &&
+                    element.identifier != "it"
                 ) {
                     // If we have any synthetic imports in this class, this unresolved symbol is
                     // probably referring to it

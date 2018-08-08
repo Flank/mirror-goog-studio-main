@@ -1309,21 +1309,39 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
         // Regression test for https://issuetracker.google.com/110175594
         // UnusedIds triggered when using Kotlin Synthetic Properties
         lint().files(
-                        gradle("" + "apply plugin: 'com.android.application'\n"),
+                        gradle("apply plugin: 'com.android.application'\n"),
                         kotlin(
                                 ""
                                         + "package test.pkg\n"
+                                        + "import android.widget.Button\n"
+                                        + "import android.widget.TextView\n"
                                         + "import kotlinx.android.synthetic.main.fragment_team_list.*\n"
                                         + "class Test : android.app.Activity {\n"
-                                        + "    fun test() {\n"
-                                        + "        val s = fab.toString()\n"
+                                        + "    fun test1() {\n"
+                                        + "        val s = fab1.toString()\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    fun test2() {\n"
+                                        + "        fab2.text = \"hello\"\n"
+                                        + "        val hasSelection = fab3.hasSelection()\n"
+                                        + "        handle(fab4)\n"
+                                        + "        if (fab5 is Button) {\n"
+                                        + "            println(\"weird\")\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    fun handle(text: TextView) {\n"
                                         + "    }\n"
                                         + "}"),
                         xml(
                                 "res/values/ids.xml",
                                 ""
                                         + "<resources>\n"
-                                        + "    <item name=\"fab\" type=\"id\"/>\n"
+                                        + "    <item name=\"fab1\" type=\"id\"/>\n"
+                                        + "    <item name=\"fab2\" type=\"id\"/>\n"
+                                        + "    <item name=\"fab3\" type=\"id\"/>\n"
+                                        + "    <item name=\"fab4\" type=\"id\"/>\n"
+                                        + "    <item name=\"fab5\" type=\"id\"/>\n"
                                         + "</resources>\n"))
                 .client(
                         new com.android.tools.lint.checks.infrastructure.TestLintClient(
