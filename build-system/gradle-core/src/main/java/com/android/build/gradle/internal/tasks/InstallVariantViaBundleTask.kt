@@ -21,7 +21,7 @@ import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.internal.InstallUtils
 import com.android.builder.testing.ConnectedDeviceProvider
 import com.android.builder.testing.api.DeviceConnector
@@ -83,7 +83,7 @@ open class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: Work
                     timeOutInMs,
                     installOptions,
                     projectName,
-                    variantName!!,
+                    variantName,
                     minSdkCodename,
                     minSdkVersion
                 )
@@ -230,40 +230,40 @@ open class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: Work
         }
      }
 
-    internal class CreationAction(private val scope: VariantScope) :
-        TaskCreationAction<InstallVariantViaBundleTask>() {
+    internal class CreationAction(variantScope: VariantScope) :
+        VariantTaskCreationAction<InstallVariantViaBundleTask>(variantScope) {
 
         override val name: String
-            get() = scope.getTaskName("install")
+            get() = variantScope.getTaskName("install")
         override val type: Class<InstallVariantViaBundleTask>
             get() = InstallVariantViaBundleTask::class.java
 
         override fun configure(task: InstallVariantViaBundleTask) {
-            task.description = "Installs the " + scope.variantData.description + ""
-            task.variantName = scope.variantConfiguration.fullName
-            task.group = TaskManager.INSTALL_GROUP
-            task.projectName = scope.globalScope.project.name
+            super.configure(task)
 
-            scope.variantConfiguration.minSdkVersion.let {
+            task.description = "Installs the " + variantScope.variantData.description + ""
+            task.group = TaskManager.INSTALL_GROUP
+            task.projectName = variantScope.globalScope.project.name
+
+            variantScope.variantConfiguration.minSdkVersion.let {
                 task.minSdkVersion = it.apiLevel
                 task.minSdkCodename = it.codename
             }
-            scope.globalScope.extension.adbOptions.installOptions?.let {
+            variantScope.globalScope.extension.adbOptions.installOptions?.let {
                 task.installOptions.addAll(it)
             }
 
+            task.apkBundle = variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.APKS_FROM_BUNDLE)
 
-            task.apkBundle = scope.artifacts.getFinalArtifactFiles(InternalArtifactType.APKS_FROM_BUNDLE)
+            task.timeOutInMs = variantScope.globalScope.extension.adbOptions.timeOutInMs
 
-            task.timeOutInMs = scope.globalScope.extension.adbOptions.timeOutInMs
-
-            task.adbExe = { scope.globalScope.sdkHandler.sdkInfo?.adb!! }
+            task.adbExe = { variantScope.globalScope.sdkHandler.sdkInfo?.adb!! }
 
         }
 
         override fun handleProvider(taskProvider: TaskProvider<out InstallVariantViaBundleTask>) {
             super.handleProvider(taskProvider)
-            scope.taskContainer.installTask = taskProvider
+            variantScope.taskContainer.installTask = taskProvider
         }
     }
 }

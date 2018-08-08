@@ -19,7 +19,7 @@ package com.android.build.gradle.tasks;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.ide.common.process.ProcessException;
 import java.io.IOException;
 import org.gradle.api.tasks.Nested;
@@ -41,26 +41,26 @@ public class ExternalNativeBuildJsonTask extends AndroidVariantTask {
     }
 
     @NonNull
-    public static TaskCreationAction<ExternalNativeBuildJsonTask> createTaskConfigAction(
+    public static VariantTaskCreationAction<ExternalNativeBuildJsonTask> createTaskConfigAction(
             @NonNull final ExternalNativeJsonGenerator generator,
             @NonNull final VariantScope scope) {
         return new CreationAction(scope, generator);
     }
 
-    private static class CreationAction extends TaskCreationAction<ExternalNativeBuildJsonTask> {
+    private static class CreationAction
+            extends VariantTaskCreationAction<ExternalNativeBuildJsonTask> {
 
-        private final VariantScope scope;
         private final ExternalNativeJsonGenerator generator;
 
         private CreationAction(VariantScope scope, ExternalNativeJsonGenerator generator) {
-            this.scope = scope;
+            super(scope);
             this.generator = generator;
         }
 
         @NonNull
         @Override
         public String getName() {
-            return scope.getTaskName("generateJsonModel");
+            return getVariantScope().getTaskName("generateJsonModel");
         }
 
         @NonNull
@@ -71,10 +71,8 @@ public class ExternalNativeBuildJsonTask extends AndroidVariantTask {
 
         @Override
         public void configure(@NonNull ExternalNativeBuildJsonTask task) {
-            task.setVariantName(scope.getVariantConfiguration().getFullName());
+            super.configure(task);
             task.generator = generator;
-
-            task.dependsOn(scope.getTaskContainer().getPreBuildTask());
         }
     }
 }

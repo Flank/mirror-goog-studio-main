@@ -35,7 +35,7 @@ import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AbstractAndroidCompile;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.utils.AndroidXDependency;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.packaging.TypedefRemover;
@@ -64,6 +64,7 @@ import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.CompileClasspath;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
@@ -71,6 +72,7 @@ import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Task which extracts annotations from the source files, and writes them to one of two possible
@@ -107,6 +109,21 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
     private ArtifactCollection libraries;
 
     @Nullable FileCollection lintClassPath;
+
+    private String variantName;
+
+    @Internal
+    @NotNull
+    @Override
+    public String getVariantName() {
+        return variantName;
+    }
+
+    @Override
+    public void setVariantName(@NotNull String name) {
+        variantName = name;
+    }
+
 
     /** Lint classpath */
     @InputFiles
@@ -300,23 +317,22 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
         return false;
     }
 
-    public static class CreationAction extends TaskCreationAction<ExtractAnnotations> {
+    public static class CreationAction extends VariantTaskCreationAction<ExtractAnnotations> {
 
         @NonNull private final AndroidConfig extension;
-        @NonNull private final VariantScope variantScope;
         private File output;
         private File typedefFile;
 
         public CreationAction(
                 @NonNull AndroidConfig extension, @NonNull VariantScope variantScope) {
+            super(variantScope);
             this.extension = extension;
-            this.variantScope = variantScope;
         }
 
         @NonNull
         @Override
         public String getName() {
-            return variantScope.getTaskName("extract", "Annotations");
+            return getVariantScope().getTaskName("extract", "Annotations");
         }
 
         @NonNull
@@ -330,7 +346,7 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
             super.preConfigure(taskName);
 
             output =
-                    variantScope
+                    getVariantScope()
                             .getArtifacts()
                             .appendArtifact(
                                     InternalArtifactType.ANNOTATIONS_ZIP,
@@ -338,7 +354,7 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
                                     SdkConstants.FN_ANNOTATIONS_ZIP);
 
             typedefFile =
-                    variantScope
+                    getVariantScope()
                             .getArtifacts()
                             .appendArtifact(
                                     InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE,
@@ -350,11 +366,14 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
         public void handleProvider(
                 @NonNull TaskProvider<? extends ExtractAnnotations> taskProvider) {
             super.handleProvider(taskProvider);
-            variantScope.getTaskContainer().setGenerateAnnotationsTask(taskProvider);
+            getVariantScope().getTaskContainer().setGenerateAnnotationsTask(taskProvider);
         }
 
         @Override
         public void configure(@NonNull ExtractAnnotations task) {
+            super.configure(task);
+            VariantScope variantScope = getVariantScope();
+
             final GradleVariantConfiguration variantConfig = variantScope.getVariantConfiguration();
             final AndroidBuilder androidBuilder = variantScope.getGlobalScope().getAndroidBuilder();
 

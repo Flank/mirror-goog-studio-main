@@ -112,8 +112,6 @@ public class ApplicationTaskManager extends TaskManager {
 
     @Override
     public void createTasksForVariantScope(@NonNull final VariantScope variantScope) {
-        BaseVariantData variantData = variantScope.getVariantData();
-
         createAnchorTasks(variantScope);
         createCheckManifestTask(variantScope);
 

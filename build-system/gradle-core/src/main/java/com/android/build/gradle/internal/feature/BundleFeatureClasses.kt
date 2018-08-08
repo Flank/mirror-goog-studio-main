@@ -25,10 +25,10 @@ import com.android.build.gradle.internal.res.namespaced.JarRequest
 import com.android.build.gradle.internal.res.namespaced.JarWorkerRunnable
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.tasks.Workers
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.ide.common.workers.WorkerExecutorFacade
-import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileVisitDetails
 import org.gradle.api.file.ReproducibleFileVisitor
@@ -45,7 +45,7 @@ import javax.inject.Inject
  * Task to jar all classes bundled in a feature so that dependent features can compile against those
  * classes without bundling them.
  */
-open class BundleFeatureClasses @Inject constructor(workerExecutor: WorkerExecutor) : DefaultTask() {
+open class BundleFeatureClasses @Inject constructor(workerExecutor: WorkerExecutor) : AndroidVariantTask() {
 
     val workers: WorkerExecutorFacade = Workers.getWorker(workerExecutor)
 
@@ -103,10 +103,11 @@ open class BundleFeatureClasses @Inject constructor(workerExecutor: WorkerExecut
         }
     }
 
-    class CreationAction(private val scope: VariantScope) : TaskCreationAction<BundleFeatureClasses>() {
+    class CreationAction(variantScope: VariantScope) :
+        VariantTaskCreationAction<BundleFeatureClasses>(variantScope) {
 
         override val name: String
-            get() = scope.getTaskName("bundle", "Classes")
+            get() = variantScope.getTaskName("bundle", "Classes")
         override val type: Class<BundleFeatureClasses>
             get() = BundleFeatureClasses::class.java
 
@@ -115,22 +116,23 @@ open class BundleFeatureClasses @Inject constructor(workerExecutor: WorkerExecut
         override fun preConfigure(taskName: String) {
             super.preConfigure(taskName)
 
-            outputJar = scope.artifacts.appendArtifact(
+            outputJar = variantScope.artifacts.appendArtifact(
                 InternalArtifactType.FEATURE_CLASSES, taskName, "classes.jar")
         }
 
         override fun configure(task: BundleFeatureClasses) {
+            super.configure(task)
             task.outputJar = outputJar
             task.javacClasses =
-                    scope.artifacts.getArtifactFiles(InternalArtifactType.JAVAC)
-            task.preJavacClasses = scope.variantData.allPreJavacGeneratedBytecode
-            task.postJavacClasses = scope.variantData.allPostJavacGeneratedBytecode
-            val globalScope = scope.globalScope
+                    variantScope.artifacts.getArtifactFiles(InternalArtifactType.JAVAC)
+            task.preJavacClasses = variantScope.variantData.allPreJavacGeneratedBytecode
+            task.postJavacClasses = variantScope.variantData.allPostJavacGeneratedBytecode
+            val globalScope = variantScope.globalScope
             task.modulePath = globalScope.project.path
             if (globalScope.extension.aaptOptions.namespaced) {
-                task.thisRClassClasses = scope.artifacts
+                task.thisRClassClasses = variantScope.artifacts
                     .getFinalArtifactFiles(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
-                task.dependencyRClassClasses = scope.getArtifactFileCollection(
+                task.dependencyRClassClasses = variantScope.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                         ALL,
                         COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)

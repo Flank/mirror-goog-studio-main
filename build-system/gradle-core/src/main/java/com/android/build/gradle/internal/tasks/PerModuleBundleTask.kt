@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.MODULE_PATH
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.builder.files.NativeLibraryAbiPredicate
 import com.android.builder.packaging.JarMerger
@@ -167,8 +167,8 @@ open class PerModuleBundleTask : AndroidVariantTask() {
     private fun hasFeatureDexFiles() = featureDexFiles.files.isNotEmpty()
 
     class CreationAction(
-        private val variantScope: VariantScope
-    ) : TaskCreationAction<PerModuleBundleTask>() {
+        variantScope: VariantScope
+    ) : VariantTaskCreationAction<PerModuleBundleTask>(variantScope) {
 
         override val name: String
             get() = variantScope.getTaskName("build", "PreBundle")
@@ -186,7 +186,7 @@ open class PerModuleBundleTask : AndroidVariantTask() {
         }
 
         override fun configure(task: PerModuleBundleTask) {
-            task.variantName = variantScope.fullVariantName
+            super.configure(task)
 
             val artifacts = variantScope.artifacts
             task.fileNameSupplier = if (variantScope.type.isBaseModule)

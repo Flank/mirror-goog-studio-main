@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.TaskInputHelper
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ProcessAndroidResources
 import com.android.builder.symbols.processLibraryMainSymbolTable
@@ -139,10 +139,10 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
 
 
     class CreationAction(
-            private val variantScope: VariantScope,
+            variantScope: VariantScope,
             private val symbolFile: File,
             private val symbolsWithPackageNameOutputFile: File
-    ) : TaskCreationAction<GenerateLibraryRFileTask>() {
+    ) : VariantTaskCreationAction<GenerateLibraryRFileTask>(variantScope) {
 
         override val name: String
             get() = variantScope.getTaskName("generate", "RFile")
@@ -182,8 +182,7 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
         }
 
         override fun configure(task: GenerateLibraryRFileTask) {
-
-            task.variantName = variantScope.fullVariantName
+            super.configure(task)
 
             task.platformAttrRTxt = variantScope.globalScope.platformAttrs
 

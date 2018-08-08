@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer
 import com.android.ide.common.build.ApkData
 import com.android.utils.FileUtils
@@ -44,7 +44,6 @@ import javax.xml.parsers.ParserConfigurationException
  * Task to shrink resources for the android app bundle
  */
 open class ShrinkBundleResourcesTask : AndroidVariantTask() {
-
 
     @get:OutputFile
     lateinit var compressedResourceFile: File
@@ -157,9 +156,10 @@ open class ShrinkBundleResourcesTask : AndroidVariantTask() {
         }
     }
 
-    class CreationAction(val scope: VariantScope) :
-        TaskCreationAction<ShrinkBundleResourcesTask>() {
-        override val name: String = scope.getTaskName("shrink", "Resources")
+    class CreationAction(variantScope: VariantScope) :
+        VariantTaskCreationAction<ShrinkBundleResourcesTask>(variantScope) {
+
+        override val name: String = variantScope.getTaskName("shrink", "Resources")
         override val type: Class<ShrinkBundleResourcesTask>
             get() = ShrinkBundleResourcesTask::class.java
 
@@ -167,7 +167,7 @@ open class ShrinkBundleResourcesTask : AndroidVariantTask() {
 
         override fun preConfigure(taskName: String) {
             outputLocation =
-                    scope.artifacts
+                    variantScope.artifacts
                         .appendArtifact(
                             InternalArtifactType.SHRUNK_LINKED_RES_FOR_BUNDLE,
                             taskName,
@@ -176,31 +176,31 @@ open class ShrinkBundleResourcesTask : AndroidVariantTask() {
         }
 
         override fun configure(task: ShrinkBundleResourcesTask) {
+            super.configure(task)
+
             task.compressedResourceFile = outputLocation
-            task.uncompressedResources = scope.artifacts.getFinalArtifactFiles(
+            task.uncompressedResources = variantScope.artifacts.getFinalArtifactFiles(
                 InternalArtifactType.LINKED_RES_FOR_BUNDLE
             )
-            task.mainSplit = scope.variantData.outputScope.mainSplit
+            task.mainSplit = variantScope.variantData.outputScope.mainSplit
 
-            task.dex = scope.transformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX)
+            task.dex = variantScope.transformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX)
 
-            task.sourceDir = scope.artifacts.getFinalArtifactFiles(
+            task.sourceDir = variantScope.artifacts.getFinalArtifactFiles(
                 InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES
             )
-            task.resourceDir = scope.artifacts.getFinalArtifactFiles(
+            task.resourceDir = variantScope.artifacts.getFinalArtifactFiles(
                 InternalArtifactType.MERGED_NOT_COMPILED_RES
             )
             task.mappingFileSrc =
-                    if (scope.artifacts.hasArtifact(InternalArtifactType.APK_MAPPING))
-                        scope
+                    if (variantScope.artifacts.hasArtifact(InternalArtifactType.APK_MAPPING))
+                        variantScope
                             .artifacts
                             .getFinalArtifactFiles(InternalArtifactType.APK_MAPPING)
                     else
                         null
-
-            task.mergedManifests = scope.artifacts.getFinalArtifactFiles(
+            task.mergedManifests = variantScope.artifacts.getFinalArtifactFiles(
                 InternalArtifactType.BUNDLE_MANIFEST)
-            task.variantName = scope.fullVariantName
         }
     }
 }

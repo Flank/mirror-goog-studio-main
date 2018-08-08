@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
@@ -98,6 +99,10 @@ open class InstantRunMainApkResourcesBuilderTest {
         `when`(variantScope.globalScope).thenReturn(globalScope)
         `when`(variantScope.outputScope).thenReturn(outputScope)
         `when`(variantScope.artifacts).thenReturn(buildArtifactsHolder)
+
+        `when`(variantScope.taskContainer).thenReturn(MutableTaskContainer())
+        variantScope.taskContainer.preBuildTask = project.tasks.register("preBuildTask")
+
         `when`(buildArtifactsHolder.getFinalArtifactFiles(InternalArtifactType.MERGED_RES))
                 .thenReturn(resources)
         `when`(dslScope.issueReporter).thenReturn(issueReporter)

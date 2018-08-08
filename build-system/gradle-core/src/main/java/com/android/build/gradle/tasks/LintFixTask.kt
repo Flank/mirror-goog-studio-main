@@ -71,7 +71,6 @@ open class LintFixTask : LintBaseTask() {
 
             task.description =
                     "Runs lint on all variants and applies any safe suggestions to the source code."
-            task.variantName = ""
             task.group = "cleanup"
 
             task.allInputs = globalScope.project.files()

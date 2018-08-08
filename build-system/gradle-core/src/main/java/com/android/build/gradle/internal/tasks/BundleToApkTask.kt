@@ -22,7 +22,7 @@ import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.tools.build.bundletool.commands.BuildApksCommand
 import com.android.tools.build.bundletool.model.Aapt2Command
 import com.android.utils.FileUtils
@@ -130,11 +130,11 @@ open class BundleToApkTask @Inject constructor(workerExecutor: WorkerExecutor) :
         }
     }
 
-    class CreationAction(private val scope: VariantScope) :
-        TaskCreationAction<BundleToApkTask>() {
+    class CreationAction(variantScope: VariantScope) :
+        VariantTaskCreationAction<BundleToApkTask>(variantScope) {
 
         override val name: String
-            get() = scope.getTaskName("makeApkFromBundleFor")
+            get() = variantScope.getTaskName("makeApkFromBundleFor")
         override val type: Class<BundleToApkTask>
             get() = BundleToApkTask::class.java
 
@@ -143,7 +143,7 @@ open class BundleToApkTask @Inject constructor(workerExecutor: WorkerExecutor) :
         override fun preConfigure(taskName: String) {
             super.preConfigure(taskName)
 
-            outputFile = scope.artifacts.appendArtifact(
+            outputFile = variantScope.artifacts.appendArtifact(
                 InternalArtifactType.APKS_FROM_BUNDLE,
                 taskName,
                 "bundle.apks"
@@ -151,12 +151,13 @@ open class BundleToApkTask @Inject constructor(workerExecutor: WorkerExecutor) :
         }
 
         override fun configure(task: BundleToApkTask) {
-            task.variantName = scope.fullVariantName
-            task.outputFile = outputFile
-            task.bundle = scope.artifacts.getFinalArtifactFiles(InternalArtifactType.BUNDLE)
-            task.aapt2FromMaven = getAapt2FromMaven(scope.globalScope)
+            super.configure(task)
 
-            scope.variantConfiguration.signingConfig?.let {
+            task.outputFile = outputFile
+            task.bundle = variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.BUNDLE)
+            task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
+
+            variantScope.variantConfiguration.signingConfig?.let {
                 task.keystoreFile = it.storeFile
                 task.keystorePassword = it.storePassword
                 task.keyAlias = it.keyAlias

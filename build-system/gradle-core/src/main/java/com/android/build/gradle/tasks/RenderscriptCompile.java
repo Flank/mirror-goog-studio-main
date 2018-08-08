@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NdkTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.internal.compiler.DirectoryWalker;
@@ -247,20 +247,18 @@ public class RenderscriptCompile extends NdkTask {
 
     // ----- CreationAction -----
 
-    public static class CreationAction extends TaskCreationAction<RenderscriptCompile> {
+    public static class CreationAction extends VariantTaskCreationAction<RenderscriptCompile> {
 
-        @NonNull
-        private final VariantScope scope;
         private File sourceOutputDir;
 
         public CreationAction(@NonNull VariantScope scope) {
-            this.scope = scope;
+            super(scope);
         }
 
         @NonNull
         @Override
         public String getName() {
-            return scope.getTaskName("compile", "Renderscript");
+            return getVariantScope().getTaskName("compile", "Renderscript");
         }
 
         @NonNull
@@ -274,7 +272,8 @@ public class RenderscriptCompile extends NdkTask {
             super.preConfigure(taskName);
 
             sourceOutputDir =
-                    scope.getArtifacts()
+                    getVariantScope()
+                            .getArtifacts()
                             .appendArtifact(RENDERSCRIPT_SOURCE_OUTPUT_DIR, taskName, "out");
         }
 
@@ -282,17 +281,18 @@ public class RenderscriptCompile extends NdkTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends RenderscriptCompile> taskProvider) {
             super.handleProvider(taskProvider);
-            scope.getTaskContainer().setRenderscriptCompileTask(taskProvider);
+            getVariantScope().getTaskContainer().setRenderscriptCompileTask(taskProvider);
         }
 
         @Override
         public void configure(@NonNull RenderscriptCompile renderscriptTask) {
+            super.configure(renderscriptTask);
+            VariantScope scope = getVariantScope();
+
             BaseVariantData variantData = scope.getVariantData();
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
 
             boolean ndkMode = config.getRenderscriptNdkModeEnabled();
-            renderscriptTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
-            renderscriptTask.setVariantName(config.getFullName());
 
             renderscriptTask.targetApi = TaskInputHelper.memoize(config::getRenderscriptTarget);
 
@@ -319,8 +319,6 @@ public class RenderscriptCompile extends NdkTask {
 
             if (config.getType().isTestComponent()) {
                 renderscriptTask.dependsOn(scope.getTaskContainer().getProcessManifestTask());
-            } else {
-                renderscriptTask.dependsOn(scope.getTaskContainer().getPreBuildTask());
             }
         }
     }

@@ -20,11 +20,11 @@ import android.databinding.tool.LayoutXmlProcessor;
 import android.databinding.tool.processing.Scope;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.AndroidVariantTask;
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.options.BooleanOption;
 import java.io.File;
 import java.util.function.Supplier;
-import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.OutputDirectory;
@@ -39,7 +39,7 @@ import org.gradle.api.tasks.TaskProvider;
  * that contained the build environment information needed for data binding, but it is now no longer
  * the case. We'll rename it later.
  */
-public class DataBindingExportBuildInfoTask extends DefaultTask {
+public class DataBindingExportBuildInfoTask extends AndroidVariantTask {
 
     @Internal private Supplier<LayoutXmlProcessor> xmlProcessor;
 
@@ -63,18 +63,17 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
         Scope.assertNoError();
     }
 
-    public static class CreationAction extends TaskCreationAction<DataBindingExportBuildInfoTask> {
-
-        @NonNull private final VariantScope variantScope;
+    public static class CreationAction
+            extends VariantTaskCreationAction<DataBindingExportBuildInfoTask> {
 
         public CreationAction(@NonNull VariantScope variantScope) {
-            this.variantScope = variantScope;
+            super(variantScope);
         }
 
         @NonNull
         @Override
         public String getName() {
-            return variantScope.getTaskName("dataBindingExportBuildInfo");
+            return getVariantScope().getTaskName("dataBindingExportBuildInfo");
         }
 
         @NonNull
@@ -87,11 +86,14 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends DataBindingExportBuildInfoTask> taskProvider) {
             super.handleProvider(taskProvider);
-            variantScope.getTaskContainer().setDataBindingExportBuildInfoTask(taskProvider);
+            getVariantScope().getTaskContainer().setDataBindingExportBuildInfoTask(taskProvider);
         }
 
         @Override
         public void configure(@NonNull DataBindingExportBuildInfoTask task) {
+            super.configure(task);
+            VariantScope variantScope = getVariantScope();
+
             task.xmlProcessor = variantScope.getVariantData()::getLayoutXmlProcessor;
             task.useAndroidX =
                     variantScope

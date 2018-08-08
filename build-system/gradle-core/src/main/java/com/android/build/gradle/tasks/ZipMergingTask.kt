@@ -22,7 +22,7 @@ import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.packaging.JarMerger
 import com.android.utils.FileUtils
 import org.gradle.api.tasks.CacheableTask
@@ -81,10 +81,11 @@ open class ZipMergingTask : AndroidVariantTask() {
         }
     }
 
-    class CreationAction(private val scope: VariantScope) : TaskCreationAction<ZipMergingTask>() {
+    class CreationAction(variantScope: VariantScope) :
+        VariantTaskCreationAction<ZipMergingTask>(variantScope) {
 
         override val name: String
-            get() = scope.getTaskName("createFullJar")
+            get() = variantScope.getTaskName("createFullJar")
         override val type: Class<ZipMergingTask>
             get() = ZipMergingTask::class.java
 
@@ -92,17 +93,18 @@ open class ZipMergingTask : AndroidVariantTask() {
 
         override fun preConfigure(taskName: String) {
             super.preConfigure(taskName)
-            mainFullJar = scope.artifacts.appendArtifact(InternalArtifactType.FULL_JAR,
+            mainFullJar = variantScope.artifacts.appendArtifact(InternalArtifactType.FULL_JAR,
                 taskName, FN_INTERMEDIATE_FULL_JAR)
         }
 
         override fun configure(task: ZipMergingTask) {
-            val buildArtifacts = scope.artifacts
+            super.configure(task)
+
+            val buildArtifacts = variantScope.artifacts
             task.init(
                     buildArtifacts.getOptionalFinalArtifactFiles(InternalArtifactType.LIBRARY_CLASSES),
                     buildArtifacts.getOptionalFinalArtifactFiles(InternalArtifactType.LIBRARY_JAVA_RES),
                     mainFullJar)
-            task.variantName = scope.fullVariantName
         }
     }
 }

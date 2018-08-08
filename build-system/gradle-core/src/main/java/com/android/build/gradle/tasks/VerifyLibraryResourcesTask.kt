@@ -29,7 +29,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.IncrementalTask
 import com.android.build.gradle.internal.tasks.Workers
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptException
 import com.android.builder.internal.aapt.AaptOptions
@@ -154,41 +154,38 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
     }
 
     class CreationAction(
-        private val scope: VariantScope
-    ) : TaskCreationAction<VerifyLibraryResourcesTask>() {
+        variantScope: VariantScope
+    ) : VariantTaskCreationAction<VerifyLibraryResourcesTask>(variantScope) {
 
         override val name: String
-            get() = scope.getTaskName("verify", "Resources")
+            get() = variantScope.getTaskName("verify", "Resources")
         override val type: Class<VerifyLibraryResourcesTask>
             get() = VerifyLibraryResourcesTask::class.java
 
         /** Configure the given newly-created task object.  */
         override fun configure(task: VerifyLibraryResourcesTask) {
-            val variantData = scope.variantData
-            val config = variantData.variantConfiguration
-            task.variantName = config.fullName
+            super.configure(task)
 
-            task.setAndroidBuilder(scope.globalScope.androidBuilder)
-            task.aapt2FromMaven = getAapt2FromMaven(scope.globalScope)
-            task.incrementalFolder = scope.getIncrementalDir(name)
+            task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
+            task.incrementalFolder = variantScope.getIncrementalDir(name)
 
             task.inputDirectory =
-                    scope.artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_RES)
+                    variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_RES)
 
-            task.compiledDirectory = scope.compiledResourcesOutputDir
-            task.mergeBlameLogFolder = scope.resourceBlameLogDir
+            task.compiledDirectory = variantScope.compiledResourcesOutputDir
+            task.mergeBlameLogFolder = variantScope.resourceBlameLogDir
 
-            val aaptFriendlyManifestsFilePresent = scope.artifacts
+            val aaptFriendlyManifestsFilePresent = variantScope.artifacts
                     .hasArtifact(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
             task.taskInputType = when {
                 aaptFriendlyManifestsFilePresent ->
                     InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS
-                scope.instantRunBuildContext.isInInstantRunMode ->
+                variantScope.instantRunBuildContext.isInInstantRunMode ->
                     InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS
                 else ->
                     InternalArtifactType.MERGED_MANIFESTS
             }
-            task.manifestFiles = scope.artifacts
+            task.manifestFiles = variantScope.artifacts
                     .getFinalArtifactFiles(task.taskInputType)
         }
     }

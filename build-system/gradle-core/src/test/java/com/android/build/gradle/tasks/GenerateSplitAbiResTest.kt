@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.ide.FilterDataImpl
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
@@ -80,7 +81,7 @@ class GenerateSplitAbiResTest {
             "dirName",
             "app.apk",
             ImmutableList.of(FilterDataImpl(VariantOutput.FilterType.ABI, "x86")))
-    private var project: Project? = null
+    private lateinit var project: Project
 
     @Before
     fun setUp() {
@@ -102,7 +103,11 @@ class GenerateSplitAbiResTest {
             `when`(variantData).thenReturn(mockedVariantData)
             `when`(variantConfiguration).thenReturn(mockedVariantConfiguration)
             `when`(outputScope).thenReturn(mockedOutputScope)
+            `when`(taskContainer).thenReturn(MutableTaskContainer())
+            `when`(fullVariantName).thenReturn("theVariantName")
         }
+
+        mockedVariantScope.taskContainer.preBuildTask = project.tasks.register("preBuildTask")
 
         with(mockedAndroidConfig) {
             `when`(aaptOptions).thenReturn(mockedAaptOptions)

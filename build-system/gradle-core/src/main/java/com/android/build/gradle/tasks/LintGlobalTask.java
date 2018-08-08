@@ -91,7 +91,6 @@ public class LintGlobalTask extends LintBaseTask {
             super.configure(lintTask);
 
             lintTask.setDescription("Runs lint on all variants.");
-            lintTask.setVariantName("");
 
             lintTask.allInputs = getGlobalScope().getProject().files();
             lintTask.variantInputMap =

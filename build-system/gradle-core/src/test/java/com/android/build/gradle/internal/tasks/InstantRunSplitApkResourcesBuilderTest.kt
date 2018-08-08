@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.ProjectOptions
@@ -75,6 +76,7 @@ class InstantRunSplitApkResourcesBuilderTest {
     @Mock private lateinit var aaptOptions: AaptOptions
     @Mock private lateinit var outputScope: OutputScope
     @Mock private lateinit var mainApkInfo: ApkData
+    @Mock private lateinit var taskContainer: MutableTaskContainer
 
     @get:Rule
     val temporaryFolder = TemporaryFolder()
@@ -133,6 +135,11 @@ class InstantRunSplitApkResourcesBuilderTest {
             task.name)).thenReturn(temporaryFolder.newFolder())
         Mockito.`when`(resources.get()).thenReturn(project.files())
         Mockito.`when`(globalScope.project).thenReturn(project)
+
+        val preBuildTask = project.tasks.register("preBuild")
+        Mockito.`when`(variantScope.fullVariantName).thenReturn("theVariantName")
+        Mockito.`when`(variantScope.taskContainer).thenReturn(taskContainer)
+        Mockito.`when`(taskContainer.preBuildTask).thenReturn(preBuildTask)
 
         configAction.preConfigure(task.name)
         configAction.configure(task)

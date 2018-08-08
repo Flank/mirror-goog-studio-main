@@ -21,6 +21,7 @@ import com.android.build.VariantOutput
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
@@ -56,6 +57,7 @@ class CompatibleScreensManifestTest {
     @Mock private lateinit var variantConfiguration: GradleVariantConfiguration
     @Mock private lateinit var productFlavor: ProductFlavor
     @Mock private lateinit var buildArtifactsHolder: BuildArtifactsHolder
+    @Mock private lateinit var taskContainer: MutableTaskContainer
 
     private lateinit var task: CompatibleScreensManifest
 
@@ -72,6 +74,8 @@ class CompatibleScreensManifestTest {
         `when`(scope.variantConfiguration).thenReturn(variantConfiguration)
         `when`(scope.outputScope).thenReturn(outputScope)
         `when`(scope.artifacts).thenReturn(buildArtifactsHolder)
+        `when`(scope.taskContainer).thenReturn(taskContainer)
+        `when`(taskContainer.preBuildTask).thenReturn(project.tasks.register("preBuildTask"))
         `when`(buildArtifactsHolder.appendArtifact(
                         InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST, task.name))
             .thenReturn(temporaryFolder.root)

@@ -127,7 +127,7 @@ public class TransformManagerTest extends TaskTestUtils {
         assertThat(syncIssue).isNotNull();
         assertThat(syncIssue.getMessage())
                 .isEqualTo(
-                        "Unable to add Transform 'transform name' on variant 'null': "
+                        "Unable to add Transform 'transform name' on variant 'theVariantName': "
                                 + "requested streams not available: [PROJECT]+[] / [RESOURCES]");
         assertThat(syncIssue.getType()).isEqualTo(SyncIssue.TYPE_GENERIC);
     }
@@ -809,8 +809,8 @@ public class TransformManagerTest extends TaskTestUtils {
 
         SyncIssue syncIssue = errorReporter.getSyncIssue();
         assertThat(syncIssue).isNotNull();
-        assertThat(syncIssue.getMessage()).isEqualTo(
-                "PROVIDED_ONLY scope cannot be consumed by Transform 'transform name'");
+        assertThat(syncIssue.getMessage())
+                .isEqualTo("PROVIDED_ONLY scope cannot be consumed by Transform 'transform name'");
         assertThat(syncIssue.getType()).isEqualTo(SyncIssue.TYPE_GENERIC);
     }
 
@@ -830,8 +830,8 @@ public class TransformManagerTest extends TaskTestUtils {
 
         SyncIssue syncIssue = errorReporter.getSyncIssue();
         assertThat(syncIssue).isNotNull();
-        assertThat(syncIssue.getMessage()).isEqualTo(
-                "TESTED_CODE scope cannot be consumed by Transform 'transform name'");
+        assertThat(syncIssue.getMessage())
+                .isEqualTo("TESTED_CODE scope cannot be consumed by Transform 'transform name'");
         assertThat(syncIssue.getType()).isEqualTo(SyncIssue.TYPE_GENERIC);
     }
 

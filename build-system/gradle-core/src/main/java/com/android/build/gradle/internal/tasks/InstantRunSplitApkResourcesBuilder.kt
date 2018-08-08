@@ -30,7 +30,7 @@ import com.android.build.gradle.internal.res.namespaced.getAaptPoolSize
 import com.android.build.gradle.internal.res.namespaced.registerAaptService
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransform
 import com.android.build.gradle.internal.transforms.InstantRunSplitApkBuilder
 import com.android.builder.core.AndroidBuilder
@@ -241,8 +241,8 @@ open class InstantRunSplitApkResourcesBuilder
             val outputDirectory: File): Serializable
     }
 
-    class CreationAction(val variantScope: VariantScope) :
-        TaskCreationAction<InstantRunSplitApkResourcesBuilder>() {
+    class CreationAction(variantScope: VariantScope) :
+        VariantTaskCreationAction<InstantRunSplitApkResourcesBuilder>(variantScope) {
 
         override val name: String
             get() = variantScope.getTaskName("instantRunSplitApkResources")
@@ -259,6 +259,8 @@ open class InstantRunSplitApkResourcesBuilder
         }
 
         override fun configure(task: InstantRunSplitApkResourcesBuilder) {
+            super.configure(task)
+
             val artifacts = variantScope.artifacts
             val globalScope = variantScope.globalScope
             task.resources = artifacts.getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES)
@@ -277,11 +279,9 @@ open class InstantRunSplitApkResourcesBuilder
             task.aapt2FromMaven = getAapt2FromMaven(globalScope)
             task.applicationId = variantScope.variantConfiguration.applicationId
 
-            task.setAndroidBuilder(globalScope.androidBuilder)
             task.buildContext = variantScope.instantRunBuildContext
             task.aaptOptions = globalScope.extension.aaptOptions.convert()
             task.mainApkInfo = variantScope.outputScope.mainSplit
-            task.variantName = variantScope.fullVariantName
 
             // This task theoretically depends on the resources bundle as the split manifest file
             // generated can contain resource references: android:versionName="@string/version_name"

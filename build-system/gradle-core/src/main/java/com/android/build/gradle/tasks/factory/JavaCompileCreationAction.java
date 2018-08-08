@@ -15,7 +15,7 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -27,20 +27,19 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.TaskProvider;
 
 /** Configuration Action for a JavaCompile task. */
-public class JavaCompileCreationAction extends TaskCreationAction<AndroidJavaCompile> {
+public class JavaCompileCreationAction extends VariantTaskCreationAction<AndroidJavaCompile> {
     private static final ILogger LOG = LoggerWrapper.getLogger(JavaCompileCreationAction.class);
 
-    @NonNull private final VariantScope scope;
     private File destinationDir;
 
     public JavaCompileCreationAction(@NonNull VariantScope scope) {
-        this.scope = scope;
+        super(scope);
     }
 
     @NonNull
     @Override
     public String getName() {
-        return scope.getTaskName("compile", "JavaWithJavac");
+        return getVariantScope().getTaskName("compile", "JavaWithJavac");
     }
 
     @NonNull
@@ -52,6 +51,7 @@ public class JavaCompileCreationAction extends TaskCreationAction<AndroidJavaCom
     @Override
     public void preConfigure(@NonNull String taskName) {
         super.preConfigure(taskName);
+        VariantScope scope = getVariantScope();
 
         BuildArtifactsHolder artifacts = scope.getArtifacts();
         destinationDir = artifacts.appendArtifact(InternalArtifactType.JAVAC, taskName, "classes");
@@ -69,34 +69,38 @@ public class JavaCompileCreationAction extends TaskCreationAction<AndroidJavaCom
     @Override
     public void handleProvider(@NonNull TaskProvider<? extends AndroidJavaCompile> taskProvider) {
         super.handleProvider(taskProvider);
-        scope.getTaskContainer().setJavacTask(taskProvider);
+        getVariantScope().getTaskContainer().setJavacTask(taskProvider);
     }
 
     @Override
-    public void configure(@NonNull final AndroidJavaCompile javacTask) {
+    public void configure(@NonNull final AndroidJavaCompile task) {
+        super.configure(task);
+        VariantScope scope = getVariantScope();
+
+
         final GlobalScope globalScope = scope.getGlobalScope();
         final Project project = globalScope.getProject();
         BuildArtifactsHolder artifacts = scope.getArtifacts();
 
-        javacTask.compileSdkVersion = globalScope.getExtension().getCompileSdkVersion();
-        javacTask.mInstantRunBuildContext = scope.getInstantRunBuildContext();
+        task.compileSdkVersion = globalScope.getExtension().getCompileSdkVersion();
+        task.mInstantRunBuildContext = scope.getInstantRunBuildContext();
 
         // We can't just pass the collection directly, as the instanceof check in the incremental
         // compile doesn't work recursively currently, so every ConfigurableFileTree needs to be
         // directly in the source array.
         for (ConfigurableFileTree fileTree: scope.getVariantData().getJavaSources()) {
-            javacTask.source(fileTree);
+            task.source(fileTree);
         }
 
-        javacTask.getOptions().setBootstrapClasspath(scope.getBootClasspath());
-        javacTask.setClasspath(scope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES));
+        task.getOptions().setBootstrapClasspath(scope.getBootClasspath());
+        task.setClasspath(scope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES));
 
-        javacTask.setDestinationDir(destinationDir);
+        task.setDestinationDir(destinationDir);
 
         CompileOptions compileOptions = globalScope.getExtension().getCompileOptions();
-        javacTask.setSourceCompatibility(compileOptions.getSourceCompatibility().toString());
-        javacTask.setTargetCompatibility(compileOptions.getTargetCompatibility().toString());
-        javacTask.getOptions().setEncoding(compileOptions.getEncoding());
+        task.setSourceCompatibility(compileOptions.getSourceCompatibility().toString());
+        task.setTargetCompatibility(compileOptions.getTargetCompatibility().toString());
+        task.getOptions().setEncoding(compileOptions.getEncoding());
 
         Boolean includeCompileClasspath =
                 scope.getVariantConfiguration()
@@ -112,7 +116,7 @@ public class JavaCompileCreationAction extends TaskCreationAction<AndroidJavaCom
                     processorPath.plus(scope.getJavaClasspath(COMPILE_CLASSPATH, PROCESSED_JAR));
         }
 
-        javacTask.getOptions().setAnnotationProcessorPath(processorPath);
+        task.getOptions().setAnnotationProcessorPath(processorPath);
 
         boolean incremental = AbstractCompilesUtil.isIncremental(
                 project,
@@ -124,7 +128,7 @@ public class JavaCompileCreationAction extends TaskCreationAction<AndroidJavaCom
         if (incremental) {
             LOG.verbose("Using incremental javac compilation for %1$s %2$s.",
                     project.getPath(), scope.getFullVariantName());
-            javacTask.getOptions().setIncremental(true);
+            task.getOptions().setIncremental(true);
         } else {
             LOG.verbose("Not using incremental javac compilation for %1$s %2$s.",
                     project.getPath(), scope.getFullVariantName());
@@ -136,32 +140,28 @@ public class JavaCompileCreationAction extends TaskCreationAction<AndroidJavaCom
                         .getAnnotationProcessorOptions();
 
         if (!annotationProcessorOptions.getClassNames().isEmpty()) {
-            javacTask.getOptions().getCompilerArgs().add("-processor");
-            javacTask.getOptions().getCompilerArgs().add(
-                    Joiner.on(',').join(annotationProcessorOptions.getClassNames()));
+            task.getOptions().getCompilerArgs().add("-processor");
+            task.getOptions()
+                    .getCompilerArgs()
+                    .add(Joiner.on(',').join(annotationProcessorOptions.getClassNames()));
         }
         if (!annotationProcessorOptions.getArguments().isEmpty()) {
             for (Map.Entry<String, String> arg :
                     annotationProcessorOptions.getArguments().entrySet()) {
-                javacTask.getOptions().getCompilerArgs().add(
-                        "-A" + arg.getKey() + "=" + arg.getValue());
+                task.getOptions().getCompilerArgs().add("-A" + arg.getKey() + "=" + arg.getValue());
             }
         }
-        javacTask
-                .getOptions()
+        task.getOptions()
                 .getCompilerArgumentProviders()
                 .addAll(annotationProcessorOptions.getCompilerArgumentProviders());
 
-        javacTask
-                .getOptions()
+        task.getOptions()
                 .setAnnotationProcessorGeneratedSourcesDirectory(
                         scope.getAnnotationProcessorOutputDir());
-        javacTask.annotationProcessorOutputFolder = scope.getAnnotationProcessorOutputDir();
+        task.annotationProcessorOutputFolder = scope.getAnnotationProcessorOutputDir();
 
-        javacTask.processorListFile =
-                artifacts.getFinalArtifactFiles(ANNOTATION_PROCESSOR_LIST);
-        javacTask.variantName = scope.getFullVariantName();
+        task.processorListFile = artifacts.getFinalArtifactFiles(ANNOTATION_PROCESSOR_LIST);
 
-        javacTask.dependsOn(scope.getTaskContainer().getSourceGenTask());
+        task.dependsOn(scope.getTaskContainer().getSourceGenTask());
     }
 }

@@ -17,8 +17,10 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.VariantAwareTask
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.compile.JavaCompile
 import java.io.File
 
@@ -31,13 +33,16 @@ import java.io.File
  * In the future, this might not call javac at all, but it needs to be profiled first.
  */
 @CacheableTask
-open class CompileRClassTask : JavaCompile() {
+open class CompileRClassTask : JavaCompile(), VariantAwareTask {
 
-    class CreationAction(private val scope: VariantScope) :
-        TaskCreationAction<CompileRClassTask>() {
+    @Internal
+    override lateinit var variantName: String
+
+    class CreationAction(variantScope: VariantScope) :
+        VariantTaskCreationAction<CompileRClassTask>(variantScope) {
 
         override val name: String
-            get() = scope.getTaskName("compile", "FinalRClass")
+            get() = variantScope.getTaskName("compile", "FinalRClass")
         override val type: Class<CompileRClassTask>
             get() = CompileRClassTask::class.java
 
@@ -46,14 +51,16 @@ open class CompileRClassTask : JavaCompile() {
         override fun preConfigure(taskName: String) {
             super.preConfigure(taskName)
             destinationDir =
-                    scope.artifacts.appendArtifact(
+                    variantScope.artifacts.appendArtifact(
                         InternalArtifactType.RUNTIME_R_CLASS_CLASSES,
                         taskName
                     )
         }
 
         override fun configure(task: CompileRClassTask) {
-            val artifacts = scope.artifacts
+            super.configure(task)
+
+            val artifacts = variantScope.artifacts
             task.classpath = task.project.files()
             task.source(
                 artifacts.getFinalArtifactFiles(InternalArtifactType.RUNTIME_R_CLASS_SOURCES))

@@ -22,9 +22,10 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.PROCE
 
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.BuildableArtifact;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.utils.FileUtils;
 import com.android.utils.PathUtils;
 import com.google.common.collect.Iterables;
@@ -39,12 +40,11 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
-import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 
-public class PackageForUnitTest extends DefaultTask {
+public class PackageForUnitTest extends AndroidVariantTask {
     BuildableArtifact resApk;
     BuildableArtifact mergedAssets;
     File apkForUnitTest;
@@ -99,18 +99,17 @@ public class PackageForUnitTest extends DefaultTask {
                 .getOutputFile();
     }
 
-    public static class CreationAction extends TaskCreationAction<PackageForUnitTest> {
-        @NonNull private final VariantScope scope;
+    public static class CreationAction extends VariantTaskCreationAction<PackageForUnitTest> {
         private File apkForUnitTest;
 
         public CreationAction(@NonNull VariantScope scope) {
-            this.scope = scope;
+            super(scope);
         }
 
         @NonNull
         @Override
         public String getName() {
-            return scope.getTaskName("package", "ForUnitTest");
+            return getVariantScope().getTaskName("package", "ForUnitTest");
         }
 
         @NonNull
@@ -123,14 +122,18 @@ public class PackageForUnitTest extends DefaultTask {
         public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
             apkForUnitTest =
-                    scope.getArtifacts()
+                    getVariantScope()
+                            .getArtifacts()
                             .appendArtifact(APK_FOR_LOCAL_TEST, taskName, "apk-for-local-test.ap_");
         }
 
         @Override
         public void configure(@NonNull PackageForUnitTest task) {
-            task.resApk = scope.getArtifacts().getArtifactFiles(PROCESSED_RES);
-            task.mergedAssets = scope.getArtifacts().getArtifactFiles(MERGED_ASSETS);
+            super.configure(task);
+
+            BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
+            task.resApk = artifacts.getArtifactFiles(PROCESSED_RES);
+            task.mergedAssets = artifacts.getArtifactFiles(MERGED_ASSETS);
             task.apkForUnitTest = apkForUnitTest;
         }
     }

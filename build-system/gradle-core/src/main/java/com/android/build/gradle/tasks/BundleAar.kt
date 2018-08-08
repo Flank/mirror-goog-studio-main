@@ -21,28 +21,33 @@ import com.android.SdkConstants
 import com.android.build.gradle.AndroidConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.VariantAwareTask
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.BuilderConstants
 import org.gradle.api.Action
 import org.gradle.api.file.CopySpec
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.file.FileCopyDetails
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Zip
 import java.io.File
 
 /** Custom Zip task to allow archive name to be set lazily. */
-open class BundleAar : Zip() {
+open class BundleAar : Zip(), VariantAwareTask {
     private lateinit var archiveNameSupplier: () -> String
 
     @Input
     override fun getArchiveName() = archiveNameSupplier()
 
+    @Internal
+    override lateinit var variantName: String
+
     class CreationAction(
         private val extension: AndroidConfig,
-        private val variantScope: VariantScope
-    ) : TaskCreationAction<BundleAar>() {
+        variantScope: VariantScope
+    ) : VariantTaskCreationAction<BundleAar>(variantScope) {
 
         override val name: String
             get() = variantScope.getTaskName("bundle", "Aar")
@@ -64,6 +69,8 @@ open class BundleAar : Zip() {
         }
 
         override fun configure(task: BundleAar) {
+            super.configure(task)
+
             val artifacts = variantScope.artifacts
 
             // Sanity check, there should never be duplicates.

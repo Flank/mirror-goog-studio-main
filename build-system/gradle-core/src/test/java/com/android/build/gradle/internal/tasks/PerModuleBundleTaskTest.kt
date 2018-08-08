@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.MODULE_PATH
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.core.VariantTypeImpl
 import com.android.testutils.truth.ZipFileSubject
@@ -32,7 +33,9 @@ import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.bouncycastle.util.io.Streams
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.file.FileCollection
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Rule
@@ -59,6 +62,8 @@ class PerModuleBundleTaskTest {
     @Mock private lateinit var variantConfiguration: GradleVariantConfiguration
     @Mock private lateinit var globalScope: GlobalScope
     @Mock private lateinit var project: Project
+    @Mock private lateinit var taskContainer: MutableTaskContainer
+    @Mock private lateinit var preBuildTask: TaskProvider<out Task>
 
     @get:Rule
     val testFolder = TemporaryFolder()
@@ -109,6 +114,8 @@ class PerModuleBundleTaskTest {
             mapOf(MODULE_PATH to ":foo:bar")))
             .thenReturn(dexFiles)
 
+        Mockito.`when`(variantScope.taskContainer).thenReturn(taskContainer)
+        Mockito.`when`(taskContainer.preBuildTask).thenReturn(preBuildTask)
 
         val testFiles = testFolder.newFolder("test_files")
         val featureMetadata = File(testFiles, "feature-metadata.json")

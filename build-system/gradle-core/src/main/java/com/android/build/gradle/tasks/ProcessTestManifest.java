@@ -322,9 +322,6 @@ public class ProcessTestManifest extends ManifestProcessorTask {
                             "manifest",
                             scope.getDirName()));
 
-            task.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
-            task.setVariantName(config.getFullName());
-
             task.minSdkVersion =
                     TaskInputHelper.memoize(() -> config.getMinSdkVersion().getApiString());
 

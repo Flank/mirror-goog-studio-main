@@ -34,7 +34,7 @@ import com.android.build.gradle.internal.dsl.CoreExternalNativeCmakeOptions;
 import com.android.build.gradle.internal.dsl.CoreExternalNativeNdkBuildOptions;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.errors.EvalIssueReporter;
@@ -367,11 +367,10 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
         this.stlSharedObjectFiles = stlSharedObjectFiles;
     }
 
-    public static class CreationAction extends TaskCreationAction<ExternalNativeBuildTask> {
+    public static class CreationAction extends VariantTaskCreationAction<ExternalNativeBuildTask> {
         @Nullable private final String buildTargetAbi;
         @NonNull private final ExternalNativeJsonGenerator generator;
         @NonNull private final TaskProvider<? extends Task> generateTask;
-        @NonNull private final VariantScope scope;
         @NonNull private final AndroidBuilder androidBuilder;
 
         public CreationAction(
@@ -380,17 +379,17 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
                 @NonNull TaskProvider<? extends Task> generateTask,
                 @NonNull VariantScope scope,
                 @NonNull AndroidBuilder androidBuilder) {
+            super(scope);
             this.buildTargetAbi = buildTargetAbi;
             this.generator = generator;
             this.generateTask = generateTask;
-            this.scope = scope;
             this.androidBuilder = androidBuilder;
         }
 
         @NonNull
         @Override
         public String getName() {
-            return scope.getTaskName("externalNativeBuild");
+            return getVariantScope().getTaskName("externalNativeBuild");
         }
 
         @NonNull
@@ -403,12 +402,14 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends ExternalNativeBuildTask> taskProvider) {
             super.handleProvider(taskProvider);
-            scope.getTaskContainer().getExternalNativeBuildTasks().add(taskProvider);
-            scope.getTaskContainer().setExternalNativeBuildTask(taskProvider);
+            getVariantScope().getTaskContainer().getExternalNativeBuildTasks().add(taskProvider);
+            getVariantScope().getTaskContainer().setExternalNativeBuildTask(taskProvider);
         }
 
         @Override
         public void configure(@NonNull ExternalNativeBuildTask task) {
+            super.configure(task);
+            VariantScope scope = getVariantScope();
             final BaseVariantData variantData = scope.getVariantData();
             final Set<String> targets;
             CoreExternalNativeBuildOptions nativeBuildOptions =
@@ -432,7 +433,6 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
             }
             task.setStlSharedObjectFiles(generator.getStlSharedObjectFiles());
             task.setTargets(targets);
-            task.setVariantName(variantData.getName());
             task.setSoFolder(generator.getSoFolder());
             task.setObjFolder(generator.getObjFolder());
             task.stats = generator.stats;

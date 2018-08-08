@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks
 
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.tasks.VariantAwareTask
 import org.gradle.api.Task
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileSystemLocation
@@ -26,7 +27,7 @@ import org.gradle.api.provider.Provider
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.jvm.isAccessible
 
-class TaskArtifactsHolder<T: Task>(val artifacts: BuildArtifactsHolder) {
+class TaskArtifactsHolder<T>(val artifacts: BuildArtifactsHolder) where T: Task, T: VariantAwareTask {
 
     private val inputs = mutableListOf<InputFilesInjectPoint<T>>()
     private val outputs = mutableListOf<OutputDirectoryInjectPoint<T>>()

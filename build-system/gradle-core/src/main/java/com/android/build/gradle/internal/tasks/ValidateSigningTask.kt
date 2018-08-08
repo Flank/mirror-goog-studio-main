@@ -20,6 +20,7 @@ import com.android.annotations.VisibleForTesting
 import com.android.build.gradle.internal.packaging.createDefaultDebugStore
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.BuilderConstants
 import com.android.builder.model.SigningConfig
 import com.android.builder.signing.DefaultSigningConfig
@@ -124,10 +125,10 @@ open class ValidateSigningTask : AndroidVariantTask() {
     fun forceRerun() = signingConfig.storeFile?.isFile != true
 
     class CreationAction(
-        private val variantScope: VariantScope,
+        variantScope: VariantScope,
         private val defaultDebugKeystoreLocation: File
     ) :
-        TaskCreationAction<ValidateSigningTask>() {
+        VariantTaskCreationAction<ValidateSigningTask>(variantScope) {
 
         override val name: String
             get() = variantScope.getTaskName("validateSigning")
@@ -135,7 +136,8 @@ open class ValidateSigningTask : AndroidVariantTask() {
             get() = ValidateSigningTask::class.java
 
         override fun configure(task: ValidateSigningTask) {
-            task.variantName = variantScope.fullVariantName
+            super.configure(task)
+
             task.signingConfig =
                     variantScope.variantConfiguration.signingConfig ?:
                             throw IllegalStateException(

@@ -20,7 +20,7 @@ import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.StringOption
 import com.android.bundle.Devices.DeviceSpec
 import com.android.tools.build.bundletool.commands.ExtractApksCommand
@@ -108,10 +108,11 @@ open class ExtractApksTask @Inject constructor(workerExecutor: WorkerExecutor) :
         }
     }
 
-    class CreationAction(private val scope: VariantScope) : TaskCreationAction<ExtractApksTask>() {
+    class CreationAction(variantScope: VariantScope) :
+        VariantTaskCreationAction<ExtractApksTask>(variantScope) {
 
         override val name: String
-            get() = getTaskName(scope)
+            get() = getTaskName(variantScope)
         override val type: Class<ExtractApksTask>
             get() = ExtractApksTask::class.java
 
@@ -119,15 +120,16 @@ open class ExtractApksTask @Inject constructor(workerExecutor: WorkerExecutor) :
 
         override fun preConfigure(taskName: String) {
             super.preConfigure(taskName)
-            outputDir = scope.artifacts.appendArtifact(InternalArtifactType.EXTRACTED_APKS, taskName)
+            outputDir = variantScope.artifacts.appendArtifact(InternalArtifactType.EXTRACTED_APKS, taskName)
         }
 
         override fun configure(task: ExtractApksTask) {
-            task.variantName = scope.fullVariantName
-            task.outputDir = outputDir
-            task.apkSetArchive = scope.artifacts.getFinalArtifactFiles(InternalArtifactType.APKS_FROM_BUNDLE)
+            super.configure(task)
 
-            val devicePath = scope.globalScope.projectOptions.get(StringOption.IDE_APK_SELECT_CONFIG)
+            task.outputDir = outputDir
+            task.apkSetArchive = variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.APKS_FROM_BUNDLE)
+
+            val devicePath = variantScope.globalScope.projectOptions.get(StringOption.IDE_APK_SELECT_CONFIG)
             if (devicePath != null) {
                 task.deviceConfig = File(devicePath)
             }

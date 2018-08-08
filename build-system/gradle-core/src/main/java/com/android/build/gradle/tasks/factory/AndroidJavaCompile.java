@@ -20,6 +20,7 @@ import com.android.annotations.VisibleForTesting;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.tasks.VariantAwareTask;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
@@ -38,16 +39,16 @@ import org.gradle.api.JavaVersion;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
-import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
+import org.jetbrains.annotations.NotNull;
 
 /** Specialization of the JavaCompile task to record execution time. */
 @CacheableTask
-public class AndroidJavaCompile extends JavaCompile {
+public class AndroidJavaCompile extends JavaCompile implements VariantAwareTask {
 
     String compileSdkVersion;
 
@@ -57,7 +58,7 @@ public class AndroidJavaCompile extends JavaCompile {
 
     BuildableArtifact processorListFile;
 
-    String variantName;
+    private String variantName;
 
     @PathSensitive(PathSensitivity.NONE)
     @InputFiles
@@ -119,5 +120,17 @@ public class AndroidJavaCompile extends JavaCompile {
     private boolean isPostN() {
         final AndroidVersion hash = AndroidTargetHash.getVersionFromHash(compileSdkVersion);
         return hash != null && hash.getApiLevel() >= 24;
+    }
+
+    @Internal
+    @NotNull
+    @Override
+    public String getVariantName() {
+        return variantName;
+    }
+
+    @Override
+    public void setVariantName(@NotNull String name) {
+        variantName = name;
     }
 }

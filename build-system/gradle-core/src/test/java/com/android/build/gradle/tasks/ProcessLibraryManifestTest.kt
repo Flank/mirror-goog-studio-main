@@ -22,13 +22,14 @@ import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
+import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.builder.core.AndroidBuilder
 import com.android.ide.common.build.ApkData
 import com.google.common.truth.Truth.assertThat
+import org.gradle.api.Project
 import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
@@ -87,10 +88,15 @@ class ProcessLibraryManifestTest {
         `when`(variantConfiguration.mergedFlavor).thenReturn(mergedFlavor)
         `when`(mainSplit.fullName).thenReturn("fooRelease")
 
-        val project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()
+        val project: Project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()
         val configAction =
             ProcessLibraryManifest.CreationAction(variantScope)
-        val taskProvider = project!!.tasks.register<ProcessLibraryManifest>("fooRelease", ProcessLibraryManifest::class.java)
+        val taskProvider = project.tasks.register<ProcessLibraryManifest>(
+            "fooRelease",
+            ProcessLibraryManifest::class.java
+        )
+
+        variantScope.taskContainer.preBuildTask = project.tasks.register("preBuildTask")
 
         `when`(buildArtifactsHolder.createDirectory(
             InternalArtifactType.MERGED_MANIFESTS,

@@ -31,7 +31,8 @@ import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.AndroidVariantTask;
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.ide.common.build.ApkInfo;
 import com.google.common.base.Preconditions;
@@ -44,7 +45,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.function.Supplier;
-import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
@@ -57,7 +57,7 @@ import org.gradle.api.tasks.TaskAction;
  *
  * <p>See DSL documentation in {@link TestOptions.UnitTestOptions#isIncludeAndroidResources()}
  */
-public class GenerateTestConfig extends DefaultTask {
+public class GenerateTestConfig extends AndroidVariantTask {
 
     BuildableArtifact resourcesDirectory;
     BuildableArtifact assets;
@@ -180,14 +180,13 @@ public class GenerateTestConfig extends DefaultTask {
         return packageForR.get();
     }
 
-    public static class CreationAction extends TaskCreationAction<GenerateTestConfig> {
+    public static class CreationAction extends VariantTaskCreationAction<GenerateTestConfig> {
 
-        @NonNull private final VariantScope scope;
         @NonNull private final VariantScope testedScope;
         private File generatedJavaResourcesDirectory;
 
         public CreationAction(@NonNull VariantScope scope) {
-            this.scope = scope;
+            super(scope);
             this.testedScope =
                     Preconditions.checkNotNull(
                             scope.getTestedVariantData(), "Not a unit test variant.")
@@ -197,7 +196,7 @@ public class GenerateTestConfig extends DefaultTask {
         @NonNull
         @Override
         public String getName() {
-            return scope.getTaskName("generate", "Config");
+            return getVariantScope().getTaskName("generate", "Config");
         }
 
         @NonNull
@@ -211,7 +210,8 @@ public class GenerateTestConfig extends DefaultTask {
             super.preConfigure(taskName);
 
             generatedJavaResourcesDirectory =
-                    scope.getArtifacts()
+                    getVariantScope()
+                            .getArtifacts()
                             .appendArtifact(
                                     InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY,
                                     taskName,
@@ -220,6 +220,9 @@ public class GenerateTestConfig extends DefaultTask {
 
         @Override
         public void configure(@NonNull GenerateTestConfig task) {
+            super.configure(task);
+            VariantScope scope = getVariantScope();
+
             // we don't actually consume the task, only the path, so make a manual dependency
             // on the filecollections.
 

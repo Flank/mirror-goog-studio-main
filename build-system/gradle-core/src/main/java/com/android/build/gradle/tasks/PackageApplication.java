@@ -116,7 +116,7 @@ public class PackageApplication extends PackageAndroidArtifact {
         @NonNull
         @Override
         public String getName() {
-            return variantScope.getTaskName("package");
+            return getVariantScope().getTaskName("package");
         }
 
         @NonNull
@@ -128,7 +128,7 @@ public class PackageApplication extends PackageAndroidArtifact {
         @Override
         public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
-            variantScope
+            getVariantScope()
                     .getArtifacts()
                     .appendArtifact(
                             expectedOutputType, ImmutableList.of(outputDirectory), taskName);
@@ -138,7 +138,7 @@ public class PackageApplication extends PackageAndroidArtifact {
         public void handleProvider(
                 @NonNull TaskProvider<? extends PackageApplication> taskProvider) {
             super.handleProvider(taskProvider);
-            variantScope.getTaskContainer().setPackageAndroidTask(taskProvider);
+            getVariantScope().getTaskContainer().setPackageAndroidTask(taskProvider);
         }
 
         @Override
@@ -177,7 +177,7 @@ public class PackageApplication extends PackageAndroidArtifact {
         @NonNull
         @Override
         public String getName() {
-            return variantScope.getTaskName("packageInstantRunResources");
+            return getVariantScope().getTaskName("packageInstantRunResources");
         }
 
         @NonNull
@@ -193,13 +193,14 @@ public class PackageApplication extends PackageAndroidArtifact {
             packageApplication.instantRunFileType = FileType.RESOURCES;
 
             // Skip files which are not needed for hot/cold swap.
-            FileCollection emptyCollection = variantScope.getGlobalScope().getProject().files();
+            FileCollection emptyCollection =
+                    getVariantScope().getGlobalScope().getProject().files();
 
             packageApplication.dexFolders = emptyCollection;
             packageApplication.jniFolders = emptyCollection;
             packageApplication.javaResourceFiles = emptyCollection;
             packageApplication.apkList =
-                    variantScope
+                    getVariantScope()
                             .getArtifacts()
                             .getFinalArtifactFiles(InternalArtifactType.APK_LIST);
 

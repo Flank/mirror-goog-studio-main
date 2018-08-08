@@ -397,6 +397,7 @@ public class TaskTestUtils {
         when(scope.getDirName()).thenReturn("config dir name");
         when(scope.getGlobalScope()).thenReturn(globalScope);
         when(scope.getTaskName(Mockito.anyString())).thenReturn(TASK_NAME);
+        when(scope.getFullVariantName()).thenReturn("theVariantName");
         return scope;
     }
 

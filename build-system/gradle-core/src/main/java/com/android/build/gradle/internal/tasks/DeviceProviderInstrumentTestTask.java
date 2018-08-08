@@ -32,7 +32,7 @@ import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.test.AbstractTestDataImpl;
 import com.android.build.gradle.internal.test.report.ReportType;
 import com.android.build.gradle.internal.test.report.TestReport;
@@ -340,10 +340,8 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
     }
 
     public static class CreationAction
-            extends TaskCreationAction<DeviceProviderInstrumentTestTask> {
+            extends VariantTaskCreationAction<DeviceProviderInstrumentTestTask> {
 
-        @NonNull
-        private final VariantScope scope;
         @NonNull
         private final DeviceProvider deviceProvider;
         @NonNull private final AbstractTestDataImpl testData;
@@ -355,7 +353,7 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
                 @NonNull DeviceProvider deviceProvider,
                 @NonNull AbstractTestDataImpl testData,
                 @NonNull FileCollection testTargetManifests) {
-            this.scope = scope;
+            super(scope);
             this.deviceProvider = deviceProvider;
             this.testData = testData;
             this.testTargetManifests = testTargetManifests;
@@ -364,7 +362,7 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
         @NonNull
         @Override
         public String getName() {
-            return scope.getTaskName(deviceProvider.getName());
+            return getVariantScope().getTaskName(deviceProvider.getName());
         }
 
         @NonNull
@@ -378,7 +376,8 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
             super.preConfigure(taskName);
 
             coverageDir =
-                    scope.getArtifacts()
+                    getVariantScope()
+                            .getArtifacts()
                             .appendArtifact(
                                     InternalArtifactType.JACOCO_COVERAGE_DIR,
                                     taskName,
@@ -389,6 +388,7 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
         public void handleProvider(
                 @NonNull TaskProvider<? extends DeviceProviderInstrumentTestTask> taskProvider) {
             super.handleProvider(taskProvider);
+            VariantScope scope = getVariantScope();
             if (scope.getVariantData() instanceof TestVariantData) {
                 if (deviceProvider instanceof ConnectedDeviceProvider) {
                     scope.getTaskContainer().setConnectedTestTask(taskProvider);
@@ -402,6 +402,9 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
 
         @Override
         public void configure(@NonNull DeviceProviderInstrumentTestTask task) {
+            super.configure(task);
+
+            VariantScope scope = getVariantScope();
             Project project = scope.getGlobalScope().getProject();
             ProjectOptions projectOptions = scope.getGlobalScope().getProjectOptions();
 
@@ -426,8 +429,6 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
                                 deviceProvider.getName()));
             }
             task.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
-            task.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
-            task.setVariantName(variantName);
             task.setTestData(testData);
             task.setFlavorName(testData.getFlavorName());
             task.setDeviceProvider(deviceProvider);

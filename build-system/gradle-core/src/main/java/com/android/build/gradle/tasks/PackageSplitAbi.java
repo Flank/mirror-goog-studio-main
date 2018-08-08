@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.internal.packaging.IncrementalPackager;
@@ -171,19 +171,18 @@ public class PackageSplitAbi extends AndroidBuilderTask {
 
     // ----- CreationAction -----
 
-    public static class CreationAction extends TaskCreationAction<PackageSplitAbi> {
+    public static class CreationAction extends VariantTaskCreationAction<PackageSplitAbi> {
 
-        private VariantScope scope;
         private File outputDirectory;
 
         public CreationAction(VariantScope scope) {
-            this.scope = scope;
+            super(scope);
         }
 
         @Override
         @NonNull
         public String getName() {
-            return scope.getTaskName("package", "SplitAbi");
+            return getVariantScope().getTaskName("package", "SplitAbi");
         }
 
         @Override
@@ -196,7 +195,8 @@ public class PackageSplitAbi extends AndroidBuilderTask {
         public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
             outputDirectory =
-                    scope.getArtifacts()
+                    getVariantScope()
+                            .getArtifacts()
                             .appendArtifact(
                                     InternalArtifactType.ABI_PACKAGED_SPLIT, taskName, "out");
         }
@@ -204,19 +204,20 @@ public class PackageSplitAbi extends AndroidBuilderTask {
         @Override
         public void handleProvider(@NonNull TaskProvider<? extends PackageSplitAbi> taskProvider) {
             super.handleProvider(taskProvider);
-            scope.getTaskContainer().setPackageSplitAbiTask(taskProvider);
+            getVariantScope().getTaskContainer().setPackageSplitAbiTask(taskProvider);
         }
 
         @Override
         public void configure(@NonNull PackageSplitAbi task) {
-            VariantConfiguration config = this.scope.getVariantConfiguration();
+            super.configure(task);
+            VariantScope scope = getVariantScope();
+
+            VariantConfiguration config = scope.getVariantConfiguration();
             task.processedAbiResources =
                     scope.getArtifacts()
                             .getFinalArtifactFiles(InternalArtifactType.ABI_PROCESSED_SPLIT_RES);
             task.signingConfig = config.getSigningConfig();
             task.outputDirectory = outputDirectory;
-            task.setAndroidBuilder(this.scope.getGlobalScope().getAndroidBuilder());
-            task.setVariantName(config.getFullName());
             task.minSdkVersion = config.getMinSdkVersion();
             task.incrementalDir = scope.getIncrementalDir(task.getName());
 

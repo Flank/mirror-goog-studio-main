@@ -60,7 +60,7 @@ public class AndroidJavaCompileTest {
 
         File inputFile = temporaryFolder.newFile();
         Files.write(inputFile.toPath(), "[]".getBytes("utf-8"));
-        task.variantName = VARIANT_NAME;
+        task.setVariantName(VARIANT_NAME);
         task.processorListFile =
                 new BuildableArtifactImpl(project.files(inputFile), Mockito.mock(DslScope.class));
 
@@ -76,7 +76,7 @@ public class AndroidJavaCompileTest {
 
         File inputFile = temporaryFolder.newFile();
         Files.write(inputFile.toPath(), "[\"processor1\", \"processor2\"]".getBytes("utf-8"));
-        task.variantName = VARIANT_NAME;
+        task.setVariantName(VARIANT_NAME);
         task.processorListFile =
                 new BuildableArtifactImpl(project.files(inputFile), Mockito.mock(DslScope.class));
         task.processAnalytics();

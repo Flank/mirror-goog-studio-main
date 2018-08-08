@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.tasks;
 
+import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.File;
@@ -50,7 +51,7 @@ public class MergeFileTask extends AndroidVariantTask {
         }
 
         // first delete the current file
-        output.delete();
+        FileUtils.deleteIfExists(output);
 
         // no input? done.
         if (existingFiles.isEmpty()) {

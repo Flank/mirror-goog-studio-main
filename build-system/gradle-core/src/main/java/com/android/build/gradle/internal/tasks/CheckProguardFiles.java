@@ -20,17 +20,16 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.ProguardFiles;
 import com.android.build.gradle.ProguardFiles.ProguardFile;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.gradle.api.DefaultTask;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.TaskAction;
 
-public class CheckProguardFiles extends DefaultTask {
+public class CheckProguardFiles extends AndroidVariantTask {
 
     private List<File> proguardFiles;
 
@@ -67,17 +66,16 @@ public class CheckProguardFiles extends DefaultTask {
         return proguardFiles;
     }
 
-    public static class CreationAction extends TaskCreationAction<CheckProguardFiles> {
-        private final VariantScope scope;
+    public static class CreationAction extends VariantTaskCreationAction<CheckProguardFiles> {
 
         public CreationAction(VariantScope scope) {
-            this.scope = scope;
+            super(scope);
         }
 
         @NonNull
         @Override
         public String getName() {
-            return scope.getTaskName("check", "ProguardFiles");
+            return getVariantScope().getTaskName("check", "ProguardFiles");
         }
 
         @NonNull
@@ -88,7 +86,9 @@ public class CheckProguardFiles extends DefaultTask {
 
         @Override
         public void configure(@NonNull CheckProguardFiles task) {
-            task.proguardFiles = scope.getProguardFiles();
+            super.configure(task);
+
+            task.proguardFiles = getVariantScope().getProguardFiles();
         }
     }
 }

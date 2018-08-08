@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ProductFlavor;
 import com.android.manifmerger.ManifestMerger2;
@@ -256,7 +255,7 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
                                     SdkConstants.ANDROID_MANIFEST_XML);
 
             aaptFriendlyManifestOutputDirectory =
-                    getScope()
+                    getVariantScope()
                             .getArtifacts()
                             .appendArtifact(
                                     InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
@@ -265,13 +264,13 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
 
             reportFile =
                     FileUtils.join(
-                            getScope().getGlobalScope().getOutputsDir(),
+                            getVariantScope().getGlobalScope().getOutputsDir(),
                             "logs",
                             "manifest-merger-"
-                                    + getScope().getVariantConfiguration().getBaseName()
+                                    + getVariantScope().getVariantConfiguration().getBaseName()
                                     + "-report.txt");
 
-            getScope()
+            getVariantScope()
                     .getArtifacts()
                     .appendArtifact(
                             InternalArtifactType.MANIFEST_MERGE_REPORT,
@@ -283,18 +282,15 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends ProcessLibraryManifest> taskProvider) {
             super.handleProvider(taskProvider);
-            getScope().getTaskContainer().setProcessManifestTask(taskProvider);
+            getVariantScope().getTaskContainer().setProcessManifestTask(taskProvider);
         }
 
         @Override
         public void configure(@NonNull ProcessLibraryManifest task) {
             super.configure(task);
-            VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> config =
-                    getScope().getVariantConfiguration();
-            final AndroidBuilder androidBuilder = getScope().getGlobalScope().getAndroidBuilder();
 
-            task.setAndroidBuilder(androidBuilder);
-            task.setVariantName(config.getFullName());
+            VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> config =
+                    getVariantScope().getVariantConfiguration();
 
             task.variantConfiguration = config;
 
@@ -326,7 +322,7 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
 
             task.manifestOutputFile = manifestOutputFile;
 
-            task.outputScope = getScope().getOutputScope();
+            task.outputScope = getVariantScope().getOutputScope();
 
             task.setReportFile(reportFile);
         }

@@ -617,12 +617,9 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
             final BaseVariantData variantData = variantScope.getVariantData();
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
             GlobalScope globalScope = variantScope.getGlobalScope();
-            AndroidBuilder androidBuilder = globalScope.getAndroidBuilder();
 
             VariantType variantType = variantScope.getType();
 
-            task.setAndroidBuilder(androidBuilder);
-            task.setVariantName(config.getFullName());
             task.outputScope = variantData.getOutputScope();
 
             task.setVariantConfiguration(config);

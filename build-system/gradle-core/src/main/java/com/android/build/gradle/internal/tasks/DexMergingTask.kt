@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.transforms.DexMergerTransformCallable
 import com.android.builder.dexing.DexMergerTool
 import com.android.builder.dexing.DexingType
@@ -133,17 +133,17 @@ open class DexMergingTask : AndroidVariantTask() {
     }
 
     class CreationAction @JvmOverloads constructor(
-        private val scope: VariantScope,
+        variantScope: VariantScope,
         private val action: DexMergingAction,
         private val dexingType: DexingType,
         private val outputType: InternalArtifactType = InternalArtifactType.DEX
-    ) : TaskCreationAction<DexMergingTask>() {
+    ) : VariantTaskCreationAction<DexMergingTask>(variantScope) {
 
         private val internalName: String = when (action) {
-            DexMergingAction.MERGE_LIBRARY_PROJECTS -> scope.getTaskName("mergeLibDex")
-            DexMergingAction.MERGE_EXTERNAL_LIBS -> scope.getTaskName("mergeExtDex")
-            DexMergingAction.MERGE_PROJECT -> scope.getTaskName("mergeProjectDex")
-            DexMergingAction.MERGE_ALL -> scope.getTaskName("mergeDex")
+            DexMergingAction.MERGE_LIBRARY_PROJECTS -> variantScope.getTaskName("mergeLibDex")
+            DexMergingAction.MERGE_EXTERNAL_LIBS -> variantScope.getTaskName("mergeExtDex")
+            DexMergingAction.MERGE_PROJECT -> variantScope.getTaskName("mergeProjectDex")
+            DexMergingAction.MERGE_ALL -> variantScope.getTaskName("mergeDex")
         }
 
         override val name = internalName
@@ -152,36 +152,37 @@ open class DexMergingTask : AndroidVariantTask() {
         private lateinit var output: File
 
         override fun preConfigure(taskName: String) {
-            output = scope.artifacts.appendArtifact(outputType, taskName)
+            output = variantScope.artifacts.appendArtifact(outputType, taskName)
         }
 
         override fun configure(task: DexMergingTask) {
+            super.configure(task)
+
             task.dexFiles = getDexFiles(action)
             task.mergingThreshold = getMergingThreshold(action, task)
 
             task.dexingType = dexingType
             if (DexMergingAction.MERGE_ALL == action && dexingType === DexingType.LEGACY_MULTIDEX) {
                 task.mainDexListFile =
-                        scope.artifacts.getFinalArtifactFiles(InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST)
+                        variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST)
             }
 
-            task.messageReceiver = scope.globalScope.messageReceiver
-            task.dexMerger = scope.dexMerger
-            task.minSdkVersion = scope.minSdkVersion.featureLevel
-            task.isDebuggable = scope.variantConfiguration.buildType.isDebuggable()
+            task.messageReceiver = variantScope.globalScope.messageReceiver
+            task.dexMerger = variantScope.dexMerger
+            task.minSdkVersion = variantScope.minSdkVersion.featureLevel
+            task.isDebuggable = variantScope.variantConfiguration.buildType.isDebuggable()
             task.outputDir = output
-            task.variantName = scope.fullVariantName
         }
 
         private fun getDexFiles(action: DexMergingAction): FileCollection {
-            val minSdk = scope.minSdkVersion.featureLevel
-            val isDebuggable = scope.variantConfiguration.buildType.isDebuggable
+            val minSdk = variantScope.minSdkVersion.featureLevel
+            val isDebuggable = variantScope.variantConfiguration.buildType.isDebuggable
             val attributes = getAttributeMap(minSdk, isDebuggable)
 
             fun forAction(action: DexMergingAction): FileCollection {
                 return when (action) {
                     DexMergingAction.MERGE_EXTERNAL_LIBS -> {
-                        scope.getArtifactFileCollection(
+                        variantScope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.EXTERNAL,
                             AndroidArtifacts.ArtifactType.DEX,
@@ -189,7 +190,7 @@ open class DexMergingTask : AndroidVariantTask() {
                         )
                     }
                     DexMergingAction.MERGE_LIBRARY_PROJECTS -> {
-                        scope.getArtifactFileCollection(
+                        variantScope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.MODULE,
                             AndroidArtifacts.ArtifactType.DEX,
@@ -197,14 +198,14 @@ open class DexMergingTask : AndroidVariantTask() {
                         )
                     }
                     DexMergingAction.MERGE_PROJECT -> {
-                        val manager = scope.transformManager
+                        val manager = variantScope.transformManager
                         val streams = manager.getStreams(StreamFilter.DEX_ARCHIVE)
-                        scope.globalScope.project.files(*streams.stream().map { it.fileCollection }.toArray())
+                        variantScope.globalScope.project.files(*streams.stream().map { it.fileCollection }.toArray())
                     }
                     DexMergingAction.MERGE_ALL -> {
                         forAction(DexMergingAction.MERGE_PROJECT) +
                                 forAction(DexMergingAction.MERGE_LIBRARY_PROJECTS) +
-                                scope.artifacts.getFinalArtifactFiles(InternalArtifactType.EXTERNAL_LIBS_DEX).get()
+                                variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.EXTERNAL_LIBS_DEX).get()
                     }
                 }
             }
@@ -222,7 +223,7 @@ open class DexMergingTask : AndroidVariantTask() {
             return when (action) {
                 DexMergingAction.MERGE_LIBRARY_PROJECTS ->
                     when {
-                        scope.minSdkVersion.featureLevel < 23 -> {
+                        variantScope.minSdkVersion.featureLevel < 23 -> {
                             task.outputs.cacheIf { getAllRegularFiles(task.dexFiles).size < LIBRARIES_MERGING_THRESHOLD }
                             LIBRARIES_MERGING_THRESHOLD
                         }

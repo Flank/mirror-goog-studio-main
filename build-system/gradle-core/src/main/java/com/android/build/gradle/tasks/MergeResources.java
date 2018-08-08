@@ -33,11 +33,12 @@ import com.android.build.gradle.internal.res.Aapt2MavenUtils;
 import com.android.build.gradle.internal.res.namespaced.Aapt2DaemonManagerService;
 import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey;
 import com.android.build.gradle.internal.res.namespaced.NamespaceRemover;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.Workers;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.AndroidBuilder;
@@ -708,9 +709,7 @@ public class MergeResources extends IncrementalTask {
         return resourceSetList;
     }
 
-    public static class CreationAction extends TaskCreationAction<MergeResources> {
-        @NonNull
-        private final VariantScope scope;
+    public static class CreationAction extends VariantTaskCreationAction<MergeResources> {
         @NonNull private final TaskManager.MergeType mergeType;
         @NonNull
         private final String taskNamePrefix;
@@ -724,7 +723,7 @@ public class MergeResources extends IncrementalTask {
         private File dataBindingLayoutInfoOutFolder;
 
         public CreationAction(
-                @NonNull VariantScope scope,
+                @NonNull VariantScope variantScope,
                 @NonNull TaskManager.MergeType mergeType,
                 @NonNull String taskNamePrefix,
                 @Nullable File outputLocation,
@@ -732,7 +731,7 @@ public class MergeResources extends IncrementalTask {
                 boolean includeDependencies,
                 boolean processResources,
                 @NonNull ImmutableSet<Flag> flags) {
-            this.scope = scope;
+            super(variantScope);
             this.mergeType = mergeType;
             this.taskNamePrefix = taskNamePrefix;
             this.outputLocation = outputLocation;
@@ -746,7 +745,7 @@ public class MergeResources extends IncrementalTask {
         @NonNull
         @Override
         public String getName() {
-            return scope.getTaskName(taskNamePrefix, "Resources");
+            return getVariantScope().getTaskName(taskNamePrefix, "Resources");
         }
 
         @NonNull
@@ -759,10 +758,11 @@ public class MergeResources extends IncrementalTask {
         public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
 
-            if (scope.getGlobalScope().getExtension().getDataBinding().isEnabled()) {
+            if (getVariantScope().getGlobalScope().getExtension().getDataBinding().isEnabled()) {
                 // Keep as an output.
                 dataBindingLayoutInfoOutFolder =
-                        scope.getArtifacts()
+                        getVariantScope()
+                                .getArtifacts()
                                 .appendArtifact(
                                         mergeType == MERGE
                                                 ? DATA_BINDING_LAYOUT_INFO_TYPE_MERGE
@@ -782,15 +782,19 @@ public class MergeResources extends IncrementalTask {
             // latter one wins: The mergeResources task with mergeType == MERGE is the one that is
             // finally registered in the current scope.
             // Filed https://issuetracker.google.com//110412851 to clean this up at some point.
-            scope.getTaskContainer().setMergeResourcesTask(taskProvider);
+            getVariantScope().getTaskContainer().setMergeResourcesTask(taskProvider);
         }
 
         @Override
-        public void configure(@NonNull MergeResources mergeResourcesTask) {
-            BaseVariantData variantData = scope.getVariantData();
-            Project project = scope.getGlobalScope().getProject();
+        public void configure(@NonNull MergeResources task) {
+            super.configure(task);
 
-            mergeResourcesTask.minSdk =
+            VariantScope variantScope = getVariantScope();
+            GlobalScope globalScope = variantScope.getGlobalScope();
+            BaseVariantData variantData = variantScope.getVariantData();
+            Project project = globalScope.getProject();
+
+            task.minSdk =
                     TaskInputHelper.memoize(
                             () ->
                                     variantData
@@ -798,73 +802,66 @@ public class MergeResources extends IncrementalTask {
                                             .getMinSdkVersion()
                                             .getApiLevel());
 
-            mergeResourcesTask.aapt2FromMaven =
-                    Aapt2MavenUtils.getAapt2FromMaven(scope.getGlobalScope());
-            mergeResourcesTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
-            mergeResourcesTask.setVariantName(scope.getVariantConfiguration().getFullName());
-            mergeResourcesTask.setIncrementalFolder(scope.getIncrementalDir(getName()));
+            task.aapt2FromMaven = Aapt2MavenUtils.getAapt2FromMaven(globalScope);
+            task.setIncrementalFolder(variantScope.getIncrementalDir(getName()));
             // Libraries use this task twice, once for compilation (with dependencies),
             // where blame is useful, and once for packaging where it is not.
             if (includeDependencies) {
-                mergeResourcesTask.setBlameLogFolder(scope.getResourceBlameLogDir());
+                task.setBlameLogFolder(variantScope.getResourceBlameLogDir());
             }
-            mergeResourcesTask.processResources = processResources;
-            mergeResourcesTask.crunchPng = scope.isCrunchPngs();
+            task.processResources = processResources;
+            task.crunchPng = variantScope.isCrunchPngs();
 
             VectorDrawablesOptions vectorDrawablesOptions = variantData
                     .getVariantConfiguration()
                     .getMergedFlavor()
                     .getVectorDrawables();
-            mergeResourcesTask.generatedDensities = vectorDrawablesOptions.getGeneratedDensities();
-            if (mergeResourcesTask.generatedDensities == null) {
-                mergeResourcesTask.generatedDensities = Collections.emptySet();
+            task.generatedDensities = vectorDrawablesOptions.getGeneratedDensities();
+            if (task.generatedDensities == null) {
+                task.generatedDensities = Collections.emptySet();
             }
 
-            mergeResourcesTask.disableVectorDrawables =
-                    !processVectorDrawables || mergeResourcesTask.generatedDensities.isEmpty();
+            task.disableVectorDrawables =
+                    !processVectorDrawables || task.generatedDensities.isEmpty();
 
             // TODO: When support library starts supporting gradients (http://b/62421666), remove
             // the vectorSupportLibraryIsUsed field and set disableVectorDrawables when
             // the getUseSupportLibrary method returns TRUE.
-            mergeResourcesTask.vectorSupportLibraryIsUsed =
+            task.vectorSupportLibraryIsUsed =
                     Boolean.TRUE.equals(vectorDrawablesOptions.getUseSupportLibrary());
 
-            mergeResourcesTask.validateEnabled =
-                    !scope.getGlobalScope()
-                            .getProjectOptions()
-                            .get(BooleanOption.DISABLE_RESOURCE_VALIDATION);
+            task.validateEnabled =
+                    !globalScope.getProjectOptions().get(BooleanOption.DISABLE_RESOURCE_VALIDATION);
 
             if (includeDependencies) {
-                mergeResourcesTask.libraries = scope.getArtifactCollection(
-                        RUNTIME_CLASSPATH, ALL, ANDROID_RES);
+                task.libraries =
+                        variantScope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, ANDROID_RES);
             }
 
-            mergeResourcesTask.resources = variantData.getAndroidResources();
-            mergeResourcesTask.sourceFolderInputs =
+            task.resources = variantData.getAndroidResources();
+            task.sourceFolderInputs =
                     () ->
                             variantData
                                     .getVariantConfiguration()
                                     .getSourceFiles(SourceProvider::getResDirectories);
-            mergeResourcesTask.extraGeneratedResFolders = variantData.getExtraGeneratedResFolders();
-            mergeResourcesTask.renderscriptResOutputDir =
-                    project.files(scope.getRenderscriptResOutputDir());
-            mergeResourcesTask.generatedResOutputDir =
-                    project.files(scope.getGeneratedResOutputDir());
-            if (scope.getTaskContainer().getMicroApkTask() != null
+            task.extraGeneratedResFolders = variantData.getExtraGeneratedResFolders();
+            task.renderscriptResOutputDir =
+                    project.files(variantScope.getRenderscriptResOutputDir());
+            task.generatedResOutputDir = project.files(variantScope.getGeneratedResOutputDir());
+            if (variantScope.getTaskContainer().getMicroApkTask() != null
                     && variantData.getVariantConfiguration().getBuildType().isEmbedMicroApp()) {
-                mergeResourcesTask.microApkResDirectory =
-                        project.files(scope.getMicroApkResDirectory());
+                task.microApkResDirectory = project.files(variantScope.getMicroApkResDirectory());
             }
 
-            mergeResourcesTask.outputDir = outputLocation;
-            if (!mergeResourcesTask.disableVectorDrawables) {
-                mergeResourcesTask.generatedPngsOutputDir = scope.getGeneratedPngsOutputDir();
+            task.outputDir = outputLocation;
+            if (!task.disableVectorDrawables) {
+                task.generatedPngsOutputDir = variantScope.getGeneratedPngsOutputDir();
             }
 
-            if (scope.getGlobalScope().getExtension().getDataBinding().isEnabled()) {
+            if (globalScope.getExtension().getDataBinding().isEnabled()) {
                 // Keep as an output.
-                mergeResourcesTask.dataBindingLayoutInfoOutFolder = dataBindingLayoutInfoOutFolder;
-                mergeResourcesTask.dataBindingLayoutProcessor =
+                task.dataBindingLayoutInfoOutFolder = dataBindingLayoutInfoOutFolder;
+                task.dataBindingLayoutProcessor =
                         new SingleFileProcessor() {
 
                             // Lazily instantiate the processor to avoid parsing the manifest.
@@ -890,23 +887,22 @@ public class MergeResources extends IncrementalTask {
                             @Override
                             public void end() throws JAXBException {
                                 getProcessor()
-                                        .writeLayoutInfoFiles(
-                                                mergeResourcesTask.dataBindingLayoutInfoOutFolder);
+                                        .writeLayoutInfoFiles(task.dataBindingLayoutInfoOutFolder);
                             }
                         };
             }
 
-            mergeResourcesTask.mergedNotCompiledResourcesOutputDirectory =
-                    mergedNotCompiledOutputDirectory;
+            task.mergedNotCompiledResourcesOutputDirectory = mergedNotCompiledOutputDirectory;
 
-            mergeResourcesTask.pseudoLocalesEnabled =
-                    scope.getVariantData()
+            task.pseudoLocalesEnabled =
+                    variantScope
+                            .getVariantData()
                             .getVariantConfiguration()
                             .getBuildType()
                             .isPseudoLocalesEnabled();
-            mergeResourcesTask.flags = flags;
+            task.flags = flags;
 
-            mergeResourcesTask.dependsOn(scope.getTaskContainer().getResourceGenTask());
+            task.dependsOn(variantScope.getTaskContainer().getResourceGenTask());
 
         }
     }

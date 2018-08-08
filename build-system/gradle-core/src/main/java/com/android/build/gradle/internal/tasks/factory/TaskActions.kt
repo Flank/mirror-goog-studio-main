@@ -16,6 +16,11 @@
 
 package com.android.build.gradle.internal.tasks.factory
 
+import com.android.build.gradle.internal.scope.MutableTaskContainer
+import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.AndroidBuilderTask
+import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.build.gradle.internal.tasks.VariantAwareTask
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskProvider
 
@@ -30,7 +35,7 @@ interface TaskInformation<T: Task> {
     val type: Class<T>
 }
 
-/** Lazy Creation Action for tasks
+/** Lazy Creation Action for non variant aware tasks
  *
  * This contains both meta-data to create the task ([name], [type])
  * and actions to configure the task ([preConfigure], [configure], [handleProvider])
@@ -44,6 +49,32 @@ abstract class TaskCreationAction<T : Task> : TaskInformation<T>, PreConfigActio
 
     override fun handleProvider(taskProvider: TaskProvider<out T>) {
         // default does nothing
+    }
+}
+
+/** Lazy Creation Action for variant aware tasks.
+ *
+ * Tasks must implement [VariantAwareTask]. The simplest way to do this is to extend
+ * [AndroidVariantTask].
+ *
+ * Optionally they can also extends [AndroidBuilderTask].
+ *
+ * This contains both meta-data to create the task ([name], [type])
+ * and actions to configure the task ([preConfigure], [configure], [handleProvider])
+ */
+abstract class VariantTaskCreationAction<T>(
+    protected val variantScope: VariantScope
+) : TaskCreationAction<T>() where T: Task, T: VariantAwareTask {
+
+    override fun configure(task: T) {
+        val taskContainer: MutableTaskContainer = variantScope.taskContainer
+        task.dependsOn(taskContainer.preBuildTask)
+
+        task.variantName = variantScope.fullVariantName
+
+        if (task is AndroidBuilderTask) {
+            task.setAndroidBuilder(variantScope.globalScope.androidBuilder)
+        }
     }
 }
 

@@ -23,11 +23,10 @@ import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.testing.api.TestServer;
 import com.android.utils.StringHelper;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.List;
@@ -89,8 +88,7 @@ public class TestServerTask extends AndroidVariantTask {
     @Override
     @Input
     public String getVariantName() {
-        return Preconditions.checkNotNull(super.getVariantName(),
-                "Test server task must have a variant name.");
+        return super.getVariantName();
     }
 
     public TestServer getTestServer() {
@@ -110,22 +108,21 @@ public class TestServerTask extends AndroidVariantTask {
     }
 
     /** Configuration Action for a TestServerTask. */
-    public static class TestServerTaskCreationAction extends TaskCreationAction<TestServerTask> {
-
-        private final VariantScope scope;
+    public static class TestServerTaskCreationAction
+            extends VariantTaskCreationAction<TestServerTask> {
 
         private final TestServer testServer;
 
         public TestServerTaskCreationAction(VariantScope scope, TestServer testServer) {
-            this.scope = scope;
+            super(scope);
             this.testServer = testServer;
         }
 
         @NonNull
         @Override
         public String getName() {
-            return scope.getVariantConfiguration().hasFlavors()
-                    ? scope.getTaskName(testServer.getName() + "Upload")
+            return getVariantScope().getVariantConfiguration().hasFlavors()
+                    ? getVariantScope().getTaskName(testServer.getName() + "Upload")
                     : testServer.getName() + ("Upload");
         }
 
@@ -136,34 +133,36 @@ public class TestServerTask extends AndroidVariantTask {
         }
 
         @Override
-        public void configure(@NonNull TestServerTask serverTask) {
+        public void configure(@NonNull TestServerTask task) {
+            super.configure(task);
+            VariantScope scope = getVariantScope();
 
             final BaseVariantData testedVariantData = scope.getTestedVariantData();
 
             final String variantName = scope.getVariantConfiguration().getFullName();
-            serverTask.setDescription(
+            task.setDescription(
                     "Uploads APKs for Build \'"
                             + variantName
                             + "\' to Test Server \'"
                             + StringHelper.capitalize(testServer.getName())
                             + "\'.");
-            serverTask.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
-            serverTask.setVariantName(variantName);
+            task.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
 
-            serverTask.setTestServer(testServer);
+            task.setTestServer(testServer);
 
             if (testedVariantData != null && testedVariantData.getScope()
                     .getArtifacts().hasArtifact(InternalArtifactType.APK)) {
-                serverTask.setTestedApks(
-                        testedVariantData.getScope().getArtifacts()
+                task.setTestedApks(
+                        testedVariantData
+                                .getScope()
+                                .getArtifacts()
                                 .getFinalArtifactFiles(InternalArtifactType.APK));
             }
 
-            serverTask.setTestApks(
-                    scope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.APK));
+            task.setTestApks(scope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.APK));
 
             if (!testServer.isConfigured()) {
-                serverTask.setEnabled(false);
+                task.setEnabled(false);
             }
         }
     }

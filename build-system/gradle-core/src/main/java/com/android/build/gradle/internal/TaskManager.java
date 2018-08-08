@@ -116,6 +116,7 @@ import com.android.build.gradle.internal.tasks.LintCompile;
 import com.android.build.gradle.internal.tasks.MergeAaptProguardFilesCreationAction;
 import com.android.build.gradle.internal.tasks.PackageForUnitTest;
 import com.android.build.gradle.internal.tasks.PrepareLintJar;
+import com.android.build.gradle.internal.tasks.ProcessJavaResTask;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
 import com.android.build.gradle.internal.tasks.SourceSetsTask;
 import com.android.build.gradle.internal.tasks.TestServerTask;
@@ -132,6 +133,7 @@ import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.internal.tasks.factory.TaskFactory;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.test.AbstractTestDataImpl;
 import com.android.build.gradle.internal.test.TestDataImpl;
 import com.android.build.gradle.internal.transforms.CustomClassTransform;
@@ -198,7 +200,6 @@ import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.build.gradle.tasks.ShaderCompile;
 import com.android.build.gradle.tasks.factory.AndroidUnitTest;
 import com.android.build.gradle.tasks.factory.JavaCompileCreationAction;
-import com.android.build.gradle.tasks.factory.ProcessJavaResCreationAction;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DesugarProcessArgs;
@@ -1178,7 +1179,7 @@ public abstract class TaskManager {
                 task.getName());
     }
 
-    protected TaskCreationAction<LinkApplicationAndroidResourcesTask>
+    protected VariantTaskCreationAction<LinkApplicationAndroidResourcesTask>
             createProcessAndroidResourcesConfigAction(
                     @NonNull VariantScope scope,
                     @NonNull Supplier<File> symbolLocation,
@@ -1276,8 +1277,8 @@ public abstract class TaskManager {
      * <p>The java processing will happen in two steps:
      *
      * <ul>
-     *   <li>{@link Sync} task configured with {@link ProcessJavaResCreationAction} will sync all
-     *       source folders into a single folder identified by {@link
+     *   <li>{@link Sync} task configured with {@link ProcessJavaResTask.CreationAction} will sync
+     *       all source folders into a single folder identified by {@link
      *       VariantScope#getSourceFoldersJavaResDestinationDir()}
      *   <li>{@link MergeJavaResourcesTransform} will take the output of this merge plus the
      *       dependencies and will create a single merge with the {@link PackagingOptions} settings
@@ -1296,9 +1297,9 @@ public abstract class TaskManager {
         // TODO: move this file computation completely out of VariantScope.
         File destinationDir = variantScope.getSourceFoldersJavaResDestinationDir();
 
-        TaskProvider<Sync> processJavaResourcesTask =
+        TaskProvider<ProcessJavaResTask> processJavaResourcesTask =
                 taskFactory.register(
-                        new ProcessJavaResCreationAction(variantScope, destinationDir));
+                        new ProcessJavaResTask.CreationAction(variantScope, destinationDir));
 
         // create the task outputs for others to consume
         BuildableArtifact javaRes =
@@ -1585,9 +1586,7 @@ public abstract class TaskManager {
         TaskProvider<Task> cleanTask = taskFactory.named("clean");
         TaskFactoryUtils.dependsOn(
                 cleanTask,
-                taskFactory.register(
-                        new ExternalNativeCleanTask.CreationAction(
-                                generator, scope, androidBuilder)));
+                taskFactory.register(new ExternalNativeCleanTask.CreationAction(generator, scope)));
     }
 
     public void createNdkTasks(@NonNull VariantScope scope) {

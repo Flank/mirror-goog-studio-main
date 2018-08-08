@@ -24,7 +24,8 @@ import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.AndroidVariantTask;
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.model.Version;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Closeables;
@@ -39,7 +40,6 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.function.Supplier;
 import javax.inject.Inject;
-import org.gradle.api.DefaultTask;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTreeElement;
@@ -67,10 +67,8 @@ import org.jacoco.report.MultiSourceFileLocator;
 import org.jacoco.report.html.HTMLFormatter;
 import org.jacoco.report.xml.XMLFormatter;
 
-/**
- * Simple Jacoco report task that calls the Ant version.
- */
-public class JacocoReportTask extends DefaultTask {
+/** Simple Jacoco report task that calls the Ant version. */
+public class JacocoReportTask extends AndroidVariantTask {
 
     private FileCollection jacocoClasspath;
 
@@ -180,20 +178,19 @@ public class JacocoReportTask extends DefaultTask {
                 });
     }
 
-    public static class CreationAction extends TaskCreationAction<JacocoReportTask> {
-        @NonNull private VariantScope scope;
+    public static class CreationAction extends VariantTaskCreationAction<JacocoReportTask> {
         @NonNull private final Configuration jacocoAntConfiguration;
 
         public CreationAction(
                 @NonNull VariantScope scope, @NonNull Configuration jacocoAntConfiguration) {
-            this.scope = scope;
+            super(scope);
             this.jacocoAntConfiguration = jacocoAntConfiguration;
         }
 
         @NonNull
         @Override
         public String getName() {
-            return scope.getTaskName("create", "CoverageReport");
+            return getVariantScope().getTaskName("create", "CoverageReport");
         }
 
         @NonNull
@@ -205,11 +202,13 @@ public class JacocoReportTask extends DefaultTask {
         @Override
         public void handleProvider(@NonNull TaskProvider<? extends JacocoReportTask> taskProvider) {
             super.handleProvider(taskProvider);
-            scope.getTaskContainer().setCoverageReportTask(taskProvider);
+            getVariantScope().getTaskContainer().setCoverageReportTask(taskProvider);
         }
 
         @Override
         public void configure(@NonNull JacocoReportTask task) {
+            super.configure(task);
+            VariantScope scope = getVariantScope();
 
             task.setDescription("Creates JaCoCo test coverage report from data gathered on the "
                     + "device.");

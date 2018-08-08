@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.tools.build.bundletool.commands.BuildApksCommand
 import com.android.tools.build.bundletool.model.Aapt2Command
 import com.android.utils.FileUtils
@@ -182,10 +182,11 @@ open class BundleToStandaloneApkTask @Inject constructor(workerExecutor: WorkerE
         }
     }
 
-    class CreationAction(private val scope: VariantScope) : TaskCreationAction<BundleToStandaloneApkTask>() {
+    class CreationAction(variantScope: VariantScope) :
+        VariantTaskCreationAction<BundleToStandaloneApkTask>(variantScope) {
 
         override val name: String
-            get() = scope.getTaskName("package", "UniversalApk")
+            get() = variantScope.getTaskName("package", "UniversalApk")
         override val type: Class<BundleToStandaloneApkTask>
             get() = BundleToStandaloneApkTask::class.java
 
@@ -195,23 +196,23 @@ open class BundleToStandaloneApkTask @Inject constructor(workerExecutor: WorkerE
             super.preConfigure(taskName)
 
             // Mirrors logic in OutputFactory.getOutputFileName, but without splits.
-            val suffix = if (scope.variantConfiguration.isSigningReady) SdkConstants.DOT_ANDROID_PACKAGE else "-unsigned.apk"
-            outputFile = scope.artifacts.createArtifactFile(
+            val suffix = if (variantScope.variantConfiguration.isSigningReady) SdkConstants.DOT_ANDROID_PACKAGE else "-unsigned.apk"
+            outputFile = variantScope.artifacts.createArtifactFile(
                 InternalArtifactType.UNIVERSAL_APK,
                 BuildArtifactsHolder.OperationType.INITIAL,
                 taskName,
-                "${scope.globalScope.projectBaseName}-${scope.variantConfiguration.baseName}-universal$suffix"
+                "${variantScope.globalScope.projectBaseName}-${variantScope.variantConfiguration.baseName}-universal$suffix"
             )
         }
 
         override fun configure(task: BundleToStandaloneApkTask) {
-            task.variantName = scope.fullVariantName
+            super.configure(task)
 
             task.outputFile = outputFile
-            task.bundle = scope.artifacts.getFinalArtifactFiles(InternalArtifactType.BUNDLE)
-            task.aapt2FromMaven = getAapt2FromMaven(scope.globalScope)
-            task.tempDirectory = scope.getIncrementalDir(name)
-            scope.variantConfiguration.signingConfig?.let {
+            task.bundle = variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.BUNDLE)
+            task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
+            task.tempDirectory = variantScope.getIncrementalDir(name)
+            variantScope.variantConfiguration.signingConfig?.let {
                 task.keystoreFile = it.storeFile
                 task.keystorePassword = it.storePassword
                 task.keyAlias = it.keyAlias

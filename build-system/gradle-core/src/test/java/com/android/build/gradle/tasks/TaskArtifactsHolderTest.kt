@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.tasks.injection.JavaTasks
@@ -58,7 +59,9 @@ class TaskArtifactsHolderTest {
         val testDir = projectFolder.newFolder()
         project = ProjectBuilder.builder().withProjectDir(testDir).build()
         Mockito.`when`(variantScope.artifacts).thenReturn(artifacts)
-
+        Mockito.`when`(variantScope.fullVariantName).thenReturn("theVariantName")
+        Mockito.`when`(variantScope.taskContainer).thenReturn(MutableTaskContainer())
+        variantScope.taskContainer.preBuildTask = project.tasks.register("preBuildTask")
     }
 
     /**

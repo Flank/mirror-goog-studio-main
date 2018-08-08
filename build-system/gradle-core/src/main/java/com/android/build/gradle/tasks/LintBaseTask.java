@@ -38,17 +38,20 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.Version;
+import com.android.builder.sdk.TargetInfo;
 import com.android.sdklib.BuildToolInfo;
 import com.android.tools.lint.gradle.api.ReflectiveLintRunner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
@@ -56,14 +59,16 @@ import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Internal;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
-public abstract class LintBaseTask extends AndroidBuilderTask {
+public abstract class LintBaseTask extends DefaultTask {
     public static final String LINT_CLASS_PATH = "lintClassPath";
 
     protected static final Logger LOG = Logging.getLogger(LintBaseTask.class);
 
     @Nullable FileCollection lintClassPath;
+    protected AndroidBuilder androidBuilder;
 
     /** Lint classpath */
     @InputFiles
@@ -88,6 +93,14 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
             new ReflectiveLintRunner().runLint(getProject().getGradle(),
                     descriptor, lintClassPath.getFiles());
         }
+    }
+
+    @Internal("No influence on output, this is to give access to the build tools")
+    private BuildToolInfo getBuildTools() {
+        TargetInfo targetInfo = androidBuilder.getTargetInfo();
+        Preconditions.checkState(
+                targetInfo != null, "androidBuilder.targetInfo required for task '%s'.", getName());
+        return targetInfo.getBuildTools();
     }
 
     protected abstract class LintBaseTaskDescriptor extends
@@ -296,7 +309,7 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
 
             lintTask.toolingRegistry = globalScope.getToolingRegistry();
             lintTask.reportsDir = globalScope.getReportsDir();
-            lintTask.setAndroidBuilder(globalScope.getAndroidBuilder());
+            lintTask.androidBuilder = globalScope.getAndroidBuilder();
 
             lintTask.lintClassPath = globalScope.getProject().getConfigurations()
                     .getByName(LINT_CLASS_PATH);

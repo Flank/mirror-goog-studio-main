@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NdkTask;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.NdkLease;
@@ -430,18 +430,16 @@ public class NdkCompile extends NdkTask {
                 getStl() == null);
     }
 
-    public static class CreationAction extends TaskCreationAction<NdkCompile> {
-
-        @NonNull private final VariantScope variantScope;
+    public static class CreationAction extends VariantTaskCreationAction<NdkCompile> {
 
         public CreationAction(@NonNull VariantScope variantScope) {
-            this.variantScope = variantScope;
+            super(variantScope);
         }
 
         @NonNull
         @Override
         public String getName() {
-            return variantScope.getTaskName("compile", "Ndk");
+            return getVariantScope().getTaskName("compile", "Ndk");
         }
 
         @NonNull
@@ -453,16 +451,17 @@ public class NdkCompile extends NdkTask {
         @Override
         public void handleProvider(@NonNull TaskProvider<? extends NdkCompile> taskProvider) {
             super.handleProvider(taskProvider);
-            variantScope.getTaskContainer().setNdkCompileTask(taskProvider);
+            getVariantScope().getTaskContainer().setNdkCompileTask(taskProvider);
         }
 
         @Override
         public void configure(@NonNull NdkCompile ndkCompile) {
+            super.configure(ndkCompile);
+            VariantScope variantScope = getVariantScope();
+
             final BaseVariantData variantData = variantScope.getVariantData();
             MutableTaskContainer taskContainer = variantScope.getTaskContainer();
 
-            ndkCompile.setAndroidBuilder(variantScope.getGlobalScope().getAndroidBuilder());
-            ndkCompile.setVariantName(variantData.getName());
             ndkCompile.setNdkDirectory(
                     variantScope.getGlobalScope().getSdkHandler().getNdkFolder());
             ndkCompile.setForTesting(variantData.getType().isTestComponent());
@@ -513,9 +512,6 @@ public class NdkCompile extends NdkTask {
             } else {
                 ndkCompile.setNdkRenderScriptMode(false);
             }
-
-            ndkCompile.dependsOn(taskContainer.getPreBuildTask());
-
         }
     }
 }

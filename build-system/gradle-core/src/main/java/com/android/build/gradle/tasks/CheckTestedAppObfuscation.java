@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import java.io.File;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFiles;
@@ -64,18 +64,17 @@ public class CheckTestedAppObfuscation extends AndroidVariantTask {
         }
     }
 
-    public static class CreationAction extends TaskCreationAction<CheckTestedAppObfuscation> {
-
-        private final VariantScope scope;
+    public static class CreationAction
+            extends VariantTaskCreationAction<CheckTestedAppObfuscation> {
 
         public CreationAction(VariantScope scope) {
-            this.scope = scope;
+            super(scope);
         }
 
         @NonNull
         @Override
         public String getName() {
-            return scope.getTaskName("checkTestedAppObfuscation");
+            return getVariantScope().getTaskName("checkTestedAppObfuscation");
         }
 
         @NonNull
@@ -86,13 +85,14 @@ public class CheckTestedAppObfuscation extends AndroidVariantTask {
 
         @Override
         public void configure(@NonNull CheckTestedAppObfuscation task) {
-            task.setVariantName(scope.getFullVariantName());
+            super.configure(task);
 
             task.mappingFile =
-                    scope.getArtifactFileCollection(
-                            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-                            AndroidArtifacts.ArtifactScope.ALL,
-                            AndroidArtifacts.ArtifactType.APK_MAPPING);
+                    getVariantScope()
+                            .getArtifactFileCollection(
+                                    AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                                    AndroidArtifacts.ArtifactScope.ALL,
+                                    AndroidArtifacts.ArtifactType.APK_MAPPING);
         }
     }
 }

@@ -16,11 +16,10 @@
 package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.compiling.ResValueGenerator;
 import com.android.builder.model.ClassField;
 import com.android.utils.FileUtils;
@@ -101,19 +100,16 @@ public class GenerateResValues extends AndroidBuilderTask {
     }
 
 
-    public static class CreationAction extends TaskCreationAction<GenerateResValues> {
-
-        @NonNull
-        private final VariantScope scope;
+    public static class CreationAction extends VariantTaskCreationAction<GenerateResValues> {
 
         public CreationAction(@NonNull VariantScope scope) {
-            this.scope = scope;
+            super(scope);
         }
 
         @NonNull
         @Override
         public String getName() {
-            return scope.getTaskName("generate", "ResValues");
+            return getVariantScope().getTaskName("generate", "ResValues");
         }
 
         @NonNull
@@ -126,22 +122,18 @@ public class GenerateResValues extends AndroidBuilderTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends GenerateResValues> taskProvider) {
             super.handleProvider(taskProvider);
-            scope.getTaskContainer().setGenerateResValuesTask(taskProvider);
+            getVariantScope().getTaskContainer().setGenerateResValuesTask(taskProvider);
         }
 
         @Override
-        public void configure(@NonNull GenerateResValues generateResValuesTask) {
+        public void configure(@NonNull GenerateResValues task) {
+            super.configure(task);
 
-            final GradleVariantConfiguration variantConfiguration =
-                    scope.getVariantData().getVariantConfiguration();
+            VariantScope scope = getVariantScope();
 
-            generateResValuesTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
-            generateResValuesTask.setVariantName(variantConfiguration.getFullName());
+            task.items = TaskInputHelper.memoize(scope.getVariantConfiguration()::getResValues);
 
-            generateResValuesTask.items =
-                    TaskInputHelper.memoize(variantConfiguration::getResValues);
-
-            generateResValuesTask.setResOutputDir(scope.getGeneratedResOutputDir());
+            task.setResOutputDir(scope.getGeneratedResOutputDir());
         }
     }
 }

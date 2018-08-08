@@ -14,25 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.tasks;
+package com.android.build.gradle.internal.tasks
 
-import com.android.annotations.Nullable;
-import org.gradle.api.DefaultTask;
-import org.gradle.api.tasks.Internal;
+import org.gradle.api.DefaultTask
+import org.gradle.api.tasks.Internal
 
-/** Base Android task with a variant name for analytics. */
-public abstract class AndroidVariantTask extends DefaultTask {
+/** Base Android task with a variant name for analytics.  */
+abstract class AndroidVariantTask : DefaultTask(), VariantAwareTask {
 
-    @Nullable
-    private String variantName;
-
-    @Nullable
     @Internal("No influence on output, this is for our build stats reporting mechanism")
-    public String getVariantName() {
-        return variantName;
-    }
-
-    public void setVariantName(@Nullable String variantName) {
-        this.variantName = variantName;
-    }
+    override lateinit var variantName: String
 }

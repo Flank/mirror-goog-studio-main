@@ -19,7 +19,8 @@ package com.android.build.gradle.internal.res.namespaced
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.symbols.exportToCompiledJava
 import com.android.ide.common.symbols.SymbolTable
 import com.android.utils.FileUtils
@@ -41,7 +42,7 @@ import java.util.function.Supplier
  * Class generating the R.jar and res-ids.txt files for a resource namespace aware library.
  */
 @CacheableTask
-open class GenerateNamespacedLibraryRFilesTask : DefaultTask() {
+open class GenerateNamespacedLibraryRFilesTask : AndroidVariantTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -76,11 +77,11 @@ open class GenerateNamespacedLibraryRFilesTask : DefaultTask() {
         exportToCompiledJava(ImmutableList.of(resources), rJarFile.toPath())
     }
 
-    class CreationAction(private val scope: VariantScope) :
-        TaskCreationAction<GenerateNamespacedLibraryRFilesTask>() {
+    class CreationAction(variantScope: VariantScope) :
+        VariantTaskCreationAction<GenerateNamespacedLibraryRFilesTask>(variantScope) {
 
         override val name: String
-            get() = scope.getTaskName("create", "RFiles")
+            get() = variantScope.getTaskName("create", "RFiles")
         override val type: Class<GenerateNamespacedLibraryRFilesTask>
             get() = GenerateNamespacedLibraryRFilesTask::class.java
 
@@ -88,7 +89,7 @@ open class GenerateNamespacedLibraryRFilesTask : DefaultTask() {
 
         override fun preConfigure(taskName: String) {
             super.preConfigure(taskName)
-            rJarFile = scope.artifacts
+            rJarFile = variantScope.artifacts
                 .appendArtifact(
                     InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
                     taskName, "R.jar"
@@ -96,11 +97,12 @@ open class GenerateNamespacedLibraryRFilesTask : DefaultTask() {
         }
 
         override fun configure(task: GenerateNamespacedLibraryRFilesTask) {
+            super.configure(task)
 
-            task.partialRFiles = scope.artifacts.getFinalArtifactFiles(
+            task.partialRFiles = variantScope.artifacts.getFinalArtifactFiles(
                 InternalArtifactType.PARTIAL_R_FILES)
             task.packageForRSupplier =
-                    Suppliers.memoize(scope.variantConfiguration::getOriginalApplicationId)
+                    Suppliers.memoize(variantScope.variantConfiguration::getOriginalApplicationId)
             task.rJarFile = rJarFile
         }
     }

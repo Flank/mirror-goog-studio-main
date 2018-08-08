@@ -25,7 +25,7 @@ import org.gradle.api.tasks.TaskProvider
 
 /**
  * Extension function for [TaskContainer] to add a way to create a task with our
- * [TaskCreationAction] without having a [TaskFactory]
+ * [VariantTaskCreationAction] without having a [TaskFactory]
  */
 fun <T : Task> TaskContainer.registerTask(
     creationAction: TaskCreationAction<T>,
@@ -59,14 +59,14 @@ fun <T : Task> TaskContainer.registerTask(
 }
 
 /**
- * Wrapper for the [TaskCreationAction] as a simple [Action] that is passed
+ * Wrapper for the [VariantTaskCreationAction] as a simple [Action] that is passed
  * to [TaskContainer.register].
  *
- * If the task is configured during the register then [TaskCreationAction.preConfigure] is called
+ * If the task is configured during the register then [VariantTaskCreationAction.preConfigure] is called
  * right away.
  *
  * After register, if it has not been called then it is called,
- * alongside [TaskCreationAction.handleProvider]
+ * alongside [VariantTaskCreationAction.handleProvider]
  */
 private class TaskAction<T: Task>(
     val creationAction: TaskCreationAction<T>,

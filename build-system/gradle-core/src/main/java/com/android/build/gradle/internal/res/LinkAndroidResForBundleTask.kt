@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.Workers
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.options.StringOption
 import com.android.builder.core.VariantTypeImpl
@@ -202,8 +202,8 @@ open class LinkAndroidResForBundleTask
     var minSdkVersion: Int = 1
         private set
 
-    class CreationAction(private val variantScope: VariantScope) :
-        TaskCreationAction<LinkAndroidResForBundleTask>() {
+    class CreationAction(variantScope: VariantScope) :
+        VariantTaskCreationAction<LinkAndroidResForBundleTask>(variantScope) {
 
         override val name: String
             get() = variantScope.getTaskName("bundle", "Resources")
@@ -221,14 +221,14 @@ open class LinkAndroidResForBundleTask
         }
 
         override fun configure(task: LinkAndroidResForBundleTask) {
+            super.configure(task)
+
             val variantData = variantScope.variantData
 
             val projectOptions = variantScope.globalScope.projectOptions
 
             val config = variantData.variantConfiguration
 
-            task.setAndroidBuilder(variantScope.globalScope.androidBuilder)
-            task.variantName = config.fullName
             task.bundledResFile = bundledResFile
 
             task.incrementalFolder = variantScope.getIncrementalDir(name)

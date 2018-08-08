@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.StringOption
 import com.android.builder.packaging.PackagingUtils
 import com.android.bundle.Config
@@ -54,7 +54,8 @@ import javax.inject.Inject
 /**
  * Task that generates the final bundle (.aab) with all the modules.
  */
-open class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecutor) : AndroidVariantTask() {
+open class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecutor) :
+    AndroidVariantTask() {
 
     private val workers = Workers.getWorker(workerExecutor)
 
@@ -226,9 +227,11 @@ open class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecutor)
         @get:Optional
         val enableLanguage: Boolean?) : Serializable
 
-    class CreationAction(private val scope: VariantScope) : TaskCreationAction<PackageBundleTask>() {
+    class CreationAction(variantScope: VariantScope) :
+        VariantTaskCreationAction<PackageBundleTask>(variantScope) {
+
         override val name: String
-            get() = scope.getTaskName("package", "Bundle")
+            get() = variantScope.getTaskName("package", "Bundle")
         override val type: Class<PackageBundleTask>
             get() = PackageBundleTask::class.java
 
@@ -238,54 +241,54 @@ open class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecutor)
             super.preConfigure(taskName)
 
             val apkLocationOverride =
-                scope.globalScope.projectOptions.get(StringOption.IDE_APK_LOCATION)
+                variantScope.globalScope.projectOptions.get(StringOption.IDE_APK_LOCATION)
 
-            val bundleName = "${scope.globalScope.projectBaseName}.aab"
+            val bundleName = "${variantScope.globalScope.projectBaseName}.aab"
 
             bundleFile = if (apkLocationOverride == null)
-                scope.artifacts.createArtifactFile(
+                variantScope.artifacts.createArtifactFile(
                     InternalArtifactType.BUNDLE,
                     BuildArtifactsHolder.OperationType.INITIAL,
                     taskName,
                     bundleName)
             else
-                scope.artifacts.createArtifactFile(
+                variantScope.artifacts.createArtifactFile(
                     InternalArtifactType.BUNDLE,
                     BuildArtifactsHolder.OperationType.INITIAL,
                     taskName,
                     FileUtils.join(
-                        scope.globalScope.project.file(apkLocationOverride),
-                        scope.variantConfiguration.dirName,
+                        variantScope.globalScope.project.file(apkLocationOverride),
+                        variantScope.variantConfiguration.dirName,
                         bundleName))
 
         }
 
         override fun configure(task: PackageBundleTask) {
-            task.variantName = scope.fullVariantName
+            super.configure(task)
 
             task.bundleFile = bundleFile
-            task.baseModuleZip = scope.artifacts.getFinalArtifactFiles(InternalArtifactType.MODULE_BUNDLE)
+            task.baseModuleZip = variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.MODULE_BUNDLE)
 
-            task.featureZips = scope.getArtifactFileCollection(
+            task.featureZips = variantScope.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.METADATA_VALUES,
                 AndroidArtifacts.ArtifactScope.ALL,
                 AndroidArtifacts.ArtifactType.MODULE_BUNDLE
             )
 
             task.aaptOptionsNoCompress =
-                    scope.globalScope.extension.aaptOptions.noCompress ?: listOf()
+                    variantScope.globalScope.extension.aaptOptions.noCompress ?: listOf()
 
-            if (scope.type.isHybrid) {
+            if (variantScope.type.isHybrid) {
                 task.bundleOptions =
-                        ((scope.globalScope.extension as FeatureExtension).bundle).convert()
+                        ((variantScope.globalScope.extension as FeatureExtension).bundle).convert()
             } else {
                 task.bundleOptions =
-                        ((scope.globalScope.extension as BaseAppModuleExtension).bundle).convert()
+                        ((variantScope.globalScope.extension as BaseAppModuleExtension).bundle).convert()
             }
 
-            if (scope.needsMainDexListForBundle) {
+            if (variantScope.needsMainDexListForBundle) {
                 task.mainDexList =
-                        scope.artifacts.getFinalArtifactFiles(
+                        variantScope.artifacts.getFinalArtifactFiles(
                             InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE
                         )
                 // The dex files from this application are still processed for legacy multidex
@@ -293,12 +296,12 @@ open class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecutor)
                 // not reprocess the dex files.
             }
 
-            if (scope.artifacts.hasArtifact(InternalArtifactType.APK_MAPPING)) {
+            if (variantScope.artifacts.hasArtifact(InternalArtifactType.APK_MAPPING)) {
                 task.obsfuscationMappingFile =
-                        scope.artifacts.getFinalArtifactFiles(InternalArtifactType.APK_MAPPING)
+                        variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.APK_MAPPING)
             }
 
-            scope.variantConfiguration.signingConfig?.let {
+            variantScope.variantConfiguration.signingConfig?.let {
                 task.keystoreFile = it.storeFile
                 task.keystorePassword = it.storePassword
                 task.keyAlias = it.keyAlias

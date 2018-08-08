@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.feature.BundleFeatureClasses
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.testutils.truth.FileSubject
@@ -49,6 +50,7 @@ class BundleFeatureClassesTest {
     @Mock private lateinit var postJavacClasses: FileCollection
     @Mock private lateinit var extension: BaseExtension
     @Mock private lateinit var aaptOptions: AaptOptions
+    @Mock private lateinit var taskContainer: MutableTaskContainer
 
     @get:Rule
     val testFolder = TemporaryFolder()
@@ -61,6 +63,7 @@ class BundleFeatureClassesTest {
         Mockito.`when`(scope.artifacts).thenReturn(artifacts)
         Mockito.`when`(scope.globalScope).thenReturn(globalScope)
         Mockito.`when`(scope.variantData).thenReturn(variantData)
+        Mockito.`when`(scope.fullVariantName).thenReturn("theVariantName")
         Mockito.`when`(variantData.allPostJavacGeneratedBytecode).thenReturn(postJavacClasses)
         Mockito.`when`(variantData.allPreJavacGeneratedBytecode).thenReturn(preJavacClasses)
         Mockito.`when`(globalScope.extension).thenReturn(extension)
@@ -73,6 +76,11 @@ class BundleFeatureClassesTest {
         val project = ProjectBuilder.builder()
             .withName("feature1")
             .withProjectDir(testFolder.newFolder()).build()
+
+        val preBuildTask = project.tasks.register("preBuild")
+        Mockito.`when`(scope.taskContainer).thenReturn(taskContainer)
+        Mockito.`when`(taskContainer.preBuildTask).thenReturn(preBuildTask)
+
         task = project.tasks.create("test", BundleFeatureClasses::class.java)
 
         Mockito.`when`(globalScope.project).thenReturn(project)

@@ -50,7 +50,7 @@ import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.scope.SplitList;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -609,8 +609,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
     }
 
     private abstract static class BaseCreationAction
-            extends TaskCreationAction<LinkApplicationAndroidResourcesTask> {
-        protected final VariantScope variantScope;
+            extends VariantTaskCreationAction<LinkApplicationAndroidResourcesTask> {
         private final boolean generateLegacyMultidexMainDexProguardRules;
         @Nullable private final String baseName;
         private final boolean isLibrary;
@@ -623,7 +622,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                 boolean generateLegacyMultidexMainDexProguardRules,
                 @Nullable String baseName,
                 boolean isLibrary) {
-            this.variantScope = scope;
+            super(scope);
             this.generateLegacyMultidexMainDexProguardRules =
                     generateLegacyMultidexMainDexProguardRules;
             this.baseName = baseName;
@@ -633,7 +632,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         @NonNull
         @Override
         public final String getName() {
-            return variantScope.getTaskName("process", "Resources");
+            return getVariantScope().getTaskName("process", "Resources");
         }
 
         @NonNull
@@ -647,6 +646,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         @Override
         public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
+            final VariantScope variantScope = getVariantScope();
 
             resPackageOutputFolder =
                     variantScope
@@ -679,19 +679,19 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         public void handleProvider(
                 @NonNull TaskProvider<? extends LinkApplicationAndroidResourcesTask> taskProvider) {
             super.handleProvider(taskProvider);
-            variantScope.getTaskContainer().setProcessAndroidResTask(taskProvider);
+            getVariantScope().getTaskContainer().setProcessAndroidResTask(taskProvider);
         }
 
         @Override
         public void configure(@NonNull LinkApplicationAndroidResourcesTask task) {
+            super.configure(task);
+            final VariantScope variantScope = getVariantScope();
             final BaseVariantData variantData = variantScope.getVariantData();
             final ProjectOptions projectOptions = variantScope.getGlobalScope().getProjectOptions();
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
 
             preconditionsCheck(variantData);
 
-            task.setAndroidBuilder(variantScope.getGlobalScope().getAndroidBuilder());
-            task.setVariantName(config.getFullName());
             task.resPackageOutputFolder = resPackageOutputFolder;
             task.aapt2FromMaven = Aapt2MavenUtils.getAapt2FromMaven(variantScope.getGlobalScope());
 
@@ -830,7 +830,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
             sourceOutputDir =
-                    variantScope
+                    getVariantScope()
                             .getArtifacts()
                             .appendArtifact(
                                     InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
@@ -846,19 +846,21 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             task.sourceOutputDir = sourceOutputDir;
 
             task.dependenciesFileCollection =
-                    variantScope.getArtifactFileCollection(
-                            RUNTIME_CLASSPATH,
-                            ALL,
-                            AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME);
+                    getVariantScope()
+                            .getArtifactFileCollection(
+                                    RUNTIME_CLASSPATH,
+                                    ALL,
+                                    AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME);
 
             task.inputResourcesDir =
-                    variantScope.getArtifacts()
+                    getVariantScope()
+                            .getArtifacts()
                             .getFinalArtifactFiles(sourceArtifactType.getOutputType());
 
             task.textSymbolOutputDir = symbolLocation;
             task.symbolsWithPackageNameOutputFile = symbolsWithPackageNameOutputFile;
 
-            task.minSdkVersion = variantScope.getMinSdkVersion().getApiLevel();
+            task.minSdkVersion = getVariantScope().getMinSdkVersion().getApiLevel();
         }
     }
 
@@ -882,7 +884,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             super.preConfigure(taskName);
 
             sourceOutputDir =
-                    variantScope
+                    getVariantScope()
                             .getArtifacts()
                             .appendArtifact(
                                     InternalArtifactType.RUNTIME_R_CLASS_SOURCES, taskName, "out");
@@ -892,6 +894,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         public final void configure(@NonNull LinkApplicationAndroidResourcesTask task) {
             super.configure(task);
 
+            final VariantScope variantScope = getVariantScope();
             final ProjectOptions projectOptions = variantScope.getGlobalScope().getProjectOptions();
 
             task.sourceOutputDir = sourceOutputDir;

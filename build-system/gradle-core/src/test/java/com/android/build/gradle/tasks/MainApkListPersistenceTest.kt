@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
@@ -74,6 +75,10 @@ open class MainApkListPersistenceTest {
                 .thenReturn("taskFoo")
         Mockito.`when`(variantScope.outputScope).thenReturn(outputScope)
         Mockito.`when`(variantScope.artifacts).thenReturn(artifacts)
+        Mockito.`when`(variantScope.taskContainer).thenReturn(MutableTaskContainer())
+        Mockito.`when`(variantScope.fullVariantName).thenReturn("theVariantName")
+
+        variantScope.taskContainer.preBuildTask = project.tasks.register("preBuildTask")
 
         task = project.tasks.create("test", MainApkListPersistence::class.java)
         configAction = MainApkListPersistence.CreationAction(variantScope)

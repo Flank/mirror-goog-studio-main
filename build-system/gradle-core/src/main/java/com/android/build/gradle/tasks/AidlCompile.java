@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.compiling.DependencyFileProcessor;
 import com.android.builder.internal.compiler.AidlProcessor;
 import com.android.builder.internal.incremental.DependencyData;
@@ -342,21 +342,19 @@ public class AidlCompile extends IncrementalTask {
         return importDirs;
     }
 
-    public static class CreationAction extends TaskCreationAction<AidlCompile> {
+    public static class CreationAction extends VariantTaskCreationAction<AidlCompile> {
 
-        @NonNull
-        VariantScope scope;
         private File sourceOutputDir;
         private File packagedDir;
 
         public CreationAction(@NonNull VariantScope scope) {
-            this.scope = scope;
+            super(scope);
         }
 
         @Override
         @NonNull
         public String getName() {
-            return scope.getTaskName("compile", "Aidl");
+            return getVariantScope().getTaskName("compile", "Aidl");
         }
 
         @Override
@@ -370,12 +368,14 @@ public class AidlCompile extends IncrementalTask {
             super.preConfigure(taskName);
 
             sourceOutputDir =
-                    scope.getArtifacts()
+                    getVariantScope()
+                            .getArtifacts()
                             .appendArtifact(
                                     InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR, taskName, "out");
-            if (scope.getVariantConfiguration().getType().isAar()) {
+            if (getVariantScope().getVariantConfiguration().getType().isAar()) {
                 packagedDir =
-                        scope.getArtifacts()
+                        getVariantScope()
+                                .getArtifacts()
                                 .appendArtifact(
                                         InternalArtifactType.AIDL_PARCELABLE, taskName, "out");
             }
@@ -384,16 +384,17 @@ public class AidlCompile extends IncrementalTask {
         @Override
         public void handleProvider(@NonNull TaskProvider<? extends AidlCompile> taskProvider) {
             super.handleProvider(taskProvider);
-            scope.getTaskContainer().setAidlCompileTask(taskProvider);
+            getVariantScope().getTaskContainer().setAidlCompileTask(taskProvider);
         }
 
         @Override
         public void configure(@NonNull AidlCompile compileTask) {
+            super.configure(compileTask);
+            VariantScope scope = getVariantScope();
+
             final VariantConfiguration<?, ?, ?> variantConfiguration = scope
                     .getVariantConfiguration();
 
-            compileTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
-            compileTask.setVariantName(scope.getVariantConfiguration().getFullName());
             compileTask.setIncrementalFolder(scope.getIncrementalDir(getName()));
 
             compileTask.sourceDirs = variantConfiguration::getAidlSourceList;
@@ -407,8 +408,6 @@ public class AidlCompile extends IncrementalTask {
                 compileTask.setPackageWhitelist(
                         scope.getGlobalScope().getExtension().getAidlPackageWhiteList());
             }
-
-            compileTask.dependsOn(scope.getTaskContainer().getPreBuildTask());
 
         }
     }

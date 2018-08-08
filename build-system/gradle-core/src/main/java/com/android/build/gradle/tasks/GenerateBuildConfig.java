@@ -22,7 +22,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.compiling.BuildConfigGenerator;
 import com.android.builder.model.ClassField;
@@ -200,19 +200,17 @@ public class GenerateBuildConfig extends AndroidBuilderTask {
 
     // ----- Config Action -----
 
-    public static final class CreationAction extends TaskCreationAction<GenerateBuildConfig> {
-
-        @NonNull
-        private final VariantScope scope;
+    public static final class CreationAction
+            extends VariantTaskCreationAction<GenerateBuildConfig> {
 
         public CreationAction(@NonNull VariantScope scope) {
-            this.scope = scope;
+            super(scope);
         }
 
         @Override
         @NonNull
         public String getName() {
-            return scope.getTaskName("generate", "BuildConfig");
+            return getVariantScope().getTaskName("generate", "BuildConfig");
         }
 
         @Override
@@ -225,18 +223,18 @@ public class GenerateBuildConfig extends AndroidBuilderTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends GenerateBuildConfig> taskProvider) {
             super.handleProvider(taskProvider);
-            scope.getTaskContainer().setGenerateBuildConfigTask(taskProvider);
+            getVariantScope().getTaskContainer().setGenerateBuildConfigTask(taskProvider);
         }
 
         @Override
         public void configure(@NonNull GenerateBuildConfig task) {
+            super.configure(task);
+            VariantScope scope = getVariantScope();
+
             BaseVariantData variantData = scope.getVariantData();
 
             final GradleVariantConfiguration variantConfiguration =
                     variantData.getVariantConfiguration();
-
-            task.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
-            task.setVariantName(scope.getVariantConfiguration().getFullName());
 
             task.buildConfigPackageName =
                     TaskInputHelper.memoize(variantConfiguration::getOriginalApplicationId);

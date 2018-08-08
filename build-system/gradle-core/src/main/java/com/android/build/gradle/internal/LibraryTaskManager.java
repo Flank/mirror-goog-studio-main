@@ -38,7 +38,7 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesTask;
-import com.android.build.gradle.internal.tasks.PackageRenderscriptCreationAction;
+import com.android.build.gradle.internal.tasks.PackageRenderscriptTask;
 import com.android.build.gradle.internal.tasks.factory.PreConfigAction;
 import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
@@ -178,7 +178,7 @@ public class LibraryTaskManager extends TaskManager {
         createMergeJniLibFoldersTasks(variantScope);
         createStripNativeLibraryTask(taskFactory, variantScope);
 
-        taskFactory.register(new PackageRenderscriptCreationAction(variantScope));
+        taskFactory.register(new PackageRenderscriptTask.CreationAction(variantScope));
 
         // merge consumer proguard files from different build types and flavors
         taskFactory.register(new MergeConsumerProguardFilesTask.CreationAction(variantScope));

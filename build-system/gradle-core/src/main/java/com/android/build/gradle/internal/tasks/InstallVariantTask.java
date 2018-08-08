@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.internal.InstallUtils;
 import com.android.builder.sdk.SdkInfo;
@@ -256,18 +256,16 @@ public class InstallVariantTask extends AndroidBuilderTask {
         this.variantData = variantData;
     }
 
-    public static class CreationAction extends TaskCreationAction<InstallVariantTask> {
-
-        private final VariantScope scope;
+    public static class CreationAction extends VariantTaskCreationAction<InstallVariantTask> {
 
         public CreationAction(VariantScope scope) {
-            this.scope = scope;
+            super(scope);
         }
 
         @NonNull
         @Override
         public String getName() {
-            return scope.getTaskName("install");
+            return getVariantScope().getTaskName("install");
         }
 
         @NonNull
@@ -277,45 +275,53 @@ public class InstallVariantTask extends AndroidBuilderTask {
         }
 
         @Override
-        public void configure(@NonNull InstallVariantTask installTask) {
-            installTask.setDescription(
-                    "Installs the " + scope.getVariantData().getDescription() + ".");
-            installTask.setVariantName(scope.getVariantConfiguration().getFullName());
-            installTask.setGroup(TaskManager.INSTALL_GROUP);
-            installTask.setProjectName(scope.getGlobalScope().getProject().getName());
-            installTask.setVariantData(scope.getVariantData());
-            installTask.setApkDirectory(
+        public void configure(@NonNull InstallVariantTask task) {
+            super.configure(task);
+            VariantScope scope = getVariantScope();
+
+            task.setDescription("Installs the " + scope.getVariantData().getDescription() + ".");
+            task.setGroup(TaskManager.INSTALL_GROUP);
+            task.setProjectName(scope.getGlobalScope().getProject().getName());
+            task.setApkDirectory(
                     scope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.APK));
-            installTask.setTimeOutInMs(
+            task.setTimeOutInMs(
                     scope.getGlobalScope().getExtension().getAdbOptions().getTimeOutInMs());
-            installTask.setInstallOptions(
+            task.setInstallOptions(
                     scope.getGlobalScope().getExtension().getAdbOptions().getInstallOptions());
-            installTask.setProcessExecutor(
+            task.setProcessExecutor(
                     scope.getGlobalScope().getAndroidBuilder().getProcessExecutor());
-            installTask.adbExe = TaskInputHelper.memoize(() -> {
-                final SdkInfo info = scope.getGlobalScope().getSdkHandler().getSdkInfo();
-                return (info == null ? null : info.getAdb());
-            });
-            installTask.splitSelectExe = TaskInputHelper.memoize(() -> {
-                // SDK is loaded somewhat dynamically, plus we don't want to do all this logic
-                // if the task is not going to run, so use a supplier.
-                final TargetInfo info =
-                        scope.getGlobalScope().getAndroidBuilder().getTargetInfo();
-                String path = info == null ? null : info.getBuildTools().getPath(SPLIT_SELECT);
-                if (path != null) {
-                    File splitSelectExe = new File(path);
-                    return splitSelectExe.exists() ? splitSelectExe : null;
-                } else {
-                    return null;
-                }
-            });
+            task.adbExe =
+                    TaskInputHelper.memoize(
+                            () -> {
+                                final SdkInfo info =
+                                        scope.getGlobalScope().getSdkHandler().getSdkInfo();
+                                return (info == null ? null : info.getAdb());
+                            });
+            task.splitSelectExe =
+                    TaskInputHelper.memoize(
+                            () -> {
+                                // SDK is loaded somewhat dynamically, plus we don't want to do all this logic
+                                // if the task is not going to run, so use a supplier.
+                                final TargetInfo info =
+                                        scope.getGlobalScope().getAndroidBuilder().getTargetInfo();
+                                String path =
+                                        info == null
+                                                ? null
+                                                : info.getBuildTools().getPath(SPLIT_SELECT);
+                                if (path != null) {
+                                    File splitSelectExe = new File(path);
+                                    return splitSelectExe.exists() ? splitSelectExe : null;
+                                } else {
+                                    return null;
+                                }
+                            });
         }
 
         @Override
         public void handleProvider(
                 @NonNull TaskProvider<? extends InstallVariantTask> taskProvider) {
             super.handleProvider(taskProvider);
-            scope.getTaskContainer().setInstallTask(taskProvider);
+            getVariantScope().getTaskContainer().setInstallTask(taskProvider);
         }
     }
 }

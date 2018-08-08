@@ -28,8 +28,6 @@ import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
-import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.utils.FileUtils;
@@ -139,24 +137,18 @@ public class ExternalNativeCleanTask extends AndroidBuilderTask {
     public static class CreationAction extends TaskCreationAction<ExternalNativeCleanTask> {
         @NonNull
         private final ExternalNativeJsonGenerator generator;
-        @NonNull
-        private final VariantScope scope;
-        @NonNull
-        private final AndroidBuilder androidBuilder;
+        @NonNull private final VariantScope variantScope;
 
         public CreationAction(
-                @NonNull ExternalNativeJsonGenerator generator,
-                @NonNull VariantScope scope,
-                @NonNull AndroidBuilder androidBuilder) {
+                @NonNull ExternalNativeJsonGenerator generator, @NonNull VariantScope scope) {
             this.generator = generator;
-            this.scope = scope;
-            this.androidBuilder = androidBuilder;
+            this.variantScope = scope;
         }
 
         @NonNull
         @Override
         public String getName() {
-            return scope.getTaskName("externalNativeBuildClean");
+            return variantScope.getTaskName("externalNativeBuildClean");
         }
 
         @NonNull
@@ -167,9 +159,7 @@ public class ExternalNativeCleanTask extends AndroidBuilderTask {
 
         @Override
         public void configure(@NonNull ExternalNativeCleanTask task) {
-            final BaseVariantData variantData = scope.getVariantData();
-            task.setVariantName(variantData.getName());
-
+            task.setVariantName(variantScope.getFullVariantName());
             // Attempt to clean every possible ABI even those that aren't currently built.
             // This covers cases where user has changed abiFilters or platform. We don't want
             // to leave stale results hanging around.
@@ -177,7 +167,7 @@ public class ExternalNativeCleanTask extends AndroidBuilderTask {
             for(Abi abi : NdkHandler.getAbiList()) {
                 abiNames.add(abi.getName());
             }
-            task.setAndroidBuilder(androidBuilder);
+            task.setAndroidBuilder(variantScope.getGlobalScope().getAndroidBuilder());
             task.nativeBuildConfigurationsJsons =
                     ExternalNativeBuildTaskUtils.getOutputJsons(
                             generator.getJsonFolder(), abiNames);

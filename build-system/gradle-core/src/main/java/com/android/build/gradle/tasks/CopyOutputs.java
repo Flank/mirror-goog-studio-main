@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -36,7 +36,6 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.tooling.BuildException;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Copy the location our various tasks outputs into a single location.
@@ -109,20 +108,19 @@ public class CopyOutputs extends AndroidVariantTask {
                 .into(InternalArtifactType.APK);
     }
 
-    public static class CreationAction extends TaskCreationAction<CopyOutputs> {
+    public static class CreationAction extends VariantTaskCreationAction<CopyOutputs> {
 
-        private final VariantScope variantScope;
         private final File destinationDir;
 
         public CreationAction(VariantScope variantScope, File destinationDir) {
-            this.variantScope = variantScope;
+            super(variantScope);
             this.destinationDir = destinationDir;
         }
 
         @NonNull
         @Override
         public String getName() {
-            return variantScope.getTaskName("copyOutputs");
+            return getVariantScope().getTaskName("copyOutputs");
         }
 
         @NonNull
@@ -132,9 +130,9 @@ public class CopyOutputs extends AndroidVariantTask {
         }
 
         @Override
-        public void preConfigure(@NotNull String taskName) {
+        public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
-            variantScope
+            getVariantScope()
                     .getArtifacts()
                     .appendArtifact(
                             InternalArtifactType.APK, ImmutableList.of(destinationDir), taskName);
@@ -142,8 +140,9 @@ public class CopyOutputs extends AndroidVariantTask {
 
         @Override
         public void configure(@NonNull CopyOutputs task) {
-            task.setVariantName(variantScope.getFullVariantName());
-            BuildArtifactsHolder artifacts = variantScope.getArtifacts();
+            super.configure(task);
+
+            BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
             task.fullApks = artifacts.getFinalArtifactFiles(
                     InternalArtifactType.FULL_APK);
             task.abiSplits = artifacts.getFinalArtifactFiles(

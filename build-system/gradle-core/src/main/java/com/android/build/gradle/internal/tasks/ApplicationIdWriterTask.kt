@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.apache.commons.io.FileUtils
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
@@ -77,8 +77,8 @@ open class ApplicationIdWriterTask : AndroidVariantTask() {
         }
     }
 
-    class CreationAction(private val variantScope: VariantScope) :
-        TaskCreationAction<ApplicationIdWriterTask>() {
+    class CreationAction(variantScope: VariantScope) :
+        VariantTaskCreationAction<ApplicationIdWriterTask>(variantScope) {
 
         override val name: String
             get() = variantScope.getTaskName("write", "ApplicationId")
@@ -98,7 +98,7 @@ open class ApplicationIdWriterTask : AndroidVariantTask() {
         }
 
         override fun configure(task: ApplicationIdWriterTask) {
-            task.variantName = variantScope.fullVariantName
+            super.configure(task)
 
             task.outputFile = outputFile
             // if BASE_FEATURE get the app ID from the app module

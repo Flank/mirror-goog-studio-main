@@ -17,29 +17,33 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.tasks.VariantAwareTask
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.Task
 
 /**
  * Convenient super class for CreationAction implementation that will process all annotated
  * input and output properties. Each input and output will be looked up in the scope and
- * pre-allocated during the [TaskCreationAction.preConfigure] call.
+ * pre-allocated during the [VariantTaskCreationAction.preConfigure] call.
  *
- * Once the task is created and the [TaskCreationAction.configure] is invoked, the pre-allocated
+ * Once the task is created and the [VariantTaskCreationAction.configure] is invoked, the pre-allocated
  * are transferred to the relevant input and output fields of the task instance.
  */
-open class AnnotationProcessingTaskCreationAction<T: Task>(
-    protected val scope: VariantScope,
+open class AnnotationProcessingTaskCreationAction<T>(
+    variantScope: VariantScope,
     override val name: String,
-    override val type: Class<T>): TaskCreationAction<T>() {
+    override val type: Class<T>
+) : VariantTaskCreationAction<T>(variantScope) where T : Task, T : VariantAwareTask {
 
-    private val artifactsHolder= TaskArtifactsHolder<T>(scope.artifacts)
+    private val artifactsHolder= TaskArtifactsHolder<T>(variantScope.artifacts)
 
     override fun preConfigure(taskName: String) {
         artifactsHolder.allocateArtifacts(this)
     }
 
     override fun configure(task: T)  {
+        super.configure(task)
+
         artifactsHolder.transfer(task)
     }
 }

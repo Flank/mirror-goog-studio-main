@@ -42,7 +42,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.internal.tasks.ModuleMetadata;
 import com.android.build.gradle.internal.tasks.Workers;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
@@ -298,9 +298,8 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
 
     // ----- CreationAction -----
 
-    public static class CreationAction extends TaskCreationAction<GenerateSplitAbiRes> {
+    public static class CreationAction extends VariantTaskCreationAction<GenerateSplitAbiRes> {
 
-        @NonNull private final VariantScope scope;
         @NonNull private final FeatureSetMetadata.SupplierProvider provider;
         private File outputDirectory;
 
@@ -312,14 +311,14 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
         CreationAction(
                 @NonNull VariantScope scope,
                 @NonNull FeatureSetMetadata.SupplierProvider provider) {
-            this.scope = scope;
+            super(scope);
             this.provider = provider;
         }
 
         @Override
         @NonNull
         public String getName() {
-            return scope.getTaskName("generate", "SplitAbiRes");
+            return getVariantScope().getTaskName("generate", "SplitAbiRes");
         }
 
         @Override
@@ -332,52 +331,50 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
         public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
 
-            outputDirectory = scope.getArtifacts().appendArtifact(
-                    InternalArtifactType.ABI_PROCESSED_SPLIT_RES,
-                    taskName,
-                    "out");
+            outputDirectory =
+                    getVariantScope()
+                            .getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.ABI_PROCESSED_SPLIT_RES, taskName, "out");
         }
 
         @Override
-        public void configure(@NonNull GenerateSplitAbiRes generateSplitAbiRes) {
+        public void configure(@NonNull GenerateSplitAbiRes task) {
+            super.configure(task);
+            VariantScope scope = getVariantScope();
+
             final VariantConfiguration config = scope.getVariantConfiguration();
             VariantType variantType = config.getType();
 
-            generateSplitAbiRes.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
-            generateSplitAbiRes.setVariantName(config.getFullName());
-
             if (variantType.isFeatureSplit()) {
-                generateSplitAbiRes.featureNameSupplier =
-                        provider.getFeatureNameSupplierForTask(scope, generateSplitAbiRes);
+                task.featureNameSupplier = provider.getFeatureNameSupplierForTask(scope, task);
             }
 
             // not used directly, but considered as input for the task.
-            generateSplitAbiRes.versionCode = config::getVersionCode;
-            generateSplitAbiRes.versionName = config::getVersionName;
+            task.versionCode = config::getVersionCode;
+            task.versionName = config::getVersionName;
 
-            generateSplitAbiRes.variantScope = scope;
-            generateSplitAbiRes.variantType = variantType;
-            generateSplitAbiRes.outputDirectory = outputDirectory;
-            generateSplitAbiRes.splits =
+            task.variantScope = scope;
+            task.variantType = variantType;
+            task.outputDirectory = outputDirectory;
+            task.splits =
                     AbiSplitOptions.getAbiFilters(
                             scope.getGlobalScope().getExtension().getSplits().getAbiFilters());
-            generateSplitAbiRes.outputBaseName = config.getBaseName();
-            generateSplitAbiRes.applicationId = config::getApplicationId;
-            generateSplitAbiRes.debuggable = config.getBuildType().isDebuggable();
-            generateSplitAbiRes.aaptOptions =
-                    scope.getGlobalScope().getExtension().getAaptOptions();
-            generateSplitAbiRes.outputFactory = scope.getVariantData().getOutputFactory();
-            generateSplitAbiRes.aapt2FromMaven =
-                    Aapt2MavenUtils.getAapt2FromMaven(scope.getGlobalScope());
+            task.outputBaseName = config.getBaseName();
+            task.applicationId = config::getApplicationId;
+            task.debuggable = config.getBuildType().isDebuggable();
+            task.aaptOptions = scope.getGlobalScope().getExtension().getAaptOptions();
+            task.outputFactory = scope.getVariantData().getOutputFactory();
+            task.aapt2FromMaven = Aapt2MavenUtils.getAapt2FromMaven(scope.getGlobalScope());
 
             // if BASE_FEATURE get the app ID from the app module
             if (variantType.isBaseModule() && variantType.isHybrid()) {
-                generateSplitAbiRes.applicationIdOverride =
+                task.applicationIdOverride =
                         scope.getArtifactFileCollection(
                                 METADATA_VALUES, MODULE, METADATA_BASE_MODULE_DECLARATION);
             } else if (variantType.isFeatureSplit()) {
                 // if feature split, get it from the base module
-                generateSplitAbiRes.applicationIdOverride =
+                task.applicationIdOverride =
                         scope.getArtifactFileCollection(
                                 COMPILE_CLASSPATH, MODULE, FEATURE_APPLICATION_ID_DECLARATION);
             }
