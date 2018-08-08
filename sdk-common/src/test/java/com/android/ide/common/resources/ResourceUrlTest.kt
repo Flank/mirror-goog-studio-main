@@ -98,6 +98,7 @@ class ResourceUrlTest {
                 ResourceUrl.createAttrReference("com.app", "foo"),
                 ResourceUrl.parseAttrReference("com.app:foo")
         )
+        assertEquals("*com.app:foo", ResourceUrl.parseAttrReference("*com.app:foo")!!.toString())
 
         assertNull(ResourceUrl.parseAttrReference("@attr/foo"))
         assertNull(ResourceUrl.parseAttrReference("@foo"))

@@ -273,9 +273,6 @@ public class ResourceUrl implements Serializable {
      */
     @Nullable
     public static ResourceUrl parseAttrReference(@NonNull String input) {
-        String namespace = null;
-        String name;
-
         if (input.isEmpty()) {
             return null;
         }
@@ -284,15 +281,23 @@ public class ResourceUrl implements Serializable {
             return null;
         }
 
-        if (input.indexOf('/') != -1) {
+        boolean privateAccessOverride = false;
+        int prefixEnd = 0;
+        if (input.charAt(0) == '*') {
+            prefixEnd = 1;
+            privateAccessOverride = true;
+        }
+        if (input.indexOf('/', prefixEnd) >= 0) {
             return null;
         }
 
-        int colon = input.indexOf(':');
-        if (colon == -1) {
-            name = input;
+        String namespace = null;
+        String name;
+        int colon = input.indexOf(':', prefixEnd);
+        if (colon < 0) {
+            name = input.substring(prefixEnd);
         } else {
-            namespace = input.substring(0, colon);
+            namespace = input.substring(prefixEnd, colon);
             if (namespace.isEmpty()) {
                 return null;
             }
@@ -303,7 +308,8 @@ public class ResourceUrl implements Serializable {
             return null;
         }
 
-        return new ResourceUrl(ResourceType.ATTR, name, namespace, UrlType.ATTR, false);
+        return new ResourceUrl(
+                ResourceType.ATTR, name, namespace, UrlType.ATTR, privateAccessOverride);
     }
 
     /**
