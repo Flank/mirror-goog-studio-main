@@ -54,12 +54,21 @@ bool DumpCommand::Run(const Workspace& workspace) {
   // Unlink all files which could have been generated from a previous run.
   workspace.ClearDirectory(dumpBase_.c_str());
 
+  // Retrieve apks for this package.
   ApkRetriever apkRetriever(packageName_);
-  for (std::string& apkPath : apkRetriever.get()) {
-    ApkArchive archive(apkPath);
-    archive.ExtractMetadata(packageName_, dumpBase_);
+  bool success = true;
+  auto apks_path = apkRetriever.get();
+  if (apks_path.size() == 0) {
+    std::cerr << "ApkRetriever did not return apks." << std::endl;
+    return false;
   }
-  return true;
+
+  // Extract all apks.
+  for (std::string& apkPath : apks_path) {
+    ApkArchive archive(apkPath);
+    success &= archive.ExtractMetadata(packageName_, dumpBase_);
+  }
+  return success;
 }
 
 }  // namespace deployer

@@ -23,29 +23,79 @@
 #include <iostream>
 #include <map>
 
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
+
+#include "command_cmd.h"
+#include "package_manager.h"
 #include "dump.h"
 #include "trace.h"
 #include "workspace.h"
 
 using namespace deployer;
 
-void PrintUsage(char* invoked_path) {
-  std::string binary_name = basename(invoked_path);
+struct Parameters {
+  const char* binary_name = nullptr;
+  const char* command_name = nullptr;
+  const char* cmd_path = nullptr;
+  const char* pm_path = nullptr;
+  int consumed = 0;
+};
+
+void PrintUsage(const char* invoked_path) {
   std::cerr
-      << "Usages:" << std::endl
-      << binary_name << " command [command_parameters]" << std::endl
+      << "Usage:" << std::endl
+      << invoked_path << " [env parameters] command [command_parameters]" << std::endl
       << std::endl
+      << "Environment parameters available:" << std::endl
+      << "  -cmd=X: Define path to cmd executable (to mock android)." << std::endl
+      << "  -pm=X : Define path to package manager executable (to mock android)." << std::endl
       << "Commands available:" << std::endl
-      << "   dump   : Extract CDs and Signatures for a given applicationID."
+      << "   dump : Extract CDs and Signatures for a given applicationID."
       << std::endl
-      << "   swap   : Perform a hot-swap via JVMTI." << std::endl
+      << "   swap : Perform a hot-swap via JVMTI." << std::endl
       << std::endl;
 }
 
+bool ParseParameters(int argc, char** argv, Parameters* parameters) {
+  parameters->binary_name = argv[0];
+  parameters->consumed = 1;
+
+  int index = 1;
+  while(index < argc && argv[index][0] == '-') {
+    strtok(argv[index], "=");
+    if (!strncmp("-cmd", argv[index], 4)) {
+      parameters->cmd_path = strtok(nullptr, "=");;
+    } else if (!strncmp("-pm", argv[index], 3)) {
+      parameters->pm_path = strtok(nullptr, "=");;
+    } else {
+      std::cerr << "environment parameter unknown:" << argv[index] << std::endl;
+      return false;
+    }
+    parameters->consumed++;
+    index++;
+  }
+
+  if (index < argc) {
+    parameters->command_name = argv[index];
+    parameters->consumed++;
+  }
+  return true;
+}
+
 std::string GetInstallerPath() {
-  char dest[1024];
-  std::fill(dest, dest + 1024, '\0');
-  readlink("/proc/self/exe", dest, 1024);
+#ifdef __APPLE__
+  uint32_t size = 1024;
+  char dest[size];
+  std::fill(dest, dest + size, '\0');
+  _NSGetExecutablePath(dest, &size);
+#else
+  int size = 1024;
+  char dest[size];
+  std::fill(dest, dest + size, '\0');
+  readlink("/proc/self/exe", dest, size);
+#endif
   return std::string(dest);
 }
 
@@ -57,24 +107,36 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  auto binary_name = argv[0];
-  auto command_name = argv[1];
+  Parameters parameters;
+  bool parametersParsed = ParseParameters(argc, argv, &parameters);
+  if (!parametersParsed) {
+    std::cerr << "Unable to parse env parameters." << std::endl;
+    return EXIT_FAILURE;
+  }
 
-  // Create a workspace for filesystem operations.
-  Workspace workspace(GetInstallerPath());
+  if (parameters.cmd_path != nullptr) {
+    CmdCommand::SetPath(parameters.cmd_path);
+  }
+  if (parameters.pm_path != nullptr) {
+    PackageManager::SetPath(parameters.pm_path);
+  }
 
   // Retrieve Command to be invoked.
-  auto task = GetCommand(command_name);
+  auto task = GetCommand(parameters.command_name);
   if (task == nullptr) {
-    PrintUsage(binary_name);
+    std::cerr << "Command '" << parameters.command_name << "' unknown." << std::endl;
+    PrintUsage(parameters.binary_name);
     return EXIT_FAILURE;
   }
 
   // Allow command to parse its parameters and invoke it.
-  task->ParseParameters(argc - 2, argv + 2);
+  task->ParseParameters(argc - parameters.consumed, argv + parameters.consumed);
   if (!task->ReadyToRun()) {
     return EXIT_FAILURE;
   }
+
+  // Create a workspace for filesystem operations.
+  Workspace workspace(GetInstallerPath());
   if (!task->Run(workspace)) {
     return EXIT_FAILURE;
   }

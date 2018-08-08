@@ -23,10 +23,10 @@
 namespace deployer {
 
 namespace {
-const char* kCMD_EXEC = "/system/bin/cmd";
+const char* CMD_EXEC = "/system/bin/cmd";
 }  // namespace
 
-CmdCommand::CmdCommand() : ShellCommandRunner(kCMD_EXEC) {}
+CmdCommand::CmdCommand() : ShellCommandRunner(CMD_EXEC) {}
 
 bool CmdCommand::GetAppApks(const std::string& package_name, Apks* apks,
                             std::string* error_string) const noexcept {
@@ -39,6 +39,7 @@ bool CmdCommand::GetAppApks(const std::string& package_name, Apks* apks,
   bool success = Run(parameters, &output);
   if (!success) {
     *error_string = output;
+    std::cerr << output;
     return false;
   }
 
@@ -76,6 +77,9 @@ bool CmdCommand::AttachAgent(int pid, const std::string& agent,
   }
 
   return true;
+}
+void CmdCommand::SetPath(const char* path) {
+  CMD_EXEC = path;
 }
 
 }  // namespace deployer

@@ -39,7 +39,7 @@ class ApkArchive {
 
   ApkArchive(const std::string& path);
   ~ApkArchive();
-  void ExtractMetadata(const std::string& pkg,
+  bool ExtractMetadata(const std::string& pkg,
                        const std::string& dumpDst) noexcept;
 
  private:

@@ -28,6 +28,7 @@ class PackageManager : public ShellCommandRunner {
   PackageManager();
   bool GetApks(const std::string &package_name, Apks *apks,
                std::string *error_string) const;
+  static void SetPath(const char* path);
 };
 
 }  // namespace deployer

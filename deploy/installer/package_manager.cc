@@ -7,10 +7,10 @@
 namespace deployer {
 
 namespace {
-const char *kPM_EXEC = "/system/bin/pm";
+const char* PM_EXEC = "/system/bin/pm";
 }  // namespace
 
-PackageManager::PackageManager() : ShellCommandRunner(kPM_EXEC) {}
+PackageManager::PackageManager() : ShellCommandRunner(PM_EXEC) {}
 
 bool PackageManager::GetApks(const std::string &package_name, Apks *apks,
                              std::string *error_string) const {
@@ -41,6 +41,9 @@ bool PackageManager::GetApks(const std::string &package_name, Apks *apks,
   }
 
   return true;
+}
+void PackageManager::SetPath(const char* path) {
+  PM_EXEC = path;
 }
 
 }  // namespace deployer

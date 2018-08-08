@@ -27,6 +27,7 @@ namespace deployer {
 // should extend.
 class Command {
  public:
+  ~Command() = default;
   // Parse parameters and set readyToRun to true if no error was encountered.
   virtual void ParseParameters(int argc, char** argv) = 0;
 

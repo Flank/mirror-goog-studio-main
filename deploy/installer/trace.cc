@@ -43,7 +43,7 @@ void Trace::Init() {
   }
 }
 #else
-void Trace::Init() { std::cout << "Tracing is disabled" << std::endl; }
+void Trace::Init() {}
 #endif
 
 }  // namespace deployer

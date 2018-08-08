@@ -188,14 +188,14 @@ bool ApkArchive::WriteMetadata(const std::string& path, Location loc) const
   return true;
 }
 
-void ApkArchive::ExtractMetadata(const std::string& packageName,
+bool ApkArchive::ExtractMetadata(const std::string& packageName,
                                  const std::string& dumpBase) noexcept {
   Trace traceDump("ExtractMetadata");
   bool readyForProcessing = Prepare();
 
   if (!readyForProcessing) {
     // TODO Log errors better than this!
-    return;
+    return false;
   }
 
   std::string apkFilename = std::string(strrchr(path_.c_str(), '/') + 1);
@@ -209,7 +209,7 @@ void ApkArchive::ExtractMetadata(const std::string& packageName,
   } else {
     // Without a valid Central Directory location, we cannot get a valid
     // Signature location either.
-    return;
+    return false;
   }
 
   Location sigLoc = GetSignatureLocation(cdLoc.start);
@@ -217,6 +217,7 @@ void ApkArchive::ExtractMetadata(const std::string& packageName,
     std::string blockDumpPath = dumpBase + apkFilename + ".remoteblock";
     WriteMetadata(blockDumpPath, sigLoc);
   }
+  return true;
 }
 
 }  // namespace deployer

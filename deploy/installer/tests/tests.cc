@@ -40,7 +40,7 @@ class deployer::ApkArchiveTester {
 class InstallerTest : public ::testing::Test {};
 
 TEST_F(InstallerTest, TestArchiveParser) {
-  ApkArchive archive("tools/base/deploy/installer/sample.apk");
+  ApkArchive archive("tools/base/deploy/installer/tests/data/app/my.fake.app/sample.apk");
 
   ApkArchiveTester archiveTester(archive);
   EXPECT_TRUE(archiveTester.Prepare());
