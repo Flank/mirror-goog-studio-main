@@ -29,6 +29,7 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Atomics;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -556,6 +557,27 @@ final class Device implements IDevice {
             IOException {
         AdbHelper.executeRemoteCommand(AndroidDebugBridge.getSocketAddress(), command, this,
                 receiver, DdmPreferences.getTimeOut());
+    }
+
+    @Override
+    public void executeShellCommand(
+            String command,
+            IShellOutputReceiver receiver,
+            long maxTimeToOutputResponse,
+            TimeUnit maxTimeUnits,
+            @Nullable InputStream is)
+            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
+                    IOException {
+        AdbHelper.executeRemoteCommand(
+                AndroidDebugBridge.getSocketAddress(),
+                AdbHelper.AdbService.EXEC,
+                command,
+                this,
+                receiver,
+                0L,
+                maxTimeToOutputResponse,
+                maxTimeUnits,
+                is);
     }
 
     @Override

@@ -22,6 +22,7 @@ import com.android.ddmlib.log.LogReceiver;
 import com.android.sdklib.AndroidVersion;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -372,6 +373,18 @@ public interface IDevice extends IShellEnabledDevice {
     void executeShellCommand(String command, IShellOutputReceiver receiver)
             throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
             IOException;
+
+    /** A version of executeShell command that can take an input stream to send through stdin. */
+    default void executeShellCommand(
+            String command,
+            IShellOutputReceiver receiver,
+            long maxTimeToOutputResponse,
+            TimeUnit maxTimeUnits,
+            @Nullable InputStream is)
+            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
+                    IOException {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Runs the event log service and outputs the event log to the {@link LogReceiver}.
