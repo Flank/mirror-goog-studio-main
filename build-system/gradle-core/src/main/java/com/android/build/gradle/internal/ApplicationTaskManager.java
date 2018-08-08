@@ -53,7 +53,7 @@ import com.android.build.gradle.internal.tasks.PerModuleBundleTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureApplicationIdsTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureInfoTask;
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadataWriterTask;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarationWriterTask;
@@ -125,7 +125,7 @@ public class ApplicationTaskManager extends TaskManager {
         // Add a task to publish the applicationId.
         createApplicationIdWriterTask(variantScope);
 
-        taskFactory.lazyCreate(new MainApkListPersistence.CreationAction(variantScope));
+        taskFactory.register(new MainApkListPersistence.CreationAction(variantScope));
         createBuildArtifactReportTask(variantScope);
 
         // Add a task to process the manifest(s)
@@ -173,7 +173,7 @@ public class ApplicationTaskManager extends TaskManager {
         // Add feature related tasks if necessary
         if (variantScope.getType().isBaseModule()) {
             // Base feature specific tasks.
-            taskFactory.lazyCreate(new FeatureSetMetadataWriterTask.CreationAction(variantScope));
+            taskFactory.register(new FeatureSetMetadataWriterTask.CreationAction(variantScope));
 
             if (extension.getDataBinding().isEnabled()) {
                 // Create a task that will package the manifest ids(the R file packages) of all
@@ -181,7 +181,7 @@ public class ApplicationTaskManager extends TaskManager {
                 // processor which uses it to known about all available features.
                 //
                 // <p>see: {@link TaskManager#setDataBindingAnnotationProcessorParams(VariantScope)}
-                taskFactory.lazyCreate(
+                taskFactory.register(
                         new DataBindingExportFeatureApplicationIdsTask.CreationAction(
                                 variantScope));
 
@@ -189,15 +189,15 @@ public class ApplicationTaskManager extends TaskManager {
         } else {
             // Non-base feature specific task.
             // Task will produce artifacts consumed by the base feature
-            taskFactory.lazyCreate(
+            taskFactory.register(
                     new FeatureSplitDeclarationWriterTask.CreationAction(variantScope));
             if (extension.getDataBinding().isEnabled()) {
                 // Create a task that will package necessary information about the feature into a
                 // file which is passed into the Data Binding annotation processor.
-                taskFactory.lazyCreate(
+                taskFactory.register(
                         new DataBindingExportFeatureInfoTask.CreationAction(variantScope));
             }
-            taskFactory.lazyCreate(new MergeConsumerProguardFilesTask.CreationAction(variantScope));
+            taskFactory.register(new MergeConsumerProguardFilesTask.CreationAction(variantScope));
         }
 
         // Add data binding tasks if enabled
@@ -226,8 +226,7 @@ public class ApplicationTaskManager extends TaskManager {
         // Create the lint tasks, if enabled
         createLintTasks(variantScope);
 
-        taskFactory.lazyCreate(
-                new FeatureSplitTransitiveDepsWriterTask.CreationAction(variantScope));
+        taskFactory.register(new FeatureSplitTransitiveDepsWriterTask.CreationAction(variantScope));
 
         createDynamicBundleTask(variantScope);
     }
@@ -253,7 +252,7 @@ public class ApplicationTaskManager extends TaskManager {
 
         } else {
             // use the install task that uses the App Bundle
-            taskFactory.lazyCreate(new InstallVariantViaBundleTask.CreationAction(variantScope));
+            taskFactory.register(new InstallVariantViaBundleTask.CreationAction(variantScope));
         }
     }
 
@@ -268,7 +267,7 @@ public class ApplicationTaskManager extends TaskManager {
         }
 
         TaskProvider<BuildInfoWriterTask> buildInfoGeneratorTask =
-                taskFactory.lazyCreate(
+                taskFactory.register(
                         new BuildInfoWriterTask.CreationAction(variantScope, getLogger()));
 
         variantScope.getInstantRunTaskManager()
@@ -312,7 +311,7 @@ public class ApplicationTaskManager extends TaskManager {
                         null);
 
 
-        taskFactory.lazyCreate(new InstantRunSplitApkResourcesBuilder.CreationAction(variantScope));
+        taskFactory.register(new InstantRunSplitApkResourcesBuilder.CreationAction(variantScope));
 
         // and now the transform that will create a split FULL_APK for each slice.
         InstantRunSliceSplitApkBuilder slicesApkBuilder =
@@ -365,8 +364,8 @@ public class ApplicationTaskManager extends TaskManager {
                 scope.getVariantData().getAllPostJavacGeneratedBytecode();
 
         // Create the classes artifact for uses by external test modules.
-        taskFactory.lazyCreate(
-                new LazyTaskCreationAction<Jar>() {
+        taskFactory.register(
+                new TaskCreationAction<Jar>() {
                     private File outputFile;
 
                     @NonNull
@@ -416,19 +415,18 @@ public class ApplicationTaskManager extends TaskManager {
 
         if (variantType.isApk()) {
             TaskProvider<AppClasspathCheckTask> classpathCheck =
-                    taskFactory.lazyCreate(new AppClasspathCheckTask.CreationAction(scope));
+                    taskFactory.register(new AppClasspathCheckTask.CreationAction(scope));
 
             TaskProvider<? extends Task> task =
                     (variantType.isTestComponent()
-                            ? taskFactory.lazyCreate(new TestPreBuildTask.CreationAction(scope))
-                            : taskFactory.lazyCreate(new AppPreBuildTask.CreationAction(scope)));
+                            ? taskFactory.register(new TestPreBuildTask.CreationAction(scope))
+                            : taskFactory.register(new AppPreBuildTask.CreationAction(scope)));
 
             TaskFactoryUtils.dependsOn(task, classpathCheck);
 
             if (variantType.isBaseModule() && globalScope.hasDynamicFeatures()) {
                 TaskProvider<CheckMultiApkLibrariesTask> checkMultiApkLibrariesTask =
-                        taskFactory.lazyCreate(
-                                new CheckMultiApkLibrariesTask.CreationAction(scope));
+                        taskFactory.register(new CheckMultiApkLibrariesTask.CreationAction(scope));
 
                 TaskFactoryUtils.dependsOn(task, checkMultiApkLibrariesTask);
             }
@@ -480,11 +478,11 @@ public class ApplicationTaskManager extends TaskManager {
 
     private void createApplicationIdWriterTask(@NonNull VariantScope variantScope) {
         if (variantScope.getType().isBaseModule()) {
-            taskFactory.lazyCreate(new ModuleMetadataWriterTask.CreationAction(variantScope));
+            taskFactory.register(new ModuleMetadataWriterTask.CreationAction(variantScope));
         }
 
         TaskProvider<? extends Task> applicationIdWriterTask =
-                taskFactory.lazyCreate(new ApplicationIdWriterTask.CreationAction(variantScope));
+                taskFactory.register(new ApplicationIdWriterTask.CreationAction(variantScope));
 
         TextResourceFactory resources = project.getResources().getText();
         // this builds the dependencies from the task, and its output is the textResource.
@@ -505,11 +503,11 @@ public class ApplicationTaskManager extends TaskManager {
             return;
         }
 
-        taskFactory.lazyCreate(new PerModuleBundleTask.CreationAction(scope));
+        taskFactory.register(new PerModuleBundleTask.CreationAction(scope));
 
         if (scope.getType().isBaseModule()) {
             TaskProvider<PackageBundleTask> packageBundleTask =
-                    taskFactory.lazyCreate(new PackageBundleTask.CreationAction(scope));
+                    taskFactory.register(new PackageBundleTask.CreationAction(scope));
 
             // bundle anchor task does not depend on packageBundleTask, instead it depends
             // on its BuildableArtifact in order to always generate the final version of it.
@@ -518,9 +516,9 @@ public class ApplicationTaskManager extends TaskManager {
                     scope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.BUNDLE));
 
             TaskProvider<BundleToApkTask> splitAndMultiApkTask =
-                    taskFactory.lazyCreate(new BundleToApkTask.CreationAction(scope));
+                    taskFactory.register(new BundleToApkTask.CreationAction(scope));
             TaskProvider<BundleToStandaloneApkTask> universalApkTask =
-                    taskFactory.lazyCreate(new BundleToStandaloneApkTask.CreationAction(scope));
+                    taskFactory.register(new BundleToStandaloneApkTask.CreationAction(scope));
             // make the tasks depend on the validate signing task to ensure that the keystore
             // is created if it's a debug one.
             if (scope.getVariantConfiguration().getSigningConfig() != null) {
@@ -530,7 +528,7 @@ public class ApplicationTaskManager extends TaskManager {
                 TaskFactoryUtils.dependsOn(universalApkTask, validateSigningTask);
             }
 
-            taskFactory.lazyCreate(new ExtractApksTask.CreationAction(scope));
+            taskFactory.register(new ExtractApksTask.CreationAction(scope));
         }
     }
 }

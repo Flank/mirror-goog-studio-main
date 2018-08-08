@@ -20,12 +20,12 @@ import com.android.SdkConstants
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import java.io.File
 
 /** Configuration action for a task to merge aapt proguard files  */
 class MergeAaptProguardFilesCreationAction(private val scope: VariantScope) :
-    LazyTaskCreationAction<MergeFileTask>() {
+    TaskCreationAction<MergeFileTask>() {
 
     override val name: String
         get() = scope.getTaskName("merge", "AaptProguardFiles")

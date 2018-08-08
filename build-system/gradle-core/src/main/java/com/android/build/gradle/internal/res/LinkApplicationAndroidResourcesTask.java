@@ -50,7 +50,7 @@ import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.scope.SplitList;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -609,7 +609,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
     }
 
     private abstract static class BaseCreationAction
-            extends LazyTaskCreationAction<LinkApplicationAndroidResourcesTask> {
+            extends TaskCreationAction<LinkApplicationAndroidResourcesTask> {
         protected final VariantScope variantScope;
         private final boolean generateLegacyMultidexMainDexProguardRules;
         @Nullable private final String baseName;

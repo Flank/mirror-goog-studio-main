@@ -3,14 +3,14 @@ package com.android.build.gradle.tasks.factory;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.builder.model.SourceProvider;
 import java.io.File;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.TaskProvider;
 
 /** Configuration Action for a process*JavaRes tasks. */
-public class ProcessJavaResCreationAction extends LazyTaskCreationAction<Sync> {
+public class ProcessJavaResCreationAction extends TaskCreationAction<Sync> {
     private VariantScope scope;
     private final File destinationDir;
 

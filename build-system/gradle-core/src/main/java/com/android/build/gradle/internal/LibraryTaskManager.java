@@ -110,7 +110,7 @@ public class LibraryTaskManager extends TaskManager {
 
         createCheckManifestTask(variantScope);
 
-        taskFactory.lazyCreate(
+        taskFactory.register(
                 new BuildArtifactReportTask.BuildArtifactReportCreationAction(variantScope));
 
         createGenerateResValuesTask(variantScope);
@@ -178,16 +178,16 @@ public class LibraryTaskManager extends TaskManager {
         createMergeJniLibFoldersTasks(variantScope);
         createStripNativeLibraryTask(taskFactory, variantScope);
 
-        taskFactory.lazyCreate(new PackageRenderscriptCreationAction(variantScope));
+        taskFactory.register(new PackageRenderscriptCreationAction(variantScope));
 
         // merge consumer proguard files from different build types and flavors
-        taskFactory.lazyCreate(new MergeConsumerProguardFilesTask.CreationAction(variantScope));
+        taskFactory.register(new MergeConsumerProguardFilesTask.CreationAction(variantScope));
 
         // Some versions of retrolambda remove the actions from the extract annotations task.
         // TODO: remove this hack once tests are moved to a version that doesn't do this
         // b/37564303
         if (projectOptions.get(BooleanOption.ENABLE_EXTRACT_ANNOTATIONS)) {
-            taskFactory.lazyCreate(new ExtractAnnotations.CreationAction(extension, variantScope));
+            taskFactory.register(new ExtractAnnotations.CreationAction(extension, variantScope));
         }
 
         final boolean instrumented =
@@ -285,7 +285,7 @@ public class LibraryTaskManager extends TaskManager {
         // used by the Android application plugin and the task usually don't need to
         // be executed.  The artifact is useful for other Gradle users who needs the
         // 'jar' artifact as API dependency.
-        taskFactory.lazyCreate(new ZipMergingTask.CreationAction(variantScope));
+        taskFactory.register(new ZipMergingTask.CreationAction(variantScope));
 
         // now add a transform that will take all the native libs and package
         // them into an intermediary folder. This processes only the PROJECT
@@ -398,7 +398,7 @@ public class LibraryTaskManager extends TaskManager {
 
     private void createBundleTask(@NonNull VariantScope variantScope) {
         TaskProvider<BundleAar> bundle =
-                taskFactory.lazyCreate(new BundleAar.CreationAction(extension, variantScope));
+                taskFactory.register(new BundleAar.CreationAction(extension, variantScope));
 
         TaskFactoryUtils.dependsOn(variantScope.getTaskContainer().getAssembleTask(), bundle);
 
@@ -541,7 +541,7 @@ public class LibraryTaskManager extends TaskManager {
     }
 
     public void createLibraryAssetsTask(@NonNull VariantScope scope) {
-        taskFactory.lazyCreate(new MergeSourceSetFolders.LibraryAssetCreationAction(scope));
+        taskFactory.register(new MergeSourceSetFolders.LibraryAssetCreationAction(scope));
     }
 
     @NonNull
@@ -560,7 +560,7 @@ public class LibraryTaskManager extends TaskManager {
 
     public void createVerifyLibraryResTask(@NonNull VariantScope scope) {
         TaskProvider<VerifyLibraryResourcesTask> verifyLibraryResources =
-                taskFactory.lazyCreate(new VerifyLibraryResourcesTask.CreationAction(scope));
+                taskFactory.register(new VerifyLibraryResourcesTask.CreationAction(scope));
 
         TaskFactoryUtils.dependsOn(
                 scope.getTaskContainer().getAssembleTask(), verifyLibraryResources);

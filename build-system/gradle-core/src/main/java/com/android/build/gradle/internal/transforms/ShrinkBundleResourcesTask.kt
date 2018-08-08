@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer
 import com.android.ide.common.build.ApkData
 import com.android.utils.FileUtils
@@ -157,7 +157,7 @@ open class ShrinkBundleResourcesTask : AndroidVariantTask() {
     }
 
     class CreationAction(val scope: VariantScope) :
-        LazyTaskCreationAction<ShrinkBundleResourcesTask>() {
+        TaskCreationAction<ShrinkBundleResourcesTask>() {
         override val name: String = scope.getTaskName("shrink", "Resources")
         override val type: Class<ShrinkBundleResourcesTask>
             get() = ShrinkBundleResourcesTask::class.java

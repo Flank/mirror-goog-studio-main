@@ -126,7 +126,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
 
         // create the test connected check task.
         TaskProvider<DeviceProviderInstrumentTestTask> instrumentTestTask =
-                taskFactory.lazyCreate(
+                taskFactory.register(
                         new DeviceProviderInstrumentTestTask.CreationAction(
                                 variantScope,
                                 new ConnectedDeviceProvider(
@@ -184,7 +184,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                             AndroidArtifacts.ArtifactType.APK_MAPPING));
         } else {
             TaskProvider<CheckTestedAppObfuscation> checkObfuscation =
-                    taskFactory.lazyCreate(
+                    taskFactory.register(
                             new CheckTestedAppObfuscation.CreationAction(variantScope));
             Preconditions.checkNotNull(variantScope.getTaskContainer().getJavacTask());
             TaskFactoryUtils.dependsOn(
@@ -220,7 +220,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
     @NonNull
     protected TaskProvider<? extends ManifestProcessorTask> createMergeManifestTask(
             @NonNull VariantScope variantScope) {
-        return taskFactory.lazyCreate(
+        return taskFactory.register(
                 new ProcessTestManifest.CreationAction(
                         variantScope,
                         new BuildableArtifactImpl(

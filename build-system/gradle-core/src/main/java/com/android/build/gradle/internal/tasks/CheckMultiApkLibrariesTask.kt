@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.annotations.NonNull
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.utils.FileUtils
 import com.google.common.io.Files
 import org.apache.commons.io.Charsets
@@ -96,7 +96,7 @@ open class CheckMultiApkLibrariesTask : AndroidVariantTask() {
     }
 
     class CreationAction(val scope: VariantScope) :
-        LazyTaskCreationAction<CheckMultiApkLibrariesTask>() {
+        TaskCreationAction<CheckMultiApkLibrariesTask>() {
 
         override val name: String
             get() = scope.getTaskName("check", "Libraries")

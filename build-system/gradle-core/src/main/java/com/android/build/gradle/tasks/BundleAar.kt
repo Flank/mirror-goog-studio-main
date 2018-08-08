@@ -21,8 +21,7 @@ import com.android.SdkConstants
 import com.android.build.gradle.AndroidConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
-import com.android.build.gradle.internal.variant.LibraryVariantData
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.builder.core.BuilderConstants
 import org.gradle.api.Action
 import org.gradle.api.file.CopySpec
@@ -43,7 +42,7 @@ open class BundleAar : Zip() {
     class CreationAction(
         private val extension: AndroidConfig,
         private val variantScope: VariantScope
-    ) : LazyTaskCreationAction<BundleAar>() {
+    ) : TaskCreationAction<BundleAar>() {
 
         override val name: String
             get() = variantScope.getTaskName("bundle", "Aar")

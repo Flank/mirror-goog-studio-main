@@ -25,13 +25,13 @@ import org.gradle.api.tasks.TaskProvider
 
 /**
  * Extension function for [TaskContainer] to add a way to create a task with our
- * [LazyTaskCreationAction] without having a [TaskFactory]
+ * [TaskCreationAction] without having a [TaskFactory]
  */
-fun <T : Task> TaskContainer.lazyCreate(
-    creationAction: LazyTaskCreationAction<T>,
-    secondaryPreConfigAction: PreConfigAction?,
-    secondaryAction: TaskConfigAction<in T>?,
-    secondaryProviderCallback: TaskProviderCallback<T>?
+fun <T : Task> TaskContainer.registerTask(
+    creationAction: TaskCreationAction<T>,
+    secondaryPreConfigAction: PreConfigAction? = null,
+    secondaryAction: TaskConfigAction<in T>? = null,
+    secondaryProviderCallback: TaskProviderCallback<T>? = null
 ): TaskProvider<T> {
     val actionWrapper = TaskAction(creationAction, secondaryPreConfigAction, secondaryAction, secondaryProviderCallback)
     return this.register(creationAction.name, creationAction.type, actionWrapper)
@@ -44,11 +44,11 @@ fun <T : Task> TaskContainer.lazyCreate(
  * Extension function for [TaskContainer] to add a way to create a task with our
  * [PreConfigAction] and [TaskConfigAction] without having a [TaskFactory]
  */
-fun <T : Task> TaskContainer.lazyCreate(
+fun <T : Task> TaskContainer.registerTask(
     taskName: String,
     taskType: Class<T>,
-    preConfigAction: PreConfigAction?,
-    action: TaskConfigAction<in T>?,
+    preConfigAction: PreConfigAction? = null,
+    action: TaskConfigAction<in T>? = null,
     providerCallback: TaskProviderCallback<T>? = null
 ): TaskProvider<T> {
     val actionWrapper = TaskAction2(preConfigAction, action, providerCallback)
@@ -59,17 +59,17 @@ fun <T : Task> TaskContainer.lazyCreate(
 }
 
 /**
- * Wrapper for the [LazyTaskCreationAction] as a simple [Action] that is passed
+ * Wrapper for the [TaskCreationAction] as a simple [Action] that is passed
  * to [TaskContainer.register].
  *
- * If the task is configured during the register then [LazyTaskCreationAction.preConfigure] is called
+ * If the task is configured during the register then [TaskCreationAction.preConfigure] is called
  * right away.
  *
  * After register, if it has not been called then it is called,
- * alongside [LazyTaskCreationAction.handleProvider]
+ * alongside [TaskCreationAction.handleProvider]
  */
 private class TaskAction<T: Task>(
-    val creationAction: LazyTaskCreationAction<T>,
+    val creationAction: TaskCreationAction<T>,
     val secondaryPreConfigAction: PreConfigAction? = null,
     val secondaryAction: TaskConfigAction<in T>? = null,
     val secondaryProviderCallback: TaskProviderCallback<T>? = null

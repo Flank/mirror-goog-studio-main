@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.build.gradle.internal.tasks.Workers
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
@@ -114,7 +114,7 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecutor: W
 
     class CreationAction(
         private val scope: VariantScope
-    ) : LazyTaskCreationAction<LinkLibraryAndroidResourcesTask>() {
+    ) : TaskCreationAction<LinkLibraryAndroidResourcesTask>() {
 
         override val name: String
             get() = scope.getTaskName("link", "Resources")

@@ -30,7 +30,7 @@ import com.android.build.gradle.internal.res.namespaced.getAaptPoolSize
 import com.android.build.gradle.internal.res.namespaced.registerAaptService
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransform
 import com.android.build.gradle.internal.transforms.InstantRunSplitApkBuilder
 import com.android.builder.core.AndroidBuilder
@@ -242,7 +242,7 @@ open class InstantRunSplitApkResourcesBuilder
     }
 
     class CreationAction(val variantScope: VariantScope) :
-        LazyTaskCreationAction<InstantRunSplitApkResourcesBuilder>() {
+        TaskCreationAction<InstantRunSplitApkResourcesBuilder>() {
 
         override val name: String
             get() = variantScope.getTaskName("instantRunSplitApkResources")

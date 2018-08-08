@@ -22,7 +22,7 @@ import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.builder.packaging.JarMerger
 import com.android.utils.FileUtils
 import org.gradle.api.tasks.CacheableTask
@@ -81,7 +81,7 @@ open class ZipMergingTask : AndroidVariantTask() {
         }
     }
 
-    class CreationAction(private val scope: VariantScope) : LazyTaskCreationAction<ZipMergingTask>() {
+    class CreationAction(private val scope: VariantScope) : TaskCreationAction<ZipMergingTask>() {
 
         override val name: String
             get() = scope.getTaskName("createFullJar")

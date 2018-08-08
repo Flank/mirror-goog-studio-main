@@ -24,7 +24,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.builder.errors.EvalIssueException;
 import java.io.File;
 import java.io.IOException;
@@ -97,8 +97,7 @@ public class MergeConsumerProguardFilesTask extends MergeFileTask {
         }
     }
 
-    public static class CreationAction
-            extends LazyTaskCreationAction<MergeConsumerProguardFilesTask> {
+    public static class CreationAction extends TaskCreationAction<MergeConsumerProguardFilesTask> {
 
         @NonNull private final VariantScope variantScope;
         private File outputFile;

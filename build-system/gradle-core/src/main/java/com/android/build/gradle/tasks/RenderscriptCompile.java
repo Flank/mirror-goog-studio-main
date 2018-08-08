@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NdkTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.internal.compiler.DirectoryWalker;
@@ -247,7 +247,7 @@ public class RenderscriptCompile extends NdkTask {
 
     // ----- CreationAction -----
 
-    public static class CreationAction extends LazyTaskCreationAction<RenderscriptCompile> {
+    public static class CreationAction extends TaskCreationAction<RenderscriptCompile> {
 
         @NonNull
         private final VariantScope scope;

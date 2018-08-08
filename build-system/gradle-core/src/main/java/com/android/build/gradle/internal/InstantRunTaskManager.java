@@ -110,8 +110,7 @@ public class InstantRunTaskManager {
         TransformVariantScope transformVariantScope = variantScope.getTransformVariantScope();
 
         buildInfoLoaderTask =
-                taskFactory.lazyCreate(
-                        new BuildInfoLoaderTask.CreationAction(variantScope, logger));
+                taskFactory.register(new BuildInfoLoaderTask.CreationAction(variantScope, logger));
 
         // always run the verifier first, since if it detects incompatible changes, we
         // should skip bytecode enhancements of the changed classes.
@@ -160,7 +159,7 @@ public class InstantRunTaskManager {
         // that the processAndroidResources task ran in a previous non InstantRun enabled
         // invocation.
         TaskProvider<CheckManifestInInstantRunMode> checkManifestTask =
-                taskFactory.lazyCreate(
+                taskFactory.register(
                         new CheckManifestInInstantRunMode.CreationAction(variantScope));
 
         InstantRunTransform instantRunTransform = new InstantRunTransform(
@@ -191,7 +190,7 @@ public class InstantRunTaskManager {
             // will eventually get packaged in the main APK.
             // We need to pass the published resource type as the generated manifest can use
             // a String resource for its version name (so AAPT can check for resources existence).
-            taskFactory.lazyCreate(
+            taskFactory.register(
                     new InstantRunMainApkResourcesBuilder.CreationAction(
                             variantScope, resourceFilesInputType));
         }
@@ -224,7 +223,7 @@ public class InstantRunTaskManager {
 
 
         TaskProvider<FastDeployRuntimeExtractorTask> extractorTask =
-                taskFactory.lazyCreate(
+                taskFactory.register(
                         new FastDeployRuntimeExtractorTask.CreationAction(
                                 variantScope, buildInfoLoaderTask));
 
@@ -239,7 +238,7 @@ public class InstantRunTaskManager {
                         .build());
 
         // create the AppInfo.class for this variant.
-        taskFactory.lazyCreate(
+        taskFactory.register(
                 new GenerateInstantRunAppInfoTask.CreationAction(
                         transformVariantScope, variantScope, instantRunMergedManifests));
 
@@ -293,7 +292,7 @@ public class InstantRunTaskManager {
             context.setVerifierStatus(InstantRunVerifierStatus.COLD_SWAP_REQUESTED);
         }
 
-        return taskFactory.lazyCreate(
+        return taskFactory.register(
                 new PreColdSwapTask.CreationAction(
                         "preColdswap", transformVariantScope, variantScope, verifierTask));
     }

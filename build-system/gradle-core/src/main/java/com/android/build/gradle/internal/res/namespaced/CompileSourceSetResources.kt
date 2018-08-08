@@ -21,8 +21,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.IncrementalTask
 import com.android.build.gradle.internal.tasks.Workers
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
-import com.android.build.gradle.internal.tasks.factory.dependsOn
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.FileStatus
@@ -180,7 +179,7 @@ open class CompileSourceSetResources
         override val name: String,
         private val inputDirectories: BuildableArtifact,
         private val variantScope: VariantScope
-    ) : LazyTaskCreationAction<CompileSourceSetResources>() {
+    ) : TaskCreationAction<CompileSourceSetResources>() {
 
         override val type: Class<CompileSourceSetResources>
             get() = CompileSourceSetResources::class.java

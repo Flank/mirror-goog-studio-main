@@ -24,7 +24,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_LAYOUT_INFO_TYPE_MERGE
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import org.gradle.api.DefaultTask
@@ -165,7 +165,7 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
     }
 
     class CreationAction(val variantScope: VariantScope) :
-        LazyTaskCreationAction<DataBindingGenBaseClassesTask>() {
+        TaskCreationAction<DataBindingGenBaseClassesTask>() {
 
         override val name: String
             get() = variantScope.getTaskName("dataBindingGenBaseClasses")

@@ -32,7 +32,7 @@ import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.internal.test.AbstractTestDataImpl;
 import com.android.build.gradle.internal.test.report.ReportType;
 import com.android.build.gradle.internal.test.report.TestReport;
@@ -340,7 +340,7 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
     }
 
     public static class CreationAction
-            extends LazyTaskCreationAction<DeviceProviderInstrumentTestTask> {
+            extends TaskCreationAction<DeviceProviderInstrumentTestTask> {
 
         @NonNull
         private final VariantScope scope;

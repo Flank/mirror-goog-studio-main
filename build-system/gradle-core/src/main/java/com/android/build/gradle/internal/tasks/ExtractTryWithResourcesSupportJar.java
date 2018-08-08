@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.builder.core.DesugarProcessBuilder;
 import com.android.utils.FileUtils;
 import java.io.File;
@@ -55,7 +55,7 @@ public class ExtractTryWithResourcesSupportJar extends AndroidVariantTask {
     }
 
     public static class CreationAction
-            extends LazyTaskCreationAction<ExtractTryWithResourcesSupportJar> {
+            extends TaskCreationAction<ExtractTryWithResourcesSupportJar> {
 
         @NonNull private final ConfigurableFileCollection outputLocation;
         @NonNull private final String taskName;

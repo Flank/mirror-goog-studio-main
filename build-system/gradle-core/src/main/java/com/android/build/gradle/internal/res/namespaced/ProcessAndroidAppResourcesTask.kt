@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.build.gradle.internal.tasks.Workers
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
@@ -114,7 +114,7 @@ open class ProcessAndroidAppResourcesTask
     }
 
     class CreationAction(private val scope: VariantScope) :
-        LazyTaskCreationAction<ProcessAndroidAppResourcesTask>() {
+        TaskCreationAction<ProcessAndroidAppResourcesTask>() {
 
         override val name: String
             get() = scope.getTaskName("process", "Resources")

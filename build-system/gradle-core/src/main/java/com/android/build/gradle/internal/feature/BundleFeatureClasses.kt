@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.res.namespaced.JarWorkerRunnable
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.Workers
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
@@ -103,7 +103,7 @@ open class BundleFeatureClasses @Inject constructor(workerExecutor: WorkerExecut
         }
     }
 
-    class CreationAction(private val scope: VariantScope) : LazyTaskCreationAction<BundleFeatureClasses>() {
+    class CreationAction(private val scope: VariantScope) : TaskCreationAction<BundleFeatureClasses>() {
 
         override val name: String
             get() = scope.getTaskName("bundle", "Classes")

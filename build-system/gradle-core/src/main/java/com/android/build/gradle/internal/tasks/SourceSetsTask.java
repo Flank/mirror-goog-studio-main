@@ -21,7 +21,7 @@ import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.api.AndroidSourceDirectorySet;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.builder.core.VariantType;
 import java.io.IOException;
 import java.util.stream.Collectors;
@@ -108,7 +108,7 @@ public class SourceSetsTask extends AbstractReportTask {
     }
 
 
-    public static class CreationAction extends LazyTaskCreationAction<SourceSetsTask> {
+    public static class CreationAction extends TaskCreationAction<SourceSetsTask> {
 
         private final AndroidConfig extension;
 

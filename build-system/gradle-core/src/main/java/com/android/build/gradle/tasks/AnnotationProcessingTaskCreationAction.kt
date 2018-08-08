@@ -17,21 +17,21 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import org.gradle.api.Task
 
 /**
  * Convenient super class for CreationAction implementation that will process all annotated
  * input and output properties. Each input and output will be looked up in the scope and
- * pre-allocated during the [LazyTaskCreationAction.preConfigure] call.
+ * pre-allocated during the [TaskCreationAction.preConfigure] call.
  *
- * Once the task is created and the [LazyTaskCreationAction.configure] is invoked, the pre-allocated
+ * Once the task is created and the [TaskCreationAction.configure] is invoked, the pre-allocated
  * are transferred to the relevant input and output fields of the task instance.
  */
 open class AnnotationProcessingTaskCreationAction<T: Task>(
     protected val scope: VariantScope,
     override val name: String,
-    override val type: Class<T>): LazyTaskCreationAction<T>() {
+    override val type: Class<T>): TaskCreationAction<T>() {
 
     private val artifactsHolder= TaskArtifactsHolder<T>(scope.artifacts)
 

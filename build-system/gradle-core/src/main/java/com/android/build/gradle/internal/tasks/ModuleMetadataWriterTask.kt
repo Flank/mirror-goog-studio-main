@@ -22,7 +22,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -94,7 +94,7 @@ open class ModuleMetadataWriterTask : AndroidVariantTask() {
     }
 
     class CreationAction(private val variantScope: VariantScope) :
-        LazyTaskCreationAction<ModuleMetadataWriterTask>() {
+        TaskCreationAction<ModuleMetadataWriterTask>() {
 
         override val name: String
             get() = variantScope.getTaskName("write", "ModuleMetadata")

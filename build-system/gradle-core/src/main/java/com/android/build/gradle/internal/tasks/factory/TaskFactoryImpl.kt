@@ -39,37 +39,37 @@ class TaskFactoryImpl(private val taskContainer: TaskContainer):
 
     override fun named(name: String): TaskProvider<Task> = taskContainer.named(name)
 
-    override fun lazyCreate(name: String): TaskProvider<Task> = taskContainer.register(name)
+    override fun register(name: String): TaskProvider<Task> = taskContainer.register(name)
 
-    override fun <T : Task> lazyCreate(creationAction: LazyTaskCreationAction<T>): TaskProvider<T> =
-        taskContainer.lazyCreate(creationAction, null, null, null)
+    override fun <T : Task> register(creationAction: TaskCreationAction<T>): TaskProvider<T> =
+        taskContainer.registerTask(creationAction, null, null, null)
 
-    override fun <T : Task> lazyCreate(
-        creationAction: LazyTaskCreationAction<T>,
+    override fun <T : Task> register(
+        creationAction: TaskCreationAction<T>,
         secondaryPreConfigAction: PreConfigAction?,
         secondaryAction: TaskConfigAction<in T>?,
         secondaryProviderCallback: TaskProviderCallback<T>?
     ): TaskProvider<T> =
-        taskContainer.lazyCreate(creationAction, secondaryPreConfigAction, secondaryAction, secondaryProviderCallback)
+        taskContainer.registerTask(creationAction, secondaryPreConfigAction, secondaryAction, secondaryProviderCallback)
 
-    override fun <T: Task> lazyCreate(
+    override fun <T: Task> register(
         taskName: String,
         taskType: Class<T>,
         preConfigAction: PreConfigAction?,
         action: TaskConfigAction<in T>?,
         providerCallback: TaskProviderCallback<T>?
     ): TaskProvider<T> =
-        taskContainer.lazyCreate(taskName, taskType, preConfigAction, action, providerCallback)
+        taskContainer.registerTask(taskName, taskType, preConfigAction, action, providerCallback)
 
-    override fun lazyCreate(
+    override fun register(
         taskName: String,
         preConfigAction: PreConfigAction?,
         action: TaskConfigAction<in Task>?,
         providerCallback: TaskProviderCallback<Task>?
     ): TaskProvider<Task> =
-        taskContainer.lazyCreate(taskName, Task::class.java, preConfigAction, action, providerCallback)
+        taskContainer.registerTask(taskName, Task::class.java, preConfigAction, action, providerCallback)
 
-    override fun <T : Task> lazyCreate(
+    override fun <T : Task> register(
         taskName: String,
         taskType: Class<T>,
         action: Action<in T>
@@ -77,18 +77,18 @@ class TaskFactoryImpl(private val taskContainer: TaskContainer):
         return taskContainer.register(taskName, taskType, action)
     }
 
-    override fun lazyCreate(
+    override fun register(
         taskName: String,
         action: Action<in Task>
     ): TaskProvider<Task> {
         return taskContainer.register(taskName, Task::class.java, action)
     }
 
-    override fun lazyConfigure(name: String, action: Action<in Task>) {
+    override fun configure(name: String, action: Action<in Task>) {
         taskContainer.named(name).configure(action)
     }
 
-    override fun <T : Task> lazyConfigure(name: String, type: Class<T>, action: Action<in T>) {
+    override fun <T : Task> configure(name: String, type: Class<T>, action: Action<in T>) {
         taskContainer.withType(type).named(name).configure(action)
     }
 }

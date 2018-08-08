@@ -17,7 +17,7 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.compile.JavaCompile
 import java.io.File
@@ -34,7 +34,7 @@ import java.io.File
 open class CompileRClassTask : JavaCompile() {
 
     class CreationAction(private val scope: VariantScope) :
-        LazyTaskCreationAction<CompileRClassTask>() {
+        TaskCreationAction<CompileRClassTask>() {
 
         override val name: String
             get() = scope.getTaskName("compile", "FinalRClass")

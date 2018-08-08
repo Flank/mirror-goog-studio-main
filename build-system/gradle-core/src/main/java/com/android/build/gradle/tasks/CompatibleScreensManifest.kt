@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.tasks.TaskInputHelper
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.ide.common.build.ApkData
 import com.android.resources.Density
 import com.android.utils.FileUtils
@@ -140,7 +140,7 @@ open class CompatibleScreensManifest : AndroidVariantTask() {
     }
 
     class CreationAction(private val scope: VariantScope, private val screenSizes: Set<String>) :
-        LazyTaskCreationAction<CompatibleScreensManifest>() {
+        TaskCreationAction<CompatibleScreensManifest>() {
 
         override val name: String
             get() = scope.getTaskName("create", "CompatibleScreenManifests")

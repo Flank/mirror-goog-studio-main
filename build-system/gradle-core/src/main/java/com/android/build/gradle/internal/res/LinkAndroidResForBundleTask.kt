@@ -29,7 +29,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.Workers
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.options.StringOption
 import com.android.builder.core.VariantTypeImpl
@@ -204,7 +204,7 @@ open class LinkAndroidResForBundleTask
         private set
 
     class CreationAction(private val variantScope: VariantScope) :
-        LazyTaskCreationAction<LinkAndroidResForBundleTask>() {
+        TaskCreationAction<LinkAndroidResForBundleTask>() {
 
         override val name: String
             get() = variantScope.getTaskName("bundle", "Resources")

@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
@@ -176,7 +176,7 @@ public class GenerateApkDataTask extends AndroidBuilderTask {
         return manifestFile;
     }
 
-    public static class CreationAction extends LazyTaskCreationAction<GenerateApkDataTask> {
+    public static class CreationAction extends TaskCreationAction<GenerateApkDataTask> {
 
         @NonNull
         VariantScope scope;

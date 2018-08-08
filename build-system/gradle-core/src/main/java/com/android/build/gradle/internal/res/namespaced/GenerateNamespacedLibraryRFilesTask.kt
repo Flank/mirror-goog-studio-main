@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.res.namespaced
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.builder.symbols.exportToCompiledJava
 import com.android.ide.common.symbols.SymbolTable
 import com.android.utils.FileUtils
@@ -77,7 +77,7 @@ open class GenerateNamespacedLibraryRFilesTask : DefaultTask() {
     }
 
     class CreationAction(private val scope: VariantScope) :
-        LazyTaskCreationAction<GenerateNamespacedLibraryRFilesTask>() {
+        TaskCreationAction<GenerateNamespacedLibraryRFilesTask>() {
 
         override val name: String
             get() = scope.getTaskName("create", "RFiles")

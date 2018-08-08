@@ -24,7 +24,7 @@ import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.builder.model.Version;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Closeables;
@@ -180,7 +180,7 @@ public class JacocoReportTask extends DefaultTask {
                 });
     }
 
-    public static class CreationAction extends LazyTaskCreationAction<JacocoReportTask> {
+    public static class CreationAction extends TaskCreationAction<JacocoReportTask> {
         @NonNull private VariantScope scope;
         @NonNull private final Configuration jacocoAntConfiguration;
 

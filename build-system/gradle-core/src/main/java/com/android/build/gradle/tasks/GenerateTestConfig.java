@@ -31,7 +31,7 @@ import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.ide.common.build.ApkInfo;
 import com.google.common.base.Preconditions;
@@ -180,7 +180,7 @@ public class GenerateTestConfig extends DefaultTask {
         return packageForR.get();
     }
 
-    public static class CreationAction extends LazyTaskCreationAction<GenerateTestConfig> {
+    public static class CreationAction extends TaskCreationAction<GenerateTestConfig> {
 
         @NonNull private final VariantScope scope;
         @NonNull private final VariantScope testedScope;

@@ -20,7 +20,7 @@ import com.android.SdkConstants
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.Workers
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.google.common.base.Suppliers
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.CacheableTask
@@ -56,7 +56,7 @@ open class StaticLibraryManifestTask @Inject constructor(workerExecutor: WorkerE
 
     class CreationAction(
         private val scope: VariantScope
-    ) : LazyTaskCreationAction<StaticLibraryManifestTask>() {
+    ) : TaskCreationAction<StaticLibraryManifestTask>() {
         override val name: String
             get() = scope.getTaskName("create", "StaticLibraryManifest")
         override val type: Class<StaticLibraryManifestTask>

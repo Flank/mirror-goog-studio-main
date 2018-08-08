@@ -21,7 +21,7 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.ide.common.build.ApkData
 import com.android.utils.FileUtils
 import org.gradle.api.tasks.Input
@@ -56,7 +56,7 @@ open class MainApkListPersistence : AndroidVariantTask() {
     class CreationAction(
         val scope: VariantScope
     ) :
-        LazyTaskCreationAction<MainApkListPersistence>() {
+        TaskCreationAction<MainApkListPersistence>() {
 
         override val name: String
             get() = scope.getTaskName("mainApkListPersistence")

@@ -24,7 +24,7 @@ import com.android.annotations.NonNull;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.utils.FileUtils;
 import com.android.utils.PathUtils;
 import com.google.common.collect.Iterables;
@@ -99,7 +99,7 @@ public class PackageForUnitTest extends DefaultTask {
                 .getOutputFile();
     }
 
-    public static class CreationAction extends LazyTaskCreationAction<PackageForUnitTest> {
+    public static class CreationAction extends TaskCreationAction<PackageForUnitTest> {
         @NonNull private final VariantScope scope;
         private File apkForUnitTest;
 

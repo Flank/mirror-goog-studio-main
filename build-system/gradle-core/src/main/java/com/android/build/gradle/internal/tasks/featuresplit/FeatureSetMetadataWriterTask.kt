@@ -21,7 +21,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.tasks.Workers
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.options.IntegerOption
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.CacheableTask
@@ -110,7 +110,7 @@ open class FeatureSetMetadataWriterTask @Inject constructor(workerExecutor: Work
     }
 
     class CreationAction(private val variantScope: VariantScope) :
-        LazyTaskCreationAction<FeatureSetMetadataWriterTask>() {
+        TaskCreationAction<FeatureSetMetadataWriterTask>() {
 
         override val name: String
             get() = variantScope.getTaskName("generate", "FeatureMetadata")

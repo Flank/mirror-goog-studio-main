@@ -257,7 +257,7 @@ public class TransformManager extends FilterableStreamCollection {
 
         // create the task...
         return Optional.of(
-                taskFactory.lazyCreate(
+                taskFactory.register(
                         new TransformTask.CreationAction<>(
                                 scope.getFullVariantName(),
                                 taskName,

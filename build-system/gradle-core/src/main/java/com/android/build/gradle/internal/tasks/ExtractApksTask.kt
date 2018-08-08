@@ -20,7 +20,7 @@ import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.options.StringOption
 import com.android.bundle.Devices.DeviceSpec
 import com.android.tools.build.bundletool.commands.ExtractApksCommand
@@ -108,7 +108,7 @@ open class ExtractApksTask @Inject constructor(workerExecutor: WorkerExecutor) :
         }
     }
 
-    class CreationAction(private val scope: VariantScope) : LazyTaskCreationAction<ExtractApksTask>() {
+    class CreationAction(private val scope: VariantScope) : TaskCreationAction<ExtractApksTask>() {
 
         override val name: String
             get() = getTaskName(scope)

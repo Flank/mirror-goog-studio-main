@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.builder.utils.FileCache;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
@@ -44,7 +44,7 @@ public class CleanBuildCache extends DefaultTask {
     }
 
     @Immutable
-    public static final class CreationAction extends LazyTaskCreationAction<CleanBuildCache> {
+    public static final class CreationAction extends TaskCreationAction<CleanBuildCache> {
 
         @NonNull private final GlobalScope globalScope;
 

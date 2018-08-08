@@ -22,7 +22,7 @@ import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.tools.build.bundletool.commands.BuildApksCommand
 import com.android.tools.build.bundletool.model.Aapt2Command
 import com.android.utils.FileUtils
@@ -131,7 +131,7 @@ open class BundleToApkTask @Inject constructor(workerExecutor: WorkerExecutor) :
     }
 
     class CreationAction(private val scope: VariantScope) :
-        LazyTaskCreationAction<BundleToApkTask>() {
+        TaskCreationAction<BundleToApkTask>() {
 
         override val name: String
             get() = scope.getTaskName("makeApkFromBundleFor")

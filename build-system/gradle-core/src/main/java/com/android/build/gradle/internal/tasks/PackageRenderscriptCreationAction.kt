@@ -18,13 +18,13 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import org.gradle.api.tasks.Sync
 import java.io.File
 
 /** Configuration action for a package-renderscript task.  */
 class PackageRenderscriptCreationAction(private val variantScope: VariantScope) :
-    LazyTaskCreationAction<Sync>() {
+    TaskCreationAction<Sync>() {
 
     override val name: String
         get() = variantScope.getTaskName("package", "Renderscript")

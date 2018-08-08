@@ -21,7 +21,7 @@ import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.builder.internal.InstallUtils
 import com.android.builder.testing.ConnectedDeviceProvider
 import com.android.builder.testing.api.DeviceConnector
@@ -231,7 +231,7 @@ open class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: Work
      }
 
     internal class CreationAction(private val scope: VariantScope) :
-        LazyTaskCreationAction<InstallVariantViaBundleTask>() {
+        TaskCreationAction<InstallVariantViaBundleTask>() {
 
         override val name: String
             get() = scope.getTaskName("install")

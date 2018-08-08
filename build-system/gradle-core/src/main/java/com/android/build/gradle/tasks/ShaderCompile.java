@@ -21,7 +21,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.builder.internal.compiler.ShaderProcessor;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.utils.FileUtils;
@@ -134,7 +134,7 @@ public class ShaderCompile extends AndroidBuilderTask {
         this.scopedArgs = ImmutableMap.copyOf(scopedArgs);
     }
 
-    public static class CreationAction extends LazyTaskCreationAction<ShaderCompile> {
+    public static class CreationAction extends TaskCreationAction<ShaderCompile> {
 
         @NonNull
         VariantScope scope;

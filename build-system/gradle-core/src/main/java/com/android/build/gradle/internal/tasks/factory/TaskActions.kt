@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.tasks.factory
 
-import org.gradle.api.Action
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskProvider
 
@@ -36,7 +35,7 @@ interface TaskInformation<T: Task> {
  * This contains both meta-data to create the task ([name], [type])
  * and actions to configure the task ([preConfigure], [configure], [handleProvider])
  */
-abstract class LazyTaskCreationAction<T : Task> : TaskInformation<T>, PreConfigAction,
+abstract class TaskCreationAction<T : Task> : TaskInformation<T>, PreConfigAction,
     TaskConfigAction<T>, TaskProviderCallback<T> {
 
     override fun preConfigure(taskName: String) {

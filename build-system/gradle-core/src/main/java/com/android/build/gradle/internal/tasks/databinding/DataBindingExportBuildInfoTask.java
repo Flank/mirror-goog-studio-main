@@ -20,7 +20,7 @@ import android.databinding.tool.LayoutXmlProcessor;
 import android.databinding.tool.processing.Scope;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.options.BooleanOption;
 import java.io.File;
 import java.util.function.Supplier;
@@ -63,8 +63,7 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
         Scope.assertNoError();
     }
 
-    public static class CreationAction
-            extends LazyTaskCreationAction<DataBindingExportBuildInfoTask> {
+    public static class CreationAction extends TaskCreationAction<DataBindingExportBuildInfoTask> {
 
         @NonNull private final VariantScope variantScope;
 

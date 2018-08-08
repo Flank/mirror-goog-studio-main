@@ -21,7 +21,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.utils.FileUtils
 import com.google.common.base.Charsets
 import com.google.common.base.Joiner
@@ -71,7 +71,7 @@ open class FeatureSplitTransitiveDepsWriterTask : AndroidVariantTask() {
     }
 
     class CreationAction(private val variantScope: VariantScope) :
-        LazyTaskCreationAction<FeatureSplitTransitiveDepsWriterTask>() {
+        TaskCreationAction<FeatureSplitTransitiveDepsWriterTask>() {
 
         override val name: String
             get() = variantScope.getTaskName("generate", "FeatureTransitiveDeps")

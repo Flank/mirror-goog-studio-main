@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import java.io.File;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFiles;
@@ -64,7 +64,7 @@ public class CheckTestedAppObfuscation extends AndroidVariantTask {
         }
     }
 
-    public static class CreationAction extends LazyTaskCreationAction<CheckTestedAppObfuscation> {
+    public static class CreationAction extends TaskCreationAction<CheckTestedAppObfuscation> {
 
         private final VariantScope scope;
 

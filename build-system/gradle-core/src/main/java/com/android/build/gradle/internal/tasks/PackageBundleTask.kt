@@ -24,7 +24,7 @@ import com.android.build.gradle.internal.process.JarSigner
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.options.StringOption
 import com.android.builder.packaging.PackagingUtils
 import com.android.bundle.Config
@@ -225,7 +225,7 @@ open class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecutor)
         @get:Optional
         val enableLanguage: Boolean?) : Serializable
 
-    class CreationAction(private val scope: VariantScope) : LazyTaskCreationAction<PackageBundleTask>() {
+    class CreationAction(private val scope: VariantScope) : TaskCreationAction<PackageBundleTask>() {
         override val name: String
             get() = scope.getTaskName("package", "Bundle")
         override val type: Class<PackageBundleTask>

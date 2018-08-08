@@ -469,7 +469,7 @@ public class VariantManager implements VariantModel {
 
                         taskManager
                                 .getTaskFactory()
-                                .lazyCreate(
+                                .register(
                                         variantAssembleTaskName,
                                         task -> {
                                             task.setDescription(
@@ -483,7 +483,7 @@ public class VariantManager implements VariantModel {
 
                     taskManager
                             .getTaskFactory()
-                            .lazyConfigure(
+                            .configure(
                                     "assemble", task1 -> task1.dependsOn(variantAssembleTaskName));
 
                     if (needBundleTask) {
@@ -493,7 +493,7 @@ public class VariantManager implements VariantModel {
                         if (!taskManager.getTaskFactory().containsKey(variantBundleTaskName)) {
                             taskManager
                                     .getTaskFactory()
-                                    .lazyCreate(
+                                    .register(
                                             variantBundleTaskName,
                                             task -> {
                                                 task.setDescription(
@@ -507,7 +507,7 @@ public class VariantManager implements VariantModel {
 
                         taskManager
                                 .getTaskFactory()
-                                .lazyConfigure(
+                                .configure(
                                         "bundle", task1 -> task1.dependsOn(variantBundleTaskName));
                     }
                 }
@@ -530,7 +530,7 @@ public class VariantManager implements VariantModel {
         // Add dependency of assemble task on assemble build type task.
         taskManager
                 .getTaskFactory()
-                .lazyConfigure(
+                .configure(
                         "assemble",
                         task -> {
                             assert buildTypeData.getAssembleTask() != null;
@@ -541,7 +541,7 @@ public class VariantManager implements VariantModel {
 
             if (variantType.isHybrid()
                     && taskManager.getTaskFactory().findByName("bundle") == null) {
-                taskManager.getTaskFactory().lazyCreate("bundle");
+                taskManager.getTaskFactory().register("bundle");
             }
 
             if (buildTypeData.getBundleTask() == null) {
@@ -550,7 +550,7 @@ public class VariantManager implements VariantModel {
 
             taskManager
                     .getTaskFactory()
-                    .lazyConfigure(
+                    .configure(
                             "bundle",
                             task -> {
                                 assert buildTypeData.getBundleTask() != null;

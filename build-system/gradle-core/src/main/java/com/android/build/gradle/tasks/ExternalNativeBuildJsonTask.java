@@ -19,7 +19,7 @@ package com.android.build.gradle.tasks;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.ide.common.process.ProcessException;
 import java.io.IOException;
 import org.gradle.api.tasks.Nested;
@@ -41,14 +41,13 @@ public class ExternalNativeBuildJsonTask extends AndroidVariantTask {
     }
 
     @NonNull
-    public static LazyTaskCreationAction<ExternalNativeBuildJsonTask> createTaskConfigAction(
+    public static TaskCreationAction<ExternalNativeBuildJsonTask> createTaskConfigAction(
             @NonNull final ExternalNativeJsonGenerator generator,
             @NonNull final VariantScope scope) {
         return new CreationAction(scope, generator);
     }
 
-    private static class CreationAction
-            extends LazyTaskCreationAction<ExternalNativeBuildJsonTask> {
+    private static class CreationAction extends TaskCreationAction<ExternalNativeBuildJsonTask> {
 
         private final VariantScope scope;
         private final ExternalNativeJsonGenerator generator;

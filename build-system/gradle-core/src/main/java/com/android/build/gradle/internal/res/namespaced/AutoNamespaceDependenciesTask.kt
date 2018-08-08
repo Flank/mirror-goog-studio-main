@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.internal.utils.toImmutableMap
 import com.android.builder.symbols.exportToCompiledJava
@@ -386,7 +386,7 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
         }.toImmutableMap { it.toImmutableList() }
 
     class CreationAction(private val variantScope: VariantScope) :
-        LazyTaskCreationAction<AutoNamespaceDependenciesTask>() {
+        TaskCreationAction<AutoNamespaceDependenciesTask>() {
 
         override val name: String
             get() = variantScope.getTaskName("autoNamespace", "Dependencies")

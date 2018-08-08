@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NdkTask;
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.NdkLease;
@@ -430,7 +430,7 @@ public class NdkCompile extends NdkTask {
                 getStl() == null);
     }
 
-    public static class CreationAction extends LazyTaskCreationAction<NdkCompile> {
+    public static class CreationAction extends TaskCreationAction<NdkCompile> {
 
         @NonNull private final VariantScope variantScope;
 

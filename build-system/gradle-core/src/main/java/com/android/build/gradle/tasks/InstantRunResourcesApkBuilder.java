@@ -30,7 +30,7 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.packaging.PackagerException;
 import com.android.ide.common.build.ApkInfo;
@@ -172,8 +172,7 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
         return APK_FILE_NAME + "-" + apkData.getBaseName();
     }
 
-    public static class CreationAction
-            extends LazyTaskCreationAction<InstantRunResourcesApkBuilder> {
+    public static class CreationAction extends TaskCreationAction<InstantRunResourcesApkBuilder> {
 
         protected final VariantScope variantScope;
         private final InternalArtifactType resInputType;

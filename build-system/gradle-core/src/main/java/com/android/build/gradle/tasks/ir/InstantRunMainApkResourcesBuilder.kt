@@ -24,7 +24,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_
 import com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder
 import com.android.build.gradle.internal.transforms.InstantRunSplitApkBuilder
 import com.android.builder.internal.aapt.BlockingResourceLinker
@@ -114,7 +114,7 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
         val variantScope: VariantScope,
         private val taskInputType: ArtifactType
     ) :
-        LazyTaskCreationAction<InstantRunMainApkResourcesBuilder>() {
+        TaskCreationAction<InstantRunMainApkResourcesBuilder>() {
 
         override val name: String
             get() = variantScope.getTaskName("instantRunMainApkResources")

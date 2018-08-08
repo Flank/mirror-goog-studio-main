@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import org.apache.commons.io.FileUtils
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
@@ -78,7 +78,7 @@ open class ApplicationIdWriterTask : AndroidVariantTask() {
     }
 
     class CreationAction(private val variantScope: VariantScope) :
-        LazyTaskCreationAction<ApplicationIdWriterTask>() {
+        TaskCreationAction<ApplicationIdWriterTask>() {
 
         override val name: String
             get() = variantScope.getTaskName("write", "ApplicationId")
