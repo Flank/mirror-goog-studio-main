@@ -25,6 +25,8 @@ import static org.junit.Assert.assertNotNull;
 import com.android.testutils.TestResources;
 import com.android.tools.apk.analyzer.internal.AppBundleArchive;
 import com.android.utils.FileUtils;
+import com.android.utils.ILogger;
+import com.android.utils.StdLogger;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import java.io.IOException;
@@ -37,18 +39,21 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class ArchivesTest {
+    private ArchiveContext archiveContext;
     private Archive archive;
     private FileSystem fs;
+    private ILogger logger = new StdLogger(StdLogger.Level.VERBOSE);
 
     @Before
     public void setup() throws IOException {
-        archive = Archives.open(TestResources.getFile("/test.apk").toPath());
+        archiveContext = Archives.open(TestResources.getFile("/test.apk").toPath(), logger);
+        archive = archiveContext.getArchive();
         fs = archive.getContentRoot().getFileSystem();
     }
 
     @After
     public void cleanup() throws IOException {
-        archive.close();
+        archiveContext.close();
     }
 
     @Test
@@ -61,8 +66,8 @@ public class ArchivesTest {
         Path apk = folder.resolve("foo.apk");
         Files.write(apk, apkData, StandardOpenOption.CREATE);
 
-        try (Archive archive = Archives.open(apk)) {
-            assertThat(archive).isNotNull();
+        try (ArchiveContext archiveContext = Archives.open(apk)) {
+            assertThat(archiveContext).isNotNull();
         }
     }
 
@@ -76,19 +81,19 @@ public class ArchivesTest {
         Path apk = folder.resolve("foo with spaces.apk");
         Files.write(apk, apkData, StandardOpenOption.CREATE);
 
-        try (Archive archive = Archives.open(apk)) {
-            assertThat(archive).isNotNull();
+        try (ArchiveContext archiveContext = Archives.open(apk)) {
+            assertThat(archiveContext).isNotNull();
         }
     }
 
 
     @Test
     public void getFirstManifestArchiveFromAPK() throws IOException {
-        try (Archive archive = Archives.open(getArchivePath("1.apk"))) {
-            ArchiveNode node = ArchiveTreeStructure.create(archive);
+        try (ArchiveContext archiveContext = Archives.open(getArchivePath("1.apk"))) {
+            ArchiveNode node = ArchiveTreeStructure.create(archiveContext);
             ArchiveEntry entry = Archives.getFirstManifestArchiveEntry(node);
             assertNotNull(entry);
-            assertEquals(archive, entry.getArchive());
+            assertEquals(archiveContext.getArchive(), entry.getArchive());
         }
     }
 
@@ -97,12 +102,12 @@ public class ArchivesTest {
         Path archivePath = getArchivePath("bundle.zip");
         Path contentRoot;
 
-        try (Archive archive = Archives.open(archivePath)) {
-            contentRoot = archive.getContentRoot();
-            ArchiveNode node = ArchiveTreeStructure.create(archive);
+        try (ArchiveContext archiveContext = Archives.open(archivePath)) {
+            contentRoot = archiveContext.getArchive().getContentRoot();
+            ArchiveNode node = ArchiveTreeStructure.create(archiveContext);
             ArchiveEntry entry = Archives.getFirstManifestArchiveEntry(node);
             assertNotNull(entry);
-            assertNotEquals(archive, entry.getArchive());
+            assertNotEquals(archiveContext, entry.getArchive());
             assertEquals(
                     ((InnerArchiveEntry) node.getChildren().get(0).getData())
                             .asArchiveEntry()
@@ -122,12 +127,12 @@ public class ArchivesTest {
     public void getFirstManifestArchiveFromAppBundle() throws Exception {
         Path archivePath = getArchivePath("android-app-bundle.aab");
 
-        try (Archive archive = Archives.open(archivePath)) {
-            assertThat(archive).isInstanceOf(AppBundleArchive.class);
-            ArchiveNode node = ArchiveTreeStructure.create(archive);
+        try (ArchiveContext archiveContext = Archives.open(archivePath)) {
+            assertThat(archiveContext.getArchive()).isInstanceOf(AppBundleArchive.class);
+            ArchiveNode node = ArchiveTreeStructure.create(archiveContext);
             ArchiveEntry entry = Archives.getFirstManifestArchiveEntry(node);
             assertNotNull(entry);
-            assertEquals(archive, entry.getArchive());
+            assertEquals(archiveContext.getArchive(), entry.getArchive());
         }
     }
 
@@ -135,9 +140,13 @@ public class ArchivesTest {
     public void protoXml_manifest() throws Exception {
         Path archivePath = getArchivePath("android-app-bundle.aab");
 
-        try (Archive archive = Archives.open(archivePath)) {
-            Path path = archive.getContentRoot().resolve("base/manifest/AndroidManifest.xml");
-            assertThat(archive.isProtoXml(path, new byte[] {0x0a})).isTrue();
+        try (ArchiveContext archiveContext = Archives.open(archivePath)) {
+            Path path =
+                    archiveContext
+                            .getArchive()
+                            .getContentRoot()
+                            .resolve("base/manifest/AndroidManifest.xml");
+            assertThat(archiveContext.getArchive().isProtoXml(path, new byte[] {0x0a})).isTrue();
         }
     }
 
@@ -145,9 +154,10 @@ public class ArchivesTest {
     public void protoXml_layoutXml() throws Exception {
         Path archivePath = getArchivePath("android-app-bundle.aab");
 
-        try (Archive archive = Archives.open(archivePath)) {
-            Path path = archive.getContentRoot().resolve("base/res/layout/foo.xml");
-            assertThat(archive.isProtoXml(path, new byte[] {0x0a})).isTrue();
+        try (ArchiveContext archiveContext = Archives.open(archivePath)) {
+            Path path =
+                    archiveContext.getArchive().getContentRoot().resolve("base/res/layout/foo.xml");
+            assertThat(archiveContext.getArchive().isProtoXml(path, new byte[] {0x0a})).isTrue();
         }
     }
 
@@ -155,9 +165,10 @@ public class ArchivesTest {
     public void protoXml_wrongContent() throws Exception {
         Path archivePath = getArchivePath("android-app-bundle.aab");
 
-        try (Archive archive = Archives.open(archivePath)) {
-            Path path = archive.getContentRoot().resolve("base/res/layout/foo.xml");
-            assertThat(archive.isProtoXml(path, new byte[] {0x0b})).isFalse();
+        try (ArchiveContext archiveContext = Archives.open(archivePath)) {
+            Path path =
+                    archiveContext.getArchive().getContentRoot().resolve("base/res/layout/foo.xml");
+            assertThat(archiveContext.getArchive().isProtoXml(path, new byte[] {0x0b})).isFalse();
         }
     }
 

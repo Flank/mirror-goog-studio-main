@@ -20,13 +20,11 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.testutils.TestResources;
+import com.android.utils.ILogger;
+import com.android.utils.StdLogger;
 import com.google.common.primitives.Longs;
 import java.io.IOException;
-import java.nio.file.DirectoryNotEmptyException;
-import java.nio.file.Files;
-import java.util.HashSet;
 import java.util.Locale;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.junit.After;
@@ -34,35 +32,23 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class ArchiveTreeStructureTest {
-    private Archive archive;
+    private ILogger logger = new StdLogger(StdLogger.Level.VERBOSE);
+    private ArchiveContext archiveContext;
     private ArchiveNode root;
 
     @Before
     public void setup() throws IOException {
-        archive = Archives.open(TestResources.getFile("/test.apk").toPath());
-        root = ArchiveTreeStructure.create(archive);
+        archiveContext = Archives.open(TestResources.getFile("/test.apk").toPath(), logger);
+        root = ArchiveTreeStructure.create(archiveContext);
     }
 
     @After
     public void tearDown() throws IOException {
-        Set<Archive> archives = new HashSet<>();
-        ArchiveTreeStream.postOrderStream(root)
-                .forEach(node -> archives.add(node.getData().getArchive()));
-        for (Archive ar : archives) {
-            ar.close();
-            if (ar != archive) {
-                Files.deleteIfExists(ar.getPath());
-                try {
-                    Files.deleteIfExists(ar.getPath().getParent());
-                } catch (DirectoryNotEmptyException ignored) {
-
-                }
-            }
-        }
+        archiveContext.close();
     }
 
     @Test
-    public void create() throws IOException {
+    public void create() {
         String actual = dumpTree(root, n -> n.getData().getFullPathString());
         String expected =
                 "/\n"
@@ -77,7 +63,7 @@ public class ArchiveTreeStructureTest {
     }
 
     @Test
-    public void updateRawFileSizes() throws IOException {
+    public void updateRawFileSizes() {
         ArchiveTreeStructure.updateRawFileSizes(root, ApkSizeCalculator.getDefault());
         String actual =
                 dumpTree(
@@ -103,7 +89,7 @@ public class ArchiveTreeStructureTest {
     }
 
     @Test
-    public void updateDownloadFileSizes() throws IOException {
+    public void updateDownloadFileSizes() {
         ArchiveTreeStructure.updateDownloadFileSizes(root, ApkSizeCalculator.getDefault());
 
         String actual =
@@ -130,7 +116,7 @@ public class ArchiveTreeStructureTest {
     }
 
     @Test
-    public void sort() throws IOException {
+    public void sort() {
         ArchiveTreeStructure.updateRawFileSizes(root, ApkSizeCalculator.getDefault());
         ArchiveTreeStructure.sort(
                 root,

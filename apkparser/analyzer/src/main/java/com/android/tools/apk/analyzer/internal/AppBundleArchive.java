@@ -30,27 +30,20 @@ import java.nio.file.Path;
  * <p>The archive is opened as a <code>zip</code> {@link FileSystem} until the {@link #close()}
  * method is called.
  */
-public class AppBundleArchive implements Archive {
+public class AppBundleArchive extends AbstractArchive {
     /** The first byte of a proto XML file is always 0x0A. */
     public static final byte PROTO_XML_LEAD_BYTE = 0x0A;
 
-    @NonNull private final Path appBundlePath;
     @NonNull private final FileSystem zipFileSystem;
 
-    private AppBundleArchive(@NonNull Path appBundlePath) throws IOException {
-        this.appBundlePath = appBundlePath;
-        this.zipFileSystem = FileUtils.createZipFilesystem(appBundlePath);
+    private AppBundleArchive(@NonNull Path path) throws IOException {
+        super(path);
+        this.zipFileSystem = FileUtils.createZipFilesystem(path);
     }
 
     @NonNull
     public static AppBundleArchive fromBundleFile(@NonNull Path artifact) throws IOException {
         return new AppBundleArchive(artifact);
-    }
-
-    @NonNull
-    @Override
-    public Path getPath() {
-        return appBundlePath;
     }
 
     @Override
@@ -62,11 +55,6 @@ public class AppBundleArchive implements Archive {
     @Override
     public void close() throws IOException {
         zipFileSystem.close();
-    }
-
-    @Override
-    public boolean isBinaryXml(@NonNull Path p, @NonNull byte[] content) {
-        return false;
     }
 
     @Override
@@ -89,11 +77,6 @@ public class AppBundleArchive implements Archive {
         }
 
         return (content.length > 0) && (content[0] == PROTO_XML_LEAD_BYTE);
-    }
-
-    @Override
-    public String toString() {
-        return String.format("%s: path=\"%s\"", getClass().getSimpleName(), appBundlePath);
     }
 
     private static boolean isManifestFile(@NonNull Path p) {

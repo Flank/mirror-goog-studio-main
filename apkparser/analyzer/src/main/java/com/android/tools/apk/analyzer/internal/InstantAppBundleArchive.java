@@ -20,7 +20,11 @@ import com.android.annotations.NonNull;
 import com.android.tools.apk.analyzer.Archive;
 import com.android.utils.FileUtils;
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.FileSystem;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 
 /**
@@ -29,18 +33,16 @@ import java.nio.file.attribute.BasicFileAttributes;
  * <p>The contents of the <code>zip</code> file (i.e. <code>APK</code> files) are extracted into a
  * temporary directory. The {@link #close()} method deletes this temporary directory.
  */
-public class InstantAppBundleArchive implements Archive {
-    @NonNull private final Path bundleFilePath;
+public class InstantAppBundleArchive extends AbstractArchive {
     @NonNull private final Path extractedFilesPath;
 
-    private InstantAppBundleArchive(@NonNull Path bundleFilePath) throws IOException {
-        this.bundleFilePath = bundleFilePath;
-        this.extractedFilesPath =
-                Files.createTempDirectory(bundleFilePath.getFileName().toString());
+    private InstantAppBundleArchive(@NonNull Path path) throws IOException {
+        super(path);
+        this.extractedFilesPath = Files.createTempDirectory(path.getFileName().toString());
 
         // For zip archives (which are AIA bundles), we unzip the outer zip contents to a temp folder
         // so that we show accurate file sizes for the top-level APKs in the ZIP file.
-        extractArchiveContents(bundleFilePath);
+        extractArchiveContents(path);
     }
 
     private void extractArchiveContents(@NonNull Path artifact) throws IOException {
@@ -52,15 +54,8 @@ public class InstantAppBundleArchive implements Archive {
     }
 
     @NonNull
-    public static InstantAppBundleArchive fromZippedBundle(@NonNull Path artifact)
-            throws IOException {
-        return new InstantAppBundleArchive(artifact);
-    }
-
-    @NonNull
-    @Override
-    public Path getPath() {
-        return bundleFilePath;
+    public static InstantAppBundleArchive fromZippedBundle(@NonNull Path path) throws IOException {
+        return new InstantAppBundleArchive(path);
     }
 
     @Override
@@ -72,21 +67,6 @@ public class InstantAppBundleArchive implements Archive {
     @Override
     public void close() throws IOException {
         FileUtils.deletePath(extractedFilesPath.toFile());
-    }
-
-    @Override
-    public boolean isBinaryXml(@NonNull Path p, @NonNull byte[] content) {
-        return false;
-    }
-
-    @Override
-    public boolean isProtoXml(@NonNull Path p, @NonNull byte[] content) {
-        return false;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("%s: path=\"%s\"", getClass().getSimpleName(), bundleFilePath);
     }
 
     private static class CopyPathFileVisitor implements FileVisitor<Path> {
@@ -117,12 +97,12 @@ public class InstantAppBundleArchive implements Archive {
         }
 
         @Override
-        public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+        public FileVisitResult visitFileFailed(Path file, IOException exc) {
             return FileVisitResult.CONTINUE;
         }
 
         @Override
-        public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+        public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
             return FileVisitResult.CONTINUE;
         }
     }

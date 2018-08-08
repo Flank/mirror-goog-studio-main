@@ -32,7 +32,7 @@ package com.android.tools.apk.analyzer.internal;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
-import com.android.tools.apk.analyzer.Archive;
+import com.android.tools.apk.analyzer.ArchiveContext;
 import com.android.tools.apk.analyzer.ArchiveEntry;
 import com.android.tools.apk.analyzer.ArchiveNode;
 import com.android.tools.apk.analyzer.ArchiveTreeStructure;
@@ -51,7 +51,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 public class ApkFileByFileDiffParser {
     @NonNull
     public static DefaultMutableTreeNode createTreeNode(
-            @NonNull Archive oldFile, @NonNull Archive newFile)
+            @NonNull ArchiveContext oldFile, @NonNull ArchiveContext newFile)
             throws IOException, InterruptedException {
         ArchiveNode oldRoot = ArchiveTreeStructure.create(oldFile);
         ArchiveNode newRoot = ArchiveTreeStructure.create(newFile);
@@ -60,7 +60,9 @@ public class ApkFileByFileDiffParser {
                 new PatchExplainer(new DeflateCompressor(), new BsDiffDeltaGenerator());
         Map<String, Long> pathsToDiffSize = new HashMap<>();
         List<EntryExplanation> explanationList =
-                explainer.explainPatch(oldFile.getPath().toFile(), newFile.getPath().toFile());
+                explainer.explainPatch(
+                        oldFile.getArchive().getPath().toFile(),
+                        newFile.getArchive().getPath().toFile());
         for (EntryExplanation explanation : explanationList) {
             String path = new String(explanation.getPath().getData(), "UTF8");
             pathsToDiffSize.put(path, explanation.getCompressedSizeInPatch());

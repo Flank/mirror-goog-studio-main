@@ -17,7 +17,7 @@ package com.android.tools.apk.analyzer.internal;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.tools.apk.analyzer.Archive;
+import com.android.tools.apk.analyzer.ArchiveContext;
 import com.android.tools.apk.analyzer.ArchiveEntry;
 import com.android.tools.apk.analyzer.ArchiveNode;
 import com.android.tools.apk.analyzer.ArchiveTreeStructure;
@@ -29,7 +29,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 public class ApkDiffParser {
     @NonNull
     public static DefaultMutableTreeNode createTreeNode(
-            @NonNull Archive oldFile, @NonNull Archive newFile) throws IOException {
+            @NonNull ArchiveContext oldFile, @NonNull ArchiveContext newFile) throws IOException {
         ArchiveNode oldRoot = ArchiveTreeStructure.create(oldFile);
         ArchiveNode newRoot = ArchiveTreeStructure.create(newFile);
         return createTreeNode(oldRoot, newRoot);

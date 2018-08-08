@@ -18,14 +18,10 @@ package com.android.tools.apk.analyzer;
 
 import com.android.annotations.NonNull;
 import com.android.tools.apk.analyzer.internal.ArchiveTreeNode;
-import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -35,43 +31,16 @@ import javax.swing.tree.MutableTreeNode;
 
 public class ArchiveTreeStructure {
 
-    //this is a list of extensions we're likely to find inside APK files (or AIA bundles or AARs)
-    //that are to be treated as internal archives that are browsable in APK analyzer
-    private static final List<String> INNER_ZIP_EXTENSIONS =
-            ImmutableList.of(".zip", ".apk", ".jar");
-
-    private static final FileVisitor<Path> fileVisitor =
-            new FileVisitor<Path>() {
-                @Override
-                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-                    dir.toFile().deleteOnExit();
-                    return FileVisitResult.CONTINUE;
-                }
-
-                @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-                    file.toFile().deleteOnExit();
-                    return FileVisitResult.CONTINUE;
-                }
-
-                @Override
-                public FileVisitResult visitFileFailed(Path file, IOException exc) {
-                    return FileVisitResult.CONTINUE;
-                }
-
-                @Override
-                public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
-                    return FileVisitResult.CONTINUE;
-                }
-            };
-
     @NonNull
-    public static ArchiveNode create(@NonNull Archive archive) throws IOException {
-        return createWorker(archive, "");
+    public static ArchiveNode create(@NonNull ArchiveContext archiveContext) throws IOException {
+        return createWorker(archiveContext.getArchiveManager(), archiveContext.getArchive(), "");
     }
 
     @NonNull
-    private static ArchiveNode createWorker(@NonNull Archive archive, @NonNull String pathPrefix)
+    private static ArchiveNode createWorker(
+            @NonNull ArchiveManager archiveManager,
+            @NonNull Archive archive,
+            @NonNull String pathPrefix)
             throws IOException {
         Path contentRoot = archive.getContentRoot();
         ArchiveTreeNode rootNode =
@@ -80,8 +49,6 @@ public class ArchiveTreeStructure {
         Stack<ArchiveTreeNode> stack = new Stack<>();
         stack.push(rootNode);
 
-        Path tempFolder = null;
-
         while (!stack.isEmpty()) {
             ArchiveTreeNode node = stack.pop();
             Path path = node.getData().getPath();
@@ -89,37 +56,22 @@ public class ArchiveTreeStructure {
             try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
                 for (Path childPath : stream) {
                     ArchiveTreeNode childNode;
-                    if (INNER_ZIP_EXTENSIONS
-                            .stream()
-                            .anyMatch(ext -> childPath.getFileName().toString().endsWith(ext))) {
-                        // The entry is a "zip" type entry that need to be extracted into a temporary
-                        // directory to allow for recursive extraction if needed, so we extract the
-                        // entry into a temp file, and wrap it with a new Archive instance.
-                        //
-                        // Note: Temporary files are deleted using the "deleteOnExit" mechanism, it should
-                        //       be more deterministic and reliable than that.
-                        if (tempFolder == null) {
-                            tempFolder =
-                                    Files.createTempDirectory(
-                                            archive.getPath().getFileName().toString());
-                        }
-                        Path tempFile =
-                                tempFolder.resolve(contentRoot.relativize(childPath).toString());
-                        Files.createDirectories(tempFile.getParent());
-                        Files.copy(childPath, tempFile);
-                        Archive tempArchive = Archives.openInnerZip(tempFile);
+                    Archive innerArchive = archiveManager.openInnerArchive(archive, childPath);
+                    if (innerArchive != null) {
 
                         // Create inner tree for temp archive file
                         ArchiveTreeNode newArchiveNode =
                                 (ArchiveTreeNode)
                                         createWorker(
-                                                tempArchive, pathPrefix + childPath.toString());
+                                                archiveManager,
+                                                innerArchive,
+                                                pathPrefix + childPath.toString());
 
                         // Create root node for temp archive file, and append children
                         childNode =
                                 new ArchiveTreeNode(
                                         new InnerArchiveEntry(
-                                                archive, childPath, pathPrefix, tempArchive));
+                                                archive, childPath, pathPrefix, innerArchive));
 
                         for (ArchiveNode archiveNodeChild : newArchiveNode.getChildren()) {
                             childNode.add((MutableTreeNode) archiveNodeChild);
@@ -136,10 +88,6 @@ public class ArchiveTreeStructure {
                     node.add(childNode);
                 }
             }
-        }
-
-        if (tempFolder != null) {
-            Files.walkFileTree(tempFolder, fileVisitor);
         }
 
         return rootNode;

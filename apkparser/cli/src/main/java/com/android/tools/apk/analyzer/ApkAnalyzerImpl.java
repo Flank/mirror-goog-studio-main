@@ -94,9 +94,10 @@ public class ApkAnalyzerImpl {
     }
 
     public void resPackages(@NonNull Path apk) {
-        try (Archive archive = Archives.open(apk)) {
+        try (ArchiveContext archiveContext = Archives.open(apk)) {
             byte[] resContents =
-                    Files.readAllBytes(archive.getContentRoot().resolve("resources.arsc"));
+                    Files.readAllBytes(
+                            archiveContext.getArchive().getContentRoot().resolve("resources.arsc"));
             BinaryResourceFile binaryRes = new BinaryResourceFile(resContents);
             List<Chunk> chunks = binaryRes.getChunks();
             if (chunks.isEmpty()) {
@@ -117,10 +118,10 @@ public class ApkAnalyzerImpl {
     }
 
     public void resXml(@NonNull Path apk, @NonNull String filePath) {
-        try (Archive archive = Archives.open(apk)) {
-            Path path = archive.getContentRoot().resolve(filePath);
+        try (ArchiveContext archiveContext = Archives.open(apk)) {
+            Path path = archiveContext.getArchive().getContentRoot().resolve(filePath);
             byte[] bytes = Files.readAllBytes(path);
-            if (!archive.isBinaryXml(path, bytes)) {
+            if (!archiveContext.getArchive().isBinaryXml(path, bytes)) {
                 throw new IOException("The supplied file is not a binary XML resource.");
             }
             out.write(BinaryXmlParser.decodeXml(path.getFileName().toString(), bytes));
@@ -134,9 +135,10 @@ public class ApkAnalyzerImpl {
             @NonNull String type,
             @NonNull String config,
             @Nullable String packageName) {
-        try (Archive archive = Archives.open(apk)) {
+        try (ArchiveContext archiveContext = Archives.open(apk)) {
             byte[] resContents =
-                    Files.readAllBytes(archive.getContentRoot().resolve("resources.arsc"));
+                    Files.readAllBytes(
+                            archiveContext.getArchive().getContentRoot().resolve("resources.arsc"));
             BinaryResourceFile binaryRes = new BinaryResourceFile(resContents);
             List<Chunk> chunks = binaryRes.getChunks();
             if (chunks.isEmpty()) {
@@ -184,9 +186,10 @@ public class ApkAnalyzerImpl {
             @NonNull String config,
             @NonNull String name,
             @Nullable String packageName) {
-        try (Archive archive = Archives.open(apk)) {
+        try (ArchiveContext archiveContext = Archives.open(apk)) {
             byte[] resContents =
-                    Files.readAllBytes(archive.getContentRoot().resolve("resources.arsc"));
+                    Files.readAllBytes(
+                            archiveContext.getArchive().getContentRoot().resolve("resources.arsc"));
             BinaryResourceFile binaryRes = new BinaryResourceFile(resContents);
             List<Chunk> chunks = binaryRes.getChunks();
             if (chunks.isEmpty()) {
@@ -251,9 +254,10 @@ public class ApkAnalyzerImpl {
     }
 
     public void resConfigs(@NonNull Path apk, @NonNull String type, @Nullable String packageName) {
-        try (Archive archive = Archives.open(apk)) {
+        try (ArchiveContext archiveContext = Archives.open(apk)) {
             byte[] resContents =
-                    Files.readAllBytes(archive.getContentRoot().resolve("resources.arsc"));
+                    Files.readAllBytes(
+                            archiveContext.getArchive().getContentRoot().resolve("resources.arsc"));
             BinaryResourceFile binaryRes = new BinaryResourceFile(resContents);
             List<Chunk> chunks = binaryRes.getChunks();
             if (chunks.isEmpty()) {
@@ -289,8 +293,9 @@ public class ApkAnalyzerImpl {
     }
 
     public void dexCode(@NonNull Path apk, @NonNull String fqcn, @Nullable String method) {
-        try (Archive archive = Archives.open(apk)) {
-            Collection<Path> dexPaths = getDexFilesFrom(archive.getContentRoot());
+        try (ArchiveContext archiveContext = Archives.open(apk)) {
+            Collection<Path> dexPaths =
+                    getDexFilesFrom(archiveContext.getArchive().getContentRoot());
 
             boolean dexFound = false;
             for (Path dexPath : dexPaths) {
@@ -422,15 +427,20 @@ public class ApkAnalyzerImpl {
         ProguardMappings proguardMappings = new ProguardMappings(proguardMap, seeds, usage);
         boolean deobfuscateNames = proguardMap != null;
 
-        try (Archive archive = Archives.open(apk)) {
+        try (ArchiveContext archiveContext = Archives.open(apk)) {
             Collection<Path> dexPaths;
             if (dexFilePaths == null || dexFilePaths.isEmpty()) {
-                dexPaths = getDexFilesFrom(archive.getContentRoot());
+                dexPaths = getDexFilesFrom(archiveContext.getArchive().getContentRoot());
             } else {
                 dexPaths =
                         dexFilePaths
                                 .stream()
-                                .map(dexFile -> archive.getContentRoot().resolve(dexFile))
+                                .map(
+                                        dexFile ->
+                                                archiveContext
+                                                        .getArchive()
+                                                        .getContentRoot()
+                                                        .resolve(dexFile))
                                 .collect(Collectors.toList());
             }
             Map<Path, DexBackedDexFile> dexFiles = Maps.newHashMapWithExpectedSize(dexPaths.size());
@@ -521,15 +531,20 @@ public class ApkAnalyzerImpl {
     }
 
     public void dexReferences(@NonNull Path apk, @Nullable List<String> dexFilePaths) {
-        try (Archive archive = Archives.open(apk)) {
+        try (ArchiveContext archiveContext = Archives.open(apk)) {
             Collection<Path> dexPaths;
             if (dexFilePaths == null || dexFilePaths.isEmpty()) {
-                dexPaths = getDexFilesFrom(archive.getContentRoot());
+                dexPaths = getDexFilesFrom(archiveContext.getArchive().getContentRoot());
             } else {
                 dexPaths =
                         dexFilePaths
                                 .stream()
-                                .map(dexFile -> archive.getContentRoot().resolve(dexFile))
+                                .map(
+                                        dexFile ->
+                                                archiveContext
+                                                        .getArchive()
+                                                        .getContentRoot()
+                                                        .resolve(dexFile))
                                 .collect(Collectors.toList());
             }
             for (Path dexPath : dexPaths) {
@@ -544,8 +559,9 @@ public class ApkAnalyzerImpl {
     }
 
     public void dexList(@NonNull Path apk) {
-        try (Archive archive = Archives.open(apk)) {
-            getDexFilesFrom(archive.getContentRoot()).stream()
+        try (ArchiveContext archiveContext = Archives.open(apk)) {
+            getDexFilesFrom(archiveContext.getArchive().getContentRoot())
+                    .stream()
                     .map(path -> path.getFileName().toString())
                     .forEachOrdered(out::println);
         } catch (IOException e) {
@@ -564,8 +580,8 @@ public class ApkAnalyzerImpl {
     }
 
     public void manifestDebuggable(@NonNull Path apk) {
-        try (Archive archive = Archives.open(apk)) {
-            ManifestData manifestData = getManifestData(archive);
+        try (ArchiveContext archiveContext = Archives.open(apk)) {
+            ManifestData manifestData = getManifestData(archiveContext.getArchive());
             boolean debuggable =
                     manifestData.getDebuggable() != null ? manifestData.getDebuggable() : false;
             out.println(String.valueOf(debuggable));
@@ -590,8 +606,8 @@ public class ApkAnalyzerImpl {
     }
 
     public void manifestTargetSdk(@NonNull Path apk) {
-        try (Archive archive = Archives.open(apk)) {
-            ManifestData manifestData = getManifestData(archive);
+        try (ArchiveContext archiveContext = Archives.open(apk)) {
+            ManifestData manifestData = getManifestData(archiveContext.getArchive());
             out.println(String.valueOf(manifestData.getTargetSdkVersion()));
         }  catch (SAXException | ParserConfigurationException e) {
             throw new RuntimeException(e);
@@ -601,8 +617,8 @@ public class ApkAnalyzerImpl {
     }
 
     public void manifestMinSdk(@NonNull Path apk) {
-        try (Archive archive = Archives.open(apk)) {
-            ManifestData manifestData = getManifestData(archive);
+        try (ArchiveContext archiveContext = Archives.open(apk)) {
+            ManifestData manifestData = getManifestData(archiveContext.getArchive());
             out.println(
                     manifestData.getMinSdkVersion() != ManifestData.MIN_SDK_CODENAME
                             ? String.valueOf(manifestData.getMinSdkVersion())
@@ -615,8 +631,8 @@ public class ApkAnalyzerImpl {
     }
 
     public void manifestVersionCode(@NonNull Path apk) {
-        try (Archive archive = Archives.open(apk)) {
-            ManifestData manifestData = getManifestData(archive);
+        try (ArchiveContext archiveContext = Archives.open(apk)) {
+            ManifestData manifestData = getManifestData(archiveContext.getArchive());
             out.printf("%d", manifestData.getVersionCode()).println();
         }  catch (SAXException | ParserConfigurationException e) {
             throw new RuntimeException(e);
@@ -637,8 +653,8 @@ public class ApkAnalyzerImpl {
     }
 
     public void manifestAppId(@NonNull Path apk) {
-        try (Archive archive = Archives.open(apk)) {
-            ManifestData manifestData = getManifestData(archive);
+        try (ArchiveContext archiveContext = Archives.open(apk)) {
+            ManifestData manifestData = getManifestData(archiveContext.getArchive());
             out.println(manifestData.getPackage());
         }  catch (SAXException | ParserConfigurationException e) {
             throw new RuntimeException(e);
@@ -648,8 +664,12 @@ public class ApkAnalyzerImpl {
     }
 
     public void manifestPrint(@NonNull Path apk) {
-        try (Archive archive = Archives.open(apk)) {
-            Path path = archive.getContentRoot().resolve(SdkConstants.ANDROID_MANIFEST_XML);
+        try (ArchiveContext archiveContext = Archives.open(apk)) {
+            Path path =
+                    archiveContext
+                            .getArchive()
+                            .getContentRoot()
+                            .resolve(SdkConstants.ANDROID_MANIFEST_XML);
             byte[] bytes = Files.readAllBytes(path);
             out.write(BinaryXmlParser.decodeXml(path.getFileName().toString(), bytes));
         } catch (IOException e) {
@@ -673,13 +693,13 @@ public class ApkAnalyzerImpl {
             boolean patchSize,
             boolean showFilesOnly,
             boolean showDifferentOnly) {
-        try (Archive oldApk = Archives.open(oldApkFile);
-                Archive newApk = Archives.open(newApkFile)) {
+        try (ArchiveContext archiveContext1 = Archives.open(oldApkFile);
+                ArchiveContext archiveContext2 = Archives.open(newApkFile)) {
             DefaultMutableTreeNode node;
             if (patchSize) {
-                node = ApkFileByFileDiffParser.createTreeNode(oldApk, newApk);
+                node = ApkFileByFileDiffParser.createTreeNode(archiveContext1, archiveContext2);
             } else {
-                node = ApkDiffParser.createTreeNode(oldApk, newApk);
+                node = ApkDiffParser.createTreeNode(archiveContext1, archiveContext2);
             }
             dumpCompare(node, "", !showFilesOnly, showDifferentOnly);
         } catch (IOException e) {
@@ -747,8 +767,8 @@ public class ApkAnalyzerImpl {
     }
 
     public void filesCat(@NonNull Path apk, @NonNull String filePath) {
-        try (Archive archive = Archives.open(apk)) {
-            Path path = archive.getContentRoot().resolve(filePath);
+        try (ArchiveContext archiveContext = Archives.open(apk)) {
+            Path path = archiveContext.getArchive().getContentRoot().resolve(filePath);
             try (InputStream is = new BufferedInputStream(Files.newInputStream(path))) {
                 ByteStreams.copy(is, out);
                 out.flush();
@@ -775,8 +795,8 @@ public class ApkAnalyzerImpl {
             boolean showRawSize,
             boolean showDownloadSize,
             boolean showFilesOnly) {
-        try (Archive archive = Archives.open(apk)) {
-            ArchiveNode node = ArchiveTreeStructure.create(archive);
+        try (ArchiveContext archiveContext = Archives.open(apk)) {
+            ArchiveNode node = ArchiveTreeStructure.create(archiveContext);
             if (showRawSize) {
                 ArchiveTreeStructure.updateRawFileSizes(node, ApkSizeCalculator.getDefault());
             }

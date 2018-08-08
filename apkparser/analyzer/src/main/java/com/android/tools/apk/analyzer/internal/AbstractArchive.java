@@ -18,33 +18,33 @@ package com.android.tools.apk.analyzer.internal;
 
 import com.android.annotations.NonNull;
 import com.android.tools.apk.analyzer.Archive;
-import com.android.utils.FileUtils;
-import java.io.IOException;
-import java.nio.file.FileSystem;
 import java.nio.file.Path;
 
-/**
- * Implementation of {@link Archive} for any kind of &quot;zip&quot; file.
- *
- * <p>The archive is opened as a <code>zip</code> {@link FileSystem} until the {@link #close()}
- * method is called.
- */
-public class ZipArchive extends AbstractArchive {
-    @NonNull private final FileSystem zipFileSystem;
+public abstract class AbstractArchive implements Archive {
+    @NonNull private final Path path;
 
-    public ZipArchive(@NonNull Path path) throws IOException {
-        super(path);
-        this.zipFileSystem = FileUtils.createZipFilesystem(path);
+    public AbstractArchive(@NonNull Path path) {
+        this.path = path;
     }
 
-    @Override
     @NonNull
-    public Path getContentRoot() {
-        return zipFileSystem.getPath("/");
+    @Override
+    public Path getPath() {
+        return path;
     }
 
     @Override
-    public void close() throws IOException {
-        zipFileSystem.close();
+    public boolean isBinaryXml(@NonNull Path p, @NonNull byte[] content) {
+        return false;
+    }
+
+    @Override
+    public boolean isProtoXml(@NonNull Path p, @NonNull byte[] content) {
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s: path=\"%s\"", getClass().getSimpleName(), path);
     }
 }

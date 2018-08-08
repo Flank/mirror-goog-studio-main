@@ -18,33 +18,33 @@ package com.android.tools.apk.analyzer.internal;
 
 import com.android.annotations.NonNull;
 import com.android.tools.apk.analyzer.Archive;
-import com.android.utils.FileUtils;
+import com.android.tools.apk.analyzer.ArchiveContext;
+import com.android.tools.apk.analyzer.ArchiveManager;
 import java.io.IOException;
-import java.nio.file.FileSystem;
-import java.nio.file.Path;
 
-/**
- * Implementation of {@link Archive} for any kind of &quot;zip&quot; file.
- *
- * <p>The archive is opened as a <code>zip</code> {@link FileSystem} until the {@link #close()}
- * method is called.
- */
-public class ZipArchive extends AbstractArchive {
-    @NonNull private final FileSystem zipFileSystem;
+public class ArchiveContextImpl implements ArchiveContext {
+    @NonNull private final ArchiveManager archiveManager;
+    @NonNull private final Archive archive;
 
-    public ZipArchive(@NonNull Path path) throws IOException {
-        super(path);
-        this.zipFileSystem = FileUtils.createZipFilesystem(path);
+    public ArchiveContextImpl(@NonNull ArchiveManager archiveManager, @NonNull Archive archive) {
+        this.archiveManager = archiveManager;
+        this.archive = archive;
     }
 
     @Override
     @NonNull
-    public Path getContentRoot() {
-        return zipFileSystem.getPath("/");
+    public ArchiveManager getArchiveManager() {
+        return archiveManager;
+    }
+
+    @NonNull
+    @Override
+    public Archive getArchive() {
+        return archive;
     }
 
     @Override
     public void close() throws IOException {
-        zipFileSystem.close();
+        archiveManager.close();
     }
 }

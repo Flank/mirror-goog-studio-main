@@ -22,6 +22,8 @@ import com.android.testutils.TestResources;
 import com.android.tools.apk.analyzer.internal.ApkDiffEntry;
 import com.android.tools.apk.analyzer.internal.ApkDiffParser;
 import com.android.tools.apk.analyzer.internal.ApkEntry;
+import com.android.utils.ILogger;
+import com.android.utils.StdLogger;
 import java.io.IOException;
 import java.nio.file.Path;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -29,14 +31,16 @@ import junit.framework.TestCase;
 import org.junit.Test;
 
 public class ApkDiffParserTest {
+    private ILogger logger = new StdLogger(StdLogger.Level.VERBOSE);
 
     @Test
     public void testTreeCreation_1v2() throws IOException {
         Path apkRoot1 = TestResources.getFile("/1.apk").toPath();
         Path apkRoot2 = TestResources.getFile("/2.apk").toPath();
-        try (Archive archive1 = Archives.open(apkRoot1);
-                Archive archive2 = Archives.open(apkRoot2)) {
-            DefaultMutableTreeNode treeNode = ApkDiffParser.createTreeNode(archive1, archive2);
+        try (ArchiveContext archiveContext1 = Archives.open(apkRoot1, logger);
+                ArchiveContext archiveContext2 = Archives.open(apkRoot2, logger)) {
+            DefaultMutableTreeNode treeNode =
+                    ApkDiffParser.createTreeNode(archiveContext1, archiveContext2);
             TestCase.assertEquals(
                     "1.apk 649 960 311\n"
                             + "  instant-run.zip 0 352 352\n"
@@ -54,9 +58,10 @@ public class ApkDiffParserTest {
     public void testTreeCreation_2v1() throws IOException {
         Path apkRoot1 = TestResources.getFile("/1.apk").toPath();
         Path apkRoot2 = TestResources.getFile("/2.apk").toPath();
-        try (Archive archive1 = Archives.open(apkRoot1);
-                Archive archive2 = Archives.open(apkRoot2)) {
-            DefaultMutableTreeNode treeNode = ApkDiffParser.createTreeNode(archive2, archive1);
+        try (ArchiveContext archiveContext1 = Archives.open(apkRoot1, logger);
+                ArchiveContext archiveContext2 = Archives.open(apkRoot2, logger)) {
+            DefaultMutableTreeNode treeNode =
+                    ApkDiffParser.createTreeNode(archiveContext2, archiveContext1);
             TestCase.assertEquals(
                     "2.apk 960 649 -311\n"
                             + "  res/ 6 6 0\n"

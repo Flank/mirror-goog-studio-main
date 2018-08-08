@@ -34,10 +34,10 @@ public class ApkFileByFileDiffParserTest {
     public void testTreeCreation_1v2() throws IOException, InterruptedException {
         Path apkRoot1 = TestResources.getFile("/1.apk").toPath();
         Path apkRoot2 = TestResources.getFile("/2.apk").toPath();
-        try (Archive archive1 = Archives.open(apkRoot1);
-                Archive archive2 = Archives.open(apkRoot2)) {
+        try (ArchiveContext archiveContext1 = Archives.open(apkRoot1);
+                ArchiveContext archiveContext2 = Archives.open(apkRoot2)) {
             DefaultMutableTreeNode treeNode =
-                    ApkFileByFileDiffParser.createTreeNode(archive1, archive2);
+                    ApkFileByFileDiffParser.createTreeNode(archiveContext1, archiveContext2);
             TestCase.assertEquals(
                     "1.apk 649 960 158\n"
                             + "  instant-run.zip 0 352 158\n"
@@ -55,10 +55,10 @@ public class ApkFileByFileDiffParserTest {
     public void testTreeCreation_2v1() throws IOException, InterruptedException {
         Path apkRoot1 = TestResources.getFile("/1.apk").toPath();
         Path apkRoot2 = TestResources.getFile("/2.apk").toPath();
-        try (Archive archive1 = Archives.open(apkRoot1);
-                Archive archive2 = Archives.open(apkRoot2)) {
+        try (ArchiveContext archiveContext1 = Archives.open(apkRoot1);
+                ArchiveContext archiveContext2 = Archives.open(apkRoot2)) {
             DefaultMutableTreeNode treeNode =
-                    ApkFileByFileDiffParser.createTreeNode(archive2, archive1);
+                    ApkFileByFileDiffParser.createTreeNode(archiveContext2, archiveContext1);
             TestCase.assertEquals(
                     "2.apk 960 649 0\n"
                             + "  res/ 6 6 0\n"

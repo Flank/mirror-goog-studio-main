@@ -16,17 +16,15 @@
 
 package com.android.tools.apk.analyzer;
 
-import static com.android.SdkConstants.EXT_ANDROID_PACKAGE;
-import static com.android.SdkConstants.EXT_APP_BUNDLE;
-import static com.android.SdkConstants.EXT_ZIP;
-
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.apk.analyzer.internal.ApkArchive;
 import com.android.tools.apk.analyzer.internal.AppBundleArchive;
+import com.android.tools.apk.analyzer.internal.ArchiveManagerImpl;
 import com.android.tools.apk.analyzer.internal.InstantAppBundleArchive;
-import com.android.tools.apk.analyzer.internal.ZipArchive;
+import com.android.utils.ILogger;
+import com.android.utils.NullLogger;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -35,34 +33,17 @@ public class Archives {
 
     /** Opens an archive file from the local file system */
     @NonNull
-    public static Archive open(@NonNull Path archive) throws IOException {
-        if (hasFileExtension(archive, EXT_ZIP)) {
-            // We assume this is an AIA bundle, which we give special handling
-            return InstantAppBundleArchive.fromZippedBundle(archive);
-        } else if (hasFileExtension(archive, EXT_APP_BUNDLE)) {
-            // Android App Bundle (.aab) archive
-            return AppBundleArchive.fromBundleFile(archive);
-        } else if (hasFileExtension(archive, EXT_ANDROID_PACKAGE)) {
-            // APK file archive
-            return new ApkArchive(archive);
-        } else {
-            return new ZipArchive(archive);
-        }
+    public static ArchiveContext open(@NonNull Path path) throws IOException {
+        return open(path, NullLogger.getLogger());
     }
 
-    /**
-     * Opens an APK file extracted from an AIA bundle
-     *
-     * <p>Note: APK files extracted from AIA bundle file should be abstracted in a more transparent
-     * manner.
-     */
+    /** Opens an archive file from the local file system */
     @NonNull
-    static Archive openInnerZip(@NonNull Path archive) throws IOException {
-        if (hasFileExtension(archive, EXT_ANDROID_PACKAGE)) {
-            return new ApkArchive(archive);
-        } else {
-            return new ZipArchive(archive);
-        }
+    public static ArchiveContext open(@NonNull Path path, @NonNull ILogger logger)
+            throws IOException {
+        //noinspection resource,IOResourceOpenedButNotSafelyClosed
+        ArchiveManagerImpl archiveManager = new ArchiveManagerImpl(logger);
+        return archiveManager.openArchive(path);
     }
 
     /**
@@ -144,13 +125,5 @@ public class Archives {
                 .map(ArchiveNode::getData)
                 .findFirst()
                 .orElse(null);
-    }
-
-    private static boolean hasFileExtension(@NonNull Path path, @NonNull String extension) {
-        if (!extension.startsWith(".")) {
-            extension = "." + extension;
-        }
-        //noinspection StringToUpperCaseOrToLowerCaseWithoutLocale
-        return path.getFileName().toString().toLowerCase().endsWith(extension);
     }
 }
