@@ -17,6 +17,11 @@
 package com.android.build.gradle.internal.dependency;
 
 
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_ELEMENTS;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.BUNDLE_ELEMENTS;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.METADATA_ELEMENTS;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.attributes.BuildTypeAttr;
@@ -26,6 +31,7 @@ import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.errors.SyncIssueHandler;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
 import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.builder.core.VariantType;
 import com.android.builder.errors.EvalIssueException;
@@ -33,10 +39,12 @@ import com.android.builder.errors.EvalIssueReporter;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -89,16 +97,12 @@ public class VariantDependencies {
     @NonNull private final Collection<Configuration> sourceSetRuntimeConfigurations;
     @NonNull private final Collection<Configuration> sourceSetImplementationConfigurations;
 
-    @Nullable private final Configuration apiElements;
-    @Nullable private final Configuration runtimeElements;
+    @NonNull private final ImmutableMap<PublishedConfigType, Configuration> elements;
 
     @NonNull private final Configuration annotationProcessorConfiguration;
 
-    @Nullable private final Configuration metadataElements;
-
     @Nullable private final Configuration wearAppConfiguration;
     @Nullable private final Configuration metadataValuesConfiguration;
-    @Nullable private final Configuration bundleElements;
 
     public static final class Builder {
         @NonNull private final Project project;
@@ -279,12 +283,10 @@ public class VariantDependencies {
                 testedApksAttributes.attribute(AndroidTypeAttr.ATTRIBUTE, consumeType);
             }
 
-            Configuration apiElements = null;
-            Configuration runtimeElements = null;
-            Configuration metadataElements = null;
             Configuration metadataValues = null;
             Configuration wearApp = null;
-            Configuration bundleElements = null;
+            EnumMap<PublishedConfigType, Configuration> elements =
+                    Maps.newEnumMap(PublishedConfigType.class);
 
             if (publishType != null) {
                 if (publishType.getName().equals(AndroidTypeAttr.APK)) {
@@ -303,7 +305,8 @@ public class VariantDependencies {
                             factory.named(AndroidTypeAttr.class, AndroidTypeAttr.APK));
 
                     // bundle config for UAM bundle
-                    bundleElements = configurations.maybeCreate(variantName + "BundleElements");
+                    Configuration bundleElements =
+                            configurations.maybeCreate(variantName + "BundleElements");
                     bundleElements.setDescription("Bundle elements for " + variantName);
                     bundleElements.setCanBeResolved(false);
 
@@ -313,6 +316,7 @@ public class VariantDependencies {
                     bundleElementsAttributes.attribute(VariantAttr.ATTRIBUTE, variantNameAttr);
                     bundleElementsAttributes.attribute(
                             Usage.USAGE_ATTRIBUTE, factory.named(Usage.class, USAGE_BUNDLE));
+                    elements.put(BUNDLE_ELEMENTS, bundleElements);
                 }
 
                 Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> publicationFlavorMap =
@@ -320,7 +324,8 @@ public class VariantDependencies {
 
                 // this is the configuration that contains the artifacts for inter-module
                 // dependencies.
-                runtimeElements = configurations.maybeCreate(variantName + "RuntimeElements");
+                Configuration runtimeElements =
+                        configurations.maybeCreate(variantName + "RuntimeElements");
                 runtimeElements.setDescription("Runtime elements for " + variantName);
                 runtimeElements.setCanBeResolved(false);
 
@@ -338,8 +343,9 @@ public class VariantDependencies {
                 if (variantType.isAar()) {
                     runtimeElements.extendsFrom(runtimeClasspath);
                 }
+                elements.put(RUNTIME_ELEMENTS, runtimeElements);
 
-                apiElements = configurations.maybeCreate(variantName + "ApiElements");
+                Configuration apiElements = configurations.maybeCreate(variantName + "ApiElements");
                 apiElements.setDescription("API elements for " + variantName);
                 apiElements.setCanBeResolved(false);
                 final AttributeContainer apiElementsAttributes = apiElements.getAttributes();
@@ -349,11 +355,13 @@ public class VariantDependencies {
                 apiElementsAttributes.attribute(AndroidTypeAttr.ATTRIBUTE, publishType);
                 // apiElements only extends the api classpaths.
                 apiElements.setExtendsFrom(apiClasspaths);
+                elements.put(API_ELEMENTS, apiElements);
 
                 if (variantType.getPublishToMetadata()) {
                     // Variant-specific metadata publishing configuration. Only published to by base
                     // app, optional apks, and non base feature modules.
-                    metadataElements = configurations.maybeCreate(variantName + "MetadataElements");
+                    Configuration metadataElements =
+                            configurations.maybeCreate(variantName + "MetadataElements");
 
                     metadataElements.setCanBeResolved(false);
                     final AttributeContainer metadataElementsAttributes =
@@ -364,6 +372,7 @@ public class VariantDependencies {
                             AndroidTypeAttr.ATTRIBUTE,
                             factory.named(AndroidTypeAttr.class, AndroidTypeAttr.METADATA));
                     metadataElementsAttributes.attribute(VariantAttr.ATTRIBUTE, variantNameAttr);
+                    elements.put(METADATA_ELEMENTS, metadataElements);
                 }
 
                 if (variantType.isBaseModule()) {
@@ -429,13 +438,10 @@ public class VariantDependencies {
                     runtimeClasspath,
                     runtimeClasspaths,
                     implementationConfigurations,
-                    apiElements,
-                    runtimeElements,
+                    elements,
                     annotationProcessor,
-                    metadataElements,
                     metadataValues,
-                    wearApp,
-                    bundleElements);
+                    wearApp);
         }
 
         private static void checkOldConfigurations(
@@ -514,25 +520,19 @@ public class VariantDependencies {
             @NonNull Configuration runtimeClasspath,
             @NonNull Collection<Configuration> sourceSetRuntimeConfigurations,
             @NonNull Collection<Configuration> sourceSetImplementationConfigurations,
-            @Nullable Configuration apiElements,
-            @Nullable Configuration runtimeElements,
+            @NonNull Map<PublishedConfigType, Configuration> elements,
             @NonNull Configuration annotationProcessorConfiguration,
-            @Nullable Configuration metadataElements,
             @Nullable Configuration metadataValuesConfiguration,
-            @Nullable Configuration wearAppConfiguration,
-            @Nullable Configuration bundleElements) {
+            @Nullable Configuration wearAppConfiguration) {
         this.variantName = variantName;
         this.compileClasspath = compileClasspath;
         this.runtimeClasspath = runtimeClasspath;
         this.sourceSetRuntimeConfigurations = sourceSetRuntimeConfigurations;
         this.sourceSetImplementationConfigurations = sourceSetImplementationConfigurations;
-        this.apiElements = apiElements;
-        this.runtimeElements = runtimeElements;
+        this.elements = Maps.immutableEnumMap(elements);
         this.annotationProcessorConfiguration = annotationProcessorConfiguration;
-        this.metadataElements = metadataElements;
         this.metadataValuesConfiguration = metadataValuesConfiguration;
         this.wearAppConfiguration = wearAppConfiguration;
-        this.bundleElements = bundleElements;
     }
 
     public String getName() {
@@ -559,23 +559,13 @@ public class VariantDependencies {
     }
 
     @Nullable
-    public Configuration getApiElements() {
-        return apiElements;
-    }
-
-    @Nullable
-    public Configuration getRuntimeElements() {
-        return runtimeElements;
+    public Configuration getElements(PublishedConfigType configType) {
+        return elements.get(configType);
     }
 
     @NonNull
     public Configuration getAnnotationProcessorConfiguration() {
         return annotationProcessorConfiguration;
-    }
-
-    @Nullable
-    public Configuration getMetadataElements() {
-        return metadataElements;
     }
 
     @Nullable
@@ -588,15 +578,8 @@ public class VariantDependencies {
         return metadataValuesConfiguration;
     }
 
-    @Nullable
-    public Configuration getBundleElements() {
-        return bundleElements;
-    }
-
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("name", variantName)
-                .toString();
+        return MoreObjects.toStringHelper(this).add("name", variantName).toString();
     }
 }
