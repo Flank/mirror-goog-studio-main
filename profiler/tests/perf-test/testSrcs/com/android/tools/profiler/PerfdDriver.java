@@ -14,7 +14,7 @@ public class PerfdDriver extends ProcessRunner {
     private int myPort = 0;
 
     public PerfdDriver(String configFilePath) {
-        super(PERFD_PATH, "-config_file=" + configFilePath, "-profiler_test");
+        super(PERFD_PATH, "--config_file=" + configFilePath, "--profiler_test=true");
     }
 
     @Override

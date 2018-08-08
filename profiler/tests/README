@@ -67,7 +67,7 @@ HOW DO I ADD NEW TEST
 
 CAN I MANUALLY LAUNCH THE TEST ENVIRONMENT
   Yes, To do this you first should build "//tools/base/profiler/...".
-  In the output you can launch "perfd -config_file=[path to config]".
+  In the output you can launch "perfd --config_file=[path to config]".
   Followed by launching art with the following options
   "art --64 --verbose -Dservice.address=[IP]:[port] \
    -Dapp.communication.port=[port] \

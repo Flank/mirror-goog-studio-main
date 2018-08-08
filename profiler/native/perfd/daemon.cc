@@ -119,15 +119,13 @@ void RunConnector(int app_pid, const string& package_name,
   // Pass the app's process id so the connector knows which agent socket to
   // connect to.
   std::ostringstream connect_arg;
-  connect_arg << kConnectCmdLineArg << "=" << app_pid;
-
+  connect_arg << "--" << kConnectCmdLineArg << "=" << app_pid;
   // Pass the fd as command line argument to connector.
-  std::ostringstream fd_arg;
-  fd_arg << kPerfdConnectRequest << "=" << fd;
+  connect_arg << ":" << kPerfdConnectRequest << ":" << fd;
+
   int return_value =
       execl(kRunAsExecutable, kRunAsExecutable, package_name.c_str(),
-            kConnectorRelativePath, connect_arg.str().c_str(),
-            fd_arg.str().c_str(), (char*)nullptr);
+            kConnectorRelativePath, connect_arg.str().c_str(), (char*)nullptr);
   if (return_value == -1) {
     perror("execl");
     exit(-1);
@@ -269,7 +267,8 @@ std::vector<proto::EventGroup> Daemon::GetEventGroups(
 // case this will return true, false otherwise.
 bool Daemon::IsAppAgentAlive(int app_pid, const string& app_name) {
   std::ostringstream args;
-  args << kConnectCmdLineArg << "=" << app_pid << " " << kHeartBeatRequest;
+  args << "--" << kConnectCmdLineArg << "=" << app_pid << ":"
+       << kHeartBeatRequest;
   BashCommandRunner ping(kConnectorRelativePath);
   return ping.RunAs(args.str(), app_name, nullptr);
 }

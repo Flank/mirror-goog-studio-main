@@ -15,6 +15,7 @@
  */
 
 #include <cstring>
+#include "gflags/gflags.h"
 #include "perfd/connector.h"
 #include "perfd/cpu/cpu_profiler_component.h"
 #include "perfd/daemon.h"
@@ -33,45 +34,37 @@
 #include "utils/socket_utils.h"
 #include "utils/trace.h"
 
-const char* const kProfilerTest = "-profiler_test";
+DEFINE_bool(experimental_pipeline, false, "Use unified pipeline");
+DEFINE_bool(profiler_test, false, "Run profiler test");
+DEFINE_string(config_file, profiler::kConfigFileDefaultPath,
+              "Path to agent config file");
+DEFINE_string(connect, "", "Communicate with an agent");
 
 int main(int argc, char** argv) {
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
+
   // If directed by command line argument, establish a communication channel
   // with the agent which is running a Unix socket server and send the arguments
   // over.  When this argument is used, the program is usually invoked by from
   // GenericComponent's ProfilerServiceImpl::AttachAgent().
-  const char* config_path = profiler::kConfigFileDefaultPath;
-  bool is_testing_profiler = false;
-  for (int i = 1; i < argc; i++) {
-    if (i + 1 < argc && strncmp(argv[i], profiler::kConnectCmdLineArg,
-                                strlen(profiler::kConnectCmdLineArg)) == 0) {
-      if (profiler::ConnectAndSendDataToPerfa(argv[i], argv[i + 1])) {
-        return 0;
-      } else {
-        return -1;
-      }
-      // Note that in this case we should not initialize various profiler
-      // components as the following code does. They create threads but the
-      // associated thread objects might be destructed before the threads exit,
-      // causing 'terminate called without an active exception' error.
-    } else if (strncmp(argv[i], profiler::kConfigFileArg,
-                       strlen(profiler::kConfigFileArg)) == 0) {
-      char* tokenized_word = strtok(argv[i], "=");
-      if (tokenized_word != nullptr &&
-          ((tokenized_word = strtok(nullptr, "=")) != nullptr)) {
-        config_path = tokenized_word;
-      }
-    } else if (strncmp(argv[i], kProfilerTest, strlen(kProfilerTest)) == 0) {
-      is_testing_profiler = true;
+  if (!FLAGS_connect.empty()) {
+    if (profiler::ConnectAndSendDataToPerfa(FLAGS_connect)) {
+      return 0;
+    } else {
+      return -1;
     }
+    // Note that in this case we should not initialize various profiler
+    // components as the following code does. They create threads but the
+    // associated thread objects might be destructed before the threads exit,
+    // causing 'terminate called without an active exception' error.
   }
 
   profiler::Trace::Init();
 
   profiler::SteadyClock clock;
-  profiler::Config config(config_path);
+  profiler::Config config(FLAGS_config_file);
   profiler::EventBuffer buffer;
-  profiler::FileCache file_cache(is_testing_profiler
+  profiler::FileCache file_cache(FLAGS_profiler_test
                                      ? getenv("TEST_TMPDIR")
                                      : profiler::CurrentProcess::dir());
   auto* termination_service = profiler::TerminationService::Instance();

@@ -35,25 +35,26 @@ const int kTimeoutUs = profiler::Clock::ms_to_us(500);
 
 namespace profiler {
 
-bool ConnectAndSendDataToPerfa(const std::string& connect_arg,
-                               const std::string& control_arg) {
+bool ConnectAndSendDataToPerfa(const std::string& connect_arg) {
   // Parses the app's process id from |connect_arg| to construct the target
   // agent socket we want to connect to.
-  int delimiter_index = connect_arg.find('=');
+  int delimiter_index = connect_arg.find(':');
   assert(delimiter_index != -1);
   std::string app_socket(profiler::kAgentSocketName);
-  app_socket.append(connect_arg.substr(delimiter_index + 1));
+  app_socket.append(connect_arg.substr(0, delimiter_index));
 
-  std::string control = control_arg.substr(0, 1);
+  std::string control = connect_arg.substr(delimiter_index + 1, 1);
   int daemon_socket_fd = -1;
   int retry_count = 0;
   if (control.compare(profiler::kHeartBeatRequest) == 0) {
     // Send heartbeat. No additional parsing needed.
   } else if (control.compare(profiler::kPerfdConnectRequest) == 0) {
     // Connect request. Parse the file descriptor as well.
-    delimiter_index = control_arg.find('=');
-    assert(delimiter_index != -1);
-    daemon_socket_fd = atoi(control_arg.c_str() + delimiter_index + 1);
+    // connect_arg[delimiter_index] is ':'
+    // connect_arg[delimiter_index + 1] is 'C'
+    // connect_arg[delimiter_index + 2] is ':'
+    assert(connect_arg.length() > +3);
+    daemon_socket_fd = atoi(connect_arg.c_str() + delimiter_index + 3);
 
     // Make a number of attempts to connect to the agent. The agent may just be
     // starting up and not ready for receiving the connection yet.

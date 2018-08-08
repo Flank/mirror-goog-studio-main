@@ -25,16 +25,13 @@ namespace profiler {
 // "AndroidStudioProfilerAgent" (removing the "@" prefix).
 const char* const kAgentSocketName = "@AndroidStudioProfilerAgent";
 
-// Command line argument to be used when looking for the config file path.
-const char* const kConfigFileArg = "-config_file";
-
 // Default config file path if none are found on the command line. The path
 // points to a profiler::proto::AgentConfig file.
 const char* const kConfigFileDefaultPath = "/data/local/tmp/perfd/agent.config";
 
 // The command line argument indicating that perfd is establishing communication
 // channel with the agent through Unix abstract socket.
-const char* const kConnectCmdLineArg = "-connect";
+const char* const kConnectCmdLineArg = "connect";
 
 // Control messages that are sent by Perfd to Perfa via unix socket.
 // Also see profiler::ConnectAndSendDataToPerfa for more details on how each

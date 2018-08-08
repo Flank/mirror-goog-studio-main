@@ -49,6 +49,10 @@ _repositories = [
         "name": "androidndk",
         "api_level": 21,
     },
+    {
+        "name": "gflags_repo",
+        "path": "external/gflags",
+    },
 ]
 
 _binds = {

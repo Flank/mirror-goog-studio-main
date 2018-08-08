@@ -75,7 +75,10 @@ cc_binary(
     linkopts = ANDROID_LINKOPTS,
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
-    deps = [":daemon"],
+    deps = [
+        ":daemon",
+        "@gflags_repo//:gflags_nothreads",
+    ],
 )
 
 cc_test(
