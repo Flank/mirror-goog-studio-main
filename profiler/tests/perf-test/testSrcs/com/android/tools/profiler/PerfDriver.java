@@ -231,6 +231,7 @@ public class PerfDriver implements TestRule {
                     Agent.AgentConfig.MemoryConfig.newBuilder()
                             .setTrackGlobalJniRefs(true)
                             .setAppDir("/")
+                            .setMaxStackDepth(50)
                             .build();
 
             Agent.AgentConfig config =
