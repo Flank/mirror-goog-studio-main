@@ -45,4 +45,8 @@ public class TestActivity extends Activity {
     public void getClassInitializerStatus() {
         System.out.println(new ClinitTarget().getStatus());
     }
+
+    public void getFailedTargetStatus() {
+        System.out.println(FailedTarget.getStatus());
+    }
 }

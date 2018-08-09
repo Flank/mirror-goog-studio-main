@@ -100,7 +100,7 @@ public class FakeAndroidDriver extends ProcessRunner {
     public void start() throws IOException {
         super.start();
         Pattern pattern = Pattern.compile("(.*)(" + APP_LISTENING + ")(?<result>.*)");
-        String port = waitForInput(pattern, ProcessRunner.NO_TIMEOUT);
+        String port = waitForInput(pattern, ProcessRunner.LONG_TIMEOUT_MS);
         assertTrue(port != null && !port.isEmpty());
         myCommunicationPort = Integer.parseInt(port);
     }
@@ -125,8 +125,16 @@ public class FakeAndroidDriver extends ProcessRunner {
     }
 
     public void attachAgent(String loc) {
+        attachAgent(loc, true);
+    }
+
+    public void attachAgent(String loc, boolean shouldSucceed) {
         sendRequest("attach-agent", loc);
-        waitForInput(String.format("%s %s", "attach-agent", loc));
+        if (shouldSucceed) {
+            waitForInput(String.format("%s %s", "attach-agent", loc));
+        } else {
+            waitForError("Failed to attach agent", SHORT_TIMEOUT_MS);
+        }
     }
 
     public void setProperty(String propertyKey, String propertyValue) {

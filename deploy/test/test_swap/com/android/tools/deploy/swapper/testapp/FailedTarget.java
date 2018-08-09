@@ -15,11 +15,11 @@
  */
 package com.android.tools.deploy.swapper.testapp;
 
-/** This is a class that much of the swapper will be swapping in the Activity for testing. */
-public class Target {
-    private static int seqNumber = 0;
-    /** This is the method to identify the class that is current in the VM. */
+/** Specifically created to failed to hotswap */
+public class FailedTarget {
+    public static final String newField = "FailedTarget SWAPPED!";
+
     public static String getStatus() {
-        return "JUST SWAPPED " + seqNumber++;
+        return newField;
     }
 }
