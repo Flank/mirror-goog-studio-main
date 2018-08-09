@@ -71,10 +71,6 @@ service ProfilerService {
   rpc EndSession(EndSessionRequest) returns (EndSessionResponse) {
   }
 
-  // Request a session by ID.
-  rpc GetSession(GetSessionRequest) returns (GetSessionResponse) {
-  }
-
   // Import a session
   rpc ImportSession(ImportSessionRequest) returns (ImportSessionResponse) {
   }
@@ -197,15 +193,6 @@ message EndSessionRequest {
 }
 
 message EndSessionResponse {
-  Session session = 1;
-}
-
-message GetSessionRequest {
-  int64 session_id = 1;
-}
-
-message GetSessionResponse {
-  // Will not be set if no session with a matching ID was found.
   Session session = 1;
 }
 

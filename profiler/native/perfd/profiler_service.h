@@ -66,11 +66,6 @@ class ProfilerServiceImpl final
       const profiler::proto::EndSessionRequest* request,
       profiler::proto::EndSessionResponse* response) override;
 
-  grpc::Status GetSession(
-      grpc::ServerContext* context,
-      const profiler::proto::GetSessionRequest* request,
-      profiler::proto::GetSessionResponse* response) override;
-
   grpc::Status GetSessions(
       grpc::ServerContext* context,
       const profiler::proto::GetSessionsRequest* request,

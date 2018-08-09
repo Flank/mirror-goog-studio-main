@@ -70,15 +70,6 @@ class ProfilerServiceTest : public ::testing::Test {
     return res.session();
   }
 
-  proto::Session GetSession(int32_t session_id) {
-    proto::GetSessionRequest req;
-    req.set_session_id(session_id);
-    grpc::ClientContext context;
-    proto::GetSessionResponse res;
-    stub_->GetSession(&context, req, &res);
-    return res.session();
-  }
-
   proto::GetSessionsResponse GetSessions(int64_t start, int64_t end) {
     proto::GetSessionsRequest request;
     request.set_start_timestamp(start);
@@ -269,21 +260,6 @@ TEST_F(ProfilerServiceTest, BeginClosesPreviousSession) {
     EXPECT_FALSE(IsSessionActive(sessions.sessions(1)));
     EXPECT_FALSE(IsSessionActive(sessions.sessions(2)));
   }
-}
-
-TEST_F(ProfilerServiceTest, GetSessionWorks) {
-  clock_.SetCurrentTime(1000);
-
-  proto::Session session = BeginSession(-1, 1);
-  clock_.Elapse(500);
-  session = EndSession(-1, session.session_id());
-
-  proto::Session retrieved_session = GetSession(session.session_id());
-  EXPECT_EQ(session.session_id(), retrieved_session.session_id());
-
-  // Getting a non-existent session returns an empty session.
-  session = GetSession(session.session_id() - 1);
-  EXPECT_EQ(0, session.session_id());
 }
 
 TEST_F(ProfilerServiceTest, GetSessionsByTimeRangeWorks) {

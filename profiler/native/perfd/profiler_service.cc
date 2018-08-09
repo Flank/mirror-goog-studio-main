@@ -130,32 +130,6 @@ Status ProfilerServiceImpl::EndSession(
   return Status::OK;
 }
 
-Status ProfilerServiceImpl::GetSession(
-    ServerContext* context, const profiler::proto::GetSessionRequest* request,
-    profiler::proto::GetSessionResponse* response) {
-  proto::GetEventGroupRequest req;
-  proto::GetEventGroupResponse res;
-  req.set_event_id(request->session_id());
-  GetEventGroup(context, &req, &res);
-  proto::Session* session = response->mutable_session();
-  const auto& group = res.group();
-  session->set_session_id(group.event_id());
-  for (int i = 0; i < group.events_size(); i++) {
-    const auto& event = group.events(i);
-    if (event.has_session_started()) {
-      session->set_device_id(event.session_started().device_id());
-      session->set_pid(event.session_started().pid());
-      session->set_start_timestamp(event.timestamp());
-      session->set_end_timestamp(LLONG_MAX);
-    }
-    if (event.has_session_ended()) {
-      session->set_end_timestamp(event.timestamp());
-    }
-  }
-
-  return Status::OK;
-}
-
 Status ProfilerServiceImpl::GetSessions(
     ServerContext* context, const profiler::proto::GetSessionsRequest* request,
     profiler::proto::GetSessionsResponse* response) {
