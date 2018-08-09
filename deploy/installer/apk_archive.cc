@@ -15,6 +15,7 @@
  */
 
 #include "apk_archive.h"
+#include "trace.h"
 
 #include <fcntl.h>
 #include <libgen.h>
@@ -189,6 +190,7 @@ bool ApkArchive::WriteMetadata(const std::string& path, Location loc) const
 
 void ApkArchive::ExtractMetadata(const std::string& packageName,
                                  const std::string& dumpBase) noexcept {
+  Trace traceDump("ExtractMetadata");
   bool readyForProcessing = Prepare();
 
   if (!readyForProcessing) {

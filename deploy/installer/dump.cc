@@ -42,6 +42,7 @@ void DumpCommand::ParseParameters(int argc, char** argv) {
 }
 
 bool DumpCommand::Run(const Workspace& workspace) {
+  Trace traceDump("dump");
   std::string base_ = workspace.GetBase();
   constexpr int kDirectoryMode = (S_IRWXG | S_IRWXU | S_IRWXO);
   std::string dumpFolder = base_ + "/dumps/";

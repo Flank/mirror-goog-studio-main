@@ -50,12 +50,12 @@ std::string GetInstallerPath() {
 }
 
 int main(int argc, char** argv) {
+  Trace::Init();
+  Trace mainTrace("ir2_installer");
   if (argc < 2) {
     PrintUsage(argv[0]);
     return EXIT_FAILURE;
   }
-
-  Trace::Init();
 
   auto binary_name = argv[0];
   auto command_name = argv[1];

@@ -56,7 +56,7 @@ bool ShellCommandRunner::RunAs(const string& parameters,
 
 bool ShellCommandRunner::RunAndReadOutput(const string& cmd,
                                           string* output) const {
-  Trace trace(executable_path_);
+  Trace trace(cmd);
   char buffer[1024];
 
   // Without this line, stdout is picked up but not stderr.
