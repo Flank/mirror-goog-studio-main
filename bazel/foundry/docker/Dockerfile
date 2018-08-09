@@ -1,4 +1,4 @@
-FROM gcr.io/cloud-marketplace/google/rbe-debian8@sha256:496193842f61c9494be68bd624e47c74d706cabf19a693c4653ffe96a97e43e3
+FROM gcr.io/cloud-marketplace/google/rbe-debian8@sha256:46c4fd30ed413f16a8be697833f7c07997c61997c0dceda651e9167068ca2cd3
 RUN apt-get update && apt-get --no-install-recommends install -y ca-certificates-java locales && rm -rf /var/lib/apt/lists/*
 # Install lib32ncurses5 for sdk linker dependency on 32 bit libraries.
 RUN apt-get update && apt-get install -y lib32ncurses5 lib32z1
