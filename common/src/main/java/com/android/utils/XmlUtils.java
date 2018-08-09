@@ -829,7 +829,7 @@ public class XmlUtils {
     }
 
     /**
-     * Removes trailing zeros after the decimal dot and also the dot itself if there were non-zero
+     * Removes trailing zeros after the decimal dot and also the dot itself if there are no non-zero
      * digits after it.
      *
      * @param floatingPointNumber the string representing a floating point number
