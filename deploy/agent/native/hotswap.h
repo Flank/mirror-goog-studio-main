@@ -19,7 +19,7 @@
 
 #include "jni.h"
 #include "jvmti.h"
-#include "swap.pb.h"
+#include "deploy.pb.h"
 
 #include <string>
 

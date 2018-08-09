@@ -16,7 +16,7 @@
 
 package com.android.tools.deployer;
 
-import com.android.tools.deploy.proto.Common;
+import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deploy.swapper.*;
 import com.android.utils.ILogger;
 import com.google.protobuf.ByteString;
@@ -202,7 +202,7 @@ public class Deployer {
     private void swap(RunResponse response) throws DeployerException {
 
         ClassRedefiner redefiner = new AgentBasedClassRedefiner(adb);
-        Common.SwapRequest.Builder request = Common.SwapRequest.newBuilder();
+        Deploy.SwapRequest.Builder request = Deploy.SwapRequest.newBuilder();
         request.setPackageName(packageName);
         request.setRestartActivity(true);
         for (Apk apk : apks) {
@@ -230,7 +230,7 @@ public class Deployer {
                         .forEach(
                                 e ->
                                         request.addClasses(
-                                                Common.ClassDef.newBuilder()
+                                                Deploy.ClassDef.newBuilder()
                                                         .setName(e.name)
                                                         .setDex(ByteString.copyFrom(e.dex))
                                                         .build()));

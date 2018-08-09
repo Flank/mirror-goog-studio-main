@@ -15,9 +15,9 @@
  */
 package com.android.tools.deploy.swapper;
 
-import com.android.tools.deploy.proto.Common;
+import com.android.tools.deploy.proto.Deploy;
 
 /** Responsible for invoking the corresponding API to redefine a class in ART. */
 public abstract class ClassRedefiner {
-    public abstract void redefine(Common.SwapRequest request);
+    public abstract void redefine(Deploy.SwapRequest request);
 }

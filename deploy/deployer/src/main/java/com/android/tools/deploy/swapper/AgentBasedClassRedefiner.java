@@ -15,7 +15,7 @@
  */
 package com.android.tools.deploy.swapper;
 
-import com.android.tools.deploy.proto.Common.SwapRequest;
+import com.android.tools.deploy.proto.Deploy.SwapRequest;
 import com.android.tools.deployer.AdbClient;
 
 public class AgentBasedClassRedefiner extends ClassRedefiner {

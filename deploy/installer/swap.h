@@ -20,7 +20,7 @@
 #include <string>
 
 #include "command.h"
-#include "swap.pb.h"
+#include "deploy.pb.h"
 
 namespace deployer {
 

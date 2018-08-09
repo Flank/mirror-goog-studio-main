@@ -15,8 +15,8 @@
  */
 package com.android.tools.deploy.swapper;
 
-import com.android.tools.deploy.proto.Common;
-import com.android.tools.deploy.proto.Common.AgentConfig;
+import com.android.tools.deploy.proto.Deploy;
+import com.android.tools.deploy.proto.Deploy.AgentConfig;
 import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.fakeandroid.ProcessRunner;
 import com.google.protobuf.ByteString;
@@ -70,15 +70,15 @@ public class AgentBasedClassRedefinerTest extends ClassRedefinerTestBase {
         android.stop();
     }
 
-    private Common.SwapRequest createRequest(String name, String dex, boolean restart)
+    private Deploy.SwapRequest createRequest(String name, String dex, boolean restart)
             throws IOException {
-        Common.ClassDef classDef =
-                Common.ClassDef.newBuilder()
+        Deploy.ClassDef classDef =
+                Deploy.ClassDef.newBuilder()
                         .setName(name)
                         .setDex(ByteString.copyFrom(getSplittedDex(dex)))
                         .build();
-        Common.SwapRequest request =
-                Common.SwapRequest.newBuilder()
+        Deploy.SwapRequest request =
+                Deploy.SwapRequest.newBuilder()
                         .addClasses(classDef)
                         .setPackageName(PACKAGE)
                         .setRestartActivity(restart)
@@ -94,7 +94,7 @@ public class AgentBasedClassRedefinerTest extends ClassRedefinerTestBase {
         android.triggerMethod(ACTIVITY_CLASS, "getStatus");
         Assert.assertTrue(android.waitForInput("NOT SWAPPED", RETURN_VALUE_TIMEOUT));
 
-        Common.SwapRequest request =
+        Deploy.SwapRequest request =
                 createRequest(
                         "com.android.tools.deploy.swapper.testapp.Target",
                         "com/android/tools/deploy/swapper/testapp/Target.dex",
@@ -115,7 +115,7 @@ public class AgentBasedClassRedefinerTest extends ClassRedefinerTestBase {
         android.triggerMethod(ACTIVITY_CLASS, "getStatus");
         Assert.assertTrue(android.waitForInput("NOT SWAPPED", RETURN_VALUE_TIMEOUT));
 
-        Common.SwapRequest request =
+        Deploy.SwapRequest request =
                 createRequest(
                         "com.android.tools.deploy.swapper.testapp.Target",
                         "com/android/tools/deploy/swapper/testapp/Target.dex",
@@ -139,7 +139,7 @@ public class AgentBasedClassRedefinerTest extends ClassRedefinerTestBase {
         android.triggerMethod(ACTIVITY_CLASS, "getStatus");
         Assert.assertTrue(android.waitForInput("NOT SWAPPED", RETURN_VALUE_TIMEOUT));
 
-        Common.SwapRequest request =
+        Deploy.SwapRequest request =
                 createRequest(
                         "com.android.tools.deploy.swapper.testapp.Target",
                         "com/android/tools/deploy/swapper/testapp/ClinitTarget.dex",
@@ -159,7 +159,7 @@ public class AgentBasedClassRedefinerTest extends ClassRedefinerTestBase {
         android.loadDex(DEX_LOCATION);
         android.launchActivity(ACTIVITY_CLASS);
 
-        Common.SwapRequest request =
+        Deploy.SwapRequest request =
                 createRequest(
                         "com.android.tools.deploy.swapper.testapp.ClinitTarget",
                         "com/android/tools/deploy/swapper/testapp/ClinitTarget.dex",
@@ -188,7 +188,7 @@ public class AgentBasedClassRedefinerTest extends ClassRedefinerTestBase {
         }
 
         @Override
-        public void redefine(Common.SwapRequest request) {
+        public void redefine(Deploy.SwapRequest request) {
             try {
                 AgentConfig.Builder agentConfig = AgentConfig.newBuilder();
                 agentConfig.setInstrumentDex(INSTRUMENTATION_LOCATION);

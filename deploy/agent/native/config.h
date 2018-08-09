@@ -20,7 +20,7 @@
 #include <memory>
 #include <string>
 
-#include "swap.pb.h"
+#include "deploy.pb.h"
 
 namespace swapper {
 class Config {

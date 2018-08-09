@@ -19,7 +19,7 @@
 #include <sstream>
 #include <string>
 
-#include "swap.pb.h"
+#include "deploy.pb.h"
 
 std::string ReadFile(const std::string& file_name) {
   std::ostringstream file_contents;
