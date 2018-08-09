@@ -84,6 +84,9 @@ data class Variant(
      * Returns all [Artifact] instances that are part of this [Variant].
      */
     val artifacts: List<Artifact> = listOfNotNull(mainArtifact, androidTestArtifact, unitTestArtifact) + extraArtifacts + extraJavaArtifacts
+
+    override fun toString(): String = printProperties(
+        this, Variant(name = "", mainArtifact = Artifact("")))
 }
 
 /**

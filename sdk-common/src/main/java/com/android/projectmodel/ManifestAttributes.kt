@@ -97,16 +97,5 @@ data class ManifestAttributes(
                     debuggable = other.debuggable ?: debuggable
             )
 
-    override fun toString(): String {
-        val componentStrings = ArrayList<String>()
-        val defaultValues = ManifestAttributes()
-        for (prop in ManifestAttributes::class.memberProperties) {
-            val defaultValue = prop.get(defaultValues)
-            val actualValue = prop.get(this)
-            if (defaultValue != actualValue) {
-                componentStrings.add("${prop.name}=$actualValue")
-            }
-        }
-        return componentStrings.joinToString(",", "ManifestAttributes(", ")")
-    }
+    override fun toString(): String = printProperties(this, ManifestAttributes())
 }

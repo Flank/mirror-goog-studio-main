@@ -55,4 +55,7 @@ data class AndroidProject(
          * Namespacing strategy for this project
          */
         val namespacing: NamespacingType = NamespacingType.DISABLED
-)
+) {
+    override fun toString(): String =
+        printProperties(this, AndroidProject(name = "", type = ProjectType.APP))
+}

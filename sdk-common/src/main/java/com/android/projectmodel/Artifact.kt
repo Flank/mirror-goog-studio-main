@@ -66,4 +66,6 @@ data class Artifact(
      */
     val compileDeps: List<ArtifactDependency>
         get() = resolved.compileDeps ?: emptyList()
+
+    override fun toString(): String = printProperties(this, Artifact(name = ""))
 }

@@ -16,8 +16,6 @@
 @file:JvmName("ConfigUtil")
 package com.android.projectmodel
 
-import kotlin.reflect.full.memberProperties
-
 /**
  * Represents a group of source files and configuration data that contribute to one or more [Artifact]s. For those familiar with Gradle,
  * this is the union of the Gradle concepts of a build type, flavor, and source provider. Unlike a Gradle source provider, this contains
@@ -89,18 +87,7 @@ data class Config(
          */
         val usingSupportLibVectors: Boolean = false
 ) {
-    override fun toString(): String {
-        val componentStrings = ArrayList<String>()
-        val defaultValues = Config()
-        for (prop in Config::class.memberProperties) {
-            val defaultValue = prop.get(defaultValues)
-            val actualValue = prop.get(this)
-            if (defaultValue != actualValue) {
-                componentStrings.add("${prop.name}=$actualValue")
-            }
-        }
-        return componentStrings.joinToString(",", "Config(", ")")
-    }
+    override fun toString(): String = printProperties(this, Config())
 
   /**
    * Merges this [Config] with another higher-priority [Config].

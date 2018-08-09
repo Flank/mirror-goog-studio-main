@@ -16,6 +16,7 @@
 package com.android.projectmodel
 
 import com.android.ide.common.repository.GradleCoordinate
+import com.android.ide.common.util.PathString
 import java.util.IdentityHashMap
 
 /**
@@ -42,7 +43,10 @@ data class ArtifactDependency(
          * Resolved Maven coordinate for this dependency, if one existed and is known to the build system.
          */
         val resolvedMavenCoordinate: GradleCoordinate? = null
-)
+) {
+    override fun toString(): String = printProperties(
+        this, ArtifactDependency(JavaLibrary("", PathString(""))))
+}
 
 /**
  * Uses a depth-first search to visit each dependency exactly once. The result may contain multiple
