@@ -486,7 +486,9 @@ void MemoryTrackingEnv::LogGcStart() {
 }
 
 void MemoryTrackingEnv::LogGcFinish() {
-  profiler::EnqueueGcStats(last_gc_start_ns_, clock_.GetCurrentTime());
+  int64_t gc_end_ns = clock_.GetCurrentTime();
+  profiler::EnqueueGcStats(last_gc_start_ns_, gc_end_ns);
+  timing_stats_.Track(TimingStats::kGc, gc_end_ns - last_gc_start_ns_);
 
 #ifndef NDEBUG
   Log::V(">> [MEM AGENT STATS DUMP BEGIN]");
@@ -597,22 +599,24 @@ void MemoryTrackingEnv::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
                                             jclass klass, jlong size) {
   g_env->total_live_count_++;
 
-  jvmtiError error;
-
-  ClassInfo klass_info;
-  GetClassInfo(g_env, jvmti, jni, klass, &klass_info);
-  if (klass_info.class_name.compare(kClassClass) == 0) {
-    // Special case, we can potentially get two allocation events
-    // when a class is loaded: One for ClassLoad and another for
-    // ClassPrepare. We don't know which one it is here, so opting
-    // to handle Class object allocation in ClassPrepare instead.
-    return;
-  }
-
   Stopwatch stopwatch;
   {
+    jvmtiError error;
+
+    ClassInfo klass_info;
+    GetClassInfo(g_env, jvmti, jni, klass, &klass_info);
+    if (klass_info.class_name.compare(kClassClass) == 0) {
+      // Special case, we can potentially get two allocation events
+      // when a class is loaded: One for ClassLoad and another for
+      // ClassPrepare. We don't know which one it is here, so opting
+      // to handle Class object allocation in ClassPrepare instead.
+      return;
+    }
+
     int32_t tag = g_env->GetNextObjectTag();
+    Stopwatch stopwatch_settag;
     error = jvmti->SetTag(object, tag);
+    g_env->timing_stats_.Track(TimingStats::kSetTag, stopwatch_settag.GetElapsed());
     CheckJvmtiError(jvmti, error);
 
     auto itr = g_env->class_tag_map_.find(klass_info);
@@ -964,62 +968,59 @@ void MemoryTrackingEnv::FillAllocEventThreadData(
     AllocationEvent::Allocation* alloc_data) {
   env->FillThreadName(jvmti, jni, thread, alloc_data->mutable_thread_name());
 
+  // Collect stack frames
+  int32_t depth = env->max_stack_depth_;
+  jvmtiFrameInfo frames[depth];
+  jint count = 0;
   Stopwatch stopwatch;
-  {
-    // Collect stack frames
-    int32_t depth = env->max_stack_depth_;
-    jvmtiFrameInfo frames[depth];
-    jint count = 0;
-    jvmtiError error = jvmti->GetStackTrace(thread, 0, depth, frames, &count);
-    CheckJvmtiError(jvmti, error);
-    for (int i = 0; i < count; i++) {
-      int64_t method_id = reinterpret_cast<int64_t>(frames[i].method);
-      // jlocation is just a jlong.
-      int64_t location_id = reinterpret_cast<jlong>(frames[i].location);
-      alloc_data->add_method_ids(method_id);
-      alloc_data->add_location_ids(location_id);
-    }
-  }
+  jvmtiError error = jvmti->GetStackTrace(thread, 0, depth, frames, &count);
   env->timing_stats_.Track(TimingStats::kGetCallstack, stopwatch.GetElapsed());
+  CheckJvmtiError(jvmti, error);
+  for (int i = 0; i < count; i++) {
+    int64_t method_id = reinterpret_cast<int64_t>(frames[i].method);
+    // jlocation is just a jlong.
+    int64_t location_id = reinterpret_cast<jlong>(frames[i].location);
+    alloc_data->add_method_ids(method_id);
+    alloc_data->add_location_ids(location_id);
+  }
 }
 
 void MemoryTrackingEnv::FillThreadName(jvmtiEnv* jvmti, JNIEnv* jni,
                                        jthread thread,
                                        std::string* thread_name) {
   assert(thread_name != nullptr);
+  jvmtiThreadInfo ti;
   Stopwatch stopwatch;
-  {
-    jvmtiThreadInfo ti;
-    jvmtiError error = jvmti->GetThreadInfo(thread, &ti);
-    if (CheckJvmtiError(jvmti, error)) {
-      return;
-    }
-    ScopedLocalRef<jobject> scoped_thread_group(jni, ti.thread_group);
-    ScopedLocalRef<jobject> scoped_class_loader(jni, ti.context_class_loader);
-    *thread_name = ti.name;
-    Deallocate(jvmti, ti.name);
-  }
+  jvmtiError error = jvmti->GetThreadInfo(thread, &ti);
   timing_stats_.Track(TimingStats::kThreadInfo, stopwatch.GetElapsed());
+  if (CheckJvmtiError(jvmti, error)) {
+    return;
+  }
+  ScopedLocalRef<jobject> scoped_thread_group(jni, ti.thread_group);
+  ScopedLocalRef<jobject> scoped_class_loader(jni, ti.context_class_loader);
+  *thread_name = ti.name;
+  Deallocate(jvmti, ti.name);
 }
 
 void MemoryTrackingEnv::GetClassInfo(MemoryTrackingEnv* env, jvmtiEnv* jvmti,
                                      JNIEnv* jni, jclass klass,
                                      ClassInfo* klass_info) {
   jvmtiError error;
+
+  // Get class loader id.
   Stopwatch stopwatch;
-  {
-    // Get class loader id.
-    klass_info->class_loader_id = GetClassLoaderId(jvmti, jni, klass);
+  klass_info->class_loader_id = GetClassLoaderId(jvmti, jni, klass);
+  env->timing_stats_.Track(TimingStats::kClassLoader, stopwatch.GetElapsed());
 
-    // Get class name.
-    char* sig_mutf8;
-    error = jvmti->GetClassSignature(klass, &sig_mutf8, nullptr);
-    CheckJvmtiError(jvmti, error);
+  // Get class name.
+  char* sig_mutf8;
+  stopwatch.Start();
+  error = jvmti->GetClassSignature(klass, &sig_mutf8, nullptr);
+  env->timing_stats_.Track(TimingStats::kClassName, stopwatch.GetElapsed());
+  CheckJvmtiError(jvmti, error);
 
-    // TODO this is wrong. We need to parse mutf-8.
-    klass_info->class_name = sig_mutf8;
-    Deallocate(jvmti, sig_mutf8);
-  }
-  env->timing_stats_.Track(TimingStats::kClassInfo, stopwatch.GetElapsed());
+  // TODO this is wrong. We need to parse mutf-8.
+  klass_info->class_name = sig_mutf8;
+  Deallocate(jvmti, sig_mutf8);
 }
 }  // namespace profiler

@@ -90,15 +90,18 @@ struct TrackingAllocator {
 class TimingStats {
  public:
   enum TimingTag {
-    kAllocate,  // Time from SetTag + kThreadInfo + kGetCallstack
-    kFree,
-    kClassInfo,          // Time to resolve class name + class loader
+    kAllocate,           // Total time in VMObjectAllocate callback
+    kFree,               // Total time in ObjectFree callback
+    kGc,                 // Time between GC start and end callbacks
+    kClassLoader,        // Time to resolve class loader
+    kClassName,          // Time to resolve class name
     kThreadInfo,         // Time to resolve thread id/name
     kGetCallstack,       // Time to retrieve callstack's method+frame ids
     kResolveCallstack,   // Method ids -> Method nmaes
     kResolveLineNumber,  // Frame ids -> Line numbers
     kNativeBacktrace,    // Time to unwind native stack.
     kMemMapLookup,       // Time to check if native stack starts within the app
+    kSetTag,             // Time of jvmti.SetTag().
     kTimingTagCount,
   };
 
@@ -133,10 +136,12 @@ class TimingStats {
         return "Allocate";
       case kFree:
         return "Free";
-      case kClassInfo:
-        return "ClassInfo";
+      case kClassLoader:
+        return "GetClassLoader";
+      case kClassName:
+        return "GetClassName";
       case kThreadInfo:
-        return "ThreadInfo";
+        return "GetThreadInfo";
       case kGetCallstack:
         return "GetCallstack";
       case kResolveCallstack:
@@ -147,6 +152,10 @@ class TimingStats {
         return "NativeBacktrace";
       case kMemMapLookup:
         return "MemMapLookup";
+      case kGc:
+        return "GC";
+      case kSetTag:
+        return "SetTag";
       default:
         return "Unknown";
     }
