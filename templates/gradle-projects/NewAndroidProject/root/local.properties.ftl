@@ -8,3 +8,8 @@
 # For customization when using a Version Control System, please read the
 # header note.
 sdk.dir=${escapePropertyValue(sdkDir)}
+<#if useOfflineRepo!false>
+# Location of any local repos you want to use.
+# Multiple repos can be specified, using a comma to separate the different locations.
+offline.repo=${escapePropertyValue(offlineRepoPath)}
+</#if>
