@@ -95,13 +95,8 @@ public class JavaCompileCreationAction extends LazyTaskCreationAction<AndroidJav
         javacTask.setDestinationDir(destinationDir);
 
         CompileOptions compileOptions = globalScope.getExtension().getCompileOptions();
-
-        AbstractCompilesUtil.configureLanguageLevel(
-                javacTask,
-                compileOptions,
-                globalScope.getExtension().getCompileSdkVersion(),
-                scope.getJava8LangSupportType());
-
+        javacTask.setSourceCompatibility(compileOptions.getSourceCompatibility().toString());
+        javacTask.setTargetCompatibility(compileOptions.getTargetCompatibility().toString());
         javacTask.getOptions().setEncoding(compileOptions.getEncoding());
 
         Boolean includeCompileClasspath =

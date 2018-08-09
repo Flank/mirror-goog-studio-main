@@ -77,6 +77,7 @@ import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.build.gradle.options.SyncOptions.ErrorFormatMode;
 import com.android.build.gradle.tasks.LintBaseTask;
+import com.android.build.gradle.tasks.factory.AbstractCompilesUtil;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.errors.EvalIssueReporter;
@@ -702,6 +703,11 @@ public abstract class BasePlugin<E extends BaseExtension2>
         checkState(extension.getCompileSdkVersion() != null, "compileSdkVersion is not specified.");
 
         ndkHandler.setCompileSdkVersion(extension.getCompileSdkVersion());
+        extension
+                .getCompileOptions()
+                .setDefaultJavaVersion(
+                        AbstractCompilesUtil.getDefaultJavaVersion(
+                                extension.getCompileSdkVersion()));
 
         // get current plugins and look for the default Java plugin.
         if (project.getPlugins().hasPlugin(JavaPlugin.class)) {

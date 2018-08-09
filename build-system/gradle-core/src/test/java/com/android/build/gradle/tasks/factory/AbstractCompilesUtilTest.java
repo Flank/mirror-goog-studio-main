@@ -16,9 +16,8 @@
 
 package com.android.build.gradle.tasks.factory;
 
-import static com.android.build.gradle.tasks.factory.AbstractCompilesUtil.chooseDefaultJavaVersion;
+import static com.android.build.gradle.tasks.factory.AbstractCompilesUtil.getDefaultJavaVersion;
 
-import com.android.build.gradle.internal.scope.VariantScope;
 import org.gradle.api.JavaVersion;
 import org.junit.Assert;
 import org.junit.Test;
@@ -26,37 +25,14 @@ import org.junit.Test;
 /** Tests the logic for choosing Java language level. */
 public class AbstractCompilesUtilTest {
 
-    private static final String CURRENT_JDK_VERSION = "1.8";
-
     @Test
     public void testChooseDefaultJavaVersion_jdk8() throws Exception {
+        Assert.assertEquals(JavaVersion.VERSION_1_6, getDefaultJavaVersion("android-15"));
+        Assert.assertEquals(JavaVersion.VERSION_1_7, getDefaultJavaVersion("android-21"));
         Assert.assertEquals(
-                JavaVersion.VERSION_1_6,
-                chooseDefaultJavaVersion(
-                        "android-15", CURRENT_JDK_VERSION, VariantScope.Java8LangSupport.UNUSED));
-        Assert.assertEquals(
-                JavaVersion.VERSION_1_7,
-                chooseDefaultJavaVersion(
-                        "android-21", CURRENT_JDK_VERSION, VariantScope.Java8LangSupport.UNUSED));
-        Assert.assertEquals(
-                JavaVersion.VERSION_1_7,
-                chooseDefaultJavaVersion(
-                        "Google Inc.:Google APIs:22",
-                        CURRENT_JDK_VERSION,
-                        VariantScope.Java8LangSupport.UNUSED));
-        Assert.assertEquals(
-                JavaVersion.VERSION_1_7,
-                chooseDefaultJavaVersion(
-                        "android-24", CURRENT_JDK_VERSION, VariantScope.Java8LangSupport.UNUSED));
-        Assert.assertEquals(
-                JavaVersion.VERSION_1_7,
-                chooseDefaultJavaVersion(
-                        "android-24", CURRENT_JDK_VERSION, VariantScope.Java8LangSupport.DESUGAR));
-        Assert.assertEquals(
-                JavaVersion.VERSION_1_7,
-                chooseDefaultJavaVersion(
-                        "android-24",
-                        CURRENT_JDK_VERSION,
-                        VariantScope.Java8LangSupport.RETROLAMBDA));
+                JavaVersion.VERSION_1_7, getDefaultJavaVersion("Google Inc.:Google APIs:22"));
+        Assert.assertEquals(JavaVersion.VERSION_1_7, getDefaultJavaVersion("android-24"));
+        Assert.assertEquals(JavaVersion.VERSION_1_7, getDefaultJavaVersion("android-24"));
+        Assert.assertEquals(JavaVersion.VERSION_1_7, getDefaultJavaVersion("android-24"));
     }
 }

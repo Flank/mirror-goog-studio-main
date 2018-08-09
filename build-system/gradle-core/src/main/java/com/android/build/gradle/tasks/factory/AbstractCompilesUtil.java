@@ -37,37 +37,10 @@ public class AbstractCompilesUtil {
 
     public static final String ANDROID_APT_PLUGIN_NAME = "com.neenbedankt.android-apt";
 
-    /**
-     * Determines the java language level to use and sets it on the given task and {@link
-     * CompileOptions}. The latter is to propagate the information to Studio.
-     */
-    public static void configureLanguageLevel(
-            AbstractCompile compileTask,
-            final CompileOptions compileOptions,
-            String compileSdkVersion,
-            VariantScope.Java8LangSupport java8LangSupport) {
-        setDefaultJavaVersion(compileOptions, compileSdkVersion, java8LangSupport);
-        compileTask.setSourceCompatibility(compileOptions.getSourceCompatibility().toString());
-        compileTask.setTargetCompatibility(compileOptions.getTargetCompatibility().toString());
-    }
-
-    public static void setDefaultJavaVersion(
-            final CompileOptions compileOptions,
-            String compileSdkVersion,
-            VariantScope.Java8LangSupport java8LangSupport) {
-        compileOptions.setDefaultJavaVersion(
-                chooseDefaultJavaVersion(
-                        compileSdkVersion,
-                        System.getProperty("java.specification.version"),
-                        java8LangSupport));
-    }
-
     @NonNull
     @VisibleForTesting
-    static JavaVersion chooseDefaultJavaVersion(
-            @NonNull String compileSdkVersion,
-            @NonNull String currentJdkVersion,
-            VariantScope.Java8LangSupport java8LangSupport) {
+    public static JavaVersion getDefaultJavaVersion(@NonNull String compileSdkVersion) {
+        String currentJdkVersion = System.getProperty("java.specification.version");
         final AndroidVersion hash = AndroidTargetHash.getVersionFromHash(compileSdkVersion);
         Integer compileSdkLevel = (hash == null ? null : hash.getFeatureLevel());
 
