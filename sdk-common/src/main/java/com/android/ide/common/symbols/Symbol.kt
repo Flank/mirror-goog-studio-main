@@ -63,6 +63,7 @@ sealed class Symbol {
     abstract val name: String
     /** The value as a string. */
     abstract fun getValue():String
+    abstract val intValue: Int
     abstract val javaType: SymbolJavaType
     abstract val children: ImmutableList<String>
 
@@ -82,16 +83,13 @@ sealed class Symbol {
          * @param name the sanitized name of the symbol
          * @param idProvider the provider for the value of the symbol
          */
-        @JvmStatic fun createAndValidateSymbol(
+        @JvmStatic @JvmOverloads fun createAndValidateSymbol(
             resourceType: ResourceType,
             name: String,
-            idProvider: IdProvider): NormalSymbol {
-            validateSymbol(name, resourceType)
-            return NormalSymbol(
-                resourceType = resourceType,
-                name = name,
-                intValue = idProvider.next(resourceType)
-            )
+            idProvider: IdProvider,
+            isMaybeDefinition: Boolean = false): Symbol {
+            return createAndValidateSymbol(
+                resourceType, name, idProvider.next(resourceType), isMaybeDefinition)
         }
 
         /**
@@ -105,17 +103,24 @@ sealed class Symbol {
          * @param name the sanitized name of the symbol
          * @param value the value of the symbol
          */
-        @JvmStatic fun createAndValidateSymbol(
+        @JvmStatic @JvmOverloads fun createAndValidateSymbol(
                 resourceType: ResourceType,
                 name: String,
-                value: Int): NormalSymbol {
+                value: Int,
+                isMaybeDefinition: Boolean = false): Symbol {
             validateSymbol(name, resourceType)
-            return NormalSymbol(
-                resourceType = resourceType,
-                name = name,
-                canonicalName = canonicalizeValueResourceName(name),
-                intValue = value
-            )
+            return if (resourceType == ResourceType.ATTR) {
+                AttributeSymbol(
+                    name = name,
+                    intValue = value,
+                    isMaybeDefinition = isMaybeDefinition)
+            } else {
+                NormalSymbol(
+                    resourceType = resourceType,
+                    name = name,
+                    intValue = value
+                )
+            }
         }
 
         /**
@@ -169,13 +174,15 @@ sealed class Symbol {
     data class NormalSymbol @JvmOverloads constructor(
         override val resourceType: ResourceType,
         override val name: String,
-        val intValue: Int,
+        override val intValue: Int,
         override val resourceVisibility: ResourceVisibility = ResourceVisibility.UNDEFINED,
         override val canonicalName: String = canonicalizeValueResourceName(name)
     ) : Symbol() {
         init {
             Preconditions.checkArgument(resourceType != ResourceType.STYLEABLE,
                 "Internal Error: Styleables must be represented by StyleableSymbol.")
+            Preconditions.checkArgument(resourceType != ResourceType.ATTR,
+                "Internal Error: Attributes must be represented by AttributeSymbol.")
         }
         override val javaType: SymbolJavaType
             get() = SymbolJavaType.INT
@@ -185,6 +192,27 @@ sealed class Symbol {
 
         override fun toString(): String =
                 "$resourceVisibility $resourceType $canonicalName = 0x${intValue.toString(16)}"
+    }
+
+    /**
+     * TODO: add attribute format
+     */
+    data class AttributeSymbol @JvmOverloads constructor(
+        override val name: String,
+        override val intValue: Int,
+        val isMaybeDefinition: Boolean = false,
+        override val resourceVisibility: ResourceVisibility = ResourceVisibility.UNDEFINED,
+        override val canonicalName: String = canonicalizeValueResourceName(name)
+    ) : Symbol() {
+        override val resourceType: ResourceType = ResourceType.ATTR
+        override val javaType: SymbolJavaType = SymbolJavaType.INT
+        override fun getValue(): String = "0x${Integer.toHexString(intValue)}"
+        override val children: ImmutableList<String>
+            get() = throw UnsupportedOperationException("Attributes cannot have children.")
+
+        private val typeWithMaybeDef = "$resourceType${if (isMaybeDefinition) "?" else ""}"
+        override fun toString(): String =
+            "$resourceVisibility $typeWithMaybeDef $canonicalName = 0x${intValue.toString(16)}"
     }
 
     data class StyleableSymbol @JvmOverloads constructor(
@@ -207,6 +235,9 @@ sealed class Symbol {
     ) : Symbol() {
         override val resourceType: ResourceType
             get() = ResourceType.STYLEABLE
+        override val intValue: Int
+            get() = throw UnsupportedOperationException("Styleables have no int value")
+
 
         override fun getValue(): String =
             StringBuilder(values.size * 12 + 2).apply {

@@ -85,7 +85,9 @@ import org.xml.sax.SAXException;
  *  - R def format,
  *     - Used for namespace backward compatibility.
  *     - Contains only the resources defined in a single library.
- *     - Reuses the partial R file format, but with the package name as the first line.
+ *     - Has the package name as the first line.
+ *     - May contain internal resource types (e.g. "maybe attributes" defined under declare
+ *       styleable resources).
  * </pre>
  */
 public final class SymbolIo {
@@ -294,13 +296,24 @@ public final class SymbolIo {
                                 readConfiguration.rawSymbolNames
                                         ? SymbolUtils.canonicalizeValueResourceName(data.name)
                                         : data.name;
-                        table.add(
-                                new Symbol.NormalSymbol(
-                                        data.resourceType,
-                                        data.name,
-                                        value,
-                                        data.accessibility,
-                                        canonicalName));
+
+                        if (data.resourceType == ResourceType.ATTR) {
+                            table.add(
+                                    new Symbol.AttributeSymbol(
+                                            data.name,
+                                            value,
+                                            data.maybeDefinition,
+                                            data.accessibility,
+                                            canonicalName));
+                        } else {
+                            table.add(
+                                    new Symbol.NormalSymbol(
+                                            data.resourceType,
+                                            data.name,
+                                            value,
+                                            data.accessibility,
+                                            canonicalName));
+                        }
                         readNextLine();
                     }
                 }
@@ -398,6 +411,7 @@ public final class SymbolIo {
         @NonNull final SymbolJavaType javaType;
         @NonNull final String value;
         @NonNull final ImmutableList<String> children;
+        final boolean maybeDefinition;
 
         public SymbolData(
                 @NonNull ResourceType resourceType,
@@ -410,6 +424,7 @@ public final class SymbolIo {
             this.javaType = javaType;
             this.value = value;
             this.children = ImmutableList.of();
+            this.maybeDefinition = false;
         }
 
         public SymbolData(
@@ -424,6 +439,7 @@ public final class SymbolIo {
             this.javaType = javaType;
             this.value = value;
             this.children = ImmutableList.of();
+            this.maybeDefinition = false;
         }
 
         public SymbolData(@NonNull String name, @NonNull ImmutableList<String> children) {
@@ -433,6 +449,7 @@ public final class SymbolIo {
             this.javaType = SymbolJavaType.INT_LIST;
             this.value = "";
             this.children = children;
+            this.maybeDefinition = false;
         }
 
         public SymbolData(@NonNull ResourceType resourceType, @NonNull String name) {
@@ -445,6 +462,17 @@ public final class SymbolIo {
                             : SymbolJavaType.INT;
             this.value = "";
             this.children = ImmutableList.of();
+            this.maybeDefinition = false;
+        }
+
+        public SymbolData(@NonNull String name, boolean maybeDefinition) {
+            this.accessibility = ResourceVisibility.UNDEFINED;
+            this.name = name;
+            this.javaType = SymbolJavaType.INT;
+            this.resourceType = ResourceType.ATTR;
+            this.value = "";
+            this.children = ImmutableList.of();
+            this.maybeDefinition = maybeDefinition;
         }
     }
 
@@ -531,8 +559,15 @@ public final class SymbolIo {
             throws IOException {
         // format is "<type> <name>[ <child>[ <child>[ ...]]]"
         int startPos = line.indexOf(' ');
+        boolean maybeDefinition = false;
         String typeName = line.substring(0, startPos);
-        ResourceType resourceType = ResourceType.fromClassName(typeName);
+        ResourceType resourceType;
+        if (typeName.equals("attr?")) {
+            maybeDefinition = true;
+            resourceType = ResourceType.ATTR;
+        } else {
+            resourceType = ResourceType.fromClassName(typeName);
+        }
         if (resourceType == null) {
             throw new IOException("Invalid symbol type " + typeName);
         }
@@ -554,7 +589,11 @@ public final class SymbolIo {
             return new SymbolData(name, children.build());
         } else {
             String name = line.substring(startPos + 1);
-            return new SymbolData(resourceType, name);
+            if (resourceType == ResourceType.ATTR) {
+                return new SymbolData(name, maybeDefinition);
+            } else {
+                return new SymbolData(resourceType, name);
+            }
         }
     }
 
@@ -670,9 +709,8 @@ public final class SymbolIo {
                     pw.print(s.getCanonicalName());
                     pw.print(' ');
                     if (s.getResourceType() != ResourceType.STYLEABLE) {
-                        Symbol.NormalSymbol symbol = (Symbol.NormalSymbol) s;
                         pw.print("0x");
-                        pw.print(Integer.toHexString(symbol.getIntValue()));
+                        pw.print(Integer.toHexString(s.getIntValue()));
                         pw.print('\n');
                     } else {
 
@@ -722,6 +760,9 @@ public final class SymbolIo {
      */
     public static void writeRDef(@NonNull SymbolTable table, @NonNull Path file)
             throws IOException {
+        Preconditions.checkNotNull(
+                ReadConfiguration.R_DEF.fileTypeHeader,
+                "Missing package for R-def file " + file.toAbsolutePath());
 
         try (Writer writer = Files.newBufferedWriter(file)) {
             writer.write(ReadConfiguration.R_DEF.fileTypeHeader);
@@ -737,6 +778,10 @@ public final class SymbolIo {
 
                 for (Symbol s : symbols) {
                     writer.write(s.getResourceType().getName());
+                    if (s.getResourceType() == ResourceType.ATTR
+                            && ((Symbol.AttributeSymbol) s).isMaybeDefinition()) {
+                        writer.write('?');
+                    }
                     writer.write(' ');
                     writer.write(s.getName());
                     if (s.getResourceType() == ResourceType.STYLEABLE) {
@@ -934,9 +979,8 @@ public final class SymbolIo {
                     pw.print(" = ");
 
                     if (s.getResourceType() != ResourceType.STYLEABLE) {
-                        Symbol.NormalSymbol symbol = (Symbol.NormalSymbol) s;
                         pw.print("0x");
-                        pw.print(Integer.toHexString(symbol.getIntValue()));
+                        pw.print(Integer.toHexString(s.getIntValue()));
                         pw.print(';');
                         pw.println();
                     } else {

@@ -65,10 +65,12 @@ fun compileSources(sources: ImmutableList<File>, javacOutput: File) {
  * Creates a test only symbol with the given type and name, with a default value (empty list for
  * declare-styleables, '0' for other types). Does not verify the correctness of the resource name.
  */
-fun symbol(type: String, name: String): Symbol {
+fun symbol(type: String, name: String, maybeDefinition: Boolean = false): Symbol {
     val resType = ResourceType.fromClassName(type)!!
     if (resType == ResourceType.STYLEABLE) {
         return Symbol.StyleableSymbol(name, ImmutableList.of(), ImmutableList.of())
+    } else if (resType == ResourceType.ATTR) {
+        return Symbol.AttributeSymbol(name, 0, isMaybeDefinition = maybeDefinition)
     }
     return Symbol.NormalSymbol(resType, name, 0)
 }

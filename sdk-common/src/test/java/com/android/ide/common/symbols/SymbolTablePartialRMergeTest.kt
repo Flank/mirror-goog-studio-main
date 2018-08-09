@@ -349,16 +349,9 @@ class SymbolTablePartialRMergeTest {
 
         val expected = SymbolTable.builder()
             .tablePackage("com.boop.beep")
-            .add(Symbol.NormalSymbol(ResourceType.ATTR, "a1", 0, ResourceVisibility.PUBLIC))
-            .add(Symbol.NormalSymbol(ResourceType.ATTR, "a2", 0, ResourceVisibility.PRIVATE))
-            .add(
-                Symbol.NormalSymbol(
-                    ResourceType.ATTR,
-                    "a3",
-                    0,
-                    ResourceVisibility.PRIVATE_XML_ONLY
-                )
-            )
+            .add(Symbol.AttributeSymbol("a1", 0, false, ResourceVisibility.PUBLIC))
+            .add(Symbol.AttributeSymbol("a2", 0, false, ResourceVisibility.PRIVATE))
+            .add(Symbol.AttributeSymbol("a3", 0, false, ResourceVisibility.PRIVATE_XML_ONLY))
             .add(
                 Symbol.StyleableSymbol(
                     "s1",

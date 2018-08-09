@@ -81,6 +81,7 @@ fun mergeAndRenumberSymbols(
     tables.forEach { table ->
         table.symbols.values().forEach { symbol ->
             when (symbol) {
+                is Symbol.AttributeSymbol -> newSymbolMap.put(ResourceType.ATTR, symbol.canonicalName)
                 is Symbol.NormalSymbol -> newSymbolMap.put(symbol.resourceType, symbol.canonicalName)
                 is Symbol.StyleableSymbol -> {
                     arrayToAttrs
@@ -97,7 +98,7 @@ fun mergeAndRenumberSymbols(
 
     // let's keep a map of the new ATTR names to symbol so that we can find them easily later
     // when we process the styleable
-    val attrToValue = HashMap<String, Symbol.NormalSymbol>()
+    val attrToValue = HashMap<String, Symbol.AttributeSymbol>()
 
     // process the normal symbols
     for (resourceType in newSymbolMap.keySet()) {
@@ -106,19 +107,20 @@ fun mergeAndRenumberSymbols(
 
         for (symbolName in symbolNames) {
             val value = idProvider.next(resourceType)
-            val newSymbol =
-                    Symbol.NormalSymbol(
-                            resourceType = resourceType,
-                            name = symbolName, // All names are canonical at this point.
-                            canonicalName = symbolName,
-                            intValue = value
-                    )
-            tableBuilder.add(newSymbol)
-
+            val newSymbol: Symbol
             if (resourceType == ResourceType.ATTR) {
-                // store the new ATTR value in the map
+                newSymbol = Symbol.AttributeSymbol(symbolName, value, false)
+                // Also store the new ATTR value in the map.
                 attrToValue[symbolName] = newSymbol
+            } else {
+                newSymbol = Symbol.NormalSymbol(
+                    resourceType = resourceType,
+                    name = symbolName, // All names are canonical at this point.
+                    canonicalName = symbolName,
+                    intValue = value
+                )
             }
+            tableBuilder.add(newSymbol)
         }
     }
 
@@ -135,8 +137,7 @@ fun mergeAndRenumberSymbols(
                     || attribute.startsWith(ANDROID_UNDERSCORE_PREFIX)) {
                 val name = attribute.substring(SdkConstants.ANDROID_NS_NAME_PREFIX_LEN)
 
-                val platformSymbol =
-                    platformSymbols.symbols.get(ResourceType.ATTR, name) as Symbol.NormalSymbol?
+                val platformSymbol = platformSymbols.symbols.get(ResourceType.ATTR, name)
                 if (platformSymbol != null) {
                     attributeValues.add(platformSymbol.intValue)
                     continue

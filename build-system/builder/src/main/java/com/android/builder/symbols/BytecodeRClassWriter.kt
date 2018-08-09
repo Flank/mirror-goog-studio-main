@@ -128,7 +128,7 @@ private fun generateResourceTypeClass(table: SymbolTable, resType: ResourceType)
                 s.canonicalName,
                 s.javaType.desc,
                 null,
-                (s as? Symbol.NormalSymbol)?.intValue
+                if (s is Symbol.StyleableSymbol) null else s.intValue
         )
                 .visitEnd()
 

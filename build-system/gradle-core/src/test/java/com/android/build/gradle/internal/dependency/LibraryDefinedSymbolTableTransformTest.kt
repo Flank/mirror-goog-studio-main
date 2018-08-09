@@ -65,6 +65,17 @@ class LibraryDefinedSymbolTableTransformTest {
                         "        <attr name=\"myAttr\" />",
                         "    </declare-styleable>",
                         "</resources>"))
+        val stylesReversedXml = File(valuesDir, "stylesReversed.xml")
+        Files.write(
+            stylesReversedXml.toPath(),
+            ImmutableList.of(
+                "<resources>",
+                "    <declare-styleable name=\"ds2\">",
+                "        <attr name=\"myAttr2\" />",
+                "        <attr name=\"maybeAttr\" />",
+                "    </declare-styleable>",
+                "<attr name=\"myAttr2\" format=\"color\" />",
+                "</resources>"))
 
         val manifest = File(explodedAar, "AndroidManifest.xml")
         Files.write(
@@ -89,7 +100,9 @@ class LibraryDefinedSymbolTableTransformTest {
 
         val expected = SymbolTable.builder()
             .tablePackage("com.example.mylibrary")
-            .add(Symbol.NormalSymbol(ResourceType.ATTR, "myAttr", 0))
+            .add(Symbol.AttributeSymbol("myAttr", 0, false))
+            .add(Symbol.AttributeSymbol("maybeAttr", 0, true))
+            .add(Symbol.AttributeSymbol("myAttr2", 0, false))
             .add(Symbol.NormalSymbol(ResourceType.STRING, "app_name", 0))
             .add(Symbol.NormalSymbol(ResourceType.STRING, "desc", 0))
             .add(
@@ -97,6 +110,13 @@ class LibraryDefinedSymbolTableTransformTest {
                     "ds",
                     ImmutableList.of(),
                 ImmutableList.of("android:name", "android:color", "myAttr")
+                )
+            )
+            .add(
+                Symbol.StyleableSymbol(
+                    "ds2",
+                    ImmutableList.of(),
+                    ImmutableList.of("myAttr2", "maybeAttr")
                 )
             )
             .build()

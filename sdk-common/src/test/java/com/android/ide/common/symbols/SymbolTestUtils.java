@@ -45,6 +45,13 @@ public final class SymbolTestUtils {
             @NonNull String javaType,
             @NonNull String value,
             @NonNull List<String> styleableChildren) {
+        boolean maybeDefinition = false;
+        if (resourceType.endsWith("?")) {
+            Preconditions.checkState(
+                    resourceType.equals("attr?"), "Only attributes can have maybe definitions");
+            maybeDefinition = true;
+            resourceType = ResourceType.ATTR.getName();
+        }
         ResourceType type =
                 Preconditions.checkNotNull(
                         ResourceType.fromClassName(resourceType),
@@ -67,7 +74,7 @@ public final class SymbolTestUtils {
             intValue = -1;
         }
 
-        return Symbol.createAndValidateSymbol(type, name, intValue);
+        return Symbol.createAndValidateSymbol(type, name, intValue, maybeDefinition);
     }
 
     /** @see #createSymbol(String, String, String, String, List) */

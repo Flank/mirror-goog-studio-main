@@ -828,7 +828,6 @@ public class SymbolIoTest {
         }
     }
 
-
     @Test
     public void testMisorderedAarWithPackage() throws Exception {
         Path misordered =
@@ -857,7 +856,7 @@ public class SymbolIoTest {
     }
 
     @Test
-    public void testRealMisorderedAar() throws Exception {
+    public void testRealMisorderedAar() {
         File misordered =
                 TestResources.getFile(SymbolIoTest.class, "/testData/symbolIo/misordered_R.txt");
         try {
@@ -979,10 +978,8 @@ public class SymbolIoTest {
 
         assertThat(table.getSymbols().values())
                 .containsExactly(
-                        new Symbol.NormalSymbol(
-                                ResourceType.ATTR, "color", 0, ResourceVisibility.PUBLIC),
-                        new Symbol.NormalSymbol(
-                                ResourceType.ATTR, "size", 0, ResourceVisibility.PUBLIC),
+                        new Symbol.AttributeSymbol("color", 0, false, ResourceVisibility.PUBLIC),
+                        new Symbol.AttributeSymbol("size", 0, false, ResourceVisibility.PUBLIC),
                         new Symbol.NormalSymbol(
                                 ResourceType.STRING, "publicString", 0, ResourceVisibility.PUBLIC),
                         new Symbol.NormalSymbol(
@@ -1017,6 +1014,8 @@ public class SymbolIoTest {
                                         ResourceVisibility.UNDEFINED,
                                         "A_B"))
                         .add(new Symbol.NormalSymbol(ResourceType.TRANSITION, "t", 0))
+                        .add(new Symbol.AttributeSymbol("maybeAttr", 0, true))
+                        .add(new Symbol.AttributeSymbol("realAttr", 0, false))
                         .build();
 
         Path rDefFile = mTemporaryFolder.newFile("outputRDef.txt").toPath();

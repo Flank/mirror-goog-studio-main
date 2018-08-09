@@ -358,6 +358,11 @@ abstract class SymbolTable protected constructor() {
             return symbols.get(symbol.resourceType, symbol.canonicalName)
         }
 
+
+        fun remove(resourceType: ResourceType, canonicalName: String): Symbol? {
+            return symbols.remove(resourceType, canonicalName)
+        }
+
         /**
          * Builds a symbol table with all symbols added.
          *

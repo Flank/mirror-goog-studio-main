@@ -155,7 +155,7 @@ class ResourceValuesXmlParserTest {
                         .add(SymbolTestUtils.createSymbol("styleable", "empty", "int[]", "{  }"))
                         .add(SymbolTestUtils.createSymbol("id", "e1", "int", 0x7f_0b_0001))
                         .add(SymbolTestUtils.createSymbol("id", "e2", "int", 0x7f_0b_0002))
-                        .add(SymbolTestUtils.createSymbol("attr", "enums", "int", 0x7f_04_0001))
+                        .add(SymbolTestUtils.createSymbol("attr?", "enums", "int", 0x7f_04_0001))
                         .add(
                                 SymbolTestUtils.createSymbol(
                                         "styleable",
@@ -163,8 +163,8 @@ class ResourceValuesXmlParserTest {
                                         "int[]",
                                         "{ 0x7f040001 }",
                                         ImmutableList.of("enums")))
-                        .add(SymbolTestUtils.createSymbol("attr", "flags", "int", 0x7f_04_0002))
-                        .add(SymbolTestUtils.createSymbol("attr", "nothing", "int", 0x7f_04_0003))
+                        .add(SymbolTestUtils.createSymbol("attr?", "flags", "int", 0x7f_04_0002))
+                        .add(SymbolTestUtils.createSymbol("attr?", "nothing", "int", 0x7f_04_0003))
                         .add(
                                 SymbolTestUtils.createSymbol(
                                         "styleable",
@@ -473,12 +473,12 @@ class ResourceValuesXmlParserTest {
 
         val expected =
                 SymbolTable.builder()
-                        .add(SymbolTestUtils.createSymbol("attr", "showText", "int", 0x7f_04_0001))
+                        .add(SymbolTestUtils.createSymbol("attr?", "showText", "int", 0x7f_04_0001))
                         .add(SymbolTestUtils.createSymbol("id", "left", "int", 0x7f_0b_0001))
                         .add(SymbolTestUtils.createSymbol("id", "right", "int", 0x7f_0b_0002))
                         .add(
                                 SymbolTestUtils.createSymbol(
-                                        "attr", "labelPosition", "int", 0x7f_04_0002))
+                                        "attr?", "labelPosition", "int", 0x7f_04_0002))
                         .add(
                                 SymbolTestUtils.createSymbol(
                                         "styleable",

@@ -51,24 +51,14 @@ class BytecodeRClassWriterTest {
 
         val symbols = SymbolTable.builder()
                 .tablePackage("com.example.foo")
-                .add(Symbol.NormalSymbol(ResourceType.ID,
-                        "foo",
-                       0x0))
+                .add(Symbol.NormalSymbol(ResourceType.ID, "foo", 0x0))
                 .add(
                     Symbol.NormalSymbol(
                                 ResourceType.DRAWABLE,
                                 "bar",
                                 0x1))
-                .add(
-                    Symbol.NormalSymbol(
-                                ResourceType.ATTR,
-                                "beep",
-                                0x3))
-                .add(
-                    Symbol.NormalSymbol(
-                                ResourceType.ATTR,
-                                "boop",
-                                0x5))
+                .add(Symbol.AttributeSymbol("beep", 0x3))
+                .add(Symbol.AttributeSymbol("boop", 0x5))
                 .add(
                     Symbol.StyleableSymbol(
                                 "styles",
@@ -98,16 +88,8 @@ class BytecodeRClassWriterTest {
 
         val appSymbols = SymbolTable.builder()
                 .tablePackage("com.example.foo.app")
-                .add(
-                    Symbol.NormalSymbol(
-                                ResourceType.ATTR,
-                                "beep",
-                                0x1))
-                .add(
-                    Symbol.NormalSymbol(
-                                ResourceType.ATTR,
-                                "boop",
-                                0x3))
+                .add(Symbol.AttributeSymbol("beep", 0x1))
+                .add(Symbol.AttributeSymbol("boop", 0x3))
                 .add(
                     Symbol.StyleableSymbol(
                                 "styles",
@@ -131,8 +113,7 @@ class BytecodeRClassWriterTest {
         val appRDotJava = SymbolIo.exportToJava(appSymbols, rDotJavaDir, false)
         val libRDotJava = SymbolIo.exportToJava(librarySymbols, rDotJavaDir, false)
         val javac = ToolProvider.getSystemJavaCompiler()
-        val manager = javac.getStandardFileManager(
-                null, null, null)
+        val manager = javac.getStandardFileManager(null, null, null)
         // Use javac to compile R.java into R.class, R$id.class. etc.
         val source = manager.getJavaFileObjectsFromFiles(ImmutableList.of(libRDotJava, appRDotJava)) as Iterable<JavaFileObject>
         javac.getTask(null,

@@ -242,7 +242,7 @@ private fun parseChild(
                     child, idProvider, name, builder, enumSymbols, platformAttrSymbols)
         ResourceType.ATTR ->
             // We also need to find all the enums declared under attr (if there are any).
-            parseAttr(child, idProvider, name, builder, enumSymbols)
+            parseAttr(child, idProvider, name, builder, enumSymbols, false)
         ResourceType.PUBLIC -> error("Already checked above.")
         else -> throw ResourceValuesXmlParseException(
                 "Unknown resource value XML element '${toXml(child)}'")
@@ -312,10 +312,10 @@ private fun parseDeclareStyleable(
                                 "Unknown android attribute '$attrName' under '$styleableName"
                             )
 
-                (attrSymbol as Symbol.NormalSymbol).intValue
+                attrSymbol.intValue
             }
         } else {
-            parseAttr(attrElement, idProvider, attrName, builder, enumSymbols)
+            parseAttr(attrElement, idProvider, attrName, builder, enumSymbols, true)
         }
         attrNames.add(attrName)
         attrValues.add(attrValue)
@@ -344,7 +344,8 @@ private fun parseAttr(
         idProvider: IdProvider,
         name: String,
         builder: SymbolTable.Builder,
-        enumSymbols: MutableList<Symbol>): Int {
+        enumSymbols: MutableList<Symbol>,
+        isMaybeDefinition: Boolean): Int {
     var enumNode: Node? = attr.firstChild
     while (enumNode != null) {
         if (enumNode.nodeType != Node.ELEMENT_NODE) {
@@ -373,14 +374,23 @@ private fun parseAttr(
         enumNode = enumNode.nextSibling
     }
 
-    val newAttr = Symbol.createAndValidateSymbol(ResourceType.ATTR, name, idProvider)
+    val newAttr = Symbol.createAndValidateSymbol(
+        ResourceType.ATTR, name, idProvider, isMaybeDefinition)
 
     if (!builder.contains(newAttr)) {
+        // If we haven't encountered this attribute yet, add the new one.
         builder.add(newAttr)
         return newAttr.intValue
+    } else if (!isMaybeDefinition
+        && (builder[newAttr] as Symbol.AttributeSymbol).isMaybeDefinition) {
+        // We already have the attribute, but it was defined under a declare-styleable. Replace it
+        // with a real definition. Keep the ID of the previous definition.
+        val old = builder.remove(newAttr.resourceType, newAttr.canonicalName)!!
+        builder.add(Symbol.AttributeSymbol(newAttr.canonicalName, old.intValue, false))
     }
 
-    return (builder[newAttr] as Symbol.NormalSymbol).intValue
+    // Otherwise use existing attribute.
+    return builder[newAttr]!!.intValue
 }
 
 /**
