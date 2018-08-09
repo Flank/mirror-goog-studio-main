@@ -21,6 +21,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 #include "command_cmd.h"
 #include "dump.h"
@@ -35,10 +36,20 @@ const std::string kConfig = "config.pb";
 }  // namespace
 
 void SwapCommand::ParseParameters(int argc, char** argv) {
-  // Always assume it's coming from standard input, for now.
-  std::string cin_string((std::istreambuf_iterator<char>(std::cin)),
-         std::istreambuf_iterator<char>());;
-  if (!request_.ParseFromString(cin_string)) {
+  int size = -1;
+  force_update_ = false;
+  if (argc < 2) {
+    std::cerr << "Not enough arguments for swap command: swap <force> <pb_size>" << std::endl;
+    return;
+  }
+
+  force_update_ = atoi(argv[0]);
+  size = atoi(argv[1]);
+
+  std::string data;
+  std::copy_n(std::istreambuf_iterator<char>(std::cin), size, std::back_inserter(data));
+
+  if (!request_.ParseFromString(data)) {
     std::cerr << "Could not parse swap configuration proto." << std::endl;
     return;
   }
@@ -47,9 +58,6 @@ void SwapCommand::ParseParameters(int argc, char** argv) {
   // If we modify/delete the agent after ART has already loaded it, the app
   // will crash, so we want to be careful here.
 
-  // Check if we should forcibly replace the agent and instrumentation even if
-  // they exist.
-  force_update_ = false;
   if (argc == 1) {
     std::istringstream(argv[0]) >> force_update_;
     std::cout << force_update_ << std::endl;

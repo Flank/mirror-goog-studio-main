@@ -16,10 +16,14 @@
 package com.android.tools.deploy.swapper;
 
 import com.android.tools.deploy.proto.Common;
+import com.android.tools.deploy.proto.Common.AgentConfig;
 import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.fakeandroid.ProcessRunner;
+import com.google.protobuf.ByteString;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import org.junit.After;
 import org.junit.Assert;
@@ -36,6 +40,7 @@ public class AgentBasedClassRedefinerTest extends ClassRedefinerTestBase {
 
     private static final String INSTRUMENTATION_LOCATION =
             ProcessRunner.getProcessPath("app.instrumentation.location");
+    private static final String PACKAGE = "package.name.does.matter.in.this.test.";
 
     // Location of all the dex files to be swapped in to test hotswapping.
     private static final String DEX_SWAP_LOCATION =
@@ -46,7 +51,7 @@ public class AgentBasedClassRedefinerTest extends ClassRedefinerTestBase {
 
     private FakeAndroidDriver android;
 
-    private AgentBasedClassRedefiner redefiner;
+    private ClassRedefiner redefiner;
     private TemporaryFolder dexLocation;
 
     @Before
@@ -65,6 +70,22 @@ public class AgentBasedClassRedefinerTest extends ClassRedefinerTestBase {
         android.stop();
     }
 
+    private Common.SwapRequest createRequest(String name, String dex, boolean restart)
+            throws IOException {
+        Common.ClassDef classDef =
+                Common.ClassDef.newBuilder()
+                        .setName(name)
+                        .setDex(ByteString.copyFrom(getSplittedDex(dex)))
+                        .build();
+        Common.SwapRequest request =
+                Common.SwapRequest.newBuilder()
+                        .addClasses(classDef)
+                        .setPackageName(PACKAGE)
+                        .setRestartActivity(restart)
+                        .build();
+        return request;
+    }
+
     @Test
     public void testSimpleClassRedefinition() throws Exception {
         android.loadDex(DEX_LOCATION);
@@ -73,10 +94,12 @@ public class AgentBasedClassRedefinerTest extends ClassRedefinerTestBase {
         android.triggerMethod(ACTIVITY_CLASS, "getStatus");
         Assert.assertTrue(android.waitForInput("NOT SWAPPED", RETURN_VALUE_TIMEOUT));
 
-        redefiner.redefineClass(
-                "com.android.tools.deploy.swapper.testapp.Target",
-                getSplittedDex("com/android/tools/deploy/swapper/testapp/Target.dex"));
-        redefiner.commit();
+        Common.SwapRequest request =
+                createRequest(
+                        "com.android.tools.deploy.swapper.testapp.Target",
+                        "com/android/tools/deploy/swapper/testapp/Target.dex",
+                        true);
+        redefiner.redefine(request);
 
         android.triggerMethod(ACTIVITY_CLASS, "getStatus");
         Assert.assertTrue(android.waitForInput("JUST SWAPPED", RETURN_VALUE_TIMEOUT));
@@ -92,10 +115,12 @@ public class AgentBasedClassRedefinerTest extends ClassRedefinerTestBase {
         android.triggerMethod(ACTIVITY_CLASS, "getStatus");
         Assert.assertTrue(android.waitForInput("NOT SWAPPED", RETURN_VALUE_TIMEOUT));
 
-        redefiner.redefineClass(
-                "com.android.tools.deploy.swapper.testapp.Target",
-                getSplittedDex("com/android/tools/deploy/swapper/testapp/Target.dex"));
-        redefiner.commit();
+        Common.SwapRequest request =
+                createRequest(
+                        "com.android.tools.deploy.swapper.testapp.Target",
+                        "com/android/tools/deploy/swapper/testapp/Target.dex",
+                        true);
+        redefiner.redefine(request);
 
         android.triggerMethod(ACTIVITY_CLASS, "getStatus");
 
@@ -114,10 +139,12 @@ public class AgentBasedClassRedefinerTest extends ClassRedefinerTestBase {
         android.triggerMethod(ACTIVITY_CLASS, "getStatus");
         Assert.assertTrue(android.waitForInput("NOT SWAPPED", RETURN_VALUE_TIMEOUT));
 
-        redefiner.redefineClass(
-                "com.android.tools.deploy.swapper.testapp.Target",
-                getSplittedDex("com/android/tools/deploy/swapper/testapp/ClinitTarget.dex"));
-        redefiner.commit();
+        Common.SwapRequest request =
+                createRequest(
+                        "com.android.tools.deploy.swapper.testapp.Target",
+                        "com/android/tools/deploy/swapper/testapp/ClinitTarget.dex",
+                        true);
+        redefiner.redefine(request);
 
         android.triggerMethod(ACTIVITY_CLASS, "getStatus");
     }
@@ -132,10 +159,12 @@ public class AgentBasedClassRedefinerTest extends ClassRedefinerTestBase {
         android.loadDex(DEX_LOCATION);
         android.launchActivity(ACTIVITY_CLASS);
 
-        redefiner.redefineClass(
-                "com.android.tools.deploy.swapper.testapp.ClinitTarget",
-                getSplittedDex("com/android/tools/deploy/swapper/testapp/ClinitTarget.dex"));
-        redefiner.commit();
+        Common.SwapRequest request =
+                createRequest(
+                        "com.android.tools.deploy.swapper.testapp.ClinitTarget",
+                        "com/android/tools/deploy/swapper/testapp/ClinitTarget.dex",
+                        true);
+        redefiner.redefine(request);
 
         android.triggerMethod(ACTIVITY_CLASS, "printCounter");
         Assert.assertTrue(android.waitForInput("TestActivity.counter = 0", RETURN_VALUE_TIMEOUT));
@@ -147,50 +176,38 @@ public class AgentBasedClassRedefinerTest extends ClassRedefinerTestBase {
         Assert.assertTrue(android.waitForInput("TestActivity.counter = 1", RETURN_VALUE_TIMEOUT));
     }
 
-    /**
-     * Modified the Redefiner to:
-     *
-     * <p>1. "Push" the dex files by just copying to a local temp directory.
-     *
-     * <p>2. On commit, attach the agent with a local agent shared object.
-     */
-    private static class LocalTestAgentBasedClassRedefiner extends AgentBasedClassRedefiner {
+    private static class LocalTestAgentBasedClassRedefiner extends ClassRedefiner {
         private final TemporaryFolder messageDir;
         private final FakeAndroidDriver android;
         private String messageLocation;
 
         private LocalTestAgentBasedClassRedefiner(
                 FakeAndroidDriver android, TemporaryFolder messageDir, boolean shouldRestart) {
-            super(
-                    "DEADBEEF",
-                    "package.name.does.matter.in.this.test.",
-                    shouldRestart,
-                    INSTRUMENTATION_LOCATION);
             this.android = android;
             this.messageDir = messageDir;
         }
 
         @Override
-        protected String pushToDevice(Common.AgentConfig message) {
+        public void redefine(Common.SwapRequest request) {
             try {
+                AgentConfig.Builder agentConfig = AgentConfig.newBuilder();
+                agentConfig.setInstrumentDex(INSTRUMENTATION_LOCATION);
+                agentConfig.setSwapRequest(request);
+
                 File pb = Files.createTempFile("messageDir", "msg.pb").toFile();
                 FileOutputStream out = new FileOutputStream(pb);
-                message.writeTo(out);
-                return messageLocation = pb.getAbsolutePath();
-            } catch (Exception e) {
-                Assert.fail(e.toString());
-                return null;
-            }
-        }
+                agentConfig.build().writeTo(out);
 
-        @Override
-        public void commit() {
-            super.commit();
-            android.attachAgent(
-                    ProcessRunner.getProcessPath("swap.agent.location") + "=" + messageLocation);
-            // TODO(acleung): We have no way to two way communicate with the Agent for now
-            // so we are just going wait for a log statement.
-            android.waitForInput("Done HotSwapping!");
+                android.attachAgent(
+                        ProcessRunner.getProcessPath("swap.agent.location")
+                                + "="
+                                + pb.getAbsolutePath());
+                // TODO(acleung): We have no way to two way communicate with the Agent for now
+                // so we are just going wait for a log statement.
+                android.waitForInput("Done HotSwapping!");
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
         }
     }
 }

@@ -15,28 +15,9 @@
  */
 package com.android.tools.deploy.swapper;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.android.tools.deploy.proto.Common;
 
-/**
- * Responsible for invoking the corresponding API to redefine a class in ART.
- *
- * <p>The implementation is transaction based where classes redefinition requests are queued up with
- * {@link #redefineClass(String, byte[])}
- */
-abstract class ClassRedefiner {
-    private boolean committed = false;
-    protected final Map<String, byte[]> classesToRedefine = new HashMap<>();
-
-    void redefineClass(String className, byte[] dexCode) {
-        classesToRedefine.put(className, dexCode);
-    }
-
-    protected void commit() {
-        if (committed) {
-            throw new IllegalStateException("ClassRedefiner transaction already committed.");
-        }
-        committed = true;
-        classesToRedefine.clear();
-    }
+/** Responsible for invoking the corresponding API to redefine a class in ART. */
+public abstract class ClassRedefiner {
+    public abstract void redefine(Common.SwapRequest request);
 }

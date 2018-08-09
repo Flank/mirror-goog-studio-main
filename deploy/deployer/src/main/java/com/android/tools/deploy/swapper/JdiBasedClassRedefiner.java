@@ -15,6 +15,7 @@
  */
 package com.android.tools.deploy.swapper;
 
+import com.android.tools.deploy.proto.Common;
 import com.sun.jdi.Bootstrap;
 import com.sun.jdi.ReferenceType;
 import com.sun.jdi.VirtualMachine;
@@ -71,18 +72,16 @@ class JdiBasedClassRedefiner extends ClassRedefiner {
     }
 
     @Override
-    public void commit() {
+    public void redefine(Common.SwapRequest request) {
         Map<ReferenceType, byte[]> redefinitionRequest = new HashMap<>();
 
-        for (Map.Entry<String, byte[]> redefinition : classesToRedefine.entrySet()) {
-            List<ReferenceType> classes = getReferenceTypeByName(redefinition.getKey());
+        for (Common.ClassDef redefinition : request.getClassesList()) {
+            List<ReferenceType> classes = getReferenceTypeByName(redefinition.getName());
             for (ReferenceType classRef : classes) {
-                redefinitionRequest.put(classRef, redefinition.getValue());
+                redefinitionRequest.put(classRef, redefinition.getDex().toByteArray());
             }
         }
-
         vm.redefineClasses(redefinitionRequest);
-        super.commit();
     }
 
     List<ReferenceType> getReferenceTypeByName(String name) {

@@ -50,7 +50,7 @@ public class DexArchiveComparator {
         // Deleted classes are ignored as it is irrelevant to hot swapping.
     }
 
-    public Result compare(DexArchive oldApk, DexArchive newApk) throws Exception {
+    public Result compare(DexArchive oldApk, DexArchive newApk) {
         Map<String, DexFile> oldDexFiles = oldApk.getDexFiles();
         Map<String, DexFile> newDexFiles = newApk.getDexFiles();
 
@@ -88,6 +88,10 @@ public class DexArchiveComparator {
     private Result compare(Map<String, Long> prevDexesChecksum, List<byte[]> newDexes) {
         Result result = new Result();
         NewDexConsumer newDexConsumer = new NewDexConsumer(prevDexesChecksum, result);
+
+        if (newDexes.isEmpty()) {
+            return result;
+        }
 
         for (byte[] newDex : newDexes) {
             try {

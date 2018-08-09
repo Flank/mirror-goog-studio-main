@@ -18,10 +18,10 @@ package com.android.tools.deployer;
 
 import com.android.annotations.NonNull;
 import com.android.ddmlib.*;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -35,10 +35,23 @@ public class AdbClient {
     public void shell(String[] parameters) throws DeployerException {
         try {
             device.executeShellCommand(String.join(" ", parameters), new NullOutputReceiver());
-        } catch (IOException
-                | TimeoutException
-                | AdbCommandRejectedException
-                | ShellCommandUnresponsiveException e) {
+        } catch (Exception e) {
+            throw new DeployerException("Unable to run shell command.", e);
+        }
+    }
+
+    public void shell(String[] parameters, byte[] data) throws DeployerException {
+        try {
+            device.executeShellCommand(
+                    String.join(" ", parameters),
+                    new NullOutputReceiver(),
+                    DdmPreferences.getTimeOut(),
+                    TimeUnit.MILLISECONDS,
+                    new ByteArrayInputStream(data));
+        } catch (AdbCommandRejectedException
+                | ShellCommandUnresponsiveException
+                | IOException
+                | TimeoutException e) {
             throw new DeployerException("Unable to run shell command.", e);
         }
     }
@@ -72,18 +85,28 @@ public class AdbClient {
             for (String file : files) {
                 device.pullFile(srcDirectory + "/" + file, dstDir.getPath() + "/" + file);
             }
-        } catch (Exception e) {
+        } catch (AdbCommandRejectedException
+                | ShellCommandUnresponsiveException
+                | IOException
+                | SyncException
+                | TimeoutException e) {
             throw new DeployerException("Unable to pull files.", e);
         }
     }
 
-    public void installMultiple(List<Apk> apks) throws DeployerException {
+    public void installMultiple(List<Apk> apks, boolean kill) throws DeployerException {
         List<File> files = new ArrayList<>();
         for (Apk apk : apks) {
             files.add(new File(apk.getLocalArchive().getPath()));
         }
         try {
-            device.installPackages(files, true, Arrays.asList("-t", "-r"), 10, TimeUnit.SECONDS);
+            List<String> options = new ArrayList<>();
+            options.add("-t");
+            options.add("-r");
+            if (!kill) {
+                options.add("--dont-kill");
+            }
+            device.installPackages(files, true, options, 10, TimeUnit.SECONDS);
         } catch (InstallException e) {
             throw new DeployerException("Unable to install packages.", e);
         }

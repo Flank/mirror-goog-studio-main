@@ -21,6 +21,10 @@ public class DeployerException extends RuntimeException {
         super(message);
     }
 
+    public DeployerException(Throwable t) {
+        super(t);
+    }
+
     public DeployerException(String message, Throwable t) {
         super(message, t);
     }

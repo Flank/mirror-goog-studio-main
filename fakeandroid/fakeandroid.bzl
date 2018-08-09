@@ -1,4 +1,4 @@
-def fake_android_test(name, srcs, deps = [], data = [], runtime_deps = [], tags = [], size = "small", jvm_flags = []):
+def fake_android_test(name, srcs=[], deps = [], data = [], runtime_deps = [], tags = [], size = "small", jvm_flags = []):
     native.java_test(
       name = name,
       runtime_deps = runtime_deps + [
@@ -27,9 +27,6 @@ def fake_android_test(name, srcs, deps = [], data = [], runtime_deps = [], tags 
       data = data + [
         "//tools/base/fakeandroid:art-runner",
       ],
-      srcs = select({
-        "//tools/base/bazel:darwin": ["//tools/base/bazel/test:NoOpTest.java"],
-        "//tools/base/bazel:windows": ["//tools/base/bazel/test:NoOpTest.java"],
-        "//conditions:default": srcs}),
-      tags = list(depset(tags + ["no_windows", "no_mac"])),
+      srcs = srcs,
+      tags = list(depset(tags + ["no_windows", "no_test_mac"])),
     )

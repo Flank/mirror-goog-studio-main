@@ -194,13 +194,6 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* input,
   jvmtiEnv* jvmti;
   JNIEnv* jni;
 
-  std::cout << "AAAAA" << std::endl;
-
-  Log::V("WHOO");
-  std::ofstream o("/data/local/tmp/magic.txt", std::ios::binary);
-  o << "Hello, world!" << std::endl;
-  o.close();
-
   Log::V("Prior agent invocations in this VM: %d", run_counter++);
 
   if (!Config::ParseFromFile(input)) {

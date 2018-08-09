@@ -33,7 +33,11 @@ public abstract class DexArchiveDatabase {
     public DexArchive retrieveCache(String checksum) {
         Map<String, DexFile> dexFiles = new HashMap<>();
 
-        for (DexFileEntry entry : this.getDexFiles(checksum)) {
+        List<DexFileEntry> dexFileEntries = this.getDexFiles(checksum);
+        if (dexFileEntries == null) {
+            return null;
+        }
+        for (DexFileEntry entry : dexFileEntries) {
             dexFiles.put(
                     entry.name,
                     new OnCacheDexFile(

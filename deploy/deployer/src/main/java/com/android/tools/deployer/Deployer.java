@@ -16,7 +16,11 @@
 
 package com.android.tools.deployer;
 
+import com.android.tools.deploy.proto.Common;
+import com.android.tools.deploy.swapper.*;
 import com.android.utils.ILogger;
+import com.google.protobuf.ByteString;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -26,22 +30,17 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.zip.ZipInputStream;
 
 public class Deployer {
 
     private static final ILogger LOGGER = Logger.getLogger(Deployer.class);
     private final String packageName;
     private final ArrayList<Apk> apks = new ArrayList<>();
-    private final InstallerCallBack installerCallBack;
     private final AdbClient adb;
     private final Path workingDirectory;
+    private final DexArchiveDatabase db;
 
-    // TODO:
-    // Until we figure out the threading model of IR2, run installation in a background thread so
-    // Hot Swap is not blocked. At the very minimum, this should be a static field when we release.
-    private ExecutorService installerThread = Executors.newSingleThreadExecutor();
     private StopWatch stopWatch;
 
     // status field is always set.
@@ -67,17 +66,21 @@ public class Deployer {
                 new HashMap<>(); // Set only if status == OK otherwise content is undefined.
     }
 
-
     public interface InstallerCallBack {
         void onInstallationFinished(boolean status);
     }
 
     public Deployer(
-            String packageName, List<String> apkPaths, InstallerCallBack cb, AdbClient adb) {
+            String packageName,
+            List<String> apkPaths,
+            InstallerCallBack cb,
+            AdbClient adb,
+            DexArchiveDatabase db) {
         this.stopWatch = new StopWatch();
         this.packageName = packageName;
-        this.installerCallBack = cb;
         this.adb = adb;
+        this.db = db;
+
         try {
             workingDirectory = Files.createTempDirectory("ir2deployer");
         } catch (IOException e) {
@@ -95,7 +98,14 @@ public class Deployer {
      * followed immediately with either a full install or a patch install depending on
      * the size of the patch.
      */
-    public RunResponse run() {
+    public RunResponse install() throws IOException {
+        for (Apk apk : apks) {
+            cache(apk);
+        }
+        return diffInstall(true);
+    }
+
+    private RunResponse diffInstall(boolean kill) {
         stopWatch.start();
         RunResponse response = new RunResponse();
 
@@ -115,9 +125,15 @@ public class Deployer {
 
             generateDiffs(apks, response);
         } finally {
-            install();
+            doInstall(kill);
         }
 
+        return response;
+    }
+
+    public RunResponse fullSwap() {
+        RunResponse response = diffInstall(false);
+        swap(response);
         return response;
     }
 
@@ -128,14 +144,11 @@ public class Deployer {
                 remoteApks++;
             }
         }
-        // If no remote apks were retrieved, it is likely the app was not installed.
-        if (remoteApks == 0) {
+
+        if (remoteApks == 0) { // No remote apks. App probably was not installed.
             response.status = RunResponse.Status.NOT_INSTALLED;
             response.errorMessage = "App not installed";
-        }
-
-        // Check the local apk split structure is the same as the remote split.
-        if (remoteApks != apks.size()) {
+        } else if (remoteApks != apks.size()) { // If the number doesn't match we cannot do a diff.
             response.status = RunResponse.Status.ERROR;
             response.errorMessage = "Remote apks count differ, unable to generate a diff.";
         }
@@ -176,24 +189,67 @@ public class Deployer {
         }
     }
 
-    // TODO: If the installer extracted v2 signature block, use it to generates apk patches.
-    // For now just install the full apks set.
-    private void install() {
-        installerThread.submit(
-                () -> {
-                    boolean succeeded = true;
-                    try {
-                        adb.installMultiple(apks);
-                        stopWatch.mark("Install succeeded");
-                    } catch (DeployerException e) {
-                        succeeded = false;
-                        stopWatch.mark("Install failed");
-                        LOGGER.error(e, null);
-                    } finally {
-                        installerCallBack.onInstallationFinished(succeeded);
-                        installerThread.shutdown();
-                    }
-                });
+    private void doInstall(boolean kill) {
+        try {
+            adb.installMultiple(apks, kill);
+            stopWatch.mark("Install succeeded");
+        } catch (DeployerException e) {
+            stopWatch.mark("Install failed");
+            LOGGER.error(e, null);
+        }
+    }
+
+    private void swap(RunResponse response) throws DeployerException {
+
+        ClassRedefiner redefiner = new AgentBasedClassRedefiner(adb);
+        Common.SwapRequest.Builder request = Common.SwapRequest.newBuilder();
+        request.setPackageName(packageName);
+        request.setRestartActivity(true);
+        for (Apk apk : apks) {
+            HashMap<String, Apk.ApkEntryStatus> diffs = response.result.get(apk.getPath()).diffs;
+
+            try {
+                DexArchive newApk = cache(apk);
+
+                if (diffs.isEmpty()) {
+                    continue;
+                }
+
+                // TODO: Only pass in a list of changed files instead of doing a full APK comparision.
+                DexArchive prevApk =
+                        DexArchive.buildFromDatabase(db, apk.getRemoteArchive().getDigest());
+                if (prevApk == null) {
+                    // TODO: propagate this error condition up
+                    return;
+                }
+
+                DexArchiveComparator comparator = new DexArchiveComparator();
+                comparator
+                        .compare(prevApk, newApk)
+                        .changedClasses
+                        .forEach(
+                                e ->
+                                        request.addClasses(
+                                                Common.ClassDef.newBuilder()
+                                                        .setName(e.name)
+                                                        .setDex(ByteString.copyFrom(e.dex))
+                                                        .build()));
+
+            } catch (Exception e) {
+                throw new DeployerException(e);
+            }
+        }
+
+        redefiner.redefine(request.build());
+    }
+
+    private DexArchive cache(Apk apk) throws IOException {
+        DexArchive newApk =
+                DexArchive.buildFromHostFileSystem(
+                        new ZipInputStream(new FileInputStream(apk.getLocalArchive().getPath())),
+                        apk.getLocalArchive().getDigest());
+        newApk.cache(db);
+        return newApk;
     }
 
     private void getRemoteApkDumps(String packageName, String dst) throws DeployerException {

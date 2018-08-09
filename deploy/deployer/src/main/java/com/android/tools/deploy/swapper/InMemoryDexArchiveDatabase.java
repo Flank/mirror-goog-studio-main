@@ -35,6 +35,11 @@ public class InMemoryDexArchiveDatabase extends DexArchiveDatabase implements Se
 
     @Override
     public List<DexFileEntry> getDexFiles(String archiveChecksum) {
+
+        if (!archiveTable.containsKey(archiveChecksum)) {
+            return null;
+        }
+
         return archiveTable
                 .get(archiveChecksum)
                 .stream()
