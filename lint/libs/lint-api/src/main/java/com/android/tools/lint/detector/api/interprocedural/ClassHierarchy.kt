@@ -45,13 +45,13 @@ class MutableClassHierarchy : ClassHierarchy {
     override fun directOverridesOf(superMethod: UMethod) = directOverrides[superMethod].asSequence()
 
     fun addClass(subClass: UClass) {
-        subClass.supers
+        subClass.javaPsi.supers
             .mapNotNull { it.navigationElement.toUElementOfType<UClass>() }
             .forEach { directInheritors.put(it, subClass) }
     }
 
     fun addMethod(subMethod: UMethod) {
-        subMethod.findSuperMethods()
+        subMethod.javaPsi.findSuperMethods()
             .mapNotNull { it.navigationElement.toUElementOfType<UMethod>() }
             .forEach { directOverrides.put(it, subMethod) }
     }

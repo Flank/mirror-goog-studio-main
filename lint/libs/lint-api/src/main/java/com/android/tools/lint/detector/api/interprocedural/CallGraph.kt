@@ -120,7 +120,7 @@ val Node?.shortName: String
     get() {
         if (this == null)
             return "[unresolved invoke]"
-        val containingClass = target.element.getContainingUClass()
+        val containingClass = target.element.getContainingUClass()?.javaPsi
         val containingClassStr =
             if (containingClass?.name == "Companion")
                 containingClass.containingClass?.name ?: "anon"
@@ -130,7 +130,7 @@ val Node?.shortName: String
         return when (target) {
             is Method -> "$containingClassStr#${target.element.name}"
             is Lambda -> "$containingClassStr#$containingMethod#lambda"
-            is DefaultCtor -> "${target.element.name}#${target.element.name}"
+            is DefaultCtor -> "${target.element.javaPsi.name}#${target.element.javaPsi.name}"
         }
     }
 

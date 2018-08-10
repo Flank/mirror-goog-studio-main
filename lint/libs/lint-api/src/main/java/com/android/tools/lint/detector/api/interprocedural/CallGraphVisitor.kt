@@ -70,7 +70,7 @@ class CallGraphVisitor(
 
     // Checks for implicit calls to super constructors.
     override fun visitClass(node: UClass): Boolean {
-        val superClass = node.superClass?.psi?.navigationElement.toUElementOfType<UClass>()
+        val superClass = node.superClass?.javaPsi?.navigationElement.toUElementOfType<UClass>()
         if (superClass != null) {
             val constructors = node.constructors()
             val thoseWithoutExplicitSuper = constructors.filter {
@@ -157,7 +157,7 @@ class CallGraphVisitor(
         val staticallyDispatched = baseCallee.isStaticallyDispatched()
         val throughSuper = node.receiver is USuperExpression
         val isFunctionalCall =
-            baseCallee.psi == LambdaUtil.getFunctionalInterfaceMethod(node.receiverType)
+            baseCallee.javaPsi == LambdaUtil.getFunctionalInterfaceMethod(node.receiverType)
         val uniqueImpl = (overrides + baseCallee).singleOrNull { it.isCallable() }
         when {
             staticallyDispatched || throughSuper -> addEdge(baseCallee, DIRECT)
@@ -188,14 +188,16 @@ class CallGraphVisitor(
 
     /** Returns whether this method could be the runtime target of a call. */
     private fun UMethod.isCallable() = when {
-        hasModifierProperty(PsiModifier.ABSTRACT) -> false
-        containingClass?.isInterface == true -> hasModifierProperty(PsiModifier.DEFAULT)
+        javaPsi.hasModifierProperty(PsiModifier.ABSTRACT) -> false
+        javaPsi.containingClass?.isInterface == true -> {
+            javaPsi.hasModifierProperty(PsiModifier.DEFAULT)
+        }
         else -> true
     }
 
     /** Returns whether this method is statically dispatched. */
     private fun UMethod.isStaticallyDispatched(): Boolean {
-        val parentClass = containingClass ?: return true
+        val parentClass = javaPsi.containingClass ?: return true
         return isConstructor ||
                 isStatic ||
                 isFinal ||

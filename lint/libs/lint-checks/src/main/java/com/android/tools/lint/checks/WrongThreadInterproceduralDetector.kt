@@ -38,6 +38,8 @@ import com.android.tools.lint.detector.api.interprocedural.searchForContextualPa
 import com.android.tools.lint.detector.api.interprocedural.shortName
 import com.intellij.codeInsight.AnnotationUtil
 import com.intellij.psi.PsiModifierListOwner
+import com.intellij.psi.PsiVariable
+import org.jetbrains.uast.UVariable
 import java.util.EnumSet
 
 data class AnnotatedCallPath(
@@ -63,7 +65,7 @@ fun searchForInterproceduralThreadAnnotationViolations(
     fun CallTarget.isAnnotatedWith(annotation: String) = when (this) {
         is CallTarget.Method -> {
             element.isAnnotatedWith(annotation) ||
-                    element.containingClass?.isAnnotatedWith(annotation) ?: false
+                    element.javaPsi.containingClass?.isAnnotatedWith(annotation) ?: false
         }
         is CallTarget.Lambda -> element.annotations.any { it.qualifiedName == annotation }
         is CallTarget.DefaultCtor -> element.isAnnotatedWith(annotation)
@@ -88,7 +90,7 @@ fun searchForInterproceduralThreadAnnotationViolations(
     fun paramSearchNodes(annotation: String) = contextualGraph.contextualNodes
         .flatMap { searchNode ->
             searchNode.paramContext.params
-                .filter { (param, _) -> param.psi.isAnnotatedWith(annotation) }
+                .filter { (param, _) -> (param.javaPsi as PsiVariable).isAnnotatedWith(annotation) }
                 .map { it.second } // Pulls out receivers.
         }
         .mapNotNull { receiver ->
