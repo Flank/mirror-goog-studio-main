@@ -39,8 +39,7 @@ public class MinifyLibAndAppWithJavaResTest {
 
     @Parameterized.Parameters(name = "codeShrinker = {0}")
     public static CodeShrinker[] data() {
-        // enable for R8 once http://b/36847655 is fixed
-        return new CodeShrinker[] {CodeShrinker.PROGUARD};
+        return new CodeShrinker[] {CodeShrinker.PROGUARD, CodeShrinker.R8};
     }
 
     @Rule
@@ -79,12 +78,14 @@ public class MinifyLibAndAppWithJavaResTest {
         assertThat(releaseApk).contains("com/android/tests/other/some.xml");
         assertThat(releaseApk).contains("com/android/tests/other/another.properties");
 
+        // check that resources with relative path lookup code have a matching obfuscated
+        // package name.
         if (codeShrinker == CodeShrinker.PROGUARD) {
-            // check that resources with relative path lookup code have a matching obfuscated
-            // package
-            // name.
             assertThat(releaseApk).contains("com/android/tests/b/resources.properties");
             assertThat(releaseApk).contains("com/android/tests/a/resources.properties");
+        } else {
+            assertThat(releaseApk).contains("a/a/a/b/resources.properties");
+            assertThat(releaseApk).contains("a/a/a/a/resources.properties");
         }
     }
 }
