@@ -42,6 +42,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.function.Supplier;
 import javax.imageio.ImageIO;
 import javax.xml.stream.XMLInputFactory;
@@ -250,17 +251,22 @@ public class VectorDrawableRenderer implements ResourcePreprocessor {
     }
 
     private enum PreprocessingReason {
-        /** Preprocessing is required due to lack of vector drawable support. */
-        VECTOR_SUPPORT(21),
-        /** Preprocessing is required due to lack of gradient support. */
-        GRADIENT_SUPPORT(24),
-        /** Preprocessing is required due to lack of support for the android:fillType attribute. */
-        FILLTYPE_SUPPORT(24);
+        VECTOR_SUPPORT(
+                21,
+                "File was preprocessed as vector drawable support was added in Android 5.0 (API level 21)"),
+        GRADIENT_SUPPORT(
+                24,
+                "File was preprocessed as vector drawable gradient support was added in Android 7.0 (API level 24)"),
+        FILLTYPE_SUPPORT(
+                24,
+                "File was preprocessed as vector drawable android:filltype support was added in Android 7.0 (API level 24)");
 
         private final int mSdkThreshold;
+        private final String explanation;
 
-        PreprocessingReason(int sdkThreshold) {
+        PreprocessingReason(int sdkThreshold, @NonNull String explanation) {
             mSdkThreshold = sdkThreshold;
+            this.explanation = explanation;
         }
 
         /**
@@ -269,5 +275,17 @@ public class VectorDrawableRenderer implements ResourcePreprocessor {
         int getSdkThreshold() {
             return mSdkThreshold;
         }
+
+        @NonNull
+        public String getExplanation() {
+            return explanation;
+        }
+    }
+
+    protected String getPreprocessingReasonDescription(@NonNull File inputXmlFile)
+            throws IOException {
+        FolderConfiguration config = getFolderConfiguration(inputXmlFile);
+        PreprocessingReason reason = getReasonForPreprocessing(inputXmlFile, config);
+        return Objects.requireNonNull(reason, "Processing file for no reason").getExplanation();
     }
 }

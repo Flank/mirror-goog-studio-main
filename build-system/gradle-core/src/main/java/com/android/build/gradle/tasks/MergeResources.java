@@ -389,10 +389,13 @@ public class MergeResources extends IncrementalTask {
                         String.format(
                                 "Can't process attribute %1$s=\"%2$s\": "
                                         + "references to other resources are not supported by "
-                                        + "build-time PNG generation. "
+                                        + "build-time PNG generation.\n"
+                                        + "%3$s\n"
                                         + "See http://developer.android.com/tools/help/vector-asset-studio.html "
                                         + "for details.",
-                                e.getName(), e.getValue()));
+                                e.getName(),
+                                e.getValue(),
+                                getPreprocessingReasonDescription(original)));
             }
         }
     }

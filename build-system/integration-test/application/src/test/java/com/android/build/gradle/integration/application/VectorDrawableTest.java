@@ -576,6 +576,8 @@ public class VectorDrawableTest {
 
         GradleBuildResult result = project.executor().expectFailure().run("assembleDebug");
         // Make sure we print out something useful.
+        assertThat(result.getFailureMessage())
+                .contains("vector drawable support was added in Android 5.0 (API level 21)");
         assertThat(result.getFailureMessage()).contains("vector-asset-studio.html");
     }
 
