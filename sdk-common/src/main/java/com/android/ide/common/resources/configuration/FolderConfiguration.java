@@ -26,13 +26,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Streams;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -1177,14 +1171,13 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
     /**
      * Returns the best matching {@link Configurable} for this configuration.
      *
-     * @param configurables the list of {@link Configurable} to choose from.
-     *
-     * @return an item from the given list of {@link Configurable} or null.
-     *
-     * See http://d.android.com/guide/topics/resources/resources-i18n.html#best-match
+     * @param configurables the list of {@link Configurable} to choose from
+     * @return an item from the given list of {@link Configurable} or null
+     * @see "http://d.android.com/guide/topics/resources/resources-i18n.html#best-match"
      */
     @Nullable
-    public <T extends Configurable> T findMatchingConfigurable(@Nullable List<T> configurables) {
+    public <T extends Configurable> T findMatchingConfigurable(
+            @Nullable Collection<T> configurables) {
         // Because we skip qualifiers where reference configuration doesn't have a valid qualifier,
         // we can end up with more than one match. In this case, we just take the first one.
         List<T> matches = findMatchingConfigurables(configurables);
@@ -1196,12 +1189,11 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
      * {@link ResourceQualifier} if it's not valid and assumes that all resources match it.
      *
      * @param configurables the list of {@code Configurable} to choose from.
-     *
      * @return a list of items from the above list. This may be empty.
      */
     @NonNull
     public <T extends Configurable> List<T> findMatchingConfigurables(
-            @Nullable List<T> configurables) {
+            @Nullable Collection<T> configurables) {
         if (configurables == null) {
             return Collections.emptyList();
         }

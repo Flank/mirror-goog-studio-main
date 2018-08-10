@@ -198,12 +198,12 @@ public class ResourceItemResolverTest extends TestCase {
                     public ResourceResolver getResolver(boolean createIfNecessary) {
                         if (mResolver == null && createIfNecessary) {
                             Map<ResourceType, ResourceValueMap> appResourceMap =
-                                    appResources
-                                            .getConfiguredResources(config)
+                                    ResourceRepositoryUtil.getConfiguredResources(
+                                                    appResources, config)
                                             .row(ResourceNamespace.RES_AUTO);
                             Map<ResourceType, ResourceValueMap> frameworkResourcesMap =
-                                    frameworkResources
-                                            .getConfiguredResources(config)
+                                    ResourceRepositoryUtil.getConfiguredResources(
+                                                    frameworkResources, config)
                                             .row(ResourceNamespace.ANDROID);
                             assertNotNull(appResourceMap);
                             mResolver =

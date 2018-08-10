@@ -44,8 +44,8 @@ public class ResourceItemResolver extends RenderResources {
     private final LayoutLog myLogger;
     private final ResourceProvider myResourceProvider;
     private ResourceResolver myResolver;
-    private AbstractResourceRepository myFrameworkResources;
-    private AbstractResourceRepository myAppResources;
+    private ResourceRepository myFrameworkResources;
+    private ResourceRepository myAppResources;
     @Nullable private List<ResourceValue> myLookupChain;
 
     public ResourceItemResolver(
@@ -173,8 +173,9 @@ public class ResourceItemResolver extends RenderResources {
                     return null;
                 }
             }
-            ResourceValue item;
-            item = myAppResources.getConfiguredValue(url.type, url.name, myConfiguration);
+            ResourceValue item =
+                    ResourceRepositoryUtil.getConfiguredValue(
+                            myAppResources, url.type, url.name, myConfiguration);
             if (item != null) {
                 if (myLookupChain != null) {
                     myLookupChain.add(item);
@@ -337,7 +338,7 @@ public class ResourceItemResolver extends RenderResources {
     public interface ResourceProvider {
         @Nullable ResourceResolver getResolver(boolean createIfNecessary);
         @Nullable
-        AbstractResourceRepository getFrameworkResources();
+        ResourceRepository getFrameworkResources();
         @Nullable AbstractResourceRepository getAppResources();
     }
 }

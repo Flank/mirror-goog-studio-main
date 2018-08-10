@@ -21,10 +21,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.GuardedBy;
 import com.android.ide.common.rendering.api.ResourceNamespace;
-import com.android.ide.common.rendering.api.ResourceReference;
-import com.android.ide.common.rendering.api.ResourceValue;
-import com.android.ide.common.resources.configuration.FolderConfiguration;
-import com.android.ide.common.resources.configuration.LocaleQualifier;
 import com.android.resources.ResourceType;
 import com.google.common.collect.*;
 import java.util.*;
@@ -39,7 +35,7 @@ import java.util.function.Predicate;
  *       Because of that access should be synchronized on the {@code ITEM_MAP_LOCK} object.
  * </ul>
  */
-public abstract class AbstractResourceRepository {
+public abstract class AbstractResourceRepository implements ResourceRepository {
     /**
      * Number of indirections we'll follow for resource resolution before assuming there is a cyclic
      * dependency error in the input.
@@ -68,29 +64,25 @@ public abstract class AbstractResourceRepository {
      *
      * <p>The returned object should be accessed only while holding {@link #ITEM_MAP_LOCK}.
      */
-    @NonNull
     @GuardedBy("AbstractResourceRepository.ITEM_MAP_LOCK")
+    @NonNull
     protected abstract ResourceTable getFullTable();
 
-    @Nullable
     @GuardedBy("AbstractResourceRepository.ITEM_MAP_LOCK")
+    @Nullable
     protected abstract ListMultimap<String, ResourceItem> getMap(
             @NonNull ResourceNamespace namespace, @NonNull ResourceType type, boolean create);
 
-    @NonNull
     @GuardedBy("AbstractResourceRepository.ITEM_MAP_LOCK")
-    public abstract Set<ResourceNamespace> getNamespaces();
-
     @NonNull
-    @GuardedBy("AbstractResourceRepository.ITEM_MAP_LOCK")
     protected final ListMultimap<String, ResourceItem> getMap(
             @NonNull ResourceNamespace namespace, @NonNull ResourceType type) {
         //noinspection ConstantConditions - won't return null if create is false.
         return getMap(namespace, type, true);
     }
 
-    @NonNull
     @GuardedBy("AbstractResourceRepository.ITEM_MAP_LOCK")
+    @NonNull
     public ResourceTable getItems() {
         return getFullTable();
     }
@@ -131,6 +123,7 @@ public abstract class AbstractResourceRepository {
         return items.isEmpty() ? null : items;
     }
 
+    @Override
     @NonNull
     public List<ResourceItem> getResourceItems(
             @NonNull ResourceNamespace namespace,
@@ -155,6 +148,7 @@ public abstract class AbstractResourceRepository {
      * @param filter the predicate for checking resource items
      * @return the resources matching the namespace, type, and satisfying the name filter
      */
+    @Override
     @NonNull
     public List<ResourceItem> getResourceItems(
             @NonNull ResourceNamespace namespace,
@@ -185,6 +179,7 @@ public abstract class AbstractResourceRepository {
      * @param resourceType the type of the resources to return
      * @return the resources matching the namespace and type
      */
+    @Override
     @NonNull
     public List<ResourceItem> getResourceItems(
             @NonNull ResourceNamespace namespace, @NonNull ResourceType resourceType) {
@@ -197,12 +192,6 @@ public abstract class AbstractResourceRepository {
         }
 
         return result;
-    }
-
-    @NonNull
-    public List<ResourceItem> getResourceItems(@NonNull ResourceReference reference) {
-        return getResourceItems(
-                reference.getNamespace(), reference.getResourceType(), reference.getName());
     }
 
     /** @deprecated Use {@link #getItemsOfType(ResourceNamespace, ResourceType)} instead. */
@@ -224,14 +213,28 @@ public abstract class AbstractResourceRepository {
         return Collections.emptySet();
     }
 
-    /**
-     * Returns a collection of <b>public</b> resource items matching a given resource type.
-     *
-     * <p>This implementation returns an empty collection. Subclasses may override this behavior.
-     *
-     * @param type the type of the resources to return
-     * @return a collection of items, possibly empty.
-     */
+    @Override
+    public void accept(@NonNull ResourceItemVisitor visitor) {
+        synchronized (ITEM_MAP_LOCK) {
+            for (Map.Entry<ResourceNamespace, Map<ResourceType, ListMultimap<String, ResourceItem>>>
+                    namespaceEntry : getFullTable().rowMap().entrySet()) {
+                if (visitor.shouldVisitNamespace(namespaceEntry.getKey())) {
+                    for (Map.Entry<ResourceType, ListMultimap<String, ResourceItem>> typeEntry :
+                            namespaceEntry.getValue().entrySet()) {
+                        if (visitor.shouldVisitResourceType(typeEntry.getKey())) {
+                            for (ResourceItem item : typeEntry.getValue().values()) {
+                                if (visitor.visit(item) == ResourceItemVisitor.VisitResult.ABORT) {
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
     @NonNull
     public Collection<ResourceItem> getPublicResourcesOfType(@NonNull ResourceType type) {
         return Collections.emptyList();
@@ -334,6 +337,7 @@ public abstract class AbstractResourceRepository {
      * @param resourceName the name of the resource
      * @return true if the resource is known
      */
+    @Override
     public boolean hasResourceItem(
             @NonNull ResourceNamespace namespace,
             @NonNull ResourceType resourceType,
@@ -368,173 +372,18 @@ public abstract class AbstractResourceRepository {
         return false;
     }
 
-    /**
-     * Returns whether the repository has resources of a given {@link ResourceType}.
-     *
-     * <p>Do not call this method if you you are going to call
-     * {@link #getItemsOfType(ResourceNamespace, ResourceType)} or
-     * {@link #getResourceItems(ResourceNamespace, ResourceType)} immediately after.
-     *
-     * @param resourceType the type of resource to check.
-     * @return true if the repository contains resources of the given type, false otherwise.
-     */
-    public boolean hasResourcesOfType(
-            @NonNull ResourceNamespace namespace, @NonNull ResourceType resourceType) {
-        synchronized (ITEM_MAP_LOCK) {
-            ListMultimap<String, ResourceItem> map = getMap(namespace, resourceType, false);
-            return map != null && !map.isEmpty();
-        }
-    }
-
+    @Override
     @NonNull
-    public ImmutableSet<ResourceType> getAvailableResourceTypes(
-            @NonNull ResourceNamespace namespace) {
+    public Set<ResourceType> getAvailableResourceTypes(@NonNull ResourceNamespace namespace) {
+        EnumSet<ResourceType> result = EnumSet.noneOf(ResourceType.class);
         synchronized (ITEM_MAP_LOCK) {
-            EnumSet<ResourceType> result = EnumSet.noneOf(ResourceType.class);
             for (ResourceType resourceType : ResourceType.values()) {
-                if (hasResourcesOfType(namespace, resourceType)) {
+                ListMultimap<String, ResourceItem> map = getMap(namespace, resourceType, false);
+                if (map != null && !map.isEmpty()) {
                     result.add(resourceType);
                 }
             }
-
-            return Sets.immutableEnumSet(result);
         }
-    }
-
-    /**
-     * Returns the resources values matching a given {@link FolderConfiguration}.
-     *
-     * @param referenceConfig the configuration that each value must match.
-     * @return a {@link Table} with one row for every namespace present in this repository, where
-     *     every row contains an entry for all resource types.
-     */
-    @NonNull
-    public Table<ResourceNamespace, ResourceType, ResourceValueMap> getConfiguredResources(
-            @NonNull FolderConfiguration referenceConfig) {
-        synchronized (ITEM_MAP_LOCK) {
-            Set<ResourceNamespace> namespaces = getNamespaces();
-
-            Map<ResourceNamespace, Map<ResourceType, ResourceValueMap>> backingMap;
-            if (KnownNamespacesMap.canContainAll(namespaces)) {
-                backingMap = new KnownNamespacesMap<>();
-            } else {
-                backingMap = new HashMap<>();
-            }
-            Table<ResourceNamespace, ResourceType, ResourceValueMap> table =
-                    Tables.newCustomTable(backingMap, () -> new EnumMap<>(ResourceType.class));
-
-            for (ResourceNamespace namespace : namespaces) {
-                // TODO(namespaces): Move this method to ResourceResolverCache.
-                // For performance reasons don't mix framework and non-framework resources since
-                // they have different life spans.
-                assert namespaces.size() == 1 || namespace != ResourceNamespace.ANDROID;
-
-                for (ResourceType type : ResourceType.values()) {
-                    // get the local results and put them in the map
-                    table.put(
-                            namespace,
-                            type,
-                            getConfiguredResources(namespace, type, referenceConfig));
-                }
-            }
-            return table;
-        }
-    }
-
-    /**
-     * Returns a map of (resource name, resource value) for the given {@link ResourceType}.
-     *
-     * <p>The values returned are taken from the resource files best matching a given {@link
-     * FolderConfiguration}.
-     *
-     * @param namespace namespaces of the resources
-     * @param type the type of the resources.
-     * @param referenceConfig the configuration to best match.
-     */
-    @NonNull
-    // TODO: namespaces
-    public ResourceValueMap getConfiguredResources(
-            @NonNull ResourceNamespace namespace,
-            @NonNull ResourceType type,
-            @NonNull FolderConfiguration referenceConfig) {
-        synchronized (ITEM_MAP_LOCK) {
-            ListMultimap<String, ResourceItem> items = getFullTable().get(namespace, type);
-            if (items == null) {
-                return ResourceValueMap.create();
-            }
-
-            Set<String> keys = items.keySet();
-            ResourceValueMap map = ResourceValueMap.createWithExpectedSize(keys.size());
-
-            for (String key : keys) {
-                List<ResourceItem> keyItems = items.get(key);
-
-                // Look for the best match for the given configuration.
-                ResourceItem match = referenceConfig.findMatchingConfigurable(keyItems);
-                if (match != null) {
-                    ResourceValue value = match.getResourceValue();
-                    if (value != null) {
-                        map.put(match.getName(), value);
-                    }
-                }
-            }
-
-            return map;
-        }
-    }
-
-    @Nullable
-    // TODO: namespaces
-    public ResourceValue getConfiguredValue(
-            @NonNull ResourceType type,
-            @NonNull String name,
-            @NonNull FolderConfiguration referenceConfig) {
-        synchronized (ITEM_MAP_LOCK) {
-            // get the resource item for the given type
-            ListMultimap<String, ResourceItem> items =
-                    getMap(ResourceNamespace.TODO(), type, false);
-            if (items == null) {
-                return null;
-            }
-
-            List<ResourceItem> keyItems = items.get(name);
-            if (keyItems == null) {
-                return null;
-            }
-
-            // look for the best match for the given configuration
-            // the match has to be of type ResourceFile since that's what the input list contains
-            ResourceItem match = referenceConfig.findMatchingConfigurable(keyItems);
-            return match != null ? match.getResourceValue() : null;
-        }
-    }
-
-    /** Returns the sorted list of languages used in the resources. */
-    @NonNull
-    // TODO: namespaces
-    public SortedSet<LocaleQualifier> getLocales() {
-        SortedSet<LocaleQualifier> set = new TreeSet<>();
-
-        // As an optimization we could just look for values since that's typically where
-        // the languages are defined -- not on layouts, menus, etc -- especially if there
-        // are no translations for it
-        Set<FolderConfiguration> folderConfigurations = new HashSet<>();
-
-        synchronized (ITEM_MAP_LOCK) {
-            for (ListMultimap<String, ResourceItem> map : getFullTable().values()) {
-                for (ResourceItem item : map.values()) {
-                    folderConfigurations.add(item.getConfiguration());
-                }
-            }
-        }
-
-        for (FolderConfiguration configuration : folderConfigurations) {
-            LocaleQualifier locale = configuration.getLocaleQualifier();
-            if (locale != null) {
-                set.add(locale);
-            }
-        }
-
-        return set;
+        return Sets.immutableEnumSet(result);
     }
 }

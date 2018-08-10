@@ -32,6 +32,7 @@ import com.android.ide.common.resources.configuration.FolderConfiguration
 import com.android.ide.common.resources.configuration.VersionQualifier
 import com.android.ide.common.resources.usage.ResourceUsageModel
 import com.android.ide.common.resources.usage.ResourceUsageModel.getResourceFieldName
+import com.android.ide.common.resources.getLocales
 import com.android.resources.FolderTypeRelationship
 import com.android.resources.ResourceFolderType
 import com.android.resources.ResourceFolderType.VALUES
@@ -332,7 +333,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
             if (locales == null) {
                 locales = filterLocalesByResConfigs(
                     context.project,
-                    resources.locales.mapNotNull {
+                    resources.getLocales().mapNotNull {
                         if (it.hasLanguage()) {
                             it.language
                         } else {

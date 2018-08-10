@@ -191,7 +191,8 @@ public class MergerResourceRepositoryTest2 extends TestCase {
         FolderConfiguration folderConfig = new FolderConfiguration();
         folderConfig.setLocaleQualifier(LocaleQualifier.getQualifier("en"));
         Map<ResourceType, ResourceValueMap> configuredItems =
-                mRepository.getConfiguredResources(folderConfig).row(ResourceNamespace.RES_AUTO);
+                ResourceRepositoryUtil.getConfiguredResources(mRepository, folderConfig)
+                        .row(ResourceNamespace.RES_AUTO);
         ResourceValue value = configuredItems.get(ResourceType.STRING).get("show_all_apps");
         assertNotNull(value);
         assertEquals("All", value.getValue());
@@ -200,7 +201,8 @@ public class MergerResourceRepositoryTest2 extends TestCase {
         folderConfig = new FolderConfiguration();
         folderConfig.setLocaleQualifier(LocaleQualifier.getQualifier("es"));
         configuredItems =
-                mRepository.getConfiguredResources(folderConfig).row(ResourceNamespace.RES_AUTO);
+                ResourceRepositoryUtil.getConfiguredResources(mRepository, folderConfig)
+                        .row(ResourceNamespace.RES_AUTO);
         value = configuredItems.get(ResourceType.STRING).get("show_all_apps");
         assertNotNull(value);
         assertEquals("Todo", value.getValue());
@@ -227,7 +229,8 @@ public class MergerResourceRepositoryTest2 extends TestCase {
                 new ScreenOrientationQualifier(ScreenOrientation.LANDSCAPE));
 
         Map<ResourceType, ResourceValueMap> configuredResources =
-                mRepository.getConfiguredResources(folderConfig).row(ResourceNamespace.RES_AUTO);
+                ResourceRepositoryUtil.getConfiguredResources(mRepository, folderConfig)
+                        .row(ResourceNamespace.RES_AUTO);
         ResourceValueMap strings = configuredResources.get(ResourceType.STRING);
         ResourceValueMap layouts = configuredResources.get(ResourceType.LAYOUT);
         ResourceValueMap ids = configuredResources.get(ResourceType.ID);
