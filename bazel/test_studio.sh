@@ -17,5 +17,7 @@ if [[ -d "${dist_dir}" ]]; then
   for source_xml in $(cd "${testlogs_dir}" && find -name '*.xml' -printf '%P\n'); do
     target_xml="$(echo "${source_xml}" | tr '/' '_')"
     cp -pv "${testlogs_dir}/${source_xml}" "${dist_dir}/gtest/${target_xml}"
+    # GTestXmlResultParser requires the testsuites element to have tests and time attributes.
+    sed -i 's/<testsuites>/<testsuites tests="0" time="0">/' "${dist_dir}/gtest/${target_xml}"
   done
 fi
