@@ -21,7 +21,6 @@ import com.android.builder.testing.api.DeviceConnector;
 import com.android.ddmlib.testrunner.AndroidTestOrchestratorRemoteAndroidTestRunner;
 import com.google.common.base.CharMatcher;
 import com.google.common.truth.Truth;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -39,7 +38,6 @@ public class AndroidTestOrchestratorRemoteAndroidTestRunnerTest {
                         + "android.support.test.orchestrator/android.support.test.orchestrator.AndroidTestOrchestrator");
     }
 
-    @Ignore("b/111584882 Disabled in 3.2 as there is no androidx mapping for ATSL")
     @Test
     public void amInstrumentCommand_new() throws Exception {
         checkAdbCommand(
