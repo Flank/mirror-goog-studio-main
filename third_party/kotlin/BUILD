@@ -5,14 +5,14 @@ maven_repo(
     artifacts = [
         ":org.jetbrains.kotlin_kotlin-gradle-plugin",
         ":org.jetbrains.kotlin_kotlin-stdlib-jdk8",
+        ":org.jetbrains.kotlin_kotlin-scripting-compiler-embeddable",
     ],
     visibility = ["//visibility:public"],
 )
 
 # To update the section below, run
-#    bazel run //tools/base/bazel:third_party_build_generator outputFile path/to/prebuilts/tools/common/m2/repository org.jetbrains.kotlin:kotlin-gradle-plugin:<version> org.jetbrains.kotlin:kotlin-stdlib-jdk-8:<version>
+#    bazel run //tools/base/bazel:third_party_build_generator outputFile path/to/prebuilts/tools/common/m2/repository org.jetbrains.kotlin:kotlin-gradle-plugin:<version> org.jetbrains.kotlin:kotlin-stdlib-jdk8:<version>
 # and place the contents of outputFile here.
-
 #
 # !!! ATTENTION !!!
 #
@@ -26,7 +26,7 @@ load("//tools/base/bazel:maven.bzl", "maven_java_library")
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-android-extensions",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-android-extensions/1.2.50:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-android-extensions/1.2.60:jar",
     visibility = ["//visibility:public"],
     exports = [],
     runtime_deps = [":org.jetbrains.kotlin_kotlin-compiler-embeddable"],
@@ -35,7 +35,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-annotation-processing-gradle",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-annotation-processing-gradle/1.2.50:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-annotation-processing-gradle/1.2.60:jar",
     visibility = ["//visibility:public"],
     exports = [":org.jetbrains.kotlin_kotlin-stdlib"],
     runtime_deps = [":org.jetbrains.kotlin_kotlin-compiler-embeddable"],
@@ -44,7 +44,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-build-common",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-build-common/1.2.50:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-build-common/1.2.60:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -52,10 +52,11 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-compiler-embeddable",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-compiler-embeddable/1.2.50:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-compiler-embeddable/1.2.60:jar",
     visibility = ["//visibility:public"],
     exports = [],
     runtime_deps = [
+        ":org.jetbrains.kotlin_kotlin-reflect",
         ":org.jetbrains.kotlin_kotlin-script-runtime",
         ":org.jetbrains.kotlin_kotlin-stdlib",
     ],
@@ -64,7 +65,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-compiler-runner",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-compiler-runner/1.2.50:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-compiler-runner/1.2.60:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":org.jetbrains.kotlin_kotlin-build-common",
@@ -75,7 +76,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-daemon-client",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-daemon-client/1.2.50:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-daemon-client/1.2.60:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -83,7 +84,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-gradle-plugin",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-gradle-plugin/1.2.50:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-gradle-plugin/1.2.60:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":org.jetbrains.kotlin_kotlin-gradle-plugin-api",
@@ -95,16 +96,13 @@ maven_java_library(
         ":org.jetbrains.kotlin_kotlin-compiler-embeddable",
         ":org.jetbrains.kotlin_kotlin-compiler-runner",
         ":org.jetbrains.kotlin_kotlin-reflect",
-        ":org.jetbrains.kotlin_kotlin-scripting-common",
-        ":org.jetbrains.kotlin_kotlin-scripting-compiler",
-        ":org.jetbrains.kotlin_kotlin-scripting-gradle",
     ],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-gradle-plugin-api",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-gradle-plugin-api/1.2.50:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-gradle-plugin-api/1.2.60:jar",
     visibility = ["//visibility:public"],
     exports = [":org.jetbrains.kotlin_kotlin-stdlib"],
 )
@@ -112,7 +110,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-reflect",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-reflect/1.2.50:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-reflect/1.2.60:jar",
     visibility = ["//visibility:public"],
     exports = [":org.jetbrains.kotlin_kotlin-stdlib"],
 )
@@ -120,76 +118,23 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-script-runtime",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-script-runtime/1.2.50:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-script-runtime/1.2.60:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
-    name = "org.jetbrains.kotlin_kotlin-scripting-common",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-scripting-common/1.2.50:jar",
+    name = "org.jetbrains.kotlin_kotlin-scripting-compiler-embeddable",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-scripting-compiler-embeddable/1.2.60:jar",
     visibility = ["//visibility:public"],
-    exports = [
-        ":org.jetbrains.kotlin_kotlin-reflect",
-        ":org.jetbrains.kotlin_kotlin-stdlib",
-        ":org.jetbrains.kotlinx_kotlinx-coroutines-core",
-    ],
-)
-
-# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
-maven_java_library(
-    name = "org.jetbrains.kotlin_kotlin-scripting-compiler",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-scripting-compiler/1.2.50:jar",
-    visibility = ["//visibility:public"],
-    exports = [
-        ":org.jetbrains.kotlin_kotlin-scripting-common",
-        ":org.jetbrains.kotlin_kotlin-scripting-jvm",
-        ":org.jetbrains.kotlin_kotlin-scripting-misc",
-    ],
-)
-
-# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
-maven_java_library(
-    name = "org.jetbrains.kotlin_kotlin-scripting-gradle",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-scripting-gradle/1.2.50:jar",
-    visibility = ["//visibility:public"],
-    exports = [":org.jetbrains.kotlin_kotlin-gradle-plugin-api"],
-    runtime_deps = [
-        ":org.jetbrains.kotlin_kotlin-scripting-common",
-        ":org.jetbrains.kotlin_kotlin-scripting-jvm",
-        ":org.jetbrains.kotlin_kotlin-scripting-misc",
-    ],
-)
-
-# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
-maven_java_library(
-    name = "org.jetbrains.kotlin_kotlin-scripting-jvm",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-scripting-jvm/1.2.50:jar",
-    visibility = ["//visibility:public"],
-    exports = [
-        ":org.jetbrains.kotlin_kotlin-script-runtime",
-        ":org.jetbrains.kotlin_kotlin-scripting-common",
-        ":org.jetbrains.kotlin_kotlin-stdlib",
-    ],
-)
-
-# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
-maven_java_library(
-    name = "org.jetbrains.kotlin_kotlin-scripting-misc",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-scripting-misc/1.2.50:jar",
-    visibility = ["//visibility:public"],
-    exports = [
-        ":org.jetbrains.kotlin_kotlin-script-runtime",
-        ":org.jetbrains.kotlin_kotlin-scripting-common",
-        ":org.jetbrains.kotlin_kotlin-stdlib",
-    ],
+    exports = [],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-stdlib",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.2.50:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.2.60:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":org.jetbrains.kotlin_kotlin-stdlib-common",
@@ -200,7 +145,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-stdlib-common",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-common/1.2.50:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-common/1.2.60:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -208,7 +153,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-stdlib-jdk7",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.2.50:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.2.60:jar",
     visibility = ["//visibility:public"],
     exports = [":org.jetbrains.kotlin_kotlin-stdlib"],
 )
@@ -216,20 +161,12 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-stdlib-jdk8",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.2.50:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.2.60:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":org.jetbrains.kotlin_kotlin-stdlib",
         ":org.jetbrains.kotlin_kotlin-stdlib-jdk7",
     ],
-)
-
-# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
-maven_java_library(
-    name = "org.jetbrains.kotlinx_kotlinx-coroutines-core",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlinx/kotlinx-coroutines-core/0.20:jar",
-    visibility = ["//visibility:public"],
-    exports = [":org.jetbrains.kotlin_kotlin-stdlib"],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
