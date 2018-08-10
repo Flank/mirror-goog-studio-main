@@ -25,6 +25,7 @@ import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
@@ -50,6 +51,7 @@ public class MultiTypeTaskManager extends TaskManager {
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
             @NonNull SdkHandler sdkHandler,
+            @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         super(
@@ -60,6 +62,7 @@ public class MultiTypeTaskManager extends TaskManager {
                 dataBindingBuilder,
                 extension,
                 sdkHandler,
+                variantFactory,
                 toolingRegistry,
                 recorder);
         FeatureTaskManager featureTaskManager =
@@ -71,6 +74,7 @@ public class MultiTypeTaskManager extends TaskManager {
                         dataBindingBuilder,
                         extension,
                         sdkHandler,
+                        variantFactory,
                         toolingRegistry,
                         recorder);
         delegates =
@@ -86,6 +90,7 @@ public class MultiTypeTaskManager extends TaskManager {
                                         dataBindingBuilder,
                                         extension,
                                         sdkHandler,
+                                        variantFactory,
                                         toolingRegistry,
                                         recorder));
     }

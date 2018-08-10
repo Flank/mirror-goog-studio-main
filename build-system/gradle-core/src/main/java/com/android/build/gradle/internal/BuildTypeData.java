@@ -27,8 +27,6 @@ import org.gradle.api.tasks.TaskProvider;
  */
 public class BuildTypeData extends VariantDimensionData {
     @NonNull private final CoreBuildType buildType;
-    @Nullable private TaskProvider<Task> assembleTask;
-    @Nullable private TaskProvider<Task> bundleTask;
 
     BuildTypeData(
             @NonNull CoreBuildType buildType,
@@ -43,23 +41,5 @@ public class BuildTypeData extends VariantDimensionData {
     @NonNull
     public CoreBuildType getBuildType() {
         return buildType;
-    }
-
-    @Nullable
-    public TaskProvider<Task> getAssembleTask() {
-        return assembleTask;
-    }
-
-    public void setAssembleTask(TaskProvider<Task> assembleTask) {
-        this.assembleTask = assembleTask;
-    }
-
-    @Nullable
-    public TaskProvider<Task> getBundleTask() {
-        return bundleTask;
-    }
-
-    public void setBundleTask(TaskProvider<Task> bundleTask) {
-        this.bundleTask = bundleTask;
     }
 }

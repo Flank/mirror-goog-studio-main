@@ -23,6 +23,7 @@ import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.feature.BundleFeatureClasses;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
@@ -45,6 +46,7 @@ public class FeatureTaskManager extends ApplicationTaskManager {
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
             @NonNull SdkHandler sdkHandler,
+            @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         super(
@@ -55,6 +57,7 @@ public class FeatureTaskManager extends ApplicationTaskManager {
                 dataBindingBuilder,
                 extension,
                 sdkHandler,
+                variantFactory,
                 toolingRegistry,
                 recorder);
     }

@@ -102,6 +102,7 @@ public class FeaturePlugin extends LibraryPlugin {
             @NonNull AndroidConfig androidConfig,
             @NonNull SdkHandler sdkHandler,
             @NonNull NdkHandler ndkHandler,
+            @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         return new MultiTypeTaskManager(
@@ -112,6 +113,7 @@ public class FeaturePlugin extends LibraryPlugin {
                 dataBindingBuilder,
                 androidConfig,
                 sdkHandler,
+                variantFactory,
                 toolingRegistry,
                 recorder);
     }

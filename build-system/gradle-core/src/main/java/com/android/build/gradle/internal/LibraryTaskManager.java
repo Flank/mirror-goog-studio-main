@@ -46,6 +46,7 @@ import com.android.build.gradle.internal.transforms.LibraryAarJarsTransform;
 import com.android.build.gradle.internal.transforms.LibraryBaseTransform;
 import com.android.build.gradle.internal.transforms.LibraryIntermediateJarsTransform;
 import com.android.build.gradle.internal.transforms.LibraryJniLibsTransform;
+import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.internal.variant.VariantHelper;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -83,6 +84,7 @@ public class LibraryTaskManager extends TaskManager {
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
             @NonNull SdkHandler sdkHandler,
+            @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         super(
@@ -93,6 +95,7 @@ public class LibraryTaskManager extends TaskManager {
                 dataBindingBuilder,
                 extension,
                 sdkHandler,
+                variantFactory,
                 toolingRegistry,
                 recorder);
     }

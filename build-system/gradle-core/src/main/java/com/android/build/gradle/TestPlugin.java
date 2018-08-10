@@ -102,6 +102,7 @@ public class TestPlugin extends BasePlugin<TestExtensionImpl> {
             @NonNull AndroidConfig androidConfig,
             @NonNull SdkHandler sdkHandler,
             @NonNull NdkHandler ndkHandler,
+            @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         return new TestApplicationTaskManager(
@@ -112,6 +113,7 @@ public class TestPlugin extends BasePlugin<TestExtensionImpl> {
                 dataBindingBuilder,
                 androidConfig,
                 sdkHandler,
+                variantFactory,
                 toolingRegistry,
                 recorder);
     }

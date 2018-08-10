@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.InstantAppProvisionTask;
 import com.android.build.gradle.internal.tasks.InstantAppSideLoadTask;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
+import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.BundleInstantApp;
 import com.android.builder.core.AndroidBuilder;
@@ -48,6 +49,7 @@ public class InstantAppTaskManager extends TaskManager {
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
             @NonNull SdkHandler sdkHandler,
+            @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder threadRecorder) {
         super(
@@ -58,6 +60,7 @@ public class InstantAppTaskManager extends TaskManager {
                 dataBindingBuilder,
                 extension,
                 sdkHandler,
+                variantFactory,
                 toolingRegistry,
                 threadRecorder);
     }

@@ -25,7 +25,7 @@ import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.internal.scope.CodeShrinker
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.model.SyncIssue
-import com.android.testutils.truth.FileSubject
+import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import org.junit.Assume
 import org.junit.Rule
@@ -207,7 +207,7 @@ class MinifyFeaturesTest(
                     .appendToBuild(
                         """
                             android {
-	                            dynamicFeatures = [':foo:otherFeature1', '$otherFeature2GradlePath']
+                                dynamicFeatures = [':foo:otherFeature1', '$otherFeature2GradlePath']
                                 buildTypes {
                                     minified.initWith(buildTypes.debug)
                                     minified {
@@ -589,6 +589,13 @@ class MinifyFeaturesTest(
                 """)
 
     private val instantApp = MinimalSubProject.instantApp()
+        .appendToBuild("""
+            android {
+                buildTypes {
+                    minified
+                }
+            }
+        """.trimIndent())
 
     private val testApp =
         MultiModuleTestProject.builder()
@@ -640,9 +647,13 @@ class MinifyFeaturesTest(
                 override fun isSigned() = true
          }
 
-        project.executor()
+        val executor = project.executor()
             .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
-            .run("assembleMinified")
+
+        when (multiApkMode) {
+            MultiApkMode.DYNAMIC_APP -> executor.run("assembleMinified")
+            MultiApkMode.INSTANT_APP -> executor.run("app:assembleMinified", "instantApp:assembleMinified")
+        }
 
         // check aapt_rules.txt merging
         val aaptProguardFile =
@@ -654,8 +665,8 @@ class MinifyFeaturesTest(
                     MultiApkMode.INSTANT_APP -> FileUtils.join("feature", "minified")
                 },
                 SdkConstants.FN_AAPT_RULES)
-        FileSubject.assertThat(aaptProguardFile).exists()
-        FileSubject.assertThat(aaptProguardFile)
+        assertThat(aaptProguardFile).exists()
+        assertThat(aaptProguardFile)
             .doesNotContain("-keep class com.example.lib2.FooView")
         val mergedAaptProguardFile =
             FileUtils.join(
@@ -670,8 +681,8 @@ class MinifyFeaturesTest(
                     MultiApkMode.INSTANT_APP -> "mergeMinifiedFeatureAaptProguardFiles"
                 },
                 SdkConstants.FN_MERGED_AAPT_RULES)
-        FileSubject.assertThat(mergedAaptProguardFile).exists()
-        FileSubject.assertThat(mergedAaptProguardFile)
+        assertThat(mergedAaptProguardFile).exists()
+        assertThat(mergedAaptProguardFile)
             .contains("-keep class com.example.lib2.FooView")
 
         val baseModuleApk =
@@ -682,6 +693,7 @@ class MinifyFeaturesTest(
                         MultiApkMode.INSTANT_APP -> it.getFeatureApk(apkType)
                     }
                 }
+        assertThat(baseModuleApk.file.toFile()).exists()
         assertThat(baseModuleApk).containsClass("Lcom/example/baseModule/Main;")
         assertThat(baseModuleApk).containsClass("Lcom/example/baseModule/a;")
         assertThat(baseModuleApk).containsClass("Lcom/example/baseModule/EmptyClassToKeep;")
@@ -709,6 +721,7 @@ class MinifyFeaturesTest(
                         MultiApkMode.INSTANT_APP -> it.getFeatureApk(apkType)
                     }
                 }
+        assertThat(otherFeature1Apk.file.toFile()).exists()
         assertThat(otherFeature1Apk).containsClass("Lcom/example/otherFeature1/Main;")
         assertThat(otherFeature1Apk).containsClass("Lcom/example/otherFeature1/EmptyClassToKeep;")
         assertThat(otherFeature1Apk).containsClass("Lcom/example/lib2/EmptyClassToKeep;")
@@ -732,6 +745,7 @@ class MinifyFeaturesTest(
                         MultiApkMode.INSTANT_APP -> it.getFeatureApk(apkType)
                     }
                 }
+        assertThat(otherFeature2Apk.file.toFile()).exists()
         assertThat(otherFeature2Apk).containsClass("Lcom/example/otherFeature2/Main;")
         assertThat(otherFeature2Apk).doesNotContainJavaResource("other_java_res_2.txt")
         assertThat(otherFeature2Apk).doesNotContainClass("Lcom/example/lib1/EmptyClassToKeep;")
@@ -741,6 +755,7 @@ class MinifyFeaturesTest(
 
         if (multiApkMode == MultiApkMode.INSTANT_APP) {
             val appApk = project.getSubproject("app").getApk(apkType)
+            assertThat(appApk.file.toFile()).exists()
             assertThat(appApk).containsClass("Lcom/example/baseModule/Main;")
             assertThat(appApk).containsClass("Lcom/example/baseModule/EmptyClassToKeep;")
             assertThat(appApk).containsClass("Lcom/example/lib1/EmptyClassToKeep;")

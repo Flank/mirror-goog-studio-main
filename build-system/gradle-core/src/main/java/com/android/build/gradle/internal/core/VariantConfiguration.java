@@ -266,7 +266,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     public String getFullName() {
         if (mFullName == null) {
             mFullName =
-                    computeFullName(
+                    computeRegularVariantName(
                             getFlavorName(),
                             mBuildType,
                             mType,
@@ -280,13 +280,19 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      * Returns the full, unique name of the variant in camel case (starting with a lower case),
      * including BuildType, Flavors and Test (if applicable).
      *
+     * <p>This is to be used for the normal variant name. In case of Feature plugin, the library
+     * side will be called the same as for library plugins, while the feature side will add
+     * 'feature' to the name.
+     *
+     * <p>The hybrid name below will always rename the library side to contain 'aar'
+     *
      * @param flavorName the flavor name, as computed by {@link #computeFlavorName(List)}
      * @param buildType the build type
      * @param type the variant type
      * @return the name of the variant
      */
     @NonNull
-    public static <B extends BuildType> String computeFullName(
+    public static <B extends BuildType> String computeRegularVariantName(
             @NonNull String flavorName,
             @NonNull B buildType,
             @NonNull VariantType type,
@@ -301,7 +307,8 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         }
 
         if (type.isHybrid()) {
-            sb.append("Feature");
+            //noinspection ConstantConditions
+            StringHelper.appendCapitalized(sb, type.getHybridName());
         }
 
         if (type.isTestComponent()) {
@@ -312,6 +319,45 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         }
         return sb.toString();
     }
+
+    /**
+     * Returns the full, unique name of the variant in camel case (starting with a lower case),
+     * including BuildType, Flavors and Test (if applicable).
+     *
+     * <p>This is the full hybrid version even for variants that are not hybrid (ie LIBRARY are not
+     * considered hybrid but they share with FEATURE, so this will return a different name than
+     * {@link #computeRegularVariantName(String, BuildType, VariantType, VariantType)}.)
+     *
+     * <p>This should only be used to differentiate the assemble task name.
+     *
+     * @return the name of the variant
+     */
+    @NonNull
+    public String computeHybridVariantName() {
+        StringBuilder sb = new StringBuilder();
+
+        String flavorName = getFlavorName();
+        if (!flavorName.isEmpty()) {
+            sb.append(flavorName);
+            StringHelper.appendCapitalized(sb, mBuildType.getName());
+        } else {
+            sb.append(mBuildType.getName());
+        }
+
+        if (mType.isTestComponent()) {
+            VariantType testedType = mTestedConfig == null ? null : mTestedConfig.getType();
+            if (testedType != null && testedType.isHybrid()) {
+                //noinspection ConstantConditions
+                StringHelper.appendCapitalized(sb, testedType.getHybridName());
+            }
+            sb.append(mType.getSuffix());
+        } else {
+            //noinspection ConstantConditions
+            StringHelper.appendCapitalized(sb, mType.getHybridName());
+        }
+        return sb.toString();
+    }
+
 
     /**
      * Returns a full name that includes the given splits name.

@@ -27,8 +27,6 @@ import org.gradle.api.tasks.TaskProvider;
  */
 public class ProductFlavorData<T extends CoreProductFlavor> extends VariantDimensionData {
     @NonNull private final T productFlavor;
-    @Nullable private TaskProvider<Task> assembleTask;
-    @Nullable private TaskProvider<Task> bundleTask;
 
     ProductFlavorData(
             @NonNull T productFlavor,
@@ -43,23 +41,5 @@ public class ProductFlavorData<T extends CoreProductFlavor> extends VariantDimen
     @NonNull
     public T getProductFlavor() {
         return productFlavor;
-    }
-
-    @Nullable
-    public TaskProvider<Task> getAssembleTask() {
-        return assembleTask;
-    }
-
-    public void setAssembleTask(@NonNull TaskProvider<Task> assembleTask) {
-        this.assembleTask = assembleTask;
-    }
-
-    @Nullable
-    public TaskProvider<Task> getBundleTask() {
-        return bundleTask;
-    }
-
-    public void setBundleTask(@Nullable TaskProvider<Task> bundleTask) {
-        this.bundleTask = bundleTask;
     }
 }

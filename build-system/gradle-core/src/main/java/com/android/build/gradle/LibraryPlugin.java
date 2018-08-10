@@ -116,6 +116,7 @@ public class LibraryPlugin extends BasePlugin<LibraryExtensionImpl> {
             @NonNull AndroidConfig androidConfig,
             @NonNull SdkHandler sdkHandler,
             @NonNull NdkHandler ndkHandler,
+            @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         return new LibraryTaskManager(
@@ -126,6 +127,7 @@ public class LibraryPlugin extends BasePlugin<LibraryExtensionImpl> {
                 dataBindingBuilder,
                 androidConfig,
                 sdkHandler,
+                variantFactory,
                 toolingRegistry,
                 recorder);
     }

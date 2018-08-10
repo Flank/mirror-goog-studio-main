@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.plugin.AppPluginDelegate;
 import com.android.build.gradle.internal.plugin.TypedPluginDelegate;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
+import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
@@ -108,6 +109,7 @@ public abstract class AbstractAppPlugin extends BasePlugin<AppExtensionImpl> {
             @NonNull AndroidConfig androidConfig,
             @NonNull SdkHandler sdkHandler,
             @NonNull NdkHandler ndkHandler,
+            @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         return new ApplicationTaskManager(
@@ -118,6 +120,7 @@ public abstract class AbstractAppPlugin extends BasePlugin<AppExtensionImpl> {
                 dataBindingBuilder,
                 androidConfig,
                 sdkHandler,
+                variantFactory,
                 toolingRegistry,
                 recorder);
     }

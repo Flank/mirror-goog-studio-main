@@ -74,9 +74,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
@@ -99,13 +97,11 @@ import com.android.builder.model.SigningConfig;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.android.utils.StringHelper;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.wireless.android.sdk.stats.ApiVersion;
-import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.io.File;
 import java.util.Collection;
@@ -117,7 +113,6 @@ import java.util.stream.Collectors;
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributeMatchingStrategy;
@@ -125,7 +120,6 @@ import org.gradle.api.attributes.AttributesSchema;
 import org.gradle.api.attributes.Usage;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.model.ObjectFactory;
-import org.gradle.api.tasks.TaskProvider;
 
 /**
  * Class to create, manage variants.
@@ -359,206 +353,40 @@ public class VariantManager implements VariantModel {
         return result;
     }
 
-    /**
-     * Variant/Task creation entry point.
-     */
-    public void createAndroidTasks() {
+    /** Variant/Task creation entry point. */
+    public List<VariantScope> createAndroidTasks() {
         variantFactory.validateModel(this);
         variantFactory.preVariantWork(project);
 
         if (variantScopes.isEmpty()) {
-            recorder.record(
-                    ExecutionType.VARIANT_MANAGER_CREATE_VARIANTS,
-                    project.getPath(),
-                    null /*variantName*/,
-                    this::populateVariantDataList);
+            populateVariantDataList();
         }
 
         // Create top level test tasks.
-        recorder.record(
-                ExecutionType.VARIANT_MANAGER_CREATE_TESTS_TASKS,
-                project.getPath(),
-                null /*variantName*/,
-                () -> taskManager.createTopLevelTestTasks(!productFlavors.isEmpty()));
-
-
+        taskManager.createTopLevelTestTasks(!productFlavors.isEmpty());
 
         for (final VariantScope variantScope : variantScopes) {
-            recorder.record(
-                    ExecutionType.VARIANT_MANAGER_CREATE_TASKS_FOR_VARIANT,
-                    project.getPath(),
-                    variantScope.getFullVariantName(),
-                    () -> createTasksForVariantData(variantScope));
+            createTasksForVariantData(variantScope);
         }
 
         taskManager.createSourceSetArtifactReportTask(globalScope);
 
         taskManager.createReportTasks(variantScopes);
-    }
 
-    /** Create assemble task for VariantData. */
-    private void createAssembleTaskForVariantData(final BaseVariantData variantData) {
-        final VariantScope variantScope = variantData.getScope();
-        VariantType variantType = variantData.getType();
-        final MutableTaskContainer taskContainer = variantScope.getTaskContainer();
-
-        boolean needBundleTask = variantType.isBaseModule();
-        if (variantType.isTestComponent()) {
-            taskContainer.setAssembleTask(taskManager.createAssembleTask(variantData));
-        } else {
-            BuildTypeData buildTypeData =
-                    buildTypes.get(variantData.getVariantConfiguration().getBuildType().getName());
-
-            Preconditions.checkNotNull(buildTypeData.getAssembleTask());
-            if (needBundleTask) {
-                Preconditions.checkNotNull(buildTypeData.getBundleTask());
-            }
-
-            if (productFlavors.isEmpty()) {
-                // Reuse assemble task for build type if there is no product flavor.
-                taskContainer.setAssembleTask(buildTypeData.getAssembleTask());
-
-                if (needBundleTask) {
-                    taskContainer.setBundleTask(buildTypeData.getBundleTask());
-                }
-            } else {
-                TaskProvider<Task> variantAssembleTask =
-                        taskManager.createAssembleTask(variantData);
-                taskContainer.setAssembleTask(variantAssembleTask);
-
-                // setup the task dependencies
-                // build type
-                TaskFactoryUtils.dependsOn(buildTypeData.getAssembleTask(), variantAssembleTask);
-
-                TaskProvider<Task> variantBundleTask = null;
-                if (needBundleTask) {
-                    variantBundleTask = taskManager.createBundleTask(variantData);
-                    taskContainer.setBundleTask(variantBundleTask);
-
-                    TaskFactoryUtils.dependsOn(buildTypeData.getBundleTask(), variantBundleTask);
-                }
-
-                // each flavor
-                GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
-                for (CoreProductFlavor flavor : variantConfig.getProductFlavors()) {
-                    ProductFlavorData productFlavorData = productFlavors.get(flavor.getName());
-
-                    TaskProvider<Task> flavorAssembleTask = productFlavorData.getAssembleTask();
-                    if (flavorAssembleTask == null) {
-                        flavorAssembleTask = taskManager.createAssembleTask(productFlavorData);
-                        productFlavorData.setAssembleTask(flavorAssembleTask);
-                    }
-                    TaskFactoryUtils.dependsOn(flavorAssembleTask, variantAssembleTask);
-
-                    if (needBundleTask) {
-                        TaskProvider<Task> flavorBundleTask = productFlavorData.getBundleTask();
-                        if (flavorBundleTask == null) {
-                            flavorBundleTask = taskManager.createBundleTask(productFlavorData);
-                            productFlavorData.setBundleTask(flavorBundleTask);
-                        }
-                        TaskFactoryUtils.dependsOn(flavorBundleTask, variantBundleTask);
-                    }
-                }
-
-                // assembleTask for this flavor(dimension), created on demand if needed.
-                if (variantConfig.getProductFlavors().size() > 1) {
-                    final String name = StringHelper.capitalize(variantConfig.getFlavorName());
-                    final String variantAssembleTaskName =
-                            StringHelper.appendCapitalized("assemble", name);
-                    if (!taskManager.getTaskFactory().containsKey(variantAssembleTaskName)) {
-
-                        taskManager
-                                .getTaskFactory()
-                                .register(
-                                        variantAssembleTaskName,
-                                        task -> {
-                                            task.setDescription(
-                                                    "Assembles all builds for flavor combination: "
-                                                            + name);
-                                            task.setGroup("Build");
-                                            task.dependsOn(
-                                                    taskContainer.getAssembleTask().getName());
-                                        });
-                    }
-
-                    taskManager
-                            .getTaskFactory()
-                            .configure(
-                                    "assemble", task1 -> task1.dependsOn(variantAssembleTaskName));
-
-                    if (needBundleTask) {
-
-                        final String variantBundleTaskName =
-                                StringHelper.appendCapitalized("bundle", name);
-                        if (!taskManager.getTaskFactory().containsKey(variantBundleTaskName)) {
-                            taskManager
-                                    .getTaskFactory()
-                                    .register(
-                                            variantBundleTaskName,
-                                            task -> {
-                                                task.setDescription(
-                                                        "Assembles all bundles for flavor combination: "
-                                                                + name);
-                                                task.setGroup("Build");
-                                                task.dependsOn(
-                                                        taskContainer.getBundleTask().getName());
-                                            });
-                        }
-
-                        taskManager
-                                .getTaskFactory()
-                                .configure(
-                                        "bundle", task1 -> task1.dependsOn(variantBundleTaskName));
-                    }
-                }
-            }
-        }
+        return variantScopes;
     }
 
     /** Create tasks for the specified variant. */
     public void createTasksForVariantData(final VariantScope variantScope) {
         final BaseVariantData variantData = variantScope.getVariantData();
         final VariantType variantType = variantData.getType();
-
         final GradleVariantConfiguration variantConfig = variantScope.getVariantConfiguration();
 
-        final BuildTypeData buildTypeData = buildTypes.get(variantConfig.getBuildType().getName());
-        if (buildTypeData.getAssembleTask() == null) {
-            buildTypeData.setAssembleTask(taskManager.createAssembleTask(buildTypeData));
+        taskManager.createAssembleTask(variantData);
+        if (variantType.isBaseModule()) {
+            taskManager.createBundleTask(variantData);
         }
 
-        // Add dependency of assemble task on assemble build type task.
-        taskManager
-                .getTaskFactory()
-                .configure(
-                        "assemble",
-                        task -> {
-                            assert buildTypeData.getAssembleTask() != null;
-                            task.dependsOn(buildTypeData.getAssembleTask().getName());
-                        });
-
-        if (variantScope.getType().isBaseModule()) {
-
-            if (variantType.isHybrid()
-                    && taskManager.getTaskFactory().findByName("bundle") == null) {
-                taskManager.getTaskFactory().register("bundle");
-            }
-
-            if (buildTypeData.getBundleTask() == null) {
-                buildTypeData.setBundleTask(taskManager.createBundleTask(buildTypeData));
-            }
-
-            taskManager
-                    .getTaskFactory()
-                    .configure(
-                            "bundle",
-                            task -> {
-                                assert buildTypeData.getBundleTask() != null;
-                                task.dependsOn(buildTypeData.getBundleTask());
-                            });
-        }
-
-        createAssembleTaskForVariantData(variantData);
         if (variantType.isTestComponent()) {
             final BaseVariantData testedVariantData =
                     (BaseVariantData) ((TestVariantData) variantData).getTestedVariantData();
@@ -582,6 +410,8 @@ public class VariantManager implements VariantModel {
             }
 
             // 2. the build type.
+            final BuildTypeData buildTypeData =
+                    buildTypes.get(variantConfig.getBuildType().getName());
             DefaultAndroidSourceSet buildTypeConfigurationProvider =
                     buildTypeData.getTestSourceSet(variantType);
             if (buildTypeConfigurationProvider != null) {

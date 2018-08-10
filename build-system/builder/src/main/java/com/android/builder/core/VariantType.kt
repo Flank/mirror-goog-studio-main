@@ -120,6 +120,9 @@ interface VariantType {
     val consumeType: String
     val publishType: String?
 
+    /** the name of the hybrid sub-type */
+    val hybridName: String?
+
     val name: String
 
     companion object {
@@ -166,8 +169,8 @@ enum class VariantTypeImpl(
     override val analyticsVariantType: GradleBuildVariant.VariantType,
     override val canHaveSplits: Boolean = false,
     private val consumeTypeOptional: String?,
-    override val publishType: String?
-
+    override val publishType: String?,
+    override val hybridName: String? = null
 ): VariantType {
     BASE_APK(
         isApk = true,
@@ -205,7 +208,8 @@ enum class VariantTypeImpl(
         analyticsVariantType = GradleBuildVariant.VariantType.FEATURE,
         canHaveSplits = true,
         consumeTypeOptional = ATTR_AAR,
-        publishType = ATTR_FEATURE
+        publishType = ATTR_FEATURE,
+        hybridName = "feature"
     ),
     FEATURE(
         isApk = true,
@@ -219,7 +223,8 @@ enum class VariantTypeImpl(
         analyticsVariantType = GradleBuildVariant.VariantType.FEATURE,
         canHaveSplits = true,
         consumeTypeOptional = ATTR_FEATURE,
-        publishType = ATTR_FEATURE
+        publishType = ATTR_FEATURE,
+        hybridName = "feature"
     ),
     LIBRARY(
         isAar = true,
@@ -231,7 +236,8 @@ enum class VariantTypeImpl(
         analyticsVariantType = GradleBuildVariant.VariantType.LIBRARY,
         canHaveSplits = true,
         consumeTypeOptional = ATTR_AAR,
-        publishType = ATTR_AAR),
+        publishType = ATTR_AAR,
+        hybridName = "aar"), // aar is a non hybrid but has a hybrid name to differentiate from (BASE_)FEATURE.
     INSTANTAPP(
         prefix = "",
         suffix = "",

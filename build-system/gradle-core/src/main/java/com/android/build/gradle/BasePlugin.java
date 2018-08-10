@@ -111,6 +111,7 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.UnknownHostException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
@@ -216,6 +217,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
             @NonNull AndroidConfig androidConfig,
             @NonNull SdkHandler sdkHandler,
             @NonNull NdkHandler ndkHandler,
+            @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder threadRecorder);
 
@@ -551,6 +553,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                         extension,
                         sdkHandler,
                         ndkHandler,
+                        variantFactory,
                         registry,
                         threadRecorder);
 
@@ -775,38 +778,41 @@ public abstract class BasePlugin<E extends BaseExtension2>
             sdkHandler.addLocalRepositories(project);
         }
 
-        threadRecorder.record(
-                ExecutionType.VARIANT_MANAGER_CREATE_ANDROID_TASKS,
-                project.getPath(),
-                null,
-                () -> {
-                    variantManager.createAndroidTasks();
-                    ApiObjectFactory apiObjectFactory =
-                            new ApiObjectFactory(
-                                    androidBuilder,
-                                    extension,
-                                    variantFactory,
-                                    project.getObjects());
-                    for (VariantScope variantScope : variantManager.getVariantScopes()) {
-                        BaseVariantData variantData = variantScope.getVariantData();
-                        apiObjectFactory.create(variantData);
-                    }
+        List<VariantScope> variantScopes = variantManager.createAndroidTasks();
 
-                    // Make sure no SourceSets were added through the DSL without being properly configured
-                    // Only do it if we are not restricting to a single variant (with Instant
-                    // Run or we can find extra source set
-                    if (projectOptions.get(StringOption.IDE_RESTRICT_VARIANT_NAME) == null) {
-                        sourceSetManager.checkForUnconfiguredSourceSets();
-                    }
+        ApiObjectFactory apiObjectFactory =
+                new ApiObjectFactory(
+                        androidBuilder, extension, variantFactory, project.getObjects());
+        for (VariantScope variantScope : variantScopes) {
+            BaseVariantData variantData = variantScope.getVariantData();
+            apiObjectFactory.create(variantData);
+        }
 
-                    // must run this after scopes are created so that we can configure kotlin
-                    // kapt tasks
-                    taskManager.addDataBindingDependenciesIfNecessary(
-                            extension.getDataBinding(), variantManager.getVariantScopes());
-                });
+        // Make sure no SourceSets were added through the DSL without being properly configured
+        // Only do it if we are not restricting to a single variant (with Instant
+        // Run or we can find extra source set
+        if (projectOptions.get(StringOption.IDE_RESTRICT_VARIANT_NAME) == null) {
+            sourceSetManager.checkForUnconfiguredSourceSets();
+        }
+
+        // must run this after scopes are created so that we can configure kotlin
+        // kapt tasks
+        taskManager.addDataBindingDependenciesIfNecessary(
+                extension.getDataBinding(), variantManager.getVariantScopes());
+
 
         // create the global lint task that depends on all the variants
         taskManager.configureGlobalLintTask(variantManager.getVariantScopes());
+
+        int flavorDimensionCount = 0;
+        if (extension.getFlavorDimensionList() != null) {
+            flavorDimensionCount = extension.getFlavorDimensionList().size();
+        }
+
+        taskManager.createAnchorAssembleTasks(
+                variantScopes,
+                flavorDimensionCount,
+                variantFactory.getVariantConfigurationTypes().size());
 
         // now publish all variant artifacts.
         for (VariantScope variantScope : variantManager.getVariantScopes()) {

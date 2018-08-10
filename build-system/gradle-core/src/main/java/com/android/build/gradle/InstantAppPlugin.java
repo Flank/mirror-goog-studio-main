@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.plugin.TypedPluginDelegate;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.variant.InstantAppVariantFactory;
+import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
@@ -103,6 +104,7 @@ public class InstantAppPlugin extends BasePlugin<BaseExtension2> {
             @NonNull AndroidConfig androidConfig,
             @NonNull SdkHandler sdkHandler,
             @NonNull NdkHandler ndkHandler,
+            @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         return new InstantAppTaskManager(
@@ -113,6 +115,7 @@ public class InstantAppPlugin extends BasePlugin<BaseExtension2> {
                 dataBindingBuilder,
                 androidConfig,
                 sdkHandler,
+                variantFactory,
                 toolingRegistry,
                 recorder);
     }

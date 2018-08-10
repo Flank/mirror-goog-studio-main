@@ -62,6 +62,7 @@ import com.android.build.gradle.internal.transforms.InstantRunDependenciesApkBui
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
+import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.MainApkListPersistence;
 import com.android.build.gradle.tasks.MergeResources;
@@ -96,6 +97,7 @@ public class ApplicationTaskManager extends TaskManager {
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
             @NonNull SdkHandler sdkHandler,
+            @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         super(
@@ -106,6 +108,7 @@ public class ApplicationTaskManager extends TaskManager {
                 dataBindingBuilder,
                 extension,
                 sdkHandler,
+                variantFactory,
                 toolingRegistry,
                 recorder);
     }
@@ -506,12 +509,6 @@ public class ApplicationTaskManager extends TaskManager {
         if (scope.getType().isBaseModule()) {
             TaskProvider<PackageBundleTask> packageBundleTask =
                     taskFactory.register(new PackageBundleTask.CreationAction(scope));
-
-            // bundle anchor task does not depend on packageBundleTask, instead it depends
-            // on its BuildableArtifact in order to always generate the final version of it.
-            TaskFactoryUtils.dependsOn(
-                    scope.getTaskContainer().getBundleTask(),
-                    scope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.BUNDLE));
 
             TaskProvider<BundleToApkTask> splitAndMultiApkTask =
                     taskFactory.register(new BundleToApkTask.CreationAction(scope));
