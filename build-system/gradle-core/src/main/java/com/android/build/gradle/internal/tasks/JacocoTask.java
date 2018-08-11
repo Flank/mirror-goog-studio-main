@@ -33,7 +33,6 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
 import org.gradle.workers.WorkerExecutor;
-import org.jetbrains.annotations.NotNull;
 
 @CacheableTask
 public class JacocoTask extends AndroidVariantTask {
@@ -99,7 +98,7 @@ public class JacocoTask extends AndroidVariantTask {
         }
 
         @Override
-        public void preConfigure(@NotNull String taskName) {
+        public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
             output =
                     getVariantScope()

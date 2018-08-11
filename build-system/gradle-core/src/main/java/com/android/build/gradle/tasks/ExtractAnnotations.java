@@ -72,7 +72,6 @@ import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Task which extracts annotations from the source files, and writes them to one of two possible
@@ -113,14 +112,14 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
     private String variantName;
 
     @Internal
-    @NotNull
+    @NonNull
     @Override
     public String getVariantName() {
         return variantName;
     }
 
     @Override
-    public void setVariantName(@NotNull String name) {
+    public void setVariantName(@NonNull String name) {
         variantName = name;
     }
 

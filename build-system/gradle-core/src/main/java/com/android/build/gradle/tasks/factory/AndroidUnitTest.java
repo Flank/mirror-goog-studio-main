@@ -44,7 +44,6 @@ import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.api.tasks.testing.TestTaskReports;
-import org.jetbrains.annotations.NotNull;
 
 /** Patched version of {@link Test} that we need to use for local unit tests support. */
 public class AndroidUnitTest extends Test implements VariantAwareTask {
@@ -56,14 +55,14 @@ public class AndroidUnitTest extends Test implements VariantAwareTask {
     private String variantName;
 
     @Internal
-    @NotNull
+    @NonNull
     @Override
     public String getVariantName() {
         return variantName;
     }
 
     @Override
-    public void setVariantName(@NotNull String name) {
+    public void setVariantName(@NonNull String name) {
         variantName = name;
     }
 

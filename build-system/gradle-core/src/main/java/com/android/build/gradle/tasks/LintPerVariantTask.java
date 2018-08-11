@@ -26,7 +26,6 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
-import org.jetbrains.annotations.NotNull;
 
 public class LintPerVariantTask extends LintBaseTask implements VariantAwareTask {
 
@@ -36,7 +35,7 @@ public class LintPerVariantTask extends LintBaseTask implements VariantAwareTask
     private String variantName;
 
     @Internal
-    @NotNull
+    @NonNull
     @Override
     public String getVariantName() {
         return variantName;

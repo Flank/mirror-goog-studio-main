@@ -82,7 +82,6 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.internal.logging.ConsoleRenderer;
-import org.jetbrains.annotations.NotNull;
 import org.xml.sax.SAXException;
 
 /** Run instrumentation tests for a given variant */
@@ -372,7 +371,7 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
         }
 
         @Override
-        public void preConfigure(@NotNull String taskName) {
+        public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
 
             coverageDir =
