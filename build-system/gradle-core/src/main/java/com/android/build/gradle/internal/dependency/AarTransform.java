@@ -24,7 +24,6 @@ import static com.android.SdkConstants.FD_RENDERSCRIPT;
 import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.FN_ANNOTATIONS_ZIP;
-import static com.android.SdkConstants.FN_CLASSES_JAR;
 import static com.android.SdkConstants.FN_LINT_JAR;
 import static com.android.SdkConstants.FN_PROGUARD_TXT;
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
@@ -32,16 +31,13 @@ import static com.android.SdkConstants.FN_RESOURCE_STATIC_LIBRARY;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
 import static com.android.SdkConstants.FN_R_CLASS_JAR;
 import static com.android.SdkConstants.FN_SHARED_LIBRARY_ANDROID_MANIFEST_XML;
-import static com.android.SdkConstants.LIBS_FOLDER;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.utils.FileUtils;
-import com.google.common.collect.Lists;
 import java.io.File;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -74,7 +70,8 @@ public class AarTransform extends ArtifactTransform {
         // publish JAR instead of PROCESSED_JAR below. (Consequently, the jar may be processed
         // twice, but it's probably okay since the ArtifactTransforms are cached.)
         return new ArtifactType[] {
-            ArtifactType.CLASSES,
+            // For CLASSES, this transform is ues for runtime, and AarCompileClassesTransform is
+            // used for compile
             ArtifactType.NON_NAMESPACED_CLASSES,
             ArtifactType.SHARED_CLASSES,
             ArtifactType.JAVA_RES,
@@ -107,25 +104,28 @@ public class AarTransform extends ArtifactTransform {
     public List<File> transform(@NonNull File input) {
         switch (targetType) {
             case CLASSES:
-                return (shouldBeAutoNamespaced(input) || isShared(input))
+                return (AarTransformUtil.shouldBeAutoNamespaced(input, autoNamespaceDependencies)
+                                || isShared(input))
                         ? Collections.emptyList()
-                        : getJars(input);
+                        : AarTransformUtil.getJars(input);
             case NON_NAMESPACED_CLASSES:
-                return shouldBeAutoNamespaced(input) ? getJars(input) : Collections.emptyList();
+                return AarTransformUtil.shouldBeAutoNamespaced(input, autoNamespaceDependencies)
+                        ? AarTransformUtil.getJars(input)
+                        : Collections.emptyList();
             case JAVA_RES:
             case JAR:
                 // even though resources are supposed to only be in the main jar of the AAR, this
                 // is not necessarily enforced by all build systems generating AAR so it's safer to
                 // read all jars from the manifest.
                 // For shared libraries, these are provided via SHARED_CLASSES and SHARED_JAVA_RES.
-                return isShared(input) ? Collections.emptyList() : getJars(input);
+                return isShared(input) ? Collections.emptyList() : AarTransformUtil.getJars(input);
             case SHARED_CLASSES:
             case SHARED_JAVA_RES:
-                return isShared(input) ? getJars(input) : Collections.emptyList();
+                return isShared(input) ? AarTransformUtil.getJars(input) : Collections.emptyList();
             case LINT:
                 return listIfExists(FileUtils.join(input, FD_JARS, FN_LINT_JAR));
             case MANIFEST:
-                if (shouldBeAutoNamespaced(input)) {
+                if (AarTransformUtil.shouldBeAutoNamespaced(input, autoNamespaceDependencies)) {
                     return Collections.emptyList();
                 }
                 if (isShared(input)) {
@@ -140,7 +140,7 @@ public class AarTransform extends ArtifactTransform {
             case NON_NAMESPACED_MANIFEST:
                 // Non-namespaced libraries cannot be shared, so if it needs rewriting return only
                 // the manifest.
-                return (shouldBeAutoNamespaced(input))
+                return (AarTransformUtil.shouldBeAutoNamespaced(input, autoNamespaceDependencies))
                         ? listIfExists(new File(input, FN_ANDROID_MANIFEST_XML))
                         : Collections.emptyList();
             case ANDROID_RES:
@@ -185,35 +185,9 @@ public class AarTransform extends ArtifactTransform {
         }
     }
 
-    private static List<File> getJars(@NonNull File explodedAar) {
-        List<File> files = Lists.newArrayList();
-        File jarFolder = new File(explodedAar, FD_JARS);
-
-        File file = FileUtils.join(jarFolder, FN_CLASSES_JAR);
-        if (file.isFile()) {
-            files.add(file);
-        }
-
-        // local jars
-        final File localJarFolder = new File(jarFolder, LIBS_FOLDER);
-        File[] jars = localJarFolder.listFiles((dir, name) -> name.endsWith(SdkConstants.DOT_JAR));
-
-        if (jars != null) {
-            files.addAll((Arrays.asList(jars)));
-        }
-
-        return files;
-    }
-
     private boolean isShared(@NonNull File explodedAar) {
         return sharedLibSupport
                 && new File(explodedAar, FN_SHARED_LIBRARY_ANDROID_MANIFEST_XML).exists();
-    }
-
-    private boolean shouldBeAutoNamespaced(@NonNull File explodedAar) {
-        // Only rewrite dependencies if the flag is set and the library is not already namespaced.
-        return autoNamespaceDependencies
-                && !(new File(explodedAar, FN_RESOURCE_STATIC_LIBRARY).exists());
     }
 
     @NonNull

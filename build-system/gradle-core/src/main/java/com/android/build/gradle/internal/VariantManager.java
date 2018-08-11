@@ -41,6 +41,7 @@ import com.android.build.gradle.internal.api.VariantFilter;
 import com.android.build.gradle.internal.api.artifact.BuildArtifactSpec;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.crash.ExternalApiUsageException;
+import com.android.build.gradle.internal.dependency.AarCompileClassesTransform;
 import com.android.build.gradle.internal.dependency.AarTransform;
 import com.android.build.gradle.internal.dependency.AlternateCompatibilityRule;
 import com.android.build.gradle.internal.dependency.AlternateDisambiguationRule;
@@ -119,6 +120,7 @@ import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributeMatchingStrategy;
 import org.gradle.api.attributes.AttributesSchema;
+import org.gradle.api.attributes.Usage;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.tasks.TaskProvider;
@@ -820,6 +822,37 @@ public class VariantManager implements VariantModel {
                                                 autoNamespaceDependencies));
                     });
         }
+
+        // API jar(s)
+        Usage apiUsage = project.getObjects().named(Usage.class, Usage.JAVA_API);
+        dependencies.registerTransform(
+                reg -> {
+                    reg.getFrom().attribute(ARTIFACT_FORMAT, EXPLODED_AAR.getType());
+                    reg.getFrom().attribute(Usage.USAGE_ATTRIBUTE, apiUsage);
+                    reg.getTo().attribute(ARTIFACT_FORMAT, ArtifactType.CLASSES.getType());
+                    reg.getTo().attribute(Usage.USAGE_ATTRIBUTE, apiUsage);
+                    reg.artifactTransform(
+                            AarCompileClassesTransform.class,
+                            config -> config.params(autoNamespaceDependencies));
+                });
+
+        // Runtime jars
+        Usage runtimeUsage = project.getObjects().named(Usage.class, Usage.JAVA_RUNTIME);
+        dependencies.registerTransform(
+                reg -> {
+                    reg.getFrom().attribute(ARTIFACT_FORMAT, EXPLODED_AAR.getType());
+                    reg.getFrom().attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
+                    reg.getTo().attribute(ARTIFACT_FORMAT, ArtifactType.CLASSES.getType());
+                    reg.getTo().attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
+                    reg.artifactTransform(
+                            AarTransform.class,
+                            config ->
+                                    config.params(
+                                            ArtifactType.CLASSES,
+                                            sharedLibSupport,
+                                            autoNamespaceDependencies));
+                });
+
 
         dependencies.registerTransform(
                 reg -> {
