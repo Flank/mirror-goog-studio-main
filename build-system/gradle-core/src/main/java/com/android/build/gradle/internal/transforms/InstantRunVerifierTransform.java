@@ -162,7 +162,7 @@ public class InstantRunVerifierTransform extends Transform {
 
             if (!isIncremental) {
                 // non incremental mode, we need to traverse the folder
-                for (File file : Files.fileTreeTraverser().breadthFirstTraversal(inputDir)) {
+                for (File file : Files.fileTraverser().breadthFirst(inputDir)) {
 
                     if (file.isDirectory()) {
                         continue;

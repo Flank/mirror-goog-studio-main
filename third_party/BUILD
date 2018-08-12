@@ -38,6 +38,7 @@ maven_java_library(
         ":org.jetbrains.kotlin_kotlin-stdlib",
         ":org.ow2.asm_asm",
         ":org.ow2.asm_asm-commons",
+        ":org.ow2.asm_asm-util",
     ],
 )
 
@@ -127,7 +128,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.code.findbugs_jsr305",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/code/findbugs/jsr305/3.0.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/code/findbugs/jsr305/3.0.2:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -151,12 +152,13 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.guava_guava",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/guava/guava/23.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/guava/guava/26.0-jre:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":com.google.code.findbugs_jsr305",
         ":com.google.errorprone_error_prone_annotations",
         ":com.google.j2objc_j2objc-annotations",
+        ":org.checkerframework_checker-qual",
         ":org.codehaus.mojo_animal-sniffer-annotations",
     ],
 )
@@ -865,6 +867,14 @@ maven_java_library(
 maven_java_library(
     name = "org.bouncycastle_bcprov-jdk15on",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/bouncycastle/bcprov-jdk15on/1.56:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "org.checkerframework_checker-qual",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/checkerframework/checker-qual/2.5.2:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )

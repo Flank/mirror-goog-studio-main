@@ -922,7 +922,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
         }
 
         // See if the path contains non-ASCII characters.
-        if (CharMatcher.ASCII.matchesAllOf(project.getRootDir().getAbsolutePath())) {
+        if (CharMatcher.ascii().matchesAllOf(project.getRootDir().getAbsolutePath())) {
             return;
         }
 

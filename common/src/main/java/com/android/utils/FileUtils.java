@@ -400,7 +400,8 @@ public final class FileUtils {
 
     @NonNull
     public static FluentIterable<File> getAllFiles(@NonNull File dir) {
-        return Files.fileTreeTraverser().preOrderTraversal(dir).filter(Files.isFile());
+        return FluentIterable.from(Files.fileTraverser().depthFirstPreOrder(dir))
+                .filter(Files.isFile());
     }
 
     @NonNull
@@ -470,10 +471,11 @@ public final class FileUtils {
      */
     public static List<File> find(@NonNull File base, @NonNull final Pattern pattern) {
         checkArgument(base.isDirectory(), "'%s' must be a directory.", base.getAbsolutePath());
-        return Files.fileTreeTraverser()
-                .preOrderTraversal(base)
-                .filter(file -> pattern.matcher(
-                        FileUtils.toSystemIndependentPath(file.getPath())).find())
+        return FluentIterable.from(Files.fileTraverser().depthFirstPreOrder(base))
+                .filter(
+                        file ->
+                                pattern.matcher(FileUtils.toSystemIndependentPath(file.getPath()))
+                                        .find())
                 .toList();
     }
 
@@ -482,8 +484,7 @@ public final class FileUtils {
      */
     public static Optional<File> find(@NonNull File base, @NonNull final String name) {
         checkArgument(base.isDirectory(), "'%s' must be a directory.", base.getAbsolutePath());
-        return Files.fileTreeTraverser()
-                .preOrderTraversal(base)
+        return FluentIterable.from(Files.fileTraverser().depthFirstPreOrder(base))
                 .filter(file -> name.equals(file.getName()))
                 .last();
     }

@@ -4,7 +4,7 @@
       <root url="file://$PROJECT_DIR$/.idea/codeContracts" />
     </ANNOTATIONS>
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/guava/guava/22.0/guava-22.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/guava/guava/26.0-jre/guava-26.0-jre.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

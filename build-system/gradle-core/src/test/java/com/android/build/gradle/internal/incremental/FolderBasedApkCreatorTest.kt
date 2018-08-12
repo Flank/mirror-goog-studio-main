@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.incremental
 
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory
 import com.android.utils.FileUtils
+import com.google.common.collect.FluentIterable
 import com.google.common.io.Files
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
@@ -210,7 +211,7 @@ class FolderBasedApkCreatorTest {
     }
 
     private fun getFilesInFolder(folder: File) =
-        Files.fileTreeTraverser().breadthFirstTraversal(folder)
+        FluentIterable.from(Files.fileTraverser().breadthFirst(folder))
             .filter(File::isFile)
             .filter{it.name != ApkChangeList.CHANGE_LIST_FN}
             .map(File::getAbsolutePath)

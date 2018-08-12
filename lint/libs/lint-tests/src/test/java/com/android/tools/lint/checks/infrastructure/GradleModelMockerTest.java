@@ -17,11 +17,11 @@
 package com.android.tools.lint.checks.infrastructure;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.FilterData;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidLibrary;
@@ -42,7 +42,7 @@ import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.builder.model.level2.GraphItem;
 import com.android.builder.model.level2.Library;
 import com.android.utils.ILogger;
-import com.google.common.collect.Iterators;
+import com.android.utils.Pair;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
@@ -628,22 +628,29 @@ public class GradleModelMockerTest {
                                 + "}\n");
 
         AndroidArtifact mainArtifact = mocker.getVariant().getMainArtifact();
-        AndroidArtifactOutput[] outputs =
-                Iterators.toArray(
-                        mainArtifact.getOutputs().iterator(), AndroidArtifactOutput.class);
-        assertThat(outputs).hasLength(10);
-        assertThat(outputs[0].getFilterTypes()).isEmpty();
-        FilterData filterData = outputs[1].getFilters().iterator().next();
-        assertThat(filterData.getFilterType()).isEqualTo("DENSITY");
-        assertThat(filterData.getIdentifier()).isEqualTo("mdpi");
-
-        filterData = outputs[3].getFilters().iterator().next();
-        assertThat(filterData.getFilterType()).isEqualTo("LANGUAGE");
-        assertThat(filterData.getIdentifier()).isEqualTo("fr");
-
-        filterData = outputs[9].getFilters().iterator().next();
-        assertThat(filterData.getFilterType()).isEqualTo("ABI");
-        assertThat(filterData.getIdentifier()).isEqualTo("armeabi");
+        Collection<AndroidArtifactOutput> outputs = mainArtifact.getOutputs();
+        assertThat(outputs).hasSize(10);
+        List<Pair<String, String>> generatedSplits =
+                outputs.stream()
+                        .filter(artifact -> !artifact.getFilters().isEmpty())
+                        .map(artifact -> artifact.getFilters().iterator().next())
+                        .map(
+                                filterData ->
+                                        Pair.of(
+                                                filterData.getFilterType(),
+                                                filterData.getIdentifier()))
+                        .collect(toList());
+        assertThat(generatedSplits)
+                .containsExactly(
+                        Pair.of("DENSITY", "mdpi"),
+                        Pair.of("DENSITY", "hdpi"),
+                        Pair.of("LANGUAGE", "fr"),
+                        Pair.of("LANGUAGE", "fr-rCA"),
+                        Pair.of("LANGUAGE", "en"),
+                        Pair.of("ABI", "x86_64"),
+                        Pair.of("ABI", "mips64"),
+                        Pair.of("ABI", "arm64-v8a"),
+                        Pair.of("ABI", "armeabi"));
     }
 
     @Test

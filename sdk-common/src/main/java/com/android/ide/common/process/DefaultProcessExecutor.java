@@ -25,8 +25,8 @@ import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -81,23 +81,26 @@ public class DefaultProcessExecutor implements ProcessExecutor {
             final ProcessOutput output = processOutputHandler.createOutput();
             ListenableFuture<Integer> outputFuture = grabProcessOutput(process, output);
 
-            Futures.addCallback(outputFuture, new FutureCallback<Integer>() {
-                @Override
-                public void onSuccess(Integer exit) {
-                    try {
-                        output.close();
-                        processOutputHandler.handleOutput(output);
-                        result.set(new ProcessResultImpl(command, exit));
-                    } catch (Exception e) {
-                        result.set(new ProcessResultImpl(command, e));
-                    }
-                }
+            Futures.addCallback(
+                    outputFuture,
+                    new FutureCallback<Integer>() {
+                        @Override
+                        public void onSuccess(Integer exit) {
+                            try {
+                                output.close();
+                                processOutputHandler.handleOutput(output);
+                                result.set(new ProcessResultImpl(command, exit));
+                            } catch (Exception e) {
+                                result.set(new ProcessResultImpl(command, e));
+                            }
+                        }
 
-                @Override
-                public void onFailure(@Nullable Throwable t) {
-                    result.set(new ProcessResultImpl(command, t));
-                }
-            });
+                        @Override
+                        public void onFailure(@Nullable Throwable t) {
+                            result.set(new ProcessResultImpl(command, t));
+                        }
+                    },
+                    MoreExecutors.directExecutor());
         } catch (Exception e) {
             result.set(new ProcessResultImpl(command, e));
         }
