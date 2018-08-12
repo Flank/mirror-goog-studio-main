@@ -15,7 +15,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../../prebuilts/sdk/23/public/android.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../../prebuilts/studio/sdk/linux/platforms/android-23/android.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
