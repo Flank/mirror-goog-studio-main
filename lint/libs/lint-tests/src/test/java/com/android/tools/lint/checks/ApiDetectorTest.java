@@ -509,6 +509,38 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    public void testUnusedForegroundAttribute() {
+        // Regression test for b/37137262
+        String expected =
+                ""
+                        + "res/layout/linear.xml:8: Warning: Attribute android:foreground has no effect on API levels lower than 23 (current min is 21) [UnusedAttribute]\n"
+                        + "    android:foreground=\"?selectableItemBackground\"\n"
+                        + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 1 warnings";
+
+        lint().files(
+                        manifest().minSdk(21),
+                        xml(
+                                "res/layout/linear.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    android:layout_width=\"match_parent\"\n"
+                                        + "    android:layout_height=\"match_parent\"\n"
+                                        + "    android:orientation=\"vertical\">\n"
+                                        + "\n"
+                                        + "  <TextView \n"
+                                        + "    android:foreground=\"?selectableItemBackground\"\n"
+                                        + "    android:id=\"@+id/title\"\n"
+                                        + "    android:layout_width=\"wrap_content\"\n"
+                                        + "    android:layout_height=\"wrap_content\"/>\n"
+                                        + "\n"
+                                        + "</LinearLayout>"))
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expect(expected);
+    }
+
     public void testUnusedLevelListAttribute() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=214143
         String expected =

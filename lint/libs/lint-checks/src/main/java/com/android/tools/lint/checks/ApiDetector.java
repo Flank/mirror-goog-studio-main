@@ -367,6 +367,21 @@ public class ApiDetector extends ResourceXmlDetector
                     context.report(UNUSED, attribute, location, message, apiLevelFix(23));
                 }
             }
+
+            if (name.equals(ATTR_FOREGROUND)
+                    && context.getResourceFolderType() == ResourceFolderType.LAYOUT) {
+                // Requires API 23
+                int minSdk = getMinSdk(context);
+                if (Math.max(minSdk, context.getFolderVersion()) < 23) {
+                    Location location = context.getLocation(attribute);
+                    String message =
+                            String.format(
+                                    "Attribute `android:foreground` has no effect on API levels "
+                                            + "lower than 23 (current min is %1$d)",
+                                    minSdk);
+                    context.report(UNUSED, attribute, location, message, apiLevelFix(23));
+                }
+            }
         }
 
         String value = attribute.getValue();
