@@ -16,12 +16,12 @@
 
 package com.android.tools.lint.checks
 
-import com.android.tools.lint.checks.infrastructure.LintDetectorTest
+import com.android.tools.lint.checks.infrastructure.LintDetectorTest.xml
 import com.android.tools.lint.detector.api.Detector
 
 class StringCasingDetectorTest : AbstractCheckTest() {
 
-    private val duplicateStrings = LintDetectorTest.xml(
+    private val duplicateStrings = xml(
         "res/values/duplicate_strings.xml",
         """<?xml version="1.0" encoding="utf-8"?>
                 <resources>
@@ -56,7 +56,7 @@ class StringCasingDetectorTest : AbstractCheckTest() {
         lint().files(duplicateStrings).run().expect(expected)
     }
 
-    private val turkishNonDuplicateStrings = LintDetectorTest.xml(
+    private val turkishNonDuplicateStrings = xml(
         "res/values-tr/duplicate_strings.xml",
         """<?xml version="1.0" encoding="utf-8"?>
                 <resources>
@@ -70,7 +70,7 @@ class StringCasingDetectorTest : AbstractCheckTest() {
         lint().files(turkishNonDuplicateStrings).run().expectClean()
     }
 
-    private val turkishDuplicateStrings = LintDetectorTest.xml(
+    private val turkishDuplicateStrings = xml(
         "res/values-tr/duplicate_strings.xml",
         """<?xml version="1.0" encoding="utf-8"?>
                 <resources>
@@ -91,5 +91,21 @@ class StringCasingDetectorTest : AbstractCheckTest() {
                 0 errors, 2 warnings
                 """)
         lint().files(turkishDuplicateStrings).run().expect(expected)
+    }
+
+    fun testIgnoredNonTranslatable() {
+        // Regression test for
+        // https://issuetracker.google.com/112492581
+        lint().files(
+            xml(
+                "res/values/duplicate_strings.xml",
+                """
+                <resources>
+                    <string name="off">off</string>
+                    <string translatable="false" name="off_debug">Off</string>
+                </resources>
+                """
+            ).indented()
+        ).run().expectClean()
     }
 }

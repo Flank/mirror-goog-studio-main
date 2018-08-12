@@ -16,7 +16,9 @@
 
 package com.android.tools.lint.checks
 
+import com.android.SdkConstants.ATTR_TRANSLATABLE
 import com.android.SdkConstants.TAG_STRING
+import com.android.SdkConstants.VALUE_FALSE
 import com.android.resources.ResourceFolderType
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Context
@@ -100,6 +102,10 @@ class StringCasingDetector : ResourceXmlDetector() {
     }
 
     private fun checkTextNode(context: XmlContext, element: Element, text: String) {
+        if (VALUE_FALSE == element.getAttribute(ATTR_TRANSLATABLE)) {
+            return
+        }
+
         val locale = getLocale(context)
         val key = if (locale != null)
             Pair.of(locale.full, text.toLowerCase(Locale.forLanguageTag(locale.tag)))
@@ -112,7 +118,7 @@ class StringCasingDetector : ResourceXmlDetector() {
     }
 
     override fun afterCheckRootProject(context: Context) {
-        for ((key, duplicates) in allStrings) {
+        for ((_, duplicates) in allStrings) {
             if (duplicates.size > 1) {
                 // we have detected a duplicated string in the string resources, notify the developer.
                 for (dup in duplicates) {
