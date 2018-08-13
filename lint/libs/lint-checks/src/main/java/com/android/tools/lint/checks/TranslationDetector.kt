@@ -386,7 +386,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
                     set
                 }
                 names.add(name)
-            } else if (element != null && context is XmlContext) {
+            } else if (element != null && type == STRING && context is XmlContext) {
                 // Second pass: that means we're reporting already determined
                 // missing translations
                 val missingFrom = missingMap?.get(name)

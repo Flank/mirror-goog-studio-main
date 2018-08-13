@@ -1296,4 +1296,32 @@ class TranslationDetectorTest : AbstractCheckTest() {
             )
         ).run().expectClean()
     }
+
+    fun test112410856() {
+        // Regression test for
+        // 112410856: Lint thinks text IDs with same id as layout id's need translation.
+
+        lint().files(
+            xml(
+                "res/values/strings.xml", """
+                    <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+                      <string name="foo">Foo</string>
+                      <string name="bar">Bar</string>
+                    </resources>
+                    """
+            ),
+            xml(
+                "res/layout/foo.xml", """
+                    <View/>
+                    """
+            ),
+            xml(
+                "res/values-nb/strings.xml", """
+                    <resources>
+                      <string name="bar">Bar</string>
+                    </resources>
+                    """
+            )
+        ).run().expectClean()
+    }
 }
