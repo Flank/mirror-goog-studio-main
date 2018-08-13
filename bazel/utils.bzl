@@ -124,35 +124,6 @@ def java_jarjar(name, rules, srcs=[], visibility=None):
       visibility = visibility,
   )
 
-# Creates a filegroup for a given platform directory in the SDK.
-#
-# It excludes files that are not necessary for testing and take up space in the sandbox.
-def platform_filegroup(name, visibility = ["//visibility:public"]):
-  pattern = "*/" + name
-
-  native.filegroup(
-      name = name,
-      srcs = native.glob(
-          include = [pattern + "/**"],
-          exclude = [
-              pattern + "/skins/**",
-          ]
-      ),
-      visibility = visibility
-   )
-  build_only_name = name + "_build_only"
-  native.filegroup(
-      name = build_only_name,
-      srcs = native.glob(
-          include = [pattern + "/**"],
-          exclude = [
-              pattern + "/skins/**",
-              pattern + "/data/res/**",
-          ],
-      ),
-      visibility = visibility
-  )
-
 def merged_properties(name, srcs, mappings, visibility=None):
   native.genrule(
       name = name,
