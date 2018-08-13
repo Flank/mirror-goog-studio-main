@@ -4,6 +4,9 @@
     <@kt.addAllKotlinDependencies />
     <dependency mavenUrl="com.android.support:support-v4:${buildApi}.+"/>
     <dependency mavenUrl="android.arch.lifecycle:extensions:1.+"/>
+    <#if generateKotlin && useAndroidX>
+        <dependency mavenUrl="androidx.lifecycle:lifecycle-viewmodel-ktx:1.+"/>
+    </#if>
 
     <instantiate from="root/res/layout/blank_fragment.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/layout/${escapeXmlAttribute(layoutName)}.xml" />

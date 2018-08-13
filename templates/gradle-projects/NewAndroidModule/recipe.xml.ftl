@@ -157,12 +157,18 @@
 <#if includeNavController>
     <instantiate from="root/res/navigation/mobile_navigation.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/navigation/mobile_navigation.xml" />
-    <#if includeKotlinSupport>
+
+    <dependency mavenUrl="android.arch.navigation:navigation-fragment:+" />
+    <dependency mavenUrl="android.arch.navigation:navigation-ui:+" />
+
+    <#if generateKotlin>
         <dependency mavenUrl="android.arch.navigation:navigation-fragment-ktx:+" />
-    <#else>
-        <dependency mavenUrl="android.arch.navigation:navigation-fragment:+" />
+        <dependency mavenUrl="android.arch.navigation:navigation-ui-ktx:+" />
     </#if>
     <open file="${escapeXmlAttribute(resOut)}/navigation/mobile_navigation.xml" />
 </#if>
 
+<#if generateKotlin && useAndroidX>
+    <dependency mavenUrl="androidx.core:core-ktx:+" />
+</#if>
 </recipe>

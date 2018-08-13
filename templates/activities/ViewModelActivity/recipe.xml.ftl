@@ -7,6 +7,9 @@
     <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+"/>
     <dependency mavenUrl="com.android.support.constraint:constraint-layout:+" />
     <dependency mavenUrl="android.arch.lifecycle:extensions:1.+"/>
+    <#if generateKotlin && useAndroidX>
+        <dependency mavenUrl="androidx.lifecycle:lifecycle-viewmodel-ktx:1.+"/>
+    </#if>
 
     <instantiate from="root/res/layout/activity.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/layout/${escapeXmlAttribute(activityLayout)}.xml" />
