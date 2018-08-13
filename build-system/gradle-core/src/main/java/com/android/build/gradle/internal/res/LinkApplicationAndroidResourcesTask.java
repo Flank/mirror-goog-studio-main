@@ -50,7 +50,7 @@ import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.scope.SplitList;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -101,7 +101,6 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.api.tasks.TaskProvider;
 import org.gradle.tooling.BuildException;
 
 @CacheableTask
@@ -609,14 +608,11 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
     }
 
     private abstract static class BaseCreationAction
-            extends LazyTaskCreationAction<LinkApplicationAndroidResourcesTask> {
+            extends EagerTaskCreationAction<LinkApplicationAndroidResourcesTask> {
         protected final VariantScope variantScope;
         private final boolean generateLegacyMultidexMainDexProguardRules;
         @Nullable private final String baseName;
         private final boolean isLibrary;
-        private File resPackageOutputFolder;
-        private File proguardOutputFile;
-        private File aaptMainDexListProguardOutputFile;
 
         public BaseCreationAction(
                 @NonNull VariantScope scope,
@@ -643,47 +639,10 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         }
 
         protected void preconditionsCheck(BaseVariantData variantData) {}
+        protected void postExecute(@NonNull LinkApplicationAndroidResourcesTask task) {}
 
         @Override
-        public void preConfigure(@NonNull String taskName) {
-            super.preConfigure(taskName);
-
-            resPackageOutputFolder =
-                    variantScope
-                            .getArtifacts()
-                            .appendArtifact(InternalArtifactType.PROCESSED_RES, taskName, "out");
-
-            if (generatesProguardOutputFile(variantScope)) {
-                proguardOutputFile = variantScope.getProcessAndroidResourcesProguardOutputFile();
-                variantScope
-                        .getArtifacts()
-                        .appendArtifact(
-                                InternalArtifactType.AAPT_PROGUARD_FILE,
-                                ImmutableList.of(proguardOutputFile),
-                                taskName);
-            }
-
-            if (generateLegacyMultidexMainDexProguardRules) {
-                aaptMainDexListProguardOutputFile =
-                        variantScope
-                                .getArtifacts()
-                                .appendArtifact(
-                                        InternalArtifactType
-                                                .LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES,
-                                        taskName,
-                                        "manifest_keep.txt");
-            }
-        }
-
-        @Override
-        public void handleProvider(
-                @NonNull TaskProvider<? extends LinkApplicationAndroidResourcesTask> taskProvider) {
-            super.handleProvider(taskProvider);
-            variantScope.getTaskContainer().setProcessAndroidResTask(taskProvider);
-        }
-
-        @Override
-        public void configure(@NonNull LinkApplicationAndroidResourcesTask task) {
+        public final void execute(@NonNull LinkApplicationAndroidResourcesTask task) {
             final BaseVariantData variantData = variantScope.getVariantData();
             final ProjectOptions projectOptions = variantScope.getGlobalScope().getProjectOptions();
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
@@ -692,7 +651,10 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
             task.setAndroidBuilder(variantScope.getGlobalScope().getAndroidBuilder());
             task.setVariantName(config.getFullName());
-            task.resPackageOutputFolder = resPackageOutputFolder;
+            task.resPackageOutputFolder =
+                    variantScope
+                            .getArtifacts()
+                            .appendArtifact(InternalArtifactType.PROCESSED_RES, task, "out");
             task.aapt2FromMaven = Aapt2MavenUtils.getAapt2FromMaven(variantScope.getGlobalScope());
 
             task.applicationId = TaskInputHelper.memoize(config::getApplicationId);
@@ -737,11 +699,27 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                             .getFinalArtifactFiles(InternalArtifactType.APK_LIST);
 
             if (generatesProguardOutputFile(variantScope)) {
-                task.setProguardOutputFile(proguardOutputFile);
+                task.setProguardOutputFile(
+                        variantScope.getProcessAndroidResourcesProguardOutputFile());
+                variantScope
+                        .getArtifacts()
+                        .appendArtifact(
+                                InternalArtifactType.AAPT_PROGUARD_FILE,
+                                ImmutableList.of(
+                                        variantScope
+                                                .getProcessAndroidResourcesProguardOutputFile()),
+                                task);
             }
 
             if (generateLegacyMultidexMainDexProguardRules) {
-                task.setAaptMainDexListProguardOutputFile(aaptMainDexListProguardOutputFile);
+                task.setAaptMainDexListProguardOutputFile(
+                        variantScope
+                                .getArtifacts()
+                                .appendArtifact(
+                                        InternalArtifactType
+                                                .LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES,
+                                        task,
+                                        "manifest_keep.txt"));
             }
 
             task.variantScope = variantScope;
@@ -791,14 +769,16 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             task.isLibrary = isLibrary;
             task.supportDirectory =
                     new File(variantScope.getInstantRunSplitApkOutputFolder(), "resources");
+
+            postExecute(task);
         }
+
     }
 
     public static final class CreationAction extends BaseCreationAction {
         protected final Supplier<File> symbolLocation;
         private final File symbolsWithPackageNameOutputFile;
         private final TaskManager.MergeType sourceArtifactType;
-        private File sourceOutputDir;
 
         public CreationAction(
                 @NonNull VariantScope scope,
@@ -827,23 +807,15 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         }
 
         @Override
-        public void preConfigure(@NonNull String taskName) {
-            super.preConfigure(taskName);
-            sourceOutputDir =
+        protected final void postExecute(@NonNull LinkApplicationAndroidResourcesTask task) {
+            // TODO: unify with generateBuilderConfig, compileAidl, and library packaging somehow?
+            task.sourceOutputDir =
                     variantScope
                             .getArtifacts()
                             .appendArtifact(
                                     InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
-                                    taskName,
+                                    task,
                                     SdkConstants.FD_RES_CLASS);
-        }
-
-        @Override
-        public final void configure(@NonNull LinkApplicationAndroidResourcesTask task) {
-            super.configure(task);
-
-            // TODO: unify with generateBuilderConfig, compileAidl, and library packaging somehow?
-            task.sourceOutputDir = sourceOutputDir;
 
             task.dependenciesFileCollection =
                     variantScope.getArtifactFileCollection(
@@ -859,6 +831,8 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             task.symbolsWithPackageNameOutputFile = symbolsWithPackageNameOutputFile;
 
             task.minSdkVersion = variantScope.getMinSdkVersion().getApiLevel();
+
+            variantScope.getTaskContainer().setProcessAndroidResTask(task);
         }
     }
 
@@ -867,8 +841,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
      * discovery task.
      */
     public static final class NamespacedCreationAction extends BaseCreationAction {
-        private File sourceOutputDir;
-
         public NamespacedCreationAction(
                 @NonNull VariantScope scope,
                 boolean generateLegacyMultidexMainDexProguardRules,
@@ -876,25 +848,15 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             super(scope, generateLegacyMultidexMainDexProguardRules, baseName, false);
         }
 
-
         @Override
-        public void preConfigure(@NonNull String taskName) {
-            super.preConfigure(taskName);
+        protected final void postExecute(@NonNull LinkApplicationAndroidResourcesTask task) {
+            final ProjectOptions projectOptions = variantScope.getGlobalScope().getProjectOptions();
 
-            sourceOutputDir =
+            task.sourceOutputDir =
                     variantScope
                             .getArtifacts()
                             .appendArtifact(
-                                    InternalArtifactType.RUNTIME_R_CLASS_SOURCES, taskName, "out");
-        }
-
-        @Override
-        public final void configure(@NonNull LinkApplicationAndroidResourcesTask task) {
-            super.configure(task);
-
-            final ProjectOptions projectOptions = variantScope.getGlobalScope().getProjectOptions();
-
-            task.sourceOutputDir = sourceOutputDir;
+                                    InternalArtifactType.RUNTIME_R_CLASS_SOURCES, task, "out");
 
             List<FileCollection> dependencies = new ArrayList<>(2);
             dependencies.add(

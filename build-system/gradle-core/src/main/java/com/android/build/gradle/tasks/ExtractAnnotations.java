@@ -35,7 +35,7 @@ import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AbstractAndroidCompile;
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import com.android.build.gradle.internal.utils.AndroidXDependency;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.packaging.TypedefRemover;
@@ -300,12 +300,10 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
         return false;
     }
 
-    public static class CreationAction extends LazyTaskCreationAction<ExtractAnnotations> {
+    public static class CreationAction extends EagerTaskCreationAction<ExtractAnnotations> {
 
         @NonNull private final AndroidConfig extension;
         @NonNull private final VariantScope variantScope;
-        private File output;
-        private File typedefFile;
 
         public CreationAction(
                 @NonNull AndroidConfig extension, @NonNull VariantScope variantScope) {
@@ -326,35 +324,7 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
         }
 
         @Override
-        public void preConfigure(@NonNull String taskName) {
-            super.preConfigure(taskName);
-
-            output =
-                    variantScope
-                            .getArtifacts()
-                            .appendArtifact(
-                                    InternalArtifactType.ANNOTATIONS_ZIP,
-                                    taskName,
-                                    SdkConstants.FN_ANNOTATIONS_ZIP);
-
-            typedefFile =
-                    variantScope
-                            .getArtifacts()
-                            .appendArtifact(
-                                    InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE,
-                                    taskName,
-                                    "typedefs.txt");
-        }
-
-        @Override
-        public void handleProvider(
-                @NonNull TaskProvider<? extends ExtractAnnotations> taskProvider) {
-            super.handleProvider(taskProvider);
-            variantScope.getTaskContainer().setGenerateAnnotationsTask(taskProvider);
-        }
-
-        @Override
-        public void configure(@NonNull ExtractAnnotations task) {
+        public void execute(@NonNull ExtractAnnotations task) {
             final GradleVariantConfiguration variantConfig = variantScope.getVariantConfiguration();
             final AndroidBuilder androidBuilder = variantScope.getGlobalScope().getAndroidBuilder();
 
@@ -365,10 +335,22 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
             task.setGroup(BasePlugin.BUILD_GROUP);
 
             // publish intermediate annotation data
-            task.setOutput(output);
-            task.setDestinationDir(output.getParentFile());
+            task.setOutput(
+                    variantScope
+                            .getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.ANNOTATIONS_ZIP,
+                                    task,
+                                    SdkConstants.FN_ANNOTATIONS_ZIP));
+            task.setDestinationDir(task.getOutput().getParentFile());
 
-            task.typedefFile = typedefFile;
+            task.typedefFile =
+                    variantScope
+                            .getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE,
+                                    task,
+                                    "typedefs.txt");
 
             task.setClassDir(
                     variantScope
@@ -387,6 +369,8 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
             // Setup the boot classpath just before the task actually runs since this will
             // force the sdk to be parsed. (Same as in compileTask)
             task.setBootClasspath(() -> androidBuilder.getBootClasspathAsStrings(false));
+
+            variantScope.getTaskContainer().setGenerateAnnotationsTask(task);
 
             task.lintClassPath = variantScope.getGlobalScope().getProject().getConfigurations()
                     .getByName(LintBaseTask.LINT_CLASS_PATH);

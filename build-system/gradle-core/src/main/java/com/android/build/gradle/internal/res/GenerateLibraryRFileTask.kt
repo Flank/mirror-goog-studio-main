@@ -21,9 +21,9 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactSco
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.TaskInputHelper
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ProcessAndroidResources
 import com.android.builder.symbols.processLibraryMainSymbolTable
@@ -43,7 +43,6 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.io.IOException
 import java.util.function.Supplier
@@ -142,46 +141,15 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
             private val variantScope: VariantScope,
             private val symbolFile: File,
             private val symbolsWithPackageNameOutputFile: File
-    ) : LazyTaskCreationAction<GenerateLibraryRFileTask>() {
+    ) : EagerTaskCreationAction<GenerateLibraryRFileTask>() {
 
         override val name: String
             get() = variantScope.getTaskName("generate", "RFile")
         override val type: Class<GenerateLibraryRFileTask>
             get() = GenerateLibraryRFileTask::class.java
 
-        private lateinit var rClassOutputJar: File
-        private lateinit var sourceOutputDirectory: File
-
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-
-            if (variantScope.globalScope.projectOptions.get(BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION)) {
-                rClassOutputJar = variantScope.artifacts
-                    .appendArtifact(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR,
-                        taskName,
-                        "R.jar")
-            } else {
-                sourceOutputDirectory = variantScope.artifacts
-                    .appendArtifact(InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES, taskName)
-            }
-
-            if (generatesProguardOutputFile(variantScope)) {
-                variantScope
-                    .artifacts
-                    .appendArtifact(
-                        InternalArtifactType.AAPT_PROGUARD_FILE,
-                        listOf(variantScope.processAndroidResourcesProguardOutputFile),
-                        taskName)
-            }
-
-        }
-
-        override fun handleProvider(taskProvider: TaskProvider<out GenerateLibraryRFileTask>) {
-            super.handleProvider(taskProvider)
-            variantScope.taskContainer.processAndroidResTask = taskProvider
-        }
-
-        override fun configure(task: GenerateLibraryRFileTask) {
+        override fun execute(task: GenerateLibraryRFileTask) {
+            variantScope.taskContainer.processAndroidResTask = task
 
             task.variantName = variantScope.fullVariantName
 
@@ -196,15 +164,25 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
                     ALL,
                     AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME)
             if (variantScope.globalScope.projectOptions.get(BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION)) {
-                task.rClassOutputJar = rClassOutputJar
+                task.rClassOutputJar = variantScope.artifacts
+                    .appendArtifact(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR,
+                        task,
+                        "R.jar")
             } else {
-                task.sourceOutputDirectory = sourceOutputDirectory
+                task.sourceOutputDirectory = variantScope.artifacts
+                    .appendArtifact(InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES, task)
             }
             task.textSymbolOutputFile = symbolFile
             task.symbolsWithPackageNameOutputFile = symbolsWithPackageNameOutputFile
 
             if (generatesProguardOutputFile(variantScope)) {
                 task.proguardOutputFile = variantScope.processAndroidResourcesProguardOutputFile
+                variantScope
+                    .artifacts
+                    .appendArtifact(
+                        InternalArtifactType.AAPT_PROGUARD_FILE,
+                        listOf(variantScope.processAndroidResourcesProguardOutputFile),
+                        task)
             }
 
             task.packageForRSupplier = TaskInputHelper.memoize {

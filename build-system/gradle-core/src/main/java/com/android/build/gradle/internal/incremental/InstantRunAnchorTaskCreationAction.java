@@ -19,14 +19,14 @@ package com.android.build.gradle.internal.incremental;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import org.gradle.api.DefaultTask;
 
 /**
  * Simple task used as an anchor task for all instant run related tasks. An anchor task can be used
  * to conveniently set dependencies.
  */
-public class InstantRunAnchorTaskCreationAction extends LazyTaskCreationAction<DefaultTask> {
+public class InstantRunAnchorTaskCreationAction extends EagerTaskCreationAction<DefaultTask> {
 
     private final TransformVariantScope variantScope;
 
@@ -48,7 +48,7 @@ public class InstantRunAnchorTaskCreationAction extends LazyTaskCreationAction<D
     }
 
     @Override
-    public void configure(@NonNull DefaultTask task) {
+    public void execute(@NonNull DefaultTask task) {
         task.setDescription("InstantRun task to build incremental artifacts");
     }
 }

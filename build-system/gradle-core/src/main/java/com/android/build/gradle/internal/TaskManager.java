@@ -126,6 +126,7 @@ import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuil
 import com.android.build.gradle.internal.tasks.databinding.DataBindingGenBaseClassesTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeDependencyArtifactsTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeGenClassLogTransform;
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.build.gradle.internal.tasks.factory.PreConfigAction;
 import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
@@ -1131,19 +1132,19 @@ public abstract class TaskManager {
                         "symbol-table-with-package",
                         scope.getVariantConfiguration().getDirName(),
                         "package-aware-r.txt");
-        final TaskProvider<? extends ProcessAndroidResources> task;
+        final ProcessAndroidResources task;
 
         File symbolFile = new File(symbolDirectory, FN_RESOURCE_TEXT);
         BuildArtifactsHolder artifacts = scope.getArtifacts();
         if (mergeType == MergeType.PACKAGE) {
             // Simply generate the R class for a library
             task =
-                    taskFactory.lazyCreate(
+                    taskFactory.eagerCreate(
                             new GenerateLibraryRFileTask.CreationAction(
                                     scope, symbolFile, symbolTableWithPackageName));
         } else {
             task =
-                    taskFactory.lazyCreate(
+                    taskFactory.eagerCreate(
                             createProcessAndroidResourcesConfigAction(
                                     scope,
                                     () -> symbolDirectory,
@@ -1161,8 +1162,9 @@ public abstract class TaskManager {
             // create the task that creates the aapt output for the bundle.
             taskFactory.lazyCreate(new LinkAndroidResForBundleTask.CreationAction(scope));
         }
+        scope.getTaskContainer().setProcessAndroidResTask(task);
         artifacts.appendArtifact(
-                InternalArtifactType.SYMBOL_LIST, ImmutableList.of(symbolFile), task.getName());
+                InternalArtifactType.SYMBOL_LIST, ImmutableList.of(symbolFile), task);
 
         // Needed for the IDE
         TaskFactoryUtils.dependsOn(scope.getTaskContainer().getSourceGenTask(), task);
@@ -1172,10 +1174,10 @@ public abstract class TaskManager {
         artifacts.appendArtifact(
                 InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME,
                 ImmutableList.of(symbolTableWithPackageName),
-                task.getName());
+                task);
     }
 
-    protected LazyTaskCreationAction<LinkApplicationAndroidResourcesTask>
+    protected EagerTaskCreationAction<LinkApplicationAndroidResourcesTask>
             createProcessAndroidResourcesConfigAction(
                     @NonNull VariantScope scope,
                     @NonNull Supplier<File> symbolLocation,
@@ -1881,8 +1883,8 @@ public abstract class TaskManager {
 
     private void createRunUnitTestTask(
             @NonNull final VariantScope variantScope) {
-        TaskProvider<AndroidUnitTest> runTestsTask =
-                taskFactory.lazyCreate(new AndroidUnitTest.CreationAction(variantScope));
+        final AndroidUnitTest runTestsTask =
+                taskFactory.eagerCreate(new AndroidUnitTest.CreationAction(variantScope));
 
         taskFactory.lazyConfigure(JavaPlugin.TEST_TASK_NAME, test -> test.dependsOn(runTestsTask));
     }
@@ -2171,8 +2173,7 @@ public abstract class TaskManager {
         TaskProvider<PreColdSwapTask> preColdSwapTask = null;
         if (variantScope.getInstantRunBuildContext().isInInstantRunMode()) {
 
-            TaskProvider<? extends Task> allActionsAnchorTask =
-                    createInstantRunAllActionsTasks(variantScope);
+            Task allActionsAnchorTask = createInstantRunAllActionsTasks(variantScope);
             assert variantScope.getInstantRunTaskManager() != null;
             preColdSwapTask =
                     variantScope.getInstantRunTaskManager().createPreColdswapTask(projectOptions);
@@ -2522,11 +2523,10 @@ public abstract class TaskManager {
 
     /** Create InstantRun related tasks that should be ran right after the java compilation task. */
     @NonNull
-    private TaskProvider<? extends Task> createInstantRunAllActionsTasks(
-            @NonNull VariantScope variantScope) {
+    private Task createInstantRunAllActionsTasks(@NonNull VariantScope variantScope) {
 
-        TaskProvider<? extends Task> allActionAnchorTask =
-                taskFactory.lazyCreate(new InstantRunAnchorTaskCreationAction(variantScope));
+        Task allActionAnchorTask =
+                taskFactory.eagerCreate(new InstantRunAnchorTaskCreationAction(variantScope));
 
         TransformManager transformManager = variantScope.getTransformManager();
 
@@ -2944,18 +2944,14 @@ public abstract class TaskManager {
         taskFactory.lazyCreate(new InstallVariantTask.CreationAction(variantScope));
     }
 
-    protected TaskProvider<? extends Task> getValidateSigningTask(
-            @NonNull VariantScope variantScope) {
-        // FIXME create one per signing config instead of one per variant.
-        TaskProvider<? extends ValidateSigningTask> validateSigningTask =
-                variantScope.getTaskContainer().getValidateSigningTask();
+    protected Task getValidateSigningTask(@NonNull VariantScope variantScope) {
+        File defaultDebugKeystoreLocation = GradleKeystoreHelper.getDefaultDebugKeystoreLocation();
+        ValidateSigningTask.CreationAction configAction =
+                new ValidateSigningTask.CreationAction(variantScope, defaultDebugKeystoreLocation);
+
+        Task validateSigningTask = taskFactory.findByName(configAction.getName());
         if (validateSigningTask == null) {
-            validateSigningTask =
-                    taskFactory.lazyCreate(
-                            new ValidateSigningTask.CreationAction(
-                                    variantScope,
-                                    GradleKeystoreHelper.getDefaultDebugKeystoreLocation()));
-            variantScope.getTaskContainer().setValidateSigningTask(validateSigningTask);
+            validateSigningTask = taskFactory.eagerCreate(configAction);
         }
         return validateSigningTask;
     }
@@ -3629,7 +3625,9 @@ public abstract class TaskManager {
     }
 
     public void createCheckManifestTask(@NonNull VariantScope scope) {
-        taskFactory.lazyCreate(getCheckManifestConfig(scope));
+        final CheckManifest task = taskFactory.eagerCreate(getCheckManifestConfig(scope));
+        scope.getTaskContainer().setCheckManifestTask(task);
+        task.dependsOn(scope.getTaskContainer().getPreBuildTask());
     }
 
     protected CheckManifest.CreationAction getCheckManifestConfig(@NonNull VariantScope scope) {

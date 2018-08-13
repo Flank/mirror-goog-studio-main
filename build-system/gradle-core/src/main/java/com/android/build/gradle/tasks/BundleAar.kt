@@ -20,8 +20,8 @@ import android.databinding.tool.DataBindingBuilder
 import com.android.SdkConstants
 import com.android.build.gradle.AndroidConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
 import com.android.build.gradle.internal.variant.LibraryVariantData
 import com.android.builder.core.BuilderConstants
 import org.gradle.api.Action
@@ -29,7 +29,6 @@ import org.gradle.api.file.CopySpec
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.file.FileCopyDetails
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Zip
 import java.io.File
 
@@ -43,29 +42,19 @@ open class BundleAar : Zip() {
     class CreationAction(
         private val extension: AndroidConfig,
         private val variantScope: VariantScope
-    ) : LazyTaskCreationAction<BundleAar>() {
+    ) : EagerTaskCreationAction<BundleAar>() {
 
         override val name: String
             get() = variantScope.getTaskName("bundle", "Aar")
         override val type: Class<BundleAar>
             get() = BundleAar::class.java
 
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-            variantScope.artifacts.appendArtifact(
-                InternalArtifactType.AAR,
-                listOf(File(variantScope.aarLocation,
-                    variantScope.outputScope.mainSplit.outputFileName)),
-                taskName)
-        }
+        override fun execute(task: BundleAar) {
+            val libVariantData = variantScope.variantData as LibraryVariantData
 
-        override fun handleProvider(taskProvider: TaskProvider<out BundleAar>) {
-            super.handleProvider(taskProvider)
-            variantScope.taskContainer.bundleLibraryTask = taskProvider
-        }
-
-        override fun configure(task: BundleAar) {
             val artifacts = variantScope.artifacts
+
+            libVariantData.scope.taskContainer.bundleLibraryTask = task
 
             // Sanity check, there should never be duplicates.
             task.duplicatesStrategy = DuplicatesStrategy.FAIL
@@ -146,6 +135,14 @@ open class BundleAar : Zip() {
                 variantScope.artifacts
                     .getFinalArtifactFiles(InternalArtifactType.LIBRARY_ASSETS),
                 prependToCopyPath(SdkConstants.FD_ASSETS))
+
+            variantScope.artifacts.appendArtifact(
+                InternalArtifactType.AAR,
+                listOf(File(variantScope.aarLocation,
+                    variantScope.outputScope.mainSplit.outputFileName)),
+                task)
+
+            variantScope.taskContainer.bundleLibraryTask = task
         }
 
         private fun prependToCopyPath(pathSegment: String) = Action { copySpec: CopySpec ->

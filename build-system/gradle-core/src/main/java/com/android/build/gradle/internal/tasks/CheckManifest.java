@@ -18,13 +18,12 @@ package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
 import java.io.File;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
-import org.gradle.api.tasks.TaskProvider;
 
 /** Class that checks the presence of the manifest. */
 public class CheckManifest extends AndroidVariantTask {
@@ -72,7 +71,7 @@ public class CheckManifest extends AndroidVariantTask {
         }
     }
 
-    public static class CreationAction extends LazyTaskCreationAction<CheckManifest> {
+    public static class CreationAction extends EagerTaskCreationAction<CheckManifest> {
 
         private final VariantScope scope;
         private final boolean isManifestOptional;
@@ -95,22 +94,18 @@ public class CheckManifest extends AndroidVariantTask {
         }
 
         @Override
-        public void handleProvider(@NonNull TaskProvider<? extends CheckManifest> taskProvider) {
-            super.handleProvider(taskProvider);
-            scope.getTaskContainer().setCheckManifestTask(taskProvider);
-        }
+        public void execute(@NonNull CheckManifest checkManifestTask) {
+            scope.getTaskContainer().setCheckManifestTask(checkManifestTask);
+            checkManifestTask.setVariantName(
+                    scope.getVariantData().getVariantConfiguration().getFullName());
+            checkManifestTask.setOptional(isManifestOptional);
+            checkManifestTask.manifest =
+                    scope.getVariantData().getVariantConfiguration().getMainManifest();
 
-        @Override
-        public void configure(@NonNull CheckManifest task) {
-            task.setVariantName(scope.getVariantData().getVariantConfiguration().getFullName());
-            task.setOptional(isManifestOptional);
-            task.manifest = scope.getVariantData().getVariantConfiguration().getMainManifest();
-
-            task.fakeOutputDir =
+            checkManifestTask.fakeOutputDir =
                     new File(
                             scope.getGlobalScope().getIntermediatesDir(),
                             "check-manifest/" + scope.getVariantConfiguration().getDirName());
-            task.dependsOn(scope.getTaskContainer().getPreBuildTask());
         }
     }
 }

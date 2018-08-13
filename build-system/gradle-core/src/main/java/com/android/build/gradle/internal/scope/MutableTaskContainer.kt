@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.scope
 
 import com.android.build.gradle.internal.tasks.CheckManifest
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
-import com.android.build.gradle.internal.tasks.ValidateSigningTask
 import com.android.build.gradle.tasks.AidlCompile
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator
@@ -59,7 +58,7 @@ class MutableTaskContainer : TaskContainer {
     override lateinit var javacTask: TaskProvider<out JavaCompile>
     override lateinit var compileTask: TaskProvider<out Task>
     override lateinit var preBuildTask: TaskProvider<out Task>
-    override var checkManifestTask: TaskProvider<out CheckManifest>? = null
+    override var checkManifestTask: CheckManifest? = null
     override var aidlCompileTask: TaskProvider<out AidlCompile>? = null
     override var renderscriptCompileTask: TaskProvider<out RenderscriptCompile>? = null
     override lateinit var mergeResourcesTask: TaskProvider<out MergeResources>
@@ -68,10 +67,10 @@ class MutableTaskContainer : TaskContainer {
     override var generateBuildConfigTask: TaskProvider<out GenerateBuildConfig>? = null
     override var ndkCompileTask: TaskProvider<out NdkCompile>? = null
     override var obfuscationTask: Task? = null
-    override var processAndroidResTask: TaskProvider<out ProcessAndroidResources>? = null
+    override var processAndroidResTask: ProcessAndroidResources? = null
     override var processManifestTask: TaskProvider<out ManifestProcessorTask>? = null
     override var packageAndroidTask: TaskProvider<out PackageAndroidArtifact>? = null
-    override var bundleLibraryTask: TaskProvider<out Zip>? = null
+    override var bundleLibraryTask: Zip? = null
 
     override var installTask: TaskProvider<out DefaultTask>? = null
     override var uninstallTask: TaskProvider<out DefaultTask>? = null
@@ -79,7 +78,7 @@ class MutableTaskContainer : TaskContainer {
     override var connectedTestTask: TaskProvider<out DeviceProviderInstrumentTestTask>? = null
     override val providerTestTaskList: List<TaskProvider<out DeviceProviderInstrumentTestTask>> = mutableListOf()
 
-    override var generateAnnotationsTask: TaskProvider<out ExtractAnnotations>? = null
+    override var generateAnnotationsTask: ExtractAnnotations? = null
 
     override val externalNativeBuildTasks: MutableCollection<ExternalNativeBuildTask> = mutableListOf()
 
@@ -101,6 +100,4 @@ class MutableTaskContainer : TaskContainer {
     var generateApkDataTask: Task? = null
     var coverageReportTask: TaskProvider<out Task>? = null
     var dataBindingExportBuildInfoTask: Task? = null
-
-    var validateSigningTask: TaskProvider<out ValidateSigningTask>? = null
 }

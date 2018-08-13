@@ -64,7 +64,6 @@ import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.resources.TextResource;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.TaskProvider;
-import org.gradle.api.tasks.bundling.Zip;
 import org.gradle.api.tasks.compile.JavaCompile;
 
 /**
@@ -225,7 +224,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @NonNull
     public Task getCheckManifest() {
-        return getVariantData().getTaskContainer().getCheckManifestTask().get();
+        return getVariantData().getTaskContainer().getCheckManifestTask();
     }
 
     @Override
@@ -472,9 +471,9 @@ public abstract class BaseVariantImpl implements BaseVariant {
         if (bundleTask != null) {
             TaskFactoryUtils.dependsOn(bundleTask, task);
         }
-        TaskProvider<? extends Zip> bundleTaskLibrary = taskContainer.getBundleLibraryTask();
+        Task bundleTaskLibrary = taskContainer.getBundleLibraryTask();
         if (bundleTaskLibrary != null) {
-            TaskFactoryUtils.dependsOn(bundleTaskLibrary, task);
+            bundleTaskLibrary.dependsOn(task);
         }
     }
 }

@@ -46,7 +46,7 @@ interface TaskContainer {
     // empty anchor compile task to set all compilations tasks as dependents.
     val compileTask: TaskProvider<out Task>
     val preBuildTask: TaskProvider<out Task>
-    val checkManifestTask: TaskProvider<out CheckManifest>?
+    val checkManifestTask: CheckManifest?
     val aidlCompileTask: TaskProvider<out AidlCompile>?
     val renderscriptCompileTask: TaskProvider<out RenderscriptCompile>?
     val mergeResourcesTask: TaskProvider<out MergeResources>
@@ -55,10 +55,10 @@ interface TaskContainer {
     val generateBuildConfigTask: TaskProvider<out GenerateBuildConfig>?
     val ndkCompileTask: TaskProvider<out NdkCompile>?
     val obfuscationTask: Task?
-    val processAndroidResTask: TaskProvider<out ProcessAndroidResources>?
+    val processAndroidResTask: ProcessAndroidResources?
     val processManifestTask: TaskProvider<out ManifestProcessorTask>?
     val packageAndroidTask: TaskProvider<out PackageAndroidArtifact>?
-    val bundleLibraryTask: TaskProvider<out Zip>?
+    val bundleLibraryTask: Zip?
 
     val installTask: TaskProvider<out DefaultTask>?
     val uninstallTask: TaskProvider<out DefaultTask>?
@@ -66,7 +66,7 @@ interface TaskContainer {
     val connectedTestTask: TaskProvider<out DeviceProviderInstrumentTestTask>?
     val providerTestTaskList: List<TaskProvider<out DeviceProviderInstrumentTestTask>>
 
-    var generateAnnotationsTask: TaskProvider<out ExtractAnnotations>?
+    var generateAnnotationsTask: ExtractAnnotations?
 
     val externalNativeBuildTasks: Collection<ExternalNativeBuildTask>
 }

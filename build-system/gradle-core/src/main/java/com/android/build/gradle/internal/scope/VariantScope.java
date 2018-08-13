@@ -87,9 +87,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     @NonNull
     List<File> getConsumerProguardFiles();
 
-    @NonNull
-    List<File> getConsumerProguardFilesForFeatures();
-
     @Nullable
     PostprocessingFeatures getPostprocessingFeatures();
 
