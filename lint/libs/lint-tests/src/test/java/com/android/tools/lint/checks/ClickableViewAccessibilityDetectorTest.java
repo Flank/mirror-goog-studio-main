@@ -680,6 +680,7 @@ public class ClickableViewAccessibilityDetectorTest extends AbstractCheckTest {
     public void testSuppress() {
         // Regression test for 65125896
         // 65125896: Lint suppression for ClickableViewAccessibility doesn't work
+        // as well as for Kotlin: b/112496356
         //noinspection all // Sample code
         lint().files(
                         java(
@@ -704,7 +705,24 @@ public class ClickableViewAccessibilityDetectorTest extends AbstractCheckTest {
                                         + "                });\n"
                                         + "    }\n"
                                         + "}\n"
-                                        + "\n"))
+                                        + "\n"),
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "import android.annotation.SuppressLint\n"
+                                        + "import android.content.Context\n"
+                                        + "import android.view.MotionEvent\n"
+                                        + "import android.view.View\n"
+                                        + "\n"
+                                        + "class CheckSuppressKotlin {\n"
+                                        + "    private class ViewOverridesOnTouchEventButNotPerformClick(context: Context) : View(context) {\n"
+                                        + "        @SuppressLint(\"ClickableViewAccessibility\")\n"
+                                        + "        override fun onTouchEvent(event: MotionEvent): Boolean {\n"
+                                        + "            return false\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "}\n"))
                 .run()
                 .expectClean();
     }
