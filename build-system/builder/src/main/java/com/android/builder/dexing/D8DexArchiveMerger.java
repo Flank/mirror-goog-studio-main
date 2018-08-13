@@ -27,7 +27,6 @@ import com.android.tools.r8.D8;
 import com.android.tools.r8.D8Command;
 import com.android.tools.r8.Diagnostic;
 import com.android.tools.r8.OutputMode;
-import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -104,7 +103,7 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
                             D8DiagnosticsHandler.getOrigin(dexArchiveEntry));
                 }
             } catch (IOException e) {
-                throw getExceptionToRethrow(e, input, d8DiagnosticsHandler);
+                throw getExceptionToRethrow(e, d8DiagnosticsHandler);
             }
         }
         try {
@@ -118,17 +117,15 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
                     .setIntermediate(false);
             D8.run(builder.build(), forkJoinPool);
         } catch (CompilationFailedException e) {
-            throw getExceptionToRethrow(e, inputsList, d8DiagnosticsHandler);
+            throw getExceptionToRethrow(e, d8DiagnosticsHandler);
         }
     }
 
     @NonNull
     private DexArchiveMergerException getExceptionToRethrow(
             @NonNull Throwable t,
-            @NonNull Iterable<Path> inputs,
             D8DiagnosticsHandler d8DiagnosticsHandler) {
         StringBuilder msg = new StringBuilder("Error while merging dex archives: ");
-        msg.append(Joiner.on(", ").join(inputs));
         for (String hint : d8DiagnosticsHandler.getPendingHints()) {
             msg.append(System.lineSeparator());
             msg.append(hint);
