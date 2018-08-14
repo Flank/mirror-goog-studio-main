@@ -66,10 +66,10 @@ public class ProfilerToBenchmarkAdapter {
                     .setRecentWindowSize(11)
                     // constant term of 10.0 ms to ignore regressions in trivial tasks
                     .setConstTerm(10.0)
-                    // half of recommended value
-                    .setMadCoeff(0.5)
-                    // flag 2.5% regressions
-                    .setMedianCoeff(0.025)
+                    // recommended value
+                    .setMadCoeff(1.0)
+                    // flag 5% regressions
+                    .setMedianCoeff(0.05)
                     .build();
 
     @NonNull
