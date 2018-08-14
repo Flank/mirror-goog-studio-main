@@ -1094,7 +1094,6 @@ public final class SdkConstants {
     public static final String TAG_DECLARE_STYLEABLE = "declare-styleable"; //$NON-NLS-1$
     public static final String TAG_EAT_COMMENT = "eat-comment"; //$NON-NLS-1$
     public static final String TAG_SKIP = "skip"; //$NON-NLS-1$
-    public static final String TAG_SELECTOR = "selector"; //$NON-NLS-1$
     public static final String TAG_PUBLIC = "public"; //$NON-NLS-1$
 
     // Tags: Adaptive icon
@@ -1232,6 +1231,10 @@ public final class SdkConstants {
     public static final String TAG_BITMAP = "bitmap"; //$NON-NLS-1$
     public static final String TAG_VECTOR = "vector"; //$NON-NLS-1$
     public static final String TAG_ANIMATED_VECTOR = "animated-vector"; //$NON-NLS-1$
+    public static final String TAG_SHAPE = "shape";
+    public static final String TAG_RIPPLE = "ripple";
+    public static final String TAG_ANIMATED_SELECTOR = "animated-selector";
+    public static final String TAG_SELECTOR = "selector"; //$NON-NLS-1$
 
     // Tags: Data-Binding
     public static final String TAG_LAYOUT = "layout"; //$NON-NLS-1$
