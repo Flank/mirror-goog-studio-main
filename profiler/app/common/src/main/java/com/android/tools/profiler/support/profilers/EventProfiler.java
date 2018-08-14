@@ -69,10 +69,6 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
 
     private native void sendActivityDestroyed(String name, int hashCode);
 
-    private native void sendFragmentAdded(String name, int hashCode, int activityHash);
-
-    private native void sendFragmentRemoved(String name, int hashCode, int activityHash);
-
     private native void sendRotationEvent(int rotationValue);
 
     /**

@@ -24,17 +24,17 @@
 
 using grpc::ClientContext;
 using grpc::Status;
+using profiler::Agent;
 using profiler::EventManager;
 using profiler::SteadyClock;
-using profiler::Agent;
 using profiler::proto::ActivityData;
 using profiler::proto::ActivityStateData;
-using profiler::proto::SystemData;
 using profiler::proto::FragmentData;
 using profiler::proto::InternalEventService;
+using profiler::proto::SystemData;
 
-using profiler::proto::EmptyEventResponse;
 using profiler::JStringWrapper;
+using profiler::proto::EmptyEventResponse;
 
 namespace {
 
@@ -60,7 +60,8 @@ void SendKeyboardEvent(JStringWrapper& text, int64_t event_down_time) {
   int32_t pid = getpid();
 
   Agent::Instance().SubmitEventTasks({[pid, text, timestamp, event_down_time](
-      InternalEventService::Stub& stub, ClientContext& ctx) {
+                                          InternalEventService::Stub& stub,
+                                          ClientContext& ctx) {
     SystemData event;
     event.set_type(SystemData::KEY);
     event.set_event_data(text.get());
@@ -119,13 +120,14 @@ Java_com_android_tools_profiler_support_event_WindowProfilerCallback_sendTouchEv
   int64_t timestamp = GetClock().GetCurrentTime();
   int32_t pid = getpid();
 
-  Agent::Instance().SubmitEventTasks({[jdownTime, jstate, pid, timestamp](
-      InternalEventService::Stub& stub, ClientContext& ctx) {
-    SystemData event;
-    event.set_type(SystemData::TOUCH);
-    event.set_action_id(jstate);
-    return SendSystemEvent(stub, ctx, &event, pid, timestamp, jdownTime);
-  }});
+  Agent::Instance().SubmitEventTasks(
+      {[jdownTime, jstate, pid, timestamp](InternalEventService::Stub& stub,
+                                           ClientContext& ctx) {
+        SystemData event;
+        event.set_type(SystemData::TOUCH);
+        event.set_action_id(jstate);
+        return SendSystemEvent(stub, ctx, &event, pid, timestamp, jdownTime);
+      }});
 }
 
 JNIEXPORT void JNICALL
@@ -178,14 +180,14 @@ Java_com_android_tools_profiler_support_profilers_EventProfiler_sendActivitySave
 }
 
 JNIEXPORT void JNICALL
-Java_com_android_tools_profiler_support_profilers_EventProfiler_sendFragmentAdded(
+Java_com_android_tools_profiler_support_event_FragmentWrapper_sendFragmentAdded(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash, jint activity_hash) {
   EnqueueFragmentEvent(env, jname, ActivityStateData::ADDED, jhash,
                        activity_hash);
 }
 
 JNIEXPORT void JNICALL
-Java_com_android_tools_profiler_support_profilers_EventProfiler_sendFragmentRemoved(
+Java_com_android_tools_profiler_support_event_FragmentWrapper_sendFragmentRemoved(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash, jint activity_hash) {
   EnqueueFragmentEvent(env, jname, ActivityStateData::REMOVED, jhash,
                        activity_hash);
@@ -197,13 +199,14 @@ Java_com_android_tools_profiler_support_profilers_EventProfiler_sendRotationEven
   int64_t timestamp = GetClock().GetCurrentTime();
   int32_t pid = getpid();
 
-  Agent::Instance().SubmitEventTasks({[jstate, pid, timestamp](
-      InternalEventService::Stub& stub, ClientContext& ctx) {
-    SystemData event;
-    event.set_type(SystemData::ROTATION);
-    event.set_action_id(jstate);
-    // Give rotation events a unique id.
-    return SendSystemEvent(stub, ctx, &event, pid, timestamp, timestamp);
-  }});
+  Agent::Instance().SubmitEventTasks(
+      {[jstate, pid, timestamp](InternalEventService::Stub& stub,
+                                ClientContext& ctx) {
+        SystemData event;
+        event.set_type(SystemData::ROTATION);
+        event.set_action_id(jstate);
+        // Give rotation events a unique id.
+        return SendSystemEvent(stub, ctx, &event, pid, timestamp, timestamp);
+      }});
 }
 };

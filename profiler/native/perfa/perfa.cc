@@ -37,6 +37,7 @@
 #include "transform/android_alarmmanager_listenerwrapper_transform.h"
 #include "transform/android_alarmmanager_transform.h"
 #include "transform/android_debug_transform.h"
+#include "transform/android_fragment_transform.h"
 #include "transform/android_instrumentation_transform.h"
 #include "transform/android_intentservice_transform.h"
 #include "transform/android_jobschedulerimpl_transform.h"
@@ -166,6 +167,8 @@ void RegisterTransforms(
   if (config.cpu_api_tracing_enabled()) {
     transforms->insert({"Landroid/os/Debug;", new AndroidDebugTransform()});
   }
+  transforms->insert({"Landroid/support/v4/app/Fragment;", new AndroidFragmentTransform()});
+
   if (config.energy_profiler_enabled()) {
     transforms->insert({"Landroid/app/Instrumentation;",
                         new AndroidInstrumentationTransform()});
