@@ -154,15 +154,6 @@ private class CmakeSearchContext(
      */
     internal fun versionInDsl() = cmakeVersionFromDsl != null
 
-    /**
-     * Return true if the CMake version looks like it is from the Android SDK.
-     * The difference between Android SDK CMake versions:
-     * - CMake versions from kitware.org look like 3.6.2
-     * - CMake versions from Android Studio SDK look like 3.6.4111459
-     * In the latter case, micros contains the ADRT "bid" number from cmake.yaml
-     */
-    internal fun versionLooksLikeSdkVersion() = requestedCmakeVersion!!.micro >= 4111459
-
     fun tryAcceptFoundCmake(candidateCmakeInstallFolder : File, candidateVersion : Revision,
         locationTag : String) {
         assert(requestedCmakeVersion != null)
@@ -441,18 +432,10 @@ private class CmakeSearchContext(
                         "cmake.dir property.$unsuitableCMakes"
             )
         } else {
-            // There was a CMake version specified in the DSL. Does it look like an SDK version?
-            if (versionLooksLikeSdkVersion()) {
-                throw RuntimeException(
-                    "CMake '${requestedCmakeVersion.toString()}' was not found " +
-                            "from SDK, PATH, or by cmake.dir property.$unsuitableCMakes"
-                )
-            } else {
-                throw RuntimeException(
-                    "CMake '${requestedCmakeVersion.toString()}' was not found in " +
-                            "PATH or by cmake.dir property.$unsuitableCMakes"
-                )
-            }
+            throw RuntimeException(
+                "CMake '${requestedCmakeVersion.toString()}' was not found in " +
+                        "PATH or by cmake.dir property.$unsuitableCMakes"
+            )
         }
     }
 }

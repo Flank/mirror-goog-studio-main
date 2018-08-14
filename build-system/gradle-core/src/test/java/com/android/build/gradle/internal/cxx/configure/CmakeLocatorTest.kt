@@ -348,7 +348,7 @@ class CmakeLocatorTest {
     fun requestedSdkLikeCmakeNotFoundFallbackToSdk() {
         val localCmake = fakeLocalPackageOf("cmake;3.6.4111459", "3.6.4111459")
         expectException(
-            "CMake '3.6.4111460' was not found from SDK, PATH, " +
+            "CMake '3.6.4111460' was not found in PATH " +
                     "or by cmake.dir property.$newline" +
                     "- CMake '3.6.4111459' found in SDK was not the requested " +
                     "version '3.6.4111460'."
