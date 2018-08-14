@@ -16,8 +16,11 @@
 package com.android.tools.deployer;
 
 import com.android.utils.ILogger;
+import com.google.common.collect.Lists;
+import com.google.devrel.gmscore.tools.apk.arsc.*;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -25,8 +28,9 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 public class ApkFull {
     private static final ILogger LOGGER = Logger.getLogger(ApkFull.class);
@@ -191,6 +195,67 @@ public class ApkFull {
         }
         ByteBuffer buffer = ByteBuffer.wrap(sigContent);
         return ZipUtils.digest(buffer);
+    }
+
+    // Package Manager renames apk files according to the content of AndroidManifest.xml.
+    // If found, value of node "manifest", attribute "split" is used.
+    // Otherwise, "base.apk" is used.
+    public String retrieveOnDeviceName() {
+        try {
+            ZipFile zipFile = new ZipFile(path);
+            ZipEntry manifestEntry = zipFile.getEntry("AndroidManifest.xml");
+            InputStream stream = zipFile.getInputStream(manifestEntry);
+            String splitValue = getSplitValue(stream);
+            if (splitValue == null) {
+                splitValue = "base";
+            } else {
+                splitValue = "split_" + splitValue;
+            }
+            return splitValue + ".apk";
+        } catch (IOException e) {
+            throw new DeployerException("Unable to retrieve on device name for " + path, e);
+        }
+    }
+
+    private String getSplitValue(InputStream decompressedManifest) throws IOException {
+        BinaryResourceFile file = BinaryResourceFile.fromInputStream(decompressedManifest);
+        List<Chunk> chunks = file.getChunks();
+
+        if (chunks.size() == 0) {
+            throw new DeployerException("Invalid APK, empty manifest");
+        }
+
+        if (!(chunks.get(0) instanceof XmlChunk)) {
+            throw new DeployerException("APK manifest chunk[0] != XmlChunk");
+        }
+
+        XmlChunk xmlChunk = (XmlChunk) chunks.get(0);
+        List<Chunk> contentChunks = sortByOffset(xmlChunk.getChunks());
+
+        for (Chunk chunk : contentChunks) {
+            if (chunk instanceof XmlStartElementChunk) {
+                XmlStartElementChunk startChunk = (XmlStartElementChunk) chunk;
+                if (startChunk.getName().equals("manifest")) {
+                    for (XmlAttribute attribute : startChunk.getAttributes()) {
+                        if (attribute.name().equals("split")) {
+                            return attribute.rawValue();
+                        }
+                    }
+                    return null;
+                }
+            }
+        }
+        return null;
+    }
+
+    private List<Chunk> sortByOffset(Map<Integer, Chunk> contentChunks) {
+        List<Integer> offsets = Lists.newArrayList(contentChunks.keySet());
+        Collections.sort(offsets);
+        List<Chunk> chunks = new ArrayList<>(offsets.size());
+        for (Integer offset : offsets) {
+            chunks.add(contentChunks.get(offset));
+        }
+        return chunks;
     }
 
     ApkArchiveMap getMap() {

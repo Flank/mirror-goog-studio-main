@@ -16,21 +16,17 @@
 package com.android.tools.deploy.swapper;
 
 import com.android.tools.deploy.proto.Deploy.SwapRequest;
-import com.android.tools.deployer.AdbClient;
+import com.android.tools.deployer.Installer;
 
-public class AgentBasedClassRedefiner extends ClassRedefiner {
-    private final AdbClient adb;
+public class InstallerBasedClassRedefiner extends ClassRedefiner {
+    private final Installer installer;
 
-    public AgentBasedClassRedefiner(AdbClient adb) {
-        this.adb = adb;
+    public InstallerBasedClassRedefiner(Installer installer) {
+        this.installer = installer;
     }
 
     @Override
     public void redefine(SwapRequest request) {
-        byte[] data = request.toByteArray();
-        String[] cmd = {
-            "/data/local/tmp/.ir2/bin/ir2_installer", "swap", "0", String.valueOf(data.length)
-        };
-        adb.shell(cmd, data);
+        installer.swap(request);
     }
 }

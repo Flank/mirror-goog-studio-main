@@ -18,10 +18,10 @@ class Workspace {
       : executable_path_(executable_path) {}
 
   std::string GetBase() const noexcept {
-    // Retrieves the base folder which is expected to be ".ir2" somewhere in the
-    // path.e.g: /data/local/tmp/.ir2/bin base is /data/local/tmp/.ir2.
+    // Retrieves the base folder which is expected to be ".studio" somewhere in the
+    // path.e.g: /data/local/tmp/.studio/bin base is /data/local/tmp/.studio.
     char* directory_cursor = const_cast<char*>(executable_path_.c_str());
-    // Search for ".ir2" folder.
+    // Search for ".studio" folder.
     while (directory_cursor[0] != '/' || directory_cursor[1] != 0) {
       directory_cursor = dirname(directory_cursor);
       if (!strcmp(kBasename, basename(directory_cursor))) {
@@ -51,7 +51,7 @@ class Workspace {
   }
 
  private:
-  static constexpr auto kBasename = ".ir2";
+  static constexpr auto kBasename = ".studio";
   std::string executable_path_;
 };
 

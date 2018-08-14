@@ -69,8 +69,10 @@ public class DeployerRunner {
 
         // Run
         InMemoryDexArchiveDatabase db = new InMemoryDexArchiveDatabase();
+        AdbClient adb = new AdbClient(device);
+        Installer installer = new Installer("", adb);
         Deployer deployer =
-                new Deployer(packageName, apks, new InstallerNotifier(), new AdbClient(device), db);
+                new Deployer(packageName, apks, new InstallerNotifier(), adb, db, installer);
         Deployer.RunResponse response = deployer.fullSwap();
 
         if (response.status != Deployer.RunResponse.Status.OK) {
@@ -82,7 +84,7 @@ public class DeployerRunner {
         for (String apkName : response.result.keySet()) {
             Deployer.RunResponse.Analysis analysis = response.result.get(apkName);
             for (String key : analysis.diffs.keySet()) {
-                Apk.ApkEntryStatus status = analysis.diffs.get(key);
+                ApkDiffer.ApkEntryStatus status = analysis.diffs.get(key);
                 switch (status) {
                     case CREATED:
                         LOGGER.info("%s has been CREATED.", key);

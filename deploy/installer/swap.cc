@@ -64,7 +64,7 @@ void SwapCommand::ParseParameters(int argc, char** argv) {
   }
 
   // Set this value here so we can re-use it in other methods.
-  target_dir_ = "/data/data/" + request_.package_name() + "/.ir2/";
+  target_dir_ = "/data/data/" + request_.package_name() + "/.studio/";
   ready_to_run_ = true;
 }
 
@@ -145,7 +145,7 @@ bool SwapCommand::Setup(const std::string& source_dir) {
   // We have to run the following three commands as the application, because
   // we otherwise do not have access to the application's data directory.
   if (!RunCmd("mkdir", User::APP_PACKAGE, {"-p", target_dir_}, &output)) {
-    std::cerr << "Could not create .ir2 directory." << output << std::endl;
+    std::cerr << "Could not create .studio directory." << output << std::endl;
     return false;
   }
 

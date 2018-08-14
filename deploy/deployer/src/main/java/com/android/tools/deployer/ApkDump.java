@@ -15,24 +15,17 @@
  */
 package com.android.tools.deployer;
 
-import com.google.common.collect.Lists;
 import com.google.devrel.gmscore.tools.apk.arsc.*;
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 public class ApkDump {
 
-    private final Path cdDumpPath;
-    private final Path sigDumpPath;
+    private final byte[] contentDirectory;
+    private final byte[] signature;
+    private final String name;
 
-    // Lazy initialized
+    // Cached lazy-initialized values
     private String digest = null;
     private HashMap<String, Long> crcs = null;
 
@@ -45,18 +38,17 @@ public class ApkDump {
      * <p>Block dump files contain the V2/V3 Signature Block located between the APK payload and the
      * APK CD record.
      */
-    public ApkDump(String apkPath, String dumpDirectory) {
-        String onDeviceName = retrieveOnDeviceName(apkPath);
-
-        cdDumpPath = Paths.get(dumpDirectory, onDeviceName + ".remotecd");
-        sigDumpPath = Paths.get(dumpDirectory, onDeviceName + ".remoteblock");
+    public ApkDump(String name, byte[] contentDirectory, byte[] signature) {
+        this.name = name;
+        this.contentDirectory = contentDirectory;
+        this.signature = signature;
     }
 
     public HashMap<String, Long> getCrcs() {
         if (crcs != null) {
             return crcs;
         }
-        crcs = readCrcs(cdDumpPath);
+        crcs = readCrcs();
         return crcs;
     }
 
@@ -64,101 +56,19 @@ public class ApkDump {
         if (digest != null) {
             return digest;
         }
-        digest = generateDigest(cdDumpPath, sigDumpPath);
+        digest = generateDigest();
         return digest;
     }
 
-    public boolean exists() {
-        return Files.exists(cdDumpPath);
-    }
-
     // Generates a hash for a given APK. If there is a signature block, hash it. Otherwise, hash the Central Directory record.
-    private String generateDigest(Path cdPath, Path sigPath) {
-        try {
-            byte[] data;
-            if (Files.exists(sigPath)) {
-                // TODO: Parse the signature block and use the top level digest instead.
-                data = Files.readAllBytes(sigPath);
-            } else {
-                data = Files.readAllBytes(cdPath);
-            }
-            ByteBuffer buffer = ByteBuffer.wrap(data);
-            return ZipUtils.digest(buffer);
-        } catch (IOException e) {
-            throw new DeployerException("Unable to generate digest", e);
-        }
+    private String generateDigest() {
+        byte[] data = signature != null ? signature : contentDirectory;
+        ByteBuffer buffer = ByteBuffer.wrap(data);
+        return ZipUtils.digest(buffer);
     }
 
-    private HashMap<String, Long> readCrcs(Path filename) {
-        try {
-            byte[] data = Files.readAllBytes(filename);
-            ByteBuffer buffer = ByteBuffer.wrap(data);
-            return ZipUtils.readCrcs(buffer);
-        } catch (IOException e) {
-            // It is possible the expected apk was no present on the remove device.
-            // In this case return an hashmap without crcs.
-            return new HashMap<>();
-        }
-    }
-
-    // Package Manager renames apk files according to the content of AndroidManifest.xml.
-    // If found, value of node "manifest", attribute "split" is used.
-    // Otherwise, "base.apk" is used.
-    private String retrieveOnDeviceName(String apkPath) {
-        try {
-            ZipFile zipFile = new ZipFile(apkPath);
-            ZipEntry manifestEntry = zipFile.getEntry("AndroidManifest.xml");
-            InputStream stream = zipFile.getInputStream(manifestEntry);
-            String splitValue = getSplitValue(stream);
-            if (splitValue == null) {
-                splitValue = "base";
-            } else {
-                splitValue = "split_" + splitValue;
-            }
-            return splitValue + ".apk";
-        } catch (IOException e) {
-            throw new DeployerException("Unable to retrieve on device name for " + apkPath, e);
-        }
-    }
-
-    private List<Chunk> sortByOffset(Map<Integer, Chunk> contentChunks) {
-        List<Integer> offsets = Lists.newArrayList(contentChunks.keySet());
-        Collections.sort(offsets);
-        List<Chunk> chunks = new ArrayList<>(offsets.size());
-        for (Integer offset : offsets) {
-            chunks.add(contentChunks.get(offset));
-        }
-        return chunks;
-    }
-
-    private String getSplitValue(InputStream decompressedManifest) throws IOException {
-        BinaryResourceFile file = BinaryResourceFile.fromInputStream(decompressedManifest);
-        List<Chunk> chunks = file.getChunks();
-
-        if (chunks.size() == 0) {
-            throw new DeployerException("Invalid APK, empty manifest");
-        }
-
-        if (!(chunks.get(0) instanceof XmlChunk)) {
-            throw new DeployerException("APK manifest chunk[0] != XmlChunk");
-        }
-
-        XmlChunk xmlChunk = (XmlChunk) chunks.get(0);
-        List<Chunk> contentChunks = sortByOffset(xmlChunk.getChunks());
-
-        for (Chunk chunk : contentChunks) {
-            if (chunk instanceof XmlStartElementChunk) {
-                XmlStartElementChunk startChunk = (XmlStartElementChunk) chunk;
-                if (startChunk.getName().equals("manifest")) {
-                    for (XmlAttribute attribute : startChunk.getAttributes()) {
-                        if (attribute.name().equals("split")) {
-                            return attribute.rawValue();
-                        }
-                    }
-                    return null;
-                }
-            }
-        }
-        return null;
+    private HashMap<String, Long> readCrcs() {
+        ByteBuffer buffer = ByteBuffer.wrap(contentDirectory);
+        return ZipUtils.readCrcs(buffer);
     }
 }

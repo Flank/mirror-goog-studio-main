@@ -18,7 +18,7 @@ package com.android.tools.deployer;
 
 import java.util.HashMap;
 
-public class Apk {
+public class ApkDiffer {
 
     public enum ApkEntryStatus {
         CREATED,
@@ -26,21 +26,13 @@ public class Apk {
         DELETED
     }
 
-    private final ApkFull localArchive;
-    private final ApkDump remoteArchive;
-    private final String path;
+    public HashMap<String, ApkEntryStatus> diff(ApkFull local, ApkDump remote)
+            throws DeployerException {
 
-    public Apk(String path, String workingDirectory) {
-        this.path = path;
-        localArchive = new ApkFull(path);
-        remoteArchive = new ApkDump(path, workingDirectory);
-    }
+        HashMap<String, Long> localCrcs = local.getCrcs();
+        HashMap<String, Long> remoteCrcs = remote.getCrcs();
 
-    // Traverse local and remote list of crcs in order to detect what has changed in a local apk.
-    public HashMap<String, ApkEntryStatus> diff() throws DeployerException {
-        HashMap<String, Long> localCrcs = localArchive.getCrcs();
-        HashMap<String, Long> remoteCrcs = remoteArchive.getCrcs();
-
+        // Traverse local and remote list of crcs in order to detect what has changed in a local apk.
         HashMap<String, ApkEntryStatus> diffs = new HashMap<>();
         for (String key : localCrcs.keySet()) {
             if (!remoteCrcs.containsKey(key)) {
@@ -61,17 +53,5 @@ public class Apk {
             }
     }
         return diffs;
-    }
-
-    public ApkFull getLocalArchive() {
-        return localArchive;
-    }
-
-    public ApkDump getRemoteArchive() {
-        return remoteArchive;
-    }
-
-    public String getPath() {
-        return path;
     }
 }

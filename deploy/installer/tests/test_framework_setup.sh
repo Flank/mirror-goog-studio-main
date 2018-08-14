@@ -1,7 +1,7 @@
 #!/bin/bash
 
-mkdir -p .ir2/{bin,dumps}
-cp ./tools/base/deploy/installer/ir2_installer .ir2/bin
+mkdir -p .studio/{bin,dumps}
+cp ./tools/base/deploy/installer/installer .studio/bin
 
 function fail {
    echo $1

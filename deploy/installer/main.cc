@@ -101,7 +101,7 @@ std::string GetInstallerPath() {
 
 int main(int argc, char** argv) {
   Trace::Init();
-  Trace mainTrace("ir2_installer");
+  Trace mainTrace("installer");
   if (argc < 2) {
     PrintUsage(argv[0]);
     return EXIT_FAILURE;

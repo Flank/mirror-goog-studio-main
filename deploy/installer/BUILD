@@ -1,7 +1,7 @@
 load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS", "android_cc_binary", "select_android")
 
 cc_library(
-    name = "ir2_installer_lib",
+    name = "installer_lib",
     srcs = [
         "apk_archive.cc",
         "apk_retriever.cc",
@@ -38,7 +38,7 @@ cc_library(
 )
 
 cc_binary(
-    name = "ir2_installer",
+    name = "installer",
     srcs = [
         "main.cc",
     ],
@@ -47,7 +47,7 @@ cc_binary(
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
     deps = [
-        ":ir2_installer_lib",
+        ":installer_lib",
     ],
 )
 
@@ -58,14 +58,14 @@ android_cc_binary(
         "armeabi-v7a",
         "arm64-v8a",
     ],
-    binary = ":ir2_installer.stripped",
-    filename = "ir2_installer",
+    binary = ":installer.stripped",
+    filename = "installer",
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
 )
 
 cc_test(
-    name = "ir2_installer_test",
+    name = "installer_test",
     size = "small",
     srcs = [
         "tests/tests.cc",
@@ -77,7 +77,7 @@ cc_test(
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
     deps = [
-        ":ir2_installer_lib",
+        ":installer_lib",
         "//external:gmock_main",
         "//tools/base/profiler/native/test:testutils",
     ],
@@ -90,7 +90,7 @@ sh_test(
         "tests/endtoend_p.sh",
     ],
     data = [
-        ":ir2_installer",
+        ":installer",
     ] + glob(["tests/**/*"]),
     tags = [
         "no_windows",
@@ -104,7 +104,7 @@ sh_test(
         "tests/endtoend_o.sh",
     ],
     data = [
-        ":ir2_installer",
+        ":installer",
     ] + glob(["tests/**/*"]),
     tags = [
         "no_windows",
@@ -118,7 +118,7 @@ sh_test(
         "tests/endtoend_p_with_splits.sh",
     ],
     data = [
-        ":ir2_installer",
+        ":installer",
     ] + glob(["tests/**/*"]),
     tags = [
         "no_windows",

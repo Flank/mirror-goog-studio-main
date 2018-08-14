@@ -4,6 +4,9 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 iml_module(
     name = "studio.android.sdktools.deployer",
     srcs = ["src/main/java"],
+    bundle_data = [
+        "//tools/base/deploy/installer:android",
+    ],
     iml_files = ["android.sdktools.deployer.iml"],
     test_data = glob(["src/test/resource/**"]),
     test_resources = ["src/test/resource"],

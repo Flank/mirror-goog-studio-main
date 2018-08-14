@@ -19,6 +19,7 @@ package com.android.tools.deployer;
 import com.android.annotations.NonNull;
 import com.android.ddmlib.*;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -40,14 +41,19 @@ public class AdbClient {
         }
     }
 
-    public void shell(String[] parameters, byte[] data) throws DeployerException {
+    /**
+     * Executes the given command and sends {@code input} to stdin and returns stdout as a byte[]
+     */
+    public byte[] shell(String[] parameters, byte[] input) throws DeployerException {
         try {
+            ByteArrayOutputReceiver receiver = new ByteArrayOutputReceiver();
             device.executeShellCommand(
                     String.join(" ", parameters),
-                    new NullOutputReceiver(),
+                    receiver,
                     DdmPreferences.getTimeOut(),
                     TimeUnit.MILLISECONDS,
-                    new ByteArrayInputStream(data));
+                    input == null ? null : new ByteArrayInputStream(input));
+            return receiver.toByteArray();
         } catch (AdbCommandRejectedException
                 | ShellCommandUnresponsiveException
                 | IOException
@@ -94,10 +100,10 @@ public class AdbClient {
         }
     }
 
-    public void installMultiple(List<Apk> apks, boolean kill) throws DeployerException {
+    public void installMultiple(List<ApkFull> apks, boolean kill) throws DeployerException {
         List<File> files = new ArrayList<>();
-        for (Apk apk : apks) {
-            files.add(new File(apk.getLocalArchive().getPath()));
+        for (ApkFull apk : apks) {
+            files.add(new File(apk.getPath()));
         }
         try {
             List<String> options = new ArrayList<>();
@@ -109,6 +115,40 @@ public class AdbClient {
             device.installPackages(files, true, options, 10, TimeUnit.SECONDS);
         } catch (InstallException e) {
             throw new DeployerException("Unable to install packages.", e);
+        }
+    }
+
+    public List<String> getAbis() {
+        return device.getAbis();
+    }
+
+    public void push(String from, String to) {
+        try {
+            device.pushFile(from, to);
+        } catch (IOException | SyncException | TimeoutException | AdbCommandRejectedException e) {
+            throw new DeployerException("Unable to push files", e);
+        }
+    }
+
+    private class ByteArrayOutputReceiver implements IShellOutputReceiver {
+
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+
+        @Override
+        public void addOutput(byte[] data, int offset, int length) {
+            stream.write(data, offset, length);
+        }
+
+        @Override
+        public void flush() {}
+
+        @Override
+        public boolean isCancelled() {
+            return false;
+        }
+
+        byte[] toByteArray() {
+            return stream.toByteArray();
         }
     }
 }
