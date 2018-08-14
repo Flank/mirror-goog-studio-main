@@ -73,7 +73,7 @@ public class SdkAutoDownloadTest {
             + System.lineSeparator()
             + "target_link_libraries(hello-jni log)";
 
-    private static final String BUILD_TOOLS_VERSION = "27.0.3";
+    private static final String BUILD_TOOLS_VERSION = SdkConstants.CURRENT_BUILD_TOOLS_VERSION;
     private static final String PLATFORM_VERSION =
             TestUtils.getLatestAndroidPlatform().replace("android-", "");
 

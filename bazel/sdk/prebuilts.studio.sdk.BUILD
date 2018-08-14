@@ -27,16 +27,30 @@ java_binary(
 )
 
 filegroup(
-    name = "build-tools/27.0.3",
+    name = "build-tools/latest",
+    srcs = [":build-tools/28.0.2"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "build-tools/minimum",
+    srcs = [":build-tools/25.0.0"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "build-tools/28.0.2",
     srcs = glob(
-        include = ["*/build-tools/27.0.3/**"],
+        include = ["*/build-tools/28.0.2/**"],
     ),
     visibility = ["//visibility:public"],
 )
 
 filegroup(
-    name = "build-tools/latest",
-    srcs = [":build-tools/27.0.3"],
+    name = "build-tools/27.0.3",
+    srcs = glob(
+        include = ["*/build-tools/27.0.3/**"],
+    ),
     visibility = ["//visibility:public"],
 )
 
@@ -48,12 +62,6 @@ filegroup(
     visibility = [
         "//tools/base/build-system/integration-test:__subpackages__",
     ],
-)
-
-filegroup(
-    name = "build-tools/minimum",
-    srcs = [":build-tools/25.0.0"],
-    visibility = ["//visibility:public"],
 )
 
 filegroup(
