@@ -69,7 +69,7 @@ public final class FoundryTest {
     public void testArmLinuxLinker() {
         try {
             String command =
-                    "prebuilts/studio/sdk/linux/build-tools/28.0.0/arm-linux-androideabi-ld --help";
+                    "prebuilts/studio/sdk/linux/build-tools/28.0.2/arm-linux-androideabi-ld --help";
             Process proc = Runtime.getRuntime().exec(command);
             BufferedReader input = new BufferedReader(new InputStreamReader(proc.getInputStream()));
             int exitVal = proc.waitFor();

@@ -24,6 +24,7 @@ import static com.android.manifmerger.ManifestMerger2.Invoker;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.compiling.DependencyFileProcessor;
@@ -113,15 +114,26 @@ import java.util.function.Supplier;
  */
 public class AndroidBuilder {
 
-    /** Minimal supported version of build tools. */
-    public static final Revision MIN_BUILD_TOOLS_REV = new Revision(27, 0, 3);
+    /**
+     * Minimal supported version of build tools.
+     *
+     * <p>ATTENTION: When changing this value, make sure to update the release notes
+     * (https://developer.android.com/studio/releases/gradle-plugin).
+     */
+    public static final Revision MIN_BUILD_TOOLS_REV =
+            Revision.parseRevision(SdkConstants.CURRENT_BUILD_TOOLS_VERSION);
 
     /**
      * Default version of build tools that will be used if the user does not specify.
      *
-     * <p><strong>Update the DSL documentation on BaseExtension when changing this value.</strong>
+     * <p>ATTENTION: This is usually the same as the minimum build tools version, as documented in
+     * {@code com.android.build.gradle.AndroidConfig#getBuildToolsVersion()} and {@code
+     * com.android.build.api.dsl.extension.BuildProperties#getBuildToolsVersion()}, and in the
+     * release notes (https://developer.android.com/studio/releases/gradle-plugin). If this version
+     * is higher than the minimum version, make sure to update those places to document the new
+     * behavior.
      */
-    public static final Revision DEFAULT_BUILD_TOOLS_REVISION = new Revision(28, 0, 0);
+    public static final Revision DEFAULT_BUILD_TOOLS_REVISION = MIN_BUILD_TOOLS_REV;
 
     /** API level for split APKs. */
     private static final int API_LEVEL_SPLIT_APK = 21;
