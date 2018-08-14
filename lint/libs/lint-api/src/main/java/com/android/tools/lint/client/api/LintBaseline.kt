@@ -369,7 +369,8 @@ class LintBaseline(
                             ATTR_FILE -> path = value
                             // For now not reading ATTR_LINE; not used for baseline entry matching
                             // ATTR_LINE -> line = value
-                            ATTR_FORMAT, "by" -> {} // not currently interesting, don't store
+                            ATTR_FORMAT, "by" -> {
+                            } // not currently interesting, don't store
                             else -> {
                                 if (parser.depth == 1) {
                                     setAttribute(name, value)

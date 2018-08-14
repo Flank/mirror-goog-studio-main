@@ -1527,7 +1527,11 @@ abstract class LintClient {
      */
     @Throws(IOException::class)
     open fun createXmlPullParser(resourcePath: PathString): XmlPullParser? {
-        val bytes = try { readBytes(resourcePath) } catch (e: FileNotFoundException) { return null }
+        val bytes = try {
+            readBytes(resourcePath)
+        } catch (e: FileNotFoundException) {
+            return null
+        }
         val parser = KXmlParser()
         parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true)
         parser.setInput(ByteArrayInputStream(bytes), StandardCharsets.UTF_8.name())

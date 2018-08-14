@@ -267,7 +267,7 @@ open class LintFixPerformer constructor(
         val document = file.getXmlDocument() ?: return false
 
         var node = PositionXmlParser.findNodeAtOffset(document, start.offset)
-                ?: error("No node found at offset " + start.offset)
+            ?: error("No node found at offset " + start.offset)
         if (node.nodeType == Node.ATTRIBUTE_NODE) {
             node = (node as Attr).ownerElement
         } else if (node.nodeType != Node.ELEMENT_NODE) {

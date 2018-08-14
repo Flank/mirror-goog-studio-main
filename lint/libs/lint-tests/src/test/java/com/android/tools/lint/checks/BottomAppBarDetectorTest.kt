@@ -25,7 +25,8 @@ class BottomAppBarDetectorTest : AbstractCheckTest() {
 
     fun testBasic() {
         lint().files(
-            xml("res/layout/ok.xml", """
+            xml(
+                "res/layout/ok.xml", """
                 <android.support.design.widget.CoordinatorLayout
                     xmlns:android="http://schemas.android.com/apk/res/android"
                     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -51,8 +52,10 @@ class BottomAppBarDetectorTest : AbstractCheckTest() {
                       app:srcCompat="@drawable/ic_add_black_24dp"
                       tools:ignore="RtlHardcoded"/>
                 </android.support.design.widget.CoordinatorLayout>
-            """).indented(),
-            xml("res/layout/wrong1.xml", """
+            """
+            ).indented(),
+            xml(
+                "res/layout/wrong1.xml", """
                 <LinearLayout
                     xmlns:android="http://schemas.android.com/apk/res/android"
                     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -70,8 +73,10 @@ class BottomAppBarDetectorTest : AbstractCheckTest() {
                       app:navigationIcon="@drawable/ic_menu_black_24dp"/>
 
                 </LinearLayout>
-            """).indented(),
-            xml("res/layout/wrong2.xml", """
+            """
+            ).indented(),
+            xml(
+                "res/layout/wrong2.xml", """
                 <com.google.android.material.bottomappbar.BottomAppBar
                     xmlns:android="http://schemas.android.com/apk/res/android"
                     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -81,7 +86,8 @@ class BottomAppBarDetectorTest : AbstractCheckTest() {
                     android:layout_height="wrap_content"
                     android:layout_gravity="bottom"
 app:navigationIcon="@drawable/ic_menu_black_24dp"/>
-            """).indented()
+            """
+            ).indented()
         ).run().expect(
             """
             res/layout/wrong1.xml:9: Error: This BottomAppBar must be wrapped in a CoordinatorLayout (android.support.design.widget.CoordinatorLayout) [BottomAppBar]

@@ -160,5 +160,6 @@ abstract class Configuration {
         driver: LintDriver,
         project: Project,
         registry: IssueRegistry
-    ) {}
+    ) {
+    }
 }

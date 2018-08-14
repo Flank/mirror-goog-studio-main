@@ -103,7 +103,7 @@ class UastGradleVisitor(private val javaContext: JavaContext) : GradleVisitor() 
                 val valueArguments = left.valueArguments
                 if (valueArguments.size == 1) {
                     val target = getMethodName(left)
-                            ?: ""
+                        ?: ""
                     val arg = valueArguments[0]
                     if (arg !is ULambdaExpression) {
                         // Some sort of DSL property?

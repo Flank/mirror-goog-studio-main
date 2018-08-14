@@ -183,7 +183,7 @@ class KotlinLintAnalyzerFacade {
 
         val outputDirectory =
             compilerConfiguration.get(JVMConfigurationKeys.MODULES)?.singleOrNull()?.getOutputDirectory()
-                    ?: compilerConfiguration.get(JVMConfigurationKeys.OUTPUT_DIRECTORY)?.absolutePath
+                ?: compilerConfiguration.get(JVMConfigurationKeys.OUTPUT_DIRECTORY)?.absolutePath
 
         val classpathRootsResolver = ClasspathRootsResolver(
             PsiManager.getInstance(project),

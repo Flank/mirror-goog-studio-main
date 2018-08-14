@@ -35,7 +35,8 @@ class ResolveTest : TestCase() {
 
     fun testKotlinReferencesIntoBytecode() {
         val tests = arrayOf(
-            kotlin("""
+            kotlin(
+                """
                 package pkg
                 import lib.Bar
                 import lib.Bar2
@@ -44,7 +45,8 @@ class ResolveTest : TestCase() {
                     val bar = Bar("hello1")
                     val bar2 = Bar2("hello2")
                 }
-            """).indented(),
+            """
+            ).indented(),
             libBar
         )
 

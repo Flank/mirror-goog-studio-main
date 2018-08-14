@@ -83,7 +83,7 @@ class CallGraphVisitor(
                 else listOf(node)
             val callee: UElement = superClass.constructors()
                 .find { it.uastParameters.isEmpty() }
-                    ?: superClass
+                ?: superClass
             with(mutableCallGraph) {
                 val calleeNode = getNode(callee)
                 callers.forEach { getNode(it).edges.add(Edge(calleeNode, /*call*/ null, DIRECT)) }
@@ -116,7 +116,7 @@ class CallGraphVisitor(
                 if (decl.isStatic) // Ignore static initializers for now.
                     return super.visitCallExpression(node)
                 val containingClass = decl.getContainingUClass()
-                        ?: return super.visitCallExpression(node) // No containing class.
+                    ?: return super.visitCallExpression(node) // No containing class.
                 val ctors = containingClass.constructors()
                 // For default constructors we use the containing class as the caller.
                 if (ctors.isNotEmpty()) ctors else listOf(containingClass)
@@ -141,7 +141,7 @@ class CallGraphVisitor(
                 // Found a call to a default constructor; create an edge to the instantiated class.
                 val constructedClass = node.classReference
                     ?.resolve()?.navigationElement.toUElement() as? UClass
-                        ?: return super.visitCallExpression(node) // Unable to resolve class.
+                    ?: return super.visitCallExpression(node) // Unable to resolve class.
                 addEdge(constructedClass, DIRECT)
             } else if (node.methodName == "invoke") {
                 // This is likely an invocation of a function expression, such as a Kotlin lambda.

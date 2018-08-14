@@ -1681,7 +1681,8 @@ fun resolvePlaceHolders(
         if (end == -1) {
             return s // not terminated
         }
-        val name = s.substring(start + MANIFEST_PLACEHOLDER_PREFIX.length,
+        val name = s.substring(
+            start + MANIFEST_PLACEHOLDER_PREFIX.length,
             end
         )
         val replacement = resolvePlaceHolder(project, name) ?: fallbacks?.get(name) ?: ""

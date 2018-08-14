@@ -39,7 +39,6 @@ import com.android.tools.lint.detector.api.interprocedural.shortName
 import com.intellij.codeInsight.AnnotationUtil
 import com.intellij.psi.PsiModifierListOwner
 import com.intellij.psi.PsiVariable
-import org.jetbrains.uast.UVariable
 import java.util.EnumSet
 
 data class AnnotatedCallPath(

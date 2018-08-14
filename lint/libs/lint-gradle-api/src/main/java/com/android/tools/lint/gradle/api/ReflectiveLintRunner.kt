@@ -97,7 +97,7 @@ class ReflectiveLintRunner {
                 gradle.addListener(listener)
 
                 val urls = computeUrlsFromClassLoaderDelta(lintClassPath)
-                        ?: computeUrlsFallback(lintClassPath)
+                    ?: computeUrlsFallback(lintClassPath)
                 loader = DelegatingClassLoader(urls.toTypedArray())
             }
             return loader!!

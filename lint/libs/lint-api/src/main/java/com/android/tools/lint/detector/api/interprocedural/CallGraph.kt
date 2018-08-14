@@ -328,7 +328,7 @@ fun ContextualNode.computeEdges(
                 // Resolved edges are created directly.
                 val implicitReceiverDispatchReceivers = edge.call
                     ?.getDispatchReceivers(contextualReceiverEval)
-                        ?: emptyList()
+                    ?: emptyList()
                 val paramContexts =
                     if (edge.call == null) listOf(ParamContext.EMPTY)
                     else buildParamContextsFromCall(

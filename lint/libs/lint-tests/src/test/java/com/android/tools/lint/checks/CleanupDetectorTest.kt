@@ -1691,7 +1691,8 @@ class CleanupDetectorTest : AbstractCheckTest() {
     fun testUse1() {
         // Regression test from 62377185
         lint().files(
-            kotlin("""
+            kotlin(
+                """
                 package test.pkg
                 import android.content.ContentResolver
 
@@ -1705,13 +1706,16 @@ class CleanupDetectorTest : AbstractCheckTest() {
                         resolver.query(null, null, null, null, null).use { } // OK
                     }
                 }
-            """).indented()
-        ).run().expect("""
+            """
+            ).indented()
+        ).run().expect(
+            """
             src/test/pkg/MyTest.kt:6: Warning: This Cursor should be freed up after use with #close() [Recycle]
                     val cursorOpened = resolver.query(null, null, null, null, null) // ERROR
                                                 ~~~~~
             0 errors, 1 warnings
-        """)
+        """
+        )
     }
 
     fun testUse2() {

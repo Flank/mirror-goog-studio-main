@@ -137,7 +137,7 @@ sealed class DispatchReceiver {
 
             override fun toTarget(): CallTarget.Method? {
                 val baseCallee = element.resolve().toUElementOfType<UMethod>()
-                        ?: return null
+                    ?: return null
                 return if (receiver == null) {
                     CallTarget.Method(baseCallee)
                 } else {
@@ -157,7 +157,7 @@ private fun ULambdaExpression.getCaptures(): List<UVariable> {
             node: USimpleNameReferenceExpression
         ): Boolean {
             val resolved = node.resolve()?.navigationElement.toUElementOfType<UVariable>()
-                    ?: return super.visitSimpleNameReferenceExpression(node)
+                ?: return super.visitSimpleNameReferenceExpression(node)
             val isCaptured = generateSequence<UElement>(resolved) { it.uastParent }
                 .none { it == this@getCaptures }
             if (isCaptured) {
@@ -363,8 +363,8 @@ fun UCallExpression.getDispatchReceivers(
                 as? PsiElement
 
         val uDecl = ktDecl.toUElementOfType<UDeclarationsExpression>()?.declarations?.singleOrNull()
-                ?: ktDecl.toUElement()
-                ?: return emptyList()
+            ?: ktDecl.toUElement()
+            ?: return emptyList()
 
         return receiverEval[uDecl]
     }
