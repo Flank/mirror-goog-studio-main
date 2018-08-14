@@ -91,7 +91,7 @@ class NamespacedResourcesTaskManager(
             packageOutputType: InternalArtifactType?,
             baseName: String,
             useAaptToGenerateLegacyMultidexMainDexProguardRules: Boolean) {
-       taskFactory.eagerCreate(
+       taskFactory.lazyCreate(
            LinkApplicationAndroidResourcesTask.NamespacedCreationAction(
                variantScope,
                useAaptToGenerateLegacyMultidexMainDexProguardRules,

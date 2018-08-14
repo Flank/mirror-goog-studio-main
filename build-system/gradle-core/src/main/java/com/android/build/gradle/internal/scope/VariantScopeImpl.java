@@ -44,6 +44,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
+import com.android.build.gradle.FeaturePlugin;
 import com.android.build.gradle.ProguardFiles;
 import com.android.build.gradle.internal.InstantRunTaskManager;
 import com.android.build.gradle.internal.LoggerWrapper;
@@ -483,6 +484,23 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return gatherProguardFiles(
                 PostprocessingOptions::getConsumerProguardFiles,
                 BaseConfig::getConsumerProguardFiles);
+    }
+
+    @NonNull
+    @Override
+    public List<File> getConsumerProguardFilesForFeatures() {
+        final boolean hasFeaturePlugin =
+                getGlobalScope().getProject().getPlugins().hasPlugin(FeaturePlugin.class);
+        // We include proguardFiles if we're in a dynamic-feature or feature module. For feature
+        // modules, we check for the presence of the FeaturePlugin, because we want to include
+        // proguardFiles even when we're in the library variant.
+        final boolean includeProguardFiles = hasFeaturePlugin || getType().isDynamicFeature();
+        final Collection<File> consumerProguardFiles = getConsumerProguardFiles();
+        if (includeProguardFiles) {
+            consumerProguardFiles.addAll(getExplicitProguardFiles());
+        }
+
+        return ImmutableList.copyOf(consumerProguardFiles);
     }
 
     @NonNull

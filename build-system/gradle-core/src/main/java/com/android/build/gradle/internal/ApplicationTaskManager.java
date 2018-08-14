@@ -46,7 +46,7 @@ import com.android.build.gradle.internal.tasks.CheckMultiApkLibrariesTask;
 import com.android.build.gradle.internal.tasks.ExtractApksTask;
 import com.android.build.gradle.internal.tasks.InstallVariantViaBundleTask;
 import com.android.build.gradle.internal.tasks.InstantRunSplitApkResourcesBuilder;
-import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesCreationAction;
+import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesTask;
 import com.android.build.gradle.internal.tasks.ModuleMetadataWriterTask;
 import com.android.build.gradle.internal.tasks.PackageBundleTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTask;
@@ -197,7 +197,7 @@ public class ApplicationTaskManager extends TaskManager {
                 taskFactory.eagerCreate(
                         new DataBindingExportFeatureInfoTask.CreationAction(variantScope));
             }
-            taskFactory.eagerCreate(new MergeConsumerProguardFilesCreationAction(variantScope));
+            taskFactory.lazyCreate(new MergeConsumerProguardFilesTask.CreationAction(variantScope));
         }
 
         // Add data binding tasks if enabled
@@ -524,7 +524,7 @@ public class ApplicationTaskManager extends TaskManager {
             // make the tasks depend on the validate signing task to ensure that the keystore
             // is created if it's a debug one.
             if (scope.getVariantConfiguration().getSigningConfig() != null) {
-                Task validateSigningTask = getValidateSigningTask(scope);
+                TaskProvider<? extends Task> validateSigningTask = getValidateSigningTask(scope);
                 splitAndMultiApkTask.dependsOn(validateSigningTask);
                 TaskFactoryUtils.dependsOn(packageBundleTask, validateSigningTask);
                 universalApkTask.dependsOn(validateSigningTask);

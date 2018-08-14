@@ -29,6 +29,7 @@ import com.android.build.VariantOutput;
 import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.AndroidConfig;
+import com.android.build.gradle.FeaturePlugin;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ExtraModelInfo;
@@ -54,6 +55,7 @@ import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.tasks.ExtractApksTask;
+import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
@@ -392,13 +394,6 @@ public class ModelBuilder<Extension extends AndroidConfig>
             }
         }
 
-        // FIXME we should not have to configure the javac task to have proper values in extension.getCompileOptions()
-        // b/112356059
-        VariantScope variant = Iterables.getFirst(variantManager.getVariantScopes(), null);
-        if (variant != null) {
-            variant.getTaskContainer().getCompileTask().get();
-        }
-
         return new DefaultAndroidProject(
                 project.getName(),
                 defaultConfig,
@@ -568,6 +563,8 @@ public class ModelBuilder<Extension extends AndroidConfig>
         // used for test only modules
         Collection<TestedTargetVariant> testTargetVariants = getTestTargetVariants(variantData);
 
+        checkProguardFiles(variantData.getScope());
+
         return new VariantImpl(
                 variantName,
                 variantConfiguration.getBaseName(),
@@ -578,6 +575,34 @@ public class ModelBuilder<Extension extends AndroidConfig>
                 extraAndroidArtifacts,
                 clonedExtraJavaArtifacts,
                 testTargetVariants);
+    }
+
+    private void checkProguardFiles(@NonNull VariantScope variantScope) {
+        final GlobalScope globalScope = variantScope.getGlobalScope();
+        final Project project = globalScope.getProject();
+
+        final boolean hasFeaturePlugin = project.getPlugins().hasPlugin(FeaturePlugin.class);
+        final boolean isBaseFeature =
+                hasFeaturePlugin && globalScope.getExtension().getBaseFeature();
+
+        // We check for default files unless it's a base feature, which can include default files.
+        if (!isBaseFeature) {
+            List<File> consumerProguardFiles = variantScope.getConsumerProguardFilesForFeatures();
+
+            boolean isDynamicFeature = variantScope.getType().isDynamicFeature();
+            MergeConsumerProguardFilesTask.checkProguardFiles(
+                    project,
+                    isDynamicFeature,
+                    hasFeaturePlugin,
+                    consumerProguardFiles,
+                    exception ->
+                            syncIssues.add(
+                                    new SyncIssueImpl(
+                                            Type.GENERIC,
+                                            EvalIssueReporter.Severity.ERROR,
+                                            exception.getData(),
+                                            exception.getMessage())));
+        }
     }
 
     @NonNull

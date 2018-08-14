@@ -48,7 +48,7 @@ public class LibraryVariantOutputImpl extends BaseVariantOutputImpl implements L
     @Nullable
     @Override
     public Zip getPackageLibrary() {
-        return taskContainer.getBundleLibraryTask();
+        return taskContainer.getBundleLibraryTask().getOrNull();
     }
 
     @NonNull
