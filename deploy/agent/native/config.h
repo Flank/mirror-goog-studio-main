@@ -29,7 +29,6 @@ class Config {
   static const Config& GetInstance();
 
   const proto::SwapRequest& GetSwapRequest() const;
-  const std::string& GetInstrumentationPath() const;
 
  private:
   static Config instance_;

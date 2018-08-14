@@ -291,6 +291,18 @@ java_binary(
 )
 
 config_setting(
+    name = "host_darwin",
+    values = {"host_cpu": "darwin"},
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "host_windows",
+    values = {"host_cpu": "x64_windows"},
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
     name = "darwin",
     values = {"cpu": "darwin"},
     visibility = ["//visibility:public"],

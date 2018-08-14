@@ -43,7 +43,7 @@ def _sdk_glob(platform, include, exclude):
 # A path to a file from the current platform Android SDK.
 def sdk_path(paths):
     return select({
-         "//tools/base/bazel:darwin": ["darwin/" + path for path in paths],
-         "//tools/base/bazel:windows": ["windows/" + path for path in paths],
+         "//tools/base/bazel:host_darwin": ["darwin/" + path for path in paths],
+         "//tools/base/bazel:host_windows": ["windows/" + path for path in paths],
          "//conditions:default": ["linux/" + path for path in paths],
     })
