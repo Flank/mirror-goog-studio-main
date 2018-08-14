@@ -164,7 +164,7 @@ public class Metric {
                             .name("benchmark")
                             .value(benchmark.getName())
                             .name("project")
-                            .value(benchmark.getProject())
+                            .value(benchmark.getProjectName())
                             .name("data");
                     {
                         writer.beginObject();

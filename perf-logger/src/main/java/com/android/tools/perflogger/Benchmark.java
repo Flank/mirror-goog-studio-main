@@ -17,7 +17,11 @@
 package com.android.tools.perflogger;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.google.common.collect.ImmutableMap;
+import com.google.gson.annotations.Expose;
 import java.time.Instant;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -27,20 +31,37 @@ import java.util.Objects;
 public class Benchmark {
     private static final String DEFAULT_PROJECT_NAME = "Perfgate for Android Studio";
 
-    @NonNull private final String myBenchmarkName;
-    @NonNull private final String myProjectName;
+    @NonNull @Expose private final String name;
+    @NonNull @Expose private final String projectName;
+
+    @Nullable @Expose private final String description;
+    @Nullable @Expose private final ImmutableMap<String, String> metadata;
 
     private Benchmark(@NonNull Builder builder) {
-        myBenchmarkName = builder.myBenchmarkName;
-        myProjectName = builder.myProjectName;
+        name = builder.benchmarkName;
+        projectName = builder.projectName;
+        description = builder.description;
+        metadata = builder.metadata;
     }
 
+    @NonNull
     public String getName() {
-        return myBenchmarkName;
+        return name;
     }
 
-    public String getProject() {
-        return myProjectName;
+    @NonNull
+    public String getProjectName() {
+        return projectName;
+    }
+
+    @Nullable
+    public String getDescription() {
+        return description;
+    }
+
+    @Nullable
+    public ImmutableMap<String, String> getMetadata() {
+        return metadata;
     }
 
     /**
@@ -57,34 +78,58 @@ public class Benchmark {
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(myBenchmarkName, myProjectName);
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Benchmark benchmark = (Benchmark) o;
+        return Objects.equals(name, benchmark.name)
+                && Objects.equals(projectName, benchmark.projectName)
+                && Objects.equals(description, benchmark.description)
+                && Objects.equals(metadata, benchmark.metadata);
     }
 
     @Override
-    public boolean equals(Object other) {
-        if (!(other instanceof Benchmark)) {
-            return false;
-        }
-
-        Benchmark otherBenchmark = (Benchmark) other;
-        return myBenchmarkName == otherBenchmark.myBenchmarkName
-                && myProjectName == otherBenchmark.myProjectName;
+    public int hashCode() {
+        return Objects.hash(name, projectName, description, metadata);
     }
 
     public static class Builder {
         /** Analogous to the name of the Perfgate dashboard. * */
-        @NonNull private final String myBenchmarkName;
+        @NonNull private final String benchmarkName;
         /** Analogous to the Perfgate project grouping. * */
-        @NonNull private String myProjectName = DEFAULT_PROJECT_NAME;
+        @NonNull private String projectName = DEFAULT_PROJECT_NAME;
+
+        /** Plain-text description. shown alongside the the Perfgate dashboard */
+        @Nullable public String description = null;
+        /**
+         * Key-Value metadata information to be saved with the Benchmark for programmatic access.
+         * Not necessarily surfaced in any interface. Null keys and values are not tolerated.
+         */
+        @Nullable public ImmutableMap<String, String> metadata = null;
 
         public Builder(@NonNull String benchmarkName) {
-            myBenchmarkName = benchmarkName;
+            this.benchmarkName = benchmarkName;
         }
 
         @NonNull
         public Builder setProject(@NonNull String projectName) {
-            myProjectName = projectName;
+            this.projectName = projectName;
+            return this;
+        }
+
+        @NonNull
+        public Builder setDescription(@NonNull String description) {
+            this.description = description;
+            return this;
+        }
+
+        @NonNull
+        Builder setMetadata(@NonNull Map<String, String> metadata) {
+            this.metadata = ImmutableMap.copyOf(metadata);
             return this;
         }
 
