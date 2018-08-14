@@ -43,8 +43,4 @@ const proto::SwapRequest& Config::GetSwapRequest() const {
   return agent_config_->swap_request();
 }
 
-const std::string& Config::GetInstrumentationPath() const {
-  return agent_config_->instrument_dex();
-}
-
 }  // namespace swapper
