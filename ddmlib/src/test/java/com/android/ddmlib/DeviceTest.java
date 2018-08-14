@@ -26,10 +26,7 @@ import java.util.concurrent.TimeUnit;
 public class DeviceTest extends TestCase {
     public void testScreenRecorderOptions() {
         ScreenRecorderOptions options =
-                new ScreenRecorderOptions.Builder()
-                        .setBitRate(6)
-                        .setSize(600,400)
-                        .build();
+                new ScreenRecorderOptions.Builder().setBitRate(6).setSize(600, 400).build();
         assertEquals("screenrecord --size 600x400 --bit-rate 6000000 /sdcard/1.mp4",
                 Device.getScreenRecorderCommand("/sdcard/1.mp4", options));
 
@@ -45,30 +42,32 @@ public class DeviceTest extends TestCase {
     /** Helper method that sets the mock device to return the given response on a shell command */
     @SuppressWarnings("unchecked")
     static void injectShellResponse(IDevice mockDevice, final String response) throws Exception {
-        IAnswer<Object> shellAnswer = new IAnswer<Object>() {
-            @Override
-            public Object answer() throws Throwable {
-                // insert small delay to simulate latency
-                Thread.sleep(50);
-                IShellOutputReceiver receiver =
-                    (IShellOutputReceiver)EasyMock.getCurrentArguments()[1];
-                byte[] inputData = response.getBytes();
-                receiver.addOutput(inputData, 0, inputData.length);
-                return null;
-            }
-        };
-        mockDevice.executeShellCommand(EasyMock.<String>anyObject(),
-                    EasyMock.<IShellOutputReceiver>anyObject(),
-                    EasyMock.anyLong(), EasyMock.<TimeUnit>anyObject());
+        IAnswer<Object> shellAnswer =
+                () -> {
+                    // insert small delay to simulate latency
+                    Thread.sleep(50);
+                    IShellOutputReceiver receiver =
+                            (IShellOutputReceiver) EasyMock.getCurrentArguments()[1];
+                    byte[] inputData = response.getBytes();
+                    receiver.addOutput(inputData, 0, inputData.length);
+                    return null;
+                };
+        mockDevice.executeShellCommand(
+                EasyMock.anyObject(),
+                EasyMock.anyObject(),
+                EasyMock.anyLong(),
+                EasyMock.anyObject());
         EasyMock.expectLastCall().andAnswer(shellAnswer);
     }
 
     /** Helper method that sets the mock device to throw the given exception on a shell command */
     static void injectShellExceptionResponse(@NonNull IDevice mockDevice, @NonNull Throwable e)
             throws Exception {
-        mockDevice.executeShellCommand(EasyMock.<String>anyObject(),
-                EasyMock.<IShellOutputReceiver>anyObject(),
-                EasyMock.anyLong(), EasyMock.<TimeUnit>anyObject());
+        mockDevice.executeShellCommand(
+                EasyMock.anyObject(),
+                EasyMock.anyObject(),
+                EasyMock.anyLong(),
+                EasyMock.anyObject());
         EasyMock.expectLastCall().andThrow(e);
     }
 
