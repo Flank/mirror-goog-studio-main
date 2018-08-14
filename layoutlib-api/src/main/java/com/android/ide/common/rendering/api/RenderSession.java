@@ -19,7 +19,6 @@ package com.android.ide.common.rendering.api;
 import static com.android.ide.common.rendering.api.Result.Status.NOT_IMPLEMENTED;
 
 import com.android.ide.common.rendering.api.Result.Status;
-import com.android.util.PropertiesMap;
 import java.awt.image.BufferedImage;
 import java.util.List;
 import java.util.Map;
@@ -100,17 +99,6 @@ public class RenderSession {
      */
     public boolean isAlphaChannelImage() {
         return true;
-    }
-
-    /**
-     * Returns the map of View Cookie → properties (attribute name, attribute value) for all the
-     * views that have a view cookie.
-     *
-     * @deprecated use {@link #getDefaultNamespacedProperties()}
-     */
-    @Deprecated
-    public Map<Object, PropertiesMap> getDefaultProperties() {
-        return null;
     }
 
     /**
