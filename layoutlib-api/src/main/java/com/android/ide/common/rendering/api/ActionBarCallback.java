@@ -45,17 +45,6 @@ public class ActionBarCallback {
     }
 
     /**
-     * Returns a list of names of the IDs for menus to add to the action bar.
-     *
-     * @return the list of menu ids. The list is never null, but may be empty.
-     * @deprecated Use {@link #getMenuIds()}
-     */
-    @Deprecated
-    public List<String> getMenuIdNames() {
-        return Collections.emptyList();
-    }
-
-    /**
      * Returns a list of resource references of the IDs for menus to add to the action bar.
      *
      * @return the list of menu ids
