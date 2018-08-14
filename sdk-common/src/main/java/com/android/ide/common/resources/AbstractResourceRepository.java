@@ -15,8 +15,6 @@
  */
 package com.android.ide.common.resources;
 
-import static com.android.SdkConstants.*;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.GuardedBy;
@@ -45,21 +43,6 @@ public abstract class AbstractResourceRepository implements ResourceRepository {
     public AbstractResourceRepository() {}
 
     /**
-     * Returns all leaf resource repositories contained in this resource, or this repository itself,
-     * if it does not contain any other repositories. The leaf resource repositories are guaranteed
-     * to implement the {@link SingleNamespaceResourceRepository} interface.
-     *
-     * @param result the collection to add the leaf repositories to
-     */
-    public void getLeafResourceRepositories(
-            @NonNull Collection<AbstractResourceRepository> result) {
-        //noinspection InstanceofIncompatibleInterface
-        assert this instanceof SingleNamespaceResourceRepository
-                : getClass().getCanonicalName() + " is not a SingleNamespaceResourceRepository";
-        result.add(this);
-    }
-
-    /**
      * Returns the fully computed {@link ResourceTable} for this repository.
      *
      * <p>The returned object should be accessed only while holding {@link #ITEM_MAP_LOCK}.
@@ -81,12 +64,6 @@ public abstract class AbstractResourceRepository implements ResourceRepository {
         return getMap(namespace, type, true);
     }
 
-    @GuardedBy("AbstractResourceRepository.ITEM_MAP_LOCK")
-    @NonNull
-    public ResourceTable getItems() {
-        return getFullTable();
-    }
-
     /**
      * The lock used to protect map access.
      *
@@ -96,36 +73,9 @@ public abstract class AbstractResourceRepository implements ResourceRepository {
      */
     public static final Object ITEM_MAP_LOCK = new Object();
 
-    @NonNull
-    public final List<ResourceItem> getAllResourceItems() {
-        synchronized (ITEM_MAP_LOCK) {
-            ResourceTable table = getFullTable();
-            List<ResourceItem> result = new ArrayList<>(table.size());
-
-            for (ListMultimap<String, ResourceItem> multimap : table.values()) {
-                result.addAll(multimap.values());
-            }
-
-            return result;
-        }
-    }
-
-    /**
-     * @deprecated Use {@link #getResourceItems(ResourceNamespace, ResourceType, String)} instead.
-     */
-    @Deprecated
-    @Nullable
-    public List<ResourceItem> getResourceItem(
-            @NonNull ResourceType resourceType, @NonNull String resourceName) {
-        List<ResourceItem> items =
-                getResourceItems(ResourceNamespace.TODO(), resourceType, resourceName);
-        // That's what the method used to return, let's keep it this way for now.
-        return items.isEmpty() ? null : items;
-    }
-
     @Override
     @NonNull
-    public List<ResourceItem> getResourceItems(
+    public List<ResourceItem> getResources(
             @NonNull ResourceNamespace namespace,
             @NonNull ResourceType resourceType,
             @NonNull String resourceName) {
@@ -139,18 +89,9 @@ public abstract class AbstractResourceRepository implements ResourceRepository {
         return Collections.emptyList();
     }
 
-    /**
-     * Returns the resources with the given namespace, type and with a name satisfying the given
-     * predicate.
-     *
-     * @param namespace the namespace of the resources to return
-     * @param resourceType the type of the resources to return
-     * @param filter the predicate for checking resource items
-     * @return the resources matching the namespace, type, and satisfying the name filter
-     */
     @Override
     @NonNull
-    public List<ResourceItem> getResourceItems(
+    public List<ResourceItem> getResources(
             @NonNull ResourceNamespace namespace,
             @NonNull ResourceType resourceType,
             @NonNull Predicate<ResourceItem> filter) {
@@ -172,45 +113,14 @@ public abstract class AbstractResourceRepository implements ResourceRepository {
         return result == null ? Collections.emptyList() : result;
     }
 
-    /**
-     * Returns the resources with the given namespace and type.
-     *
-     * @param namespace the namespace of the resources to return
-     * @param resourceType the type of the resources to return
-     * @return the resources matching the namespace and type
-     */
     @Override
     @NonNull
-    public List<ResourceItem> getResourceItems(
+    public ListMultimap<String, ResourceItem> getResources(
             @NonNull ResourceNamespace namespace, @NonNull ResourceType resourceType) {
-        List<ResourceItem> result = new ArrayList<>();
         synchronized (ITEM_MAP_LOCK) {
             ListMultimap<String, ResourceItem> map = getMap(namespace, resourceType, false);
-            if (map != null) {
-                result.addAll(map.values());
-            }
+            return map == null ? ImmutableListMultimap.of() : ImmutableListMultimap.copyOf(map);
         }
-
-        return result;
-    }
-
-    /** @deprecated Use {@link #getItemsOfType(ResourceNamespace, ResourceType)} instead. */
-    @Deprecated
-    @NonNull
-    public final Collection<String> getItemsOfType(@NonNull ResourceType type) {
-        return getItemsOfType(ResourceNamespace.TODO(), type);
-    }
-
-    @NonNull
-    public Collection<String> getItemsOfType(
-            @NonNull ResourceNamespace namespace, @NonNull ResourceType type) {
-        synchronized (ITEM_MAP_LOCK) {
-            Multimap<String, ResourceItem> map = getMap(namespace, type, false);
-            if (map != null) {
-                return ImmutableSet.copyOf(map.keySet());
-            }
-        }
-        return Collections.emptySet();
     }
 
     @Override
@@ -236,109 +146,13 @@ public abstract class AbstractResourceRepository implements ResourceRepository {
 
     @Override
     @NonNull
-    public Collection<ResourceItem> getPublicResourcesOfType(@NonNull ResourceType type) {
+    public Collection<ResourceItem> getPublicResources(
+            @NonNull ResourceNamespace namespace, @NonNull ResourceType type) {
         return Collections.emptyList();
     }
 
-    /**
-     * Returns true if this resource repository contains a resource of the given name.
-     *
-     * @param url the resource URL
-     * @return true if the resource is known
-     */
-    public boolean hasResourceItem(@NonNull String url) {
-        // Handle theme references
-        if (url.startsWith(PREFIX_THEME_REF)) {
-            String remainder = url.substring(PREFIX_THEME_REF.length());
-            if (url.startsWith(ATTR_REF_PREFIX)) {
-                url = PREFIX_RESOURCE_REF + url.substring(PREFIX_THEME_REF.length());
-                return hasResourceItem(url);
-            }
-            int colon = url.indexOf(':');
-            if (colon >= 0) {
-                // Convert from ?android:progressBarStyleBig to ?android:attr/progressBarStyleBig
-                if (remainder.indexOf('/', colon) == -1) {
-                    remainder = remainder.substring(0, colon) + RESOURCE_CLZ_ATTR + '/'
-                            + remainder.substring(colon);
-                }
-                url = PREFIX_RESOURCE_REF + remainder;
-                return hasResourceItem(url);
-            } else {
-                int slash = url.indexOf('/');
-                if (slash < 0) {
-                    url = PREFIX_RESOURCE_REF + RESOURCE_CLZ_ATTR + '/' + remainder;
-                    return hasResourceItem(url);
-                }
-            }
-        }
-
-        if (!url.startsWith(PREFIX_RESOURCE_REF)) {
-            return false;
-        }
-
-        assert url.startsWith("@") || url.startsWith("?") : url;
-
-        int typeEnd = url.indexOf('/', 1);
-        if (typeEnd >= 0) {
-            int nameBegin = typeEnd + 1;
-
-            // Skip @ and @+
-            int typeBegin = url.startsWith("@+") ? 2 : 1; //$NON-NLS-1$
-
-            int colon = url.lastIndexOf(':', typeEnd);
-            ResourceNamespace namespace = ResourceNamespace.RES_AUTO;
-            if (colon >= 0) {
-                if (colon - typeBegin == ANDROID_NS_NAME.length()
-                        && url.startsWith(ANDROID_NS_NAME, typeBegin)) {
-                    namespace = ResourceNamespace.ANDROID;
-                } else {
-                    // TODO: namespaces
-                    namespace = ResourceNamespace.TODO();
-                }
-                typeBegin = colon + 1;
-            }
-
-            String typeName = url.substring(typeBegin, typeEnd);
-            ResourceType type = ResourceType.fromXmlValue(typeName);
-            if (type != null) {
-                String name = url.substring(nameBegin);
-                return hasResourceItem(namespace, type, name);
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * @deprecated Use {@link #getResourceItems(ResourceNamespace, ResourceType, String)} or
-     *     {@link #hasResourceItem(ResourceNamespace, ResourceType, String)} instead
-     */
-    @Deprecated
-    public boolean hasResourceItem(
-            @NonNull ResourceType resourceType, @NonNull String resourceName) {
-        synchronized (ITEM_MAP_LOCK) {
-            ListMultimap<String, ResourceItem> map =
-                    getMap(ResourceNamespace.TODO(), resourceType, false);
-
-            if (map != null) {
-                List<ResourceItem> itemList = map.get(resourceName);
-                return itemList != null && !itemList.isEmpty();
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Returns true if this resource repository contains a resource of the given name.
-     *
-     * @param namespace the namespace of the resource to look up
-     * @param resourceType the type of resource to look up
-     * @param resourceName the name of the resource
-     * @return true if the resource is known
-     */
     @Override
-    public boolean hasResourceItem(
+    public boolean hasResources(
             @NonNull ResourceNamespace namespace,
             @NonNull ResourceType resourceType,
             @NonNull String resourceName) {
@@ -354,19 +168,13 @@ public abstract class AbstractResourceRepository implements ResourceRepository {
         return false;
     }
 
-    /**
-     * Returns whether the repository has resources of a given {@link ResourceType}.
-     *
-     * @param resourceType the type of resource to check.
-     * @return true if the repository contains resources of the given type, false otherwise.
-     */
-    public boolean hasResourcesOfType(@NonNull ResourceType resourceType) {
+    @Override
+    public boolean hasResources(
+            @NonNull ResourceNamespace namespace, @NonNull ResourceType resourceType) {
         synchronized (ITEM_MAP_LOCK) {
-            for (ResourceNamespace namespace : getNamespaces()) {
-                ListMultimap<String, ResourceItem> map = getMap(namespace, resourceType, false);
-                if (map != null && !map.isEmpty()) {
-                    return true;
-                }
+            ListMultimap<String, ResourceItem> map = getMap(namespace, resourceType, false);
+            if (map != null && !map.isEmpty()) {
+                return true;
             }
         }
         return false;
@@ -374,12 +182,11 @@ public abstract class AbstractResourceRepository implements ResourceRepository {
 
     @Override
     @NonNull
-    public Set<ResourceType> getAvailableResourceTypes(@NonNull ResourceNamespace namespace) {
+    public Set<ResourceType> getResourceTypes(@NonNull ResourceNamespace namespace) {
         EnumSet<ResourceType> result = EnumSet.noneOf(ResourceType.class);
         synchronized (ITEM_MAP_LOCK) {
             for (ResourceType resourceType : ResourceType.values()) {
-                ListMultimap<String, ResourceItem> map = getMap(namespace, resourceType, false);
-                if (map != null && !map.isEmpty()) {
+                if (hasResources(namespace, resourceType)) {
                     result.add(resourceType);
                 }
             }

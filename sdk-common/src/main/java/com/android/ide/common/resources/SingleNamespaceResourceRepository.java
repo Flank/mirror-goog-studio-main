@@ -18,6 +18,7 @@ package com.android.ide.common.resources;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ResourceNamespace;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
@@ -51,5 +52,11 @@ public interface SingleNamespaceResourceRepository extends ResourceRepository {
     @NonNull
     default Set<ResourceNamespace> getNamespaces() {
         return Collections.singleton(getNamespace());
+    }
+
+    @Override
+    default void getLeafResourceRepositories(
+            @NonNull Collection<SingleNamespaceResourceRepository> result) {
+        result.add(this);
     }
 }

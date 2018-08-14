@@ -21,6 +21,7 @@ import static com.android.SdkConstants.TAG_VECTOR;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.AbstractResourceRepository;
 import com.android.ide.common.resources.ResourceItem;
@@ -104,8 +105,9 @@ public class VectorPathDetector extends ResourceXmlDetector {
             if (repository == null) {
                 return;
             }
-            List<ResourceItem> item = repository.getResourceItem(url.type, url.name);
-            if (item == null || item.isEmpty()) {
+            List<ResourceItem> item =
+                    repository.getResources(ResourceNamespace.TODO(), url.type, url.name);
+            if (item.isEmpty()) {
                 return;
             }
             ResourceValue resourceValue = item.get(0).getResourceValue();

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.resources;
 
 import static com.android.ide.common.rendering.api.ResourceNamespace.ANDROID;
@@ -37,12 +36,11 @@ import java.util.Map;
 import org.junit.Test;
 
 public class MergerResourceRepositoryTest extends BaseTestCase {
-
     @Test
     public void testMergeByCount() throws Exception {
         MergerResourceRepository repo = getResourceRepository();
 
-        ResourceTable items = repo.getItems();
+        ResourceTable items = repo.getFullTable();
 
         assertEquals(6, items.get(RES_AUTO, ResourceType.DRAWABLE).size());
         assertEquals(1, items.get(RES_AUTO, ResourceType.RAW).size());
@@ -107,7 +105,8 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
     public void testBaseStringValue() throws Exception {
         MergerResourceRepository repo = getResourceRepository();
 
-        List<ResourceItem> itemList = repo.getResourceItem(ResourceType.STRING, "basic_string");
+        List<ResourceItem> itemList =
+                repo.getResources(RES_AUTO, ResourceType.STRING, "basic_string");
         assertNotNull(itemList);
         assertEquals(1, itemList.size());
 
@@ -121,7 +120,8 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
     public void testCdataStringValue() throws Exception {
         MergerResourceRepository repo = getResourceRepository();
 
-        List<ResourceItem> itemList = repo.getResourceItem(ResourceType.STRING, "cdata_string");
+        List<ResourceItem> itemList =
+                repo.getResources(RES_AUTO, ResourceType.STRING, "cdata_string");
         assertNotNull(itemList);
         assertEquals(1, itemList.size());
 
@@ -137,7 +137,8 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
     public void testBaseStyledStringValue() throws Exception {
         MergerResourceRepository repo = getResourceRepository();
 
-        List<ResourceItem> itemList = repo.getResourceItem(ResourceType.STRING, "styled_string");
+        List<ResourceItem> itemList =
+                repo.getResources(RES_AUTO, ResourceType.STRING, "styled_string");
         assertNotNull(itemList);
         assertEquals(1, itemList.size());
 
@@ -152,7 +153,7 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
     public void testBaseColorValue() throws Exception {
         MergerResourceRepository repo = getResourceRepository();
 
-        List<ResourceItem> itemList = repo.getResourceItem(ResourceType.COLOR, "color");
+        List<ResourceItem> itemList = repo.getResources(RES_AUTO, ResourceType.COLOR, "color");
         assertNotNull(itemList);
         assertEquals(1, itemList.size());
 
@@ -166,7 +167,8 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
     public void testBaseLayoutAliasValue() throws Exception {
         MergerResourceRepository repo = getResourceRepository();
 
-        List<ResourceItem> itemList = repo.getResourceItem(ResourceType.LAYOUT, "layout_ref");
+        List<ResourceItem> itemList =
+                repo.getResources(RES_AUTO, ResourceType.LAYOUT, "layout_ref");
         assertNotNull(itemList);
         assertEquals(1, itemList.size());
 
@@ -180,7 +182,7 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
     public void testBaseAttrValue() throws Exception {
         MergerResourceRepository repo = getResourceRepository();
 
-        List<ResourceItem> itemList = repo.getResourceItem(ResourceType.ATTR, "flag_attr");
+        List<ResourceItem> itemList = repo.getResources(RES_AUTO, ResourceType.ATTR, "flag_attr");
         assertNotNull(itemList);
         assertEquals(1, itemList.size());
 
@@ -210,7 +212,7 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
     public void testBaseStyleValue() throws Exception {
         MergerResourceRepository repo = getResourceRepository();
 
-        List<ResourceItem> itemList = repo.getResourceItem(ResourceType.STYLE, "style");
+        List<ResourceItem> itemList = repo.getResources(RES_AUTO, ResourceType.STYLE, "style");
         assertNotNull(itemList);
         assertEquals(1, itemList.size());
 
@@ -258,7 +260,7 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
         repo.update(resourceMerger);
 
         // checks the initial state of the repo
-        ResourceTable items = repo.getItems();
+        ResourceTable items = repo.getFullTable();
         ListMultimap<String, ResourceItem> drawables = items.get(RES_AUTO, ResourceType.DRAWABLE);
         assertNotNull("Drawable null check", drawables);
         assertEquals("Drawable size check", 6, drawables.size());
@@ -348,7 +350,7 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
         repo.update(resourceMerger);
 
         // checks the initial state of the repo
-        ResourceTable items = repo.getItems();
+        ResourceTable items = repo.getFullTable();
         ListMultimap<String, ResourceItem> strings = items.get(RES_AUTO, ResourceType.STRING);
         assertNotNull("String null check", strings);
         assertEquals("String size check", 5, strings.size());
@@ -428,7 +430,7 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
         repo.update(resourceMerger);
 
         // checks the initial state of the repo
-        ResourceTable items = repo.getItems();
+        ResourceTable items = repo.getFullTable();
         ListMultimap<String, ResourceItem> strings = items.get(RES_AUTO, ResourceType.STRING);
         assertNotNull("String null check", strings);
         assertEquals("String size check", 2, strings.size());
@@ -484,7 +486,7 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
         repo.update(resourceMerger);
 
         // checks the initial state of the repo
-        ResourceTable items = repo.getItems();
+        ResourceTable items = repo.getFullTable();
         ListMultimap<String, ResourceItem> layouts = items.get(RES_AUTO, ResourceType.LAYOUT);
         assertNotNull("String null check", layouts);
         assertEquals("String size check", 3, layouts.size());
@@ -594,7 +596,7 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
 
     private static void verifyResourceExists(
             MergerResourceRepository repository, String... dataItemKeys) {
-        ResourceTable items = repository.getItems();
+        ResourceTable items = repository.getFullTable();
 
         for (String resKey : dataItemKeys) {
             String type, name, qualifier = "";

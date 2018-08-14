@@ -19,6 +19,8 @@ import com.android.annotations.NonNull;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.resources.ResourceType;
+import com.google.common.collect.ListMultimap;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -35,14 +37,14 @@ public interface ResourceRepository {
      * @return the resources matching the namespace, type, and satisfying the name filter
      */
     @NonNull
-    List<ResourceItem> getResourceItems(
+    List<ResourceItem> getResources(
             @NonNull ResourceNamespace namespace,
             @NonNull ResourceType resourceType,
             @NonNull String resourceName);
 
     @NonNull
-    default List<ResourceItem> getResourceItems(@NonNull ResourceReference reference) {
-        return getResourceItems(
+    default List<ResourceItem> getResources(@NonNull ResourceReference reference) {
+        return getResources(
                 reference.getNamespace(), reference.getResourceType(), reference.getName());
     }
 
@@ -55,20 +57,20 @@ public interface ResourceRepository {
      * @return the resources matching the namespace, type, and satisfying the name filter
      */
     @NonNull
-    List<ResourceItem> getResourceItems(
+    List<ResourceItem> getResources(
             @NonNull ResourceNamespace namespace,
             @NonNull ResourceType resourceType,
             @NonNull Predicate<ResourceItem> filter);
 
     /**
-     * Returns the resources with the given namespace and type.
+     * Returns the resources with the given namespace and type keyed by resource names.
      *
      * @param namespace the namespace of the resources to return
      * @param resourceType the type of the resources to return
      * @return the resources matching the namespace and type
      */
     @NonNull
-    List<ResourceItem> getResourceItems(
+    ListMultimap<String, ResourceItem> getResources(
             @NonNull ResourceNamespace namespace, @NonNull ResourceType resourceType);
 
     /**
@@ -79,28 +81,50 @@ public interface ResourceRepository {
      */
     void accept(@NonNull ResourceItemVisitor visitor);
 
+    @NonNull
+    default List<ResourceItem> getAllResourceItems() {
+        List<ResourceItem> result = new ArrayList<>();
+        accept(item -> {
+            result.add(item);
+            return ResourceItemVisitor.VisitResult.CONTINUE;
+        });
+        return result;
+    }
+
     /**
-     * Returns a collection of <b>public</b> resource items matching a given resource type.
+     * Returns a collection of <b>public</b> resource items with the given namespace and type.
      *
+     * @param namespace the namespace of the resources to return
      * @param type the type of the resources to return
      * @return a collection of items, possibly empty.
      */
     @NonNull
-    Collection<ResourceItem> getPublicResourcesOfType(@NonNull ResourceType type);
+    Collection<ResourceItem> getPublicResources(
+            @NonNull ResourceNamespace namespace, @NonNull ResourceType type);
 
     /**
-     * Checks if the repository contains a resource with the given namespace, type and name.
+     * Checks if the repository contains resources with the given namespace, type and name.
      *
-     * @param namespace the namespace of the resources to return
-     * @param resourceType the type of the resources to return
-     * @param resourceName the bane of the resources to return
+     * @param namespace the namespace of the resources to check
+     * @param resourceType the type of the resources to check
+     * @param resourceName the name of the resources to check
      * @return true if there is at least one resource with the given namespace, type and name in
-     *     the repository
+     *         the repository
      */
-    boolean hasResourceItem(
+    boolean hasResources(
             @NonNull ResourceNamespace namespace,
             @NonNull ResourceType resourceType,
             @NonNull String resourceName);
+
+    /**
+     * Checks if the repository contains resources with the given namespace and type.
+     *
+     * @param namespace the namespace of the resources to check
+     * @param resourceType the type of the resources to check
+     * @return true if there is at least one resource with the given namespace and type in
+     *         the repository
+     */
+    boolean hasResources(@NonNull ResourceNamespace namespace, @NonNull ResourceType resourceType);
 
     /**
      * Returns types of the resources in the given namespace.
@@ -109,7 +133,7 @@ public interface ResourceRepository {
      * @return the set of resource types
      */
     @NonNull
-    Set<ResourceType> getAvailableResourceTypes(@NonNull ResourceNamespace namespace);
+    Set<ResourceType> getResourceTypes(@NonNull ResourceNamespace namespace);
 
     /**
      * Returns the namespaces that the resources in this repository belong to. The returned set may
@@ -117,4 +141,13 @@ public interface ResourceRepository {
      */
     @NonNull
     Set<ResourceNamespace> getNamespaces();
+
+    /**
+     * Returns all leaf resource repositories contained in this resource, or this repository itself,
+     * if it does not contain any other repositories and implements
+     * {@link SingleNamespaceResourceRepository}.
+     *
+     * @param result the collection to add the leaf repositories to
+     */
+    void getLeafResourceRepositories(@NonNull Collection<SingleNamespaceResourceRepository> result);
 }

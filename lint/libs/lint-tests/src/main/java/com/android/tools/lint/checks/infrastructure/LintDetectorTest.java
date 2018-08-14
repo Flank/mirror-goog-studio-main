@@ -1034,7 +1034,8 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                 repository.update(merger);
 
                 // Make tests stable: sort the item lists!
-                for (ListMultimap<String, ResourceItem> multimap : repository.getItems().values()) {
+                for (ListMultimap<String, ResourceItem> multimap :
+                        repository.getFullTable().values()) {
                     ResourceRepositories.sortItemLists(multimap);
                 }
 
@@ -1042,7 +1043,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                 // to do that here.
                 // TODO: namespaces
                 Map<ResourceType, ListMultimap<String, ResourceItem>> items =
-                        repository.getItems().row(ResourceNamespace.RES_AUTO);
+                        repository.getFullTable().row(ResourceNamespace.RES_AUTO);
                 ListMultimap<String, ResourceItem> layouts = items.get(ResourceType.LAYOUT);
                 if (layouts != null) {
                     for (ResourceItem item : layouts.values()) {

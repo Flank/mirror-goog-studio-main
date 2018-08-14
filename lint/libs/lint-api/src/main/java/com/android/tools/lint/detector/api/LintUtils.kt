@@ -1013,55 +1013,53 @@ fun getStyleAttributes(
         val front = queue.remove()
         val name = front.name
         seen.add(name)
-        val items = resources.getResourceItem(front.resourceType, name)
-        if (items != null) {
-            for (item in items) {
-                val rv = item.resourceValue
-                if (rv is StyleResourceValue) {
-                    val srv = rv as StyleResourceValue?
-                    val namespace = MoreObjects.firstNonNull(
-                        ResourceNamespace.fromNamespaceUri(namespaceUri),
-                        ResourceNamespace.TODO()
-                    )
-                    val value = srv!!.getItem(namespace, attribute)
-                    if (value != null) {
-                        if (result == null) {
-                            result = ArrayList()
-                        }
-                        if (!result.contains(value)) {
-                            result.add(value)
-                        }
+        val items = resources.getResources(ResourceNamespace.TODO(), front.resourceType, name)
+        for (item in items) {
+            val rv = item.resourceValue
+            if (rv is StyleResourceValue) {
+                val srv = rv as StyleResourceValue?
+                val namespace = MoreObjects.firstNonNull(
+                    ResourceNamespace.fromNamespaceUri(namespaceUri),
+                    ResourceNamespace.TODO()
+                )
+                val value = srv!!.getItem(namespace, attribute)
+                if (value != null) {
+                    if (result == null) {
+                        result = ArrayList()
                     }
-
-                    // TODO: namespaces
-                    val parent = srv.parentStyleName
-                    if (parent != null && !parent.startsWith(ANDROID_PREFIX)) {
-                        val p = ResourceUrl.parse(parent)
-                        if (p != null && !p.isFramework && !seen.contains(p.name)) {
-                            seen.add(p.name)
-                            queue.add(
-                                ResourceValueImpl(
-                                    ResourceNamespace.RES_AUTO,
-                                    ResourceType.STYLE,
-                                    p.name, null
-                                )
-                            )
-                        }
+                    if (!result.contains(value)) {
+                        result.add(value)
                     }
+                }
 
-                    val index = name.lastIndexOf('.')
-                    if (index > 0) {
-                        val parentName = name.substring(0, index)
-                        if (!seen.contains(parentName)) {
-                            seen.add(parentName)
-                            queue.add(
-                                ResourceValueImpl(
-                                    ResourceNamespace.RES_AUTO,
-                                    ResourceType.STYLE,
-                                    parentName, null
-                                )
+                // TODO: namespaces
+                val parent = srv.parentStyleName
+                if (parent != null && !parent.startsWith(ANDROID_PREFIX)) {
+                    val p = ResourceUrl.parse(parent)
+                    if (p != null && !p.isFramework && !seen.contains(p.name)) {
+                        seen.add(p.name)
+                        queue.add(
+                            ResourceValueImpl(
+                                ResourceNamespace.RES_AUTO,
+                                ResourceType.STYLE,
+                                p.name, null
                             )
-                        }
+                        )
+                    }
+                }
+
+                val index = name.lastIndexOf('.')
+                if (index > 0) {
+                    val parentName = name.substring(0, index)
+                    if (!seen.contains(parentName)) {
+                        seen.add(parentName)
+                        queue.add(
+                            ResourceValueImpl(
+                                ResourceNamespace.RES_AUTO,
+                                ResourceType.STYLE,
+                                parentName, null
+                            )
+                        )
                     }
                 }
             }
@@ -1099,45 +1097,43 @@ fun getInheritedStyles(
         val front = queue.remove()
         val name = front.name
         seen.add(name)
-        val items = resources.getResourceItem(front.resourceType, name)
-        if (items != null) {
-            for (item in items) {
-                val rv = item.resourceValue
-                if (rv is StyleResourceValue) {
-                    if (result == null) {
-                        result = ArrayList()
-                    }
-                    result.add(rv)
+        val items = resources.getResources(ResourceNamespace.TODO(), front.resourceType, name)
+        for (item in items) {
+            val rv = item.resourceValue
+            if (rv is StyleResourceValue) {
+                if (result == null) {
+                    result = ArrayList()
+                }
+                result.add(rv)
 
-                    // TODO: namespaces
-                    val parent = rv.parentStyleName
-                    if (parent != null && !parent.startsWith(ANDROID_PREFIX)) {
-                        val p = ResourceUrl.parse(parent)
-                        if (p != null && !p.isFramework && !seen.contains(p.name)) {
-                            seen.add(p.name)
-                            queue.add(
-                                ResourceValueImpl(
-                                    ResourceNamespace.RES_AUTO,
-                                    ResourceType.STYLE,
-                                    p.name, null
-                                )
+                // TODO: namespaces
+                val parent = rv.parentStyleName
+                if (parent != null && !parent.startsWith(ANDROID_PREFIX)) {
+                    val p = ResourceUrl.parse(parent)
+                    if (p != null && !p.isFramework && !seen.contains(p.name)) {
+                        seen.add(p.name)
+                        queue.add(
+                            ResourceValueImpl(
+                                ResourceNamespace.RES_AUTO,
+                                ResourceType.STYLE,
+                                p.name, null
                             )
-                        }
+                        )
                     }
+                }
 
-                    val index = name.lastIndexOf('.')
-                    if (index > 0) {
-                        val parentName = name.substring(0, index)
-                        if (!seen.contains(parentName)) {
-                            seen.add(parentName)
-                            queue.add(
-                                ResourceValueImpl(
-                                    ResourceNamespace.RES_AUTO,
-                                    ResourceType.STYLE,
-                                    parentName, null
-                                )
+                val index = name.lastIndexOf('.')
+                if (index > 0) {
+                    val parentName = name.substring(0, index)
+                    if (!seen.contains(parentName)) {
+                        seen.add(parentName)
+                        queue.add(
+                            ResourceValueImpl(
+                                ResourceNamespace.RES_AUTO,
+                                ResourceType.STYLE,
+                                parentName, null
                             )
-                        }
+                        )
                     }
                 }
             }

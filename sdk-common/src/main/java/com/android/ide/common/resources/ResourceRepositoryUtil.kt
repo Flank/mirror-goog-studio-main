@@ -22,7 +22,6 @@ import com.android.ide.common.rendering.api.ResourceValue
 import com.android.ide.common.resources.configuration.FolderConfiguration
 import com.android.ide.common.resources.configuration.LocaleQualifier
 import com.android.resources.ResourceType
-import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Table
 import com.google.common.collect.Tables
 import java.util.*
@@ -73,7 +72,7 @@ fun ResourceRepository.getConfiguredResources(
     type: ResourceType,
     referenceConfig: FolderConfiguration
 ): ResourceValueMap {
-    val itemsByName = getItemsByName(namespace, type)
+    val itemsByName = getResources(namespace, type).asMap()
     val result = ResourceValueMap.createWithExpectedSize(itemsByName.size)
 
     for (itemGroup in itemsByName.values) {
@@ -96,7 +95,7 @@ fun ResourceRepository.getConfiguredValue(
     name: String,
     referenceConfig: FolderConfiguration
 ): ResourceValue? {
-    val items = getResourceItems(ResourceNamespace.TODO(), type, name)
+    val items = getResources(ResourceNamespace.TODO(), type, name)
     // Look for the best match for the given configuration.
     // The match has to be of type ResourceFile since that's what the input list contains.
     val match = referenceConfig.findMatchingConfigurable<ResourceItem>(items)
@@ -119,18 +118,4 @@ fun ResourceRepository.getLocales(): SortedSet<LocaleQualifier> {
     }
 
     return locales
-}
-
-private fun ResourceRepository.getItemsByName(
-  namespace: ResourceNamespace,
-  type: ResourceType
-): Map<String, Collection<ResourceItem>> {
-    val items = getResourceItems(namespace, type)
-    if (items.isEmpty()) return emptyMap()
-
-    val itemsByName = ArrayListMultimap.create<String, ResourceItem>(items.size, 3)
-    for (item in items) {
-        itemsByName.put(item.name, item)
-    }
-    return itemsByName.asMap()
 }

@@ -33,6 +33,7 @@ import static com.android.SdkConstants.UNIT_SP;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.AbstractResourceRepository;
 import com.android.ide.common.resources.ResourceItem;
@@ -262,31 +263,30 @@ public class PxUsageDetector extends LayoutDetector {
                             client.getResourceRepository(project, true, false);
                     ResourceUrl url = ResourceUrl.parse(value);
                     if (resources != null && url != null) {
-                        List<ResourceItem> items = resources.getResourceItem(url.type, url.name);
-                        if (items != null) {
-                            for (ResourceItem item : items) {
-                                ResourceValue resourceValue = item.getResourceValue();
-                                if (resourceValue != null) {
-                                    String dimenValue = resourceValue.getValue();
-                                    if (dimenValue != null
-                                            && isDpUnit(dimenValue)
-                                            && context.isEnabled(DP_ISSUE)) {
-                                        PathString sourceFile = item.getSource();
-                                        assert sourceFile != null;
-                                        String message =
-                                                String.format(
-                                                        "Should use \"`sp`\" instead of \"`dp`\" for text sizes (`%1$s` is defined as `%2$s` in `%3$s`",
-                                                        value,
-                                                        dimenValue,
-                                                        Lint.getFileNameWithParent(
-                                                                client, sourceFile));
-                                        context.report(
-                                                DP_ISSUE,
-                                                attribute,
-                                                context.getLocation(attribute),
-                                                message);
-                                        break;
-                                    }
+                        List<ResourceItem> items =
+                                resources.getResources(
+                                        ResourceNamespace.TODO(), url.type, url.name);
+                        for (ResourceItem item : items) {
+                            ResourceValue resourceValue = item.getResourceValue();
+                            if (resourceValue != null) {
+                                String dimenValue = resourceValue.getValue();
+                                if (dimenValue != null
+                                        && isDpUnit(dimenValue)
+                                        && context.isEnabled(DP_ISSUE)) {
+                                    PathString sourceFile = item.getSource();
+                                    assert sourceFile != null;
+                                    String message =
+                                            String.format(
+                                                    "Should use \"`sp`\" instead of \"`dp`\" for text sizes (`%1$s` is defined as `%2$s` in `%3$s`",
+                                                    value,
+                                                    dimenValue,
+                                                    Lint.getFileNameWithParent(client, sourceFile));
+                                    context.report(
+                                            DP_ISSUE,
+                                            attribute,
+                                            context.getLocation(attribute),
+                                            message);
+                                    break;
                                 }
                             }
                         }

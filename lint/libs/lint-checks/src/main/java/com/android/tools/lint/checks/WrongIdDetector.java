@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_URI;
@@ -38,8 +37,9 @@ import static com.android.tools.lint.detector.api.Lint.stripIdPrefix;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.resources.AbstractResourceRepository;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.resources.ResourceItem;
+import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.util.PathString;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
@@ -353,11 +353,16 @@ public class WrongIdDetector extends LayoutDetector {
                     String suggestionMessage;
                     Set<String> spellingDictionary = mGlobalIds;
                     if (!projectScope && client.supportsProjectResources()) {
-                        AbstractResourceRepository resources =
+                        ResourceRepository resources =
                                 client.getResourceRepository(context.getProject(), true, false);
                         if (resources != null) {
                             spellingDictionary =
-                                    Sets.newHashSet(resources.getItemsOfType(ResourceType.ID));
+                                    Sets.newHashSet(
+                                            resources
+                                                    .getResources(
+                                                            ResourceNamespace.TODO(),
+                                                            ResourceType.ID)
+                                                    .keySet());
                             spellingDictionary.remove(id);
                         }
                     }
@@ -485,14 +490,12 @@ public class WrongIdDetector extends LayoutDetector {
     }
 
     private boolean idDefined(@NonNull Context context, @NonNull String id, @Nullable File notIn) {
-        AbstractResourceRepository resources =
+        ResourceRepository resources =
                 context.getClient().getResourceRepository(context.getProject(), true, true);
         if (resources != null) {
             List<ResourceItem> items =
-                    resources.getResourceItem(ResourceType.ID, stripIdPrefix(id));
-            if (items == null || items.isEmpty()) {
-                return false;
-            }
+                    resources.getResources(
+                            ResourceNamespace.TODO(), ResourceType.ID, stripIdPrefix(id));
             for (ResourceItem item : items) {
                 PathString source = item.getSource();
                 if (source != null) {

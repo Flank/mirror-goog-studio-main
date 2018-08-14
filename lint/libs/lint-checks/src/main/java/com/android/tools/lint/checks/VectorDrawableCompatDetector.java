@@ -28,6 +28,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.ide.common.resources.AbstractResourceRepository;
 import com.android.ide.common.resources.ResourceItem;
@@ -231,11 +232,8 @@ public class VectorDrawableCompatDetector extends ResourceXmlDetector {
 
     private static boolean checkResourceRepository(
             @NonNull AbstractResourceRepository resources, @NonNull String name) {
-        List<ResourceItem> items = resources.getResourceItem(ResourceType.DRAWABLE, name);
-
-        if (items == null) {
-            return false;
-        }
+        List<ResourceItem> items =
+                resources.getResources(ResourceNamespace.TODO(), ResourceType.DRAWABLE, name);
 
         // Check if at least one drawable with this name is a vector.
         for (ResourceItem item : items) {

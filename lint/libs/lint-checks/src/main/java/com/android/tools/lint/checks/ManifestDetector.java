@@ -63,6 +63,7 @@ import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProviderContainer;
 import com.android.builder.model.Variant;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.repository.GradleCoordinate;
 import com.android.ide.common.repository.MavenRepositories;
 import com.android.ide.common.repository.SdkMavenRepository;
@@ -520,7 +521,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
                 if (url != null
                         && !url.isFramework()
                         && resources != null
-                        && !resources.hasResourceItem(url.type, url.name)) {
+                        && !resources.hasResources(ResourceNamespace.TODO(), url.type, url.name)) {
                     Attr sourceFullBackupNode =
                             sourceApplicationElement.getAttributeNodeNS(
                                     ANDROID_URI, ATTR_FULL_BACKUP_CONTENT);

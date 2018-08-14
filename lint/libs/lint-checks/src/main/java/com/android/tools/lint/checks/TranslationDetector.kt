@@ -315,7 +315,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
             .getResourceRepository(context.mainProject, true, false) ?: return
 
         val items: List<ResourceItem> =
-            resources.getResourceItems(context.project.resourceNamespace, type, name)
+            resources.getResources(context.project.resourceNamespace, type, name)
         val hasDefault = items.filter { isDefaultFolder(it.configuration, null) }.any()
         if (!hasDefault) {
             reportExtraResource(type, name, context, element)

@@ -30,6 +30,7 @@ import com.android.SdkConstants.VIEW_FRAGMENT
 import com.android.SdkConstants.VIEW_INCLUDE
 import com.android.SdkConstants.VIEW_MERGE
 import com.android.SdkConstants.VIEW_TAG
+import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.ide.common.resources.ResourceItem
 import com.android.ide.common.util.PathString
 import com.android.resources.ResourceFolderType
@@ -258,8 +259,8 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
                     val resources =
                         client.getResourceRepository(context.mainProject, true, false) ?: return
 
-                    val items = resources.getResourceItem(ResourceType.ID, id)
-                    if (items != null && !items.isEmpty()) {
+                    val items = resources.getResources(ResourceNamespace.TODO(), ResourceType.ID, id)
+                    if (!items.isEmpty()) {
                         val compatible = HashSet<String>()
                         for (item in items) {
                             val tags = getViewTags(context, item)

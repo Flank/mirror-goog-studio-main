@@ -28,6 +28,7 @@ import static com.android.xml.AndroidManifest.NODE_METADATA;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.resources.AbstractResourceRepository;
 import com.android.ide.common.resources.ResourceItem;
 import com.android.ide.common.resources.configuration.DensityQualifier;
@@ -198,8 +199,9 @@ public class ManifestResourceDetector extends ResourceXmlDetector {
         ResourceUrl url = ResourceUrl.parse(value);
         if (url != null && !url.isFramework()) {
             if (repository != null) {
-                List<ResourceItem> items = repository.getResourceItem(url.type, url.name);
-                if (items != null && items.size() > 1) {
+                List<ResourceItem> items =
+                        repository.getResources(ResourceNamespace.TODO(), url.type, url.name);
+                if (items.size() > 1) {
                     List<String> list = Lists.newArrayListWithExpectedSize(5);
                     for (ResourceItem item : items) {
                         String qualifiers = item.getConfiguration().getQualifierString();

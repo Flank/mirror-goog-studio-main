@@ -19,8 +19,8 @@ import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FD_RES_DRAWABLE;
 import static com.android.SdkConstants.FD_RES_LAYOUT;
 import static com.android.SdkConstants.FD_RES_VALUES;
+import static com.android.ide.common.rendering.api.ResourceNamespace.RES_AUTO;
 
-import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.LocaleQualifier;
@@ -126,7 +126,7 @@ public class MergerResourceRepositoryTest2 extends TestCase {
         }
 
         mResourceMerger = new ResourceMerger(0);
-        ResourceSet resourceSet = new ResourceSet("main", ResourceNamespace.RES_AUTO, null, true);
+        ResourceSet resourceSet = new ResourceSet("main", RES_AUTO, null, true);
         resourceSet.addSource(mRes);
         resourceSet.loadFromFiles(mLogger = new RecordingLogger());
         mResourceMerger.addDataSet(resourceSet);
@@ -146,28 +146,27 @@ public class MergerResourceRepositoryTest2 extends TestCase {
     }
 
     public void testBasic() throws Exception {
-        assertFalse(mRepository.hasResourceItem("@layout/layout0"));
-        assertTrue(mRepository.hasResourceItem("@layout/layout1"));
-        assertFalse(mRepository.hasResourceItem(ResourceType.LAYOUT, "layout0"));
-        assertTrue(mRepository.hasResourceItem(ResourceType.LAYOUT, "layout1"));
-        assertFalse(mRepository.hasResourceItem(ResourceType.STRING, "layout1"));
-        assertTrue(mRepository.hasResourceItem(ResourceType.STRING, "home_title"));
-        assertFalse(mRepository.hasResourceItem(ResourceType.STRING, "home_title2"));
-        assertFalse(mRepository.hasResourceItem(ResourceType.DRAWABLE, "graph"));
-        assertTrue(mRepository.hasResourceItem(ResourceType.DRAWABLE, "graphic"));
-        assertTrue(mRepository.hasResourceItem("@id/action_bar_refresh"));
-        assertTrue(mRepository.hasResourceItem("@drawable/graphic"));
-        assertTrue(mRepository.hasResourcesOfType(ResourceType.DRAWABLE));
-        assertFalse(mRepository.hasResourcesOfType(ResourceType.ANIM));
+        assertFalse(mRepository.hasResources(RES_AUTO, ResourceType.LAYOUT, "layout0"));
+        assertTrue(mRepository.hasResources(RES_AUTO, ResourceType.LAYOUT, "layout1"));
+        assertFalse(mRepository.hasResources(RES_AUTO, ResourceType.STRING, "layout1"));
+        assertTrue(mRepository.hasResources(RES_AUTO, ResourceType.STRING, "home_title"));
+        assertFalse(mRepository.hasResources(RES_AUTO, ResourceType.STRING, "home_title2"));
+        assertFalse(mRepository.hasResources(RES_AUTO, ResourceType.DRAWABLE, "graph"));
+        assertTrue(mRepository.hasResources(RES_AUTO, ResourceType.DRAWABLE, "graphic"));
+        assertTrue(mRepository.hasResources(RES_AUTO, ResourceType.ID, "action_bar_refresh"));
+        assertTrue(mRepository.hasResources(RES_AUTO, ResourceType.DRAWABLE, "graphic"));
+        assertTrue(mRepository.hasResources(RES_AUTO, ResourceType.DRAWABLE));
+        assertFalse(mRepository.hasResources(RES_AUTO, ResourceType.ANIM));
 
-        Collection<ResourceType> availableResourceTypes =
-                mRepository.getAvailableResourceTypes(ResourceNamespace.RES_AUTO);
+        Collection<ResourceType> availableResourceTypes = mRepository.getResourceTypes(RES_AUTO);
         assertEquals(5, availableResourceTypes.size()); // layout, string, drawable, id, dimen
 
-        Collection<String> allStrings = mRepository.getItemsOfType(ResourceType.STRING);
+        Collection<String> allStrings =
+                mRepository.getResources(RES_AUTO, ResourceType.STRING).keySet();
         assertEquals(7, allStrings.size());
 
-        List<ResourceItem> itemList = mRepository.getResourceItem(ResourceType.STRING, "menu_settings");
+        List<ResourceItem> itemList =
+                mRepository.getResources(RES_AUTO, ResourceType.STRING, "menu_settings");
         assertNotNull(itemList);
         assertEquals(1, itemList.size());
         for (ResourceItem item : itemList) {
@@ -178,7 +177,7 @@ public class MergerResourceRepositoryTest2 extends TestCase {
         }
         //assertTrue(item.hasDefault());
 
-        itemList = mRepository.getResourceItem(ResourceType.STRING, "show_all_apps");
+        itemList = mRepository.getResources(RES_AUTO, ResourceType.STRING, "show_all_apps");
         assertNotNull(itemList);
         assertTrue(itemList.size() > 1);
         for (ResourceItem item : itemList) {
@@ -192,7 +191,7 @@ public class MergerResourceRepositoryTest2 extends TestCase {
         folderConfig.setLocaleQualifier(LocaleQualifier.getQualifier("en"));
         Map<ResourceType, ResourceValueMap> configuredItems =
                 ResourceRepositoryUtil.getConfiguredResources(mRepository, folderConfig)
-                        .row(ResourceNamespace.RES_AUTO);
+                        .row(RES_AUTO);
         ResourceValue value = configuredItems.get(ResourceType.STRING).get("show_all_apps");
         assertNotNull(value);
         assertEquals("All", value.getValue());
@@ -202,13 +201,13 @@ public class MergerResourceRepositoryTest2 extends TestCase {
         folderConfig.setLocaleQualifier(LocaleQualifier.getQualifier("es"));
         configuredItems =
                 ResourceRepositoryUtil.getConfiguredResources(mRepository, folderConfig)
-                        .row(ResourceNamespace.RES_AUTO);
+                        .row(RES_AUTO);
         value = configuredItems.get(ResourceType.STRING).get("show_all_apps");
         assertNotNull(value);
         assertEquals("Todo", value.getValue());
         assertSame(ResourceType.STRING, value.getResourceType());
 
-        itemList = mRepository.getResourceItem(ResourceType.LAYOUT, "only_land");
+        itemList = mRepository.getResources(RES_AUTO, ResourceType.LAYOUT, "only_land");
         assertNotNull(itemList);
         //assertFalse(item.hasDefault());
         assertEquals(1, itemList.size());
@@ -216,7 +215,7 @@ public class MergerResourceRepositoryTest2 extends TestCase {
         assertEquals("only_land.xml", resourceFile.getFile().getName());
         assertEquals(ScreenOrientation.LANDSCAPE.getResourceValue(), resourceFile.getQualifiers());
 
-        itemList = mRepository.getResourceItem(ResourceType.LAYOUT, "layout1");
+        itemList = mRepository.getResources(RES_AUTO, ResourceType.LAYOUT, "layout1");
         assertNotNull(itemList);
         //assertTrue(item.hasDefault());
         assertEquals(2, itemList.size());
@@ -230,7 +229,7 @@ public class MergerResourceRepositoryTest2 extends TestCase {
 
         Map<ResourceType, ResourceValueMap> configuredResources =
                 ResourceRepositoryUtil.getConfiguredResources(mRepository, folderConfig)
-                        .row(ResourceNamespace.RES_AUTO);
+                        .row(RES_AUTO);
         ResourceValueMap strings = configuredResources.get(ResourceType.STRING);
         ResourceValueMap layouts = configuredResources.get(ResourceType.LAYOUT);
         ResourceValueMap ids = configuredResources.get(ResourceType.ID);
@@ -245,12 +244,12 @@ public class MergerResourceRepositoryTest2 extends TestCase {
     }
 
     public void testUpdates() throws Exception {
-        assertFalse(mRepository.hasResourcesOfType(ResourceType.ANIM));
-        assertFalse(mRepository.hasResourcesOfType(ResourceType.MENU));
-        assertFalse(mRepository.hasResourcesOfType(ResourceType.BOOL));
+        assertFalse(mRepository.hasResources(RES_AUTO, ResourceType.ANIM));
+        assertFalse(mRepository.hasResources(RES_AUTO, ResourceType.MENU));
+        assertFalse(mRepository.hasResources(RES_AUTO, ResourceType.BOOL));
 
-        assertTrue(mRepository.hasResourcesOfType(ResourceType.DRAWABLE));
-        assertTrue(mRepository.hasResourceItem("@drawable/graphic"));
+        assertTrue(mRepository.hasResources(RES_AUTO, ResourceType.DRAWABLE));
+        assertTrue(mRepository.hasResources(RES_AUTO, ResourceType.DRAWABLE, "graphic"));
 
         // Delete the drawable graphic
         ResourceSet resourceSet = mResourceMerger.getDataSets().get(0);
@@ -261,15 +260,16 @@ public class MergerResourceRepositoryTest2 extends TestCase {
         resourceSet.updateWith(mRes, graphicFile, FileStatus.REMOVED, mLogger);
         mRepository.update(mResourceMerger);
 
-        assertFalse(mRepository.hasResourceItem("@drawable/graphic"));
-        assertFalse(mRepository.hasResourcesOfType(ResourceType.DRAWABLE));
+        assertFalse(mRepository.hasResources(RES_AUTO, ResourceType.DRAWABLE, "graphic"));
+        assertFalse(mRepository.hasResources(RES_AUTO, ResourceType.DRAWABLE));
 
         // Delete one of the overridden layouts
-        List<ResourceItem> itemList = mRepository.getResourceItem(ResourceType.LAYOUT, "layout1");
+        List<ResourceItem> itemList =
+                mRepository.getResources(RES_AUTO, ResourceType.LAYOUT, "layout1");
         assertNotNull(itemList);
         assertTrue(itemList.size() > 1);
-        assertTrue(mRepository.hasResourcesOfType(ResourceType.LAYOUT));
-        assertTrue(mRepository.hasResourceItem("@layout/layout1"));
+        assertTrue(mRepository.hasResources(RES_AUTO, ResourceType.LAYOUT));
+        assertTrue(mRepository.hasResources(RES_AUTO, ResourceType.LAYOUT, "layout1"));
 
         File layoutFolder = new File(mRes, FD_RES_LAYOUT + "-land");
         File layoutFile = new File(layoutFolder, "layout1.xml");
@@ -278,15 +278,15 @@ public class MergerResourceRepositoryTest2 extends TestCase {
         mRepository.update(mResourceMerger);
 
         // We still have a layout1: only default now
-        assertTrue(mRepository.hasResourceItem("@layout/layout1"));
-        itemList = mRepository.getResourceItem(ResourceType.LAYOUT, "layout1");
+        assertTrue(mRepository.hasResources(RES_AUTO, ResourceType.LAYOUT, "layout1"));
+        itemList = mRepository.getResources(RES_AUTO, ResourceType.LAYOUT, "layout1");
         assertNotNull(itemList);
         assertEquals(1, itemList.size());
 
         // change strings
-        assertTrue(mRepository.hasResourceItem("@string/dummy"));
-        assertFalse(mRepository.hasResourceItem("@string/myDummy"));
-        itemList = mRepository.getResourceItem(ResourceType.STRING, "dummy");
+        assertTrue(mRepository.hasResources(RES_AUTO, ResourceType.STRING, "dummy"));
+        assertFalse(mRepository.hasResources(RES_AUTO, ResourceType.STRING, "myDummy"));
+        itemList = mRepository.getResources(RES_AUTO, ResourceType.STRING, "dummy");
         assertNotNull(itemList);
         assertNotNull(itemList.get(0));
         ResourceFile stringResFile = ((ResourceMergerItem) itemList.get(0)).getSourceFile();
@@ -300,18 +300,18 @@ public class MergerResourceRepositoryTest2 extends TestCase {
         resourceSet.updateWith(mRes, stringFile, FileStatus.CHANGED, mLogger);
         mRepository.update(mResourceMerger);
 
-        assertTrue(mRepository.hasResourceItem("@string/myDummy"));
-        assertFalse(mRepository.hasResourceItem("@string/dummy"));
+        assertTrue(mRepository.hasResources(RES_AUTO, ResourceType.STRING, "myDummy"));
+        assertFalse(mRepository.hasResources(RES_AUTO, ResourceType.STRING, "dummy"));
 
         // add files
-        assertFalse(mRepository.hasResourceItem("@layout/layout5"));
+        assertFalse(mRepository.hasResources(RES_AUTO, ResourceType.LAYOUT, "layout5"));
         File layout = new File(mRes, FD_RES_LAYOUT);
         File newFile = new File(layout, "layout5.xml");
         boolean created = newFile.createNewFile();
         assertTrue(created);
         resourceSet.updateWith(mRes, newFile, FileStatus.NEW, mLogger);
         mRepository.update(mResourceMerger);
-        assertTrue(mRepository.hasResourceItem("@layout/layout5"));
+        assertTrue(mRepository.hasResources(RES_AUTO, ResourceType.LAYOUT, "layout5"));
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -334,26 +334,26 @@ public class MergerResourceRepositoryTest2 extends TestCase {
                         + "</resources>\n";
         MergerResourceRepository resources =
                 resourceFixture.createTestResources(
-                        ResourceNamespace.TODO(), new Object[] {"values/strings.xml", content});
+                        RES_AUTO, new Object[] {"values/strings.xml", content});
 
-        assertEquals(Collections.singleton(ResourceNamespace.TODO()), resources.getNamespaces());
+        assertEquals(Collections.singleton(RES_AUTO), resources.getNamespaces());
         assertNotNull(resources);
 
         assertNotNull(resources);
         assertEquals("Share your score of (1337) with (Bluetooth)!",
-                resources.getResourceItem(ResourceType.STRING, "share_with_application").get(0)
-                        .getResourceValue().getValue());
+                resources.getResources(RES_AUTO, ResourceType.STRING, "share_with_application")
+                        .get(0).getResourceValue().getValue());
         assertEquals("Call ${name}",
-                resources.getResourceItem(ResourceType.STRING, "description_call").get(0)
-                        .getResourceValue().getValue());
+                resources.getResources(RES_AUTO, ResourceType.STRING, "description_call")
+                        .get(0).getResourceValue().getValue());
         assertEquals("(42) mins (28) secs",
-                resources.getResourceItem(ResourceType.STRING, "callDetailsDurationFormat").get(0)
-                        .getResourceValue().getValue());
+                resources.getResources(RES_AUTO, ResourceType.STRING, "callDetailsDurationFormat")
+                        .get(0).getResourceValue().getValue());
         assertEquals("${number_of_sessions} sessions removed from your schedule",
-                resources.getResourceItem(ResourceType.STRING, "other").get(0).getResourceValue().getValue());
+                resources.getResources(RES_AUTO, ResourceType.STRING, "other")
+                        .get(0).getResourceValue().getValue());
         assertEquals("(123)(KB)",
-                resources.getResourceItem(ResourceType.STRING, "fileSizeSuffix").get(0)
-                        .getResourceValue().getValue());
-
+                resources.getResources(RES_AUTO, ResourceType.STRING, "fileSizeSuffix")
+                        .get(0).getResourceValue().getValue());
     }
 }

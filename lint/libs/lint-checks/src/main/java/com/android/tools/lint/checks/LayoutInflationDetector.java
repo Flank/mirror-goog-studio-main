@@ -23,6 +23,7 @@ import static com.android.tools.lint.checks.ViewHolderDetector.INFLATE;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.resources.AbstractResourceRepository;
 import com.android.ide.common.resources.ResourceItem;
 import com.android.ide.common.util.PathString;
@@ -192,10 +193,8 @@ public class LayoutInflationDetector extends LayoutDetector implements SourceCod
             return true; // not certain
         }
 
-        List<ResourceItem> items = resources.getResourceItem(ResourceType.LAYOUT, name);
-        if (items == null || items.isEmpty()) {
-            return false;
-        }
+        List<ResourceItem> items =
+                resources.getResources(ResourceNamespace.TODO(), ResourceType.LAYOUT, name);
 
         for (ResourceItem item : items) {
             PathString source = item.getSource();

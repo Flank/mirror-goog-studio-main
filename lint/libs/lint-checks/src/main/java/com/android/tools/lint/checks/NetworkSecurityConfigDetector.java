@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks;
 
 import com.android.annotations.NonNull;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.resources.AbstractResourceRepository;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceUrl;
@@ -445,7 +446,10 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
                                 context.getClient()
                                         .getResourceRepository(context.getProject(), true, false);
                         if (resources != null
-                                && !resources.hasResourceItem(resourceUrl.type, resourceUrl.name)) {
+                                && !resources.hasResources(
+                                        ResourceNamespace.TODO(),
+                                        resourceUrl.type,
+                                        resourceUrl.name)) {
                             context.report(
                                     ISSUE,
                                     sourceIdAttr,

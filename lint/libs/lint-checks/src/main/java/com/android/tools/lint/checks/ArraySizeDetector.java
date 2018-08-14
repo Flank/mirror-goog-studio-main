@@ -23,6 +23,7 @@ import static com.android.SdkConstants.TAG_STRING_ARRAY;
 
 import com.android.annotations.NonNull;
 import com.android.ide.common.rendering.api.ArrayResourceValue;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.AbstractResourceRepository;
 import com.android.ide.common.resources.ResourceItem;
@@ -289,32 +290,26 @@ public class ArraySizeDetector extends ResourceXmlDetector {
         if (resources == null) {
             return;
         }
-        List<ResourceItem> items = resources.getResourceItem(ResourceType.ARRAY, name);
-        if (items != null) {
-            for (ResourceItem item : items) {
-                PathString source = item.getSource();
-                if (source != null && Lint.isSameResourceFile(context.file, source.toFile())) {
-                    continue;
-                }
-                ResourceValue rv = item.getResourceValue();
-                if (rv instanceof ArrayResourceValue) {
-                    ArrayResourceValue arv = (ArrayResourceValue) rv;
-                    if (childCount != arv.getElementCount()) {
-                        String thisName = Lint.getFileNameWithParent(client, context.file);
-                        assert source != null;
-                        String otherName = Lint.getFileNameWithParent(client, source);
-                        String message =
-                                String.format(
-                                        "Array `%1$s` has an inconsistent number of items (%2$d in `%3$s`, %4$d in `%5$s`)",
-                                        name,
-                                        childCount,
-                                        thisName,
-                                        arv.getElementCount(),
-                                        otherName);
+        List<ResourceItem> items =
+                resources.getResources(ResourceNamespace.TODO(), ResourceType.ARRAY, name);
+        for (ResourceItem item : items) {
+            PathString source = item.getSource();
+            if (source != null && Lint.isSameResourceFile(context.file, source.toFile())) {
+                continue;
+            }
+            ResourceValue rv = item.getResourceValue();
+            if (rv instanceof ArrayResourceValue) {
+                ArrayResourceValue arv = (ArrayResourceValue) rv;
+                if (childCount != arv.getElementCount()) {
+                    String thisName = Lint.getFileNameWithParent(client, context.file);
+                    assert source != null;
+                    String otherName = Lint.getFileNameWithParent(client, source);
+                    String message =
+                            String.format(
+                                    "Array `%1$s` has an inconsistent number of items (%2$d in `%3$s`, %4$d in `%5$s`)",
+                                    name, childCount, thisName, arv.getElementCount(), otherName);
 
-                        context.report(
-                                INCONSISTENT, element, context.getLocation(element), message);
-                    }
+                    context.report(INCONSISTENT, element, context.getLocation(element), message);
                 }
             }
         }

@@ -192,7 +192,7 @@ public class ResourceItemResolver extends RenderResources {
             }
             // Now search in the framework resources.
             List<ResourceItem> items =
-                    myFrameworkResources.getResourceItems(
+                    myFrameworkResources.getResources(
                             ResourceNamespace.ANDROID, url.type, url.name);
             if (!items.isEmpty()) {
                 ResourceValue value = items.get(0).getResourceValue();

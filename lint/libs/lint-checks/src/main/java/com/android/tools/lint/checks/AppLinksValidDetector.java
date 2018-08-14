@@ -50,6 +50,7 @@ import static com.android.xml.AndroidManifest.NODE_CATEGORY;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.AbstractResourceRepository;
 import com.android.ide.common.resources.ResourceItem;
@@ -775,8 +776,9 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
         if (resources == null) {
             return str;
         }
-        List<ResourceItem> items = resources.getResourceItem(ResourceType.STRING, url.name);
-        if (items == null || items.isEmpty()) {
+        List<ResourceItem> items =
+                resources.getResources(ResourceNamespace.TODO(), ResourceType.STRING, url.name);
+        if (items.isEmpty()) {
             return str;
         }
         ResourceValue resourceValue = items.get(0).getResourceValue();

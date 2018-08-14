@@ -36,6 +36,7 @@ import com.android.SdkConstants.TOOLS_URI
 import com.android.SdkConstants.VIEW_FRAGMENT
 import com.android.SdkConstants.VIEW_TAG
 import com.android.SdkConstants.XMLNS
+import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.resources.ResourceFolderType
 import com.android.resources.ResourceFolderType.ANIM
 import com.android.resources.ResourceFolderType.ANIMATOR
@@ -204,11 +205,12 @@ class DetectMissingPrefix : LayoutDetector() {
                     true, true
                 )
                 if (repository != null) {
-                    val items = repository.getResourceItem(
+                    val items = repository.getResources(
+                        ResourceNamespace.TODO(),
                         ResourceType.ATTR,
                         attribute.localName
                     )
-                    if (items != null && !items.isEmpty()) {
+                    if (!items.isEmpty()) {
                         for (item in items) {
                             val libraryName = item.libraryName ?: continue
                             if (libraryName.contains("appcompat") || libraryName.contains("material")) {

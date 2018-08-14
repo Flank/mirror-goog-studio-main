@@ -26,6 +26,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.MavenCoordinates;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.repository.ResourceVisibilityLookup;
 import com.android.ide.common.resources.AbstractResourceRepository;
 import com.android.resources.FolderTypeRelationship;
@@ -129,7 +130,9 @@ public class PrivateResourceDetector extends ResourceXmlDetector implements Sour
                     AbstractResourceRepository repository =
                             context.getClient()
                                     .getResourceRepository(context.getMainProject(), true, false);
-                    if (repository != null && repository.hasResourceItem(resourceType, name)) {
+                    if (repository != null
+                            && repository.hasResources(
+                                    ResourceNamespace.TODO(), resourceType, name)) {
                         return;
                     }
 
