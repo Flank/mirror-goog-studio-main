@@ -107,8 +107,9 @@ class NativeAndroidProjectBuilder {
 
     /** Build the final {@link NativeAndroidProject}. */
     NativeAndroidProject buildNativeAndroidProject() {
-        // If there are no build files (therefore no native configurations) don't return a model
-        if (this.buildFiles.isEmpty()) {
+        // If there are no build files and no build variant configurations then return null
+        // to indicate there is no C++ in this project.
+        if (this.buildFiles.isEmpty() && this.variantInfos.isEmpty()) {
             return null;
         }
         return new NativeAndroidProjectImpl(
