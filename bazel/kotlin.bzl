@@ -103,6 +103,7 @@ def kotlin_library(
     exclusions=None,
     visibility=None,
     jar_name=None,
+    testonly=None,
     **kwargs):
   kotlins = native.glob([src + "/**/*.kt" for src in srcs])
   javas = native.glob([src + "/**/*.java" for src in srcs]) + java_srcs
@@ -124,6 +125,7 @@ def kotlin_library(
         deps = deps + bundled_deps,
         friends = friends,
         visibility = visibility,
+        testonly = testonly,
     )
 
   java_name = name + ".java"
@@ -138,6 +140,7 @@ def kotlin_library(
         deps = (kdeps + deps + bundled_deps) if javas else None,
         resource_jars = bundled_deps,
         visibility = visibility,
+        testonly = testonly,
         **kwargs
     )
 
