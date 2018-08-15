@@ -26,7 +26,7 @@ import java.util.Collection;
 import java.util.Set;
 
 /** Simple repository implementation that just stores what the {@link ResourceMerger} emits. */
-public final class MergerResourceRepository extends AbstractResourceRepository {
+public final class TestResourceRepository extends AbstractResourceRepository {
     private final ResourceTable resourceTable = new ResourceTable();
 
     @NonNull

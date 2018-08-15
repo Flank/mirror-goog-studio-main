@@ -50,7 +50,7 @@ public class ResourceItemResolverTest extends TestCase {
     }
 
     public void testBasicFunctionality() throws Exception {
-        MergerResourceRepository frameworkResources =
+        TestResourceRepository frameworkResources =
                 resourceFixture.createTestResources(
                         ResourceNamespace.ANDROID,
                         new Object[] {
@@ -89,7 +89,7 @@ public class ResourceItemResolverTest extends TestCase {
                                             + "</resources>\n",
                         });
 
-        MergerResourceRepository appResources =
+        TestResourceRepository appResources =
                 resourceFixture.createTestResources(
                         ResourceNamespace.TODO(),
                         new Object[] {
@@ -226,13 +226,13 @@ public class ResourceItemResolverTest extends TestCase {
 
                     @Nullable
                     @Override
-                    public MergerResourceRepository getFrameworkResources() {
+                    public TestResourceRepository getFrameworkResources() {
                         return frameworkResources;
                     }
 
                     @Nullable
                     @Override
-                    public MergerResourceRepository getAppResources() {
+                    public TestResourceRepository getAppResources() {
                         return appResources;
                     }
                 };

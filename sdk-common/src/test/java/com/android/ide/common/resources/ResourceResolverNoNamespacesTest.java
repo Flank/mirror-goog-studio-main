@@ -94,7 +94,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
     }
 
     public void testBasicFunctionality() throws Exception {
-        MergerResourceRepository frameworkRepository =
+        TestResourceRepository frameworkRepository =
                 resourceFixture.createTestResources(
                         ResourceNamespace.ANDROID,
                         new Object[] {
@@ -134,7 +134,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                                             + "</resources>\n",
                         });
 
-        MergerResourceRepository projectRepository =
+        TestResourceRepository projectRepository =
                 resourceFixture.createTestResources(
                         ResourceNamespace.TODO(),
                         new Object[] {
@@ -446,7 +446,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
     }
 
     public void testMissingMessage() throws Exception {
-        MergerResourceRepository projectRepository =
+        TestResourceRepository projectRepository =
                 resourceFixture.createTestResources(
                         ResourceNamespace.TODO(),
                         new Object[] {
@@ -490,7 +490,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
     }
 
     public void testLoop() throws Exception {
-        MergerResourceRepository projectRepository =
+        TestResourceRepository projectRepository =
                 resourceFixture.createTestResources(
                         ResourceNamespace.TODO(),
                         new Object[] {
@@ -552,7 +552,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
     }
 
     public void testParentCycle() throws Exception {
-        MergerResourceRepository projectRepository =
+        TestResourceRepository projectRepository =
                 resourceFixture.createTestResources(
                         ResourceNamespace.TODO(),
                         new Object[] {
@@ -625,7 +625,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
     }
 
     public void testSetDeviceDefaults() throws Exception {
-        MergerResourceRepository frameworkRepository =
+        TestResourceRepository frameworkRepository =
                 resourceFixture.createTestResources(
                         ResourceNamespace.ANDROID,
                         new Object[] {
@@ -668,7 +668,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                                             + "</resources>\n",
                         });
 
-        MergerResourceRepository projectRepository =
+        TestResourceRepository projectRepository =
                 resourceFixture.createTestResources(
                         ResourceNamespace.TODO(),
                         new Object[] {
@@ -738,7 +738,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
     }
 
     public void testCycle() throws Exception {
-        MergerResourceRepository frameworkRepository =
+        TestResourceRepository frameworkRepository =
                 resourceFixture.createTestResources(
                         ResourceNamespace.ANDROID,
                         new Object[] {
@@ -750,7 +750,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                                     + "</resources>\n",
                         });
 
-        MergerResourceRepository projectRepository =
+        TestResourceRepository projectRepository =
                 resourceFixture.createTestResources(
                         ResourceNamespace.TODO(),
                         new Object[] {
@@ -803,7 +803,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
     }
 
     public void testCopy() throws Exception {
-        MergerResourceRepository frameworkRepository =
+        TestResourceRepository frameworkRepository =
                 resourceFixture.createTestResources(
                         ResourceNamespace.ANDROID,
                         new Object[] {
@@ -814,7 +814,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                                     + "    <style name=\"Theme.Material\"/>\n"
                                     + "</resources>\n",
                         });
-        MergerResourceRepository projectRepository =
+        TestResourceRepository projectRepository =
                 resourceFixture.createTestResources(
                         ResourceNamespace.TODO(),
                         new Object[] {
@@ -880,7 +880,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
     }
 
     public void testResolverIds() throws Exception {
-        MergerResourceRepository projectRepository =
+        TestResourceRepository projectRepository =
                 resourceFixture.createTestResources(
                         ResourceNamespace.TODO(),
                         new Object[] {

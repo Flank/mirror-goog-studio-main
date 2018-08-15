@@ -35,10 +35,10 @@ import java.util.List;
 import java.util.Map;
 import org.junit.Test;
 
-public class MergerResourceRepositoryTest extends BaseTestCase {
+public class TestResourceRepositoryTest extends BaseTestCase {
     @Test
     public void testMergeByCount() throws Exception {
-        MergerResourceRepository repo = getResourceRepository();
+        TestResourceRepository repo = getResourceRepository();
 
         ResourceTable items = repo.getFullTable();
 
@@ -59,7 +59,7 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
 
     @Test
     public void testMergedResourcesByName() throws Exception {
-        MergerResourceRepository repo = getResourceRepository();
+        TestResourceRepository repo = getResourceRepository();
 
         // use ? between type and qualifier because of declare-styleable
         verifyResourceExists(
@@ -103,7 +103,7 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
 
     @Test
     public void testBaseStringValue() throws Exception {
-        MergerResourceRepository repo = getResourceRepository();
+        TestResourceRepository repo = getResourceRepository();
 
         List<ResourceItem> itemList =
                 repo.getResources(RES_AUTO, ResourceType.STRING, "basic_string");
@@ -118,7 +118,7 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
 
     @Test
     public void testCdataStringValue() throws Exception {
-        MergerResourceRepository repo = getResourceRepository();
+        TestResourceRepository repo = getResourceRepository();
 
         List<ResourceItem> itemList =
                 repo.getResources(RES_AUTO, ResourceType.STRING, "cdata_string");
@@ -135,7 +135,7 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
 
     @Test
     public void testBaseStyledStringValue() throws Exception {
-        MergerResourceRepository repo = getResourceRepository();
+        TestResourceRepository repo = getResourceRepository();
 
         List<ResourceItem> itemList =
                 repo.getResources(RES_AUTO, ResourceType.STRING, "styled_string");
@@ -151,7 +151,7 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
 
     @Test
     public void testBaseColorValue() throws Exception {
-        MergerResourceRepository repo = getResourceRepository();
+        TestResourceRepository repo = getResourceRepository();
 
         List<ResourceItem> itemList = repo.getResources(RES_AUTO, ResourceType.COLOR, "color");
         assertNotNull(itemList);
@@ -165,7 +165,7 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
 
     @Test
     public void testBaseLayoutAliasValue() throws Exception {
-        MergerResourceRepository repo = getResourceRepository();
+        TestResourceRepository repo = getResourceRepository();
 
         List<ResourceItem> itemList =
                 repo.getResources(RES_AUTO, ResourceType.LAYOUT, "layout_ref");
@@ -180,7 +180,7 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
 
     @Test
     public void testBaseAttrValue() throws Exception {
-        MergerResourceRepository repo = getResourceRepository();
+        TestResourceRepository repo = getResourceRepository();
 
         List<ResourceItem> itemList = repo.getResources(RES_AUTO, ResourceType.ATTR, "flag_attr");
         assertNotNull(itemList);
@@ -210,7 +210,7 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
 
     @Test
     public void testBaseStyleValue() throws Exception {
-        MergerResourceRepository repo = getResourceRepository();
+        TestResourceRepository repo = getResourceRepository();
 
         List<ResourceItem> itemList = repo.getResources(RES_AUTO, ResourceType.STYLE, "style");
         assertNotNull(itemList);
@@ -256,7 +256,7 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
         assertEquals(2, sets.size());
 
         // write the content in a repo.
-        MergerResourceRepository repo = new MergerResourceRepository();
+        TestResourceRepository repo = new TestResourceRepository();
         repo.update(resourceMerger);
 
         // checks the initial state of the repo
@@ -346,7 +346,7 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
         assertEquals(2, sets.size());
 
         // write the content in a repo.
-        MergerResourceRepository repo = new MergerResourceRepository();
+        TestResourceRepository repo = new TestResourceRepository();
         repo.update(resourceMerger);
 
         // checks the initial state of the repo
@@ -426,7 +426,7 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
         assertEquals(2, sets.size());
 
         // write the content in a repo.
-        MergerResourceRepository repo = new MergerResourceRepository();
+        TestResourceRepository repo = new TestResourceRepository();
         repo.update(resourceMerger);
 
         // checks the initial state of the repo
@@ -482,7 +482,7 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
         assertEquals(1, sets.size());
 
         // write the content in a repo.
-        MergerResourceRepository repo = new MergerResourceRepository();
+        TestResourceRepository repo = new TestResourceRepository();
         repo.update(resourceMerger);
 
         // checks the initial state of the repo
@@ -556,7 +556,7 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
     private static ResourceMerger getBaseResourceMerger() throws MergingException, IOException {
         File root =
                 TestResources.getDirectory(
-                        MergerResourceRepositoryTest.class, "/testData/resources/baseMerge");
+                        TestResourceRepositoryTest.class, "/testData/resources/baseMerge");
 
         ResourceSet res = ResourceSetTest.getBaseResourceSet();
 
@@ -575,11 +575,11 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
         return resourceMerger;
     }
 
-    private static MergerResourceRepository getResourceRepository()
+    private static TestResourceRepository getResourceRepository()
             throws MergingException, IOException {
         ResourceMerger merger = getBaseResourceMerger();
 
-        MergerResourceRepository repo = new MergerResourceRepository();
+        TestResourceRepository repo = new TestResourceRepository();
 
         repo.update(merger);
         return repo;
@@ -588,14 +588,14 @@ public class MergerResourceRepositoryTest extends BaseTestCase {
     private static File getIncMergeRoot(String name) throws IOException {
         File root =
                 TestResources.getDirectory(
-                                MergerResourceRepositoryTest.class,
+                                TestResourceRepositoryTest.class,
                                 "/testData/resources/incMergeData")
                         .getCanonicalFile();
         return new File(root, name);
     }
 
     private static void verifyResourceExists(
-            MergerResourceRepository repository, String... dataItemKeys) {
+            TestResourceRepository repository, String... dataItemKeys) {
         ResourceTable items = repository.getFullTable();
 
         for (String resKey : dataItemKeys) {

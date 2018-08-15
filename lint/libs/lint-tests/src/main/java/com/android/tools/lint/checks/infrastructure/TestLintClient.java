@@ -43,7 +43,6 @@ import com.android.builder.model.SourceProvider;
 import com.android.builder.model.Variant;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.resources.AbstractResourceRepository;
-import com.android.ide.common.resources.MergerResourceRepository;
 import com.android.ide.common.resources.MergingException;
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceItem;
@@ -51,6 +50,7 @@ import com.android.ide.common.resources.ResourceMerger;
 import com.android.ide.common.resources.ResourceMergerItem;
 import com.android.ide.common.resources.ResourceRepositories;
 import com.android.ide.common.resources.ResourceSet;
+import com.android.ide.common.resources.TestResourceRepository;
 import com.android.ide.common.util.PathString;
 import com.android.resources.ResourceType;
 import com.android.sdklib.AndroidTargetHash;
@@ -953,7 +953,7 @@ public class TestLintClient extends LintCliClient {
             return null;
         }
 
-        MergerResourceRepository repository = new MergerResourceRepository();
+        TestResourceRepository repository = new TestResourceRepository();
         ILogger logger = new StdLogger(StdLogger.Level.INFO);
         ResourceMerger merger = new ResourceMerger(0);
 

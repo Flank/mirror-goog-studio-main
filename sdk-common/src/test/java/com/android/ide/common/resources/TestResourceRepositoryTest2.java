@@ -40,12 +40,12 @@ import java.util.Map;
 import junit.framework.TestCase;
 
 @SuppressWarnings("javadoc")
-public class MergerResourceRepositoryTest2 extends TestCase {
+public class TestResourceRepositoryTest2 extends TestCase {
     private final ResourceRepositoryFixture resourceFixture = new ResourceRepositoryFixture();
     private File mTempDir;
     private File mRes;
     private ResourceMerger mResourceMerger;
-    private MergerResourceRepository mRepository;
+    private TestResourceRepository mRepository;
     private ILogger mLogger;
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -131,7 +131,7 @@ public class MergerResourceRepositoryTest2 extends TestCase {
         resourceSet.loadFromFiles(mLogger = new RecordingLogger());
         mResourceMerger.addDataSet(resourceSet);
 
-        mRepository = new MergerResourceRepository();
+        mRepository = new TestResourceRepository();
         mRepository.update(mResourceMerger);
     }
 
@@ -332,7 +332,7 @@ public class MergerResourceRepositoryTest2 extends TestCase {
                         + "         the placeholders. -->\n"
                         + "    <string name=\"fileSizeSuffix\"><xliff:g id=\"number\" example=\"123\">%1$s</xliff:g><xliff:g id=\"unit\" example=\"KB\">%2$s</xliff:g></string>"
                         + "</resources>\n";
-        MergerResourceRepository resources =
+        TestResourceRepository resources =
                 resourceFixture.createTestResources(
                         RES_AUTO, new Object[] {"values/strings.xml", content});
 

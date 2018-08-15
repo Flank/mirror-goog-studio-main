@@ -57,12 +57,12 @@ public class ResourceRepositoryFixture {
     }
 
     /**
-     * Creates a {@link MergerResourceRepository} for a resource folder whose contents is identified
+     * Creates a {@link TestResourceRepository} for a resource folder whose contents is identified
      * by the pairs of relative paths and file contents
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @NonNull
-    public MergerResourceRepository createTestResources(
+    public TestResourceRepository createTestResources(
             @NonNull ResourceNamespace namespace, @NonNull Object[] data) throws IOException {
         File dir = TestUtils.createTempDirDeletedOnExit();
         createdDirectories.add(dir);
@@ -104,7 +104,7 @@ public class ResourceRepositoryFixture {
         }
         merger.addDataSet(resourceSet);
 
-        MergerResourceRepository repository = new MergerResourceRepository();
+        TestResourceRepository repository = new TestResourceRepository();
         repository.update(merger);
 
         return repository;
