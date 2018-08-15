@@ -36,6 +36,10 @@ namespace {
 
 const char* const kSimpleperfExecutable = "simpleperf";
 
+bool IsSystemServer(const string& pkg_name) {
+  return pkg_name == "system_server";
+}
+
 }  // namespace
 
 namespace profiler {
@@ -48,10 +52,17 @@ bool Simpleperf::EnableProfiling() const {
   return enable_profiling.Run("security.perf_harden 0", nullptr);
 }
 
-bool Simpleperf::KillSimpleperf(int simpleperf_pid) {
-  BashCommandRunner kill_simpleperf("kill");
+bool Simpleperf::KillSimpleperf(int simpleperf_pid, const string& pkg_name) {
+  string kill_cmd;
+  if (IsSystemServer(pkg_name)) {
+    // When profiling system_server, kill should be called as root.
+    kill_cmd = "su root kill";
+  } else {
+    kill_cmd = "kill";
+  }
   ostringstream string_pid;
   string_pid << simpleperf_pid;
+  BashCommandRunner kill_simpleperf(kill_cmd);
   return kill_simpleperf.Run(string_pid.str(), nullptr);
 }
 
@@ -106,6 +117,13 @@ string Simpleperf::GetRecordCommand(int pid, const string& pkg_name,
                                     const string& trace_path,
                                     int sampling_interval_us) const {
   ostringstream command;
+  bool is_system_server = IsSystemServer(pkg_name);
+  if (is_system_server) {
+    // System process is owned by the system and can't be run with run-as.
+    // Therefore, we run it as root.
+    command << "su root ";
+  }
+
   command << GetSimpleperfPath(abi_arch);
   command << " record";
 
@@ -115,7 +133,11 @@ string Simpleperf::GetRecordCommand(int pid, const string& pkg_name,
   if (pid != kStartupProfilingPid) {
     command << " -p " << pid;
   }
-  command << " --app " << pkg_name;
+  
+  // Don't add --app when profiling system_process
+  if (!is_system_server) {
+    command << " --app " << pkg_name;
+  }
 
   string supported_features = GetFeatures(abi_arch);
   // If the device supports dwarf-based call graphs, use them. Otherwise use

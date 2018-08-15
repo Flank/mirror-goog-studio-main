@@ -140,6 +140,21 @@ TEST(SimpleperfTest, StartupProfilingPid) {
   EXPECT_THAT(record_command, HasArgument("--app my.package"));
 }
 
+TEST(SimpleperfTest, SystemServerCommand) {
+  FakeSimpleperfGetFeatures simpleperf{false};
+  int pid = 42;
+
+  string record_command = simpleperf.GetRecordCommand(
+      pid, "system_server", "arm", kFakeTracePath, 100);
+
+  // Command should be run as root
+  EXPECT_THAT(record_command, StartsWith("su root"));
+  // PID should be passed
+  EXPECT_THAT(record_command, HasArgument("-p 42"));
+  // package name shouldn't be passed
+  EXPECT_THAT(record_command, Not(HasArgument("--app")));
+}
+
 TEST(SimpleperfTest, SimpleperfBinaryName) {
   FakeSimpleperfGetFeatures simpleperf{false};
   int pid = 42;

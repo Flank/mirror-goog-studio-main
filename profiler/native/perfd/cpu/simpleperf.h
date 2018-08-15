@@ -58,7 +58,8 @@ class Simpleperf {
 
   // Kill simpleperf and returns true if it was killed successfully.
   // Technically this function could be const, but we mark it not for testing.
-  virtual bool KillSimpleperf(int simpleperf_pid);
+  // |pkg_name| represents the process name currently being profiled.
+  virtual bool KillSimpleperf(int simpleperf_pid, const std::string& pkg_name);
 
   // Invokes `simpleperf report-sample` passing |input_path| as input file and
   // |output_path| as the protobuf output file. Adds the command output to

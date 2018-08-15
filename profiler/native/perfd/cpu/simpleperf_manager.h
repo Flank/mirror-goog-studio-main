@@ -29,8 +29,10 @@ namespace profiler {
 
 // Entry storing all data related to an ongoing profiling.
 struct OnGoingProfiling {
-  // App pid being profiled.
+  // Process ID being profiled.
   int pid;
+  // The name of the process/app being profiled.
+  std::string process_name;
   // Simpleperf pid doing the profiling.
   int simpleperf_pid;
   // The ABI CPU architecture (e.g. arm, arm64, x86, x86_64) corresponding to

@@ -42,7 +42,7 @@ class FakeSimpleperf final : public Simpleperf {
 
   bool EnableProfiling() const { return enable_profiling_success_; }
 
-  bool KillSimpleperf(int simpleperf_pid) {
+  bool KillSimpleperf(int simpleperf_pid, const string& pkg_name) {
     kill_simpleperf_called_ = true;
     return kill_simpleperf_success_;
   }

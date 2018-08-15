@@ -84,6 +84,7 @@ bool SimpleperfManager::StartProfiling(const std::string &app_name,
   // Build entry to keep track of what is being profiled.
   OnGoingProfiling entry;
   entry.pid = pid;
+  entry.process_name = ProcessManager::GetPackageNameFromAppName(app_name);
   entry.abi_arch = abi_arch;
   entry.output_prefix = GetFileBaseName(app_name);
   entry.trace_path =
@@ -103,9 +104,9 @@ bool SimpleperfManager::StartProfiling(const std::string &app_name,
       break;  // Useless but make the compiler happy.
     }
     case 0: {  // Child Process
-      simpleperf_->Record(
-          pid, ProcessManager::GetPackageNameFromAppName(app_name), abi_arch,
-          entry.raw_trace_path, sampling_interval_us, entry.log_file_path);
+      simpleperf_->Record(pid, entry.process_name, abi_arch,
+                          entry.raw_trace_path, sampling_interval_us,
+                          entry.log_file_path);
       exit(EXIT_FAILURE);
       break;  // Useless break but makes compiler happy.
     }
@@ -209,8 +210,8 @@ bool SimpleperfManager::StopSimpleperf(
   // Ask simpleperf to stop profiling this app.
   Log::D("Sending SIGTERM to simpleperf(%d).",
          ongoing_recording.simpleperf_pid);
-  bool kill_simpleperf_result =
-      simpleperf_->KillSimpleperf(ongoing_recording.simpleperf_pid);
+  bool kill_simpleperf_result = simpleperf_->KillSimpleperf(
+      ongoing_recording.simpleperf_pid, ongoing_recording.process_name);
 
   if (!kill_simpleperf_result) {
     string msg = "Failed to send SIGTERM to simpleperf";
