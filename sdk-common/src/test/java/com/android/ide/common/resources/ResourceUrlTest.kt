@@ -19,6 +19,8 @@ import com.android.resources.ResourceType.ATTR
 import com.android.resources.ResourceType.DIMEN
 import com.android.resources.ResourceType.ID
 import com.android.resources.ResourceType.LAYOUT
+import com.android.resources.ResourceType.SAMPLE_DATA
+import com.android.resources.ResourceType.STRING
 import com.android.resources.ResourceType.STYLE
 import com.android.resources.ResourceUrl
 import org.junit.Assert.assertEquals
@@ -195,5 +197,65 @@ class ResourceUrlTest {
         assertEquals("myColor", ResourceUrl.parse("?myColor")!!.qualifiedName)
         assertEquals("android:colorPrimary", ResourceUrl.parse("?android:colorPrimary")!!.qualifiedName)
         assertEquals("my_package:my_name", ResourceUrl.parse("@*my_package:layout/my_name")!!.qualifiedName)
+    }
+
+    @Test
+    fun namespaceAfterType() {
+        var url = "?attr/android:foo"
+        var resourceUrl = ResourceUrl.parse(url)!!
+        assertEquals("android:foo", resourceUrl.qualifiedName)
+        assertEquals("foo", resourceUrl.name)
+        assertEquals("android", resourceUrl.namespace)
+        assertTrue(resourceUrl.isFramework)
+        assertTrue(resourceUrl.isTheme)
+        assertEquals(ATTR, resourceUrl.type)
+
+        url = "@string/android:foo"
+        resourceUrl = ResourceUrl.parse(url)!!
+        assertEquals("android:foo", resourceUrl.qualifiedName)
+        assertEquals("foo", resourceUrl.name)
+        assertEquals("android", resourceUrl.namespace)
+        assertTrue(resourceUrl.isFramework)
+        assertFalse(resourceUrl.isTheme)
+        assertEquals(STRING, resourceUrl.type)
+
+        url = "@attr/bar:foo"
+        resourceUrl = ResourceUrl.parse(url)!!
+        assertEquals("bar:foo", resourceUrl.qualifiedName)
+        assertEquals("foo", resourceUrl.name)
+        assertEquals("bar", resourceUrl.namespace)
+        assertFalse(resourceUrl.isFramework)
+        assertFalse(resourceUrl.isTheme)
+        assertEquals(ATTR, resourceUrl.type)
+    }
+
+    @Test
+    fun urlWithParameters() {
+        var url = "@sample/lorem[4:10]"
+        var resourceUrl = ResourceUrl.parse(url)!!
+        assertEquals("lorem[4:10]", resourceUrl.qualifiedName)
+        assertEquals("lorem[4:10]", resourceUrl.name)
+        assertNull(resourceUrl.namespace)
+        assertFalse(resourceUrl.isFramework)
+        assertFalse(resourceUrl.isTheme)
+        assertEquals(SAMPLE_DATA, resourceUrl.type)
+
+        url = "@android:sample/lorem[4:10]"
+        resourceUrl = ResourceUrl.parse(url)!!
+        assertEquals("android:lorem[4:10]", resourceUrl.qualifiedName)
+        assertEquals("lorem[4:10]", resourceUrl.name)
+        assertEquals("android", resourceUrl.namespace)
+        assertTrue(resourceUrl.isFramework)
+        assertFalse(resourceUrl.isTheme)
+        assertEquals(SAMPLE_DATA, resourceUrl.type)
+
+        url = "@sample/android:lorem[4:10]"
+        resourceUrl = ResourceUrl.parse(url)!!
+        assertEquals("android:lorem[4:10]", resourceUrl.qualifiedName)
+        assertEquals("lorem[4:10]", resourceUrl.name)
+        assertEquals("android", resourceUrl.namespace)
+        assertTrue(resourceUrl.isFramework)
+        assertFalse(resourceUrl.isTheme)
+        assertEquals(SAMPLE_DATA, resourceUrl.type)
     }
 }

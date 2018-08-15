@@ -177,92 +177,145 @@ public class ResourceUrl implements Serializable {
      * of style items.
      *
      * @param url the resource url to be parsed
-     * @param forceFramework force the returned value to be a framework resource.
-     *     <p>TODO(namespaces): remove the forceFramework argument.
+     * @param defaultToFramework defaults the returned value to be a framework resource if no
+     *     namespace is specified.
+     *     <p>TODO(namespaces): remove the defaultToFramework argument.
      */
     @Nullable
-    public static ResourceUrl parse(@NonNull String url, boolean forceFramework) {
+    public static ResourceUrl parse(@NonNull String url, boolean defaultToFramework) {
+        // Options:
         UrlType urlType = UrlType.NORMAL;
+
+        // A prefix that ends with a '*' means that private access is overridden.
         boolean privateAccessOverride = false;
-        // Handle theme references
-        if (url.startsWith(SdkConstants.PREFIX_THEME_REF)) {
+
+        // If the prefix is '?' the url points to a style.
+        boolean isStyle = false;
+
+        // Beginning of the parsing:
+        int currentIndex = 0;
+        int length = url.length();
+        if (currentIndex == length) {
+            return null;
+        }
+        char currentChar = url.charAt(currentIndex);
+
+        // The prefix could be one of @, @+, @+*, @*, ?
+        char themePrefix = SdkConstants.PREFIX_THEME_REF.charAt(0);
+        char resourcePrefix = SdkConstants.PREFIX_RESOURCE_REF.charAt(0);
+        if (themePrefix == currentChar) {
+            currentIndex++;
             urlType = UrlType.THEME;
-            String remainder = url.substring(SdkConstants.PREFIX_THEME_REF.length());
-            if (url.startsWith(SdkConstants.ATTR_REF_PREFIX)) {
-                url =
-                        SdkConstants.PREFIX_RESOURCE_REF
-                                + url.substring(SdkConstants.PREFIX_THEME_REF.length());
-            } else {
-                int colon = url.indexOf(':');
-                if (colon >= 0) {
-                    // Convert from ?android:progressBarStyleBig to ?android:attr/progressBarStyleBig
-                    if (remainder.indexOf('/', colon) < 0) {
-                        remainder =
-                                remainder.substring(0, colon)
-                                        + SdkConstants.RESOURCE_CLZ_ATTR
-                                        + '/'
-                                        + remainder.substring(colon);
-                    }
-                    url = SdkConstants.PREFIX_RESOURCE_REF + remainder;
-                } else {
-                    int slash = url.indexOf('/');
-                    if (slash < 0) {
-                        url =
-                                SdkConstants.PREFIX_RESOURCE_REF
-                                        + SdkConstants.RESOURCE_CLZ_ATTR
-                                        + '/'
-                                        + remainder;
-                    }
-                }
+            isStyle = true;
+        } else if (resourcePrefix == currentChar) {
+            currentIndex++;
+            if (currentIndex == length) {
+                return null;
+            }
+            currentChar = url.charAt(currentIndex);
+            if (currentChar == '+') {
+                currentIndex++;
+                urlType = UrlType.CREATE;
             }
         }
 
-        if (!url.startsWith(SdkConstants.PREFIX_RESOURCE_REF) || isNullOrEmpty(url)) {
+        int prefixEnd = currentIndex;
+        if (prefixEnd == 0) {
             return null;
         }
 
-        int typeEnd = url.indexOf('/', 1);
-        if (typeEnd < 0) {
+        // Private override:
+        if (currentIndex == length) {
             return null;
         }
-        int nameBegin = typeEnd + 1;
-
-        // Skip @ and @+
-        int typeBegin;
-        if (url.startsWith("@+")) {
-            urlType = UrlType.CREATE;
-            typeBegin = 2;
-        } else {
-            typeBegin = 1;
-        }
-
-        if (url.startsWith("*", typeBegin)) {
-            typeBegin += 1;
+        currentChar = url.charAt(currentIndex);
+        if (currentChar == '*') {
             privateAccessOverride = true;
+            currentIndex++;
         }
 
-        int colon = url.lastIndexOf(':', typeEnd);
-        String namespace = forceFramework ? SdkConstants.ANDROID_NS_NAME : null;
-        if (colon >= 0) {
-            if (colon - typeBegin == SdkConstants.ANDROID_NS_NAME.length()
-                    && url.startsWith(SdkConstants.ANDROID_NS_NAME, typeBegin)) {
-                namespace = SdkConstants.ANDROID_NS_NAME;
-            } else {
-                namespace = url.substring(typeBegin, colon);
-                if (namespace.isEmpty()) {
-                    return null;
-                }
+        // The token is used to mark the start of a group in the url.
+        // Once a piece of code has extracted the desired group,
+        // the token is updated to the current position.
+        int tokenStart = currentIndex;
+
+        // Namespace or type:
+        // The type can only be empty if the prefix is '?' and in that case will default to 'attr'.
+        int typeStart = -1;
+        int typeEnd = -1;
+
+        // The namespace can be null but cannot be empty, it is always located before ':'.
+        int namespaceStart =
+                defaultToFramework ? 0 : -1; // Setting to 0 so we don't unnecessary look for it.
+        int namespaceEnd = -1;
+
+        // Let's try to find the type and namespace no matter their order
+        // until we hit the end of the string.
+        while ((typeStart == -1 || namespaceStart == -1) && currentIndex < length) {
+            currentChar = url.charAt(currentIndex);
+            switch (currentChar) {
+                case '/':
+                    if (typeStart == -1) {
+                        // If the namespace or type were already found, we do not override them.
+                        typeStart = tokenStart;
+                        typeEnd = currentIndex;
+                        tokenStart = currentIndex + 1;
+                    }
+                    break;
+                case ':':
+                    if (namespaceStart == -1) {
+                        namespaceStart = tokenStart;
+                        namespaceEnd = currentIndex;
+                        if (namespaceStart == namespaceEnd) {
+                            return null;
+                        }
+                        tokenStart = currentIndex + 1;
+                    }
+                    break;
+                case '[':
+                    while (']' != currentChar && currentIndex < length - 1) {
+                        currentIndex++;
+                        currentChar = url.charAt(currentIndex);
+                    }
+                    break;
             }
-            typeBegin = colon + 1;
+            currentIndex++;
         }
-        String typeName = url.substring(typeBegin, typeEnd);
-        ResourceType type = ResourceType.fromXmlValue(typeName);
-        if (type == null) {
+
+        // Name:
+        // The rest of the url can now be considered as the name.
+        // The name cannot be empty.
+        int nameStart = tokenStart;
+        if (length <= nameStart) {
             return null;
         }
-        String name = url.substring(nameBegin);
-        if (name.isEmpty()) {
+
+        // End of parsing, we know all the indices and we can start
+        // extracting them.
+        String name = url.substring(nameStart, length);
+
+        // If no type is defined and the url is a style,
+        // then the type defaults to attr.
+        // But if it is not a style, then the url is invalid.
+        ResourceType type;
+        if (typeEnd > typeStart) {
+            type = ResourceType.fromXmlValue(url.substring(typeStart, typeEnd));
+            if (type == null) {
+                return null;
+            }
+        } else if (isStyle) {
+            type = ResourceType.ATTR;
+        } else {
             return null;
+        }
+
+        // If defaultToFramework is true and no namespace is set,
+        // the namespace will be 'android'.
+        String namespace;
+        if (namespaceStart < namespaceEnd) {
+            namespace = url.substring(namespaceStart, namespaceEnd);
+        } else {
+            namespace = defaultToFramework ? SdkConstants.ANDROID_NS_NAME : null;
         }
         return new ResourceUrl(type, name, namespace, urlType, privateAccessOverride);
     }
