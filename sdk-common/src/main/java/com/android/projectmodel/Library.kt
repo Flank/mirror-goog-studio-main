@@ -121,6 +121,8 @@ data class AarLibrary(
      */
     constructor(address: String) : this(address, null)
 
+    override fun toString(): String = printProperties(this, AarLibrary(""))
+
     /**
      * Returns a copy of the receiver with the given representative manifest file. Intended to simplify construction from Java.
      */

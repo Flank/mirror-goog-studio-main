@@ -25,6 +25,21 @@ import org.junit.Test
  */
 class AarLibraryTest {
     @Test
+    fun toStringDefaultTest() {
+        val cfg = AarLibrary("foo")
+        assertThat(cfg.toString()).isEqualTo("AarLibrary(address=foo)")
+    }
+
+    @Test
+    fun toStringOverrideTest() {
+        val cfg = AarLibrary(
+            address = "foo",
+            classesJar = PathString("/bar/baz")
+        )
+        assertThat(cfg.toString()).isEqualTo("AarLibrary(address=foo,classesJar=file:///bar/baz)")
+    }
+
+    @Test
     fun simpleConstructorTest() {
         assertThat(AarLibrary("foo")).isEqualTo(AarLibrary(address="foo", manifestFile = null))
     }
