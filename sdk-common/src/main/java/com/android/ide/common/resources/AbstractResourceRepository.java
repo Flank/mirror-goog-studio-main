@@ -20,8 +20,16 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.GuardedBy;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.resources.ResourceType;
-import com.google.common.collect.*;
-import java.util.*;
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Sets;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Predicate;
 
 /**
@@ -34,14 +42,6 @@ import java.util.function.Predicate;
  * </ul>
  */
 public abstract class AbstractResourceRepository implements ResourceRepository {
-    /**
-     * Number of indirections we'll follow for resource resolution before assuming there is a cyclic
-     * dependency error in the input.
-     */
-    public static final int MAX_RESOURCE_INDIRECTION = 50;
-
-    public AbstractResourceRepository() {}
-
     /**
      * Returns the fully computed {@link ResourceTable} for this repository.
      *

@@ -34,8 +34,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceValue;
-import com.android.ide.common.resources.AbstractResourceRepository;
 import com.android.ide.common.resources.ResourceItem;
+import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.util.PathString;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceUrl;
@@ -200,7 +200,7 @@ public class NegativeMarginDetector extends LayoutDetector {
                 // but we can use the IDE to resolve resource URLs
                 LintClient client = context.getClient();
                 Project project = context.getProject();
-                AbstractResourceRepository resources =
+                ResourceRepository resources =
                         client.getResourceRepository(project, true, true);
                 if (resources != null) {
                     List<ResourceItem> items =

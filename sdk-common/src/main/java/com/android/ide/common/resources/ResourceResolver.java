@@ -17,13 +17,22 @@ package com.android.ide.common.resources;
 
 import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.SdkConstants.PREFIX_THEME_REF;
-import static com.android.ide.common.resources.AbstractResourceRepository.MAX_RESOURCE_INDIRECTION;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
-import com.android.ide.common.rendering.api.*;
+import com.android.ide.common.rendering.api.ArrayResourceValue;
+import com.android.ide.common.rendering.api.LayoutLog;
+import com.android.ide.common.rendering.api.RenderResources;
+import com.android.ide.common.rendering.api.ResourceNamespace;
+import com.android.ide.common.rendering.api.ResourceReference;
+import com.android.ide.common.rendering.api.ResourceValue;
+import com.android.ide.common.rendering.api.ResourceValueImpl;
+import com.android.ide.common.rendering.api.SampleDataResourceValue;
+import com.android.ide.common.rendering.api.StyleItemResourceValue;
+import com.android.ide.common.rendering.api.StyleResourceValue;
+import com.android.ide.common.rendering.api.StyleResourceValueImpl;
 import com.android.ide.common.resources.sampledata.SampleDataManager;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
@@ -49,6 +58,12 @@ import java.util.regex.Pattern;
  * <b>NOTE:</b> LayoutLib tests depend on this class.
  */
 public class ResourceResolver extends RenderResources {
+    /**
+     * Number of indirections we'll follow for resource resolution before assuming there is a cyclic
+     * dependency error in the input.
+     */
+    public static final int MAX_RESOURCE_INDIRECTION = 50;
+
     public static final String THEME_NAME = "Theme";
     public static final String THEME_NAME_DOT = "Theme.";
 

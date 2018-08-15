@@ -31,8 +31,8 @@ import com.android.builder.model.AndroidLibrary
 import com.android.ide.common.repository.GradleCoordinate
 import com.android.ide.common.repository.GradleVersion
 import com.android.ide.common.repository.ResourceVisibilityLookup
-import com.android.ide.common.resources.AbstractResourceRepository
 import com.android.ide.common.resources.ResourceItem
+import com.android.ide.common.resources.ResourceRepository
 import com.android.ide.common.util.PathString
 import com.android.manifmerger.Actions
 import com.android.prefs.AndroidLocation
@@ -1491,7 +1491,7 @@ abstract class LintClient {
         project: Project,
         includeModuleDependencies: Boolean,
         includeLibraries: Boolean
-    ): AbstractResourceRepository? = null
+    ): ResourceRepository? = null
 
     /**
      * For a lint client which supports resource items (via [.supportsProjectResources])

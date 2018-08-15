@@ -29,8 +29,8 @@ import static com.android.xml.AndroidManifest.NODE_METADATA;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ResourceNamespace;
-import com.android.ide.common.resources.AbstractResourceRepository;
 import com.android.ide.common.resources.ResourceItem;
+import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.resources.configuration.DensityQualifier;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.VersionQualifier;
@@ -109,7 +109,7 @@ public class ManifestResourceDetector extends ResourceXmlDetector {
     private void checkManifest(@NonNull XmlContext context, @NonNull Document document) {
         LintClient client = context.getClient();
         Project project = context.getProject();
-        AbstractResourceRepository repository = null;
+        ResourceRepository repository = null;
         if (client.supportsProjectResources()) {
             repository = client.getResourceRepository(project, true, false);
         }
@@ -127,7 +127,7 @@ public class ManifestResourceDetector extends ResourceXmlDetector {
     private void visit(
             @NonNull XmlContext context,
             @NonNull Element element,
-            @Nullable AbstractResourceRepository repository) {
+            @Nullable ResourceRepository repository) {
         if (NODE_METADATA.equals(element.getTagName())) {
             return;
         }
@@ -195,7 +195,7 @@ public class ManifestResourceDetector extends ResourceXmlDetector {
             @NonNull XmlContext context,
             @NonNull Attr attribute,
             @NonNull String value,
-            @Nullable AbstractResourceRepository repository) {
+            @Nullable ResourceRepository repository) {
         ResourceUrl url = ResourceUrl.parse(value);
         if (url != null && !url.isFramework()) {
             if (repository != null) {

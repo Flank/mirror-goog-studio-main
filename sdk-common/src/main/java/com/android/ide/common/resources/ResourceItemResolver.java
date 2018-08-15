@@ -17,7 +17,7 @@ package com.android.ide.common.resources;
 
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import static com.android.SdkConstants.PREFIX_THEME_REF;
-import static com.android.ide.common.resources.AbstractResourceRepository.MAX_RESOURCE_INDIRECTION;
+import static com.android.ide.common.resources.ResourceResolver.MAX_RESOURCE_INDIRECTION;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -60,8 +60,8 @@ public class ResourceItemResolver extends RenderResources {
 
     public ResourceItemResolver(
             @NonNull FolderConfiguration configuration,
-            @NonNull AbstractResourceRepository frameworkResources,
-            @NonNull AbstractResourceRepository appResources,
+            @NonNull ResourceRepository frameworkResources,
+            @NonNull ResourceRepository appResources,
             @Nullable LayoutLog logger) {
         myConfiguration = configuration;
         myResourceProvider = null;
@@ -339,6 +339,6 @@ public class ResourceItemResolver extends RenderResources {
         @Nullable ResourceResolver getResolver(boolean createIfNecessary);
         @Nullable
         ResourceRepository getFrameworkResources();
-        @Nullable AbstractResourceRepository getAppResources();
+        @Nullable ResourceRepository getAppResources();
     }
 }

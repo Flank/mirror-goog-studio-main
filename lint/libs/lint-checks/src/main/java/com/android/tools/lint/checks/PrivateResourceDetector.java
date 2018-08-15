@@ -16,7 +16,17 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.SdkConstants.*;
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_REF_PREFIX;
+import static com.android.SdkConstants.FD_RES_VALUES;
+import static com.android.SdkConstants.TAG_ARRAY;
+import static com.android.SdkConstants.TAG_INTEGER_ARRAY;
+import static com.android.SdkConstants.TAG_PLURALS;
+import static com.android.SdkConstants.TAG_RESOURCES;
+import static com.android.SdkConstants.TAG_STRING_ARRAY;
+import static com.android.SdkConstants.TAG_STYLE;
+import static com.android.SdkConstants.TOOLS_URI;
+import static com.android.SdkConstants.VALUE_TRUE;
 import static com.android.tools.lint.detector.api.Lint.getBaseName;
 import static com.android.tools.lint.detector.api.Lint.isXmlFile;
 import static com.android.utils.SdkUtils.getResourceFieldName;
@@ -28,7 +38,7 @@ import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.MavenCoordinates;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.repository.ResourceVisibilityLookup;
-import com.android.ide.common.resources.AbstractResourceRepository;
+import com.android.ide.common.resources.ResourceRepository;
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
@@ -127,7 +137,7 @@ public class PrivateResourceDetector extends ResourceXmlDetector implements Sour
 
                 // See if this is resource we're overriding locally
                 if (!foreignPackage) {
-                    AbstractResourceRepository repository =
+                    ResourceRepository repository =
                             context.getClient()
                                     .getResourceRepository(context.getMainProject(), true, false);
                     if (repository != null

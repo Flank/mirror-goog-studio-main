@@ -42,13 +42,13 @@ import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.Variant;
 import com.android.ide.common.rendering.api.ResourceNamespace;
-import com.android.ide.common.resources.AbstractResourceRepository;
 import com.android.ide.common.resources.MergingException;
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceItem;
 import com.android.ide.common.resources.ResourceMerger;
 import com.android.ide.common.resources.ResourceMergerItem;
 import com.android.ide.common.resources.ResourceRepositories;
+import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.resources.ResourceSet;
 import com.android.ide.common.resources.TestResourceRepository;
 import com.android.ide.common.util.PathString;
@@ -947,7 +947,7 @@ public class TestLintClient extends LintCliClient {
 
     @Nullable
     @Override
-    public AbstractResourceRepository getResourceRepository(
+    public ResourceRepository getResourceRepository(
             Project project, boolean includeDependencies, boolean includeLibraries) {
         if (!supportsProjectResources()) {
             return null;

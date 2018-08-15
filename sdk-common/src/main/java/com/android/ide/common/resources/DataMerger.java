@@ -47,7 +47,7 @@ import org.xml.sax.SAXException;
  *
  * This is able to save its post work state and reload this for incremental update.
  */
-abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extends DataSet<I,F>>
+abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extends DataSet<I, F>>
         implements DataMap<I> {
     static final String FN_MERGER_XML = "merger.xml";
     static final String NODE_MERGER = "merger";
@@ -165,7 +165,6 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
      */
     public void mergeData(@NonNull MergeConsumer<I> consumer, boolean doCleanUp)
             throws MergingException {
-
         consumer.start(mFactory);
 
         try {
@@ -382,7 +381,7 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
      * used by {@link MergeWriter} to update a merged res folder.
      *
      * <p>If <code>false</code>, the items are marked as touched, and this can be used to feed a new
-     * {@link AbstractResourceRepository} object.
+     * {@link ResourceRepository} object.
      *
      * @param blobRootFolder the folder containing the blob.
      * @param incrementalState whether to load into an incremental state or a new state.

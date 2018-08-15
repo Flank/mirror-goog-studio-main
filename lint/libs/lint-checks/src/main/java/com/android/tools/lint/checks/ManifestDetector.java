@@ -67,7 +67,7 @@ import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.repository.GradleCoordinate;
 import com.android.ide.common.repository.MavenRepositories;
 import com.android.ide.common.repository.SdkMavenRepository;
-import com.android.ide.common.resources.AbstractResourceRepository;
+import com.android.ide.common.resources.ResourceRepository;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.resources.ResourceUrl;
@@ -515,7 +515,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
             if (fullBackupNode != null
                     && fullBackupNode.getValue().startsWith(PREFIX_RESOURCE_REF)
                     && context.getClient().supportsProjectResources()) {
-                AbstractResourceRepository resources =
+                ResourceRepository resources =
                         context.getClient().getResourceRepository(mainProject, true, false);
                 ResourceUrl url = ResourceUrl.parse(fullBackupNode.getValue());
                 if (url != null

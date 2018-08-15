@@ -12,7 +12,7 @@ import com.android.resources.ResourceType;
 import java.util.Comparator;
 
 /**
- * Describes resources that exist in an {@link AbstractResourceRepository} (and so the project). Can
+ * Describes resources that exist in an {@link ResourceRepository} (and so the project). Can
  * be turned into a {@link ResourceValue} if the contents of a given resource need to be inspected,
  * not just its presence.
  */
@@ -48,7 +48,7 @@ public interface ResourceItem extends Configurable {
 
     /**
      * Returns a string that combines the namespace, type, name and qualifiers and should uniquely
-     * identify a resource in a "correct" {@link AbstractResourceRepository}.
+     * identify a resource in a "correct" {@link ResourceRepository}.
      *
      * <p>The returned string is not unique if the same resource is declared twice for the same
      * {@link FolderConfiguration} (by mistake most likely) and the resource items were not

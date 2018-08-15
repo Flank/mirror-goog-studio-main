@@ -25,7 +25,7 @@ import java.util.Collection;
 import java.util.Map;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-/** Utilities for dealing with {@link AbstractResourceRepository} instances. */
+/** Utilities for dealing with {@link ResourceRepository} instances. */
 public class ResourceRepositories {
     private ResourceRepositories() {}
 

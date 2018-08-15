@@ -25,8 +25,8 @@ import com.android.annotations.NonNull;
 import com.android.ide.common.rendering.api.ArrayResourceValue;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceValue;
-import com.android.ide.common.resources.AbstractResourceRepository;
 import com.android.ide.common.resources.ResourceItem;
+import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.util.PathString;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
@@ -286,7 +286,7 @@ public class ArraySizeDetector extends ResourceXmlDetector {
             int childCount) {
         LintClient client = context.getClient();
         Project project = context.getMainProject();
-        AbstractResourceRepository resources = client.getResourceRepository(project, true, false);
+        ResourceRepository resources = client.getResourceRepository(project, true, false);
         if (resources == null) {
             return;
         }

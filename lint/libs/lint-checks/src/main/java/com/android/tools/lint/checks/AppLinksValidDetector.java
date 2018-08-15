@@ -52,8 +52,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceValue;
-import com.android.ide.common.resources.AbstractResourceRepository;
 import com.android.ide.common.resources.ResourceItem;
+import com.android.ide.common.resources.ResourceRepository;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import com.android.tools.lint.client.api.LintClient;
@@ -772,7 +772,7 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
             return str;
         }
         Project project = context.getProject();
-        AbstractResourceRepository resources = client.getResourceRepository(project, true, true);
+        ResourceRepository resources = client.getResourceRepository(project, true, true);
         if (resources == null) {
             return str;
         }

@@ -35,8 +35,8 @@ import com.android.annotations.VisibleForTesting
 import com.android.ide.common.repository.GradleCoordinate
 import com.android.ide.common.repository.GradleVersion
 import com.android.ide.common.repository.ResourceVisibilityLookup
-import com.android.ide.common.resources.AbstractResourceRepository
 import com.android.ide.common.resources.ResourceItem
+import com.android.ide.common.resources.ResourceRepository
 import com.android.ide.common.resources.configuration.FolderConfiguration.QUALIFIER_SPLITTER
 import com.android.repository.api.ProgressIndicator
 import com.android.resources.ResourceFolderType
@@ -2229,7 +2229,7 @@ class LintDriver
             project: Project,
             includeModuleDependencies: Boolean,
             includeLibraries: Boolean
-        ): AbstractResourceRepository? =
+        ): ResourceRepository? =
             delegate.getResourceRepository(
                 project, includeModuleDependencies,
                 includeLibraries

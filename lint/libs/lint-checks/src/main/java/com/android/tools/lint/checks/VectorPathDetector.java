@@ -23,8 +23,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceValue;
-import com.android.ide.common.resources.AbstractResourceRepository;
 import com.android.ide.common.resources.ResourceItem;
+import com.android.ide.common.resources.ResourceRepository;
 import com.android.resources.ResourceUrl;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
@@ -100,7 +100,7 @@ public class VectorPathDetector extends ResourceXmlDetector {
             if (url == null || url.isFramework()) {
                 return;
             }
-            AbstractResourceRepository repository =
+            ResourceRepository repository =
                     context.getClient().getResourceRepository(context.getProject(), true, true);
             if (repository == null) {
                 return;

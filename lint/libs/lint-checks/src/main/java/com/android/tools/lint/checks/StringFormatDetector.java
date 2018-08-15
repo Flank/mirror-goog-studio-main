@@ -41,8 +41,8 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceValue;
-import com.android.ide.common.resources.AbstractResourceRepository;
 import com.android.ide.common.resources.ResourceItem;
+import com.android.ide.common.resources.ResourceRepository;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
@@ -1234,7 +1234,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
             LintClient client = context.getClient();
             if (client.supportsProjectResources()
                     && !context.getScope().contains(Scope.RESOURCE_FILE)) {
-                AbstractResourceRepository resources =
+                ResourceRepository resources =
                         client.getResourceRepository(context.getMainProject(), true, false);
                 List<ResourceItem> items;
                 if (resources != null) {
