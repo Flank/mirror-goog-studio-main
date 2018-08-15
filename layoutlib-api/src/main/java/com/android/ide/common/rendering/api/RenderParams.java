@@ -232,12 +232,6 @@ public abstract class RenderParams {
         return mAssetRepository;
     }
 
-    /** @deprecated use {@link #getLayoutlibCallback()} */
-    @Deprecated
-    public IProjectCallback getProjectCallback() {
-        return getLayoutlibCallback();
-    }
-
     public LayoutlibCallback getLayoutlibCallback() {
         return mLayoutlibCallback;
     }
@@ -268,13 +262,6 @@ public abstract class RenderParams {
     @Deprecated
     public ScreenSize getConfigScreenSize() {
         return mHardwareConfig.getScreenSize();
-    }
-
-    /** @deprecated Use {@link #getAppIcon()}. */
-    @Deprecated
-    @Nullable
-    public ResourceValue getAppIconResource() {
-        return getAppIcon();
     }
 
     /** Returns the application icon resource, or null if there is no icon. */
