@@ -16,6 +16,9 @@
 
 package com.android.builder.dexing;
 
+import static com.android.builder.dexing.D8ErrorMessagesKt.ERROR_DUPLICATE;
+import static com.android.builder.dexing.D8ErrorMessagesKt.ERROR_DUPLICATE_HELP_PAGE;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.blame.Message;
@@ -45,11 +48,6 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
 
     private static final String ERROR_MULTIDEX =
             "Cannot fit requested classes in a single dex file";
-
-    private static final String ERROR_DUPLICATE = "Program type already present";
-    private static final String ERROR_DUPLICATE_HELP_PAGE =
-            "Learn how to resolve the issue at "
-                    + "https://developer.android.com/studio/build/dependencies#duplicate_classes.";
 
     private final int minSdkVersion;
     @NonNull private final CompilationMode compilationMode;

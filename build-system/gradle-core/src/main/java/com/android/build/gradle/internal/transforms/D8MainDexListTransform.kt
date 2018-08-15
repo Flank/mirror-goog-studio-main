@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.multidex.D8MainDexList
+import com.android.ide.common.blame.MessageReceiver
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
@@ -47,7 +48,8 @@ class D8MainDexListTransform(
         private val userProguardRules: Path? = null,
         private val userClasses: Path? = null,
         private val includeDynamicFeatures: Boolean = false,
-        private val bootClasspath: Supplier<List<Path>>) : Transform(), MainDexListWriter {
+        private val bootClasspath: Supplier<List<Path>>,
+        private val messageReceiver: MessageReceiver) : Transform(), MainDexListWriter {
 
     private val logger = LoggerWrapper.getLogger(D8MainDexListTransform::class.java)
     private lateinit var outputMainDexList: Path
@@ -63,7 +65,8 @@ class D8MainDexListTransform(
                                 .globalScope
                                 .androidBuilder
                                 .getBootClasspath(true)
-                                .map { it.toPath() }})
+                                .map { it.toPath() }},
+                    variantScope.globalScope.messageReceiver)
 
     override fun setMainDexListOutputFile(mainDexListFile: File) {
         this.outputMainDexList = mainDexListFile.toPath()
@@ -129,7 +132,8 @@ class D8MainDexListTransform(
                     getPlatformRules(),
                     proguardRules,
                     programFiles,
-                    libraryFiles
+                    libraryFiles,
+                    messageReceiver
                 )
             )
 
@@ -140,7 +144,7 @@ class D8MainDexListTransform(
             Files.deleteIfExists(outputMainDexList)
             Files.write(outputMainDexList, mainDexClasses)
         } catch (e: D8MainDexList.MainDexListException) {
-            throw TransformException("Error while generating the main dex list.", e)
+            throw TransformException("Error while generating the main dex list:${System.lineSeparator()}${e.message}", e)
         }
     }
 

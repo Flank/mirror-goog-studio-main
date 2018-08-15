@@ -34,7 +34,7 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 
-class D8DiagnosticsHandler implements DiagnosticsHandler {
+public class D8DiagnosticsHandler implements DiagnosticsHandler {
     private final MessageReceiver messageReceiver;
     private final Set<String> pendingHints = new HashSet<>();
 
