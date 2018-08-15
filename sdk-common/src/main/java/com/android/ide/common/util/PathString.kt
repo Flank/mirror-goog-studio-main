@@ -298,6 +298,12 @@ class PathString private constructor(
     }
 
     /**
+     * Returns the parent of this path, or this path if it is a root path.
+     */
+    val parentOrRoot: PathString
+        get() = parent ?: this
+
+    /**
      * Returns the parent of this path, or null if this is a root path.
      */
     val parent: PathString?
@@ -532,6 +538,19 @@ class PathString private constructor(
     @get:JvmName("isEmptyPath")
     val isEmptyPath: Boolean
         get() = prefixEndIndex == 0 && startIndex == suffixEndIndex
+
+    /**
+     * Resolves the given path against this one, given a path on the same filesystem. Resolving a
+     * path is a lot like concatenation for relative paths. Absolute paths point to the same place
+     * after being resolved. This is best explained by analogy. Imagine you're in a command prompt
+     * and this path is your current directory. You type "cd [other]". The resolved path is the
+     * directory you'd end up in.
+     *
+     * @param other a path string on the same filesystem as this. Both relative and absolute paths are
+     * supported.
+     */
+    fun resolve(other: String): PathString
+        = resolve(PathString(filesystemUri, other))
 
     /**
      * Resolves the given path against this one. Resolving a path is a lot like concatenation for
