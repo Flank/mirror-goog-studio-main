@@ -472,9 +472,9 @@ public abstract class BaseVariantImpl implements BaseVariant {
         if (bundleTask != null) {
             TaskFactoryUtils.dependsOn(bundleTask, task);
         }
-        TaskProvider<? extends Zip> bundleTaskLibrary = taskContainer.getBundleLibraryTask();
-        if (bundleTaskLibrary != null) {
-            TaskFactoryUtils.dependsOn(bundleTaskLibrary, task);
+        TaskProvider<? extends Zip> bundleLibraryTask = taskContainer.getBundleLibraryTask();
+        if (bundleLibraryTask != null) {
+            TaskFactoryUtils.dependsOn(bundleLibraryTask, task);
         }
     }
 }
