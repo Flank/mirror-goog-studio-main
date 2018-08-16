@@ -141,18 +141,7 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                     @Retention(CLASS)
                     public @interface CanIgnoreReturnValue {}"""
             ).indented(),
-            java(
-                """
-                    package javax.annotation;
-                    import static java.lang.annotation.RetentionPolicy.CLASS;
-                    import java.lang.annotation.Retention;
-                    import javax.annotation.meta.When;
-                    @SuppressWarnings("ClassNameDiffersFromFileName")
-                    @Retention(CLASS)
-                    public @interface CheckReturnValue {
-                    }
-                    """
-            ).indented(),
+            javaxCheckReturnValueSource,
             SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
@@ -162,10 +151,7 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                 "src/test/pkg/IgnoreTest.java:21: Warning: The result of method1 is not used [CheckResult]\n" +
                         "        method1(); // ERROR: should check\n" +
                         "        ~~~~~~~~~\n" +
-                        "src/test/pkg/IgnoreTest.java:22: Warning: The result of method2 is not used [CheckResult]\n" +
-                        "        method2(); // OK: void return value\n" +
-                        "        ~~~~~~~~~\n" +
-                        "0 errors, 2 warnings"
+                        "0 errors, 1 warnings"
             )
     }
 
@@ -534,4 +520,96 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                 """
             )
     }
+
+    fun test112602230() {
+        // Regression test for
+        // 112602230: Spurious lint error for unused result from AndroidFluentLogger#log
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import com.google.errorprone.annotations.CheckReturnValue;
+
+                @CheckReturnValue
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public interface LoggingApi {
+                    void log(String msg, Object p1);
+                }
+                """
+            ),
+            java(
+                """
+                package test.pkg;
+
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class LoggingApiTest {
+                    public void test(LoggingApi api) {
+                        api.log("log", null);
+                    }
+                }
+                """
+            ),
+            kotlin(
+                """
+                package test.pkg
+
+                import com.google.errorprone.annotations.CheckReturnValue;
+
+                @Suppress("RedundantUnitReturnType")
+                @CheckReturnValue
+                interface LoggingApiKotlin {
+                    fun log(msg: String, p1: Any): Unit
+                }
+
+                """
+            ),
+            kotlin(
+                """
+                package test.pkg
+
+                class LoggingApiTestKotlin {
+                    fun test(api: LoggingApiKotlin) {
+                        api.log("log", "")
+                    }
+                }
+                """
+            ),
+            errorProneCheckReturnValueSource
+        ).run().expectClean()
+    }
+
+    private val javaxCheckReturnValueSource = java(
+        """
+        package javax.annotation;
+        import static java.lang.annotation.RetentionPolicy.CLASS;
+        import java.lang.annotation.Retention;
+        @SuppressWarnings("ClassNameDiffersFromFileName")
+        @Retention(CLASS)
+        public @interface CheckReturnValue {
+        }
+        """
+    ).indented()
+
+    private val errorProneCheckReturnValueSource = java(
+        """
+        package com.google.errorprone.annotations;
+
+        import java.lang.annotation.Documented;
+        import java.lang.annotation.Retention;
+        import java.lang.annotation.Target;
+        import static java.lang.annotation.ElementType.CONSTRUCTOR;
+        import static java.lang.annotation.ElementType.METHOD;
+        import static java.lang.annotation.ElementType.PACKAGE;
+        import static java.lang.annotation.ElementType.TYPE;
+        import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+        @SuppressWarnings("ClassNameDiffersFromFileName")
+        @Documented
+        @Target({METHOD, CONSTRUCTOR, TYPE, PACKAGE})
+        @Retention(RUNTIME)
+        public @interface CheckReturnValue {
+        }
+        """
+    )
 }

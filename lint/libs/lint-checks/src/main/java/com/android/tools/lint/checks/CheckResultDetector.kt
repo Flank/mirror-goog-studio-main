@@ -31,6 +31,7 @@ import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils.containsAnnotation
 import com.android.tools.lint.detector.api.UastLintUtils.getAnnotationStringValue
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.PsiType
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UBlockExpression
 import org.jetbrains.uast.UClassInitializer
@@ -101,6 +102,10 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     ERRORPRONE_CAN_IGNORE_RETURN_VALUE
                 )
             ) {
+                return
+            }
+
+            if (method.returnType == PsiType.VOID) {
                 return
             }
 
