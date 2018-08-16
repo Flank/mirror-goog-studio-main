@@ -55,6 +55,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 
+import static com.android.sdklib.internal.avd.AvdManager.AVD_INI_RAM_SIZE;
+
 /**
  * Manager class for interacting with {@link Device}s within the SDK
  */
@@ -571,7 +573,7 @@ public class DeviceManager {
         for (State s : d.getAllStates()) {
             final Storage ramSize = s.getHardware().getRam();
             if (ramSize.getSize() > 0) {
-                props.put("hw.ramSize", ramSize.toString());
+                props.put(AVD_INI_RAM_SIZE, Long.toString(ramSize.getSizeAsUnit(Storage.Unit.MiB)));
             }
             if (s.getKeyState().equals(KeyboardState.HIDDEN)) {
                 props.put("hw.keyboard.lid", getBooleanVal(true));

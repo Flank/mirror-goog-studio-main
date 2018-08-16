@@ -47,6 +47,11 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class DeviceManagerTest {
 
+    static final String WSVGA_HASH             = "MD5:886bf70516706f933c01ecec92c4cad1";
+    static final String WSVGA_TRACKBALL_HASH   = "MD5:fa4c45fa0cfde5f07572cd148003700a";
+    static final String NEXUS_ONE_HASH         = "MD5:ef39e456bf2cab397201c2ac251f35fc";
+    static final String NEXUS_ONE_PLUGGED_HASH = "MD5:474a72646a55e61e94f69bdd94758ceb";
+
     @Rule public final TempSdkManager sdkManager =
             new TempSdkManager("sdk_" + getClass().getSimpleName());
 
@@ -405,6 +410,7 @@ public class DeviceManagerTest {
         Map<String, String> devProperties = DeviceManager.getHardwareProperties(pixelDevice);
         assertThat(devProperties.get("hw.lcd.density")).isEqualTo("420");
         assertThat(devProperties.get("hw.lcd.width")).isEqualTo("1080");
+        assertThat(devProperties.get("hw.ramSize")).isEqualTo("4096"); // In MB, without units
     }
 
     @Test
@@ -412,24 +418,24 @@ public class DeviceManagerTest {
         final Device d1 = dm.getDevice("7in WSVGA (Tablet)", "Generic");
 
         assertThat(DeviceManager.hasHardwarePropHashChanged(d1, "invalid"))
-                .isEqualTo("MD5:72f958b40e25d465a8b3767f77810370");
+                .isEqualTo(WSVGA_HASH);
 
         assertThat(DeviceManager.hasHardwarePropHashChanged(
-                d1, "MD5:72f958b40e25d465a8b3767f77810370"))
+                d1, WSVGA_HASH))
                 .isNull();
 
         // change the device hardware props, this should change the hash
         d1.getDefaultHardware().setNav(Navigation.TRACKBALL);
 
         assertThat(DeviceManager.hasHardwarePropHashChanged(
-                d1, "MD5:72f958b40e25d465a8b3767f77810370"))
-                .isEqualTo("MD5:6d894e528c6338f3079d9139111e2959");
+                d1, WSVGA_HASH))
+                .isEqualTo(WSVGA_TRACKBALL_HASH);
 
         // change the property back, should revert its hash to the previous one
         d1.getDefaultHardware().setNav(Navigation.NONAV);
 
         assertThat(DeviceManager.hasHardwarePropHashChanged(
-                d1, "MD5:72f958b40e25d465a8b3767f77810370"))
+                d1, WSVGA_HASH))
                 .isNull();
     }
 
@@ -438,24 +444,24 @@ public class DeviceManagerTest {
         final Device d2 = dm.getDevice("Nexus One", "Google");
 
         assertThat(DeviceManager.hasHardwarePropHashChanged(d2, "invalid"))
-                .isEqualTo("MD5:3f5de6d0fcc45cb6f4bcf63965b1a486");
+                .isEqualTo(NEXUS_ONE_HASH);
 
         assertThat(DeviceManager.hasHardwarePropHashChanged(
-                d2, "MD5:3f5de6d0fcc45cb6f4bcf63965b1a486"))
+                d2, NEXUS_ONE_HASH))
                 .isNull();
 
         // change the device hardware props, this should change the hash
         d2.getDefaultHardware().setChargeType(PowerType.PLUGGEDIN);
 
         assertThat(DeviceManager.hasHardwarePropHashChanged(
-                d2, "MD5:3f5de6d0fcc45cb6f4bcf63965b1a486"))
-                .isEqualTo("MD5:723565b9cfe5de483a3fd31db5335f74");
+                d2, NEXUS_ONE_HASH))
+                .isEqualTo(NEXUS_ONE_PLUGGED_HASH);
 
         // change the property back, should revert its hash to the previous one
         d2.getDefaultHardware().setChargeType(PowerType.BATTERY);
 
         assertThat(DeviceManager.hasHardwarePropHashChanged(
-                d2, "MD5:3f5de6d0fcc45cb6f4bcf63965b1a486"))
+                d2, NEXUS_ONE_HASH))
                 .isNull();
     }
 
