@@ -128,6 +128,7 @@ import java.util.IdentityHashMap
 import java.util.LinkedHashMap
 import java.util.function.Predicate
 import java.util.regex.Pattern
+import kotlin.system.measureTimeMillis
 
 /**
  * Analyzes Android projects and files
@@ -234,6 +235,8 @@ class LintDriver
 
     /** Count of files the driver has encountered (intended for analytics) */
     var fileCount = 0
+    /** Count of modules the driver has encountered (intended for analytics) */
+    var moduleCount = 0
     /** Number of Java sources to encountered in source or test folders */
     var javaFileCount = 0
     /** Number of Kotlin sources to encountered in source or test folders */
@@ -243,8 +246,22 @@ class LintDriver
     /** Number of source files encountered in test folders */
     var testSourceCount = 0
 
-    /** Count of modules the driver has encountered (intended for analytics) */
-    var moduleCount = 0
+    /** Time to initialize the lint project */
+    var initializeTimeMs = 0L
+    /** Time to register custom detectors */
+    var registerCustomDetectorsTimeMs = 0L
+    /** Time to compute the applicable detectors */
+    var computeDetectorsTimeMs = 0L
+    /** Time to run the first round of checks */
+    var checkProjectTimeMs = 0L
+    /** Time to run any extra phases */
+    var extraPhasesTimeMs = 0L
+    /** Time to report baseline issues */
+    var reportBaselineIssuesTimeMs = 0L
+    /** Time to dispose projects */
+    var disposeProjectsTimeMs = 0L
+    /** Time to generate reports */
+    var reportGenerationTimeMs = 0L
 
     /**
      * Returns the project containing a given file, or null if not found. This searches
@@ -337,7 +354,9 @@ class LintDriver
             client.log(null, "No projects found for %1\$s", request.files.toString())
             return
         }
-        realClient.performInitializeProjects(projects)
+        initializeTimeMs += measureTimeMillis {
+            realClient.performInitializeProjects(projects)
+        }
 
         if (isCanceled) {
             realClient.performDisposeProjects(projects)
@@ -348,7 +367,9 @@ class LintDriver
             fireEvent(EventType.REGISTERED_PROJECT, project = project)
         }
 
-        registerCustomDetectors(projects)
+        registerCustomDetectorsTimeMs += measureTimeMillis {
+            registerCustomDetectors(projects)
+        }
 
         // See if the lint.xml file specifies a baseline and we're not in incremental mode
         if (baseline == null && scope.size > 2) {
@@ -369,19 +390,25 @@ class LintDriver
                 val main = request.getMainProject(project)
 
                 // The set of available detectors varies between projects
-                computeDetectors(project)
+                computeDetectorsTimeMs += measureTimeMillis {
+                    computeDetectors(project)
+                }
 
                 if (applicableDetectors.isEmpty()) {
                     // No detectors enabled in this project: skip it
                     continue
                 }
 
-                checkProject(project, main)
+                checkProjectTimeMs += measureTimeMillis {
+                    checkProject(project, main)
+                }
                 if (isCanceled) {
                     break
                 }
 
-                runExtraPhases(project, main)
+                extraPhasesTimeMs += measureTimeMillis {
+                    runExtraPhases(project, main)
+                }
             }
         } catch (throwable: Throwable) {
             // Process canceled etc
@@ -394,11 +421,15 @@ class LintDriver
         if (baseline != null && !isCanceled) {
             val lastProject = Iterables.getLast(projects)
             val main = request.getMainProject(lastProject)
-            baseline.reportBaselineIssues(this, main)
+            reportBaselineIssuesTimeMs += measureTimeMillis {
+                baseline.reportBaselineIssues(this, main)
+            }
         }
 
         fireEvent(if (isCanceled) EventType.CANCELED else EventType.COMPLETED, null)
-        realClient.performDisposeProjects(projects)
+        disposeProjectsTimeMs += measureTimeMillis {
+            realClient.performDisposeProjects(projects)
+        }
     }
 
     private fun registerCustomDetectors(projects: Collection<Project>) {
@@ -2081,7 +2112,9 @@ class LintDriver
                 }
             }
 
-            delegate.report(context, issue, severity, location, message, format, fix)
+            reportGenerationTimeMs += measureTimeMillis {
+                delegate.report(context, issue, severity, location, message, format, fix)
+            }
         }
 
         private fun unsupported(): Nothing =

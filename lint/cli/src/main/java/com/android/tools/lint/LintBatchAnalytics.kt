@@ -123,6 +123,14 @@ class LintBatchAnalytics {
             kotlinSourceCount = driver.kotlinFileCount.toLong()
             resourceFileCount = driver.resourceFileCount.toLong()
             testSourceCount = driver.testSourceCount.toLong()
+            initializeTimeMs = driver.initializeTimeMs
+            registerCustomDetectorsTimeMs = driver.registerCustomDetectorsTimeMs
+            computeDetectorsTimeMs = driver.computeDetectorsTimeMs
+            checkProjectTimeMs = driver.checkProjectTimeMs
+            extraPhasesTimeMs = driver.extraPhasesTimeMs
+            reportBaselineIssuesTimeMs = driver.reportBaselineIssuesTimeMs
+            disposeProjectsTimeMs = driver.disposeProjectsTimeMs
+            reportGenerationTimeMs = driver.reportGenerationTimeMs
         }.build()
 
     private fun recordSeverityOverride(
