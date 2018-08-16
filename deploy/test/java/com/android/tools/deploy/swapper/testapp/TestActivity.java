@@ -65,4 +65,12 @@ public class TestActivity extends Activity {
         System.out.println(new KotlinCompanionTarget().getStatus());
     }
 
+    public void getLambdaTargetStatus() {
+        System.out.println(new LambdaTarget().getStatus());
+    }
+
+    public void getLambdaFailedTargetStatus() {
+        System.out.println(new LambdaFailedTarget().getStatus());
+    }
+
 }
