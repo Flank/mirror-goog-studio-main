@@ -28,6 +28,7 @@ import com.android.SdkConstants.ATTR_STYLE
 import com.android.SdkConstants.AUTO_URI
 import com.android.SdkConstants.TOOLS_URI
 import com.android.SdkConstants.XMLNS_PREFIX
+import com.android.annotations.VisibleForTesting
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.LintFix.GroupType
 import com.android.tools.lint.detector.api.LintFix.LintFixGroup
@@ -100,6 +101,7 @@ open class LintFixPerformer constructor(
         return applyEdits(files)
     }
 
+    @VisibleForTesting
     fun fix(
         file: File,
         fixes: List<LintFix>,
@@ -542,6 +544,12 @@ open class LintFixPerformer constructor(
         return true
     }
 
+    fun computeEdits(warning: Warning, lintFix: LintFix): List<PendingEditFile>? {
+        val fileMap = mutableMapOf<File, PendingEditFile>()
+        registerFix(fileMap, warning, lintFix)
+        return fileMap.values.toList()
+    }
+
     companion object {
         /** Not all fixes are eligible for auto-fix; this function checks whether a given fix is. */
         fun canAutoFix(lintFix: LintFix): Boolean {
@@ -628,7 +636,7 @@ open class LintFixPerformer constructor(
         val source: String,
         val startOffset: Int,
         val endOffset: Int,
-        private val replacement: String
+        val replacement: String
     ) : Comparable<PendingEdit> {
         override fun compareTo(other: PendingEdit): Int {
             val delta = other.startOffset - this.startOffset

@@ -16,12 +16,14 @@
 
 package com.android.tools.lint
 
-import com.android.tools.lint.checks.BuiltinIssueRegistry
 import com.android.tools.lint.client.api.LintClient
+import com.android.tools.lint.detector.api.LintFix
+import com.android.tools.lint.detector.api.LintFix.GroupType.ALTERNATIVES
+import com.android.tools.lint.detector.api.LintFix.LintFixGroup
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.TextFormat.RAW
 import com.android.utils.SdkUtils
-import com.android.utils.XmlUtils
+import com.android.utils.XmlUtils.toXmlAttributeValue
 import com.google.common.annotations.Beta
 import com.google.common.base.Charsets
 import com.google.common.base.Joiner
@@ -53,6 +55,7 @@ class XmlReporter
 constructor(client: LintCliClient, output: File) : Reporter(client, output) {
     private val writer: Writer = BufferedWriter(Files.newWriter(output, Charsets.UTF_8))
     var isIntendedForBaseline: Boolean = false
+    var includeFixes: Boolean = false
     private var attributes: MutableMap<String, String>? = null
 
     /** Sets a custom attribute to be written out on the root element of the report */
@@ -80,14 +83,14 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
     override fun write(stats: LintStats, issues: List<Warning>) {
         writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
         // Format 4: added urls= attribute with all more info links, comma separated
-        writer.write("<issues format=\"4\"")
+        writer.write("<issues format=\"5\"")
         val revision = client.getClientRevision()
         if (revision != null) {
             writer.write(String.format(" by=\"lint %1\$s\"", revision))
         }
         attributes?.let {
             it.asSequence().sortedBy { it.key }.forEach {
-                writer.write(" ${it.key}=\"${XmlUtils.toXmlAttributeValue(it.value)}\"")
+                writer.write(" ${it.key}=\"${toXmlAttributeValue(it.value)}\"")
             }
         }
         writer.write(">\n")
@@ -113,7 +116,7 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
 
     private fun writeIssue(warning: Warning) {
         writer.write('\n'.toInt())
-        indent(writer, 1)
+        indent(1)
         writer.write("<issue")
         val issue = warning.issue
         writeAttribute(writer, 2, "id", issue.id)
@@ -168,10 +171,10 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
             )
         }
 
-        if (!isIntendedForBaseline && client.getRegistry() is BuiltinIssueRegistry) {
-            if (hasAutoFix(issue)) {
-                writeAttribute(writer, 2, "quickfix", "studio")
-            }
+        if (!isIntendedForBaseline && includeFixes &&
+            (warning.quickfixData != null || hasAutoFix(issue))
+        ) {
+            writeAttribute(writer, 2, "quickfix", "studio")
         }
 
         assert(warning.file != null == (warning.location != null))
@@ -180,11 +183,22 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
             assert(warning.location.file === warning.file)
         }
 
+        var hasChildren = false
+
+        val fixData = warning.quickfixData
+        if (includeFixes && fixData != null) {
+            writer.write(">\n")
+            emitFixes(warning, fixData)
+            hasChildren = true
+        }
+
         var location: Location? = warning.location
         if (location != null) {
-            writer.write(">\n")
+            if (!hasChildren) {
+                writer.write(">\n")
+            }
             while (location != null) {
-                indent(writer, 2)
+                indent(2)
                 writer.write("<location")
                 val path = LintCliClient.getDisplayPath(
                     warning.project,
@@ -210,11 +224,102 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
                 writer.write("/>\n")
                 location = location.secondary
             }
-            indent(writer, 1)
+            hasChildren = true
+        }
+
+        if (hasChildren) {
+            indent(1)
             writer.write("</issue>\n")
         } else {
             writer.write('\n'.toInt())
-            indent(writer, 1)
+            indent(1)
+            writer.write("/>\n")
+        }
+    }
+
+    private fun emitFixes(warning: Warning, lintFix: LintFix) {
+        val fixes = if (lintFix is LintFixGroup && lintFix.type == ALTERNATIVES) {
+            lintFix.fixes
+        } else {
+            listOf(lintFix)
+        }
+        for (fix in fixes) {
+            emitFix(warning, fix)
+        }
+    }
+
+    private fun emitFix(warning: Warning, lintFix: LintFix) {
+        indent(2)
+        writer.write("<fix")
+        lintFix.displayName?.let {
+            writeAttribute(writer, 3, "description", it)
+        }
+        writeAttribute(
+            writer, 3, "auto",
+            LintFixPerformer.canAutoFix(lintFix).toString()
+        )
+
+        var haveChildren = false
+
+        val performer = LintFixPerformer(client, false)
+        val files = performer.computeEdits(warning, lintFix)
+        if (files != null && files.isNotEmpty()) {
+            haveChildren = true
+            writer.write(">\n")
+
+            for (file in files) {
+                for (edit in file.edits) {
+                    indent(3)
+                    writer.write("<edit")
+
+                    val path = LintCliClient.getDisplayPath(
+                        warning.project,
+                        file.file,
+                        // Don't use absolute paths in baseline files
+                        client.flags.isFullPath && !isIntendedForBaseline
+                    )
+                    writeAttribute(writer, 4, "file", path)
+
+                    with(edit) {
+                        val after = source.substring(Math.max(startOffset - 12, 0), startOffset)
+                        val before = source.substring(
+                            startOffset,
+                            Math.min(Math.max(startOffset + 12, endOffset), source.length)
+                        )
+                        writeAttribute(writer, 4, "offset", startOffset.toString())
+                        writeAttribute(writer, 4, "after", toXmlAttributeValue(after))
+                        writeAttribute(
+                            writer, 4, "before",
+                            toXmlAttributeValue(before)
+                        )
+                        if (endOffset > startOffset) {
+                            writeAttribute(
+                                writer, 4, "delete",
+                                toXmlAttributeValue(
+                                    source.substring(
+                                        startOffset,
+                                        endOffset
+                                    )
+                                )
+                            )
+                        }
+                        if (replacement.isNotEmpty()) {
+                            writeAttribute(
+                                writer, 4, "insert",
+                                toXmlAttributeValue(replacement)
+                            )
+                        }
+                    }
+
+                    writer.write("/>\n")
+                }
+            }
+        }
+
+        if (haveChildren) {
+            indent(2)
+            writer.write("</fix>\n")
+        } else {
             writer.write("/>\n")
         }
     }
@@ -222,16 +327,16 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
     @Throws(IOException::class)
     private fun writeAttribute(writer: Writer, indent: Int, name: String, value: String) {
         writer.write('\n'.toInt())
-        indent(writer, indent)
+        indent(indent)
         writer.write(name)
         writer.write('='.toInt())
         writer.write('"'.toInt())
-        writer.write(XmlUtils.toXmlAttributeValue(value))
+        writer.write(toXmlAttributeValue(value))
         writer.write('"'.toInt())
     }
 
     @Throws(IOException::class)
-    private fun indent(writer: Writer, indent: Int) {
+    private fun indent(indent: Int) {
         for (level in 0 until indent) {
             writer.write("    ")
         }

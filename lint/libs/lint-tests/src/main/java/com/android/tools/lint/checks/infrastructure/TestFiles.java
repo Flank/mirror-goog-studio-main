@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks.infrastructure;
 
+import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.FN_BUILD_GRADLE;
 
@@ -124,6 +125,11 @@ public class TestFiles {
     @NonNull
     public static TestFile.ManifestTestFile manifest() {
         return new TestFile.ManifestTestFile();
+    }
+
+    @NonNull
+    public static LintDetectorTest.TestFile manifest(@NonNull @Language("XML") String source) {
+        return TestFiles.source(ANDROID_MANIFEST_XML, source);
     }
 
     @NonNull

@@ -75,6 +75,7 @@ public class LintCliFlags {
     private boolean removedFixedBaselineIssues;
     private boolean writeBaselineIfMissing = true;
     private boolean autoFix = VALUE_TRUE.equals(System.getProperty("lint.autofix"));
+    private boolean includeXmlFixes;
 
     public static final int ERRNO_SUCCESS = 0;
     public static final int ERRNO_ERRORS = 1;
@@ -641,5 +642,15 @@ public class LintCliFlags {
     /** Sets whether to apply safe suggestions */
     public void setAutoFix(boolean autoFix) {
         this.autoFix = autoFix;
+    }
+
+    /** Whether XML reports should include descriptions of the quickfixes */
+    public boolean isIncludeXmlFixes() {
+        return includeXmlFixes;
+    }
+
+    /** Sets whether XML reports should include descriptions of the quickfixes */
+    public void setIncludeXmlFixes(boolean includeXmlFixes) {
+        this.includeXmlFixes = includeXmlFixes;
     }
 }

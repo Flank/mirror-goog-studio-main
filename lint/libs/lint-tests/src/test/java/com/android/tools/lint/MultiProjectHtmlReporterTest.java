@@ -43,7 +43,7 @@ public class MultiProjectHtmlReporterTest extends AbstractCheckTest {
             LintCliClient client =
                     new LintCliClient(CLIENT_UNIT_TESTS) {
                         @Override
-                        IssueRegistry getRegistry() {
+                        public IssueRegistry getRegistry() {
                             if (registry == null) {
                                 registry =
                                         new IssueRegistry() {

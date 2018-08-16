@@ -271,7 +271,10 @@ public class LintGradleExecution {
                                     flags.isFatalOnly()));
             try {
                 flags.getReporters().add(Reporter.createHtmlReporter(client, html, flags));
-                flags.getReporters().add(Reporter.createXmlReporter(client, xml, false));
+                flags.getReporters()
+                        .add(
+                                Reporter.createXmlReporter(
+                                        client, xml, false, flags.isIncludeXmlFixes()));
             } catch (IOException e) {
                 throw new GradleException(e.getMessage(), e);
             }
@@ -488,7 +491,8 @@ public class LintGradleExecution {
                 if (!ok) {
                     System.err.println("Couldn't create baseline folder " + dir);
                 } else {
-                    XmlReporter reporter = Reporter.createXmlReporter(client, baselineFile, true);
+                    XmlReporter reporter =
+                            Reporter.createXmlReporter(client, baselineFile, true, false);
                     reporter.setBaselineAttributes(
                             client, flags.isFatalOnly() ? VARIANT_FATAL : VARIANT_ALL);
                     reporter.write(stats, mergedWarnings);

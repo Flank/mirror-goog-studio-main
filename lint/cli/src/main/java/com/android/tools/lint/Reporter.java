@@ -156,13 +156,18 @@ public abstract class Reporter {
      * @param client the client
      * @param output the output file
      * @param intendedForBaseline whether this XML report is used to write a baseline file
+     * @param includeFixes whether to include descriptions of quickfixes
      * @throws IOException if an error occurs
      */
     public static XmlReporter createXmlReporter(
-            @NonNull LintCliClient client, @NonNull File output, boolean intendedForBaseline)
+            @NonNull LintCliClient client,
+            @NonNull File output,
+            boolean intendedForBaseline,
+            boolean includeFixes)
             throws IOException {
         XmlReporter reporter = new XmlReporter(client, output);
         reporter.setIntendedForBaseline(intendedForBaseline);
+        reporter.setIncludeFixes(!intendedForBaseline && includeFixes);
         return reporter;
     }
 

@@ -1146,6 +1146,10 @@ public class TestLintClient extends LintCliClient {
         return super.openConnection(url, timeout);
     }
 
+    public void setRegistry(IssueRegistry registry) {
+        this.registry = registry;
+    }
+
     public static class TestProject extends Project {
         @Nullable public final GradleModelMocker mocker;
         private final ProjectDescription projectDescription;

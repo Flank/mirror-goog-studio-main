@@ -15,6 +15,7 @@
  */
 package com.android.tools.lint.client.api
 
+import com.android.tools.lint.checks.infrastructure.TestResultChecker
 import com.android.tools.lint.checks.infrastructure.TestFiles.base64gzip
 import com.android.tools.lint.checks.infrastructure.TestFiles.classpath
 import com.android.tools.lint.checks.infrastructure.TestFiles.gradle
@@ -299,7 +300,7 @@ class CustomRuleTest {
             .allowObsoleteLintChecks(false)
             .allowCompilationErrors()
             .run()
-            .check {
+            .check(TestResultChecker {
                 assertThat(it).contains(
                     "lint2.jar: Warning: Lint found one or more custom " +
                             "checks that could not be loaded."
@@ -319,7 +320,7 @@ class CustomRuleTest {
                 )
                 assertThat(it).contains("ClassLoader.defineClass1(ClassLoader.java:")
                 assertThat(it).contains("0 errors, 1 warnings")
-            }
+            })
     }
 
     @Test
@@ -348,7 +349,7 @@ class CustomRuleTest {
             .allowCompilationErrors()
             .allowObsoleteLintChecks(false)
             .run()
-            .check {
+            .check(TestResultChecker {
                 assertThat(it).contains(
                     "lint3.jar: Warning: Lint found one or more custom " +
                             "checks that could not be loaded."
@@ -368,7 +369,7 @@ class CustomRuleTest {
                 )
                 assertThat(it).contains("ClassLoader.defineClass1(ClassLoader.java:")
                 assertThat(it).contains("0 errors, 1 warnings")
-            }
+            })
     }
 
     @Test
@@ -392,7 +393,7 @@ class CustomRuleTest {
             .allowCompilationErrors()
             .allowObsoleteLintChecks(false)
             .run()
-            .check {
+            .check(TestResultChecker {
                 assertThat(it).contains(
                     "lint5.jar: Warning: Lint found an issue registry " +
                             "(com.example.google.lint.MyIssueRegistry) which is older than the " +
@@ -404,7 +405,7 @@ class CustomRuleTest {
                             "level is "
                 )
                 assertThat(it).contains("0 errors, 1 warnings")
-            }
+            })
     }
 
     @Test
@@ -494,9 +495,9 @@ class CustomRuleTest {
             .allowCompilationErrors()
             .allowObsoleteLintChecks(false)
             .run()
-            .check {
+            .check(TestResultChecker {
                 assertThat(it).contains("res/values/strings.xml:2: Warning: All tags are now flagged: string [ShortUniqueId]")
-            }
+            })
     }
 
     private val appCompatTestSource = java(

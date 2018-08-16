@@ -17,6 +17,7 @@
 package com.android.tools.lint.client.api
 
 import com.android.tools.lint.checks.AbstractCheckTest
+import com.android.tools.lint.checks.infrastructure.TestResultChecker
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
@@ -53,12 +54,12 @@ class LintDriverCrashTest : AbstractCheckTest() {
             // since the stacktrace contains a number of specific line numbers from
             // the lint implementation, including this test, which keeps shifting every
             // time there is an edit
-            .check {
+            .check(TestResultChecker {
                 assertThat(it).contains("Foo.java: Error: Unexpected failure during lint analysis of Foo.java (this is a bug in lint or one of the libraries it depends on)")
                 assertThat(it).contains("You can set environment variable LINT_PRINT_STACKTRACE=true to dump a full stacktrace to stdout. [LintError]")
                 assertThat(it).contains("ArithmeticException:LintDriverCrashTest\$CrashingDetector\$createUastHandler$1.visitFile(LintDriverCrashTest.kt:")
                 assertThat(it).contains("1 errors, 0 warnings")
-            }
+            })
         LintDriver.clearCrashCount()
     }
 

@@ -259,7 +259,9 @@ public class LintCliClient extends LintClient {
         }
 
         if (flags.isAutoFix()) {
-            boolean fixed = new LintFixPerformer(this, !flags.isQuiet()).fix(warnings);
+            boolean statistics = !flags.isQuiet();
+            LintFixPerformer performer = new LintFixPerformer(this, statistics);
+            boolean fixed = performer.fix(warnings);
             if (fixed && LintClient.Companion.isGradle()) {
                 String message =
                         ""
@@ -286,7 +288,7 @@ public class LintCliClient extends LintClient {
             if (!ok) {
                 System.err.println("Couldn't create baseline folder " + dir);
             } else {
-                XmlReporter reporter = Reporter.createXmlReporter(this, baselineFile, true);
+                XmlReporter reporter = Reporter.createXmlReporter(this, baselineFile, true, false);
                 reporter.setBaselineAttributes(this, getBaselineVariantName());
                 reporter.write(stats, warnings);
                 System.err.println(getBaselineCreationMessage(baselineFile));
@@ -448,6 +450,8 @@ public class LintCliClient extends LintClient {
     @NonNull
     protected LintDriver createDriver(
             @NonNull IssueRegistry registry, @NonNull LintRequest request) {
+        this.registry = registry;
+
         driver = new LintDriver(registry, this, request);
         driver.setAbbreviating(!flags.isShowEverything());
         driver.setCheckTestSources(flags.isCheckTestSources());
@@ -1152,7 +1156,7 @@ public class LintCliClient extends LintClient {
     }
 
     /** Returns the issue registry used by this client */
-    IssueRegistry getRegistry() {
+    public IssueRegistry getRegistry() {
         return registry;
     }
 

@@ -87,6 +87,7 @@ public class Main {
     private static final String ARG_DISABLE = "--disable";
     private static final String ARG_CHECK = "--check";
     private static final String ARG_AUTO_FIX = "--apply-suggestions";
+    private static final String ARG_DESCRIBE_FIXES = "--describe-suggestions";
     private static final String ARG_IGNORE = "--ignore";
     private static final String ARG_LIST_IDS = "--list";
     private static final String ARG_SHOW = "--show";
@@ -639,7 +640,10 @@ public class Main {
                     exit(ERRNO_EXISTS);
                 }
                 try {
-                    flags.getReporters().add(Reporter.createXmlReporter(client, output, false));
+                    flags.getReporters()
+                            .add(
+                                    Reporter.createXmlReporter(
+                                            client, output, false, flags.isIncludeXmlFixes()));
                 } catch (IOException e) {
                     log(e, null);
                     exit(ERRNO_INVALID_ARGS);
@@ -764,6 +768,18 @@ public class Main {
                 flags.setWarningsAsErrors(true);
             } else if (arg.equals(ARG_AUTO_FIX)) {
                 flags.setAutoFix(true);
+            } else if (arg.equals(ARG_DESCRIBE_FIXES)) {
+                flags.setIncludeXmlFixes(true);
+                // Make sure we also update any XML reporters we've *already* created before
+                // coming across this flag:
+                for (Reporter reporter : flags.getReporters()) {
+                    if (reporter instanceof XmlReporter) {
+                        XmlReporter xmlReporter = (XmlReporter) reporter;
+                        if (!xmlReporter.isIntendedForBaseline()) {
+                            xmlReporter.setIncludeFixes(true);
+                        }
+                    }
+                }
             } else if (arg.equals(ARG_CLASSES)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing class folder name");

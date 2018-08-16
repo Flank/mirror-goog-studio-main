@@ -205,7 +205,10 @@ public class SyncOptions {
                 }
                 output = validateOutputFile(output);
                 try {
-                    flags.getReporters().add(Reporter.createXmlReporter(client, output, false));
+                    flags.getReporters()
+                            .add(
+                                    Reporter.createXmlReporter(
+                                            client, output, false, flags.isIncludeXmlFixes()));
                 } catch (IOException e) {
                     throw new org.gradle.api.GradleException("XML invalid argument.", e);
                 }

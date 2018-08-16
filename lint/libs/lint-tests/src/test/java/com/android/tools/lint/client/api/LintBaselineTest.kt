@@ -39,7 +39,7 @@ class LintBaselineTest : AbstractCheckTest() {
 
         @Language("XML")
         val baselineContents = """<?xml version="1.0" encoding="UTF-8"?>
-<issues format="4" by="lint unittest">
+<issues format="5" by="lint unittest">
 
     <issue
         id="UsesMinSdkAttributes"
@@ -218,7 +218,7 @@ There are quickfixes to automatically extract this hardcoded string into a resou
 
         @Language("XML")
         val expected = ("""<?xml version="1.0" encoding="UTF-8"?>
-<issues format="4" by="lint unittest">
+<issues format="5" by="lint unittest">
 
     <issue
         id="UsesMinSdkAttributes"
@@ -307,7 +307,7 @@ There are quickfixes to automatically extract this hardcoded string into a resou
         assertThat(actual).isEqualTo(
             "" +
                     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                    "<issues format=\"4\" by=\"lint unittest\">\n" +
+                    "<issues format=\"5\" by=\"lint unittest\">\n" +
                     "\n" +
                     "    <issue\n" +
                     "        id=\"HardcodedText\"\n" +

@@ -414,7 +414,7 @@ class LintBaseline(
                     // Format 4: added urls= attribute with all more info links, comma separated
                     writer.write("<")
                     writer.write(TAG_ISSUES)
-                    writer.write(" format=\"4\"")
+                    writer.write(" format=\"5\"")
                     val revision = client!!.getClientRevision()
                     if (revision != null) {
                         writer.write(String.format(" by=\"lint %1\$s\"", revision))
