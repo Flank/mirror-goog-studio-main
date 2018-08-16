@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -165,6 +166,9 @@ public class JarMerger implements Closeable {
                     name = relocator.relocate(name);
                 }
 
+                if (name.contains("../")) {
+                    throw new InvalidPathException(name, "Entry name contains invalid characters");
+                }
                 JarEntry newEntry = new JarEntry(name);
                 newEntry.setMethod(entry.getMethod());
                 if (newEntry.getMethod() == ZipEntry.STORED) {

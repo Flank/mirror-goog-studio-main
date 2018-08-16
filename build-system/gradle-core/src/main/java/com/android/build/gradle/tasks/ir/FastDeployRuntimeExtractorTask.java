@@ -96,7 +96,9 @@ public class FastDeployRuntimeExtractorTask extends AndroidVariantTask {
      */
     private static boolean isValidForPackaging(String name) {
         // don't extract metadata or classes supposed to be replaced by generated ones.
-        return !name.startsWith("META-INF") && !name.endsWith("AppInfo.class");
+        return !name.startsWith("META-INF")
+                && !name.endsWith("AppInfo.class")
+                && !name.contains("../");
     }
 
     public static class CreationAction extends TaskCreationAction<FastDeployRuntimeExtractorTask> {

@@ -26,6 +26,7 @@ import com.android.build.api.transform.SecondaryFile;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.builder.packaging.JarMerger;
+import com.android.builder.utils.ZipEntryUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closer;
@@ -35,6 +36,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.InvalidPathException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -231,6 +233,11 @@ public abstract class LibraryBaseTransform extends Transform {
                 } else {
                     // Create a new entry so that the compressed len is recomputed.
                     newEntry = new JarEntry(name);
+                }
+
+                if (!ZipEntryUtils.isValidZipEntryName(newEntry)) {
+                    throw new InvalidPathException(
+                            newEntry.getName(), "Entry name contains invalid characters");
                 }
 
                 newEntry.setLastModifiedTime(JarMerger.ZERO_TIME);

@@ -28,6 +28,7 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.pipeline.TransformManager;
+import com.android.builder.utils.ZipEntryUtils;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
@@ -171,8 +172,8 @@ public class LibraryJniLibsTransform extends Transform {
                 ZipEntry entry = entries.nextElement();
 
                 String entryPath = entry.getName();
-
-                if (!pattern.matcher(entryPath).matches()) {
+                if (!pattern.matcher(entryPath).matches()
+                        || !ZipEntryUtils.isValidZipEntryName(entry)) {
                     continue;
                 }
 

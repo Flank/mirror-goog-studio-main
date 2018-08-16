@@ -38,6 +38,7 @@ import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.builder.utils.ExceptionRunnable;
 import com.android.builder.utils.FileCache;
+import com.android.builder.utils.ZipEntryUtils;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -53,6 +54,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.attribute.FileTime;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -292,6 +294,10 @@ public class FixStackFramesTransform extends Transform {
                 Enumeration<? extends ZipEntry> inEntries = inputZip.entries();
                 while (inEntries.hasMoreElements()) {
                     ZipEntry entry = inEntries.nextElement();
+                    if (!ZipEntryUtils.isValidZipEntryName(entry)) {
+                        throw new InvalidPathException(
+                                entry.getName(), "Entry name contains invalid characters");
+                    }
                     if (!entry.getName().endsWith(SdkConstants.DOT_CLASS)) {
                         continue;
                     }

@@ -59,6 +59,7 @@ import com.android.builder.files.RelativeFile;
 import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.packaging.PackagingUtils;
 import com.android.builder.utils.FileCache;
+import com.android.builder.utils.ZipEntryUtils;
 import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.resources.FileStatus;
 import com.android.sdklib.AndroidVersion;
@@ -565,7 +566,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             Enumeration<? extends ZipEntry> entries = inFile.entries();
             while (entries.hasMoreElements()) {
                 ZipEntry zipEntry = entries.nextElement();
-                if (!zipEntry.getName().endsWith(SdkConstants.DOT_CLASS)) {
+                if (!zipEntry.getName().endsWith(SdkConstants.DOT_CLASS)
+                        && ZipEntryUtils.isValidZipEntryName(zipEntry)) {
                     outFile.putNextEntry(new ZipEntry(zipEntry.getName()));
                     try {
                         ByteStreams.copy(

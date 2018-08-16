@@ -25,6 +25,7 @@ import com.google.common.base.Function
 import com.google.common.base.Predicate
 import java.io.File
 import java.nio.file.Files
+import java.nio.file.InvalidPathException
 import java.nio.file.StandardCopyOption
 
 /**
@@ -41,7 +42,11 @@ class FolderBasedApkCreator(private val creationData: ApkCreatorFactory.Creation
     }
 
     companion object {
-        fun proccessZipEntry(zip: File, isIgnored: Predicate<String>?, action: (StoredEntry) -> Unit) {
+        fun proccessZipEntry(
+            zip: File,
+            isIgnored: Predicate<String>?,
+            action: (StoredEntry) -> Unit
+        ) {
             ZFile(zip, ZFileOptions(), true).use {
                 it.entries().forEach { entry ->
                     if (isIgnored?.test(entry.centralDirectoryHeader.name) != true) {
@@ -57,17 +62,24 @@ class FolderBasedApkCreator(private val creationData: ApkCreatorFactory.Creation
         transform: Function<String, String>?,
         isIgnored: Predicate<String>?
     ) {
-        if (zip==null) return
+        if (zip == null) return
         proccessZipEntry(zip, isIgnored) { entry ->
             entry.open().use {
                 val destinationFile =
                     File(creationData.apkPath, entry.centralDirectoryHeader.name)
+                if (entry.centralDirectoryHeader.name.contains("../")) {
+                    throw InvalidPathException(
+                        entry.centralDirectoryHeader.name,
+                        "Entry name contains invalid characters"
+                    )
+                }
                 destinationFile.parentFile.mkdirs()
                 Files.copy(
                     it,
                     destinationFile.toPath(),
                     StandardCopyOption.REPLACE_EXISTING
                 )
+
             }
         }
     }
@@ -78,7 +90,8 @@ class FolderBasedApkCreator(private val creationData: ApkCreatorFactory.Creation
         Files.copy(
             inputFile.toPath(),
             destinationFile.toPath(),
-            StandardCopyOption.REPLACE_EXISTING)
+            StandardCopyOption.REPLACE_EXISTING
+        )
     }
 
     override fun deleteFile(entryPath: String) {

@@ -22,6 +22,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.builder.dexing.ClassFileInput;
+import com.android.builder.utils.ZipEntryUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
@@ -30,6 +31,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -87,11 +89,13 @@ public class DesugaringClassAnalyzer {
             Enumeration<? extends ZipEntry> entries = zip.entries();
             while (entries.hasMoreElements()) {
                 ZipEntry zipEntry = entries.nextElement();
-
+                if (!ZipEntryUtils.isValidZipEntryName(zipEntry)) {
+                    throw new InvalidPathException(
+                            zipEntry.getName(), "Entry name contains invalid characters");
+                }
                 if (!ClassFileInput.CLASS_MATCHER.test(zipEntry.getName())) {
                     continue;
                 }
-
                 try (BufferedInputStream inputStream =
                         new BufferedInputStream(zip.getInputStream(zipEntry))) {
                     data.add(analyze(jar, inputStream));

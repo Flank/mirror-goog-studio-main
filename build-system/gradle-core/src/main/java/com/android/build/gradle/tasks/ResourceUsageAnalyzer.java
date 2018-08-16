@@ -38,6 +38,7 @@ import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.incremental.ByteCodeUtils;
 import com.android.builder.dexing.AnalysisCallback;
 import com.android.builder.dexing.R8ResourceShrinker;
+import com.android.builder.utils.ZipEntryUtils;
 import com.android.ide.common.resources.usage.ResourceUsageModel;
 import com.android.ide.common.resources.usage.ResourceUsageModel.Resource;
 import com.android.ide.common.xml.XmlPrettyPrinter;
@@ -62,6 +63,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -419,6 +421,10 @@ public class ResourceUsageAnalyzer {
                 String name = entry.getName();
                 boolean directory = entry.isDirectory();
                 Resource resource = getResourceByJarPath(name);
+                if (!ZipEntryUtils.isValidZipEntryName(entry)) {
+                    throw new InvalidPathException(
+                            entry.getName(), "Entry name contains invalid characters");
+                }
                 if (resource == null || resource.isReachable()) {
                     copyToOutput(zis, zos, entry, name, directory);
                 } else if (REPLACE_DELETED_WITH_EMPTY && !directory) {

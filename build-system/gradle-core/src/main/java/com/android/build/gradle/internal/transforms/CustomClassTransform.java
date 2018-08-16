@@ -32,6 +32,7 @@ import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.pipeline.TransformManager;
+import com.android.builder.utils.ZipEntryUtils;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -149,7 +150,8 @@ public class CustomClassTransform extends Transform {
                 try (ZipInputStream zis = new ZipInputStream(new FileInputStream(path))) {
                     ZipEntry entry;
                     Pattern pattern = Pattern.compile("dependencies/(.*)\\.jar");
-                    while ((entry = zis.getNextEntry()) != null) {
+                    while ((entry = zis.getNextEntry()) != null
+                            && ZipEntryUtils.isValidZipEntryName(entry)) {
                         Matcher matcher = pattern.matcher(entry.getName());
                         if (matcher.matches()) {
                             String name = matcher.group(1);
@@ -278,7 +280,7 @@ public class CustomClassTransform extends Transform {
                 FileOutputStream fos = new FileOutputStream(outputJar);
                 ZipOutputStream zos = new ZipOutputStream(fos)) {
             ZipEntry entry = zis.getNextEntry();
-            while (entry != null) {
+            while (entry != null && ZipEntryUtils.isValidZipEntryName(entry)) {
                 if (!entry.isDirectory() && entry.getName().endsWith(SdkConstants.DOT_CLASS)) {
                     zos.putNextEntry(new ZipEntry(entry.getName()));
                     apply(function, zis, zos);
