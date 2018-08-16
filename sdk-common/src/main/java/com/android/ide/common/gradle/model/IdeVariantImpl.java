@@ -44,6 +44,7 @@ public final class IdeVariantImpl extends IdeModel implements IdeVariant {
     @NonNull private final ProductFlavor myMergedFlavor;
     @NonNull private final Collection<TestedTargetVariant> myTestedTargetVariants;
     private final int myHashCode;
+    private final boolean myInstantAppCompatible;
 
     public IdeVariantImpl(
             @NonNull Variant variant,
@@ -84,6 +85,10 @@ public final class IdeVariantImpl extends IdeModel implements IdeVariant {
                         variant.getMergedFlavor(),
                         flavor -> new IdeProductFlavor(flavor, modelCache));
         myTestedTargetVariants = getTestedTargetVariants(variant, modelCache);
+        myInstantAppCompatible =
+                modelVersion != null
+                        && modelVersion.isAtLeastIncludingPreviews(3, 3, 0)
+                        && variant.isInstantAppCompatible();
 
         myHashCode = calculateHashCode();
     }
@@ -203,6 +208,11 @@ public final class IdeVariantImpl extends IdeModel implements IdeVariant {
     }
 
     @Override
+    public boolean isInstantAppCompatible() {
+        return myInstantAppCompatible;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -219,7 +229,8 @@ public final class IdeVariantImpl extends IdeModel implements IdeVariant {
                 && Objects.equals(myBuildType, variant.myBuildType)
                 && Objects.equals(myProductFlavors, variant.myProductFlavors)
                 && Objects.equals(myMergedFlavor, variant.myMergedFlavor)
-                && Objects.equals(myTestedTargetVariants, variant.myTestedTargetVariants);
+                && Objects.equals(myTestedTargetVariants, variant.myTestedTargetVariants)
+                && Objects.equals(myInstantAppCompatible, variant.myInstantAppCompatible);
     }
 
     @Override
@@ -237,7 +248,8 @@ public final class IdeVariantImpl extends IdeModel implements IdeVariant {
                 myBuildType,
                 myProductFlavors,
                 myMergedFlavor,
-                myTestedTargetVariants);
+                myTestedTargetVariants,
+                myInstantAppCompatible);
     }
 
     @Override
@@ -264,6 +276,8 @@ public final class IdeVariantImpl extends IdeModel implements IdeVariant {
                 + myMergedFlavor
                 + ", myTestedTargetVariants="
                 + myTestedTargetVariants
+                + ", myInstantAppCompatible="
+                + myInstantAppCompatible
                 + "}";
     }
 }

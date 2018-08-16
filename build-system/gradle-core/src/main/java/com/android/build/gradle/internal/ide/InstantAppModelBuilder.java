@@ -369,6 +369,8 @@ public class InstantAppModelBuilder
                 mainArtifact,
                 Collections.emptyList(),
                 Collections.emptyList(),
-                Collections.emptyList());
+                Collections.emptyList(),
+                false);
+        // InstantAppCompatible property is false for legacy feature module projects
     }
 }

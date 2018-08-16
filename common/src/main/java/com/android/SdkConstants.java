@@ -1049,6 +1049,7 @@ public final class SdkConstants {
 
     public static final String SHERPA_PREFIX = "app"; //$NON-NLS-1$
     public static final String SHERPA_URI = "http://schemas.android.com/apk/res-auto"; //$NON-NLS-1$
+
     /** Namespace for Instant App attributes in manifest files */
 
     // Tags: Manifest

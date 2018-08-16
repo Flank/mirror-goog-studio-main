@@ -32,6 +32,7 @@ public class VariantStub extends BaseStub implements Variant {
     @NonNull private final List<String> myProductFlavors;
     @NonNull private final ProductFlavor myMergedFlavor;
     @NonNull private final Collection<TestedTargetVariant> myTestedTargetVariants;
+    private final boolean myInstantAppCompatible;
 
     public VariantStub() {
         this(
@@ -43,7 +44,8 @@ public class VariantStub extends BaseStub implements Variant {
                 "buildType",
                 Lists.newArrayList("flavor"),
                 new ProductFlavorStub(),
-                Lists.newArrayList(new TestedTargetVariantStub()));
+                Lists.newArrayList(new TestedTargetVariantStub()),
+                false);
     }
 
     public VariantStub(
@@ -55,7 +57,8 @@ public class VariantStub extends BaseStub implements Variant {
             @NonNull String buildType,
             @NonNull List<String> productFlavors,
             @NonNull ProductFlavor mergedFlavor,
-            @NonNull Collection<TestedTargetVariant> testedTargetVariants) {
+            @NonNull Collection<TestedTargetVariant> testedTargetVariants,
+            boolean instantAppCompatible) {
         myName = name;
         myDisplayName = displayName;
         myMainArtifact = mainArtifact;
@@ -65,6 +68,7 @@ public class VariantStub extends BaseStub implements Variant {
         myProductFlavors = productFlavors;
         myMergedFlavor = mergedFlavor;
         myTestedTargetVariants = testedTargetVariants;
+        myInstantAppCompatible = instantAppCompatible;
     }
 
     @Override
@@ -122,6 +126,11 @@ public class VariantStub extends BaseStub implements Variant {
     }
 
     @Override
+    public boolean isInstantAppCompatible() {
+        return myInstantAppCompatible;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -138,7 +147,8 @@ public class VariantStub extends BaseStub implements Variant {
                 && Objects.equals(getBuildType(), variant.getBuildType())
                 && Objects.equals(getProductFlavors(), variant.getProductFlavors())
                 && Objects.equals(getMergedFlavor(), variant.getMergedFlavor())
-                && Objects.equals(getTestedTargetVariants(), variant.getTestedTargetVariants());
+                && Objects.equals(getTestedTargetVariants(), variant.getTestedTargetVariants())
+                && Objects.equals(isInstantAppCompatible(), variant.isInstantAppCompatible());
     }
 
     @Override
@@ -152,7 +162,8 @@ public class VariantStub extends BaseStub implements Variant {
                 getBuildType(),
                 getProductFlavors(),
                 getMergedFlavor(),
-                getTestedTargetVariants());
+                getTestedTargetVariants(),
+                isInstantAppCompatible());
     }
 
     @Override
@@ -179,6 +190,8 @@ public class VariantStub extends BaseStub implements Variant {
                 + myMergedFlavor
                 + ", myTestedTargetVariants="
                 + myTestedTargetVariants
+                + ", myInstantAppCompatible="
+                + myInstantAppCompatible
                 + "}";
     }
 }

@@ -16,10 +16,13 @@
 
 package com.android.build.gradle.internal.ide;
 
+import static com.android.SdkConstants.DIST_URI;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_DATA_BINDING_V2;
 import static com.android.builder.model.AndroidProject.ARTIFACT_MAIN;
+import static com.android.builder.model.AndroidProject.PROJECT_TYPE_APP;
+import static com.android.builder.model.AndroidProject.PROJECT_TYPE_DYNAMIC_FEATURE;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -106,6 +109,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -117,6 +122,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import javax.xml.namespace.QName;
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.events.Attribute;
+import javax.xml.stream.events.StartElement;
+import javax.xml.stream.events.XMLEvent;
 import org.gradle.StartParameter;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
@@ -151,6 +163,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
     private final int generation;
     private int modelLevel = AndroidProject.MODEL_LEVEL_0_ORIGINAL;
     private boolean modelWithFullDependency = false;
+
     /**
      * a map that goes from build name ({@link BuildIdentifier#getName()} to the root dir of the
      * build.
@@ -428,6 +441,59 @@ public class ModelBuilder<Extension extends AndroidConfig>
         return false;
     }
 
+    protected boolean inspectManifestForInstantTag(BaseVariantData variantData) {
+        if (projectType != PROJECT_TYPE_APP && projectType != PROJECT_TYPE_DYNAMIC_FEATURE) {
+            return false;
+        }
+
+        List<File> manifests = new ArrayList<>();
+        GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
+        manifests.addAll(variantConfiguration.getManifestOverlays());
+        if (variantConfiguration.getMainManifest() != null) {
+            manifests.add(variantConfiguration.getMainManifest());
+        }
+        if (manifests.isEmpty()) {
+            return false;
+        }
+
+        for (File manifest : manifests) {
+            try (FileInputStream inputStream = new FileInputStream(manifest)) {
+                XMLInputFactory factory = XMLInputFactory.newInstance();
+                XMLEventReader eventReader = factory.createXMLEventReader(inputStream);
+
+                while (eventReader.hasNext() && !eventReader.peek().isEndDocument()) {
+                    XMLEvent event = eventReader.nextTag();
+                    if (event.isStartElement()) {
+                        StartElement startElement = event.asStartElement();
+                        if (startElement.getName().getNamespaceURI().equals(DIST_URI)
+                                && startElement
+                                        .getName()
+                                        .getLocalPart()
+                                        .equalsIgnoreCase("module")) {
+                            Attribute instant =
+                                    startElement.getAttributeByName(new QName(DIST_URI, "instant"));
+                            if (instant != null
+                                    && (instant.getValue().equals(SdkConstants.VALUE_TRUE)
+                                            || instant.getValue().equals(SdkConstants.VALUE_1))) {
+                                eventReader.close();
+                                return true;
+                            }
+                        }
+                    }
+                }
+                eventReader.close();
+            } catch (XMLStreamException | IOException e) {
+                syncIssues.add(
+                        new SyncIssueImpl(
+                                Type.GENERIC,
+                                EvalIssueReporter.Severity.ERROR,
+                                "Failed to parse XML in " + manifest.getPath(),
+                                e.getMessage()));
+            }
+        }
+        return false;
+    }
+
     @NonNull
     protected Collection<String> getDynamicFeatures() {
         return ImmutableList.of();
@@ -574,7 +640,8 @@ public class ModelBuilder<Extension extends AndroidConfig>
                 mainArtifact,
                 extraAndroidArtifacts,
                 clonedExtraJavaArtifacts,
-                testTargetVariants);
+                testTargetVariants,
+                inspectManifestForInstantTag(variantData));
     }
 
     private void checkProguardFiles(@NonNull VariantScope variantScope) {

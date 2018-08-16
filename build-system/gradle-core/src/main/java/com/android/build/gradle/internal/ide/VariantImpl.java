@@ -55,15 +55,19 @@ final class VariantImpl implements Variant, Serializable {
     @NonNull
     private final Collection<TestedTargetVariant> testedTargetVariants;
 
-    VariantImpl(@NonNull String name,
-                @NonNull String displayName,
-                @NonNull String buildTypeName,
-                @NonNull List<String> productFlavorNames,
-                @NonNull ProductFlavorImpl mergedFlavor,
-                @NonNull AndroidArtifact mainArtifactInfo,
-                @NonNull Collection<AndroidArtifact> extraAndroidArtifacts,
-                @NonNull Collection<JavaArtifact> extraJavaArtifacts,
-                @NonNull Collection<TestedTargetVariant> testedTargetVariants) {
+    private final boolean instantAppCompatible;
+
+    VariantImpl(
+            @NonNull String name,
+            @NonNull String displayName,
+            @NonNull String buildTypeName,
+            @NonNull List<String> productFlavorNames,
+            @NonNull ProductFlavorImpl mergedFlavor,
+            @NonNull AndroidArtifact mainArtifactInfo,
+            @NonNull Collection<AndroidArtifact> extraAndroidArtifacts,
+            @NonNull Collection<JavaArtifact> extraJavaArtifacts,
+            @NonNull Collection<TestedTargetVariant> testedTargetVariants,
+            boolean instantAppCompatible) {
         this.name = name;
         this.displayName = displayName;
         this.buildTypeName = buildTypeName;
@@ -73,6 +77,7 @@ final class VariantImpl implements Variant, Serializable {
         this.extraAndroidArtifacts = extraAndroidArtifacts;
         this.extraJavaArtifacts = extraJavaArtifacts;
         this.testedTargetVariants = testedTargetVariants;
+        this.instantAppCompatible = instantAppCompatible;
     }
 
     @Override
@@ -130,6 +135,11 @@ final class VariantImpl implements Variant, Serializable {
     }
 
     @Override
+    public boolean isInstantAppCompatible() {
+        return instantAppCompatible;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -138,21 +148,31 @@ final class VariantImpl implements Variant, Serializable {
             return false;
         }
         VariantImpl variant = (VariantImpl) o;
-        return Objects.equals(name, variant.name) &&
-                Objects.equals(displayName, variant.displayName) &&
-                Objects.equals(buildTypeName, variant.buildTypeName) &&
-                Objects.equals(productFlavorNames, variant.productFlavorNames) &&
-                Objects.equals(mergedFlavor, variant.mergedFlavor) &&
-                Objects.equals(mainArtifactInfo, variant.mainArtifactInfo) &&
-                Objects.equals(extraAndroidArtifacts, variant.extraAndroidArtifacts) &&
-                Objects.equals(extraJavaArtifacts, variant.extraJavaArtifacts) &&
-                Objects.equals(testedTargetVariants, variant.testedTargetVariants);
+        return Objects.equals(name, variant.name)
+                && Objects.equals(displayName, variant.displayName)
+                && Objects.equals(buildTypeName, variant.buildTypeName)
+                && Objects.equals(productFlavorNames, variant.productFlavorNames)
+                && Objects.equals(mergedFlavor, variant.mergedFlavor)
+                && Objects.equals(mainArtifactInfo, variant.mainArtifactInfo)
+                && Objects.equals(extraAndroidArtifacts, variant.extraAndroidArtifacts)
+                && Objects.equals(extraJavaArtifacts, variant.extraJavaArtifacts)
+                && Objects.equals(testedTargetVariants, variant.testedTargetVariants)
+                && Objects.equals(instantAppCompatible, variant.instantAppCompatible);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, displayName, buildTypeName, productFlavorNames, mergedFlavor,
-                mainArtifactInfo, extraAndroidArtifacts, extraJavaArtifacts, testedTargetVariants);
+        return Objects.hash(
+                name,
+                displayName,
+                buildTypeName,
+                productFlavorNames,
+                mergedFlavor,
+                mainArtifactInfo,
+                extraAndroidArtifacts,
+                extraJavaArtifacts,
+                testedTargetVariants,
+                instantAppCompatible);
     }
 
     @Override
@@ -167,6 +187,7 @@ final class VariantImpl implements Variant, Serializable {
                 .add("extraAndroidArtifacts", extraAndroidArtifacts)
                 .add("extraJavaArtifacts", extraJavaArtifacts)
                 .add("testedTargetVariants", testedTargetVariants)
+                .add("instantAppCompatible", instantAppCompatible)
                 .toString();
     }
 }

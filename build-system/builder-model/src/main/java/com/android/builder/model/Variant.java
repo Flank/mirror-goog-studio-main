@@ -107,4 +107,14 @@ public interface Variant {
      */
     @NonNull
     Collection<TestedTargetVariant> getTestedTargetVariants();
+
+    /**
+     * Returns true if this variant is instant app compatible, intended to be possibly built and
+     * served in an instant app context. This is populated during sync from the project's manifest.
+     * Only application modules and dynamic feature modules will set this property.
+     *
+     * @return true if this variant is instant app compatible
+     * @since 3.3
+     */
+    boolean isInstantAppCompatible();
 }
