@@ -6,6 +6,10 @@
              to="${escapeXmlAttribute(topOut)}/settings.gradle" />
     <merge from="root/base-build.gradle.ftl"
              to="${baseFeatureDir}/build.gradle" />
+    <#if isInstantModule>
+      <merge from="root/base-AndroidManifest.xml.ftl"
+               to="${escapeXmlAttribute(baseFeatureDir)}/src/main/AndroidManifest.xml" />
+    </#if>
     <merge from="root/res/values/strings.xml.ftl"
                    to="${escapeXmlAttribute(baseFeatureResDir)}/values/strings.xml" />
     <instantiate from="root/build.gradle.ftl"

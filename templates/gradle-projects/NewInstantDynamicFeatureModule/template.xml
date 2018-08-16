@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<template
+    format="5"
+    revision="1"
+    name="Dynamic Feature (Instant App)"
+    description="Creates a new Android module that will be delivered as an instant app">
+
+    <category value="Application" />
+
+    <thumbs>
+        <thumb>dynamic-feature-instant.png</thumb>
+    </thumbs>
+
+    <globals file="../NewDynamicFeatureModule/globals.xml.ftl" />
+    <execute file="../NewDynamicFeatureModule/recipe.xml.ftl" />
+
+</template>
+
