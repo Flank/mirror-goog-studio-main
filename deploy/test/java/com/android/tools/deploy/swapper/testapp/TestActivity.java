@@ -16,6 +16,9 @@
 package com.android.tools.deploy.swapper.testapp;
 
 import android.app.Activity;
+import pkg.KotlinCompanionTarget;
+import pkg.KotlinFailedTarget;
+import pkg.KotlinSimpleTarget;
 
 public class TestActivity extends Activity {
 
@@ -49,4 +52,17 @@ public class TestActivity extends Activity {
     public void getFailedTargetStatus() {
         System.out.println(FailedTarget.getStatus());
     }
+
+    public void getKotlinSimpleTargetStatus() {
+        System.out.println(new KotlinSimpleTarget().getStatus());
+    }
+
+    public void getKotlinFailedTargetStatus() {
+        System.out.println(new KotlinFailedTarget().getStatus());
+    }
+
+    public void getKotlinCompanionTargetStatus() {
+        System.out.println(new KotlinCompanionTarget().getStatus());
+    }
+
 }

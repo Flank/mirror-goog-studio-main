@@ -105,7 +105,7 @@ def dex_library(name, jars=[], output=None, visibility=None, tags=[], flags=[], 
     cmd = "$(location //prebuilts/studio/sdk:dx-preview) --dex --output=./$@ ./$<"
     tools = ["//prebuilts/studio/sdk:dx-preview"]
   else:
-    cmd = "$(location //prebuilts/r8:d8) " + " ".join(flags) + " --output ./$@ ./$<"
+    cmd = "$(location //prebuilts/r8:d8) --output ./$@ " + " ".join(flags) + " ./$<"
     tools = ["//prebuilts/r8:d8"]
 
   if output == None:

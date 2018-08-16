@@ -8,6 +8,8 @@
       <sourceFolder url="file://$MODULE_DIR$/apk2" type="java-test-resource" />
       <sourceFolder url="file://$MODULE_DIR$/test_swap" type="java-test-resource" />
       <sourceFolder url="file://$MODULE_DIR$/java" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/kotlin" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/kotlin_swap" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
@@ -24,5 +26,6 @@
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
     <orderEntry type="module" module-name="fakeandroid" scope="TEST" />
     <orderEntry type="module" module-name="android.sdktools.deployer" scope="TEST" />
+    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
   </component>
 </module>
