@@ -656,9 +656,6 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
                         variantScope.getArtifactFileCollection(
                                 COMPILE_CLASSPATH, MODULE, FEATURE_APPLICATION_ID_DECLARATION);
             }
-
-            task.dependsOn(variantScope.getTaskContainer().getCheckManifestTask());
-
         }
 
         /**

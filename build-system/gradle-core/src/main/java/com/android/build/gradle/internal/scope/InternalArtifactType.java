@@ -141,6 +141,9 @@ public enum InternalArtifactType implements ArtifactType {
     // source output for rs
     RENDERSCRIPT_SOURCE_OUTPUT_DIR(Category.GENERATED),
 
+    // An output of AndroidManifest.xml check
+    CHECK_MANIFEST_RESULT,
+
     COMPATIBLE_SCREEN_MANIFEST,
     MERGED_MANIFESTS,
     LIBRARY_MANIFEST(Kind.FILE),

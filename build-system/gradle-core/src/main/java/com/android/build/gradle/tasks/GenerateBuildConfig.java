@@ -16,7 +16,9 @@
 package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
@@ -33,6 +35,7 @@ import java.util.List;
 import java.util.function.Supplier;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
@@ -74,6 +77,8 @@ public class GenerateBuildConfig extends AndroidBuilderTask {
     private Supplier<Integer> versionCode;
 
     private Supplier<List<Object>> items;
+
+    private BuildableArtifact checkManifestResult;
 
     @Input
     public String getBuildConfigPackageName() {
@@ -142,6 +147,12 @@ public class GenerateBuildConfig extends AndroidBuilderTask {
         }
 
         return list;
+    }
+
+    @InputFiles
+    @Optional
+    public BuildableArtifact getCheckManifestResult() {
+        return checkManifestResult;
     }
 
     @TaskAction
@@ -251,14 +262,15 @@ public class GenerateBuildConfig extends AndroidBuilderTask {
 
             task.setSourceOutputDir(scope.getBuildConfigSourceOutputDir());
 
+            task.checkManifestResult =
+                    scope.getArtifacts()
+                            .getFinalArtifactFilesIfPresent(
+                                    InternalArtifactType.CHECK_MANIFEST_RESULT);
             if (scope.getVariantConfiguration().getType().isTestComponent()) {
                 // in case of a test project, the manifest is generated so we need to depend
                 // on its creation.
                 task.dependsOn(scope.getTaskContainer().getProcessManifestTask());
-            } else {
-                task.dependsOn(scope.getTaskContainer().getCheckManifestTask());
             }
-
         }
     }
 }

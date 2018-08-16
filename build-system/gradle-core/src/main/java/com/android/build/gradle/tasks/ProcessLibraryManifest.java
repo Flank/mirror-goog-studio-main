@@ -326,10 +326,6 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
             task.outputScope = getScope().getOutputScope();
 
             task.setReportFile(reportFile);
-
-            if (scope.getTaskContainer().getCheckManifestTask() != null) {
-                task.dependsOn(scope.getTaskContainer().getCheckManifestTask());
-            }
         }
     }
 }

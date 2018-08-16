@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import java.io.File;
@@ -76,6 +77,7 @@ public class CheckManifest extends AndroidVariantTask {
 
         private final VariantScope scope;
         private final boolean isManifestOptional;
+        private File output;
 
         public CreationAction(@NonNull VariantScope scope, boolean isManifestOptional) {
             this.scope = scope;
@@ -101,15 +103,21 @@ public class CheckManifest extends AndroidVariantTask {
         }
 
         @Override
+        public void preConfigure(@NonNull String taskName) {
+            super.preConfigure(taskName);
+            output =
+                    scope.getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.CHECK_MANIFEST_RESULT, taskName, "out");
+        }
+
+        @Override
         public void configure(@NonNull CheckManifest task) {
             task.setVariantName(scope.getVariantData().getVariantConfiguration().getFullName());
             task.setOptional(isManifestOptional);
             task.manifest = scope.getVariantData().getVariantConfiguration().getMainManifest();
 
-            task.fakeOutputDir =
-                    new File(
-                            scope.getGlobalScope().getIntermediatesDir(),
-                            "check-manifest/" + scope.getVariantConfiguration().getDirName());
+            task.fakeOutputDir = output;
             task.dependsOn(scope.getTaskContainer().getPreBuildTask());
         }
     }

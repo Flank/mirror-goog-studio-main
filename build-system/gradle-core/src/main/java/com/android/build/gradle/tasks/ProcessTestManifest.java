@@ -346,10 +346,6 @@ public class ProcessTestManifest extends ManifestProcessorTask {
             task.manifests = scope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
 
             task.placeholdersValues = TaskInputHelper.memoize(config::getManifestPlaceholders);
-
-            if (scope.getTaskContainer().getCheckManifestTask() != null) {
-                task.dependsOn(scope.getTaskContainer().getCheckManifestTask());
-            }
         }
     }
 }

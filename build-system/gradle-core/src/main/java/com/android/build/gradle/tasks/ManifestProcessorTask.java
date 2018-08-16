@@ -16,6 +16,7 @@
 package com.android.build.gradle.tasks;
 
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.google.common.base.Joiner;
@@ -25,6 +26,7 @@ import java.io.File;
 import java.util.Map;
 import org.gradle.api.file.Directory;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
@@ -42,6 +44,16 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
     private File instantRunManifestOutputDirectory;
 
     private File reportFile;
+
+    @SuppressWarnings("unused")
+    private BuildableArtifact checkManifestResult;
+
+    @InputFiles
+    @InternalID(InternalArtifactType.CHECK_MANIFEST_RESULT)
+    @Optional
+    public BuildableArtifact getCheckManifestResult() {
+        return checkManifestResult;
+    }
 
     /**
      * The aapt friendly processed Manifest. In case we are processing a library manifest, some
