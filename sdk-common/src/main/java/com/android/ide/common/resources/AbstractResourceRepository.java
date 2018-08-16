@@ -124,7 +124,7 @@ public abstract class AbstractResourceRepository implements ResourceRepository {
     }
 
     @Override
-    public void accept(@NonNull ResourceItemVisitor visitor) {
+    public void accept(@NonNull ResourceVisitor visitor) {
         synchronized (ITEM_MAP_LOCK) {
             for (Map.Entry<ResourceNamespace, Map<ResourceType, ListMultimap<String, ResourceItem>>>
                     namespaceEntry : getFullTable().rowMap().entrySet()) {
@@ -133,7 +133,7 @@ public abstract class AbstractResourceRepository implements ResourceRepository {
                             namespaceEntry.getValue().entrySet()) {
                         if (visitor.shouldVisitResourceType(typeEntry.getKey())) {
                             for (ResourceItem item : typeEntry.getValue().values()) {
-                                if (visitor.visit(item) == ResourceItemVisitor.VisitResult.ABORT) {
+                                if (visitor.visit(item) == ResourceVisitor.VisitResult.ABORT) {
                                     return;
                                 }
                             }

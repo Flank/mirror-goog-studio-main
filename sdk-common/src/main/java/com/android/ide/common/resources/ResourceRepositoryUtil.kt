@@ -114,7 +114,7 @@ fun ResourceRepository.getLocales(): SortedSet<LocaleQualifier> {
         if (locale != null) {
             locales.add(locale)
         }
-        ResourceItemVisitor.VisitResult.CONTINUE
+        ResourceVisitor.VisitResult.CONTINUE
     }
 
     return locales

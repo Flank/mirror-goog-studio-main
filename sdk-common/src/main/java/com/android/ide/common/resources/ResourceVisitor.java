@@ -19,16 +19,17 @@ import com.android.annotations.NonNull;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.resources.ResourceType;
 
-/** @see ResourceRepository#accept(ResourceItemVisitor). */
+/** @see ResourceRepository#accept(ResourceVisitor). */
 @FunctionalInterface
-public interface ResourceItemVisitor {
+public interface ResourceVisitor {
     enum VisitResult {
         CONTINUE,
         ABORT
     }
 
     /**
-     * Called for each resource. Should not perform any operations involving locks.
+     * Called for each resource. Should not perform any long running operations or operations
+     * involving locks.
      *
      * @param resourceItem the resource to visit
      * @return {@link VisitResult#CONTINUE} to continue visiting resources,

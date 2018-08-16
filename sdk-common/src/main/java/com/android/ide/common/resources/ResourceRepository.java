@@ -74,19 +74,27 @@ public interface ResourceRepository {
             @NonNull ResourceNamespace namespace, @NonNull ResourceType resourceType);
 
     /**
-     * Calls the {@link ResourceItemVisitor#visit(ResourceItem)} method for all resources in
-     * the repository.
+     * Calls the {@link ResourceVisitor#visit(ResourceItem)} method for all resources in
+     * the repository. The visitor should not perform any long running operations or operations
+     * involving locks.
      *
      * @param visitor the visitor object
      */
-    void accept(@NonNull ResourceItemVisitor visitor);
+    void accept(@NonNull ResourceVisitor visitor);
 
+    /**
+     * Returns a list of all resources in the repository.
+     *
+     * <p>This method is expensive. Consider using {@link #accept(ResourceVisitor)} instead.
+     *
+     * @return a list of all resources in the repository
+     */
     @NonNull
-    default List<ResourceItem> getAllResourceItems() {
+    default List<ResourceItem> getAllResources() {
         List<ResourceItem> result = new ArrayList<>();
         accept(item -> {
             result.add(item);
-            return ResourceItemVisitor.VisitResult.CONTINUE;
+            return ResourceVisitor.VisitResult.CONTINUE;
         });
         return result;
     }
