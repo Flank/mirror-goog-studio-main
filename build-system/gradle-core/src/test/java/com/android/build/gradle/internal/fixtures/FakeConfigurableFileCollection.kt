@@ -27,8 +27,10 @@ class FakeConfigurableFileCollection(vararg files : Any?)
 
     private var _builtBy = mutableSetOf<Any?>()
 
-    override fun from(vararg p0: Any?): ConfigurableFileCollection {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun from(vararg collection: Any?): ConfigurableFileCollection {
+        rawFiles.addAll(collection)
+        resolved = false
+        return this
     }
 
     override fun getFrom(): MutableSet<Any> {

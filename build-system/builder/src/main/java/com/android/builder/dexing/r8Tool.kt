@@ -34,12 +34,19 @@ import com.android.tools.r8.ProgramResourceProvider
 import com.android.tools.r8.R8
 import com.android.tools.r8.StringConsumer
 import com.android.tools.r8.origin.Origin
+import com.android.tools.r8.utils.ArchiveResourceProvider
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.Collections
 import java.util.logging.Level
 import java.util.logging.Logger
+
+
+fun isProguardRule(name: String): Boolean {
+    val lowerCaseName = name.toLowerCase()
+    return lowerCaseName.startsWith("meta-inf/proguard/")
+            || lowerCaseName.startsWith("/meta-inf/proguard/")
+}
 
 /**
  * Converts the specified inputs, according to the configuration, and writes dex or classes to
@@ -130,12 +137,13 @@ fun runR8(
         .setMode(compilationMode)
         .setProgramConsumer(programConsumer)
 
+    // Use this to control all resources provided to R8
+    val r8ProgramResourceProvider = R8ProgramResourceProvider()
 
     for (path in inputClasses) {
         when {
-            Files.isRegularFile(path) -> r8CommandBuilder.addProgramResourceProvider(
-                ArchiveProgramResourceProvider.fromArchive(path)
-            )
+            Files.isRegularFile(path) -> r8ProgramResourceProvider.addProgramResourceProvider(
+                ArchiveProgramResourceProvider.fromArchive(path))
             Files.isDirectory(path) -> Files.walk(path).use {
                 it.filter { Files.isRegularFile(it) && it.toString().endsWith(SdkConstants.DOT_CLASS) }
                     .forEach { r8CommandBuilder.addProgramFiles(it) }
@@ -147,18 +155,17 @@ fun runR8(
     val dirResources = inputJavaResources.filter {
         if (!Files.isDirectory(it)) {
             // API is missing to create java resources jars, but this works
-            r8CommandBuilder.addProgramFiles(it)
+            r8ProgramResourceProvider.addProgramResourceProvider(
+                ArchiveResourceProvider.fromArchive(it, false))
             false
         } else {
             true
         }
     }
 
-    r8CommandBuilder.addProgramResourceProvider(object : ProgramResourceProvider {
-        override fun getProgramResources() = Collections.emptyList<ProgramResource>()
+    r8ProgramResourceProvider.dataResourceProviders.add(R8DataResourceProvider(dirResources))
 
-        override fun getDataResourceProvider() = R8DataResourceProvider(dirResources)
-    })
+    r8CommandBuilder.addProgramResourceProvider(r8ProgramResourceProvider)
 
     r8CommandBuilder.addLibraryFiles(libraries)
 
@@ -206,6 +213,44 @@ data class ToolConfig(
     val disableMinification: Boolean,
     val r8OutputType: R8OutputType
 )
+
+private class ProGuardRulesFilteringVisitor(
+    private val visitor: DataResourceProvider.Visitor?
+) : DataResourceProvider.Visitor {
+    override fun visit(directory: DataDirectoryResource) {
+        visitor?.visit(directory)
+    }
+
+    override fun visit(resource: DataEntryResource) {
+        if (!isProguardRule(resource.getName())) {
+            visitor?.visit(resource)
+        }
+    }
+}
+
+private class R8ProgramResourceProvider : ProgramResourceProvider {
+    private val programResourcesList: MutableList<ProgramResource> = ArrayList()
+
+    val dataResourceProviders: MutableList<DataResourceProvider> = ArrayList()
+
+    fun addProgramResourceProvider(provider: ProgramResourceProvider) {
+        programResourcesList.addAll(provider.programResources)
+        provider.dataResourceProvider?.let {
+            dataResourceProviders.add(it)
+        }
+    }
+
+    override fun getProgramResources() = programResourcesList
+
+    override fun getDataResourceProvider() = object : DataResourceProvider {
+        override fun accept(visitor: DataResourceProvider.Visitor?) {
+            val visitorWrapper = ProGuardRulesFilteringVisitor(visitor)
+            for (provider in dataResourceProviders) {
+                provider.accept(visitorWrapper)
+            }
+        }
+    }
+}
 
 /** Provider that loads all resources from the specified directories.  */
 private class R8DataResourceProvider(val dirResources: Collection<Path>) : DataResourceProvider {

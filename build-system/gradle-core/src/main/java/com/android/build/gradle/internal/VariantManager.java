@@ -18,6 +18,7 @@ package com.android.build.gradle.internal;
 
 import static com.android.build.gradle.internal.dependency.DexingTransformKt.getDexingArtifactConfigurations;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.AAR;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CONSUMER_PROGUARD_RULES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.EXPLODED_AAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROCESSED_JAR;
@@ -52,6 +53,7 @@ import com.android.build.gradle.internal.dependency.DexingArtifactConfiguration;
 import com.android.build.gradle.internal.dependency.DexingTransform;
 import com.android.build.gradle.internal.dependency.DexingTransformKt;
 import com.android.build.gradle.internal.dependency.ExtractAarTransform;
+import com.android.build.gradle.internal.dependency.ExtractProGuardRulesTransform;
 import com.android.build.gradle.internal.dependency.IdentityTransform;
 import com.android.build.gradle.internal.dependency.JetifyTransform;
 import com.android.build.gradle.internal.dependency.LibraryDefinedSymbolTableTransform;
@@ -853,6 +855,14 @@ public class VariantManager implements VariantModel {
                                             autoNamespaceDependencies));
                 });
 
+        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_PROGUARD_RULES_EXTRACTION)) {
+            dependencies.registerTransform(
+                    reg -> {
+                        reg.getFrom().attribute(ARTIFACT_FORMAT, PROCESSED_JAR.getType());
+                        reg.getTo().attribute(ARTIFACT_FORMAT, CONSUMER_PROGUARD_RULES.getType());
+                        reg.artifactTransform(ExtractProGuardRulesTransform.class);
+                    });
+        }
 
         dependencies.registerTransform(
                 reg -> {

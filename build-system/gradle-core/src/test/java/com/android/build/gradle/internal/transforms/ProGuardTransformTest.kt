@@ -25,8 +25,6 @@ import com.android.build.gradle.internal.fixtures.FakeFileCollection
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
-import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.VariantTypeImpl
 import com.android.testutils.TestClassesGenerator
@@ -110,47 +108,9 @@ class ProGuardTransformTest {
                 .setTransformOutputProvider(outputProvider)
                 .build()
 
-        val rulesFile = tmp.newFolder().resolve("foo.bar")
-        rulesFile.writeText("-keep public class test.A")
+        val rulesFile = newFile("-keep public class test.A")
 
-        val transform = ProGuardTransform(createScope(true, setOf(rulesFile)))
-
-        transform.transform(invocation)
-
-        val resultJar = resultJar()
-
-        MoreTruth.assertThat(resultJar).contains("test/A.class")
-        MoreTruth.assertThat(resultJar).doesNotContain("test/B.class")
-    }
-
-    @Test
-    fun testUseExtractedProguardRules() {
-
-        val classes = tmp.root.toPath().resolve("classes.jar")
-        ZipOutputStream(classes.toFile().outputStream()).use { zip ->
-            zip.putNextEntry(ZipEntry("META-INF/proguard/rule.pro"))
-            zip.write("-keep public class test.A".toByteArray())
-            zip.closeEntry()
-            zip.putNextEntry(ZipEntry("test/A.class"))
-            zip.write(TestClassesGenerator.emptyClass("test", "A"));
-            zip.closeEntry()
-            zip.putNextEntry(ZipEntry("test/B.class"))
-            zip.write(TestClassesGenerator.emptyClass("test", "B"));
-            zip.closeEntry()
-        }
-        val jarInput =
-            TransformTestHelper.singleJarBuilder(classes.toFile())
-                .setContentTypes(CLASSES).build()
-
-        val invocation =
-            TransformTestHelper
-                .invocationBuilder()
-                .addInput(jarInput)
-                .setContext(this.context)
-                .setTransformOutputProvider(outputProvider)
-                .build()
-
-        val transform = ProGuardTransform(createScope())
+        val transform = ProGuardTransform(createScope(setOf(rulesFile)))
 
         transform.transform(invocation)
 
@@ -161,13 +121,10 @@ class ProGuardTransformTest {
     }
 
     @Test
-    fun testUseExtractedProguardRules_andRulesFile() {
+    fun testUseProguardConfigurationFile() {
 
         val classes = tmp.root.toPath().resolve("classes.jar")
         ZipOutputStream(classes.toFile().outputStream()).use { zip ->
-            zip.putNextEntry(ZipEntry("META-INF/proguard/rule.pro"))
-            zip.write("-keep public class test.A".toByteArray())
-            zip.closeEntry()
             zip.putNextEntry(ZipEntry("test/A.class"))
             zip.write(TestClassesGenerator.emptyClass("test", "A"));
             zip.closeEntry()
@@ -179,85 +136,7 @@ class ProGuardTransformTest {
             TransformTestHelper.singleJarBuilder(classes.toFile())
                 .setContentTypes(CLASSES).build()
 
-        val invocation =
-            TransformTestHelper
-                .invocationBuilder()
-                .addInput(jarInput)
-                .setContext(this.context)
-                .setTransformOutputProvider(outputProvider)
-                .build()
-
-        val rulesFile = tmp.newFolder().resolve("foo.bar")
-        rulesFile.writeText("-keep public class test.B")
-
-        val transform = ProGuardTransform(createScope(true, setOf(rulesFile)))
-
-        transform.transform(invocation)
-
-        val resultJar = resultJar()
-
-        MoreTruth.assertThat(resultJar).contains("test/A.class")
-        MoreTruth.assertThat(resultJar).contains("test/B.class")
-    }
-
-    @Test
-    fun testDisableExtractedProguardRules() {
-
-        val classes = tmp.root.toPath().resolve("classes.jar")
-        ZipOutputStream(classes.toFile().outputStream()).use { zip ->
-            zip.putNextEntry(ZipEntry("META-INF/proguard/rule.pro"))
-            zip.write("-keep public class test.A".toByteArray())
-            zip.closeEntry()
-            zip.putNextEntry(ZipEntry("test/A.class"))
-            zip.write(TestClassesGenerator.emptyClass("test", "A"));
-            zip.closeEntry()
-            zip.putNextEntry(ZipEntry("test/B.class"))
-            zip.write(TestClassesGenerator.emptyClass("test", "B"));
-            zip.closeEntry()
-        }
-        val jarInput =
-            TransformTestHelper.singleJarBuilder(classes.toFile())
-                .setContentTypes(CLASSES).build()
-
-        val invocation =
-            TransformTestHelper
-                .invocationBuilder()
-                .addInput(jarInput)
-                .setContext(this.context)
-                .setTransformOutputProvider(outputProvider)
-                .build()
-
-        val rulesFile = tmp.newFolder().resolve("foo.bar")
-        rulesFile.writeText("-keep public class test.B")
-
-        val transform = ProGuardTransform(createScope(false, setOf(rulesFile)))
-
-        transform.transform(invocation)
-
-        val resultJar = resultJar()
-
-        MoreTruth.assertThat(resultJar).doesNotContain("test/A.class")
-        MoreTruth.assertThat(resultJar).contains("test/B.class")
-    }
-
-    @Test
-    fun testUseExtractedProguardRules_multilineRule() {
-
-        val classes = tmp.root.toPath().resolve("classes.jar")
-        ZipOutputStream(classes.toFile().outputStream()).use { zip ->
-            zip.putNextEntry(ZipEntry("META-INF/proguard/rule.pro"))
-            zip.write("-keep\n    public class test.A".toByteArray())
-            zip.closeEntry()
-            zip.putNextEntry(ZipEntry("test/A.class"))
-            zip.write(TestClassesGenerator.emptyClass("test", "A"));
-            zip.closeEntry()
-            zip.putNextEntry(ZipEntry("test/B.class"))
-            zip.write(TestClassesGenerator.emptyClass("test", "B"));
-            zip.closeEntry()
-        }
-        val jarInput =
-            TransformTestHelper.singleJarBuilder(classes.toFile())
-                .setContentTypes(CLASSES).build()
+        val configFile = newFile("-keep public class test.A")
 
         val invocation =
             TransformTestHelper
@@ -268,6 +147,8 @@ class ProGuardTransformTest {
                 .build()
 
         val transform = ProGuardTransform(createScope())
+
+        transform.setConfigurationFiles(FakeFileCollection(configFile))
 
         transform.transform(invocation)
 
@@ -278,16 +159,10 @@ class ProGuardTransformTest {
     }
 
     @Test
-    fun testUseExtractedProguardRules_multipleFiles() {
+    fun testUseProguardConfigurationFile_andRulesFile() {
 
         val classes = tmp.root.toPath().resolve("classes.jar")
         ZipOutputStream(classes.toFile().outputStream()).use { zip ->
-            zip.putNextEntry(ZipEntry("META-INF/proguard/rule.pro"))
-            zip.write("-keep public class test.A".toByteArray())
-            zip.closeEntry()
-            zip.putNextEntry(ZipEntry("META-INF/proguard/rule2.pro"))
-            zip.write("-keep public class test.B".toByteArray())
-            zip.closeEntry()
             zip.putNextEntry(ZipEntry("test/A.class"))
             zip.write(TestClassesGenerator.emptyClass("test", "A"));
             zip.closeEntry()
@@ -307,7 +182,13 @@ class ProGuardTransformTest {
                 .setTransformOutputProvider(outputProvider)
                 .build()
 
-        val transform = ProGuardTransform(createScope())
+        val rulesFile = newFile("-keep public class test.B")
+
+        val configFile = newFile("-keep public class test.A")
+
+        val transform = ProGuardTransform(createScope(setOf(rulesFile)))
+
+        transform.setConfigurationFiles(FakeFileCollection(configFile))
 
         transform.transform(invocation)
 
@@ -318,16 +199,66 @@ class ProGuardTransformTest {
     }
 
     @Test
-    fun testUseExtractedProguardRules_ignoreIfNotInPath() {
+    fun testUseProguardConfigurationFile_multipleFiles() {
 
         val classes = tmp.root.toPath().resolve("classes.jar")
         ZipOutputStream(classes.toFile().outputStream()).use { zip ->
-            zip.putNextEntry(ZipEntry("META-INF/proguard/rule.pro"))
-            zip.write("-keep public class test.A".toByteArray())
+            zip.putNextEntry(ZipEntry("test/A.class"))
+            zip.write(TestClassesGenerator.emptyClass("test", "A"));
             zip.closeEntry()
-            zip.putNextEntry(ZipEntry("META-INF/bar/rule2.pro"))
-            zip.write("-keep public class test.B".toByteArray())
+            zip.putNextEntry(ZipEntry("test/B.class"))
+            zip.write(TestClassesGenerator.emptyClass("test", "B"));
             zip.closeEntry()
+        }
+        val jarInput =
+            TransformTestHelper.singleJarBuilder(classes.toFile())
+                .setContentTypes(CLASSES).build()
+
+        val classes2 = tmp.root.toPath().resolve("classes2.jar")
+        ZipOutputStream(classes2.toFile().outputStream()).use { zip ->
+            zip.putNextEntry(ZipEntry("test/C.class"))
+            zip.write(TestClassesGenerator.emptyClass("test", "C"));
+            zip.closeEntry()
+            zip.putNextEntry(ZipEntry("test/D.class"))
+            zip.write(TestClassesGenerator.emptyClass("test", "D"));
+            zip.closeEntry()
+        }
+
+        val jarInput2 =
+            TransformTestHelper.singleJarBuilder(classes2.toFile())
+                .setContentTypes(CLASSES).build()
+
+        val configFileA = newFile("-keep public class test.A")
+        val configFileC = newFile("-keep public class test.C")
+
+        val invocation =
+            TransformTestHelper
+                .invocationBuilder()
+                .addInput(jarInput)
+                .addInput(jarInput2)
+                .setContext(this.context)
+                .setTransformOutputProvider(outputProvider)
+                .build()
+
+        val transform = ProGuardTransform(createScope())
+
+        transform.setConfigurationFiles(FakeFileCollection(configFileA, configFileC))
+
+        transform.transform(invocation)
+
+        val resultJar = resultJar()
+
+        MoreTruth.assertThat(resultJar).contains("test/A.class")
+        MoreTruth.assertThat(resultJar).contains("test/C.class")
+        MoreTruth.assertThat(resultJar).doesNotContain("test/B.class")
+        MoreTruth.assertThat(resultJar).doesNotContain("test/D.class")
+    }
+
+    @Test
+    fun testUseProguardConfigurationFile_multilineRule() {
+
+        val classes = tmp.root.toPath().resolve("classes.jar")
+        ZipOutputStream(classes.toFile().outputStream()).use { zip ->
             zip.putNextEntry(ZipEntry("test/A.class"))
             zip.write(TestClassesGenerator.emptyClass("test", "A"));
             zip.closeEntry()
@@ -347,7 +278,11 @@ class ProGuardTransformTest {
                 .setTransformOutputProvider(outputProvider)
                 .build()
 
+        val configFile = newFile("-keep\n    public class test.A")
+
         val transform = ProGuardTransform(createScope())
+
+        transform.setConfigurationFiles(FakeFileCollection(configFile))
 
         transform.transform(invocation)
 
@@ -361,7 +296,13 @@ class ProGuardTransformTest {
         return Zip(Files.walk(outputDir).filter { it.toString().endsWith(".jar") }.toList().single())
     }
 
-    private fun createScope(extractRules: Boolean = true, configFiles: Set<File> = setOf()) : VariantScope {
+    private fun newFile(withContent: String): File {
+        val f = tmp.newFile()
+        f.writeText(withContent)
+        return f
+    }
+
+    private fun createScope(configFiles: Set<File> = setOf()) : VariantScope {
         val androidBuilder = Mockito.mock(AndroidBuilder::class.java)
         val bootClassPath = listOf(TestUtils.getPlatformFile("android.jar"))
         Mockito.`when`(androidBuilder.getBootClasspath(anyBoolean())).thenReturn(bootClassPath)
@@ -370,13 +311,9 @@ class ProGuardTransformTest {
         val configFilesCollection = FakeConfigurableFileCollection(configFiles)
         Mockito.`when`(project.files()).thenReturn(configFilesCollection)
 
-        val projectOptions = Mockito.mock(ProjectOptions::class.java)
-        Mockito.`when`(projectOptions.get(BooleanOption.ENABLE_PROGUARD_RULES_EXTRACTION)).thenReturn(extractRules)
-
         val globalScope = Mockito.mock(GlobalScope::class.java)
         Mockito.`when`(globalScope.androidBuilder).thenReturn(androidBuilder)
         Mockito.`when`(globalScope.project).thenReturn(project)
-        Mockito.`when`(globalScope.projectOptions).thenReturn(projectOptions)
         Mockito.`when`(globalScope.buildDir).thenReturn(outputDir.toFile())
 
         val variantData = Mockito.mock(BaseVariantData::class.java)

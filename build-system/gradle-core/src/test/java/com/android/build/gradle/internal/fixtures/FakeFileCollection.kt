@@ -34,9 +34,9 @@ import java.io.File
  */
 open class FakeFileCollection(vararg collection : Any?) : FileCollection {
 
-    private val files = collection.toMutableSet()
+    protected val rawFiles = collection.toMutableSet()
     private val resolvedFiles = mutableSetOf<File>()
-    private var resolved = false
+    protected var resolved = false
 
     private fun resolveObject(obj : Any?) {
         when (obj) {
@@ -56,14 +56,15 @@ open class FakeFileCollection(vararg collection : Any?) : FileCollection {
 
     override fun getFiles(): MutableSet<File> {
         if (!resolved) {
-            resolveObject(files)
+            resolvedFiles.clear()
+            resolveObject(rawFiles)
             resolved = true
         }
         return resolvedFiles
     }
 
     override fun contains(file: File?): Boolean {
-        return getFiles().contains(file)
+        return files.contains(file)
     }
 
     override fun getAsFileTree(): FileTree {
@@ -75,7 +76,7 @@ open class FakeFileCollection(vararg collection : Any?) : FileCollection {
     }
 
     override fun isEmpty() : Boolean {
-        return getFiles().isEmpty()
+        return files.isEmpty()
     }
 
     override fun addToAntBuilder(
@@ -108,7 +109,7 @@ open class FakeFileCollection(vararg collection : Any?) : FileCollection {
     }
 
     override fun iterator(): MutableIterator<File> {
-        return getFiles().iterator()
+        return files.iterator()
     }
 
     override fun filter(filter: Closure<*>?): FileCollection {
@@ -124,10 +125,10 @@ open class FakeFileCollection(vararg collection : Any?) : FileCollection {
     }
 
     override fun getSingleFile() : File {
-        return if (getFiles().size == 1) first() else
+        return if (files.size == 1) first() else
             throw IllegalStateException(
-                    "Failed to get single file.  File collection contains ${getFiles().size} " +
-                            "files: ${getFiles()}")
+                    "Failed to get single file.  File collection contains ${files.size} " +
+                            "files: $files")
     }
 
 }

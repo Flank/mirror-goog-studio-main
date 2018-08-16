@@ -37,7 +37,6 @@ import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.tasks.SimpleWorkQueue;
 import com.android.builder.tasks.Job;
 import com.android.builder.tasks.JobContext;
@@ -265,18 +264,6 @@ public class ProGuardTransform extends BaseProguardAction {
             for (File configFile : getAllConfigurationFiles()) {
                 LOG.info("Applying ProGuard configuration file {}", configFile);
                 applyConfigurationFile(configFile);
-            }
-
-            if (globalScope
-                    .getProjectOptions()
-                    .get(BooleanOption.ENABLE_PROGUARD_RULES_EXTRACTION)) {
-                ProGuardRulesExtractor.extractRulesTexts(inputs)
-                        .forEach(
-                                (jarName, rulesMap) ->
-                                        rulesMap.forEach(
-                                                (ruleFileName, rules) ->
-                                                        applyRuleFile(
-                                                                jarName, ruleFileName, rules)));
             }
 
             configuration.printMapping = printMapping;

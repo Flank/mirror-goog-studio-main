@@ -77,12 +77,12 @@ class R8TransformTest {
 
         val jarInput = TransformTestHelper.singleJarBuilder(classes.toFile()).build()
         val invocation =
-                TransformTestHelper
-                    .invocationBuilder()
-                    .addInput(jarInput)
-                    .setContext(this.context)
-                    .setTransformOutputProvider(outputProvider)
-                    .build()
+            TransformTestHelper
+                .invocationBuilder()
+                .addInput(jarInput)
+                .setContext(this.context)
+                .setTransformOutputProvider(outputProvider)
+                .build()
 
         val transform = getTransform()
         transform.keep("class **")
@@ -92,6 +92,109 @@ class R8TransformTest {
         val dex = getDex()
         assertThat(dex).containsClass("Ltest/A;")
         assertThat(dex).containsClass("Ltest/B;")
+    }
+
+    @Test
+    fun testOneClassIsKept_noExtractableRules() {
+        val classes = tmp.root.toPath().resolve("classes.jar")
+        ZipOutputStream(classes.toFile().outputStream()).use { zip ->
+            zip.putNextEntry(ZipEntry("test/A.class"))
+            zip.write(TestClassesGenerator.emptyClass("test", "A"));
+            zip.closeEntry()
+            zip.putNextEntry(ZipEntry("test/B.class"))
+            zip.write(TestClassesGenerator.emptyClass("test", "B"));
+            zip.closeEntry()
+        }
+
+        val jarInput = TransformTestHelper.singleJarBuilder(classes.toFile())
+            .setContentTypes(CLASSES)
+            .setContentTypes(RESOURCES).build()
+        val invocation =
+            TransformTestHelper
+                .invocationBuilder()
+                .addInput(jarInput)
+                .setContext(this.context)
+                .setTransformOutputProvider(outputProvider)
+                .build()
+
+        val transform = getTransform()
+        transform.keep("class test.A")
+
+        transform.transform(invocation)
+
+        val dex = getDex()
+        assertThat(dex).containsClass("Ltest/A;")
+        assertThat(dex).doesNotContainClasses("Ltest/B;")
+    }
+
+    @Test
+    fun testOneClassIsKept_hasExtractableRulesInResources() {
+        val classes = tmp.root.toPath().resolve("classes.jar")
+        ZipOutputStream(classes.toFile().outputStream()).use { zip ->
+            zip.putNextEntry(ZipEntry("test/A.class"))
+            zip.write(TestClassesGenerator.emptyClass("test", "A"));
+            zip.closeEntry()
+            zip.putNextEntry(ZipEntry("test/B.class"))
+            zip.write(TestClassesGenerator.emptyClass("test", "B"));
+            zip.closeEntry()
+            zip.putNextEntry(ZipEntry("META-INF/proguard/rules.pro"))
+            zip.write("-keep class test.B".toByteArray())
+            zip.closeEntry()
+        }
+
+        val jarInput = TransformTestHelper.singleJarBuilder(classes.toFile())
+            .setContentTypes(RESOURCES).build()
+        val invocation =
+            TransformTestHelper
+                .invocationBuilder()
+                .addInput(jarInput)
+                .setContext(this.context)
+                .setTransformOutputProvider(outputProvider)
+                .build()
+
+        val transform = getTransform()
+        transform.keep("class test.A")
+
+        transform.transform(invocation)
+
+        val dex = getDex()
+        assertThat(dex).containsClass("Ltest/A;")
+        assertThat(dex).doesNotContainClasses("Ltest/B;")
+    }
+
+    @Test
+    fun testOneClassIsKept_hasExtractableRulesInClasses() {
+        val classes = tmp.root.toPath().resolve("classes.jar")
+        ZipOutputStream(classes.toFile().outputStream()).use { zip ->
+            zip.putNextEntry(ZipEntry("test/A.class"))
+            zip.write(TestClassesGenerator.emptyClass("test", "A"));
+            zip.closeEntry()
+            zip.putNextEntry(ZipEntry("test/B.class"))
+            zip.write(TestClassesGenerator.emptyClass("test", "B"));
+            zip.closeEntry()
+            zip.putNextEntry(ZipEntry("META-INF/proguard/rules.pro"))
+            zip.write("-keep class test.B".toByteArray())
+            zip.closeEntry()
+        }
+
+        val jarInput = TransformTestHelper.singleJarBuilder(classes.toFile())
+            .setContentTypes(CLASSES).build()
+        val invocation =
+            TransformTestHelper
+                .invocationBuilder()
+                .addInput(jarInput)
+                .setContext(this.context)
+                .setTransformOutputProvider(outputProvider)
+                .build()
+
+        val transform = getTransform()
+        transform.keep("class test.A")
+
+        transform.transform(invocation)
+
+        val dex = getDex()
+        assertThat(dex).containsClass("Ltest/A;")
+        assertThat(dex).doesNotContainClasses("Ltest/B;")
     }
 
     @Test
