@@ -27,7 +27,9 @@ import com.android.builder.model.ClassField
 import com.android.builder.model.ProductFlavor
 import com.android.builder.model.ProductFlavorContainer
 import com.android.builder.model.SourceProvider
+import com.android.builder.model.level2.Library
 import com.android.ide.common.util.PathString
+import com.android.ide.common.util.toPathString
 import com.android.ide.common.util.toPathStrings
 import com.android.projectmodel.ARTIFACT_NAME_MAIN
 import com.android.projectmodel.AndroidPathType
@@ -91,10 +93,11 @@ data class ArtifactContext(val parent: VariantContext, val artifact: IdeBaseArti
 data class BuildTypeContext(val buildType: BuildType)
 data class FlavorContext(val flavor: ProductFlavor)
 data class ConfigTableContext(val parent: IdeAndroidProject)
+data class LibraryContext(val library: Library)
 
 class GradleModelConverter(
     val project: IdeAndroidProject,
-    val cache: ModelCache
+    val cache: ModelCache = ModelCache()
 ) {
     private val schema = getConfigTableSchema(project)
 
@@ -111,6 +114,14 @@ class GradleModelConverter(
                 variants = variants,
                 configTable = convert(ConfigTableContext(project))
             )
+        }
+
+    /**
+     * Converts the given [Library] into a [com.android.projectmodel.Library]. Returns null if the given library is badly formed.
+     */
+    fun convert(library: Library): com.android.projectmodel.Library? =
+        compute(LibraryContext(library)) {
+            convertLibrary(library)
         }
 
     fun convert(buildType: BuildTypeContext): Config =
@@ -515,3 +526,38 @@ fun classFieldsToDynamicResourceValues(classFields: Map<String, ClassField>): Ma
     }
     return ImmutableMap.copyOf(result)
 }
+
+/**
+ * Converts a builder-model [Library] into a [com.android.projectmodel.Library]. Returns null
+ * if the input is invalid.
+ */
+fun convertLibrary(builderModelLibrary: Library): com.android.projectmodel.Library? =
+    with(builderModelLibrary) {
+        when (type) {
+            com.android.builder.model.level2.Library.LIBRARY_ANDROID -> com.android.projectmodel.AarLibrary(
+                address = artifactAddress,
+                location = artifact.toPathString(),
+                manifestFile = PathString(manifest),
+                classesJar = PathString(jarFile),
+                dependencyJars = localJars.map(::PathString),
+                resFolder = PathString(resFolder),
+                symbolFile = PathString(symbolFile),
+                resApkFile = resStaticLibrary?.let(::PathString)
+            )
+            com.android.builder.model.level2.Library.LIBRARY_JAVA -> com.android.projectmodel.JavaLibrary(
+                address = artifactAddress,
+                classesJar = artifact.toPathString()
+            )
+            com.android.builder.model.level2.Library.LIBRARY_MODULE -> {
+                val path = projectPath
+                if (path == null)
+                    null
+                else com.android.projectmodel.ProjectLibrary(
+                    address = artifactAddress,
+                    projectName = path,
+                    variant = variant ?: ""
+                )
+            }
+            else -> null
+        }
+    }

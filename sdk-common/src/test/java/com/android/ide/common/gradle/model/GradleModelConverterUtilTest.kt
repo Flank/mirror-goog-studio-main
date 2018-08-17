@@ -16,10 +16,13 @@
 
 package com.android.ide.common.gradle.model
 
+import com.android.ide.common.util.PathString
+import com.android.ide.common.util.toPathString
+import com.android.projectmodel.AarLibrary
 import com.android.projectmodel.DynamicResourceValue
-import org.junit.Test
-import com.android.resources.ResourceType;
+import com.android.resources.ResourceType
 import com.google.common.truth.Truth.assertThat
+import org.junit.Test
 
 /**
  * Tests for [GradleModelConverterUtil].
@@ -39,5 +42,26 @@ class GradleModelConverterUtilTest {
         )
 
         assertThat(output).isEqualTo(expectedOutput)
+    }
+
+    @Test
+    fun testConvertAndroidLibrary() {
+        val original = com.android.ide.common.gradle.model.stubs.level2.AndroidLibraryStub()
+        val result = convertLibrary(original)
+
+        with(original) {
+            assertThat(result).isEqualTo(
+                AarLibrary(
+                    address = artifactAddress,
+                    location = artifact.toPathString(),
+                    manifestFile = PathString(manifest),
+                    classesJar = PathString(jarFile),
+                    dependencyJars = localJars.map(::PathString),
+                    resFolder = PathString(resFolder),
+                    symbolFile = PathString(symbolFile),
+                    resApkFile = resStaticLibrary?.let(::PathString)
+                )
+            )
+        }
     }
 }
