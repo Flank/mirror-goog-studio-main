@@ -847,6 +847,100 @@ class NamespaceRewriterTest {
         checkAarRewrite(namespaceRewriter, "drawable/test.xml", original, rewritten)
     }
 
+    @Test
+    fun checkResAutoAtInnerLevel() {
+        val from = """<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout >
+
+    <TextView
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</LinearLayout>"""
+        val to = """<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:ns0="http://schemas.android.com/apk/res/com.dependency">
+
+    <TextView
+        ns0:layout_constraintTop_toTopOf="parent" />
+
+</LinearLayout>""".xmlFormat()
+
+        val local = SymbolTable.builder()
+            .tablePackage("com.local")
+            .build()
+        val depTable = SymbolTable.builder()
+            .tablePackage("com.dependency")
+            .add(symbol("attr", "layout_constraintTop_toTopOf"))
+            .build()
+
+        val namespaceRewriter = NamespaceRewriter(ImmutableList.of(local, depTable))
+        checkAarRewrite(namespaceRewriter, "layout/layout.xml", from, to)
+    }
+
+    @Test
+    fun checkResAutoAtVariousLevels() {
+        val from = """<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:topLevel="http://schemas.android.com/apk/res-auto"
+        topLevel:attr1="false">
+
+    <ElementOne
+        xmlns:innerOne="http://schemas.android.com/apk/res-auto"
+        topLevel:attr1="false"
+        innerOne:attr2="false">
+
+        <ElementTwo
+            xmlns:innerTwo="http://schemas.android.com/apk/res-auto"
+            topLevel:attr1="false"
+            innerOne:attr2="false"
+            innerTwo:attr3="false"
+            innerTwo:attr4="false" />
+
+    </ElementOne>
+
+</LinearLayout>"""
+        val to = """<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:ns0="http://schemas.android.com/apk/res/com.dependency.one"
+    xmlns:ns1="http://schemas.android.com/apk/res/com.dependency.two"
+    xmlns:ns2="http://schemas.android.com/apk/res/com.dependency.three"
+    ns0:attr1="false" >
+
+    <ElementOne
+        ns0:attr1="false"
+        ns1:attr2="false" >
+
+        <ElementTwo
+            ns0:attr1="false"
+            ns0:attr3="false"
+            ns1:attr2="false"
+            ns2:attr4="false" />
+    </ElementOne>
+
+</LinearLayout>"""
+
+        val local = SymbolTable.builder()
+            .tablePackage("com.local")
+            .build()
+        val depOne = SymbolTable.builder()
+            .tablePackage("com.dependency.one")
+            .add(symbol("attr", "attr1"))
+            .add(symbol("attr", "attr3"))
+            .build()
+        val depTwo = SymbolTable.builder()
+            .tablePackage("com.dependency.two")
+            .add(symbol("attr", "attr2"))
+            .build()
+        val depThree = SymbolTable.builder()
+            .tablePackage("com.dependency.three")
+            .add(symbol("attr", "attr4"))
+            .build()
+
+        val namespaceRewriter = NamespaceRewriter(ImmutableList.of(local, depOne, depTwo, depThree))
+        checkAarRewrite(namespaceRewriter, "layout/layout.xml", from, to)
+    }
+
     private fun checkAarRewrite(
         namespaceRewriter: NamespaceRewriter,
         path: String,

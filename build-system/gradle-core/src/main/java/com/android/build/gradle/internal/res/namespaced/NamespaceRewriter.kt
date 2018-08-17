@@ -430,16 +430,7 @@ class NamespaceRewriter(
         // We need to collect which of the dependencies packages have we used, so that we can define
         // the corresponding XML namespaces.
         val usedNamespaces: HashMap<String, String> = HashMap()
-        mainNode.attributes?.let {
-            for (i in 0 until it.length) {
-                val attr = it.item(i)
-                if (attr.nodeName.startsWith("xmlns:")
-                        && attr.nodeValue == "http://schemas.android.com/apk/res-auto") {
-                    namespacesToFix.add(attr.nodeName.drop(6))
-                }
-            }
-        }
-        namespacesToFix.forEach { mainNode.removeAttribute("xmlns:$it") }
+        collectAndRemoveXmlNamespaces(mainNode, namespacesToFix)
 
         // First fix the attributes.
         mainNode.attributes?.forEach {
@@ -458,6 +449,26 @@ class NamespaceRewriter(
             mainNode.setAttribute(
                     "xmlns:${namespace.replace('.', '_')}",
                     "http://schemas.android.com/apk/res/$pckg")
+        }
+    }
+
+    /**
+     * Goes through all nodes of the document and removes "res-auto" namespaces, while collecting
+     * their XML names.
+     */
+    private fun collectAndRemoveXmlNamespaces(node: Element, namespacesToFix: HashSet<String>) {
+        node.attributes?.forEach {
+            if (it.nodeName.startsWith("xmlns:")
+                && it.nodeValue == "http://schemas.android.com/apk/res-auto") {
+                val ns = it.nodeName.substringAfter("xmlns:")
+                namespacesToFix.add(ns)
+                node.removeAttribute("xmlns:$ns")
+            }
+        }
+
+        node.childNodes?.forEach {
+            if (it is Element)
+                collectAndRemoveXmlNamespaces(it, namespacesToFix)
         }
     }
 
