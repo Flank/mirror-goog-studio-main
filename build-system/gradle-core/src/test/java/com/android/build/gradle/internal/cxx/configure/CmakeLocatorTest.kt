@@ -418,7 +418,7 @@ class CmakeLocatorTest {
          */
         expectException("CMake '3.6.4111459' is required but has not yet been downloaded " +
                 "from the SDK.$newline" +
-                "- CMake found in SDK at '/sdk/cmake/3.10.4111459' had version '3.10.4111459'.",
+                "- CMake found in SDK at '${slash}sdk${slash}cmake${slash}3.10.4111459' had version '3.10.4111459'.",
             {
                 val localCmake = fakeLocalPackageOf(
                     "cmake;3.10.4111459",
