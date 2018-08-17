@@ -25,7 +25,7 @@ import java.io.InputStream
 interface PathOpener {
     /**
      * Returns true if and only if this [PathOpener] instance recognizes the protocol used in the
-     * given [PathString].
+     * given [PathString]. This must be a fast-running operation.
      */
     fun recognizes(path: PathString): Boolean
 

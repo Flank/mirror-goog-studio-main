@@ -24,7 +24,7 @@ import java.io.InputStream
  */
 object FileSystemRegistry : PathOpener {
     private val paths = arrayListOf<PathOpener>(JdkPathOpener)
-    private val reversedPaths = paths.asReversed()
+    private @Volatile var reversedPaths = paths.reversed()
     private val mutex = Object()
 
     /**
@@ -36,6 +36,7 @@ object FileSystemRegistry : PathOpener {
         synchronized (mutex) {
             if (!paths.contains(opener)) {
                 paths.add(opener)
+                reversedPaths = paths.reversed()
             }
         }
     }
@@ -46,7 +47,9 @@ object FileSystemRegistry : PathOpener {
      */
     fun unmount(opener: PathOpener) {
         synchronized (mutex) {
-            paths.remove(opener)
+            if (paths.remove(opener)) {
+                reversedPaths = paths.reversed()
+            }
         }
     }
 
@@ -54,7 +57,7 @@ object FileSystemRegistry : PathOpener {
      * Returns the [PathOpener] for the given path.
      */
     private fun openerFor(path: PathString): PathOpener?
-        = synchronized (mutex) {reversedPaths.firstOrNull {it.recognizes(path)}}
+        = reversedPaths.firstOrNull {it.recognizes(path)}
 
     override fun recognizes(path: PathString): Boolean
         = openerFor(path) != null
