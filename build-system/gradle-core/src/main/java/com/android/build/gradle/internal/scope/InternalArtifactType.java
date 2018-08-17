@@ -303,7 +303,10 @@ public enum InternalArtifactType implements ArtifactType {
     // package in the bundle.
     BUNDLE_DEPENDENCY_REPORT(Kind.FILE),
 
-    INSTANT_RUN_APP_INFO_OUTPUT_FILE;
+    INSTANT_RUN_APP_INFO_OUTPUT_FILE,
+
+    // A dummy output (folder) result of CheckDuplicateClassesTask execution
+    DUPLICATE_CLASSES_CHECK;
 
     /**
      * Defines the kind of artifact type. this will be used to determine the output file location

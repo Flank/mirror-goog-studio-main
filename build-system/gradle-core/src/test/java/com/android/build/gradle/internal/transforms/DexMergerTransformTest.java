@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.transforms;
 
-import static com.android.build.gradle.internal.tasks.DexMergingTaskTestKt.generateArchive;
 import static com.android.build.gradle.internal.transforms.DexMergerTransform.ANDROID_L_MAX_DEX_FILES;
 import static com.android.build.gradle.internal.transforms.DexMergerTransform.EXTERNAL_DEPS_DEX_FILES;
 import static com.android.testutils.truth.MoreTruth.assertThat;
@@ -28,7 +27,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
-import com.android.build.api.transform.Context;
 import com.android.build.api.transform.Format;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.Status;
@@ -65,6 +63,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 
 /** Tests for the {@link DexMergerTransform}. */
@@ -75,16 +74,17 @@ public class DexMergerTransformTest {
 
     @Rule public TemporaryFolder tmpDir = new TemporaryFolder();
 
-    private Context context;
+    @Mock private BuildableArtifact dummyArtifact;
+
     private TransformOutputProvider outputProvider;
     private Path out;
 
     @Before
     public void setUp() throws IOException {
-        context = Mockito.mock(Context.class);
         out = tmpDir.getRoot().toPath().resolve("out");
         Files.createDirectories(out);
         outputProvider = new TestTransformOutputProvider(out);
+        dummyArtifact = Mockito.mock(BuildableArtifact.class);
     }
 
     @Test
@@ -325,6 +325,7 @@ public class DexMergerTransformTest {
                 new DexMergerTransform(
                         DexingType.NATIVE_MULTIDEX,
                         null,
+                        dummyArtifact,
                         new NoOpMessageReceiver(),
                         DexMergerTool.DX,
                         21,
@@ -343,6 +344,7 @@ public class DexMergerTransformTest {
                 new DexMergerTransform(
                         DexingType.NATIVE_MULTIDEX,
                         null,
+                        dummyArtifact,
                         new NoOpMessageReceiver(),
                         DexMergerTool.DX,
                         23,
@@ -493,6 +495,7 @@ public class DexMergerTransformTest {
         return new DexMergerTransform(
                 dexingType,
                 collection,
+                dummyArtifact,
                 new NoOpMessageReceiver(),
                 DexMergerTool.DX,
                 1,

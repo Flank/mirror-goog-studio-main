@@ -67,6 +67,7 @@ class CacheabilityTest {
                     ":generateDebugResValues",
                     ":mergeDebugResources",
                     ":compileDebugJavaWithJavac",
+                    ":checkDebugDuplicateClasses",
                     ":mergeDebugShaders",
                     ":mergeDebugAssets",
                     ":mergeExtDexDebug",

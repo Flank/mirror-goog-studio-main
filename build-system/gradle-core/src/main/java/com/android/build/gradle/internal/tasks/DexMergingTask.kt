@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.transforms.DexMergerTransformCallable
+import com.android.build.gradle.options.BooleanOption
 import com.android.builder.dexing.DexMergerTool
 import com.android.builder.dexing.DexingType
 import com.android.ide.common.blame.Message
@@ -42,7 +43,9 @@ import com.android.ide.common.process.ProcessOutput
 import com.android.utils.FileUtils
 import com.android.utils.PathUtils.toSystemIndependentPath
 import com.google.common.base.Throwables
+import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -122,6 +125,13 @@ open class DexMergingTask : AndroidVariantTask() {
     fun getDexFilesForInput(): FileCollection =
         dexFiles.asFileTree.filter { it.name != FN_FOLDER_CONTENT }
 
+    // Dummy folder, used as a way to set up dependency
+    @get:Optional
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    var duplicateClassesCheck: BuildableArtifact? = null
+        private set
+
     @get:OutputDirectory
     lateinit var outputDir: File
         private set
@@ -183,7 +193,12 @@ open class DexMergingTask : AndroidVariantTask() {
             task.messageReceiver = variantScope.globalScope.messageReceiver
             task.dexMerger = variantScope.dexMerger
             task.minSdkVersion = variantScope.minSdkVersion.featureLevel
-            task.isDebuggable = variantScope.variantConfiguration.buildType.isDebuggable()
+            task.isDebuggable = variantScope.variantConfiguration.buildType.isDebuggable
+            if (variantScope.globalScope.projectOptions[BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK]) {
+                task.duplicateClassesCheck = variantScope.artifacts.getFinalArtifactFiles(
+                    InternalArtifactType.DUPLICATE_CLASSES_CHECK
+                )
+            }
             task.outputDir = output
         }
 
