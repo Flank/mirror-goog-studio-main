@@ -35,6 +35,8 @@ public class AgentBasedClassRedefinerTest extends ClassRedefinerTestBase {
     // Location of the initial test-app that has the ACTIVITY_CLASS
     private static final String DEX_LOCATION = ProcessRunner.getProcessPath("app.dex.location");
 
+    private static final String INSTRUMENTATION_LOCATION =
+            ProcessRunner.getProcessPath("app.instrumentation.location");
     private static final String PACKAGE = "package.name.does.matter.in.this.test.";
     
     private static final String LOCAL_HOST = "127.0.0.1";
@@ -246,6 +248,7 @@ public class AgentBasedClassRedefinerTest extends ClassRedefinerTestBase {
         public void redefine(Deploy.SwapRequest request, boolean shouldSucceed) {
             try {
                 AgentConfig.Builder agentConfig = AgentConfig.newBuilder();
+                agentConfig.setInstrumentDex(INSTRUMENTATION_LOCATION);
                 agentConfig.setSwapRequest(request);
 
                 File pb = Files.createTempFile("messageDir", "msg.pb").toFile();

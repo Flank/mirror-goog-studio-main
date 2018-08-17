@@ -27,7 +27,10 @@ message ClassDef {
 
 // Agent configuration for a swap.
 message AgentConfig {
+  // The location of the instrumentation dex file.
+  string instrument_dex = 1;
+
   // The SwapRequest that was passed to the installer.
-  SwapRequest swap_request = 1;
+  SwapRequest swap_request = 2;
 }
 

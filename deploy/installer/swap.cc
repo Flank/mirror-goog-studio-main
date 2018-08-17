@@ -78,6 +78,7 @@ bool SwapCommand::Run(const Workspace& workspace) {
   // Create the agent config, passing the agent the swap request and the
   // location of the instrumentation library.
   proto::AgentConfig agent_config;
+  agent_config.set_instrument_dex(target_dir_ + kDex);
   agent_config.set_allocated_swap_request(&request_);
 
   // TODO(noahz): Skip all this and pass to agent via the attach-agent command?
@@ -135,6 +136,12 @@ bool SwapCommand::Setup(const std::string& source_dir) {
   }
 
   std::string output;
+  if (!RunCmd("chmod", User::SHELL_USER,
+              {"+rwx", source_dir + kAgent, source_dir + kDex}, &output)) {
+    std::cerr << "Could not chmod agent files." << output << std::endl;
+    return false;
+  }
+
   // We have to run the following three commands as the application, because
   // we otherwise do not have access to the application's data directory.
   if (!RunCmd("mkdir", User::APP_PACKAGE, {"-p", target_dir_}, &output)) {
@@ -145,6 +152,12 @@ bool SwapCommand::Setup(const std::string& source_dir) {
   if (!RunCmd("cp", User::APP_PACKAGE,
               {source_dir + kAgent, target_dir_ + kAgent}, &output)) {
     std::cerr << "Could not copy agent binary." << output << std::endl;
+    return false;
+  }
+
+  if (!RunCmd("cp", User::APP_PACKAGE, {source_dir + kDex, target_dir_ + kDex},
+              &output)) {
+    std::cerr << "Could not copy agent dex." << output << std::endl;
     return false;
   }
 

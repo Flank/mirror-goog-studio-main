@@ -22,9 +22,7 @@ cc_binary(
         "native_callbacks.cc",
         "native_callbacks.h",
     ],
-    copts = ANDROID_COPTS + ["-I$(GENDIR)/tools/base/deploy/proto"] + [
-        "-I$(GENDIR)/tools/base/deploy/agent/native",
-    ],
+    copts = ANDROID_COPTS + ["-I$(GENDIR)/tools/base/deploy/proto"],
     linkopts = ANDROID_LINKOPTS,
     linkshared = 1,
     tags = [
@@ -32,39 +30,12 @@ cc_binary(
     ],
     visibility = ["//tools/base/deploy:__subpackages__"],
     deps = [
-        ":instrumentation_header",
         "//external:slicer",
         "//prebuilts/studio/jdk:jni_headers",
         "//tools/base/deploy/agent/native/jni:agent_jni",
         "//tools/base/deploy/agent/native/utils:agent_utils",
         "//tools/base/deploy/proto:cc_proto",
     ],
-)
-
-cc_library(
-    name = "instrumentation_header",
-    hdrs = [
-        ":instrumentation.jar.cc",
-    ],
-)
-
-# Converts the jar containing instrumentation dex to an array in a CC source file.
-genrule(
-    name = "instrumentation_header_generator",
-    srcs = [
-        "//tools/base/deploy/agent/instrumentation",
-    ],
-    outs = [
-        "instrumentation.jar.cc",
-    ],
-    cmd = "$(location //tools/base/deploy/tools:bin2c)" +
-          " $(location //tools/base/deploy/agent/instrumentation:instrumentation)" +
-          " $(location instrumentation.jar.cc)" +
-          " instrumentation_jar",
-    tools = [
-        "//tools/base/deploy/tools:bin2c",
-    ],
-    visibility = ["//visibility:private"],
 )
 
 android_cc_binary(

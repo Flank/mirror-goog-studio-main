@@ -198,7 +198,7 @@ public class Deployer {
     }
 
     private void swap(RunResponse response, Map<String, ApkDump> dumps) throws DeployerException {
-        stopWatch.mark("Swap started.");
+
         ClassRedefiner redefiner = new InstallerBasedClassRedefiner(installer);
         Deploy.SwapRequest.Builder request = Deploy.SwapRequest.newBuilder();
         request.setPackageName(packageName);
@@ -211,15 +211,8 @@ public class Deployer {
                 DexArchive newApk = cache(apk);
 
                 if (diffs.isEmpty()) {
-                    System.out.println("Swapper: apk " + apk.getPath() + " has not changed.");
                     continue;
                 }
-                System.out.println(
-                        "Swapper found "
-                                + diffs.size()
-                                + " changes in apk '"
-                                + apk.getPath()
-                                + "'.");
 
                 // TODO: Only pass in a list of changed files instead of doing a full APK comparision.
                 ApkDump apkDump = dumps.get(apk.retrieveOnDeviceName());
@@ -242,13 +235,11 @@ public class Deployer {
                                                         .build()));
 
             } catch (Exception e) {
-                System.out.println("Error while creating proto");
                 throw new DeployerException(e);
             }
         }
-        stopWatch.mark("Piping request...");
+
         redefiner.redefine(request.build());
-        stopWatch.mark("Swap finished.");
     }
 
     private DexArchive cache(ApkFull apk) throws IOException {

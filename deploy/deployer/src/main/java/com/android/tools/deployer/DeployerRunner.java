@@ -18,12 +18,9 @@ package com.android.tools.deployer;
 
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
-import com.android.tools.deploy.swapper.DexArchiveDatabase;
 import com.android.tools.deploy.swapper.InMemoryDexArchiveDatabase;
 import com.android.utils.ILogger;
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.IOException;
 import java.util.ArrayList;
 
 class InstallerNotifier implements Deployer.InstallerCallBack {
@@ -34,41 +31,19 @@ class InstallerNotifier implements Deployer.InstallerCallBack {
 public class DeployerRunner {
 
     private static final ILogger LOGGER = Logger.getLogger(DeployerRunner.class);
-    private static final String DB_PATH = "/tmp/studio.db";
-    private final DexArchiveDatabase db;
-
-    static InMemoryDexArchiveDatabase readDB() throws IOException, ClassNotFoundException {
-        if (!Files.exists(Paths.get(DB_PATH))) {
-            return new InMemoryDexArchiveDatabase();
-        }
-        FileInputStream file = new FileInputStream(DB_PATH);
-        ObjectInputStream in = new ObjectInputStream(file);
-        return (InMemoryDexArchiveDatabase) in.readObject();
-    }
-
-    static void saveDB(InMemoryDexArchiveDatabase db) throws IOException {
-        FileOutputStream file = new FileOutputStream(DB_PATH);
-        ObjectOutputStream out = new ObjectOutputStream(file);
-        out.writeObject(db);
-    }
 
     // Run it from bazel with the following command:
     // bazel run :deployer.runner org.wikipedia.alpha PATH_TO_APK1 PATH_TO_APK2
-    public static void main(String[] args) throws IOException, ClassNotFoundException {
-        InMemoryDexArchiveDatabase db = null;
+    public static void main(String[] args) throws IOException {
+        DeployerRunner runner = new DeployerRunner();
         try {
-            db = readDB();
-            DeployerRunner runner = new DeployerRunner(db);
             runner.run(args);
         } finally {
-            saveDB(db);
             AndroidDebugBridge.terminate();
         }
     }
 
-    public DeployerRunner(DexArchiveDatabase db) {
-        this.db = db;
-    }
+    public DeployerRunner() {}
 
     public void run(String[] args) throws IOException {
         // Check that we have the parameters we need to run.

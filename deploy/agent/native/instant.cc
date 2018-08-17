@@ -18,18 +18,10 @@
 #include "jni.h"
 #include "jvmti.h"
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-
 #include <fstream>
 #include <iostream>
 #include <memory>
-#include <string>
 #include <vector>
-#include <cstring>
-#include <sstream>
 
 #include "android_wrapper.h"
 #include "capabilities.h"
@@ -53,19 +45,6 @@ namespace swapper {
 const char* kBreadcrumbClass = "com/android/tools/deploy/instrument/Breadcrumb";
 const char* kHandlerWrapperClass =
     "com/android/tools/deploy/instrument/ActivityThreadHandlerWrapper";
-#include "instrumentation.jar.cc"
-
-std::string ToString(unsigned long val) {
-  std::stringstream stream;
-  stream << val;
-  return stream.str();
-}
-
-const std::string kInstrumentation_jar_name = std::string("instruments-")
-    + ToString(instrumentation_jar_hash)
-    + ".jar";
-
-#define FILE_MODE (S_IRUSR | S_IWUSR)
 
 // Watch as I increment between runs!
 static int run_counter = 0;
@@ -80,16 +59,18 @@ extern "C" void JNICALL Agent_ClassFileLoadHook(
                  new_class_data);
 }
 
-bool LoadInstrumentationJar(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar_path) {
+bool LoadInstrumentationJar(jvmtiEnv* jvmti, JNIEnv* jni,
+                            const string& instrumentation_jar) {
   // Check for the existence of a breadcrumb class, indicating a previous agent
   // has already loaded instrumentation. If no previous agent has run on this
   // jvm, add our instrumentation classes to the bootstrap class loader.
   jclass unused = jni->FindClass(kBreadcrumbClass);
   if (unused == nullptr) {
-    Log::V("No existing instrumentation found. Loading instrumentation from %s",
-           kInstrumentation_jar_name.c_str());
+    Log::V("No existing instrumentation found. Loading instrmentation from %s",
+           instrumentation_jar.c_str());
     jni->ExceptionClear();
-    if (jvmti->AddToBootstrapClassLoaderSearch(jar_path.c_str()) != JVMTI_ERROR_NONE) {
+    if (jvmti->AddToBootstrapClassLoaderSearch(instrumentation_jar.c_str()) !=
+        JVMTI_ERROR_NONE) {
       return false;
     }
   } else {
@@ -98,7 +79,8 @@ bool LoadInstrumentationJar(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar
   return true;
 }
 
-bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar) {
+bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni,
+                const string& instrumentation_jar) {
   // The breadcrumb class stores some checks between runs of the agent.
   // We can't use the class from the FindClass call because it may not have
   // actually found the class.
@@ -107,7 +89,7 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar) {
   // Ensure that the jar hasn't changed since we last instrumented. If it has,
   // fail out for now. This is an important scenario to guard against, since it
   // would likely cause silent failures.
-  jvalue jar_path = {.l = jni->NewStringUTF(jar.c_str())};
+  jvalue jar_path = {.l = jni->NewStringUTF(instrumentation_jar.c_str())};
   jboolean matches = breadcrumb.CallStaticMethod<jboolean>(
       {"checkHash", "(Ljava/lang/String;)Z"}, &jar_path);
   jni->DeleteLocalRef(jar_path.l);
@@ -116,7 +98,7 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar) {
     Log::E(
         "The instrumentation jar at %s does not match the jar previously used "
         "to instrument. The application must be restarted.",
-        kInstrumentation_jar_name.c_str());
+        instrumentation_jar.c_str());
     return false;
   }
 
@@ -175,54 +157,6 @@ jint DoHotSwap(jvmtiEnv* jvmti, JNIEnv* jni, const Config& config) {
   return JNI_OK;
 }
 
-// Check if the jar_path exists. If it doesn't, generate its content using the jar embedded in the
-// .data section of this executable.
-// TODO: Don't write to disk. Have jvmti load the jar directly from a memory mapped fd to agent.so.
-bool WriteJarToDiskIfNecessary(const std::string& jar_path) {
-  // If file exists, there is no need to do anything.
-  if (access(jar_path.c_str(), F_OK ) != -1) {
-    return true;
-  }
-
-  // TODO: Would be more efficient to have the offet and size and use sendfile() to avoid a userland
-  // trip.
-  int fd = open(jar_path.c_str(), O_WRONLY | O_CREAT, FILE_MODE);
-  if (fd == -1) {
-    Log::E("WriteJarToDiskIfNecessary(). Unable to open().");
-    return false;
-  }
-  int written = write(fd, instrumentation_jar, instrumentation_jar_len);
-  if (written == -1) {
-    Log::E("WriteJarToDiskIfNecessary(). Unable to write().");
-    return false;
-  }
-
-  int closeResult = close(fd);
-  if (closeResult == -1) {
-    Log::E("WriteJarToDiskIfNecessary(). Unable to close().");
-    return false;
-  }
-
-  return true;
-}
-
-std::string GetInstrumentJarPath(const std::string& package_name) {
-#ifdef __ANDROID__
-  std::string target_jar_dir_ = std::string("/data/data/") + package_name + "/.studio/";
-  std::string target_jar = target_jar_dir_ + kInstrumentation_jar_name;
-  return target_jar;
-#else
-  // For tests purposes.
-  char* tmp_dir = getenv("TEST_TMPDIR");
-  Log::E("GetInstrumentPath:%s", tmp_dir);
-  if (tmp_dir == nullptr) {
-    return kInstrumentation_jar_name;
-  } else {
-    return std::string(tmp_dir) + "/" + kInstrumentation_jar_name;
-  }
-#endif
-}
-
 jint DoHotSwapAndRestart(jvmtiEnv* jvmti, JNIEnv* jni, const Config& config) {
   jvmtiEventCallbacks callbacks;
   callbacks.ClassFileLoadHook = Agent_ClassFileLoadHook;
@@ -233,21 +167,12 @@ jint DoHotSwapAndRestart(jvmtiEnv* jvmti, JNIEnv* jni, const Config& config) {
     return JNI_ERR;
   }
 
-  std::string instrument_jar_path = GetInstrumentJarPath(config.GetSwapRequest().package_name());
-
-
-  // Make sure the instrumentation jar is ready on disk.
-  if (!WriteJarToDiskIfNecessary(instrument_jar_path)) {
-    Log::E("Error writing instrumentation.jar to disk.");
-    return JNI_ERR;
-  }
-
-  if (!LoadInstrumentationJar(jvmti, jni, instrument_jar_path)) {
+  if (!LoadInstrumentationJar(jvmti, jni, config.GetInstrumentationPath())) {
     Log::E("Error loading instrumentation dex.");
     return JNI_ERR;
   }
 
-  if (!Instrument(jvmti, jni, instrument_jar_path)) {
+  if (!Instrument(jvmti, jni, config.GetInstrumentationPath())) {
     Log::E("Error instrumenting application.");
     return JNI_ERR;
   }

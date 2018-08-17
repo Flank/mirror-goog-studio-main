@@ -58,7 +58,7 @@ public class AdbClient {
                 | ShellCommandUnresponsiveException
                 | IOException
                 | TimeoutException e) {
-            throw new DeployerException("Unable to run shell command:", e);
+            throw new DeployerException("Unable to run shell command.", e);
         }
     }
 
