@@ -133,6 +133,165 @@ public class ConstraintLayoutDetectorTest extends AbstractCheckTest {
         lint().projects(project).checkMessage(this::checkReportedError).run().expect(expected);
     }
 
+    public void testBarrierMissingConstraint() {
+        String expected =
+                "res/layout/layout1.xml:50: Error: This view is not constrained. It only has designtime positions, so it will jump to (0,0) at runtime unless you add the constraints [MissingConstraints]\n"
+                        + "    <android.support.constraint.Barrier\n"
+                        + "     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings";
+
+        ProjectDescription project =
+                project()
+                        .files(
+                                xml(
+                                        "res/layout/layout1.xml",
+                                        ""
+                                                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                                + "<android.support.constraint.ConstraintLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                                + "    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"
+                                                + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                                + "    android:id=\"@+id/activity_main_barriers\"\n"
+                                                + "    android:layout_width=\"match_parent\"\n"
+                                                + "    android:layout_height=\"match_parent\"\n"
+                                                + "    app:layout_editor_absoluteX=\"0dp\"\n"
+                                                + "    app:layout_editor_absoluteY=\"80dp\"\n"
+                                                + "    tools:layout_editor_absoluteX=\"0dp\"\n"
+                                                + "    tools:layout_editor_absoluteY=\"80dp\">\n"
+                                                + "\n"
+                                                + "    <TextView\n"
+                                                + "        android:id=\"@+id/settingsLabel\"\n"
+                                                + "        android:layout_width=\"wrap_content\"\n"
+                                                + "        android:layout_height=\"wrap_content\"\n"
+                                                + "        android:layout_marginBottom=\"254dp\"\n"
+                                                + "        android:layout_marginTop=\"31dp\"\n"
+                                                + "        android:labelFor=\"@+id/settings\"\n"
+                                                + "        android:text=\"@string/settings\"\n"
+                                                + "        app:layout_constraintBaseline_creator=\"1\"\n"
+                                                + "        app:layout_constraintBottom_toBottomOf=\"parent\"\n"
+                                                + "        app:layout_constraintLeft_creator=\"1\"\n"
+                                                + "        app:layout_constraintLeft_toLeftOf=\"@+id/activity_main_barriers\"\n"
+                                                + "        app:layout_constraintTop_toBottomOf=\"@+id/cameraLabel\"\n"
+                                                + "        app:layout_constraintVertical_bias=\"0.65999997\"\n"
+                                                + "        app:layout_editor_absoluteX=\"16dp\"\n"
+                                                + "        app:layout_editor_absoluteY=\"238dp\"\n"
+                                                + "        tools:layout_constraintBaseline_creator=\"0\"\n"
+                                                + "        tools:layout_constraintLeft_creator=\"0\" />\n"
+                                                + "\n"
+                                                + "    <TextView\n"
+                                                + "        android:id=\"@+id/cameraLabel\"\n"
+                                                + "        android:layout_width=\"wrap_content\"\n"
+                                                + "        android:layout_height=\"wrap_content\"\n"
+                                                + "        android:layout_marginBottom=\"31dp\"\n"
+                                                + "        android:layout_marginTop=\"189dp\"\n"
+                                                + "        android:labelFor=\"@+id/cameraType\"\n"
+                                                + "        android:text=\"@string/camera\"\n"
+                                                + "        app:layout_constraintBaseline_creator=\"1\"\n"
+                                                + "        app:layout_constraintBottom_toTopOf=\"@+id/settingsLabel\"\n"
+                                                + "        app:layout_constraintLeft_creator=\"1\"\n"
+                                                + "        app:layout_constraintStart_toStartOf=\"parent\"\n"
+                                                + "        app:layout_constraintTop_toTopOf=\"parent\"\n"
+                                                + "        app:layout_editor_absoluteX=\"16dp\"\n"
+                                                + "        app:layout_editor_absoluteY=\"189dp\"\n"
+                                                + "        tools:layout_constraintBaseline_creator=\"0\"\n"
+                                                + "        tools:layout_constraintLeft_creator=\"0\" />\n"
+                                                + "\n"
+                                                + "    <android.support.constraint.Barrier\n"
+                                                + "        android:id=\"@+id/barrier2\"\n"
+                                                + "        android:layout_width=\"wrap_content\"\n"
+                                                + "        android:layout_height=\"wrap_content\"\n"
+                                                + "        app:constraint_referenced_ids=\"settingsLabel,cameraLabel\"\n"
+                                                + "        tools:layout_editor_absoluteX=\"99dp\" />\n"
+                                                + "\n"
+                                                + "</android.support.constraint.ConstraintLayout>\n"),
+                                gradle(
+                                        ""
+                                                + "apply plugin: 'com.android.application'\n"
+                                                + "\n"
+                                                + "dependencies {\n"
+                                                + "    compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha3\"'\n"
+                                                + "}"));
+
+        lint().projects(project).checkMessage(this::checkReportedError).run().expect(expected);
+    }
+
+    public void testBarrierHasConstraint() {
+        String expected = "No warnings.";
+
+        ProjectDescription project =
+                project()
+                        .files(
+                                xml(
+                                        "res/layout/layout1.xml",
+                                        ""
+                                                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                                + "<android.support.constraint.ConstraintLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                                + "    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"
+                                                + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                                + "    android:id=\"@+id/activity_main_barriers\"\n"
+                                                + "    android:layout_width=\"match_parent\"\n"
+                                                + "    android:layout_height=\"match_parent\"\n"
+                                                + "    app:layout_editor_absoluteX=\"0dp\"\n"
+                                                + "    app:layout_editor_absoluteY=\"80dp\"\n"
+                                                + "    tools:layout_editor_absoluteX=\"0dp\"\n"
+                                                + "    tools:layout_editor_absoluteY=\"80dp\">\n"
+                                                + "\n"
+                                                + "    <TextView\n"
+                                                + "        android:id=\"@+id/settingsLabel\"\n"
+                                                + "        android:layout_width=\"wrap_content\"\n"
+                                                + "        android:layout_height=\"wrap_content\"\n"
+                                                + "        android:layout_marginBottom=\"254dp\"\n"
+                                                + "        android:layout_marginTop=\"31dp\"\n"
+                                                + "        android:labelFor=\"@+id/settings\"\n"
+                                                + "        android:text=\"@string/settings\"\n"
+                                                + "        app:layout_constraintBaseline_creator=\"1\"\n"
+                                                + "        app:layout_constraintBottom_toBottomOf=\"parent\"\n"
+                                                + "        app:layout_constraintLeft_creator=\"1\"\n"
+                                                + "        app:layout_constraintLeft_toLeftOf=\"@+id/activity_main_barriers\"\n"
+                                                + "        app:layout_constraintTop_toBottomOf=\"@+id/cameraLabel\"\n"
+                                                + "        app:layout_constraintVertical_bias=\"0.65999997\"\n"
+                                                + "        app:layout_editor_absoluteX=\"16dp\"\n"
+                                                + "        app:layout_editor_absoluteY=\"238dp\"\n"
+                                                + "        tools:layout_constraintBaseline_creator=\"0\"\n"
+                                                + "        tools:layout_constraintLeft_creator=\"0\" />\n"
+                                                + "\n"
+                                                + "    <TextView\n"
+                                                + "        android:id=\"@+id/cameraLabel\"\n"
+                                                + "        android:layout_width=\"wrap_content\"\n"
+                                                + "        android:layout_height=\"wrap_content\"\n"
+                                                + "        android:layout_marginBottom=\"31dp\"\n"
+                                                + "        android:layout_marginTop=\"189dp\"\n"
+                                                + "        android:labelFor=\"@+id/cameraType\"\n"
+                                                + "        android:text=\"@string/camera\"\n"
+                                                + "        app:layout_constraintBaseline_creator=\"1\"\n"
+                                                + "        app:layout_constraintBottom_toTopOf=\"@+id/settingsLabel\"\n"
+                                                + "        app:layout_constraintLeft_creator=\"1\"\n"
+                                                + "        app:layout_constraintStart_toStartOf=\"parent\"\n"
+                                                + "        app:layout_constraintTop_toTopOf=\"parent\"\n"
+                                                + "        app:layout_editor_absoluteX=\"16dp\"\n"
+                                                + "        app:layout_editor_absoluteY=\"189dp\"\n"
+                                                + "        tools:layout_constraintBaseline_creator=\"0\"\n"
+                                                + "        tools:layout_constraintLeft_creator=\"0\" />\n"
+                                                + "\n"
+                                                + "    <android.support.constraint.Barrier\n"
+                                                + "        android:id=\"@+id/barrier2\"\n"
+                                                + "        android:layout_width=\"wrap_content\"\n"
+                                                + "        android:layout_height=\"wrap_content\"\n"
+                                                + "        app:barrierDirection=\"end\"\n"
+                                                + "        app:constraint_referenced_ids=\"settingsLabel,cameraLabel\"\n"
+                                                + "        tools:layout_editor_absoluteX=\"99dp\" />\n"
+                                                + "\n"
+                                                + "</android.support.constraint.ConstraintLayout>\n"),
+                                gradle(
+                                        ""
+                                                + "apply plugin: 'com.android.application'\n"
+                                                + "\n"
+                                                + "dependencies {\n"
+                                                + "    compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha3\"'\n"
+                                                + "}"));
+
+        lint().projects(project).checkMessage(this::checkReportedError).run().expect(expected);
+    }
+
     @Override
     protected void checkReportedError(
             @NonNull Context context,

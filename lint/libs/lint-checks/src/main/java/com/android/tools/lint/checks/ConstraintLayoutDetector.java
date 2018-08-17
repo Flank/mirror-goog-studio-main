@@ -42,6 +42,7 @@ import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
 import org.w3c.dom.Element;
@@ -131,9 +132,17 @@ public class ConstraintLayoutDetector extends LayoutDetector {
                 continue;
             }
             Element element = (Element) child;
+            String elementTagName = element.getTagName();
 
-            if (CLASS_CONSTRAINT_LAYOUT_GUIDELINE.isEquals(element.getTagName())) {
+            if (CLASS_CONSTRAINT_LAYOUT_GUIDELINE.isEquals(elementTagName)) {
                 continue;
+            }
+
+            if (!Strings.isNullOrEmpty(elementTagName)
+                    && element.getTagName().contains("Barrier")
+                    && scanForBarrierConstraint(element)) {
+                // The Barrier has the necessary layout constraints. This element is constrained correctly.
+                break;
             }
 
             boolean isConstrainedHorizontally = false;
@@ -190,6 +199,23 @@ public class ConstraintLayoutDetector extends LayoutDetector {
                 context.report(ISSUE, element, context.getNameLocation(element), message);
             }
         }
+    }
+
+    /**
+     * @param element to scan
+     * @return true if barrier specific constraint is set. False otherwise.
+     */
+    private static boolean scanForBarrierConstraint(Element element) {
+        NamedNodeMap attributes = element.getAttributes();
+        for (int i = 0; i < attributes.getLength(); i++) {
+            Node attribute = attributes.item(i);
+            String name = attribute.getLocalName();
+            if (name.endsWith("barrierDirection")) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @NonNull
