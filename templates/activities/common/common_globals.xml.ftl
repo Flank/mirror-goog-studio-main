@@ -9,6 +9,7 @@
     <#assign useMaterial2=useAndroidX || hasDependency('com.google.android.material:material')>
     <#assign supportRunner=hasDependency('com.android.support.test:runner', 'androidTestCompile')>
     <#assign testSupportLib=espresso && supportRunner>
+    <#assign navigationType=navigationType!'None'>
 
     <global id="themeName" type="string" value="${themeName}" />
     <global id="themeExists" type="boolean" value="${(theme.exists!false)?string}" />
@@ -28,6 +29,7 @@
     <global id="useAndroidX" type="boolean" value="${useAndroidX?string}" />
     <global id="hasNoActionBar" type="boolean" value="${appCompatActivity?string}" />
     <global id="testSupportLib" type="boolean" value="${testSupportLib?string}" />
+    <global id="navigationType" type="string" value="${navigationType!'None'}" />
 
     <global id="isInstantApp" type="boolean" value="false" />
     <global id="instantAppActivityOrder" type="string" value="1" />
