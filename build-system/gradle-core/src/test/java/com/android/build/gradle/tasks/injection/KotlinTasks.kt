@@ -26,6 +26,7 @@ import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 
 class KotlinTasks {
@@ -36,8 +37,14 @@ class KotlinTasks {
         @get:InternalID(InternalArtifactType.APP_CLASSES)
         lateinit var classes: BuildableArtifact
 
+        @get:InputFiles
+        @get:InternalID(InternalArtifactType.APK_MAPPING)
+        @get:Optional
+        var optional: BuildableArtifact? = null
+
         override fun executeTask(vararg parameters: Any) {
             assertThat(classes).isNotNull()
+            assertThat(optional).isNull()
         }
     }
 

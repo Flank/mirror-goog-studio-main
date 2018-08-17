@@ -27,6 +27,7 @@ import com.android.build.gradle.tasks.TaskArtifactsHolderTest;
 import org.gradle.api.file.Directory;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 
 public class JavaTasks {
@@ -41,9 +42,19 @@ public class JavaTasks {
 
         BuildableArtifact appClasses;
 
+        @InputFiles
+        @InternalID(InternalArtifactType.APK_MAPPING)
+        @Optional
+        public BuildableArtifact getApkMapping() {
+            return apkMapping;
+        }
+
+        BuildableArtifact apkMapping;
+
         @Override
         public void executeTask(@NonNull Object... parameters) {
             assertThat(appClasses).isNotNull();
+            assertThat(apkMapping).isNull();
         }
     }
 

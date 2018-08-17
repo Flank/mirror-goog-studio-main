@@ -24,6 +24,7 @@ import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
 import java.lang.reflect.AnnotatedElement
@@ -70,7 +71,7 @@ class TaskArtifactsHolder<T: Task>(val artifacts: BuildArtifactsHolder) {
                 val inputId = findID(it)
                 if (inputId != null) {
                     // find the corresponding property definition.
-                    val propertyDefinition = findProperty<BuildableArtifact>(
+                    val propertyDefinition = findProperty<BuildableArtifact?>(
                         configAction.type.kotlin,
                         it.name.substring(3).decapitalize()
                     ) ?: throw RuntimeException("Cannot find property for ${it.name}")
@@ -78,10 +79,18 @@ class TaskArtifactsHolder<T: Task>(val artifacts: BuildArtifactsHolder) {
                     // check that field is the right type.
                     checkInputType(it)
 
+                    val buildableArtifact =
+                        if (it.getDeclaredAnnotation(Optional::class.java) != null) {
+                            artifacts.getFinalArtifactFilesIfPresent(inputId)
+                        } else {
+                            requireNotNull(
+                                artifacts.getFinalArtifactFiles(inputId)
+                            ) { "Input $inputId cannot be null. Did you forget to add @Optional?"}
+                        }
                     inputs.add(
                         InputFilesInjectPoint(
                             propertyDefinition,
-                            artifacts.getFinalArtifactFiles(inputId)
+                            buildableArtifact
                         )
                     )
                 }
@@ -219,8 +228,8 @@ class TaskArtifactsHolder<T: Task>(val artifacts: BuildArtifactsHolder) {
     }
 
     private data class InputFilesInjectPoint<in T: Task>(
-        val injectionPoint: KMutableProperty1<Any, BuildableArtifact>,
-        val buildableArtifact: BuildableArtifact): InjectionPoint<T> {
+        val injectionPoint: KMutableProperty1<Any, BuildableArtifact?>,
+        val buildableArtifact: BuildableArtifact?): InjectionPoint<T> {
 
         override fun inject(task: T) {
             injectionPoint.setter.isAccessible = true
