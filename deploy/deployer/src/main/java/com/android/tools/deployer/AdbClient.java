@@ -23,6 +23,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -45,6 +46,7 @@ public class AdbClient {
      * Executes the given command and sends {@code input} to stdin and returns stdout as a byte[]
      */
     public byte[] shell(String[] parameters, byte[] input) throws DeployerException {
+        System.out.println("SHELL:" + Arrays.toString(parameters));
         ByteArrayOutputReceiver receiver = null;
         try {
             receiver = new ByteArrayOutputReceiver();
@@ -63,7 +65,10 @@ public class AdbClient {
         } finally {
             // TODO: Delete this once we gather all stdout and stderr in a proto.
             // For now this is mandatory to properly troubleshot.
+            System.out.println("OUTPUT_START:");
             System.out.println(new String(receiver.toByteArray()));
+            System.out.println("OUTPUT_END:");
+
         }
     }
 
