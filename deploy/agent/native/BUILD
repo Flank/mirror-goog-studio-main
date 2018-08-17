@@ -57,12 +57,12 @@ genrule(
     outs = [
         "instrumentation.jar.cc",
     ],
-    cmd = "$(location //tools/base/deploy/tools:bin2c)" +
+    cmd = "$(location //tools/base/bazel:bin2c)" +
           " $(location //tools/base/deploy/agent/instrumentation:instrumentation)" +
           " $(location instrumentation.jar.cc)" +
           " instrumentation_jar",
     tools = [
-        "//tools/base/deploy/tools:bin2c",
+        "//tools/base/bazel:bin2c",
     ],
     visibility = ["//visibility:private"],
 )

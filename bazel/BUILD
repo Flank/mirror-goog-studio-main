@@ -112,6 +112,14 @@ java_binary(
 )
 
 java_binary(
+    name = "bin2c",
+    srcs = ["src/com/android/tools/binaries/Bin2C.java"],
+    main_class = "com.android.tools.binaries.Bin2C",
+    visibility = ["//visibility:public"],
+    deps = ["//tools/base/third_party:com.google.guava_guava"],
+)
+
+java_binary(
     name = "singlejar",
     main_class = "com.android.tools.utils.SingleJar",
     visibility = ["//visibility:public"],
@@ -356,5 +364,15 @@ java_test(
         ":bazel_generator",
         ":iml_to_build",
         ":utils",
+    ],
+)
+
+java_test(
+    name = "bin2c_tests",
+    srcs = ["testSrc/com/android/tools/binaries/Bin2CTest.java"],
+    test_class = "com.android.tools.binaries.Bin2CTest",
+    deps = [
+        ":bin2c",
+        "//tools/base/third_party:com.google.guava_guava",
     ],
 )

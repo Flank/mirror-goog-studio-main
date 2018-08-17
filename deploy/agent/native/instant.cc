@@ -55,14 +55,8 @@ const char* kHandlerWrapperClass =
     "com/android/tools/deploy/instrument/ActivityThreadHandlerWrapper";
 #include "instrumentation.jar.cc"
 
-std::string ToString(unsigned long val) {
-  std::stringstream stream;
-  stream << val;
-  return stream.str();
-}
-
 const std::string kInstrumentation_jar_name = std::string("instruments-")
-    + ToString(instrumentation_jar_hash)
+    + instrumentation_jar_hash
     + ".jar";
 
 #define FILE_MODE (S_IRUSR | S_IWUSR)
