@@ -35,11 +35,14 @@
 
 using namespace deployer;
 
+extern const char* kVersion_hash;
+
 struct Parameters {
   const char* binary_name = nullptr;
   const char* command_name = nullptr;
   const char* cmd_path = nullptr;
   const char* pm_path = nullptr;
+  const char* version = nullptr;
   int consumed = 0;
 };
 
@@ -54,6 +57,7 @@ void PrintUsage(const char* invoked_path) {
             << "  -pm=X : Define path to package manager executable (to mock "
                "android)."
             << std::endl
+            << "  -version=X : Program will fail if version != X." << std::endl
             << "Commands available:" << std::endl
             << "   dump : Extract CDs and Signatures for a given applicationID."
             << std::endl
@@ -72,6 +76,8 @@ bool ParseParameters(int argc, char** argv, Parameters* parameters) {
       parameters->cmd_path = strtok(nullptr, "=");
     } else if (!strncmp("-pm", argv[index], 3)) {
       parameters->pm_path = strtok(nullptr, "=");
+    } else if (!strncmp("-version", argv[index], 8)) {
+      parameters->version = strtok(nullptr, "=");
     } else {
       std::cerr << "environment parameter unknown:" << argv[index] << std::endl;
       return false;
@@ -122,6 +128,20 @@ int main(int argc, char** argv) {
   }
   if (parameters.pm_path != nullptr) {
     PackageManager::SetPath(parameters.pm_path);
+  }
+
+  if (parameters.version != nullptr) {
+    if (strcmp(parameters.version, kVersion_hash)) {
+      // TODO: Output a Response object so version failure can be differentiated
+      // from actual error.
+      // For now fake a "not found" response so ddmlib client which cannot
+      // retrieve status code will push a new version
+      std::cerr << "/system/bin/sh: /data/local/tmp/.studio/bin/installer:"
+                << std::endl;
+      std::cerr << " Version mismatch, requested '" << parameters.version
+                << "' but this is '" << kVersion_hash << "'" << std::endl;
+      return EXIT_FAILURE;
+    }
   }
 
   // Retrieve Command to be invoked.

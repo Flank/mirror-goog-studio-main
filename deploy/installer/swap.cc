@@ -49,15 +49,13 @@ const int kRxFileMode =
 
 void SwapCommand::ParseParameters(int argc, char** argv) {
   int size = -1;
-  force_update_ = false;
-  if (argc < 2) {
-    std::cerr << "Not enough arguments for swap command: swap <force> <pb_size>"
+  if (argc != 1) {
+    std::cerr << "Not enough arguments for swap command: swap <pb_size>"
               << std::endl;
     return;
   }
 
-  force_update_ = atoi(argv[0]);
-  size = atoi(argv[1]);
+  size = atoi(argv[0]);
 
   static std::string data;
   std::copy_n(std::istreambuf_iterator<char>(std::cin), size,
@@ -72,11 +70,6 @@ void SwapCommand::ParseParameters(int argc, char** argv) {
   // TODO(noahz): Better way of handling the "update" scenario.
   // If we modify/delete the agent after ART has already loaded it, the app
   // will crash, so we want to be careful here.
-
-  if (argc == 1) {
-    std::istringstream(argv[0]) >> force_update_;
-    std::cout << force_update_ << std::endl;
-  }
 
   // Set this value here so we can re-use it in other methods.
   target_dir_ = "/data/data/" + package_name_ + "/.studio/";
@@ -170,12 +163,6 @@ bool SwapCommand::Run(const Workspace& workspace) {
 
 bool SwapCommand::SetupAgent(const std::string& agent_src_path,
                              const std::string& agent_dst_path) const noexcept {
-  // TODO(noahz): Remove this flag; we don't need it now that we don't ever
-  // overwrite 'old' agent versions.
-  if (!force_update_) {
-    return true;
-  }
-
   if (!CopyAgent(agent_src_path, agent_dst_path)) {
     std::cerr << "Could not copy agent library to app data folder."
               << std::endl;

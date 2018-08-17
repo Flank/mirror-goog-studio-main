@@ -21,9 +21,34 @@ iml_module(
         "//tools/base/apkparser:studio.android.sdktools.binary-resources[module]",
         "//tools/idea/.idea/libraries:Guava",
         "//tools/base/deploy/proto:deploy_java_proto",
+        "//tools/base/deploy/deployer:java_version",
         "//tools/idea/.idea/libraries:protobuf",
         "//prebuilts/r8:d8-master",
     ],
+)
+
+java_library(
+    name = "java_version",
+    srcs = select({
+        "//tools/base/bazel:host_windows": ["src/windows/java/Version.java"],
+        "//conditions:default": [":Version.java"],
+    }),
+)
+
+genrule(
+    name = "version",
+    outs = [
+        "Version.java",
+    ],
+    cmd = "$(location //tools/base/bazel:bin2c) -lang=java -embed=false -variable=com.android.tools.deployer.Version " +
+          " -output=$(location Version.java)" +
+          " $(locations //tools/base/deploy/installer:unversioned_installer)",
+    tags = ["no_windows"],
+    tools = [
+        "//tools/base/bazel:bin2c",
+        "//tools/base/deploy/installer:unversioned_installer",
+    ],
+    visibility = ["//visibility:private"],
 )
 
 java_library(
@@ -35,6 +60,7 @@ java_library(
     resources = ["//tools/base/deploy/installer:android"],
     visibility = ["//visibility:public"],
     deps = [
+        ":java_version",
         "//prebuilts/r8:d8-master",
         "//prebuilts/tools/common/m2/repository/com/google/guava/guava/23.0:jar",
         "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.4.0:jar",
