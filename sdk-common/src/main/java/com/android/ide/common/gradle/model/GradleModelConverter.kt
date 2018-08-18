@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 @file:JvmName("GradleModelConverterUtil")
+
 package com.android.ide.common.gradle.model
 
 import com.android.builder.model.AaptOptions
@@ -88,12 +89,7 @@ const val DIM_BUILD_TYPE = "buildType"
 /** Name assigned to the dimension that contains artifacts. */
 const val DIM_ARTIFACTS = "artifact"
 
-data class VariantContext(val parent: IdeAndroidProject, val variant: IdeVariant)
-data class ArtifactContext(val parent: VariantContext, val artifact: IdeBaseArtifact)
-data class BuildTypeContext(val buildType: BuildType)
-data class FlavorContext(val flavor: ProductFlavor)
-data class ConfigTableContext(val parent: IdeAndroidProject)
-data class LibraryContext(val library: Library)
+internal enum class ProjectAttribute { CONFIG_TABLE, PROJECT }
 
 class GradleModelConverter(
     val project: IdeAndroidProject,
@@ -102,17 +98,17 @@ class GradleModelConverter(
     private val schema = getConfigTableSchema(project)
 
     fun convert(): AndroidProject =
-        compute(project) {
+        compute(ProjectAttribute.PROJECT, project) {
             val variants = ArrayList<Variant>()
             forEachVariant {
-                variants.add(convert(VariantContext(project, it)))
+                variants.add(convert(it))
             }
 
             AndroidProject(
                 name = name,
                 type = getProjectType(projectType),
                 variants = variants,
-                configTable = convert(ConfigTableContext(project))
+                configTable = getConfigTable(project)
             )
         }
 
@@ -120,36 +116,33 @@ class GradleModelConverter(
      * Converts the given [Library] into a [com.android.projectmodel.Library]. Returns null if the given library is badly formed.
      */
     fun convert(library: Library): com.android.projectmodel.Library? =
-        compute(LibraryContext(library)) {
+        compute(library) {
             convertLibrary(library)
         }
 
-    fun convert(buildType: BuildTypeContext): Config =
-        compute(buildType) {
-            val baseValues = getBaseConfig(this.buildType)
-            with(this.buildType) {
-                baseValues.copy(
-                    manifestValues = getManifestAttributes(this),
-                    minifyEnabled = isMinifyEnabled
-                )
-            }
+    fun convert(buildType: BuildType): Config =
+        compute(project, buildType) {
+            getBaseConfig(this).copy(
+                manifestValues = getManifestAttributes(this),
+                minifyEnabled = isMinifyEnabled
+            )
         }
 
-    fun convert(flavor: FlavorContext): Config =
-        compute(flavor) {
-            val baseValues = getBaseConfig(this.flavor)
-            with(this.flavor) {
-                baseValues.copy(
-                    manifestValues = getManifestAttributes(this),
-                    testInstrumentationRunner = testInstrumentationRunner,
-                    testInstrumentationRunnerArguments = testInstrumentationRunnerArguments,
-                    resourceConfigurations = resourceConfigurations,
-                    usingSupportLibVectors = vectorDrawables.useSupportLibrary == true
-                )
-            }
+    fun convert(flavor: ProductFlavor): Config =
+        compute(project, flavor) {
+            getBaseConfig(this).copy(
+                manifestValues = getManifestAttributes(this),
+                testInstrumentationRunner = testInstrumentationRunner,
+                testInstrumentationRunnerArguments = testInstrumentationRunnerArguments,
+                resourceConfigurations = resourceConfigurations,
+                usingSupportLibVectors = vectorDrawables.useSupportLibrary == true
+            )
         }
 
-    private inline fun forEachArtifact(variant: IdeVariant, block: (ConfigPath, BaseArtifact) -> Unit) {
+    private inline fun forEachArtifact(
+        variant: IdeVariant,
+        block: (ConfigPath, BaseArtifact) -> Unit
+    ) {
         block(schema.matchArtifact(ARTIFACT_NAME_MAIN), variant.mainArtifact)
         variant.extraAndroidArtifacts.forEach {
             block(schema.matchArtifact(it.name), it)
@@ -159,60 +152,63 @@ class GradleModelConverter(
         }
     }
 
-    fun convert(configTable: ConfigTableContext): ConfigTable =
-        compute(configTable) {
-            with(parent) {
-                // Set up the config table
-                val configSchema = getConfigTableSchema(this)
-                val configs = ArrayList<ConfigAssociation>()
+    fun getConfigTable(project: IdeAndroidProject): ConfigTable =
+        compute(ProjectAttribute.CONFIG_TABLE, project) {
+            // Set up the config table
+            val configSchema = getConfigTableSchema(this)
+            val configs = ArrayList<ConfigAssociation>()
 
-                // Add the main config
-                configs.addAll(configsFor(matchAllArtifacts(), defaultConfig))
+            // Add the main config
+            configs.addAll(configsFor(matchAllArtifacts(), defaultConfig))
 
-                // Add the flavor configs
-                productFlavors.forEach {
-                    configs.addAll(configsFor(configSchema.pathFor(it.productFlavor.name), it))
-                }
-
-                // Add the multi-flavor configs
-                val multiFlavorConfigs = HashMap<ConfigPath, Config>()
-                forEachVariant {
-                    val multiFlavorPath = matchArtifactsWith(it.productFlavors)
-                    forEachArtifact(it) { path, artifact ->
-                        val sourceProvider = artifact.multiFlavorSourceProvider
-                        if (sourceProvider != null) {
-                            val artifactPath = multiFlavorPath.intersect(path)
-                            multiFlavorConfigs.getOrPut(artifactPath) {
-                                val cfg = Config(sources = convert(sourceProvider))
-                                configs.add(ConfigAssociation(artifactPath, cfg))
-                                cfg
-                            }
-                        }
-                    }
-                }
-
-                // Add the build types
-                buildTypes.forEach {
-                    configs.addAll(configsFor(it))
-                }
-
-                // Add the per-variant configs
-                forEachVariant {
-                    val variantPath = matchArtifactsForVariant(it)
-                    forEachArtifact(it) { path, artifact ->
-                        val sourceProvider = artifact.variantSourceProvider
-                        if (sourceProvider != null) {
-                            val artifactPath = variantPath.intersect(path)
-                            configs.add(ConfigAssociation(artifactPath, Config(sources = convert(sourceProvider))))
-                        }
-                    }
-                }
-
-                ConfigTable(
-                    schema = configSchema,
-                    associations = configs
-                )
+            // Add the flavor configs
+            productFlavors.forEach {
+                configs.addAll(configsFor(configSchema.pathFor(it.productFlavor.name), it))
             }
+
+            // Add the multi-flavor configs
+            val multiFlavorConfigs = HashMap<ConfigPath, Config>()
+            forEachVariant {
+                val multiFlavorPath = matchArtifactsWith(it.productFlavors)
+                forEachArtifact(it) { path, artifact ->
+                    val sourceProvider = artifact.multiFlavorSourceProvider
+                    if (sourceProvider != null) {
+                        val artifactPath = multiFlavorPath.intersect(path)
+                        multiFlavorConfigs.getOrPut(artifactPath) {
+                            val cfg = Config(sources = convert(sourceProvider))
+                            configs.add(ConfigAssociation(artifactPath, cfg))
+                            cfg
+                        }
+                    }
+                }
+            }
+
+            // Add the build types
+            buildTypes.forEach {
+                configs.addAll(configsFor(it))
+            }
+
+            // Add the per-variant configs
+            forEachVariant {
+                val variantPath = matchArtifactsForVariant(it)
+                forEachArtifact(it) { path, artifact ->
+                    val sourceProvider = artifact.variantSourceProvider
+                    if (sourceProvider != null) {
+                        val artifactPath = variantPath.intersect(path)
+                        configs.add(
+                            ConfigAssociation(
+                                artifactPath,
+                                Config(sources = convert(sourceProvider))
+                            )
+                        )
+                    }
+                }
+            }
+
+            ConfigTable(
+                schema = configSchema,
+                associations = configs
+            )
         }
 
     fun convert(sourceProvider: SourceProvider): SourceSet =
@@ -220,105 +216,106 @@ class GradleModelConverter(
             toSourceSet()
         }
 
-    fun convert(variant: VariantContext): Variant =
-        compute(variant) {
-            with(variant.variant) {
-                val androidTestArtifact = androidTestArtifact
-                Variant(
-                    name = name,
-                    displayName = displayName,
-                    mainArtifact = convert(ArtifactContext(variant, mainArtifact)),
-                    androidTestArtifact = androidTestArtifact?.let { convert(ArtifactContext(variant, it)) },
-                    unitTestArtifact = unitTestArtifact?.let { convert(ArtifactContext(variant, it)) },
-                    extraArtifacts = extraAndroidArtifacts
-                        .filter { it != mainArtifact && it != androidTestArtifact }
-                        .mapNotNull { it as? IdeBaseArtifact }
-                        .map { convert(ArtifactContext(variant, it)) },
-                    extraJavaArtifacts = extraJavaArtifacts
-                        .filter { it != unitTestArtifact }
-                        .mapNotNull { it as? IdeBaseArtifact }
-                        .map { convert(ArtifactContext(variant, it)) },
-                    configPath = matchArtifactsForVariant(this)
-                )
-            }
+    fun convert(variant: IdeVariant): Variant =
+        compute(project, variant) {
+            val androidTestArtifact = androidTestArtifact
+            Variant(
+                name = name,
+                displayName = displayName,
+                mainArtifact = convert(this, mainArtifact),
+                androidTestArtifact = androidTestArtifact?.let { convert(this, it) },
+                unitTestArtifact = unitTestArtifact?.let { convert(this, it) },
+                extraArtifacts = extraAndroidArtifacts
+                    .filter { it != mainArtifact && it != androidTestArtifact }
+                    .mapNotNull { it as? IdeBaseArtifact }
+                    .map { convert(this, it) },
+                extraJavaArtifacts = extraJavaArtifacts
+                    .filter { it != unitTestArtifact }
+                    .mapNotNull { it as? IdeBaseArtifact }
+                    .map { convert(this, it) },
+                configPath = matchArtifactsForVariant(this)
+            )
         }
 
     /**
      * Converts a builder-model's Artifact into a project model [Artifact].
      */
-    fun convert(artifact: ArtifactContext): Artifact =
-        compute(artifact) {
-            with(artifact.artifact) {
-                val artifactName = if (this == artifact.parent.variant.mainArtifact) ARTIFACT_NAME_MAIN else name
-                val configTable = convert(ConfigTableContext(artifact.parent.parent))
-                val variantPath = matchArtifactsForVariant(artifact.parent.variant)
-                val artifactPath = variantPath.intersect(configTable.schema.matchArtifact(artifactName))
+    fun convert(variant: IdeVariant, artifact: IdeBaseArtifact): Artifact =
+        compute(project to variant, artifact) {
+            val artifactName = if (this == variant.mainArtifact) ARTIFACT_NAME_MAIN else name
+            val configTable = getConfigTable(project)
+            val variantPath = matchArtifactsForVariant(variant)
+            val artifactPath = variantPath.intersect(configTable.schema.matchArtifact(artifactName))
 
-                // Compute the resolved configuration for this artifact. There's two ways to compute the resolved configuration:
-                // 1. Iterate over the constituent configs in the config table and merge them all.
-                // 2. Make use of the "mergedFlavor" attribute provided by Gradle.
-                //
-                // Approach 1 is simpler since it would just be a trivial for loop, but it assumes the IDE's merge logic is exactly the same
-                // as Gradle's. Approach 2 is preferred since - if gradle adds any special cases to its merge algorithm - it would report those
-                // special cases as part of mergedFlavor and we'd automatically take them into account. Unfortunately, this approach is also
-                // a lot more complicated due to special cases in builder-model.
-                // - The mergedFlavor structure does not include a source provider, so we need to compute the source inclusions manually
-                //   using approach 1.
-                // - The mergedFlavor structure does not include config information from the build type or any variant-specific overloads.
-                //
-                // So the algorithm is: first compute the source inclusions corresponding to the mergedFlavor configuration (that's the main
-                // source configurations along with any flavor-specific inclusions, minus any variant-specific inclusions). Then convert
-                // mergedFlavor to a Config and attach those source inclusions. Then do a manual merge of that config with the build type and
-                // any variant-specific Configs. Finally, we override any metadata (like the application ID) that Gradle has attached directly
-                // to the artifact. Even if that disagrees with the merged values we computed via the algorithm above, we always prefer any
-                // information supplied directly by Gradle.
+            // Compute the resolved configuration for this artifact. There's two ways to compute the resolved configuration:
+            // 1. Iterate over the constituent configs in the config table and merge them all.
+            // 2. Make use of the "mergedFlavor" attribute provided by Gradle.
+            //
+            // Approach 1 is simpler since it would just be a trivial for loop, but it assumes the IDE's merge logic is exactly the same
+            // as Gradle's. Approach 2 is preferred since - if gradle adds any special cases to its merge algorithm - it would report those
+            // special cases as part of mergedFlavor and we'd automatically take them into account. Unfortunately, this approach is also
+            // a lot more complicated due to special cases in builder-model.
+            // - The mergedFlavor structure does not include a source provider, so we need to compute the source inclusions manually
+            //   using approach 1.
+            // - The mergedFlavor structure does not include config information from the build type or any variant-specific overloads.
+            //
+            // So the algorithm is: first compute the source inclusions corresponding to the mergedFlavor configuration (that's the main
+            // source configurations along with any flavor-specific inclusions, minus any variant-specific inclusions). Then convert
+            // mergedFlavor to a Config and attach those source inclusions. Then do a manual merge of that config with the build type and
+            // any variant-specific Configs. Finally, we override any metadata (like the application ID) that Gradle has attached directly
+            // to the artifact. Even if that disagrees with the merged values we computed via the algorithm above, we always prefer any
+            // information supplied directly by Gradle.
 
-                val associationsToProcess = ArrayList<ConfigAssociation>()
+            val associationsToProcess = ArrayList<ConfigAssociation>()
 
-                // First, compute the sources for the global config or any config that is flavor-specific.
-                var mergedSource = SourceSet()
-                for (config in configTable.associations) {
-                    // Skip configs that don't apply to this artifact
-                    if (!config.path.intersects(artifactPath)) {
-                        continue
-                    }
-
-                    // If this is something that would be included in the "merged flavor", include its sources here.
-                    if ((matchesAllVariants(config.path) || !matchesAllFlavors(config.path)) && !isVariantSpecific(config.path)) {
-                        mergedSource += config.config.sources
-                    }
-                    else {
-                        associationsToProcess.add(config)
-                    }
+            // First, compute the sources for the global config or any config that is flavor-specific.
+            var mergedSource = SourceSet()
+            for (config in configTable.associations) {
+                // Skip configs that don't apply to this artifact
+                if (!config.path.intersects(artifactPath)) {
+                    continue
                 }
 
-                // Compute the merged flavor configuration. This won't include any sources that came from source sets, so
-                // we merge it with the merged sources we computed, above
-                val flavorCombinationConfig = convert(FlavorContext(artifact.parent.variant.mergedFlavor))
-                // Attach the manually-computed source providers
-                var mergedConfig = flavorCombinationConfig.copy(sources = mergedSource + flavorCombinationConfig.sources)
-
-                // Merge the additional configurations with the merged flavor. This will apply information about the build type and
-                // variant-specific overrides.
-                for (config in associationsToProcess) {
-                    mergedConfig = mergedConfig.mergeWith(config.config)
-                }
-
-                if (this is AndroidArtifact) {
-                    mergedConfig = mergedConfig.copy(
-                        manifestValues = mergedConfig.manifestValues.copy(
-                            applicationId = applicationId
-                        ),
-                        resValues = mergedConfig.resValues + classFieldsToDynamicResourceValues(resValues)
+                // If this is something that would be included in the "merged flavor", include its sources here.
+                if ((matchesAllVariants(config.path) || !matchesAllFlavors(config.path)) && !isVariantSpecific(
+                        config.path
                     )
+                ) {
+                    mergedSource += config.config.sources
+                } else {
+                    associationsToProcess.add(config)
                 }
+            }
 
-                Artifact(
-                    name = artifactName,
-                    classFolders = listOf(PathString(classesFolder)) + additionalClassesFolders.toPathStrings(),
-                    resolved = mergedConfig
+            // Compute the merged flavor configuration. This won't include any sources that came from source sets, so
+            // we merge it with the merged sources we computed, above
+            val flavorCombinationConfig = convert(variant.mergedFlavor)
+            // Attach the manually-computed source providers
+            var mergedConfig =
+                flavorCombinationConfig.copy(sources = mergedSource + flavorCombinationConfig.sources)
+
+            // Merge the additional configurations with the merged flavor. This will apply information about the build type and
+            // variant-specific overrides.
+            for (config in associationsToProcess) {
+                mergedConfig = mergedConfig.mergeWith(config.config)
+            }
+
+            if (this is AndroidArtifact) {
+                mergedConfig = mergedConfig.copy(
+                    manifestValues = mergedConfig.manifestValues.copy(
+                        applicationId = applicationId
+                    ),
+                    resValues = mergedConfig.resValues + classFieldsToDynamicResourceValues(
+                        resValues
+                    )
                 )
             }
+
+            Artifact(
+                name = artifactName,
+                classFolders = listOf(PathString(classesFolder)) + additionalClassesFolders.toPathStrings(),
+                resolved = mergedConfig
+            )
         }
 
     /**
@@ -364,11 +361,14 @@ class GradleModelConverter(
      * all variants). For this reason, it is the responsibility of the caller to pass in an [artifactFilter] that
      * tells this method what the given [flavor] is really describing.
      */
-    private fun configsFor(artifactFilter: ConfigPath, flavor: ProductFlavorContainer): List<ConfigAssociation> {
+    private fun configsFor(
+        artifactFilter: ConfigPath,
+        flavor: ProductFlavorContainer
+    ): List<ConfigAssociation> {
         val result = ArrayList<ConfigAssociation>()
 
         // This config stores the base metadata about the flavor, without the paths from the source providers.
-        val configWithoutSourceProvider = convert(FlavorContext(flavor.productFlavor))
+        val configWithoutSourceProvider = convert(flavor.productFlavor)
 
         result.add(
             // The ConfigPath for the main configuration is a path that matches both the main artifact and the current variant (if any).
@@ -376,14 +376,22 @@ class GradleModelConverter(
             // the flavor's source provider.
             ConfigAssociation(
                 artifactFilter.intersect(schema.matchArtifact(ARTIFACT_NAME_MAIN)),
-                configWithoutSourceProvider.copy(sources = configWithoutSourceProvider.sources + convert(flavor.sourceProvider))
+                configWithoutSourceProvider.copy(
+                    sources = configWithoutSourceProvider.sources + convert(
+                        flavor.sourceProvider
+                    )
+                )
             )
         )
         for (next in flavor.extraSourceProviders) {
             result.add(
                 ConfigAssociation(
                     artifactFilter.intersect(schema.matchArtifact(next.artifactName)),
-                    configWithoutSourceProvider.copy(sources = configWithoutSourceProvider.sources + convert(next.sourceProvider))
+                    configWithoutSourceProvider.copy(
+                        sources = configWithoutSourceProvider.sources + convert(
+                            next.sourceProvider
+                        )
+                    )
                 )
             )
         }
@@ -397,7 +405,7 @@ class GradleModelConverter(
     private fun configsFor(buildType: BuildTypeContainer): List<ConfigAssociation> {
         val artifactFilter = matchBuildType(buildType.buildType.name)
         val result = ArrayList<ConfigAssociation>()
-        val configWithoutSources = convert(BuildTypeContext(buildType.buildType))
+        val configWithoutSources = convert(buildType.buildType)
 
         result.add(
             // The ConfigPath for the main configuration is a path that matches both the main artifact and the current variant (if any).
@@ -428,7 +436,8 @@ class GradleModelConverter(
                 builder.getOrPutDimension(it)
             }
             productFlavors.forEach {
-                builder.getOrPutDimension(it.productFlavor.dimension ?: DIM_UNNAMED_FLAVOR).add(it.productFlavor.name)
+                builder.getOrPutDimension(it.productFlavor.dimension ?: DIM_UNNAMED_FLAVOR)
+                    .add(it.productFlavor.name)
             }
             val buildTypeDimension = builder.getOrPutDimension(DIM_BUILD_TYPE)
             buildTypes.forEach {
@@ -484,9 +493,16 @@ class GradleModelConverter(
         )
     }
 
-    private fun <K, V> compute(key: K, lambda: K.() -> V): V {
-        return cache.computeIfAbsent(key, { key.lambda() })
-    }
+    private fun <P, T, V> compute(parent: P, key: T, lambda: T.() -> V): V =
+        computeWithContext(parent to key, lambda)
+
+    private fun <T, V> compute(key: T, lambda: T.() -> V): V =
+        computeWithContext(Unit to key, lambda)
+
+    private fun <P, T, V> computeWithContext(key: Pair<P, T>, lambda: T.() -> V): V =
+    // Wrap the keys in another object, since the Ide* classes may also use builder model types
+    // as keys for deduping conversions in this cache and we don't want any false positives.
+        cache.computeIfAbsent(key) { key.second.lambda() }
 }
 
 /**
