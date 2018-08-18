@@ -45,7 +45,7 @@ data class ArtifactDependency(
         val resolvedMavenCoordinate: GradleCoordinate? = null
 ) {
     override fun toString(): String = printProperties(
-        this, ArtifactDependency(JavaLibrary("", PathString(""))))
+        this, ArtifactDependency(ExternalLibrary("")))
 }
 
 /**

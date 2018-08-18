@@ -534,7 +534,7 @@ fun classFieldsToDynamicResourceValues(classFields: Map<String, ClassField>): Ma
 fun convertLibrary(builderModelLibrary: Library): com.android.projectmodel.Library? =
     with(builderModelLibrary) {
         when (type) {
-            com.android.builder.model.level2.Library.LIBRARY_ANDROID -> com.android.projectmodel.AarLibrary(
+            com.android.builder.model.level2.Library.LIBRARY_ANDROID -> com.android.projectmodel.ExternalLibrary(
                 address = artifactAddress,
                 location = artifact.toPathString(),
                 manifestFile = PathString(manifest),
@@ -544,7 +544,7 @@ fun convertLibrary(builderModelLibrary: Library): com.android.projectmodel.Libra
                 symbolFile = PathString(symbolFile),
                 resApkFile = resStaticLibrary?.let(::PathString)
             )
-            com.android.builder.model.level2.Library.LIBRARY_JAVA -> com.android.projectmodel.JavaLibrary(
+            com.android.builder.model.level2.Library.LIBRARY_JAVA -> com.android.projectmodel.ExternalLibrary(
                 address = artifactAddress,
                 classesJar = artifact.toPathString()
             )

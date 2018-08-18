@@ -18,7 +18,7 @@ package com.android.ide.common.gradle.model
 
 import com.android.ide.common.util.PathString
 import com.android.ide.common.util.toPathString
-import com.android.projectmodel.AarLibrary
+import com.android.projectmodel.ExternalLibrary
 import com.android.projectmodel.DynamicResourceValue
 import com.android.resources.ResourceType
 import com.google.common.truth.Truth.assertThat
@@ -51,7 +51,7 @@ class GradleModelConverterUtilTest {
 
         with(original) {
             assertThat(result).isEqualTo(
-                AarLibrary(
+              ExternalLibrary(
                     address = artifactAddress,
                     location = artifact.toPathString(),
                     manifestFile = PathString(manifest),

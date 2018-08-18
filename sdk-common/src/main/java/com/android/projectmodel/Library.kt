@@ -28,15 +28,14 @@ sealed class Library {
 }
 
 /**
- * Represents a dependency on an external android library. External libraries are folders containing
- * some combination of prebuilt classes, resources, and manifest file. This is named [AarLibrary]
- * since that is the standard way of packaging Android libraries, but the actual dependency is
- * on the folder where the AAR would have been extracted by the build system rather than the AAR
- * file itself. If the library came from an AAR file, the build system would extract it somewhere
- * and then provide an instance of [AarLibrary] describing the contents and location of the
- * extracted folder.
+ * Represents a dependency on an external library. External libraries are folders containing
+ * some combination of prebuilt classes, resources, and manifest file. Although android
+ * libraries are normally packaged in an AAR file, the actual dependency is on the folder where the
+ * AAR would have been extracted by the build system rather than the AAR file itself. If the library
+ * came from an AAR file, the build system would extract it somewhere and then provide an instance
+ * of [ExternalLibrary] describing the contents and location of the extracted folder.
  */
-data class AarLibrary(
+data class ExternalLibrary(
     override val address: String,
 
     /**
@@ -44,7 +43,7 @@ data class AarLibrary(
      *
      * The IDE doesn't work with AAR files and instead relies on the build system to extract
      * necessary files to disk. Location of the original AAR files is not always known, and some
-     * [AarLibrary] instances point to folders that never came from an AAR. In such cases, this
+     * [ExternalLibrary] instances point to folders that never came from an AAR. In such cases, this
      * attribute is null.
      */
     val location: PathString? = null,
@@ -65,7 +64,7 @@ data class AarLibrary(
 
     /**
      * Location of any manifest file that can be used to understand the contents of this
-     * [AarLibrary]. In the case of libraries that include their own manifest, this will always
+     * [ExternalLibrary]. In the case of libraries that include their own manifest, this will always
      * point to [manifestFile]. In the case of libraries that don't include their own manifest,
      * this may point to any manifest file that contains sufficient information to understand
      * the contents of the library.
@@ -76,7 +75,7 @@ data class AarLibrary(
      * contain extra content that is unrelated to the library.
      *
      * If no manifest is needed to understand the library, this will be null. This manifest must
-     * not be merged into the application's manifest. If the [AarLibrary] fills in this field but
+     * not be merged into the application's manifest. If the [ExternalLibrary] fills in this field but
      * not [manifestFile], it the needed content will already have been inlined in the
      * application's manifest.
      */
@@ -116,12 +115,19 @@ data class AarLibrary(
     val resApkFile: PathString? = null
 ) : Library() {
     /**
-     * Constructs a new [AarLibrary] with the given address and all other values set to their defaults. Intended to
+     * Constructs a new [ExternalLibrary] with the given address and all other values set to their defaults. Intended to
      * simplify construction from Java.
      */
     constructor(address: String) : this(address, null)
 
-    override fun toString(): String = printProperties(this, AarLibrary(""))
+    override fun toString(): String = printProperties(this, ExternalLibrary(""))
+
+    /**
+     * Returns true if this [ExternalLibrary] contributes any resources. Resources may be packaged
+     * as either a res.apk file or a res folder.
+     */
+    @get:JvmName("hasResources")
+    val hasResources get() = resApkFile != null || resFolder != null
 
     /**
      * Returns a copy of the receiver with the given representative manifest file. Intended to simplify construction from Java.
@@ -156,17 +162,6 @@ data class AarLibrary(
      */
     fun withSymbolFile(path: PathString?) = copy(symbolFile = path)
 }
-
-/**
- * Represents a dependency on a Java artifact (either a .jar file or a folder containing .class files).
- */
-data class JavaLibrary(
-    override val address: String,
-    /**
-     * Path to .jar file containing the library classes.
-     */
-    val classesJar: PathString
-) : Library()
 
 /**
  * Represents a dependency on another [AndroidProject].

@@ -15,8 +15,19 @@
  */
 package com.android.projectmodel
 
+import kotlin.reflect.KClass
+import kotlin.reflect.KFunction
+import kotlin.reflect.KVisibility
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
+
+internal fun <T: Any> getConstructor(clazz: KClass<T>): KFunction<T>? {
+    val primaryConstructor = clazz.primaryConstructor
+    if (primaryConstructor != null && primaryConstructor.visibility == KVisibility.PUBLIC) {
+        return clazz.primaryConstructor
+    }
+    return clazz.constructors.firstOrNull { it.visibility == KVisibility.PUBLIC }
+}
 
 /**
  * Prints the properties of the given Kotlin object. Any optional parameters that are equal to
@@ -26,12 +37,14 @@ import kotlin.reflect.full.primaryConstructor
  */
 internal fun <T : Any> printProperties(toPrint: T, defaultValues: T): String {
     val clazz = toPrint.javaClass.kotlin
-    val optionalParameters = clazz.primaryConstructor?.parameters.orEmpty().filter { it.isOptional }
-        .mapNotNull { it.name }.toSet()
+    val parameters = getConstructor(clazz)?.parameters.orEmpty()
+    val optionalParameters = parameters.filter { it.isOptional }.mapNotNull { it.name }.toSet()
+    val parameterNames = parameters.map { it.name }.toSet()
     val propertyDescriptions = ArrayList<String>()
     for (prop in clazz.memberProperties) {
         val actualValue = prop.get(toPrint)
-        if (!optionalParameters.contains(prop.name) || (prop.get(defaultValues) != actualValue)) {
+        if (parameterNames.contains(prop.name)
+            && (!optionalParameters.contains(prop.name) || (prop.get(defaultValues) != actualValue))) {
             propertyDescriptions.add("${prop.name}=$actualValue")
         }
     }
