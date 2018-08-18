@@ -40,6 +40,8 @@ build:release -c opt
 # Use prebuilt JDK when doing local bazel build/test
 build --host_javabase=//prebuilts/studio/jdk:jdk_runtime
 build --javabase=//prebuilts/studio/jdk:jdk_runtime
+build --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
+build --java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
 
 # cpp sandbox is very slow on mac and linux
 build --strategy=CppCompile=standalone
@@ -73,20 +75,18 @@ build:remote --show_timestamps
 
 # Import several flags related to specifying the toolchain and (if applicable)
 # java properties.
-#import %workspace%/configs/debian8_clang/0.2.0/toolchain.bazelrc
-
 build:remote --host_javabase=//prebuilts/studio/jdk:jdk_runtime
 build:remote --javabase=//prebuilts/studio/jdk:jdk_runtime
-build:remote --crosstool_top=@bazel_toolchains//configs/debian8_clang/0.3.0/bazel_0.12.0/default:toolchain
+build:remote --crosstool_top=@bazel_toolchains//configs/debian8_clang/0.3.0/bazel_0.16.1/default:toolchain
 build:remote --experimental_remote_platform_override='properties:{ name:"container-image" value:"docker://gcr.io/google.com/android-studio-alphasource/nosla-debian8-clang-as@sha256:71c886770d70dd28c1e8a8f58eab8f8ed8bc7322550ec0dcca3cf28ae6eeac19"}'
 
-# build:remote --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
-# build:remote --java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
-# build:remote --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
-# build:remote --extra_toolchains=@bazel_toolchains//configs/debian8_clang/0.3.0/bazel_0.15.0/cpp:cc-toolchain-clang-x86_64-default
-# build:remote --extra_execution_platforms=//tools/base/bazel/foundry:rbe_debian8
-# build:remote --host_platform=//tools/base/bazel/foundry:rbe_debian8
-# build:remote --platforms=//tools/base/bazel/foundry:rbe_debian8
+build:remote --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
+build:remote --java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
+build:remote --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+build:remote --extra_toolchains=@bazel_toolchains//configs/debian8_clang/0.3.0/bazel_0.16.1/cpp:cc-toolchain-clang-x86_64-default
+build:remote --extra_execution_platforms=//tools/base/bazel/foundry:rbe_debian8
+build:remote --host_platform=//tools/base/bazel/foundry:rbe_debian8
+build:remote --platforms=//tools/base/bazel/foundry:rbe_debian8
 
 # Set various strategies so that all actions execute remotely. Mixing remote
 # and local execution will lead to errors unless the toolchain and remote

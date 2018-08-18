@@ -96,7 +96,7 @@ java_library(
 
 java_import(
     name = "langtools",
-    jars = ["@local_jdk//:langtools"],
+    jars = ["//prebuilts/studio/jdk:langtools"],
     visibility = ["//visibility:public"],
 )
 
