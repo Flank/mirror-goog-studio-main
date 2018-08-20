@@ -133,8 +133,7 @@ class CmakeLocatorTest {
     fun partialVersionNumberMatchWithRcAndProduction() {
         /**
          * In this scenario the user requested "3.12" and both "3.12.0-rc1" and "3.12.0" are found
-         * on the path. The "3.12.0" version is taken because this is the release version of
-         * "3.12.0-rc1".
+         * on the path. The "3.12.0-rc1" version is taken it is first on the path.
          *
          * See https://issuetracker.google.com/110693527
          */
@@ -159,7 +158,7 @@ class CmakeLocatorTest {
             })
         assertThat(encounter.result).isNotNull()
         assertThat(encounter.result!!.toString()).isEqualTo(
-            "/a/b/c/cmake/3.12.0"
+            "/a/b/c/cmake/3.12.0-rc1"
         )
         assertThat(encounter.warnings).hasSize(0)
         assertThat(encounter.errors).hasSize(0)
@@ -243,14 +242,14 @@ class CmakeLocatorTest {
                 "CMake '3.10.4819442' found in SDK was not the requested version '3.12.0'.$newline" +
                 "Trying to locate CMake in PATH.$newline" +
                 "- CMake found in in PATH at '${slash}a${slash}b${slash}c${slash}cmake${slash}3.12.0-a' had version '3.12.0'$newline" +
-                "- CMake found and skipped in PATH '${slash}a${slash}b${slash}c${slash}cmake${slash}3.12.0-b' which had version '3.12.0' which was lower than or equal to a version found earlier.")
+                "- CMake 3.12.0 was found in PATH at ${slash}a${slash}b${slash}c${slash}cmake${slash}3.12.0-b${slash}bin after another version. Ignoring it.")
     }
 
     @Test
     fun partialVersionNumberMatchWithTwoRcs() {
         /**
          * In this scenario the user requested "3.12" and both "3.12.0-rc1" and "3.12.0-rc2" are
-         * found on the path. The "3.12.0-rc2" version is taken because this is the higher version.
+         * found on the path. The "3.12.0-rc1" version is taken because it is first on the path.
          *
          * See https://issuetracker.google.com/110693527
          */
@@ -275,7 +274,7 @@ class CmakeLocatorTest {
             })
         assertThat(encounter.result).isNotNull()
         assertThat(encounter.result!!.toString()).isEqualTo(
-            "/a/b/c/cmake/3.12.0-rc2"
+            "/a/b/c/cmake/3.12.0-rc1"
         )
         assertThat(encounter.warnings).hasSize(0)
         assertThat(encounter.errors).hasSize(0)
@@ -665,9 +664,7 @@ class CmakeLocatorTest {
         expectException("CMake '3.6.4111459' is required but has not yet been downloaded " +
                 "from the SDK.$newline" +
                 "- CMake found in PATH at '${slash}a${slash}b${slash}c${slash}cmake' " +
-                "had version '3.12.0'.$newline" +
-                "- CMake found in PATH at '${slash}d${slash}e${slash}f${slash}cmake' " +
-                "had version '3.13.0'.", {
+                "had version '3.12.0'.", {
             findCmakePath(
                 cmakeVersionFromDsl = null,
                 environmentPaths = {

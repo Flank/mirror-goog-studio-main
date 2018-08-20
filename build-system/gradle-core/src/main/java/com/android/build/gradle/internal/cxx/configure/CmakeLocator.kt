@@ -155,7 +155,7 @@ private class CmakeSearchContext(
     internal fun versionInDsl() = cmakeVersionFromDsl != null
 
     fun tryAcceptFoundCmake(candidateCmakeInstallFolder : File, candidateVersion : Revision,
-        locationTag : String) {
+        locationTag : String)  {
         assert(requestedCmakeVersion != null)
 
         // If there is not version in the DSL then exactly forkCmakeSdkVersion (which is forever
@@ -393,11 +393,22 @@ private class CmakeSearchContext(
             return this
         }
         info("Trying to locate CMake in PATH.")
+        var found = false
         for (cmakeFolder in environmentPaths()) {
             try {
                 val version = cmakeVersionGetter(cmakeFolder) ?: continue
-                val cmakeInstallPath = cmakeFolder.parentFile
-                tryAcceptFoundCmake(cmakeInstallPath, version, "in PATH")
+                if (found) {
+                    // Found a cmake.exe later in the path. Ignore it but issue a message.
+                    info("- CMake $version was found in PATH at $cmakeFolder after" +
+                            " another version. Ignoring it.")
+                } else {
+                    val cmakeInstallPath = cmakeFolder.parentFile
+                    tryAcceptFoundCmake(cmakeInstallPath, version, "in PATH")
+
+                    // At this point, we found a cmake.exe on the PATH. We only look the first one.
+                    // Any cmake.exe further down the path is ignored.
+                    found = true
+                }
             } catch (e: IOException) {
                 warn("Could not execute cmake at '$cmakeFolder' to get version. Skipping.")
             }
