@@ -86,6 +86,7 @@ public class SdkAutoDownloadTest {
                                     .useCppSource(true)
                                     .build())
                     .addGradleProperties(IntegerOption.ANDROID_SDK_CHANNEL.getPropertyName() + "=3")
+                    .withoutNdk()
                     .create();
 
     private File mSdkHome;
@@ -128,6 +129,7 @@ public class SdkAutoDownloadTest {
                         + " = "
                         + mSdkHome.getAbsolutePath().replace("\\", "\\\\"));
 
+
         TestFileUtils.appendToFile(
                 project.getBuildFile(), "android.defaultConfig.minSdkVersion = 19");
     }
@@ -156,6 +158,12 @@ public class SdkAutoDownloadTest {
         FileUtils.copyDirectoryToDirectory(
                 FileUtils.join(
                         TestUtils.getSdk().toPath().toFile(), SdkConstants.FD_PLATFORM_TOOLS),
+                FileUtils.join(mSdkHome));
+    }
+
+    private void installNdk() throws IOException {
+        FileUtils.copyDirectoryToDirectory(
+                FileUtils.join(TestUtils.getSdk().toPath().toFile(), SdkConstants.FD_NDK),
                 FileUtils.join(mSdkHome));
     }
 
@@ -280,6 +288,7 @@ public class SdkAutoDownloadTest {
     public void checkCmakeDownloading() throws Exception {
         installPlatforms();
         installBuildTools();
+        installNdk();
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 System.lineSeparator()
@@ -299,6 +308,8 @@ public class SdkAutoDownloadTest {
 
         File cmakeDirectory = FileUtils.join(mSdkHome, SdkConstants.FD_CMAKE);
         assertThat(cmakeDirectory).isDirectory();
+        File ndkDirectory = FileUtils.join(mSdkHome, SdkConstants.FD_NDK);
+        assertThat(ndkDirectory).isDirectory();
     }
 
     @Test
@@ -306,6 +317,7 @@ public class SdkAutoDownloadTest {
         installPlatforms();
         installBuildTools();
         installPlatformTools();
+        installNdk();
         FileUtils.delete(previewLicenseFile);
         deleteLicense();
 
@@ -330,6 +342,64 @@ public class SdkAutoDownloadTest {
                 .contains(
                         "Failed to install the following Android SDK packages as some licences have not been accepted");
         assertThat(result.getStdout()).contains("CMake");
+    }
+
+    @Test
+    public void checkNdkDownloading() throws Exception {
+        installPlatforms();
+        installBuildTools();
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                System.lineSeparator()
+                        + "android.compileSdkVersion "
+                        + PLATFORM_VERSION
+                        + System.lineSeparator()
+                        + "android.buildToolsVersion \""
+                        + BUILD_TOOLS_VERSION
+                        + "\""
+                        + System.lineSeparator()
+                        + "android.externalNativeBuild.cmake.path \"CMakeLists.txt\"");
+
+        Files.write(
+                project.file("CMakeLists.txt").toPath(),
+                cmakeLists.getBytes(StandardCharsets.UTF_8));
+
+        getExecutor().run("assembleDebug");
+
+        File ndkDirectory = FileUtils.join(mSdkHome, SdkConstants.FD_NDK);
+        assertThat(ndkDirectory).isDirectory();
+    }
+
+    @Test
+    public void checkNdkMissingLicense() throws Exception {
+        installPlatforms();
+        installBuildTools();
+        installPlatformTools();
+        FileUtils.delete(previewLicenseFile);
+        deleteLicense();
+
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                System.lineSeparator()
+                        + "android.compileSdkVersion "
+                        + PLATFORM_VERSION
+                        + System.lineSeparator()
+                        + "android.buildToolsVersion \""
+                        + BUILD_TOOLS_VERSION
+                        + "\""
+                        + System.lineSeparator()
+                        + "android.externalNativeBuild.cmake.path \"CMakeLists.txt\"");
+
+        Files.write(
+                project.file("CMakeLists.txt").toPath(),
+                cmakeLists.getBytes(StandardCharsets.UTF_8));
+
+        GradleBuildResult result = getExecutor().expectFailure().run("assembleDebug");
+
+        assertThat(result.getStdout())
+                .contains(
+                        "Failed to install the following Android SDK packages as some licences have not been accepted");
+        assertThat(result.getStdout()).contains("ndk-bundle");
     }
 
     @Test

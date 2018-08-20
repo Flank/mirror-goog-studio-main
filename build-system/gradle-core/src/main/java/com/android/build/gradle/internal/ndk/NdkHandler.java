@@ -46,18 +46,17 @@ import org.gradle.api.logging.Logging;
  */
 public class NdkHandler {
 
-    @Nullable
-    private String platformVersion;
+    @NonNull private final File projectDir;
+    @Nullable private String platformVersion;
     @Nullable
     private String compileSdkVersion;
     private final Toolchain toolchain;
     private final String toolchainVersion;
-    private final File ndkDirectory;
-    private final boolean useUnifiedHeaders;
-    @Nullable
-    private final NdkInfo ndkInfo;
-    @Nullable
-    private final Revision revision;
+    private File ndkDirectory;
+    @Nullable private final Boolean requestUseUnifiedHeaders;
+    private boolean useUnifiedHeaders;
+    @Nullable private NdkInfo ndkInfo;
+    @Nullable private Revision revision;
 
     private static final int LATEST_SUPPORTED_VERSION = 14;
 
@@ -69,9 +68,16 @@ public class NdkHandler {
             @NonNull String toolchainVersion,
             @Nullable Boolean useUnifiedHeaders) {
         // TODO: Consume ndkVersionFromDsl here
+        this.projectDir = projectDir;
         this.toolchain = Toolchain.getByName(toolchainName);
         this.toolchainVersion = toolchainVersion;
         this.platformVersion = platformVersion;
+        this.requestUseUnifiedHeaders = useUnifiedHeaders;
+        relocateNdkFolder();
+    }
+
+    /** Attempts to search again for the Ndk directory. */
+    public void relocateNdkFolder() {
         ndkDirectory = findNdkDirectory(projectDir);
 
         if (ndkDirectory == null || !ndkDirectory.exists()) {
@@ -105,8 +111,8 @@ public class NdkHandler {
 
         // useUnifiedHeaders defaults to true for r15 and above.
         this.useUnifiedHeaders =
-                useUnifiedHeaders != null
-                        ? useUnifiedHeaders
+                requestUseUnifiedHeaders != null
+                        ? requestUseUnifiedHeaders
                         : revision != null && revision.getMajor() > 14;
 
         if (this.useUnifiedHeaders && (revision == null || revision.getMajor() < 14)) {

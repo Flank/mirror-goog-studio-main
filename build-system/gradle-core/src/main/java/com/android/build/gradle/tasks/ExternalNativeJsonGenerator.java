@@ -565,18 +565,23 @@ public abstract class ExternalNativeJsonGenerator {
             @NonNull SdkHandler sdkHandler,
             @NonNull VariantScope scope) {
         checkNotNull(sdkHandler.getSdkFolder(), "No Android SDK folder found");
-        File ndkFolder = sdkHandler.getNdkFolder();
-        if (ndkFolder == null || !ndkFolder.isDirectory()) {
-            throw new InvalidUserDataException(
-                    String.format(
-                            "NDK not configured. %s\n" + "Download it with SDK manager.",
-                            ndkFolder == null ? "" : ndkFolder));
+        GlobalScope globalScope = scope.getGlobalScope();
+        NdkHandler ndkHandler = globalScope.getNdkHandler();
+        File ndkFolder = ndkHandler.getNdkDirectory();
+        if (ndkFolder == null || !ndkFolder.exists() || !ndkFolder.isDirectory()) {
+            sdkHandler.installNdk(ndkHandler);
+            ndkFolder = sdkHandler.getNdkFolder();
+            if (ndkFolder == null || !ndkFolder.exists() || !ndkFolder.isDirectory()) {
+                throw new InvalidUserDataException(
+                        String.format(
+                                "NDK not configured. %s\n" + "Download it with SDK manager.",
+                                ndkFolder == null ? "" : ndkFolder));
+            }
         }
         BaseVariantData variantData = scope.getVariantData();
         GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
         GradleBuildVariant.Builder stats =
                 ProcessProfileWriter.getOrCreateVariant(projectPath, scope.getFullVariantName());
-        GlobalScope globalScope = scope.getGlobalScope();
         File intermediates =
                 FileUtils.join(
                         globalScope.getIntermediatesDir(),
@@ -595,7 +600,6 @@ public abstract class ExternalNativeJsonGenerator {
         File objFolder = new File(intermediates, "obj");
 
         // Get the highest platform version below compileSdkVersion
-        NdkHandler ndkHandler = globalScope.getNdkHandler();
 
         ApiVersion minSdkVersion =
                 variantData.getVariantConfiguration().getMergedFlavor().getMinSdkVersion();
@@ -626,6 +630,7 @@ public abstract class ExternalNativeJsonGenerator {
                         splits.getAbiFilters(),
                         projectOptions.get(BooleanOption.BUILD_ONLY_TARGET_ABI),
                         projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI));
+
 
         // These are ABIs that are available on the current platform
         Collection<Abi> validAbis = abiConfigurator.getValidAbis();

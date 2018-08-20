@@ -423,8 +423,24 @@ public class SdkHandler {
         this.sdkLibData = sdkLibData;
     }
 
+    /** Installs the NDK. */
+    public void installNdk(@NonNull NdkHandler ndkHandler) {
+        if (!sdkLibData.useSdkDownload()) {
+            return;
+        }
+        try {
+            ndkFolder = sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_NDK);
+        } catch (LicenceNotAcceptedException | InstallFailedException e) {
+            throw new RuntimeException(e);
+        }
+        ndkHandler.relocateNdkFolder();
+    }
+
     /** Installs CMake. */
     public void installCMake(String version) {
+        if (!sdkLibData.useSdkDownload()) {
+            return;
+        }
         try {
             sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_CMAKE + ";" + version);
         } catch (LicenceNotAcceptedException | InstallFailedException e) {
