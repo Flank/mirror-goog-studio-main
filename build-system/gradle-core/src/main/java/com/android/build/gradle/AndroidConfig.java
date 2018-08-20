@@ -628,4 +628,13 @@ public interface AndroidConfig {
      */
     @Nullable
     String getTestBuildType();
+
+    /**
+     * Name of the NDK version that will be used when building native code.
+     *
+     * <p>The value null means that no particular NDK version is requested. In this case, the latest
+     * available NDK will be used.
+     */
+    @Nullable
+    String getNdkVersion();
 }

@@ -183,6 +183,8 @@ public abstract class BaseExtension implements AndroidConfig {
 
     private final boolean isBaseModule;
 
+    @Nullable private String ndkVersion;
+
     BaseExtension(
             @NonNull final Project project,
             @NonNull final ProjectOptions projectOptions,
@@ -370,6 +372,16 @@ public abstract class BaseExtension implements AndroidConfig {
         // so 20 is not the same as 20.0. For the build tools revision this
         // is not the desired behavior, so normalize e.g. to 20.0.0.
         buildToolsRevision = Revision.parseRevision(version, Revision.Precision.MICRO);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String getNdkVersion() {
+        return ndkVersion;
+    }
+
+    public void setNdkVersion(@Nullable String version) {
+        ndkVersion = version;
     }
 
     /** {@inheritDoc} */

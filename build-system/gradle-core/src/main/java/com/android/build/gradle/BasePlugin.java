@@ -515,6 +515,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
 
         ndkHandler =
                 new NdkHandler(
+                        extension.getNdkVersion(),
                         project.getRootDir(),
                         null, /* compileSkdVersion, this will be set in afterEvaluate */
                         "gcc",

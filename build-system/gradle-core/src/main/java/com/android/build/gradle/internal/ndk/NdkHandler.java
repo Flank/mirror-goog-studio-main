@@ -62,11 +62,13 @@ public class NdkHandler {
     private static final int LATEST_SUPPORTED_VERSION = 14;
 
     public NdkHandler(
+            @Nullable String ndkVersionFromDsl,
             @NonNull File projectDir,
             @Nullable String platformVersion,
             @NonNull String toolchainName,
             @NonNull String toolchainVersion,
             @Nullable Boolean useUnifiedHeaders) {
+        // TODO: Consume ndkVersionFromDsl here
         this.toolchain = Toolchain.getByName(toolchainName);
         this.toolchainVersion = toolchainVersion;
         this.platformVersion = platformVersion;
