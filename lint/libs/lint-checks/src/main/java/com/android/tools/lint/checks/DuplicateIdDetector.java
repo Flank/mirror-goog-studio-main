@@ -79,6 +79,8 @@ public class DuplicateIdDetector extends LayoutDetector {
     private static final Implementation IMPLEMENTATION =
             new Implementation(DuplicateIdDetector.class, Scope.RESOURCE_FILE_SCOPE);
 
+    private static final String MOTION_SCENE_CONSTRAINT = "Constraint";
+
     /** The main issue discovered by this detector */
     public static final Issue WITHIN_LAYOUT =
             Issue.create(
@@ -250,8 +252,9 @@ public class DuplicateIdDetector extends LayoutDetector {
         assert attribute.getName().equals(ATTR_ID) || ATTR_ID.equals(attribute.getLocalName());
         String id = attribute.getValue();
         if (context.getPhase() == 1) {
+            String ownerName = null;
             if (attribute.getOwnerElement() != null) {
-                String ownerName = attribute.getOwnerElement().getTagName();
+                ownerName = attribute.getOwnerElement().getTagName();
                 if (ownerName != null && CLASS_CONSTRAINT_LAYOUT_REFERENCE.isEquals(ownerName)) {
                     Node parentNode = attribute.getOwnerElement().getParentNode();
                     if (parentNode != null) {
@@ -276,6 +279,13 @@ public class DuplicateIdDetector extends LayoutDetector {
                     }
                 }
             }
+
+            if (MOTION_SCENE_CONSTRAINT.equals(ownerName)) {
+                // We bypass id check for Constraint as the id here is a reference to the id in layout. Id that is not found in layout
+                // is also a valid use case.
+                return;
+            }
+
             if (mFileIds.containsKey(id)) {
                 Location location = context.getLocation(attribute);
 

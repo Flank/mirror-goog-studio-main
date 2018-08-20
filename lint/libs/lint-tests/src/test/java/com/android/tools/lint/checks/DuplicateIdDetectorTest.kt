@@ -365,6 +365,70 @@ res/navigation/test.xml:7: Error: Duplicate id @+id/first, already defined earli
         )
     }
 
+    fun testConstraintIdDuplicateWithPlusSigns() {
+        lint().files(
+            xml(
+              "res/xml/motionscene1.xml",
+                """
+<MotionScene xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:motion="http://schemas.android.com/apk/res-auto">
+    <ConstraintSet android:id="@id/start">
+        <Constraint
+            android:id="@id/button"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginStart="8dp"
+            motion:layout_constraintBottom_toBottomOf="parent"
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintTop_toTopOf="parent" />
+    </ConstraintSet>
+    <ConstraintSet android:id="@id/end">
+        <Constraint
+            android:id="@id/button"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginEnd="8dp"
+            motion:layout_constraintBottom_toBottomOf="parent"
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintTop_toTopOf="parent" />
+    </ConstraintSet>
+</MotionScene>"""
+            )
+        ).run().expectClean()
+    }
+
+    fun testConstraintIdDuplicateWithoutPlusSigns() {
+        lint().files(
+            xml(
+                "res/xml/motionscene2.xml",
+                """
+  <MotionScene xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:motion="http://schemas.android.com/apk/res-auto">
+      <ConstraintSet android:id="@id/start">
+          <Constraint
+              android:id="@+id/button"
+              android:layout_width="64dp"
+              android:layout_height="64dp"
+              android:layout_marginStart="8dp"
+              motion:layout_constraintBottom_toBottomOf="parent"
+              motion:layout_constraintStart_toStartOf="parent"
+              motion:layout_constraintTop_toTopOf="parent" />
+      </ConstraintSet>
+      <ConstraintSet android:id="@id/end">
+          <Constraint
+              android:id="@+id/button"
+              android:layout_width="64dp"
+              android:layout_height="64dp"
+              android:layout_marginEnd="8dp"
+              motion:layout_constraintBottom_toBottomOf="parent"
+              motion:layout_constraintEnd_toEndOf="parent"
+              motion:layout_constraintTop_toTopOf="parent" />
+      </ConstraintSet>
+  </MotionScene>"""
+            )
+        ).run().expectClean()
+    }
+
     private val mLayout2 = xml(
         "res/layout/layout2.xml", """
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
