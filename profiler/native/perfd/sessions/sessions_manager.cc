@@ -44,7 +44,6 @@ void SessionsManager::BeginSession(int64_t device_id, int32_t pid) {
   event.set_kind(proto::Event::SESSION);
   event.set_type(proto::Event::SESSION_STARTED);
   proto::SessionStarted* session_started = event.mutable_session_started();
-  session_started->set_device_id(device_id);
   session_started->set_pid(pid);
   daemon_->buffer()->Add(event);
 

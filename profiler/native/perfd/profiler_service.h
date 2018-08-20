@@ -84,11 +84,6 @@ class ProfilerServiceImpl final
       const profiler::proto::GetEventGroupsRequest* request,
       profiler::proto::GetEventGroupsResponse* response) override;
 
-  grpc::Status GetEventGroup(
-      grpc::ServerContext* context,
-      const profiler::proto::GetEventGroupRequest* request,
-      profiler::proto::GetEventGroupResponse* response) override;
-
  private:
   // The daemon this service talks to.
   Daemon* daemon_;

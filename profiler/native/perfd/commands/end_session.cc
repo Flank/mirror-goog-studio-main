@@ -18,7 +18,7 @@
 namespace profiler {
 
 grpc::Status EndSession::ExecuteOn(Daemon* daemon) {
-  daemon->sessions()->EndSession(command().session_id());
+  daemon->sessions()->EndSession(command().end_session().session_id());
   return grpc::Status::OK;
 }
 

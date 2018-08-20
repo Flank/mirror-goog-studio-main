@@ -26,6 +26,14 @@ using grpc::Status;
 using grpc::StatusCode;
 using std::string;
 
+namespace {
+// Workaround to serve legacy GetSessions API via the new, generic cache in
+// which there is no device_id. This variable is set only by the legacy
+// BeginSession call and used by the legacy GetSessions call.
+// It's assumed perfd sees the same device ID during its lifetime.
+// TODO: Remove this workaround when we delete legacy APIs.
+int64_t device_id_in_last_begin_session_request = -1;
+}  // namespace
 namespace profiler {
 
 Status ProfilerServiceImpl::GetCurrentTime(
@@ -88,7 +96,9 @@ Status ProfilerServiceImpl::ConfigureStartupAgent(
 Status ProfilerServiceImpl::BeginSession(
     ServerContext* context, const profiler::proto::BeginSessionRequest* request,
     profiler::proto::BeginSessionResponse* response) {
+  device_id_in_last_begin_session_request = request->device_id();
   proto::Command command;
+  command.set_stream_id(request->device_id());
   command.set_type(proto::Command::BEGIN_SESSION);
   proto::BeginSession* begin = command.mutable_begin_session();
   auto* jvmti_config = begin->mutable_jvmti_config();
@@ -99,7 +109,6 @@ Status ProfilerServiceImpl::BeginSession(
   jvmti_config->set_live_allocation_enabled(
       request->jvmti_config().live_allocation_enabled());
 
-  begin->set_device_id(request->device_id());
   begin->set_pid(request->pid());
   begin->set_request_time_epoch_ms(request->request_time_epoch_ms());
   begin->set_session_name(request->session_name());
@@ -117,8 +126,8 @@ Status ProfilerServiceImpl::EndSession(
     profiler::proto::EndSessionResponse* response) {
   proto::Command command;
   command.set_type(proto::Command::END_SESSION);
-  command.set_session_id(request->session_id());
-  command.mutable_end_session();  // No data to fill in.
+  command.set_stream_id(request->device_id());
+  command.mutable_end_session()->set_session_id(request->session_id());
 
   return daemon_->Execute(command, [this, response]() {
     profiler::Session* session = daemon_->sessions()->GetLastSession();
@@ -145,7 +154,7 @@ Status ProfilerServiceImpl::GetSessions(
     for (int i = 0; i < group.events_size(); i++) {
       const auto& event = group.events(i);
       if (event.has_session_started()) {
-        session.set_device_id(event.session_started().device_id());
+        session.set_device_id(device_id_in_last_begin_session_request);
         session.set_pid(event.session_started().pid());
         session.set_start_timestamp(event.timestamp());
         session.set_end_timestamp(LLONG_MAX);
@@ -185,16 +194,5 @@ Status ProfilerServiceImpl::GetEventGroups(
   }
   return Status::OK;
 }
-
-Status ProfilerServiceImpl::GetEventGroup(
-    ServerContext* context,
-    const profiler::proto::GetEventGroupRequest* request,
-    profiler::proto::GetEventGroupResponse* response) {
-  proto::EventGroup group;
-  if (daemon_->buffer()->GetGroup(request->event_id(), &group)) {
-    response->mutable_group()->CopyFrom(group);
-  }
-  return Status::OK;
-}  // namespace profiler
 
 }  // namespace profiler

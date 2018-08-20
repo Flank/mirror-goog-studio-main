@@ -36,7 +36,7 @@ class SessionsManager final {
 
   // Begins a new session. If a session was
   // already running it will be ended.
-  void BeginSession(int64_t device_id, int32_t pid);
+  void BeginSession(int64_t stream_id, int32_t pid);
 
   // Returns the last session (which is the only one that can be active),
   // or nullptr if there are none.

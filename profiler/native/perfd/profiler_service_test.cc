@@ -107,9 +107,9 @@ class ProfilerServiceTest : public ::testing::Test {
 TEST_F(ProfilerServiceTest, TestBeginSessionCommand) {
   proto::ExecuteRequest req;
   proto::Command* command = req.mutable_command();
+  command->set_stream_id(100);
   command->set_type(proto::Command::BEGIN_SESSION);
   proto::BeginSession* begin = command->mutable_begin_session();
-  begin->set_device_id(100);
   begin->set_pid(1000);
 
   proto::ExecuteResponse res;
@@ -119,7 +119,7 @@ TEST_F(ProfilerServiceTest, TestBeginSessionCommand) {
   clock_.SetCurrentTime(4);
 
   grpc::ClientContext context2;
-  begin->set_device_id(101);
+  command->set_stream_id(100);
   begin->set_pid(1001);
   stub_->Execute(&context2, req, &res);
 
@@ -141,13 +141,24 @@ TEST_F(ProfilerServiceTest, TestBeginSessionCommand) {
   ASSERT_EQ(2, events.events_size());
 
   // Test legacy api:
+  // Because lagacy APIs use device ID but new APIs don't, we have to call
+  // legacy BeginSession API at least once so profiler service knows about the
+  // device ID.
+  clock_.SetCurrentTime(20);
+  proto::BeginSessionRequest begin_req;
+  begin_req.set_device_id(100);
+  begin_req.set_pid(1002);
+  grpc::ClientContext begin_context;
+  proto::BeginSessionResponse begin_res;
+  stub_->BeginSession(&begin_context, begin_req, &begin_res);
+
   grpc::ClientContext sessions_context;
   proto::GetSessionsRequest sreq;
   sreq.set_start_timestamp(0);
-  sreq.set_end_timestamp(10);
+  sreq.set_end_timestamp(20);
   proto::GetSessionsResponse sres;
   stub_->GetSessions(&sessions_context, sreq, &sres);
-  ASSERT_EQ(2, sres.sessions_size());
+  ASSERT_EQ(3, sres.sessions_size());
 
   // Test id generation to ensure refactoring maintains same id's.
   EXPECT_EQ(96, sres.sessions(0).session_id());
@@ -156,11 +167,13 @@ TEST_F(ProfilerServiceTest, TestBeginSessionCommand) {
   EXPECT_EQ(2, sres.sessions(0).start_timestamp());
   EXPECT_EQ(4, sres.sessions(0).end_timestamp());
 
-  EXPECT_EQ(109, sres.sessions(1).session_id());
-  EXPECT_EQ(101, sres.sessions(1).device_id());
+  EXPECT_EQ(108, sres.sessions(1).session_id());
+  EXPECT_EQ(100, sres.sessions(1).device_id());
   EXPECT_EQ(1001, sres.sessions(1).pid());
   EXPECT_EQ(4, sres.sessions(1).start_timestamp());
-  EXPECT_EQ(LLONG_MAX, sres.sessions(1).end_timestamp());
+  EXPECT_EQ(20, sres.sessions(1).end_timestamp());
+
+  EXPECT_EQ(LLONG_MAX, sres.sessions(2).end_timestamp());
 }
 
 TEST_F(ProfilerServiceTest, TestBufferFull) {

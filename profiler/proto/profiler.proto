@@ -97,22 +97,20 @@ service ProfilerService {
   rpc Execute(ExecuteRequest) returns (ExecuteResponse) {
   }
 
-  // Gets all the events of the given |session_id| that aret timed
-  // between |from_timestamp| and |end_timestamp| (in ns)
+  // Gets all the events that are timed between |from_timestamp| and
+  // |end_timestamp| (in ns).
+  // This API is most useful for getting all profiling data regardless of any
+  // filtering, for example, from a device.
   rpc GetEvents(GetEventsRequest) returns (GetEventsResponse) {
   }
 
   // Gets all the event groups (events that share the same event_id) that
-  // intersect the range [|from_timestamp|, |to_timestamp|]. If the paramter |end|
-  // is used, an event_group will be considered "open" until such an event shows up.
-  // For example if we have a "BEGIN_SESSION" at time 1,  and the range requested
-  // is [2,3], and the |end| field is set to END_SESSION",  then the event group will
-  // be considered opened, and this intersecting the range.
+  // intersect the range [|from_timestamp|, |to_timestamp|]. If the paramter
+  // |end| is used, an event_group will be considered "open" until such an event
+  // shows up. For example if we have a "BEGIN_SESSION" at time 1,  and the
+  // range requested is [2,3], and the |end| field is set to END_SESSION",  then
+  // the event group will be considered opened, and this intersecting the range.
   rpc GetEventGroups(GetEventGroupsRequest) returns (GetEventGroupsResponse) {
-  }
-
-  // Gets all the events of a given |event_id|
-  rpc GetEventGroup(GetEventGroupRequest) returns (GetEventGroupResponse) {
   }
 }
 
@@ -281,38 +279,48 @@ message ExecuteResponse {
 }
 
 message GetEventsRequest {
-  int64 session_id = 1;
-  int64 from_timestamp = 2;  // inclusive (ns)
-  int64 to_timestamp = 3;    // inclusive (ns)
+  int64 from_timestamp = 1;  // inclusive (ns)
+  int64 to_timestamp = 2;    // inclusive (ns)
 }
 
 message GetEventsResponse {
   repeated Event events = 1;
 }
 
+// Every field in this message serves the purpose of filtering if it is set.
+// When multiple fields are set, all filtering conditions must be met so an
+// event group can be returned.
+//
+// The default value of a proto type (e.g., 0 for int64) is not considered
+// valid. For instance, 0 is not a valid session ID.
 message GetEventGroupsRequest {
-  int64 session_id = 1;
-  Event.Kind kind = 2;
-  Event.Type end = 3;
-  int64 from_timestamp = 4;  // inclusive
-  int64 to_timestamp = 5;    // inclusive
+  // An event is returned if |stream_id| matches.
+  int64 stream_id = 1;
+  // An event is returned if |session_id| matches.
+  int64 session_id = 2;
+  // An event is returned if |kind| matches.
+  Event.Kind kind = 3;
+  // |end| field is used to determine whether a group should be returned when
+  // |from_timestamp| is set.
+  // A group becomes active at any event whose type is not |end|, and becomes
+  // inactive at an event of type |end|. A group may be active multiple times
+  // during the lifetime. A group is returned if it's ever active during the
+  // range of [from_timestamp, to_timestamp].
+  Event.Type end = 4;
+  // When |from_timestamp| and/or |to_timestamp| are set, an event group is
+  // returned including the events during with the range, also including the
+  // last event before |from_timestamp| and the first one after |to_timestamp|
+  // in each group.
+  int64 from_timestamp = 5;  // inclusive
+  int64 to_timestamp = 6;    // inclusive
 }
 
 message GetEventGroupsResponse {
   repeated EventGroup groups = 1;
 }
 
-message GetEventGroupRequest {
-  int64 session_id = 1;
-  int64 event_id = 2;
-}
-
-message GetEventGroupResponse {
-  EventGroup group = 1;
-}
-
-// An event group is a collection of events
-// that share the same event_id.
+// An event group is a collection of events that share the same event_id.
+// The events in a group should have the same |session_id| and |kind|.
 message EventGroup {
   int64 event_id = 1;
   repeated Event events = 2;
@@ -325,8 +333,9 @@ message Command {
     END_SESSION = 2;
   }
 
-  int64 session_id = 1;  // If ommited the command is applied to all sessions
-                         // (or to create a session)
+  // A stream is an entity that provides data, such as a device or an imported
+  // file.
+  int64 stream_id = 1;  // If ommited the command is applied to all streams
   CommandType type = 2;
   oneof union {
     BeginSession begin_session = 3;
@@ -344,16 +353,21 @@ message BeginSession {
     bool live_allocation_enabled = 3;
   }
 
-  int64 device_id = 1;
-  int32 pid = 2;
-  JvmtiConfig jvmti_config = 3;
-  int64 request_time_epoch_ms = 4;
-  string session_name = 5;
+  int32 pid = 1;
+  JvmtiConfig jvmti_config = 2;
+  int64 request_time_epoch_ms = 3;
+  string session_name = 4;
 }
 
 message EndSession {
+  int64 session_id = 1;
 }
 
+// Note: stream_id should NOT be part of an |Event| message because a session
+// (which is a collection of events) could be serialized and imported later.
+// Since an event can appear in multiple streams, it is confusing to have a
+// stream_id. In addition, it is unnecessary because the caller of GetEvents or
+// GetEventGroups should know the stream_id.
 message Event {
   enum Type {
     UNSPECIFIED = 0;
@@ -364,15 +378,17 @@ message Event {
     NONE = 0;
     SESSION = 1;
   }
-  // The session the event belongs to. For session events this is the same as |event_id|
+  // The session the event belongs to. For session events this is the same as
+  // |event_id|
   int64 session_id = 1;
 
-  // The id of this event. This is not unique, for concepts that span across a range of
-  // time (network requests, threads, etc), they will all share the same |event_id|. 
+  // The id of this event. This is not unique, for concepts that span across a
+  // range of time (network requests, threads, etc), they will all share the
+  // same |event_id|.
   int64 event_id = 2;
 
-  // The kind of event (a higher level grouping of events that belong to the same area)
-  // Useful for queries such as "all the groups of "kind" SESSION.
+  // The kind of event (a higher level grouping of events that belong to the
+  // same area) Useful for queries such as "all the groups of "kind" SESSION.
   Event.Kind kind = 3;
 
   // The actual type of the event.
@@ -387,11 +403,9 @@ message Event {
 }
 
 message SessionStarted {
-  // A device's unique identifier, references Device's |device_id| property.
-  int64 device_id = 2;
   // The PID of the app. Note that this is actually an int16, but gRPC only
   // provides int32.
-  int32 pid = 3;
+  int32 pid = 1;
 }
 
 message SessionEnded {
