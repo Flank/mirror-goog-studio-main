@@ -101,10 +101,10 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar) {
   // Ensure that the jar hasn't changed since we last instrumented. If it has,
   // fail out for now. This is an important scenario to guard against, since it
   // would likely cause silent failures.
-  jvalue jar_path = {.l = jni->NewStringUTF(jar.c_str())};
+  jvalue jar_hash = {.l = jni->NewStringUTF(instrumentation_jar_hash)};
   jboolean matches = breadcrumb.CallStaticMethod<jboolean>(
-      {"checkHash", "(Ljava/lang/String;)Z"}, &jar_path);
-  jni->DeleteLocalRef(jar_path.l);
+      {"checkHash", "(Ljava/lang/String;)Z"}, &jar_hash);
+  jni->DeleteLocalRef(jar_hash.l);
 
   if (!matches) {
     Log::E(

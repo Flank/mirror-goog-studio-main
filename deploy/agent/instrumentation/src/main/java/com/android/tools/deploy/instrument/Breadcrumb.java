@@ -16,11 +16,6 @@
 
 package com.android.tools.deploy.instrument;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.zip.CRC32;
 
 /**
  * Instrumentation class allowing an agent to check whether a previous agent has instrumented the
@@ -29,27 +24,20 @@ import java.util.zip.CRC32;
  */
 @SuppressWarnings("unused") // Used by native instrumentation code.
 public final class Breadcrumb {
-    // The CRC of the dex library containing this class. Set during checkHash().
-    private static long checksum = -1;
+    // The hash of the dex library containing this class. Set during checkHash().
+    private static String hash = null;
 
     // Whether the agent that loaded this dex library finished instrumenting successfully.
     private static boolean finishedInstrumenting = false;
 
     // Checks whether or not the instrumentation library at libraryPath is identical to the
     // previous library that was loaded. If no previous library was loaded, returns true.
-    public static boolean checkHash(String libraryPath) throws IOException {
-        Path path = Paths.get(libraryPath);
-        byte[] bytes = Files.readAllBytes(path);
-
-        CRC32 crc = new CRC32();
-        crc.update(bytes);
-
-        if (checksum == -1 || checksum == 0) {
-            checksum = crc.getValue();
+    public static boolean checkHash(String hash) {
+        if (Breadcrumb.hash == null) {
+            Breadcrumb.hash = hash;
             return true;
         }
-
-        return checksum == crc.getValue();
+        return Breadcrumb.hash.equals(hash);
     }
 
     // Marks that future agents do not need to instrument.
