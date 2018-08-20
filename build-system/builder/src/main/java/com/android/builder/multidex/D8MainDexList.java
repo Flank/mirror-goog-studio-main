@@ -81,8 +81,6 @@ public final class D8MainDexList {
 
             return ImmutableList.copyOf(
                     GenerateMainDexList.run(command.build(), ForkJoinPool.commonPool()));
-        } catch (ExecutionException e) {
-            throw new MainDexListException(e.getCause());
         } catch (Exception e) {
             throw new MainDexListException(e);
         }
