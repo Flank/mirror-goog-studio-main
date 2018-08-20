@@ -318,8 +318,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                     ApkData configurationApkData =
                                             outputFactory.addConfigurationSplit(
                                                     filterType,
-                                                    filter,
-                                                    "" /* replaced later */,
                                                     filter);
                                     configurationApkData.setVersionCode(
                                             variantScope
@@ -343,8 +341,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                             findPackagedResForSplit(
                                                     resPackageOutputFolder, configurationApkData);
                                     if (packagedResForSplit != null) {
-                                        configurationApkData.setOutputFileName(
-                                                packagedResForSplit.getName());
                                         buildOutputs.add(
                                                 new BuildOutput(
                                                         InternalArtifactType
