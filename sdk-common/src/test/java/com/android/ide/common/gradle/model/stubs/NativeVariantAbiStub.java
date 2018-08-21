@@ -28,6 +28,8 @@ public class NativeVariantAbiStub extends BaseStub implements NativeVariantAbi {
     @NonNull private final Collection<NativeToolchain> myToolChains;
     @NonNull private final Collection<NativeSettings> mySettings;
     @NonNull private final Map<String, String> myFileExtensions;
+    @NonNull private final String myVariantName;
+    @NonNull private final String myAbi;
 
     public NativeVariantAbiStub() {
         this(
@@ -35,7 +37,9 @@ public class NativeVariantAbiStub extends BaseStub implements NativeVariantAbi {
                 Collections.singletonList(new NativeArtifactStub()),
                 Collections.singletonList(new NativeToolchainStub()),
                 Collections.singletonList(new NativeSettingsStub()),
-                ImmutableMap.<String, String>builder().put("key", "value").build());
+                ImmutableMap.<String, String>builder().put("key", "value").build(),
+                "variant",
+                "abi");
     }
 
     public NativeVariantAbiStub(
@@ -43,12 +47,16 @@ public class NativeVariantAbiStub extends BaseStub implements NativeVariantAbi {
             @NonNull Collection<NativeArtifact> artifacts,
             @NonNull Collection<NativeToolchain> toolChains,
             @NonNull Collection<NativeSettings> settings,
-            @NonNull Map<String, String> fileExtensions) {
+            @NonNull Map<String, String> fileExtensions,
+            @NonNull String variantName,
+            @NonNull String abi) {
         myBuildFiles = buildFiles;
         myArtifacts = artifacts;
         myToolChains = toolChains;
         mySettings = settings;
         myFileExtensions = fileExtensions;
+        myVariantName = variantName;
+        myAbi = abi;
     }
 
     @Override
@@ -82,19 +90,31 @@ public class NativeVariantAbiStub extends BaseStub implements NativeVariantAbi {
     }
 
     @Override
+    public String getVariantName() {
+        return myVariantName;
+    }
+
+    @Override
+    public String getAbi() {
+        return myAbi;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof NativeAndroidProject)) {
+        if (!(o instanceof NativeVariantAbi)) {
             return false;
         }
-        NativeAndroidProject project = (NativeAndroidProject) o;
-        return Objects.equals(getBuildFiles(), project.getBuildFiles())
-                && Objects.equals(getArtifacts(), project.getArtifacts())
-                && Objects.equals(getToolChains(), project.getToolChains())
-                && Objects.equals(getSettings(), project.getSettings())
-                && Objects.equals(getFileExtensions(), project.getFileExtensions());
+        NativeVariantAbi that = (NativeVariantAbi) o;
+        return Objects.equals(getBuildFiles(), that.getBuildFiles())
+                && Objects.equals(getArtifacts(), that.getArtifacts())
+                && Objects.equals(getToolChains(), that.getToolChains())
+                && Objects.equals(getSettings(), that.getSettings())
+                && Objects.equals(getFileExtensions(), that.getFileExtensions())
+                && Objects.equals(getVariantName(), that.getVariantName())
+                && Objects.equals(getAbi(), that.getAbi());
     }
 
     @Override
@@ -104,6 +124,8 @@ public class NativeVariantAbiStub extends BaseStub implements NativeVariantAbi {
                 getArtifacts(),
                 getToolChains(),
                 getSettings(),
-                getFileExtensions());
+                getFileExtensions(),
+                getVariantName(),
+                getAbi());
     }
 }

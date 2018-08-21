@@ -51,4 +51,12 @@ public interface NativeVariantAbi extends Serializable {
      */
     @NonNull
     Map<String, String> getFileExtensions();
+
+    /** Returns the variant name. */
+    @NonNull
+    String getVariantName();
+
+    /** Returns the abi. */
+    @NonNull
+    String getAbi();
 }

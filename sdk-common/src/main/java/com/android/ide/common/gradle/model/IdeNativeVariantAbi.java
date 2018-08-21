@@ -37,6 +37,8 @@ public final class IdeNativeVariantAbi extends IdeModel implements NativeVariant
     @NonNull private final Collection<NativeToolchain> myToolChains;
     @NonNull private final Collection<NativeSettings> mySettings;
     @NonNull private final Map<String, String> myFileExtensions;
+    @NonNull private final String myVariantName;
+    @NonNull private final String myAbi;
     private final int myHashCode;
 
     public IdeNativeVariantAbi(@NonNull NativeVariantAbi variantAbi) {
@@ -63,7 +65,10 @@ public final class IdeNativeVariantAbi extends IdeModel implements NativeVariant
                         modelCache,
                         settings -> new IdeNativeSettings(settings, modelCache));
         myFileExtensions = ImmutableMap.copyOf(variantAbi.getFileExtensions());
+        myVariantName = variantAbi.getVariantName();
+        myAbi = variantAbi.getAbi();
         myHashCode = calculateHashCode();
+
     }
 
     @NonNull
@@ -96,18 +101,41 @@ public final class IdeNativeVariantAbi extends IdeModel implements NativeVariant
         return myFileExtensions;
     }
 
+    @NonNull
+    @Override
+    public String getVariantName() {
+        return myVariantName;
+    }
+
+    @NonNull
+    @Override
+    public String getAbi() {
+        return myAbi;
+    }
+
     @Override
     public int hashCode() {
         return myHashCode;
     }
 
     private int calculateHashCode() {
-        return Objects.hash(myBuildFiles, myArtifacts, myToolChains, mySettings, myFileExtensions);
+        return Objects.hash(
+                myBuildFiles,
+                myArtifacts,
+                myToolChains,
+                mySettings,
+                myFileExtensions,
+                myVariantName,
+                myAbi);
     }
 
     @Override
     public String toString() {
         return "IdeNativeVariantAbi{"
+                + "myVariantName="
+                + myVariantName
+                + "myAbi="
+                + myAbi
                 + "myBuildFiles="
                 + myBuildFiles
                 + ", myArtifacts="
@@ -130,6 +158,8 @@ public final class IdeNativeVariantAbi extends IdeModel implements NativeVariant
                 && Objects.equals(myArtifacts, that.myArtifacts)
                 && Objects.equals(myToolChains, that.myToolChains)
                 && Objects.equals(mySettings, that.mySettings)
-                && Objects.equals(myFileExtensions, that.myFileExtensions);
+                && Objects.equals(myFileExtensions, that.myFileExtensions)
+                && Objects.equals(myVariantName, that.myVariantName)
+                && Objects.equals(myAbi, that.myAbi);
     }
 }

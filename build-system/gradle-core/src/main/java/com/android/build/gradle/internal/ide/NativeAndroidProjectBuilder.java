@@ -126,12 +126,14 @@ class NativeAndroidProjectBuilder {
     }
 
     /** Build a {@link NativeVariantAbi} which is partial information about a project. */
-    NativeVariantAbi buildNativeVariantAbi() {
+    NativeVariantAbi buildNativeVariantAbi(@NonNull String variantName, @NonNull String abi) {
         // If there are no build files (therefore no native configurations) don't return a model
         if (this.buildFiles.isEmpty()) {
             return null;
         }
         return new NativeVariantAbiImpl(
+                variantName,
+                abi,
                 this.buildFiles,
                 this.artifacts,
                 this.toolChains,

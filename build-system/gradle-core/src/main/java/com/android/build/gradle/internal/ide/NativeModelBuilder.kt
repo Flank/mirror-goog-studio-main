@@ -162,7 +162,7 @@ class NativeModelBuilder(
                 }
 
             }
-        return builder.buildNativeVariantAbi()!!
+        return builder.buildNativeVariantAbi(variantName, abiName)!!
     }
 
     /**
