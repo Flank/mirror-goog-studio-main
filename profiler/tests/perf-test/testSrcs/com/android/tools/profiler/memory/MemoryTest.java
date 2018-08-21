@@ -19,23 +19,18 @@ package com.android.tools.profiler.memory;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.tools.fakeandroid.FakeAndroidDriver;
-import com.android.tools.profiler.GrpcUtils;
+import com.android.tools.profiler.MemoryPerfDriver;
 import com.android.tools.profiler.PerfDriver;
 import com.android.tools.profiler.TestUtils;
-import com.android.tools.profiler.proto.Common.Session;
 import com.android.tools.profiler.proto.MemoryProfiler.AllocatedClass;
 import com.android.tools.profiler.proto.MemoryProfiler.AllocationEvent;
 import com.android.tools.profiler.proto.MemoryProfiler.BatchAllocationSample;
 import com.android.tools.profiler.proto.MemoryProfiler.MemoryData;
-import com.android.tools.profiler.proto.MemoryProfiler.MemoryStartRequest;
-import com.android.tools.profiler.proto.MemoryProfiler.MemoryStopRequest;
 import com.android.tools.profiler.proto.MemoryProfiler.ThreadInfo;
 import com.android.tools.profiler.proto.MemoryProfiler.TrackAllocationsResponse;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -43,27 +38,7 @@ public class MemoryTest {
     private static final String ACTIVITY_CLASS = "com.activity.MemoryActivity";
 
     // We currently only test O+ test scenarios.
-    @Rule public final PerfDriver myPerfDriver = new PerfDriver(ACTIVITY_CLASS, 26);
-
-    private GrpcUtils myGrpc;
-    private Session mySession;
-
-    @Before
-    public void setup() throws Exception {
-        myGrpc = myPerfDriver.getGrpc();
-        mySession = myPerfDriver.getSession();
-
-        // For Memory tests, we need to invoke beginSession and startMonitoringApp to properly
-        // initialize the memory cache and establish the perfa->perfd connection
-        myGrpc.getMemoryStub()
-                .startMonitoringApp(MemoryStartRequest.newBuilder().setSession(mySession).build());
-    }
-
-    @After
-    public void tearDown() {
-        myGrpc.getMemoryStub()
-                .stopMonitoringApp(MemoryStopRequest.newBuilder().setSession(mySession).build());
-    }
+    @Rule public final PerfDriver myPerfDriver = new MemoryPerfDriver(ACTIVITY_CLASS, 26);
 
     private int findClassTag(List<BatchAllocationSample> samples, String className) {
         for (BatchAllocationSample sample : samples) {
@@ -81,14 +56,18 @@ public class MemoryTest {
 
     @Test
     public void countAllocationsAndDeallocation() throws Exception {
-        MemoryStubWrapper stubWrapper = new MemoryStubWrapper(myGrpc.getMemoryStub());
+        MemoryStubWrapper stubWrapper =
+                new MemoryStubWrapper(myPerfDriver.getGrpc().getMemoryStub());
 
         // Start memory tracking.
-        TrackAllocationsResponse trackResponse = stubWrapper.startAllocationTracking(mySession);
+        TrackAllocationsResponse trackResponse =
+                stubWrapper.startAllocationTracking(myPerfDriver.getSession());
         assertThat(trackResponse.getStatus()).isEqualTo(TrackAllocationsResponse.Status.SUCCESS);
         MemoryData jvmtiData =
                 TestUtils.waitForAndReturn(
-                        () -> stubWrapper.getJvmtiData(mySession, 0, Long.MAX_VALUE),
+                        () ->
+                                stubWrapper.getJvmtiData(
+                                        myPerfDriver.getSession(), 0, Long.MAX_VALUE),
                         value -> value.getAllocationSamplesList().size() != 0);
 
         // Find MemTestEntity class tag
@@ -115,7 +94,8 @@ public class MemoryTest {
         // and a while to happen.
         while (deallocTags.size() < allocationCount) {
             androidDriver.triggerMethod(ACTIVITY_CLASS, "gc");
-            jvmtiData = stubWrapper.getJvmtiData(mySession, startTime, Long.MAX_VALUE);
+            jvmtiData =
+                    stubWrapper.getJvmtiData(myPerfDriver.getSession(), startTime, Long.MAX_VALUE);
             long endTime = jvmtiData.getEndTimestamp();
             System.out.printf(
                     "getJvmtiData called. endTime=%d, alloc samples=%d\n",

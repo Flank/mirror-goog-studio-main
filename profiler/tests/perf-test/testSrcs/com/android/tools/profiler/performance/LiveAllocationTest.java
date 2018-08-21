@@ -22,19 +22,14 @@ import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.perflogger.Benchmark;
 import com.android.tools.perflogger.Metric;
 import com.android.tools.perflogger.Metric.MetricSample;
-import com.android.tools.profiler.GrpcUtils;
+import com.android.tools.profiler.MemoryPerfDriver;
 import com.android.tools.profiler.PerfDriver;
 import com.android.tools.profiler.memory.MemoryStubWrapper;
-import com.android.tools.profiler.proto.Common.Session;
-import com.android.tools.profiler.proto.MemoryProfiler.MemoryStartRequest;
-import com.android.tools.profiler.proto.MemoryProfiler.MemoryStopRequest;
 import com.android.tools.profiler.proto.MemoryProfiler.TrackAllocationsResponse;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.regex.Pattern;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -64,11 +59,8 @@ public class LiveAllocationTest {
             Pattern.compile("(.*)allocation_timing=(?<result>.*)");
 
     // We currently only test O+ test scenarios.
-    @Rule public final PerfDriver myPerfDriver = new PerfDriver(ACTIVITY_CLASS, 26);
+    @Rule public final PerfDriver myPerfDriver = new MemoryPerfDriver(ACTIVITY_CLASS, 26);
 
-    private GrpcUtils myGrpc;
-    private Session mySession;
-    private MemoryStubWrapper myStubWrapper;
     private long myAllocationCount;
     private long myAllocationSize;
     private boolean myIsTracking;
@@ -79,26 +71,13 @@ public class LiveAllocationTest {
         myIsTracking = isTracking;
     }
 
-    @Before
-    public void setup() {
-        myGrpc = myPerfDriver.getGrpc();
-        mySession = myPerfDriver.getSession();
-        myGrpc.getMemoryStub()
-                .startMonitoringApp(MemoryStartRequest.newBuilder().setSession(mySession).build());
-        myStubWrapper = new MemoryStubWrapper(myGrpc.getMemoryStub());
-    }
-
-    @After
-    public void tearDown() {
-        myGrpc.getMemoryStub()
-                .stopMonitoringApp(MemoryStopRequest.newBuilder().setSession(mySession).build());
-    }
-
     @Test
     public void testAllocationTiming() {
         if (myIsTracking) {
+            MemoryStubWrapper myStubWrapper =
+                    new MemoryStubWrapper(myPerfDriver.getGrpc().getMemoryStub());
             TrackAllocationsResponse trackResponse =
-                    myStubWrapper.startAllocationTracking(mySession);
+                    myStubWrapper.startAllocationTracking(myPerfDriver.getSession());
             assertThat(trackResponse.getStatus())
                     .isEqualTo(TrackAllocationsResponse.Status.SUCCESS);
         }

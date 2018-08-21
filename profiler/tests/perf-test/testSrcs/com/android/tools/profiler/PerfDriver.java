@@ -83,14 +83,16 @@ public class PerfDriver implements TestRule {
                             @Override
                             public void evaluate() throws Throwable {
                                 try {
+                                    ruleBefore();
                                     before();
                                     base.evaluate();
                                 } finally {
                                     after();
+                                    ruleAfter();
                                 }
                             }
 
-                            private void before() throws Throwable {
+                            private void ruleBefore() throws Throwable {
                                 // Logs in perf-test output to track the sdk level and test start.
                                 System.out.println(
                                         String.format(
@@ -100,12 +102,12 @@ public class PerfDriver implements TestRule {
                                 start(myActivityClass);
                             }
 
-                            private void after() {
+                            private void ruleAfter() {
                                 if (mySession != null) {
                                     try {
                                         getGrpc().endSession(mySession.getSessionId());
                                     } catch (StatusRuntimeException e) {
-                                        // TODO(b/112274301): fix "connection refused" error.
+                                        // TODO(b/112274301): fix "connection closed" error.
                                     }
                                 }
                                 myMockApp.stop();
@@ -119,6 +121,12 @@ public class PerfDriver implements TestRule {
                         },
                         description);
     }
+
+    /** Override to set up the associated test. */
+    protected void before() throws Throwable {}
+
+    /** Override to tear down the associated test. */
+    protected void after() {}
 
     /**
      * Returns the port the app communicates over. Note: this will not be valid until after {@link
