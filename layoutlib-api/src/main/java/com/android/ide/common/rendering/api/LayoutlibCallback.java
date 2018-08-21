@@ -17,7 +17,6 @@ package com.android.ide.common.rendering.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import java.net.URL;
 import org.intellij.lang.annotations.MagicConstant;
 
 /**
@@ -29,25 +28,7 @@ import org.intellij.lang.annotations.MagicConstant;
  * version}.
  */
 @SuppressWarnings({"MethodMayBeStatic", "unused"})
-public abstract class LayoutlibCallback implements XmlParserFactory {
-
-    public enum ViewAttribute {
-        TEXT(String.class),
-        IS_CHECKED(Boolean.class),
-        SRC(URL.class),
-        COLOR(Integer.class);
-
-        private final Class<?> mClass;
-
-        ViewAttribute(Class<?> theClass) {
-            mClass = theClass;
-        }
-
-        public Class<?> getAttributeClass() {
-            return mClass;
-        }
-    }
-
+public abstract class LayoutlibCallback implements IProjectCallback, XmlParserFactory {
     /**
      * Loads a custom class with the given constructor signature and arguments.
      *
@@ -159,8 +140,8 @@ public abstract class LayoutlibCallback implements XmlParserFactory {
      *
      * @param name className in binary format (see {@link ClassLoader})
      * @return an new instance created by calling the given constructor.
-     * @throws ClassNotFoundException any exception thrown when creating the instance is wrapped in
-     *     a ClassNotFoundException.
+     * @throws ClassNotFoundException any exceptions thrown when creating the instance is wrapped in
+     *     ClassNotFoundException.
      * @since API 15
      */
     public Object loadClass(
