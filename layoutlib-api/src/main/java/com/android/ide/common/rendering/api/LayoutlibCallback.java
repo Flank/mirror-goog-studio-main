@@ -17,6 +17,7 @@ package com.android.ide.common.rendering.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import java.net.URL;
 import org.intellij.lang.annotations.MagicConstant;
 
 /**
@@ -29,6 +30,24 @@ import org.intellij.lang.annotations.MagicConstant;
  */
 @SuppressWarnings({"MethodMayBeStatic", "unused"})
 public abstract class LayoutlibCallback implements IProjectCallback, XmlParserFactory {
+
+    public enum ViewAttribute {
+        TEXT(String.class),
+        IS_CHECKED(Boolean.class),
+        SRC(URL.class),
+        COLOR(Integer.class);
+
+        private final Class<?> mClass;
+
+        ViewAttribute(Class<?> theClass) {
+            mClass = theClass;
+        }
+
+        public Class<?> getAttributeClass() {
+            return mClass;
+        }
+    }
+
     /**
      * Loads a custom class with the given constructor signature and arguments.
      *
@@ -42,10 +61,10 @@ public abstract class LayoutlibCallback implements IProjectCallback, XmlParserFa
      * versions of LayoutLib should call {@link LayoutlibCallback#loadClass(String, Class[],
      * Object[])} in such a case.
      *
-     * @param name The fully qualified name of the class.
-     * @param constructorSignature The signature of the class to use
-     * @param constructorArgs The arguments to use on the constructor
-     * @return A newly instantiated object.
+     * @param name the fully qualified name of the class.
+     * @param constructorSignature the signature of the class to use
+     * @param constructorArgs the arguments to use on the constructor
+     * @return a newly instantiated object.
      */
     @Nullable
     public abstract Object loadView(
@@ -55,7 +74,7 @@ public abstract class LayoutlibCallback implements IProjectCallback, XmlParserFa
     /**
      * Returns the namespace URI of the application.
      *
-     * <p>This lets the Layout Lib load custom attributes for custom views.
+     * <p>Used by the Layoutlib to load custom attributes for custom views.
      */
     @NonNull
     public abstract String getNamespace();
@@ -77,12 +96,13 @@ public abstract class LayoutlibCallback implements IProjectCallback, XmlParserFa
      * @param layoutResource Layout or a value referencing an _aapt attribute.
      * @return returns a custom parser or null if no custom parsers are needed.
      */
+    @Nullable
     public abstract ILayoutPullParser getParser(@NonNull ResourceValue layoutResource);
 
     /**
      * Returns the value of an item used by an adapter.
      *
-     * @param adapterView The {@link ResourceReference} for the adapter view info.
+     * @param adapterView the {@link ResourceReference} for the adapter view info.
      * @param adapterCookie the view cookie for this particular view.
      * @param itemRef the {@link ResourceReference} for the layout used by the adapter item.
      * @param fullPosition the position of the item in the full list.
@@ -94,7 +114,7 @@ public abstract class LayoutlibCallback implements IProjectCallback, XmlParserFa
      * @param parentPositionPerType the position of the parent's item, only considering items of the
      *     same type. This is only valid if the adapter view is an ExpandableListView. If there is
      *     only one type of items, this is the same as <var>fullParentPosition</var>.
-     * @param viewRef The {@link ResourceReference} for the view we're trying to fill.
+     * @param viewRef the {@link ResourceReference} for the view we're trying to fill.
      * @param viewAttribute the attribute being queried.
      * @param defaultValue the default value for this attribute. The object class matches the class
      *     associated with the {@link ViewAttribute}.
@@ -111,6 +131,23 @@ public abstract class LayoutlibCallback implements IProjectCallback, XmlParserFa
             int parentPositionPerType,
             ResourceReference viewRef,
             ViewAttribute viewAttribute,
+            Object defaultValue);
+
+    /**
+     * @deprecated Use {@link #getAdapterItemValue(ResourceReference, Object, ResourceReference,
+     *         int, int, int, int, ResourceReference, ViewAttribute, Object)}.
+     */
+    @Deprecated
+    public abstract Object getAdapterItemValue(
+            ResourceReference adapterView,
+            Object adapterCookie,
+            ResourceReference itemRef,
+            int fullPosition,
+            int positionPerType,
+            int fullParentPosition,
+            int parentPositionPerType,
+            ResourceReference viewRef,
+            IProjectCallback.ViewAttribute viewAttribute,
             Object defaultValue);
 
     /**
@@ -141,7 +178,7 @@ public abstract class LayoutlibCallback implements IProjectCallback, XmlParserFa
      * @param name className in binary format (see {@link ClassLoader})
      * @return an new instance created by calling the given constructor.
      * @throws ClassNotFoundException any exceptions thrown when creating the instance is wrapped in
-     *     ClassNotFoundException.
+     *     a ClassNotFoundException.
      * @since API 15
      */
     public Object loadClass(
