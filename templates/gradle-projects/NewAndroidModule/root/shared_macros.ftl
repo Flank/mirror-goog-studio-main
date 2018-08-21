@@ -10,7 +10,15 @@
 
 <#macro generateManifest packageName hasApplicationBlock=false>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="${packageName}"<#if !hasApplicationBlock>/</#if>><#if hasApplicationBlock>
+        <#if isDynamicInstantApp>
+            xmlns:dist="http://schemas.android.com/apk/distribution"
+        </#if>
+        package="${packageName}"<#if !hasApplicationBlock>/</#if>><#if hasApplicationBlock>
+
+        <#if isDynamicInstantApp>
+        <dist:module
+            dist:instant="true" />
+        </#if>
     <application <#if minApiLevel gte 4 && buildApi gte 4>android:allowBackup="true"</#if>
         android:label="@string/app_name"<#if copyIcons>
         android:icon="@mipmap/ic_launcher"<#if buildApi gte 25 && targetApi gte 25>
