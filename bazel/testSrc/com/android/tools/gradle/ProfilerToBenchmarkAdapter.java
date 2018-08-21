@@ -63,13 +63,13 @@ public class ProfilerToBenchmarkAdapter {
             new MedianWindowDeviationAnalyzer.Builder()
                     .setMetricAggregate(Analyzer.MetricAggregate.MEDIAN)
                     .setRunInfoQueryLimit(50)
-                    .setRecentWindowSize(11)
+                    .setRecentWindowSize(25)
                     // constant term of 10.0 ms to ignore regressions in trivial tasks
                     .setConstTerm(10.0)
                     // recommended value
                     .setMadCoeff(1.0)
-                    // flag 5% regressions
-                    .setMedianCoeff(0.05)
+                    // flag 10% regressions
+                    .setMedianCoeff(0.10)
                     .build();
 
     @NonNull
