@@ -339,6 +339,16 @@ public class FolderConfigurationTest {
         }
     }
 
+    @Test
+    public void layoutDirectionQualifier() {
+        FolderConfiguration ltr = FolderConfiguration.getConfigForFolder("layout-ldltr");
+        FolderConfiguration rtl = FolderConfiguration.getConfigForFolder("layout-ldrtl");
+        FolderConfiguration base = FolderConfiguration.createDefault();
+        assertThat(ltr).isNotMatchFor(rtl);
+        assertThat(ltr).isMatchFor(base);
+        assertThat(rtl).isMatchFor(base);
+    }
+
     // --- helper methods
 
     private static final class MockConfigurable implements Configurable {

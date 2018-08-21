@@ -16,6 +16,7 @@
 
 package com.android.ide.common.resources.configuration;
 
+import com.android.annotations.NonNull;
 import com.android.resources.LayoutDirection;
 import com.android.resources.ResourceEnum;
 
@@ -25,6 +26,8 @@ import com.android.resources.ResourceEnum;
 public class LayoutDirectionQualifier extends EnumBasedResourceQualifier {
 
     public static final String NAME = "Layout Direction";
+
+    private static final LayoutDirectionQualifier NULL_QUALIFIER = new LayoutDirectionQualifier();
 
     private LayoutDirection mValue = null;
 
@@ -70,5 +73,11 @@ public class LayoutDirectionQualifier extends EnumBasedResourceQualifier {
         }
 
         return false;
+    }
+
+    @Override
+    @NonNull
+    public ResourceQualifier getNullQualifier() {
+        return NULL_QUALIFIER;
     }
 }

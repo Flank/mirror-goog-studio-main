@@ -76,7 +76,7 @@ class FolderConfigurationSubject(failureStrategy: FailureStrategy, subject: Fold
 
     fun hasNoLayoutDirection() {
         val qualifier = actual().layoutDirectionQualifier
-        if (qualifier != null) {
+        if (qualifier != null && qualifier != qualifier.nullQualifier) {
             failWithBadResults("has no layout direction", "", "has", qualifier.shortDisplayValue)
         }
     }
