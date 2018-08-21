@@ -121,7 +121,8 @@ public abstract class LayoutlibCallback implements IProjectCallback, XmlParserFa
      * @return the item value or null if there's no value.
      * @see ViewAttribute#getAttributeClass()
      */
-    public abstract Object getAdapterItemValue(
+    @Nullable
+    public Object getAdapterItemValue(
             ResourceReference adapterView,
             Object adapterCookie,
             ResourceReference itemRef,
@@ -131,14 +132,17 @@ public abstract class LayoutlibCallback implements IProjectCallback, XmlParserFa
             int parentPositionPerType,
             ResourceReference viewRef,
             ViewAttribute viewAttribute,
-            Object defaultValue);
+            Object defaultValue) {
+        return null;
+    }
 
     /**
      * @deprecated Use {@link #getAdapterItemValue(ResourceReference, Object, ResourceReference,
-     *         int, int, int, int, ResourceReference, ViewAttribute, Object)}.
+     *     int, int, int, int, ResourceReference, ViewAttribute, Object)}.
      */
     @Deprecated
-    public abstract Object getAdapterItemValue(
+    @Nullable
+    public Object getAdapterItemValue(
             ResourceReference adapterView,
             Object adapterCookie,
             ResourceReference itemRef,
@@ -148,7 +152,9 @@ public abstract class LayoutlibCallback implements IProjectCallback, XmlParserFa
             int parentPositionPerType,
             ResourceReference viewRef,
             IProjectCallback.ViewAttribute viewAttribute,
-            Object defaultValue);
+            Object defaultValue) {
+        return null;
+    }
 
     /**
      * Returns an adapter binding for a given adapter view. This is only called if {@link
@@ -160,6 +166,7 @@ public abstract class LayoutlibCallback implements IProjectCallback, XmlParserFa
      * @param viewObject the view object for the adapter.
      * @return an adapter binding for the given view or null if there's no data.
      */
+    @Nullable
     public abstract AdapterBinding getAdapterBinding(
             ResourceReference adapterViewRef, Object adapterCookie, Object viewObject);
 
