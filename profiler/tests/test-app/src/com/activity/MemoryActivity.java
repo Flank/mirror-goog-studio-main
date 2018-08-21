@@ -18,6 +18,7 @@ package com.activity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class MemoryActivity extends PerfdTestActivity {
     static class MemTestEntity {
@@ -46,7 +47,7 @@ public class MemoryActivity extends PerfdTestActivity {
         return o;
     }
 
-    List<Object> entities = new ArrayList<Object>();
+    ArrayList<Object> entities = new ArrayList<Object>();
 
     public void makeAllocationNoise() {
         List<Object> objs = new ArrayList<Object>();
@@ -60,14 +61,15 @@ public class MemoryActivity extends PerfdTestActivity {
     public void allocate() {
         final int count = Integer.parseInt(System.getProperty("allocation.count"));
         final int size = Integer.parseInt(System.getProperty("allocation.size", "1"));
-        long start = System.currentTimeMillis();
+        entities.ensureCapacity(count);
+        long start = System.nanoTime();
         for (int i = 0; i < count; i++) {
             entities.add(new MemTestEntity(size));
         }
-        long end = System.currentTimeMillis();
+        long end = System.nanoTime();
         System.out.println("MemoryActivity.allocate");
         System.out.println("allocation_count=" + entities.size());
-        System.out.println("allocation_timing=" + (end - start));
+        System.out.println("allocation_timing=" + TimeUnit.NANOSECONDS.toMillis(end - start));
     }
 
     public void free() {
