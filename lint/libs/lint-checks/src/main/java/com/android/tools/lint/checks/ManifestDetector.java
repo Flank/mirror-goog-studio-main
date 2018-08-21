@@ -870,6 +870,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
         }
 
         if (parentNode != element.getOwnerDocument().getDocumentElement()
+                && tag.indexOf(':') == -1
                 && context.isEnabled(WRONG_PARENT)) {
             context.report(
                     WRONG_PARENT,

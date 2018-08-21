@@ -357,6 +357,33 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "</manifest>\n")));
     }
 
+    public void test112063828() {
+        // Regression test for
+        // 112063828: Lint flags "uses-feature" from my own namespace is not a child of <manifest>
+        lint().files(
+                        manifest(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    xmlns:dist=\"http://schemas.android.com/apk/distribution\"\n"
+                                        + "    package=\"com.example.tnorbye.nullnessmigrationtest\">\n"
+                                        + "\n"
+                                        + "    <uses-permission android:name=\"android.permission.INTERNET\"/>\n"
+                                        + "\n"
+                                        + "    <dist:module\n"
+                                        + "        dist:onDemand=\"false\"\n"
+                                        + "        dist:title=\"@string/title_arsolarfeature\">\n"
+                                        + "        <dist:fusing include=\"true\" />\n"
+                                        + "        <dist:conditions>\n"
+                                        + "            <dist:uses-feature android:name=\"android.hardware.camera.ar\" android:required=\"true\"/>\n"
+                                        + "        </dist:conditions>\n"
+                                        + "    </dist:module>\n"
+                                        + "</manifest>\n"))
+                .issues(ManifestDetector.WRONG_PARENT)
+                .run()
+                .expectClean();
+    }
+
     public void testDuplicateActivity() throws Exception {
         mEnabled = Collections.singleton(ManifestDetector.DUPLICATE_ACTIVITY);
         //noinspection all // Sample code
