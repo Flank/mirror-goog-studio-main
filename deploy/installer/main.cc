@@ -28,8 +28,8 @@
 #endif
 
 #include "command_cmd.h"
-#include "package_manager.h"
 #include "dump.h"
+#include "package_manager.h"
 #include "trace.h"
 #include "workspace.h"
 
@@ -44,18 +44,21 @@ struct Parameters {
 };
 
 void PrintUsage(const char* invoked_path) {
-  std::cerr
-      << "Usage:" << std::endl
-      << invoked_path << " [env parameters] command [command_parameters]" << std::endl
-      << std::endl
-      << "Environment parameters available:" << std::endl
-      << "  -cmd=X: Define path to cmd executable (to mock android)." << std::endl
-      << "  -pm=X : Define path to package manager executable (to mock android)." << std::endl
-      << "Commands available:" << std::endl
-      << "   dump : Extract CDs and Signatures for a given applicationID."
-      << std::endl
-      << "   swap : Perform a hot-swap via JVMTI." << std::endl
-      << std::endl;
+  std::cerr << "Usage:" << std::endl
+            << invoked_path << " [env parameters] command [command_parameters]"
+            << std::endl
+            << std::endl
+            << "Environment parameters available:" << std::endl
+            << "  -cmd=X: Define path to cmd executable (to mock android)."
+            << std::endl
+            << "  -pm=X : Define path to package manager executable (to mock "
+               "android)."
+            << std::endl
+            << "Commands available:" << std::endl
+            << "   dump : Extract CDs and Signatures for a given applicationID."
+            << std::endl
+            << "   swap : Perform a hot-swap via JVMTI." << std::endl
+            << std::endl;
 }
 
 bool ParseParameters(int argc, char** argv, Parameters* parameters) {
@@ -63,12 +66,12 @@ bool ParseParameters(int argc, char** argv, Parameters* parameters) {
   parameters->consumed = 1;
 
   int index = 1;
-  while(index < argc && argv[index][0] == '-') {
+  while (index < argc && argv[index][0] == '-') {
     strtok(argv[index], "=");
     if (!strncmp("-cmd", argv[index], 4)) {
-      parameters->cmd_path = strtok(nullptr, "=");;
+      parameters->cmd_path = strtok(nullptr, "=");
     } else if (!strncmp("-pm", argv[index], 3)) {
-      parameters->pm_path = strtok(nullptr, "=");;
+      parameters->pm_path = strtok(nullptr, "=");
     } else {
       std::cerr << "environment parameter unknown:" << argv[index] << std::endl;
       return false;
@@ -124,7 +127,8 @@ int main(int argc, char** argv) {
   // Retrieve Command to be invoked.
   auto task = GetCommand(parameters.command_name);
   if (task == nullptr) {
-    std::cerr << "Command '" << parameters.command_name << "' unknown." << std::endl;
+    std::cerr << "Command '" << parameters.command_name << "' unknown."
+              << std::endl;
     PrintUsage(parameters.binary_name);
     return EXIT_FAILURE;
   }
@@ -137,6 +141,10 @@ int main(int argc, char** argv) {
 
   // Create a workspace for filesystem operations.
   Workspace workspace(GetInstallerPath());
+  if (!workspace.Valid()) {
+    return EXIT_FAILURE;
+  }
+
   if (!task->Run(workspace)) {
     return EXIT_FAILURE;
   }

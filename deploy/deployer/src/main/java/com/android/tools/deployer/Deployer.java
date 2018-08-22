@@ -225,6 +225,10 @@ public class Deployer {
                 ApkDump apkDump = dumps.get(apk.retrieveOnDeviceName());
                 DexArchive prevApk = DexArchive.buildFromDatabase(db, apkDump.getDigest());
                 if (prevApk == null) {
+                    System.out.println(
+                            "Unable to retrieve apk in DB ''"
+                                    + apkDump.getDigest()
+                                    + "', skipping this apk.");
                     // TODO: propagate this error condition up
                     return;
                 }

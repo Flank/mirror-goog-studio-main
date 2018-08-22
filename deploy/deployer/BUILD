@@ -31,6 +31,8 @@ java_library(
     srcs = glob([
         "src/main/**/*.java",
     ]),
+    # Embed android installer in the jar (x86_64, arm7, arm64)
+    resources = ["//tools/base/deploy/installer:android"],
     visibility = ["//visibility:public"],
     deps = [
         "//prebuilts/r8:d8-master",
@@ -56,7 +58,8 @@ java_binary(
 
 java_test(
     name = "deployer.tests",
-    srcs = glob(["src/test/java/**"]),
+    size = "small",
+    srcs = glob(["src/test/java/**/*.java"]),
     data = glob(["src/test/resource/**"]),
     jvm_flags = ["-Dtest.suite.jar=deployer.tests.jar"],
     test_class = "com.android.testutils.JarTestSuite",

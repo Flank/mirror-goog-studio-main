@@ -18,8 +18,13 @@ package com.android.tools.deployer;
 import com.android.tools.deploy.proto.Deploy;
 import com.google.common.base.Charsets;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -27,10 +32,12 @@ import java.util.Map;
 
 public class Installer {
 
-    private static final String NAME = "installer";
-    public static final String INSTALLER_PATH = "/data/local/tmp/.studio/bin/" + NAME;
+    public static final String INSTALLER_BINARY_NAME = "installer";
+    public static final String INSTALLER_DIRECTORY = "/data/local/tmp/.studio/bin";
+    public static final String INSTALLER_PATH = INSTALLER_DIRECTORY + "/" + INSTALLER_BINARY_NAME;
+    public static final String ANDROID_EXECUTABLE_PATH = "/tools/base/deploy/installer/android";
     private final AdbClient adb;
-    private final String path;
+    private final String installersFolder;
 
     /**
      * The on-device binary facade.
@@ -38,9 +45,13 @@ public class Installer {
      * @param path a path to a directory with all the per-abi android executables.
      * @param adb the {@code AdbClient} to use.
      */
-    public Installer(String path, AdbClient adb) {
-        this.path = path;
+    public Installer(AdbClient adb) {
+        this(null, adb);
+    }
+
+    public Installer(String installersFolder, AdbClient adb) {
         this.adb = adb;
+        this.installersFolder = installersFolder;
     }
 
     public Map<String, ApkDump> dump(String packageName) throws IOException {
@@ -86,26 +97,59 @@ public class Installer {
         byte[] output = adb.shell(cmd, data);
         // TODO: Detect error when protobuf parsing fails
         if (new String(output, Charsets.UTF_8)
-                .startsWith("/system/bin/sh: " + INSTALLER_PATH + ": not found")) {
+                .startsWith("/system/bin/sh: " + INSTALLER_PATH + ":")) {
             prepare();
             adb.shell(cmd, data);
         }
     }
 
     public void prepare() {
-        File file = null;
+        File installerFile = null;
         List<String> abis = adb.getAbis();
+        // The jar archive contains the android executables:
+        // tools/base/deploy/installer/android/x86/installer
+        // tools/base/deploy/installer/android/armeabi-v7a/installer
+        // tools/base/deploy/installer/android/arm64-v8a/installer
+        // Loop over the supported architectures and push it to the drive.
+        // TODO: Factor in that an app may be running in 32-bit on a 64-bit device. In this case
+        //       we will have to push two binaries. Or we could cut support of 32-bit apps.
         for (String abi : abis) {
-            File candidate = new File(path, abi + "/" + NAME);
-            if (candidate.exists()) {
-                file = candidate;
+            String installerJarPath = abi + "/" + INSTALLER_BINARY_NAME;
+            try (InputStream inputStream = getResource(installerJarPath)) {
+                // Do we have the device architecture in the jar?
+                if (inputStream == null) {
+                    continue;
+                }
+                System.out.println("Pushed installer '" + installerJarPath + "'");
+                // We have a match, extract it in a tmp file.
+                installerFile = File.createTempFile(".studio_installer", abi);
+                Files.copy(
+                        inputStream,
+                        Paths.get(installerFile.getAbsolutePath()),
+                        StandardCopyOption.REPLACE_EXISTING);
                 break;
+            } catch (IOException e) {
+                throw new DeployerException(
+                        "Unable to extract installer binary to push to device.", e);
             }
         }
-        if (file == null) {
+        if (installerFile == null) {
             throw new DeployerException(
                     "Cannot find suitable installer for abis: " + Arrays.toString(abis.toArray()));
         }
-        adb.push(file.getAbsolutePath(), INSTALLER_PATH);
+
+        adb.shell(new String[] {"mkdir", "-p", INSTALLER_DIRECTORY}, null);
+        adb.push(installerFile.getAbsolutePath(), INSTALLER_PATH);
+        adb.shell(new String[] {"chmod", "+x", INSTALLER_PATH}, null);
+    }
+
+    InputStream getResource(String path) throws FileNotFoundException {
+        InputStream stream = null;
+        if (this.installersFolder == null) {
+            stream = Installer.class.getResourceAsStream(ANDROID_EXECUTABLE_PATH + "/" + path);
+        } else {
+            stream = new FileInputStream(installersFolder + "/" + path);
+        }
+        return stream;
     }
 }

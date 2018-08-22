@@ -45,8 +45,9 @@ public class AdbClient {
      * Executes the given command and sends {@code input} to stdin and returns stdout as a byte[]
      */
     public byte[] shell(String[] parameters, byte[] input) throws DeployerException {
+        ByteArrayOutputReceiver receiver = null;
         try {
-            ByteArrayOutputReceiver receiver = new ByteArrayOutputReceiver();
+            receiver = new ByteArrayOutputReceiver();
             device.executeShellCommand(
                     String.join(" ", parameters),
                     receiver,
@@ -58,7 +59,11 @@ public class AdbClient {
                 | ShellCommandUnresponsiveException
                 | IOException
                 | TimeoutException e) {
-            throw new DeployerException("Unable to run shell command:", e);
+            throw new DeployerException("Unable to run shell command", e);
+        } finally {
+            // TODO: Delete this once we gather all stdout and stderr in a proto.
+            // For now this is mandatory to properly troubleshot.
+            System.out.println(new String(receiver.toByteArray()));
         }
     }
 

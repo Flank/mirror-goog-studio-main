@@ -12,6 +12,7 @@ cc_library(
         "shell_command.cc",
         "swap.cc",
         "trace.cc",
+        "workspace.cc",
     ],
     hdrs = [
         "apk_archive.h",
@@ -33,6 +34,7 @@ cc_library(
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
     deps = [
+        ":agent_header",
         "//tools/base/deploy/proto:cc_proto",
     ],
 )
@@ -58,10 +60,41 @@ android_cc_binary(
         "armeabi-v7a",
         "arm64-v8a",
     ],
-    binary = ":installer.stripped",
+    binary = select({
+        "//tools/base/bazel:windows": ":installer",
+        "//conditions:default": ":installer.stripped",
+    }),
     filename = "installer",
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "agent_header",
+    hdrs = [
+        ":agent.so.cc",
+    ],
+    tags = ["no_windows"],
+)
+
+# Converts the jar containing agent.so cc_library to an array in a CC source file.
+genrule(
+    name = "agent_header_generator",
+    srcs = [
+        "//tools/base/deploy/agent/native:libswap.so",
+    ],
+    outs = [
+        "agent.so.cc",
+    ],
+    cmd = "$(location //tools/base/bazel:bin2c)" +
+          " $(location //tools/base/deploy/agent/native:libswap.so)" +
+          " $(location agent.so.cc)" +
+          " agent_so",
+    tags = ["no_windows"],
+    tools = [
+        "//tools/base/bazel:bin2c",
+    ],
+    visibility = ["//visibility:private"],
 )
 
 cc_test(

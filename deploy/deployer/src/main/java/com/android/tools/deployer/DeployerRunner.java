@@ -37,29 +37,47 @@ public class DeployerRunner {
     private static final String DB_PATH = "/tmp/studio.db";
     private final DexArchiveDatabase db;
 
-    static InMemoryDexArchiveDatabase readDB() throws IOException, ClassNotFoundException {
+    static InMemoryDexArchiveDatabase readDB() throws IOException {
         if (!Files.exists(Paths.get(DB_PATH))) {
-            return new InMemoryDexArchiveDatabase();
+            InMemoryDexArchiveDatabase db = new InMemoryDexArchiveDatabase();
+            saveDB(db);
+            return db;
         }
-        FileInputStream file = new FileInputStream(DB_PATH);
-        ObjectInputStream in = new ObjectInputStream(file);
-        return (InMemoryDexArchiveDatabase) in.readObject();
+
+        try (FileInputStream file = new FileInputStream(DB_PATH);
+                ObjectInputStream in = new ObjectInputStream(file)) {
+            InMemoryDexArchiveDatabase db = (InMemoryDexArchiveDatabase) in.readObject();
+            return db;
+        } catch (InvalidClassException e) {
+            // This may occur if the layout of InMemoryDexArchiveDatabase has changed since
+            // last run.
+            Files.delete(Paths.get(DB_PATH));
+            return readDB();
+        } catch (IOException | ClassNotFoundException e) {
+            throw new DeployerException("Unable to load database", e);
+        }
     }
 
-    static void saveDB(InMemoryDexArchiveDatabase db) throws IOException {
-        FileOutputStream file = new FileOutputStream(DB_PATH);
-        ObjectOutputStream out = new ObjectOutputStream(file);
-        out.writeObject(db);
+    static void saveDB(InMemoryDexArchiveDatabase db) {
+        try (FileOutputStream file = new FileOutputStream(DB_PATH);
+                ObjectOutputStream out = new ObjectOutputStream(file); ) {
+            out.writeObject(db);
+        } catch (IOException e) {
+            throw new DeployerException("Unable to save database", e);
+        }
     }
 
     // Run it from bazel with the following command:
     // bazel run :deployer.runner org.wikipedia.alpha PATH_TO_APK1 PATH_TO_APK2
-    public static void main(String[] args) throws IOException, ClassNotFoundException {
+    public static void main(String[] args)
+            throws IOException, ClassNotFoundException, InterruptedException {
         InMemoryDexArchiveDatabase db = null;
         try {
             db = readDB();
             DeployerRunner runner = new DeployerRunner(db);
             runner.run(args);
+        } catch (RuntimeException e) {
+            e.printStackTrace(System.out);
         } finally {
             saveDB(db);
             AndroidDebugBridge.terminate();
@@ -93,9 +111,8 @@ public class DeployerRunner {
         }
 
         // Run
-        InMemoryDexArchiveDatabase db = new InMemoryDexArchiveDatabase();
         AdbClient adb = new AdbClient(device);
-        Installer installer = new Installer("", adb);
+        Installer installer = new Installer(adb);
         Deployer deployer =
                 new Deployer(packageName, apks, new InstallerNotifier(), adb, db, installer);
         Deployer.RunResponse response = deployer.fullSwap();

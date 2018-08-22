@@ -138,8 +138,6 @@ ANDROID_LINKOPTS = select_android(
         "-pie",
         "-Wl,--gc-sections",
         "-Wl,--as-needed",
-        "-fuse-ld=gold",
-        "-Wl,--icf=safe",
     ],
     [],
 )

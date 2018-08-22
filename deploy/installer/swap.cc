@@ -16,43 +16,56 @@
 
 #include "swap.h"
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <algorithm>
+
+#include <fcntl.h>
 
 #include "command_cmd.h"
 #include "dump.h"
 #include "shell_command.h"
 
+#include "agent.so.cc"
+
 namespace deployer {
 
 namespace {
-const std::string kAgent = "agent.so";
-const std::string kDex = "support.dex";
+const std::string kAgentPrefix = "agent-";
+const std::string kAgentSuffix = ".so";
 const std::string kConfig = "config.pb";
+const int kRwFileMode =  S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR | S_IWGRP | S_IWOTH;
+const int kRxFileMode =  S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
 }  // namespace
+
+// In this class the use of shell commands for what would typically be
+// regular stdlib filesystem io. This is because the installer does not have
+// permissions in the /data/data/<app> directory and needs to utilize run-as.
 
 void SwapCommand::ParseParameters(int argc, char** argv) {
   int size = -1;
   force_update_ = false;
   if (argc < 2) {
-    std::cerr << "Not enough arguments for swap command: swap <force> <pb_size>" << std::endl;
+    std::cerr << "Not enough arguments for swap command: swap <force> <pb_size>"
+              << std::endl;
     return;
   }
 
   force_update_ = atoi(argv[0]);
   size = atoi(argv[1]);
 
-  std::string data;
-  std::copy_n(std::istreambuf_iterator<char>(std::cin), size, std::back_inserter(data));
+  static std::string data;
+  std::copy_n(std::istreambuf_iterator<char>(std::cin), size,
+              std::back_inserter(data));
 
   if (!request_.ParseFromString(data)) {
     std::cerr << "Could not parse swap configuration proto." << std::endl;
     return;
   }
+  package_name_ = request_.package_name();
 
   // TODO(noahz): Better way of handling the "update" scenario.
   // If we modify/delete the agent after ART has already loaded it, the app
@@ -64,57 +77,88 @@ void SwapCommand::ParseParameters(int argc, char** argv) {
   }
 
   // Set this value here so we can re-use it in other methods.
-  target_dir_ = "/data/data/" + request_.package_name() + "/.studio/";
+  target_dir_ = "/data/data/" + package_name_ + "/.studio/";
   ready_to_run_ = true;
 }
 
-bool SwapCommand::Run(const Workspace& workspace) {
-  std::string source_dir = workspace.GetBase() + "/bin/";
+std::string SwapCommand::GetAgentFilename() const noexcept {
+  return kAgentPrefix + agent_so_hash + kAgentSuffix;
+}
 
-  if (!Setup(source_dir)) {
+bool SwapCommand::WriteAgentToDisk(const std::string& agent_dst_path) const noexcept {
+  int fd = open(agent_dst_path.c_str(), O_WRONLY | O_CREAT, kRwFileMode);
+  if (fd == -1) {
+    std::cerr << "CopyAgentIfNecessary(). Unable to open()." << std::endl;
+    return false;
+  }
+  int written = write(fd, agent_so, agent_so_len);
+  if (written == -1) {
+    std::cerr << "CopyAgentIfNecessary(). Unable to write()." << std::endl;
     return false;
   }
 
-  // Create the agent config, passing the agent the swap request and the
-  // location of the instrumentation library.
-  proto::AgentConfig agent_config;
-  agent_config.set_allocated_swap_request(&request_);
-
-  // TODO(noahz): Skip all this and pass to agent via the attach-agent command?
-
-  // Write out the configuration file.
-  std::ofstream ofile(source_dir + kConfig, std::ios::binary);
-  std::string configurationString;
-  if (!agent_config.SerializeToString(&configurationString)) {
-    std::cerr << "Could not write agent configuration proto." << std::endl;
+  int close_result = close(fd);
+  if (close_result == -1) {
+    std::cerr << "CopyAgentIfNecessary(). Unable to close()." << std::endl;
     return false;
   }
-  ofile << configurationString;
-  ofile.close();
+
+  chmod(agent_dst_path.c_str(),kRxFileMode);
+
+  return true;
+}
+
+bool SwapCommand::CopyAgent(const std::string& agent_src_path,
+                            const std::string& agent_dst_path) const noexcept {
+  // TODO: Cleanup previous version of the agent ?
+
+  // Check if the agent is already in the app "data" folder.
+  std::string test_output;
+  if (RunCmd("test", User::APP_PACKAGE, {"-e", agent_dst_path}, &test_output)) {
+    std::cout << "Binary already in data folde, skipping copy." << test_output
+              << std::endl;
+    return true;
+  }
+
+  // Make sure the agent library binary is on the disk.
+  if (access(agent_src_path.c_str(), F_OK) == -1) {
+    WriteAgentToDisk(agent_src_path);
+  }
 
   // Copy to agent directory.
-  std::string output;
-  if (!RunCmd("cp", User::APP_PACKAGE,
-              {source_dir + kConfig, target_dir_ + kConfig}, &output)) {
-    std::cerr << "Could not copy agent config." << output << std::endl;
+  std::string cp_output;
+  if (!RunCmd("cp", User::APP_PACKAGE, {agent_src_path, agent_dst_path},
+              &cp_output)) {
+    std::cerr << "Could not copy agent binary." << cp_output << std::endl;
+    return false;
+  }
+  return true;
+}
+
+bool SwapCommand::Run(const Workspace& workspace) {
+  if (!Setup(workspace)) {
     return false;
   }
 
   // Get the pid(s) of the running application using the package name.
-  if (!RunCmd("pidof", User::SHELL_USER, {request_.package_name()}, &output)) {
-    std::cerr << "Could not get application pid." << output << std::endl;
+  std::string pidof_output;
+  if (!RunCmd("pidof", User::SHELL_USER, {package_name_}, &pidof_output)) {
+    std::cerr << "Could not get application pid for package : '" +
+                     package_name_ + "':"
+              << pidof_output << std::endl;
     return false;
   }
 
   int pid;
-  std::istringstream pids(output);  // This constructor copies 'output', so we
-                                    // can re-use output safely.
+  std::istringstream pids(pidof_output);  // This constructor copies 'output',
+                                          // so we can re-use output safely.
 
   // Attach the agent to the application process(es)
   CmdCommand cmd;
   while (pids >> pid) {
-    if (!cmd.AttachAgent(pid, target_dir_ + kAgent, {target_dir_ + kConfig},
-                         &output)) {
+    std::string output;
+    if (!cmd.AttachAgent(pid, target_dir_ + GetAgentFilename(),
+                         {target_dir_ + kConfig}, &output)) {
       std::cerr << "Could not attach agent to process." << output << std::endl;
       return false;
     }
@@ -123,28 +167,66 @@ bool SwapCommand::Run(const Workspace& workspace) {
   return true;
 }
 
-bool SwapCommand::Setup(const std::string& source_dir) {
-  // Note the use of shell commands for what would typically be regular stdlib
-  // filesystem io. This is because the installer does not have permissions in
-  // the /data/data/<app> directory and needs to utilize run-as.
-
-  // Check if the agent has already been copied to the app directory.
+bool SwapCommand::SetupAgent(const std::string& agent_src_path,
+                             const std::string& agent_dst_path) const noexcept {
+  // Check if the agent is already in the app directory.
   if (!force_update_ &&
-      RunCmd("stat", User::APP_PACKAGE, {target_dir_ + kAgent}, nullptr)) {
+      RunCmd("stat", User::APP_PACKAGE, {agent_dst_path}, nullptr)) {
     return true;
   }
 
+  if (!CopyAgent(agent_src_path, agent_dst_path)) {
+    std::cerr << "Could not copy agent library to app data folder."
+              << std::endl;
+    return false;
+  }
+  return true;
+}
+
+bool SwapCommand::SetupConfigFile(const Workspace& workspace,
+                                  const std::string& dst_path) noexcept {
+  std::string config_local_path = workspace.GetTmpFolder() + kConfig;
+
+  // Create the agent config, passing the agent the swap request.
+  proto::AgentConfig agent_config;
+  agent_config.set_allocated_swap_request(&request_);
+
+  // Write out the configuration file.
+  std::ofstream ofile(config_local_path, std::ios::binary);
+  std::string configurationString;
+  if (!agent_config.SerializeToString(&configurationString)) {
+    std::cerr << "Could not write agent configuration proto." << std::endl;
+    return false;
+  }
+  ofile << configurationString;
+  ofile.close();
+
+  // Copy to app data folder.
   std::string output;
-  // We have to run the following three commands as the application, because
-  // we otherwise do not have access to the application's data directory.
+  if (!RunCmd("cp", User::APP_PACKAGE, {config_local_path, dst_path},
+              &output)) {
+    return false;
+  }
+  return true;
+}
+
+bool SwapCommand::Setup(const Workspace& workspace) noexcept {
+  // Make sure the target dir exists.
+  std::string output;
   if (!RunCmd("mkdir", User::APP_PACKAGE, {"-p", target_dir_}, &output)) {
     std::cerr << "Could not create .studio directory." << output << std::endl;
     return false;
   }
 
-  if (!RunCmd("cp", User::APP_PACKAGE,
-              {source_dir + kAgent, target_dir_ + kAgent}, &output)) {
-    std::cerr << "Could not copy agent binary." << output << std::endl;
+  // Make sure the agent is in the data folder.
+  std::string agent_src_path = workspace.GetTmpFolder() + GetAgentFilename();
+  std::string agent_dst_path = target_dir_ + GetAgentFilename();
+  if (!SetupAgent(agent_src_path, agent_dst_path)) {
+    return false;
+  }
+
+  // Write the config file in the data folder.
+  if (!SetupConfigFile(workspace, target_dir_ + kConfig)) {
     return false;
   }
 
@@ -163,7 +245,7 @@ bool SwapCommand::RunCmd(const std::string& shell_cmd, User run_as,
   }
 
   if (run_as == User::APP_PACKAGE) {
-    return cmd.RunAs(params, request_.package_name(), output);
+    return cmd.RunAs(params, package_name_, output);
   } else {
     return cmd.Run(params, output);
   }

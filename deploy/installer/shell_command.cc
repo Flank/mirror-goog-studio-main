@@ -58,7 +58,10 @@ bool ShellCommandRunner::RunAndReadOutput(const string& cmd,
                                           string* output) const {
   Trace trace(cmd);
   char buffer[1024];
-
+  // TODO: Delete this trace when we have a proper proto response
+  //       object. For the time being this output is mandatory to
+  //       performe proper debugging.
+  std::cout << cmd << std::endl;
   // Without this line, stdout is picked up but not stderr.
   string redirected_cmd = cmd + " 2>&1";
   FILE* pipe = popen(redirected_cmd.c_str(), "r");

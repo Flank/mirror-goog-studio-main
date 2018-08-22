@@ -43,15 +43,9 @@ void DumpCommand::ParseParameters(int argc, char** argv) {
 
 bool DumpCommand::Run(const Workspace& workspace) {
   Trace traceDump("dump");
-  std::string base_ = workspace.GetBase();
-  constexpr int kDirectoryMode = (S_IRWXG | S_IRWXU | S_IRWXO);
-  std::string dumpFolder = base_ + "/dumps/";
-  mkdir(dumpFolder.c_str(), kDirectoryMode);
-
-  std::string dumpBase_ = dumpFolder + packageName_ + "/";
-  mkdir(dumpBase_.c_str(), kDirectoryMode);
-
-  // Unlink all files which could have been generated from a previous run.
+  // Clean dump files from previous runs.
+  std::string dumpBase_ = workspace.GetDumpsFolder() + packageName_ + "/";
+  mkdir(dumpBase_.c_str(), S_IRWXG | S_IRWXU | S_IRWXO);
   workspace.ClearDirectory(dumpBase_.c_str());
 
   // Retrieve apks for this package.
