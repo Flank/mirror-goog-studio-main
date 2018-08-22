@@ -217,6 +217,13 @@ public class GradleCoordinateTest extends BaseTestCase {
         assertTrue(COMPARE_PLUS_HIGHER.compare(a, b) < 0);
         assertTrue(COMPARE_PLUS_HIGHER.compare(b, a) > 0);
 
+        a = GradleCoordinate.parseCoordinateString("a.b.c:package:5.4.+");
+        b = GradleCoordinate.parseCoordinateString("a.b.c:package:5.4.+");
+        assert a != null;
+        assert b != null;
+        assertTrue(COMPARE_PLUS_HIGHER.compare(a, b) == 0);
+        assertTrue(COMPARE_PLUS_HIGHER.compare(b, a) == 0);
+
         a = GradleCoordinate.parseCoordinateString("a.b.c:package:5");
         b = GradleCoordinate.parseCoordinateString("a.b.c:package:+");
         assert a != null;
@@ -274,6 +281,13 @@ public class GradleCoordinateTest extends BaseTestCase {
         assert b != null;
         assertTrue(COMPARE_PLUS_LOWER.compare(a, b) > 0);
         assertTrue(COMPARE_PLUS_LOWER.compare(b, a) < 0);
+
+        a = GradleCoordinate.parseCoordinateString("a.b.c:package:5.4.+");
+        b = GradleCoordinate.parseCoordinateString("a.b.c:package:5.4.+");
+        assert a != null;
+        assert b != null;
+        assertTrue(COMPARE_PLUS_LOWER.compare(a, b) == 0);
+        assertTrue(COMPARE_PLUS_LOWER.compare(b, a) == 0);
     }
 
     @Test

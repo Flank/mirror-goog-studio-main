@@ -678,8 +678,10 @@ public final class GradleCoordinate {
             int common = Math.min(sizeA, sizeB);
             for (int i = 0; i < common; ++i) {
                 RevisionComponent revision1 = a.mRevisions.get(i);
-                if (revision1 instanceof PlusComponent) return mPlusResult;
                 RevisionComponent revision2 = b.mRevisions.get(i);
+                if (revision1 instanceof PlusComponent && revision2 instanceof PlusComponent)
+                    return 0;
+                if (revision1 instanceof PlusComponent) return mPlusResult;
                 if (revision2 instanceof PlusComponent) return -mPlusResult;
                 int delta = revision1.compareTo(revision2);
                 if (delta != 0) {
