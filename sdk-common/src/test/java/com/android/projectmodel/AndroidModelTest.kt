@@ -23,6 +23,31 @@ import org.junit.Test
  * Test cases for [AndroidModel]
  */
 class AndroidModelTest {
+    @Test
+    fun testEmptyToString() {
+        assertThat(AndroidModel().toString()).isEqualTo("AndroidModel()")
+    }
+
+    @Test
+    fun testEquals() {
+        assertThat(AndroidModel()).isEqualTo(AndroidModel())
+    }
+
+    @Test
+    fun testSingleProjectToString() {
+        assertThat(
+            AndroidModel(
+                projects = listOf(
+                    AndroidProject(
+                        name = "project",
+                        type = ProjectType.APP
+                    )
+                )
+            ).toString()
+        )
+            .isEqualTo("AndroidModel(projects=[AndroidProject(name=project,type=APP)])")
+    }
+
     /**
      * Tests the [AndroidModel.getProject] method.
      */
