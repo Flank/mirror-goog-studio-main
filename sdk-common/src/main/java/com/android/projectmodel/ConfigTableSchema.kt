@@ -25,7 +25,7 @@ package com.android.projectmodel
  * dimension corresponds to build type. For all build systems, the last dimension always corresponds
  * to an artifact name.
  */
-class ConfigTableSchema(
+data class ConfigTableSchema(
     /**
      * Dimensions for the table.
      */
@@ -58,6 +58,10 @@ class ConfigTableSchema(
     fun matchArtifact(artifactName: String): ConfigPath {
         return matchDimension(dimensions.size - 1, artifactName)
     }
+
+    override fun toString(): String
+        = "ConfigTableSchema(${dimensions.map {"${it.dimensionName}[${it.values.joinToString(",")}]"}.joinToString(",")})"
+
 
     class Builder {
         private val dimensions = ArrayList<ConfigDimension.Builder>()

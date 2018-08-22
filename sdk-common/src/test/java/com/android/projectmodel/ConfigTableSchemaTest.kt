@@ -30,6 +30,16 @@ class ConfigTableSchemaTest {
     )
 
     @Test
+    fun testToString() {
+        assertThat(schema.toString()).isEqualTo("ConfigTableSchema(paymentModel[paid,free],resolution[hires,lowres],buildType[debug,release],artifact[_main_,_unit_test_,_android_test_])")
+    }
+
+    @Test
+    fun testDefaultToString() {
+        assertThat(ConfigTableSchema().toString()).isEqualTo("ConfigTableSchema(artifact[_main_,_unit_test_,_android_test_])")
+    }
+
+    @Test
     fun testPathFor() {
         assertThat(schema.pathFor(null)).isEqualTo(matchAllArtifacts())
         assertThat(schema.pathFor("paid")).isEqualTo(matchArtifactsWith("paid"))
