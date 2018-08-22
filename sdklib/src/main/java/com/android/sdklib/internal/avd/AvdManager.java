@@ -1760,10 +1760,14 @@ public class AvdManager {
         String name = properties.get(AvdManager.AVD_INI_DEVICE_NAME);
         String manufacturer = properties.get(AvdManager.AVD_INI_DEVICE_MANUFACTURER);
 
-        if (properties != null && devices != null && name != null && manufacturer != null) {
+        if (name != null && manufacturer != null) {
             for (Device d : devices) {
                 if (d.getId().equals(name) && d.getManufacturer().equals(manufacturer)) {
-                    properties.putAll(DeviceManager.getHardwareProperties(d));
+                    // The device has a RAM size, but we don't want to use it.
+                    // Instead, we'll keep the AVD's existing RAM size setting.
+                    final Map<String, String> deviceHwProperties = DeviceManager.getHardwareProperties(d);
+                    deviceHwProperties.remove(AVD_INI_RAM_SIZE);
+                    properties.putAll(deviceHwProperties);
                     try {
                         return updateAvd(avd, properties);
                     } catch (IOException e) {

@@ -586,8 +586,10 @@ public class AvdManagerTest extends TestCase {
         Device myDevice = devMan.getDevice("Nexus 5", "Google");
         Map<String, String> baseHardwareProperties = DeviceManager.getHardwareProperties(myDevice);
 
-        // Modify a hardware property
+        // Modify a hardware property that should change
         baseHardwareProperties.put("hw.lcd.height", "960");
+        // Modify a hardware property that should NOT change
+        baseHardwareProperties.put("hw.ramSize", "1536");
         // Add a user-settable property
         baseHardwareProperties.put("hw.keyboard", "yes");
 
@@ -607,19 +609,21 @@ public class AvdManagerTest extends TestCase {
           false,
           log);
 
-        // Verify the parameter that we changed and the parameter that we added
+        // Verify the parameters that we changed and the parameter that we added
         Map<String, String> firstHardwareProperties = myDeviceInfo.getProperties();
-        assertEquals("960", firstHardwareProperties.get("hw.lcd.height"));
-        assertEquals("yes", firstHardwareProperties.get("hw.keyboard"));
+        assertEquals("960",  firstHardwareProperties.get("hw.lcd.height"));
+        assertEquals("1536", firstHardwareProperties.get("hw.ramSize"));
+        assertEquals("yes",  firstHardwareProperties.get("hw.keyboard"));
 
         // Update the device using the original hardware definition
         AvdInfo updatedDeviceInfo = mAvdManager.updateDeviceChanged(myDeviceInfo, log);
 
-        // Verify that the hardware property changed, but the
-        // user-settable property did not.
+        // Verify that one hardware property changed, but the other hardware property
+        // and the user-settable property did not change.
         Map<String, String> updatedHardwareProperties = updatedDeviceInfo.getProperties();
         assertEquals("1920", updatedHardwareProperties.get("hw.lcd.height"));
-        assertEquals("yes", updatedHardwareProperties.get("hw.keyboard"));
+        assertEquals("1536", updatedHardwareProperties.get("hw.ramSize"));
+        assertEquals("yes",  updatedHardwareProperties.get("hw.keyboard"));
     }
 
     public void testParseAvdInfo() throws Exception {
