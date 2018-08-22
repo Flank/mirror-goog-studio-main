@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -36,6 +36,7 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.tooling.BuildException;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Copy the location our various tasks outputs into a single location.
@@ -108,14 +109,14 @@ public class CopyOutputs extends AndroidVariantTask {
                 .into(InternalArtifactType.APK);
     }
 
-    public static class CreationAction extends EagerTaskCreationAction<CopyOutputs> {
+    public static class CreationAction extends LazyTaskCreationAction<CopyOutputs> {
 
         private final VariantScope variantScope;
-        private final File outputDirectory;
+        private final File destinationDir;
 
-        public CreationAction(VariantScope variantScope, File outputDirectory) {
+        public CreationAction(VariantScope variantScope, File destinationDir) {
             this.variantScope = variantScope;
-            this.outputDirectory = outputDirectory;
+            this.destinationDir = destinationDir;
         }
 
         @NonNull
@@ -131,7 +132,16 @@ public class CopyOutputs extends AndroidVariantTask {
         }
 
         @Override
-        public void execute(@NonNull CopyOutputs task) {
+        public void preConfigure(@NotNull String taskName) {
+            super.preConfigure(taskName);
+            variantScope
+                    .getArtifacts()
+                    .appendArtifact(
+                            InternalArtifactType.APK, ImmutableList.of(destinationDir), taskName);
+        }
+
+        @Override
+        public void configure(@NonNull CopyOutputs task) {
             task.setVariantName(variantScope.getFullVariantName());
             BuildArtifactsHolder artifacts = variantScope.getArtifacts();
             task.fullApks = artifacts.getFinalArtifactFiles(
@@ -140,7 +150,7 @@ public class CopyOutputs extends AndroidVariantTask {
                     InternalArtifactType.ABI_PACKAGED_SPLIT);
             task.resourcesSplits = artifacts.getFinalArtifactFiles(
                                     InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT);
-            task.destinationDir = outputDirectory;
+            task.destinationDir = destinationDir;
         }
     }
 }

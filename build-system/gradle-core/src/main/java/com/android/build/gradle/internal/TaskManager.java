@@ -2631,7 +2631,7 @@ public abstract class TaskManager {
                 .consumeStreams(
                         ImmutableSet.of(Scope.PROJECT),
                         ImmutableSet.of(DefaultContentType.CLASSES));
-        taskFactory.eagerCreate(new JacocoTask.CreationAction(variantScope));
+        taskFactory.lazyCreate(new JacocoTask.CreationAction(variantScope));
 
         variantScope
                 .getTransformManager()
@@ -2661,7 +2661,7 @@ public abstract class TaskManager {
                 return;
             }
         }
-        taskFactory.eagerCreate(
+        taskFactory.lazyCreate(
                 new DataBindingMergeDependencyArtifactsTask.CreationAction(variantScope));
     }
 
@@ -2911,12 +2911,9 @@ public abstract class TaskManager {
 
         if (splitsArePossible) {
 
-            CopyOutputs copyOutputsTask =
-                    taskFactory.eagerCreate(
+            TaskProvider<CopyOutputs> copyOutputsTask =
+                    taskFactory.lazyCreate(
                             new CopyOutputs.CreationAction(variantScope, finalApkLocation));
-            variantScope.getArtifacts().appendArtifact(InternalArtifactType.APK,
-                    ImmutableList.of(finalApkLocation),
-                    copyOutputsTask);
             TaskFactoryUtils.dependsOn(taskContainer.getAssembleTask(), copyOutputsTask);
         }
 

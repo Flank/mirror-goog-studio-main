@@ -21,7 +21,7 @@ import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.builder.dexing.DexerTool;
 import java.io.File;
 import java.io.IOException;
@@ -33,6 +33,7 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
 import org.gradle.workers.WorkerExecutor;
+import org.jetbrains.annotations.NotNull;
 
 @CacheableTask
 public class JacocoTask extends AndroidVariantTask {
@@ -77,9 +78,10 @@ public class JacocoTask extends AndroidVariantTask {
         delegate.run(executor, inputs);
     }
 
-    public static class CreationAction extends EagerTaskCreationAction<JacocoTask> {
+    public static class CreationAction extends LazyTaskCreationAction<JacocoTask> {
 
         @NonNull private final VariantScope scope;
+        private File output;
 
         public CreationAction(@NonNull VariantScope scope) {
             this.scope = scope;
@@ -98,16 +100,24 @@ public class JacocoTask extends AndroidVariantTask {
         }
 
         @Override
-        public void execute(@NonNull JacocoTask task) {
+        public void preConfigure(@NotNull String taskName) {
+            super.preConfigure(taskName);
+            output =
+                    scope.getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES,
+                                    taskName,
+                                    "out");
+        }
+
+        @Override
+        public void configure(@NonNull JacocoTask task) {
             task.inputClasses =
                     scope.getArtifacts().getFinalArtifactFiles(AnchorOutputType.ALL_CLASSES);
             task.jacocoAntTaskConfiguration =
                     JacocoConfigurations.getJacocoAntTaskConfiguration(
                             scope.getGlobalScope().getProject(), getJacocoVersion(scope));
-            task.output =
-                    scope.getArtifacts()
-                            .appendArtifact(
-                                    InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES, task, "out");
+            task.output = output;
             task.delegate =
                     new JacocoTaskDelegate(
                             task.jacocoAntTaskConfiguration, task.output, task.inputClasses);

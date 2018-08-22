@@ -82,7 +82,7 @@ public class InstantAppTaskManager extends TaskManager {
     public void createTasksBeforeEvaluate() {
         super.createTasksBeforeEvaluate();
 
-        taskFactory.eagerCreate(new InstantAppProvisionTask.CreationAction(globalScope));
+        taskFactory.lazyCreate(new InstantAppProvisionTask.CreationAction(globalScope));
     }
 
     @NonNull

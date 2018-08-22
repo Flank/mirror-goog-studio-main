@@ -189,7 +189,7 @@ public class ApplicationTaskManager extends TaskManager {
         } else {
             // Non-base feature specific task.
             // Task will produce artifacts consumed by the base feature
-            taskFactory.eagerCreate(
+            taskFactory.lazyCreate(
                     new FeatureSplitDeclarationWriterTask.CreationAction(variantScope));
             if (extension.getDataBinding().isEnabled()) {
                 // Create a task that will package necessary information about the feature into a

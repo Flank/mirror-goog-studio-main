@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.builder.sdk.SdkInfo;
 import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.api.DeviceException;
@@ -77,7 +77,7 @@ public class InstantAppProvisionTask extends DefaultTask {
         return instantAppSdk.get();
     }
 
-    public static class CreationAction extends EagerTaskCreationAction<InstantAppProvisionTask> {
+    public static class CreationAction extends LazyTaskCreationAction<InstantAppProvisionTask> {
 
         @NonNull private final GlobalScope globalScope;
 
@@ -98,7 +98,7 @@ public class InstantAppProvisionTask extends DefaultTask {
         }
 
         @Override
-        public void execute(@NonNull InstantAppProvisionTask task) {
+        public void configure(@NonNull InstantAppProvisionTask task) {
             task.setDescription("Provision all connected devices for Instant App.");
 
             task.adbExe =
