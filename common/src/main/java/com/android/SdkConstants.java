@@ -1228,6 +1228,8 @@ public final class SdkConstants {
     public static final String CONSTRAINT_REFERENCED_IDS = "constraint_referenced_ids";
 
     // Tags: Drawables
+    public static final String TAG_PATH = "path";
+    public static final String TAG_GRADIENT = "gradient";
     public static final String TAG_BITMAP = "bitmap"; //$NON-NLS-1$
     public static final String TAG_VECTOR = "vector"; //$NON-NLS-1$
     public static final String TAG_ANIMATED_VECTOR = "animated-vector"; //$NON-NLS-1$
@@ -1389,6 +1391,23 @@ public final class SdkConstants {
     public static final String ATTR_WIDTH = "width"; //$NON-NLS-1$
     public static final String ATTR_HEIGHT = "height"; //$NON-NLS-1$
     public static final String ATTR_NAV_GRAPH = "navGraph";
+
+    // Attributes: Drawable
+    public static final String ATTR_VIEWPORT_HEIGHT = "viewportHeight";
+    public static final String ATTR_VIEWPORT_WIDTH = "viewportWidth";
+    public static final String ATTR_PATH_DATA = "pathData";
+    public static final String ATTR_FILL_COLOR = "fillColor";
+
+    // Attributes: Gradients
+    public static final String ATTR_END_X = "endX";
+    public static final String ATTR_END_Y = "endY";
+    public static final String ATTR_START_X = "startX";
+    public static final String ATTR_START_Y = "startY";
+    public static final String ATTR_CENTER_X = "centerX";
+    public static final String ATTR_CENTER_Y = "centerY";
+    public static final String ATTR_GRADIENT_RADIUS = "gradientRadius";
+    public static final String ATTR_STOP_COLOR = "color";
+    public static final String ATTR_STOP_OFFSET = "offset";
 
     // Attributes: Navigation
     public static final String ATTR_GRAPH = "graph";
