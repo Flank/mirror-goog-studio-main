@@ -201,7 +201,7 @@ single_gradle_integration_test(
 
 single_gradle_integration_test(
     name = "NativeModelTest",
-    data = DATA,
+    data = DATA + CMAKE,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
