@@ -61,7 +61,7 @@ class AddJavascriptInterfaceDetector : Detector(), SourceCodeScanner {
 
     override fun getApplicableMethodNames(): List<String>? = listOf(ADD_JAVASCRIPT_INTERFACE)
 
-    override fun visitMethod(
+    override fun visitMethodCall(
         context: JavaContext,
         node: UCallExpression,
         method: PsiMethod

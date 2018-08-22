@@ -334,7 +334,7 @@ public class InstantAppDetector extends ResourceXmlDetector implements SourceCod
     }
 
     @Override
-    public void visitMethod(
+    public void visitMethodCall(
             @NonNull JavaContext context,
             @NonNull UCallExpression call,
             @NonNull PsiMethod method) {

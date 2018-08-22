@@ -39,7 +39,7 @@ import org.jetbrains.uast.UReferenceExpression
  * <ul>
  * <li> Checking calls to a given method. For this see
  * {@link #getApplicableMethodNames()} and
- * {@link #visitMethod(JavaContext, UCallExpression, PsiMethod)}</li>
+ * {@link #visitMethodCall(JavaContext, UCallExpression, PsiMethod)}</li>
  * <li> Instantiating a given class. For this, see
  * {@link #getApplicableConstructorTypes()} and
  * {@link #visitConstructor(JavaContext, UCallExpression, PsiMethod)}</li>
@@ -87,8 +87,8 @@ import org.jetbrains.uast.UReferenceExpression
  * <p>
  * However, the visitor methods have all changed, generally to change
  * to UAST types. For example, the signature
- * {@link JavaPsiScanner#visitMethod(JavaContext, JavaElementVisitor, PsiMethodCallExpression, PsiMethod)}
- * should be changed to {@link SourceCodeScanner#visitMethod(JavaContext, UCallExpression, PsiMethod)}.
+ * {@link JavaPsiScanner#visitMethodCall(JavaContext, JavaElementVisitor, PsiMethodCallExpression, PsiMethod)}
+ * should be changed to {@link SourceCodeScanner#visitMethodCall(JavaContext, UCallExpression, PsiMethod)}.
  * <p>
  * Similarly, replace {@link JavaPsiScanner#createPsiVisitor} with {@link SourceCodeScanner#createUastHandler},
  * {@link JavaPsiScanner#getApplicablePsiTypes()} with {@link SourceCodeScanner#getApplicableUastTypes()}, etc.
@@ -286,8 +286,7 @@ interface SourceCodeScanner : FileScanner {
      * Return the list of method names this detector is interested in, or
      * null. If this method returns non-null, then any AST nodes that match
      * a method call in the list will be passed to the
-     * [.visitMethod]
-     * method for processing. The visitor created by
+     * [.visitMethodCall] method for processing. The visitor created by
      * [.createPsiVisitor] is also passed to that
      * method, although it can be null.
      *
@@ -315,8 +314,29 @@ interface SourceCodeScanner : FileScanner {
      * @param context the context of the lint request
      * @param node the [PsiMethodCallExpression] node for the invoked method
      * @param method the [PsiMethod] being called
+     * @deprecated This is really visiting calls, not methods, so has been renamed to
+     *    {@link #visitMethodCall} instead
      */
+    @Deprecated("Rename to visitMethodCall instead when targeting 3.3+")
     fun visitMethod(
+        context: JavaContext,
+        node: UCallExpression,
+        method: PsiMethod
+    )
+
+    /**
+     * Method invoked for any method calls found that matches any names
+     * returned by [.getApplicableMethodNames]. This also passes
+     * back the visitor that was created by
+     * [.createJavaVisitor], but a visitor is not
+     * required. It is intended for detectors that need to do additional AST
+     * processing, but also want the convenience of not having to look for
+     * method names on their own.
+     * @param context the context of the lint request
+     * @param node the [PsiMethodCallExpression] node for the invoked method
+     * @param method the [PsiMethod] being called
+     */
+    fun visitMethodCall(
         context: JavaContext,
         node: UCallExpression,
         method: PsiMethod
@@ -523,6 +543,60 @@ interface SourceCodeScanner : FileScanner {
      * [.applicableAnnotations])
      * @param allClassAnnotations all annotations in the target surrounding class
      * @param allPackageAnnotations all annotations in the target surrounding package
+     * @deprecated This method is missing the resolved parameter; use the other method instead
+     */
+    @Deprecated("There is a new version of this method which also takes a resolved " +
+            "parameter; use that one instead")
+    fun visitAnnotationUsage(
+        context: JavaContext,
+        usage: UElement,
+        type: AnnotationUsageType,
+        annotation: UAnnotation,
+        qualifiedName: String,
+        method: PsiMethod?,
+        annotations: List<UAnnotation>,
+        allMemberAnnotations: List<UAnnotation>,
+        allClassAnnotations: List<UAnnotation>,
+        allPackageAnnotations: List<UAnnotation>
+    )
+
+    @Suppress("DEPRECATION") // Delegating to deprecated API
+    /**
+     * Called whenever the given element references an element that has been annotated with one
+     * of the annotations returned from [.applicableAnnotations].
+     *
+     * The element itself may not be annotated; it can also be a member in a class which has
+     * been annotated, or a package which has been annotated.
+     *
+     * The call is handed the annotations found at each level (member, class, package) so that
+     * it can decide how to handle them.
+     *
+     * @param context the lint scanning context
+     * @param usage the element to be checked
+     * @param type the type of annotation usage lint has found
+     * @param annotation the annotation this detector is interested in
+     * @param qualifiedName the annotation's qualified name
+     * @param method the method, if any
+     * @param referenced the referenced referenced element (method, field, etc), if any
+     * @param annotations the annotations to check. These are the annotations
+     * you've registered an interest in with
+     * [.applicableAnnotations], whether they were
+     * specified as a parameter annotation, method annotation,
+     * class annotation or package annotation. The various
+     * annotations available in those contexts are also supplied.
+     * This lets you not only see where an annotation was
+     * specified, but you can check the relative priorities
+     * of annotations. For example, let's say you have a
+     * `@WorkerThread` annotation on a class. If you also
+     * happen to have a `@UiThread` annotation on a member
+     * you shouldn't enforce worker thread semantics on the
+     * member.
+     * @param allMemberAnnotations all member annotations (may include other annotations
+     * than the ones you've registered an interest in with
+     * [.applicableAnnotations])
+     * @param allClassAnnotations all annotations in the target surrounding class
+     * @param allPackageAnnotations all annotations in the target surrounding package
+     * @deprecated This method is missing the referenced parameter; use the other method instead
      */
     fun visitAnnotationUsage(
         context: JavaContext,
@@ -531,6 +605,7 @@ interface SourceCodeScanner : FileScanner {
         annotation: UAnnotation,
         qualifiedName: String,
         method: PsiMethod?,
+        referenced: PsiElement?,
         annotations: List<UAnnotation>,
         allMemberAnnotations: List<UAnnotation>,
         allClassAnnotations: List<UAnnotation>,

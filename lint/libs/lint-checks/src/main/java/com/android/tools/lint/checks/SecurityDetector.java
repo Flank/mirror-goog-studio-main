@@ -430,7 +430,7 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
     }
 
     @Override
-    public void visitMethod(
+    public void visitMethodCall(
             @NonNull JavaContext context,
             @NonNull UCallExpression node,
             @NonNull PsiMethod method) {

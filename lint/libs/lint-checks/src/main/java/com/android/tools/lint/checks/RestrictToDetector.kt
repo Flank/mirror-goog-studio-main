@@ -33,7 +33,9 @@ import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils
 import com.android.tools.lint.detector.api.UastLintUtils.containsAnnotation
 import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiField
+import com.intellij.psi.PsiMember
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UAnnotation
@@ -64,20 +66,20 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         annotation: UAnnotation,
         qualifiedName: String,
         method: PsiMethod?,
+        referenced: PsiElement?,
         annotations: List<UAnnotation>,
         allMemberAnnotations: List<UAnnotation>,
         allClassAnnotations: List<UAnnotation>,
         allPackageAnnotations: List<UAnnotation>
     ) {
 
+        val member = method ?: referenced as? PsiMember
         when (qualifiedName) {
             RESTRICT_TO_ANNOTATION.oldName(), RESTRICT_TO_ANNOTATION.newName() -> {
-                if (method != null) {
-                    checkRestrictTo(
-                            context, usage, method, annotation, allMemberAnnotations,
-                            allClassAnnotations, true
-                    )
-                }
+                checkRestrictTo(
+                        context, usage, member, annotation, allMemberAnnotations,
+                        allClassAnnotations, true
+                )
             }
             GMS_HIDE_ANNOTATION -> {
                 val isConstructor = method == null || method.isConstructor
@@ -89,11 +91,11 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             }
             VISIBLE_FOR_TESTING_ANNOTATION.oldName(), VISIBLE_FOR_TESTING_ANNOTATION.newName(),
             GUAVA_VISIBLE_FOR_TESTING -> {
-                if (method != null) {
+                if (member != null) {
                     checkVisibleForTesting(
                         context,
                         usage,
-                        method,
+                        member,
                         annotation,
                         allMemberAnnotations,
                         allClassAnnotations
@@ -159,7 +161,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     private fun checkVisibleForTesting(
         context: JavaContext,
         node: UElement,
-        method: PsiMethod,
+        method: PsiMember,
         annotation: UAnnotation,
         allMethodAnnotations: List<UAnnotation>,
         allClassAnnotations: List<UAnnotation>
@@ -257,7 +259,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     private fun checkRestrictTo(
         context: JavaContext,
         node: UElement,
-        method: PsiMethod?,
+        method: PsiMember?,
         annotation: UAnnotation,
         allMethodAnnotations: List<UAnnotation>,
         allClassAnnotations: List<UAnnotation>,
@@ -275,7 +277,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     private fun checkRestrictTo(
         context: JavaContext,
         node: UElement,
-        method: PsiMethod?,
+        member: PsiMember?,
         annotation: UAnnotation,
         allMethodAnnotations: List<UAnnotation>,
         allClassAnnotations: List<UAnnotation>,
@@ -283,12 +285,10 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         applyClassAnnotationsToMembers: Boolean = true
     ) {
 
-        val containingClass = if (method != null) {
-            method.containingClass
-        } else if (node is UCallExpression) {
-            node.classReference?.resolve() as PsiClass
-        } else {
-            null
+        val containingClass = when {
+            member != null -> member.containingClass
+            node is UCallExpression -> node.classReference?.resolve() as PsiClass
+            else -> null
         }
 
         containingClass ?: return
@@ -299,7 +299,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             // For example, NavigationView (a public, exposed class) extends ScrimInsetsFrameLayout, which
             // is a restricted class. We don't want to make all uses of NavigationView to suddenly be
             // treated as Restricted just because it inherits code from a restricted API.
-            if (method != null && context.evaluator.isInherited(annotation, method)) {
+            if (member != null && context.evaluator.isInherited(annotation, member)) {
                 return
             }
         } else if (applyClassAnnotationsToMembers) {
@@ -321,11 +321,11 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             return
         }
 
-        if (scope and RESTRICT_TO_LIBRARY_GROUP != 0 && method != null) {
+        if (scope and RESTRICT_TO_LIBRARY_GROUP != 0 && member != null) {
             // TODO: Consult Project.getMavenCoordinates
             val evaluator = context.evaluator
             val thisCoordinates = evaluator.getLibrary(node)
-            val methodCoordinates = evaluator.getLibrary(method)
+            val methodCoordinates = evaluator.getLibrary(member)
             val thisGroup = thisCoordinates?.groupId
             val methodGroup = methodCoordinates?.groupId
             if (thisGroup != methodGroup && methodGroup != null) {
@@ -334,17 +334,17 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     methodGroup
                 )
                 reportRestriction(
-                    where, containingClass, method, context,
+                    where, containingClass, member, context,
                     node, isClassAnnotation
                 )
             }
         }
 
-        if (scope and RESTRICT_TO_LIBRARY != 0 && method != null) {
+        if (scope and RESTRICT_TO_LIBRARY != 0 && member != null) {
             // TODO: Consult Project.getMavenCoordinates
             val evaluator = context.evaluator
             val thisCoordinates = evaluator.getLibrary(node)
-            val methodCoordinates = evaluator.getLibrary(method)
+            val methodCoordinates = evaluator.getLibrary(member)
             val thisGroup = thisCoordinates?.groupId
             val methodGroup = methodCoordinates?.groupId
             if (thisGroup != methodGroup && methodGroup != null) {
@@ -357,7 +357,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                         methodArtifact
                     )
                     reportRestriction(
-                        where, containingClass, method, context,
+                        where, containingClass, member, context,
                         node, isClassAnnotation
                     )
                 }
@@ -367,7 +367,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         if (scope and RESTRICT_TO_TESTS != 0) {
             if (!isTestContext(context, node)) {
                 reportRestriction(
-                    "from tests", containingClass, method, context,
+                    "from tests", containingClass, member, context,
                     node, isClassAnnotation
                 )
             }
@@ -376,7 +376,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         if (scope and RESTRICT_TO_ALL != 0) {
             if (!isGmsContext(context, node)) {
                 reportRestriction(
-                    null, containingClass, method, context,
+                    null, containingClass, member, context,
                     node, isClassAnnotation
                 )
             }
@@ -409,7 +409,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
                 if (!isSubClass) {
                     reportRestriction(
-                        "from subclasses", containingClass, method,
+                        "from subclasses", containingClass, member,
                         context, node, isClassAnnotation
                     )
                 }
@@ -420,16 +420,16 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     private fun reportRestriction(
         where: String?,
         containingClass: PsiClass,
-        method: PsiMethod?,
+        member: PsiMember?,
         context: JavaContext,
         node: UElement,
         isClassAnnotation: Boolean
     ) {
         var api: String
-        api = if (method == null || method.isConstructor) {
-            method?.name ?: containingClass.name + " constructor"
+        api = if (member == null || member is PsiMethod && member.isConstructor) {
+            member?.name ?: containingClass.name + " constructor"
         } else {
-            containingClass.name + "." + method.name
+            containingClass.name + "." + member.name
         }
 
         var locationNode = node
@@ -456,7 +456,8 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         if (where == null) {
             message = "$api is marked as internal and should not be accessed from apps"
         } else {
-            message = "$api can only be called $where"
+            val refType = if (member is PsiMethod) "called" else "accessed"
+            message = "$api can only be $refType $where"
 
             // Most users will encounter this for the support library; let's have a clearer error message
             // for that specific scenario

@@ -41,7 +41,7 @@ class SecureRandomDetector : Detector(), SourceCodeScanner {
         return listOf(SET_SEED)
     }
 
-    override fun visitMethod(
+    override fun visitMethodCall(
         context: JavaContext,
         node: UCallExpression,
         method: PsiMethod

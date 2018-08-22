@@ -91,7 +91,7 @@ public class ClickableViewAccessibilityDetector extends Detector implements Sour
     }
 
     @Override
-    public void visitMethod(
+    public void visitMethodCall(
             @NonNull JavaContext context,
             @NonNull UCallExpression node,
             @NonNull PsiMethod method) {

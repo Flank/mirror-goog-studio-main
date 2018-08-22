@@ -719,6 +719,32 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
         ).issues(PLATFORM_NULLNESS).run().expectClean()
     }
 
+    fun testInitializedConstants() {
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "NonConstantFieldWithUpperCaseName"})
+                public class NullnessTest {
+                    public static final String MY_CONSTANT1 = "constant"; // Not nullable
+                    public final String MY_CONSTANT2 = "constant"; // Not nullable
+                    public String MY_CONSTANT3 = "constant"; // Unknown
+                }
+            """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).issues(PLATFORM_NULLNESS).run().expect(
+            """
+            src/test/pkg/NullnessTest.java:7: Warning: Unknown nullability; explicitly declare as @Nullable or @NonNull to improve Kotlin interoperability; see https://android.github.io/kotlin-guides/interop.html#nullability-annotations [UnknownNullness]
+                public String MY_CONSTANT3 = "constant"; // Unknown
+                       ~~~~~~
+            0 errors, 1 warnings
+            """
+        )
+    }
+
     fun testIncorrectNullnessAnnotations() {
         lint().files(
             java(

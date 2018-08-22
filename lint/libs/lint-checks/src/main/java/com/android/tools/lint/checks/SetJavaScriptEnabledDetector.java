@@ -54,7 +54,7 @@ public class SetJavaScriptEnabledDetector extends Detector implements SourceCode
     // ---- implements SourceCodeScanner ----
 
     @Override
-    public void visitMethod(
+    public void visitMethodCall(
             @NonNull JavaContext context,
             @NonNull UCallExpression call,
             @NonNull PsiMethod method) {

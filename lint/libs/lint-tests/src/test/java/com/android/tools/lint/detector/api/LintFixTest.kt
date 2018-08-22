@@ -160,7 +160,7 @@ class LintFixTest : TestCase() {
             return listOf("d")
         }
 
-        override fun visitMethod(
+        override fun visitMethodCall(
             context: JavaContext,
             node: UCallExpression,
             method: PsiMethod

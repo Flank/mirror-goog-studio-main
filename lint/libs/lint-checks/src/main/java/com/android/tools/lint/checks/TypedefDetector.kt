@@ -92,6 +92,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         annotation: UAnnotation,
         qualifiedName: String,
         method: PsiMethod?,
+        referenced: PsiElement?,
         annotations: List<UAnnotation>,
         allMemberAnnotations: List<UAnnotation>,
         allClassAnnotations: List<UAnnotation>,

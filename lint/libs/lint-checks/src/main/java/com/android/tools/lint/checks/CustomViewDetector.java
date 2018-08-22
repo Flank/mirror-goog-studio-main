@@ -75,7 +75,7 @@ public class CustomViewDetector extends Detector implements SourceCodeScanner {
     }
 
     @Override
-    public void visitMethod(
+    public void visitMethodCall(
             @NonNull JavaContext context,
             @NonNull UCallExpression node,
             @NonNull PsiMethod method) {

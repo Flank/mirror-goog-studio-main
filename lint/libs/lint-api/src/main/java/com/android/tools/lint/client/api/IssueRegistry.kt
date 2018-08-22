@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.client.api
 
+import com.android.tools.lint.detector.api.CURRENT_API
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
@@ -34,7 +35,6 @@ import java.util.HashSet
 /**
  * Registry which provides a list of checks to be performed on an Android project
  *
- *
  * **NOTE: This is not a public or final API; if you rely on this be prepared
  * to adjust your code for the next tools release.**
  */
@@ -47,7 +47,7 @@ protected constructor() {
 
     /**
      * The Lint API version this issue registry's checks were compiled.
-     * You should return
+     * You should return [CURRENT_API].
      */
     open val api: Int = -1
 

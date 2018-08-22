@@ -504,7 +504,7 @@ public class LocaleFolderDetector extends Detector
     }
 
     @Override
-    public void visitMethod(
+    public void visitMethodCall(
             @NonNull JavaContext context,
             @NonNull UCallExpression call,
             @NonNull PsiMethod method) {

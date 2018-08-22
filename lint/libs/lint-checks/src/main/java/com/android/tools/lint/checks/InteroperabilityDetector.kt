@@ -477,6 +477,10 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             if (type is PsiPrimitiveType) {
                 return
             }
+            if (node is UField &&
+                node.modifierList?.hasModifierProperty(PsiModifier.FINAL) == true) {
+                return
+            }
             for (annotation in node.annotations) {
                 val name = annotation.qualifiedName ?: continue
 

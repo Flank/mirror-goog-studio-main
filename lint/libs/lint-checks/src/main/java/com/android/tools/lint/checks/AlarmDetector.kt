@@ -60,7 +60,7 @@ class AlarmDetector : Detector(), SourceCodeScanner {
 
     override fun getApplicableMethodNames(): List<String>? = listOf("setRepeating")
 
-    override fun visitMethod(
+    override fun visitMethodCall(
         context: JavaContext,
         node: UCallExpression,
         method: PsiMethod

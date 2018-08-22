@@ -24,40 +24,52 @@ import java.io.File
 class RestrictToDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector = RestrictToDetector()
 
-    // sample code with warnings
     fun testRestrictToSubClass() {
-        val expected =
-            "src/test/pkg/RestrictToSubclassTest.java:20: Error: Class1.onSomething can only be called from subclasses [RestrictedApi]\n" +
-                    "            cls.onSomething(); // ERROR: Not from subclass\n" +
-                    "                ~~~~~~~~~~~\n" +
-                    "1 errors, 0 warnings\n"
+        val expected = """
+            src/test/pkg/RestrictToSubclassTest.java:26: Error: Class1.onSomething can only be called from subclasses [RestrictedApi]
+                        cls.onSomething();         // ERROR: Not from subclass
+                            ~~~~~~~~~~~
+            src/test/pkg/RestrictToSubclassTest.java:27: Error: Class1.counter can only be accessed from subclasses [RestrictedApi]
+                        int counter = cls.counter; // ERROR: Not from subclass
+                                          ~~~~~~~
+            2 errors, 0 warnings
+            """
+
         lint().files(
             java(
-                "" +
-                        "package test.pkg;\n" +
-                        "\n" +
-                        "import android.support.annotation.RestrictTo;\n" +
-                        "\n" +
-                        "public class RestrictToSubclassTest {\n" +
-                        "    public static class Class1 {\n" +
-                        "        @RestrictTo(RestrictTo.Scope.SUBCLASSES)\n" +
-                        "        public void onSomething() {\n" +
-                        "        }\n" +
-                        "    }\n" +
-                        "\n" +
-                        "    public static class SubClass extends Class1 {\n" +
-                        "        public void test1() {\n" +
-                        "            onSomething(); // OK: Call from subclass\n" +
-                        "        }\n" +
-                        "    }\n" +
-                        "\n" +
-                        "    public static class NotSubClass {\n" +
-                        "        public void test2(Class1 cls) {\n" +
-                        "            cls.onSomething(); // ERROR: Not from subclass\n" +
-                        "        }\n" +
-                        "    }\n" +
-                        "}\n"
-            ),
+                """
+                    package test.pkg;
+
+                    import android.support.annotation.RestrictTo;
+
+                    @SuppressWarnings("ClassNameDiffersFromFileName")
+                    public class RestrictToSubclassTest {
+                        public static class Class1 {
+                            @RestrictTo(RestrictTo.Scope.SUBCLASSES)
+                            public void onSomething() {
+                            }
+
+                            @RestrictTo(RestrictTo.Scope.SUBCLASSES)
+                            public int counter;
+                        }
+
+                        public static class SubClass extends Class1 {
+                            public void test1() {
+                                onSomething(); // OK: Call from subclass
+                                int counter = cls.counter; // OK: Reference from subclass
+                            }
+                        }
+
+                        @SuppressWarnings("MethodMayBeStatic")
+                        public static class NotSubClass {
+                            public void test2(Class1 cls) {
+                                cls.onSomething();         // ERROR: Not from subclass
+                                int counter = cls.counter; // ERROR: Not from subclass
+                            }
+                        }
+                    }
+                    """
+            ).indented(),
             SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
@@ -66,22 +78,23 @@ class RestrictToDetectorTest : AbstractCheckTest() {
     fun testRestrictToGroupId() {
         val project = LintDetectorTest.project().files(
             java(
-                "" +
-                        "package test.pkg;\n" +
-                        "\n" +
-                        "import library.pkg.internal.InternalClass;\n" +
-                        "import library.pkg.Library;\n" +
-                        "import library.pkg.PrivateClass;\n" +
-                        "\n" +
-                        "public class TestLibrary {\n" +
-                        "    public void test() {\n" +
-                        "        Library.method(); // OK\n" +
-                        "        Library.privateMethod(); // ERROR\n" +
-                        "        PrivateClass.method(); // ERROR\n" +
-                        "        InternalClass.method(); // ERROR\n" +
-                        "    }\n" +
-                        "}\n"
-            ),
+                """
+                package test.pkg;
+                import library.pkg.internal.InternalClass;
+                import library.pkg.Library;
+                import library.pkg.PrivateClass;
+
+                @SuppressWarnings("ClassNameDiffersFromFileName")
+                public class TestLibrary {
+                    public void test() {
+                        Library.method(); // OK
+                        Library.privateMethod(); // ERROR
+                        PrivateClass.method(); // ERROR
+                        InternalClass.method(); // ERROR
+                    }
+                }
+                """
+            ).indented(),
 
             base64gzip(
                 "libs/exploded-aar/my.group.id/mylib/25.0.0-SNAPSHOT/jars/classes.jar",
@@ -102,68 +115,73 @@ class RestrictToDetectorTest : AbstractCheckTest() {
             )
         )
         lint().projects(project).run().expect(
-            "" +
-                    "src/main/java/test/pkg/TestLibrary.java:10: Error: Library.privateMethod can only be called from within the same library group (groupId=my.group.id) [RestrictedApi]\n" +
-                    "        Library.privateMethod(); // ERROR\n" +
-                    "                ~~~~~~~~~~~~~\n" +
-                    "src/main/java/test/pkg/TestLibrary.java:11: Error: PrivateClass can only be called from within the same library group (groupId=my.group.id) [RestrictedApi]\n" +
-                    "        PrivateClass.method(); // ERROR\n" +
-                    "        ~~~~~~~~~~~~\n" +
-                    "src/main/java/test/pkg/TestLibrary.java:12: Error: InternalClass.method can only be called from within the same library group (groupId=my.group.id) [RestrictedApi]\n" +
-                    "        InternalClass.method(); // ERROR\n" +
-                    "                      ~~~~~~\n" +
-                    "3 errors, 0 warnings\n"
+            """
+            src/main/java/test/pkg/TestLibrary.java:10: Error: Library.privateMethod can only be called from within the same library group (groupId=my.group.id) [RestrictedApi]
+                    Library.privateMethod(); // ERROR
+                            ~~~~~~~~~~~~~
+            src/main/java/test/pkg/TestLibrary.java:11: Error: PrivateClass can only be called from within the same library group (groupId=my.group.id) [RestrictedApi]
+                    PrivateClass.method(); // ERROR
+                    ~~~~~~~~~~~~
+            src/main/java/test/pkg/TestLibrary.java:12: Error: InternalClass.method can only be called from within the same library group (groupId=my.group.id) [RestrictedApi]
+                    InternalClass.method(); // ERROR
+                                  ~~~~~~
+            3 errors, 0 warnings
+            """
         )
     }
 
     // sample code with warnings
     fun testRestrictToTests() {
         val expected =
-            "src/test/pkg/ProductionCode.java:9: Error: ProductionCode.testHelper2 can only be called from tests [RestrictedApi]\n" +
-                    "        testHelper2(); // ERROR\n" +
-                    "        ~~~~~~~~~~~\n" +
-                    "1 errors, 0 warnings\n"
+            """
+            src/test/pkg/ProductionCode.java:9: Error: ProductionCode.testHelper2 can only be called from tests [RestrictedApi]
+                    testHelper2(); // ERROR
+                    ~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
         lint().files(
             java(
-                "" +
-                        "package test.pkg;\n" +
-                        "\n" +
-                        "import android.support.annotation.RestrictTo;\n" +
-                        "import android.support.annotation.VisibleForTesting;\n" +
-                        "\n" +
-                        "public class ProductionCode {\n" +
-                        "    public void code() {\n" +
-                        "        testHelper1(); // ERROR? (We currently don't flag @VisibleForTesting; it deals with *visibility*)\n" +
-                        "        testHelper2(); // ERROR\n" +
-                        "    }\n" +
-                        "\n" +
-                        "    @VisibleForTesting\n" +
-                        "    public void testHelper1() {\n" +
-                        "        testHelper1(); // OK\n" +
-                        "        code(); // OK\n" +
-                        "    }\n" +
-                        "\n" +
-                        "    @RestrictTo(RestrictTo.Scope.TESTS)\n" +
-                        "    public void testHelper2() {\n" +
-                        "        testHelper1(); // OK\n" +
-                        "        code(); // OK\n" +
-                        "    }\n" +
-                        "}\n"
-            ),
+                """
+                package test.pkg;
+                import android.support.annotation.RestrictTo;
+                import android.support.annotation.VisibleForTesting;
+
+                @SuppressWarnings({"InfiniteRecursion", "ClassNameDiffersFromFileName"})
+                public class ProductionCode {
+                    public void code() {
+                        testHelper1(); // ERROR? (We currently don't flag @VisibleForTesting; it deals with *visibility*)
+                        testHelper2(); // ERROR
+                    }
+
+                    @VisibleForTesting
+                    public void testHelper1() {
+                        testHelper1(); // OK
+                        code(); // OK
+                    }
+
+                    @RestrictTo(RestrictTo.Scope.TESTS)
+                    public void testHelper2() {
+                        testHelper1(); // OK
+                        code(); // OK
+                    }
+                }
+                """
+            ).indented(),
             // test/ prefix makes it a test folder entry:
             java(
-                "test/test/pkg/UnitTest.java", "" +
-                        "package test.pkg;\n" +
-                        "\n" +
-                        "public class UnitTest {\n" +
-                        "    public void test() {\n" +
-                        "        new ProductionCode().code(); // OK\n" +
-                        "        new ProductionCode().testHelper1(); // OK\n" +
-                        "        new ProductionCode().testHelper2(); // OK\n" +
-                        "        \n" +
-                        "    }\n" +
-                        "}\n"
-            ),
+                "test/test/pkg/UnitTest.java", """
+                package test.pkg;
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class UnitTest {
+                    public void test() {
+                        new ProductionCode().code(); // OK
+                        new ProductionCode().testHelper1(); // OK
+                        new ProductionCode().testHelper2(); // OK
+
+                    }
+                }
+                """
+            ).indented(),
             SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
@@ -171,89 +189,94 @@ class RestrictToDetectorTest : AbstractCheckTest() {
 
     fun testVisibleForTesting() {
         val expected =
-            "src/test/otherpkg/OtherPkg.java:11: Error: ProductionCode.testHelper6 can only be called from tests [RestrictedApi]\n" +
-                    "        new ProductionCode().testHelper6(); // ERROR\n" +
-                    "                             ~~~~~~~~~~~\n" +
-                    "src/test/pkg/ProductionCode.java:27: Error: ProductionCode.testHelper6 can only be called from tests [RestrictedApi]\n" +
-                    "            testHelper6(); // ERROR: should only be called from tests\n" +
-                    "            ~~~~~~~~~~~\n" +
-                    "src/test/otherpkg/OtherPkg.java:8: Warning: This method should only be accessed from tests or within protected scope [VisibleForTests]\n" +
-                    "        new ProductionCode().testHelper3(); // ERROR\n" +
-                    "                             ~~~~~~~~~~~\n" +
-                    "src/test/otherpkg/OtherPkg.java:9: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]\n" +
-                    "        new ProductionCode().testHelper4(); // ERROR\n" +
-                    "                             ~~~~~~~~~~~\n" +
-                    "src/test/otherpkg/OtherPkg.java:10: Warning: This method should only be accessed from tests or within package private scope [VisibleForTests]\n" +
-                    "        new ProductionCode().testHelper5(); // ERROR\n" +
-                    "                             ~~~~~~~~~~~\n" +
-                    "2 errors, 3 warnings\n"
+            """
+            src/test/otherpkg/OtherPkg.java:11: Error: ProductionCode.testHelper6 can only be called from tests [RestrictedApi]
+                    new ProductionCode().testHelper6(); // ERROR
+                                         ~~~~~~~~~~~
+            src/test/pkg/ProductionCode.java:27: Error: ProductionCode.testHelper6 can only be called from tests [RestrictedApi]
+                        testHelper6(); // ERROR: should only be called from tests
+                        ~~~~~~~~~~~
+            src/test/otherpkg/OtherPkg.java:8: Warning: This method should only be accessed from tests or within protected scope [VisibleForTests]
+                    new ProductionCode().testHelper3(); // ERROR
+                                         ~~~~~~~~~~~
+            src/test/otherpkg/OtherPkg.java:9: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]
+                    new ProductionCode().testHelper4(); // ERROR
+                                         ~~~~~~~~~~~
+            src/test/otherpkg/OtherPkg.java:10: Warning: This method should only be accessed from tests or within package private scope [VisibleForTests]
+                    new ProductionCode().testHelper5(); // ERROR
+                                         ~~~~~~~~~~~
+            2 errors, 3 warnings
+            """
         lint().files(
             java(
-                "" +
-                        "package test.pkg;\n" +
-                        "\n" +
-                        "import android.support.annotation.VisibleForTesting;\n" +
-                        "\n" +
-                        "public class ProductionCode {\n" +
-                        "    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)\n" +
-                        "    public void testHelper3() {\n" +
-                        "    }\n" +
-                        "\n" +
-                        "    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)\n" +
-                        "    public void testHelper4() {\n" +
-                        "    }\n" +
-                        "\n" +
-                        "    @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)\n" +
-                        "    public void testHelper5() {\n" +
-                        "    }\n" +
-                        "\n" +
-                        "    @VisibleForTesting(otherwise = VisibleForTesting.NONE)\n" +
-                        "    public void testHelper6() {\n" +
-                        "    }\n" +
-                        "\n" +
-                        "    private class Local {\n" +
-                        "        private void localProductionCode() {\n" +
-                        "            testHelper3();\n" +
-                        "            testHelper4();\n" +
-                        "            testHelper5();\n" +
-                        "            testHelper6(); // ERROR: should only be called from tests\n" +
-                        "            \n" +
-                        "        }\n" +
-                        "    }\n" +
-                        "}\n"
-            ),
+                """
+                package test.pkg;
+                import android.support.annotation.VisibleForTesting;
+
+                @SuppressWarnings("ClassNameDiffersFromFileName")
+                public class ProductionCode {
+                    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
+                    public void testHelper3() {
+                    }
+
+                    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+                    public void testHelper4() {
+                    }
+
+                    @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
+                    public void testHelper5() {
+                    }
+
+                    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+                    public void testHelper6() {
+                    }
+
+                    private class Local {
+                        private void localProductionCode() {
+                            testHelper3();
+                            testHelper4();
+                            testHelper5();
+                            testHelper6(); // ERROR: should only be called from tests
+
+                        }
+                    }
+                }
+                """
+            ).indented(),
             java(
-                "" +
-                        "package test.otherpkg;\n" +
-                        "\n" +
-                        "import android.support.annotation.VisibleForTesting;\n" +
-                        "import test.pkg.ProductionCode;\n" +
-                        "\n" +
-                        "public class OtherPkg {\n" +
-                        "    public void test() {\n" +
-                        "        new ProductionCode().testHelper3(); // ERROR\n" +
-                        "        new ProductionCode().testHelper4(); // ERROR\n" +
-                        "        new ProductionCode().testHelper5(); // ERROR\n" +
-                        "        new ProductionCode().testHelper6(); // ERROR\n" +
-                        "        \n" +
-                        "    }\n" +
-                        "}\n"
-            ),
+                """
+                package test.otherpkg;
+                import android.support.annotation.VisibleForTesting;
+                import test.pkg.ProductionCode;
+
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class OtherPkg {
+                    public void test() {
+                        new ProductionCode().testHelper3(); // ERROR
+                        new ProductionCode().testHelper4(); // ERROR
+                        new ProductionCode().testHelper5(); // ERROR
+                        new ProductionCode().testHelper6(); // ERROR
+
+                    }
+                }
+                """
+            ).indented(),
             // test/ prefix makes it a test folder entry:
             java(
-                "test/test/pkg/UnitTest.java", "" +
-                        "package test.pkg;\n" +
-                        "\n" +
-                        "public class UnitTest {\n" +
-                        "    public void test() {\n" +
-                        "        new ProductionCode().testHelper3(); // OK\n" +
-                        "        new ProductionCode().testHelper4(); // OK\n" +
-                        "        new ProductionCode().testHelper5(); // OK\n" +
-                        "        new ProductionCode().testHelper6(); // OK\n" +
-                        "        \n" +
-                        "    }\n" +
-                        "}\n"
-            ),
+                "test/test/pkg/UnitTest.java", """
+                package test.pkg;
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class UnitTest {
+                    public void test() {
+                        new ProductionCode().testHelper3(); // OK
+                        new ProductionCode().testHelper4(); // OK
+                        new ProductionCode().testHelper5(); // OK
+                        new ProductionCode().testHelper6(); // OK
+
+                    }
+                }
+                """
+            ).indented(),
             SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
@@ -262,29 +285,31 @@ class RestrictToDetectorTest : AbstractCheckTest() {
     fun testVisibleForTestingIncrementally() {
         lint().files(
             java(
-                "" +
-                        "package test.pkg;\n" +
-                        "\n" +
-                        "import android.support.annotation.VisibleForTesting;\n" +
-                        "\n" +
-                        "public class ProductionCode {\n" +
-                        "    @VisibleForTesting\n" +
-                        "    public void testHelper() {\n" +
-                        "    }\n" +
-                        "}\n"
-            ),
+                """
+                package test.pkg;
+                import android.support.annotation.VisibleForTesting;
+
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class ProductionCode {
+                    @VisibleForTesting
+                    public void testHelper() {
+                    }
+                }
+                """
+            ).indented(),
             // test/ prefix makes it a test folder entry:
             java(
-                "test/test/pkg/UnitTest.java", "" +
-                        "package test.pkg;\n" +
-                        "\n" +
-                        "public class UnitTest {\n" +
-                        "    public void test() {\n" +
-                        "        new ProductionCode().testHelper(); // OK\n" +
-                        "        \n" +
-                        "    }\n" +
-                        "}\n"
-            ),
+                "test/test/pkg/UnitTest.java", """
+                package test.pkg;
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class UnitTest {
+                    public void test() {
+                        new ProductionCode().testHelper(); // OK
+
+                    }
+                }
+                """
+            ).indented(),
             SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
@@ -294,28 +319,28 @@ class RestrictToDetectorTest : AbstractCheckTest() {
     }
 
     fun testVisibleForTestingSameCompilationUnit() {
-
         lint().files(
             java(
-                "" +
-                        "package test.pkg;\n" +
-                        "\n" +
-                        "import android.support.annotation.VisibleForTesting;\n" +
-                        "\n" +
-                        "public class PrivTest {\n" +
-                        "    private static CredentialsProvider sCredentialsProvider = new DefaultCredentialsProvider();\n" +
-                        "\n" +
-                        "    static interface CredentialsProvider {\n" +
-                        "        void test();\n" +
-                        "    }\n" +
-                        "    @VisibleForTesting\n" +
-                        "    static class DefaultCredentialsProvider implements CredentialsProvider {\n" +
-                        "        @Override\n" +
-                        "        public void test() {\n" +
-                        "        }\n" +
-                        "    }\n" +
-                        "}\n"
-            ),
+                """
+                package test.pkg;
+                import android.support.annotation.VisibleForTesting;
+
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class PrivTest {
+                    private static CredentialsProvider sCredentialsProvider = new DefaultCredentialsProvider();
+                    @SuppressWarnings("UnnecessaryInterfaceModifier")
+                    static interface CredentialsProvider {
+                        void test();
+                    }
+                    @VisibleForTesting
+                    static class DefaultCredentialsProvider implements CredentialsProvider {
+                        @Override
+                        public void test() {
+                        }
+                    }
+                }
+                """
+            ).indented(),
             SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()

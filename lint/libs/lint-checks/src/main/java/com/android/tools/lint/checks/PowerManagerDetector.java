@@ -56,7 +56,7 @@ public class PowerManagerDetector extends Detector implements Detector.UastScann
     public PowerManagerDetector() {}
 
     @Override
-    public void visitMethod(
+    public void visitMethodCall(
             @NonNull JavaContext context,
             @NonNull UCallExpression call,
             @NonNull PsiMethod method) {

@@ -1985,7 +1985,7 @@ fun isNumberString(s: String?): Boolean {
  * (Kotlin 0 or 1 args), or if there's some kind of error.
  */
 fun computeKotlinArgumentMapping(call: UCallExpression, method: PsiMethod):
-  Map<UExpression, PsiParameter>? {
+    Map<UExpression, PsiParameter>? {
     if (method.parameterList.parametersCount <= 1) {
         // When there is at most one parameter the mapping is easy to figure out!
         return null
@@ -2019,7 +2019,7 @@ fun computeKotlinArgumentMapping(call: UCallExpression, method: PsiMethod):
                 val expression = argument.getArgumentExpression() ?: continue
                 @Suppress("USELESS_CAST")
                 val arg = elementMap[expression as PsiElement]
-                    ?: continue  // cast only needed to avoid Kotlin compiler frontend bug KT-24309.
+                    ?: continue // cast only needed to avoid Kotlin compiler frontend bug KT-24309.
                 val index = firstParameterIndex + parameterDescriptor.index
                 if (index < parameters.size) {
                     mapping[arg] = parameters[index]

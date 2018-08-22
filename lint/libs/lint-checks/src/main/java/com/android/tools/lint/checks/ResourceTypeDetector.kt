@@ -66,6 +66,7 @@ import com.android.tools.lint.detector.api.UastLintUtils
 import com.google.common.base.Joiner
 import com.google.common.collect.Sets
 import com.intellij.psi.PsiArrayType
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiType
 import com.intellij.psi.PsiVariable
@@ -158,6 +159,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         annotation: UAnnotation,
         qualifiedName: String,
         method: PsiMethod?,
+        referenced: PsiElement?,
         annotations: List<UAnnotation>,
         allMemberAnnotations: List<UAnnotation>,
         allClassAnnotations: List<UAnnotation>,
@@ -557,11 +559,6 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             ResourceTypeDetector::class.java,
             Scope.JAVA_FILE_SCOPE
         )
-
-        /**
-         * Number of non-synthethic [ResourceType]s.
-         */
-        private val allResourceTypes: Int = ResourceType.values().count { it.hasInnerClass }
 
         /**
          * Attempting pass the wrong type of resource

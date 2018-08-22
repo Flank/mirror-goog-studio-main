@@ -97,7 +97,7 @@ public class UnsafeNativeCodeDetector extends Detector implements SourceCodeScan
     }
 
     @Override
-    public void visitMethod(
+    public void visitMethodCall(
             @NonNull JavaContext context,
             @NonNull UCallExpression call,
             @NonNull PsiMethod method) {

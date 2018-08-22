@@ -23,7 +23,7 @@ class ThreadDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector = ThreadDetector()
 
     fun testThreading() {
-        val expected = ("" +
+        val expected = "" +
                 "src/test/pkg/ThreadTest.java:15: Error: Method onPreExecute must be called from the main thread, currently inferred thread is worker thread [WrongThread]\n" +
                 "                onPreExecute(); // ERROR\n" +
                 "                ~~~~~~~~~~~~~~\n" +
@@ -33,7 +33,7 @@ class ThreadDetectorTest : AbstractCheckTest() {
                 "src/test/pkg/ThreadTest.java:22: Error: Method publishProgress must be called from the worker thread, currently inferred thread is main thread [WrongThread]\n" +
                 "                publishProgress(); // ERROR\n" +
                 "                ~~~~~~~~~~~~~~~~~\n" +
-                "3 errors, 0 warnings\n")
+                "3 errors, 0 warnings\n"
 
         lint().files(
             java(
@@ -106,6 +106,37 @@ class ThreadDetectorTest : AbstractCheckTest() {
             SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
+    }
+
+    fun testFieldReferencesOk() {
+        lint().files(
+            java(
+                "src/test/pkg/ThreadTest.java", """
+                package test.pkg;
+
+                import android.support.annotation.MainThread;
+                import android.support.annotation.UiThread;
+                import android.support.annotation.WorkerThread;
+
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class ThreadTest2 {
+                    @UiThread
+                    public static class View {
+                        public int field = 42;
+                        public void paint() {
+                        }
+                    }
+
+                    @WorkerThread
+                    protected final void useView(View view) {
+                        int status = view.field; // OK
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
     }
 
     fun testConstructor() {

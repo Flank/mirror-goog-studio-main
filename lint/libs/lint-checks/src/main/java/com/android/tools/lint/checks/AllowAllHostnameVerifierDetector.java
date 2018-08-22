@@ -88,7 +88,7 @@ public class AllowAllHostnameVerifierDetector extends Detector implements Source
     }
 
     @Override
-    public void visitMethod(
+    public void visitMethodCall(
             @NonNull JavaContext context,
             @NonNull UCallExpression node,
             @NonNull PsiMethod method) {

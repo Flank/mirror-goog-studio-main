@@ -49,5 +49,8 @@ enum class AnnotationUsageType {
     BINARY,
 
     /** An annotated element is compared for equality or not equality */
-    EQUALITY;
+    EQUALITY,
+
+    /** An annotated field is referenced */
+    FIELD_REFERENCE;
 }

@@ -71,7 +71,7 @@ public class ViewTagDetector extends Detector implements SourceCodeScanner {
     }
 
     @Override
-    public void visitMethod(
+    public void visitMethodCall(
             @NonNull JavaContext context,
             @NonNull UCallExpression call,
             @NonNull PsiMethod method) {

@@ -40,7 +40,7 @@ class DeletedProviderDetector : Detector(), SourceCodeScanner {
         return listOf(GET_INSTANCE)
     }
 
-    override fun visitMethod(
+    override fun visitMethodCall(
         context: JavaContext,
         node: UCallExpression,
         method: PsiMethod

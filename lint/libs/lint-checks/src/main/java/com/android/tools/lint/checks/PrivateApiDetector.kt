@@ -75,7 +75,7 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
     override fun getApplicableMethodNames(): List<String>? =
         listOf(FOR_NAME, LOAD_CLASS, GET_DECLARED_METHOD)
 
-    override fun visitMethod(context: JavaContext, node: UCallExpression, method: PsiMethod) {
+    override fun visitMethodCall(context: JavaContext, node: UCallExpression, method: PsiMethod) {
         val evaluator = context.evaluator
         if (LOAD_CLASS == method.name) {
             if (evaluator.isMemberInClass(method, "java.lang.ClassLoader") ||

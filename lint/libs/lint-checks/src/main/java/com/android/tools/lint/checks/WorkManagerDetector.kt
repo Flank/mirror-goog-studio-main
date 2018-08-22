@@ -76,7 +76,7 @@ class WorkManagerDetector : Detector(), SourceCodeScanner {
         return listOf(METHOD_BEGIN_WITH, METHOD_BEGIN_UNIQUE_WORK, METHOD_THEN, METHOD_COMBINE)
     }
 
-    override fun visitMethod(context: JavaContext, node: UCallExpression, method: PsiMethod) {
+    override fun visitMethodCall(context: JavaContext, node: UCallExpression, method: PsiMethod) {
         if (!context.evaluator.isMemberInClass(method, CLASS_WORK_MANAGER) &&
             !context.evaluator.isMemberInClass(method, CLASS_WORK_CONTINUATION)
         ) {

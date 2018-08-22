@@ -31,6 +31,7 @@ import com.android.tools.lint.detector.api.getMethodName
 import com.android.tools.lint.detector.api.skipParentheses
 import com.intellij.openapi.util.Ref
 import com.intellij.psi.CommonClassNames.JAVA_LANG_STRING
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifier
@@ -73,6 +74,7 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
         annotation: UAnnotation,
         qualifiedName: String,
         method: PsiMethod?,
+        referenced: PsiElement?,
         annotations: List<UAnnotation>,
         allMemberAnnotations: List<UAnnotation>,
         allClassAnnotations: List<UAnnotation>,

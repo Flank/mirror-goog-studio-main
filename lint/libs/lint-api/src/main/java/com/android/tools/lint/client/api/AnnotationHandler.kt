@@ -25,6 +25,8 @@ import com.google.common.collect.Multimap
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiField
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifierListOwner
 import com.intellij.psi.search.GlobalSearchScope
@@ -63,6 +65,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
     private fun checkContextAnnotations(
         context: JavaContext,
         method: PsiMethod?,
+        referenced: PsiElement?,
         origCall: UElement,
         allMethodAnnotations: List<UAnnotation>
     ) {
@@ -97,6 +100,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                         else -> AnnotationUsageType.BINARY
                     },
                     method = method,
+                    referenced = referenced,
                     annotations = allMethodAnnotations
                 )
             }
@@ -116,6 +120,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                             argument = arguments[0],
                             type = AnnotationUsageType.EQUALITY,
                             method = method,
+                            referenced = referenced,
                             annotations = allMethodAnnotations
                         )
                     }
@@ -129,6 +134,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                 argument = rExpression,
                 type = AnnotationUsageType.ASSIGNMENT,
                 method = method,
+                referenced = referenced,
                 annotations = allMethodAnnotations
             )
         } else if (call is UVariable) {
@@ -139,8 +145,8 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                 override fun visitSimpleNameReferenceExpression(
                     node: USimpleNameReferenceExpression
                 ): Boolean {
-                    val resolved = node.resolve()
-                    if (variable == resolved || variablePsi == resolved) {
+                    val referencedVariable = node.resolve()
+                    if (variable == referencedVariable || variablePsi == referencedVariable) {
                         val expression = node.getParentOfType<UExpression>(
                             UExpression::class.java,
                             true
@@ -155,6 +161,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                                 argument = inner,
                                 type = AnnotationUsageType.VARIABLE_REFERENCE,
                                 method = method,
+                                referenced = referenced,
                                 annotations = allMethodAnnotations
                             )
                             return false
@@ -175,6 +182,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                     initializer,
                     type = AnnotationUsageType.ASSIGNMENT,
                     method = null,
+                    referenced = referenced,
                     annotations = allMethodAnnotations
                 )
             }
@@ -186,6 +194,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         argument: UElement,
         type: AnnotationUsageType,
         method: PsiMethod?,
+        referenced: PsiElement?,
         annotations: List<UAnnotation>,
         allMethodAnnotations: List<UAnnotation> = emptyList(),
         allClassAnnotations: List<UAnnotation> = emptyList(),
@@ -200,7 +209,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                     if (scanner.isApplicableAnnotationUsage(type)) {
                         scanner.visitAnnotationUsage(
                             context, argument, type, annotation,
-                            signature, method, annotations, allMethodAnnotations,
+                            signature, method, referenced, annotations, allMethodAnnotations,
                             allClassAnnotations, packageAnnotations
                         )
                     }
@@ -230,6 +239,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                     argument = body,
                     type = AnnotationUsageType.METHOD_RETURN,
                     method = method,
+                    referenced = method,
                     annotations = methodAnnotations,
                     allMethodAnnotations = methodAnnotations
                 )
@@ -243,6 +253,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                                 argument = returnValue,
                                 type = AnnotationUsageType.METHOD_RETURN,
                                 method = method,
+                                referenced = method,
                                 annotations = methodAnnotations,
                                 allMethodAnnotations = methodAnnotations
                             )
@@ -251,6 +262,36 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                     }
                 })
             }
+        }
+    }
+
+    fun visitSimpleNameReferenceExpression(
+        context: JavaContext,
+        node: USimpleNameReferenceExpression
+    ) {
+        /* Pending:
+        // In a qualified expression like x.y.z, only do field reference checks on z?
+        val parent = node.uastParent
+        if (parent is UQualifiedReferenceExpression && parent.selector != node) {
+            return
+        }
+        */
+
+        val field = node.resolve()
+        if (field is PsiField) {
+            val evaluator = context.evaluator
+            val annotations = filterRelevantAnnotations(
+                evaluator,
+                evaluator.getAllAnnotations(field, true)
+            )
+            checkAnnotations(
+                context = context,
+                argument = node,
+                type = AnnotationUsageType.FIELD_REFERENCE,
+                method = null,
+                referenced = field,
+                annotations = annotations
+            )
         }
     }
 
@@ -301,6 +342,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                         argument = value,
                         type = AnnotationUsageType.ANNOTATION_REFERENCE,
                         method = method,
+                        referenced = method,
                         annotations = methodAnnotations,
                         allMethodAnnotations = methodAnnotations
                     )
@@ -329,7 +371,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                 val methodAnnotations =
                     filterRelevantAnnotations(evaluator, allAnnotations, expression)
                 if (methodAnnotations.isNotEmpty()) {
-                    checkContextAnnotations(context, null, expression, methodAnnotations)
+                    checkContextAnnotations(context, null, resolved, expression, methodAnnotations)
                 }
             }
         }
@@ -344,7 +386,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
             variable
         )
         if (methodAnnotations.isNotEmpty()) {
-            checkContextAnnotations(context, null, variable, methodAnnotations)
+            checkContextAnnotations(context, null, null, variable, methodAnnotations)
         }
     }
 
@@ -441,23 +483,23 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         if (!methodAnnotations.isEmpty()) {
             checkAnnotations(
                 context, call, AnnotationUsageType.METHOD_CALL, method,
-                methodAnnotations, methodAnnotations, classAnnotations, pkgAnnotations
+                method, methodAnnotations, methodAnnotations, classAnnotations, pkgAnnotations
             )
 
-            checkContextAnnotations(context, method, call, methodAnnotations)
+            checkContextAnnotations(context, method, method, call, methodAnnotations)
         }
 
         if (!classAnnotations.isEmpty()) {
             checkAnnotations(
                 context, call, AnnotationUsageType.METHOD_CALL_CLASS, method,
-                classAnnotations, methodAnnotations, classAnnotations, pkgAnnotations
+                method, classAnnotations, methodAnnotations, classAnnotations, pkgAnnotations
             )
         }
 
         if (!pkgAnnotations.isEmpty()) {
             checkAnnotations(
                 context, call, AnnotationUsageType.METHOD_CALL_PACKAGE, method,
-                pkgAnnotations, methodAnnotations, classAnnotations, pkgAnnotations
+                method, pkgAnnotations, methodAnnotations, classAnnotations, pkgAnnotations
             )
         }
 
@@ -476,7 +518,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
 
                 checkAnnotations(
                     context, argument, AnnotationUsageType.METHOD_CALL_PARAMETER, method,
-                    filtered, methodAnnotations, classAnnotations, pkgAnnotations
+                    method, filtered, methodAnnotations, classAnnotations, pkgAnnotations
                 )
             }
         }

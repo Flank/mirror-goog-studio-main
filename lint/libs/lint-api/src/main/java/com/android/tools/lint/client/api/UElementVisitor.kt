@@ -1025,6 +1025,8 @@ internal class UElementVisitor constructor(
                 }
             }
 
+            annotationHandler?.visitSimpleNameReferenceExpression(mContext, node)
+
             return super.visitSimpleNameReferenceExpression(node)
         }
 
@@ -1054,7 +1056,7 @@ internal class UElementVisitor constructor(
                         if (function != null) {
                             for (v in list) {
                                 val scanner = v.uastScanner
-                                scanner.visitMethod(mContext, node, function)
+                                scanner.visitMethodCall(mContext, node, function)
                             }
                         }
                     }

@@ -227,7 +227,7 @@ class TranslucentViewDetector : Detector(), XmlScanner, SourceCodeScanner {
         return listOf("setTheme")
     }
 
-    override fun visitMethod(context: JavaContext, node: UCallExpression, method: PsiMethod) {
+    override fun visitMethodCall(context: JavaContext, node: UCallExpression, method: PsiMethod) {
         val activities = interestingActivities ?: return
         val uClass = node.getParentOfType<UClass>(UClass::class.java, true) ?: return
         if (!activities.contains(uClass.qualifiedName)) {

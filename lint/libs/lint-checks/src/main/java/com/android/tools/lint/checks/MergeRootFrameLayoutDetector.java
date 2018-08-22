@@ -188,7 +188,7 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector implements Sour
     }
 
     @Override
-    public void visitMethod(
+    public void visitMethodCall(
             @NonNull JavaContext context,
             @NonNull UCallExpression call,
             @NonNull PsiMethod method) {

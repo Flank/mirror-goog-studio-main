@@ -1043,7 +1043,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
     }
 
     @Override
-    public void visitMethod(
+    public void visitMethodCall(
             @NonNull JavaContext context,
             @NonNull UCallExpression node,
             @NonNull PsiMethod method) {

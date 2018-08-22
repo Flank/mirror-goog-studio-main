@@ -78,7 +78,7 @@ public class ReadParcelableDetector extends Detector implements SourceCodeScanne
     }
 
     @Override
-    public void visitMethod(
+    public void visitMethodCall(
             @NonNull JavaContext context,
             @NonNull UCallExpression node,
             @NonNull PsiMethod method) {

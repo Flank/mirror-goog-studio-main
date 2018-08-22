@@ -168,7 +168,7 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
         )
     }
 
-    override fun visitMethod(
+    override fun visitMethodCall(
         context: JavaContext,
         node: UCallExpression,
         method: PsiMethod

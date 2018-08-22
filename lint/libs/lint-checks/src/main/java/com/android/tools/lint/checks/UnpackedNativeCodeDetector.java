@@ -144,7 +144,7 @@ public class UnpackedNativeCodeDetector extends ResourceXmlDetector
     }
 
     @Override
-    public void visitMethod(
+    public void visitMethodCall(
             @NonNull JavaContext context,
             @NonNull UCallExpression call,
             @NonNull PsiMethod method) {

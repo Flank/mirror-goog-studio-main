@@ -368,7 +368,7 @@ res/navigation/test.xml:7: Error: Duplicate id @+id/first, already defined earli
     fun testConstraintIdDuplicateWithPlusSigns() {
         lint().files(
             xml(
-              "res/xml/motionscene1.xml",
+                "res/xml/motionscene1.xml",
                 """
 <MotionScene xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:motion="http://schemas.android.com/apk/res-auto">

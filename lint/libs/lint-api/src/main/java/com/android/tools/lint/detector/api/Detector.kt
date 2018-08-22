@@ -500,11 +500,22 @@ abstract class Detector {
     ) {
     }
 
+    @Deprecated("Rename to visitMethodCall instead when targeting 3.3+")
     open fun visitMethod(
         context: JavaContext,
         node: UCallExpression,
         method: PsiMethod
     ) {
+    }
+
+    open fun visitMethodCall(
+        context: JavaContext,
+        node: UCallExpression,
+        method: PsiMethod
+    ) {
+        // Backwards compatibility
+        @Suppress("DEPRECATION")
+        visitMethod(context, node, method)
     }
 
     open fun createUastHandler(context: JavaContext): UElementHandler? = null
@@ -530,6 +541,24 @@ abstract class Detector {
         allClassAnnotations: List<UAnnotation>,
         allPackageAnnotations: List<UAnnotation>
     ) {
+    }
+
+    open fun visitAnnotationUsage(
+        context: JavaContext,
+        usage: UElement,
+        type: AnnotationUsageType,
+        annotation: UAnnotation,
+        qualifiedName: String,
+        method: PsiMethod?,
+        referenced: PsiElement?,
+        annotations: List<UAnnotation>,
+        allMemberAnnotations: List<UAnnotation>,
+        allClassAnnotations: List<UAnnotation>,
+        allPackageAnnotations: List<UAnnotation>
+    ) {
+        // Backwards compatibility
+        visitAnnotationUsage(context, usage, type, annotation, qualifiedName, method,
+            annotations, allMemberAnnotations, allClassAnnotations, allPackageAnnotations)
     }
 
     open fun applicableAnnotations(): List<String>? = null
