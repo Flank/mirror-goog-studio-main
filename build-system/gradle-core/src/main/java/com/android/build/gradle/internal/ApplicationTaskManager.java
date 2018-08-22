@@ -181,7 +181,7 @@ public class ApplicationTaskManager extends TaskManager {
                 // processor which uses it to known about all available features.
                 //
                 // <p>see: {@link TaskManager#setDataBindingAnnotationProcessorParams(VariantScope)}
-                taskFactory.eagerCreate(
+                taskFactory.lazyCreate(
                         new DataBindingExportFeatureApplicationIdsTask.CreationAction(
                                 variantScope));
 
@@ -194,7 +194,7 @@ public class ApplicationTaskManager extends TaskManager {
             if (extension.getDataBinding().isEnabled()) {
                 // Create a task that will package necessary information about the feature into a
                 // file which is passed into the Data Binding annotation processor.
-                taskFactory.eagerCreate(
+                taskFactory.lazyCreate(
                         new DataBindingExportFeatureInfoTask.CreationAction(variantScope));
             }
             taskFactory.lazyCreate(new MergeConsumerProguardFilesTask.CreationAction(variantScope));

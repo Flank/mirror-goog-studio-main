@@ -100,7 +100,7 @@ class MutableTaskContainer : TaskContainer {
     var generateResValuesTask: TaskProvider<out Task>? = null
     var generateApkDataTask: Task? = null
     var coverageReportTask: TaskProvider<out Task>? = null
-    var dataBindingExportBuildInfoTask: Task? = null
+    var dataBindingExportBuildInfoTask: TaskProvider<out Task>? = null
 
     var validateSigningTask: TaskProvider<out ValidateSigningTask>? = null
 }

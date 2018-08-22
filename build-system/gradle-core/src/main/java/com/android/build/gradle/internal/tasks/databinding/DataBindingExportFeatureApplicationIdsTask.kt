@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.Workers
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclaration
 import com.android.utils.FileUtils
 import org.gradle.api.DefaultTask
@@ -69,16 +70,23 @@ open class DataBindingExportFeatureApplicationIdsTask @Inject constructor(
     class CreationAction(
         private val variantScope: VariantScope
     ) :
-        EagerTaskCreationAction<DataBindingExportFeatureApplicationIdsTask>() {
+        LazyTaskCreationAction<DataBindingExportFeatureApplicationIdsTask>() {
 
         override val name: String
             get() = variantScope.getTaskName("dataBindingExportFeaturePackageIds")
         override val type: Class<DataBindingExportFeatureApplicationIdsTask>
             get() = DataBindingExportFeatureApplicationIdsTask::class.java
 
-        override fun execute(task: DataBindingExportFeatureApplicationIdsTask) {
-            task.packageListOutFolder = variantScope.artifacts
-                .appendArtifact(InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO, task)
+        private lateinit var packageListOutFolder: File
+
+        override fun preConfigure(taskName: String) {
+            super.preConfigure(taskName)
+            packageListOutFolder = variantScope.artifacts
+                .appendArtifact(InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO, taskName)
+        }
+
+        override fun configure(task: DataBindingExportFeatureApplicationIdsTask) {
+            task.packageListOutFolder = packageListOutFolder
             task.featureDeclarations = variantScope.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.METADATA_VALUES,
                     AndroidArtifacts.ArtifactScope.MODULE,

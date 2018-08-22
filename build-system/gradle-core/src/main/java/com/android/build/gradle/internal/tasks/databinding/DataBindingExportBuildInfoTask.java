@@ -20,7 +20,7 @@ import android.databinding.tool.LayoutXmlProcessor;
 import android.databinding.tool.processing.Scope;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.build.gradle.options.BooleanOption;
 import java.io.File;
 import java.util.function.Supplier;
@@ -29,6 +29,7 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.TaskProvider;
 
 /**
  * Task to create an empty class annotated with @BindingBuildInfo, so that the Java compiler invokes
@@ -63,7 +64,7 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
     }
 
     public static class CreationAction
-            extends EagerTaskCreationAction<DataBindingExportBuildInfoTask> {
+            extends LazyTaskCreationAction<DataBindingExportBuildInfoTask> {
 
         @NonNull private final VariantScope variantScope;
 
@@ -84,7 +85,14 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
         }
 
         @Override
-        public void execute(@NonNull DataBindingExportBuildInfoTask task) {
+        public void handleProvider(
+                @NonNull TaskProvider<? extends DataBindingExportBuildInfoTask> taskProvider) {
+            super.handleProvider(taskProvider);
+            variantScope.getTaskContainer().setDataBindingExportBuildInfoTask(taskProvider);
+        }
+
+        @Override
+        public void configure(@NonNull DataBindingExportBuildInfoTask task) {
             task.xmlProcessor = variantScope.getVariantData()::getLayoutXmlProcessor;
             task.useAndroidX =
                     variantScope
@@ -92,8 +100,6 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
                             .getProjectOptions()
                             .get(BooleanOption.USE_ANDROID_X);
             task.emptyClassOutDir = variantScope.getClassOutputForDataBinding();
-
-            variantScope.getTaskContainer().setDataBindingExportBuildInfoTask(task);
         }
     }
 }

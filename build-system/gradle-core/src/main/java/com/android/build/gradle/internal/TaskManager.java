@@ -2713,12 +2713,12 @@ public abstract class TaskManager {
 
         dataBindingBuilder.setDebugLogEnabled(getLogger().isDebugEnabled());
 
-        DataBindingExportBuildInfoTask exportBuildInfo =
-                taskFactory.eagerCreate(new DataBindingExportBuildInfoTask.CreationAction(scope));
+        TaskProvider<DataBindingExportBuildInfoTask> exportBuildInfo =
+                taskFactory.lazyCreate(new DataBindingExportBuildInfoTask.CreationAction(scope));
 
-        exportBuildInfo.dependsOn(scope.getTaskContainer().getSourceGenTask());
+        TaskFactoryUtils.dependsOn(exportBuildInfo, scope.getTaskContainer().getSourceGenTask());
 
-        taskFactory.eagerCreate(new DataBindingGenBaseClassesTask.CreationAction(scope));
+        taskFactory.lazyCreate(new DataBindingGenBaseClassesTask.CreationAction(scope));
 
         setDataBindingAnnotationProcessorParams(scope, mergeType);
     }

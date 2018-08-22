@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_LAYOUT_INFO_TYPE_MERGE
 import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import org.gradle.api.DefaultTask
@@ -166,14 +167,28 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
     }
 
     class CreationAction(val variantScope: VariantScope) :
-        EagerTaskCreationAction<DataBindingGenBaseClassesTask>() {
+        LazyTaskCreationAction<DataBindingGenBaseClassesTask>() {
 
         override val name: String
             get() = variantScope.getTaskName("dataBindingGenBaseClasses")
         override val type: Class<DataBindingGenBaseClassesTask>
             get() = DataBindingGenBaseClassesTask::class.java
 
-        override fun execute(task: DataBindingGenBaseClassesTask) {
+        private lateinit var sourceOutFolder: File
+        private lateinit var classInfoBundleDir: File
+
+        override fun preConfigure(taskName: String) {
+            super.preConfigure(taskName)
+            val artifacts = variantScope.artifacts
+            sourceOutFolder = artifacts.appendArtifact(
+                InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT,
+                taskName)
+            classInfoBundleDir = artifacts.appendArtifact(
+                InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
+                taskName)
+        }
+
+        override fun configure(task: DataBindingGenBaseClassesTask) {
             task.layoutInfoDirectory =
                     variantScope.artifacts.getFinalArtifactFiles(
                             DATA_BINDING_LAYOUT_INFO_TYPE_MERGE)
@@ -188,12 +203,8 @@ open class DataBindingGenBaseClassesTask : DefaultTask() {
             task.logOutFolder = variantScope.getIncrementalDir(task.name)
             task.generateSources = variantScope.globalScope.projectOptions.get(
                     BooleanOption.ENABLE_DATA_BINDING_V2)
-            task.sourceOutFolder = artifacts.appendArtifact(
-                InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT,
-                task)
-            task.classInfoBundleDir = artifacts.appendArtifact(
-                InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
-                task)
+            task.sourceOutFolder = sourceOutFolder
+            task.classInfoBundleDir = classInfoBundleDir
             task.useAndroidX = variantScope.globalScope.projectOptions.get(
                 BooleanOption.USE_ANDROID_X)
         }

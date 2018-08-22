@@ -616,8 +616,7 @@ public abstract class BaseVariantData {
                         project.fileTree(scope.getClassOutputForDataBinding())
                                 .builtBy(
                                         scope.getTaskContainer()
-                                                .getDataBindingExportBuildInfoTask()
-                                                .getName()));
+                                                .getDataBindingExportBuildInfoTask()));
                 BuildableArtifact baseClassSource =
                         scope.getArtifacts()
                                 .getFinalArtifactFiles(
