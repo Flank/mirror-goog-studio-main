@@ -221,6 +221,8 @@ public enum InternalArtifactType implements ArtifactType {
     EXTRACTED_APKS,
     // Universal APK from the bundle
     UNIVERSAL_APK(Category.OUTPUTS, Kind.FILE),
+    // The manifest meant to be consumed by the bundle.
+    BUNDLE_MANIFEST,
 
     // file containing the metadata for the full feature set. This contains the feature names,
     // the res ID offset, both tied to the feature module path. Published by the base for the

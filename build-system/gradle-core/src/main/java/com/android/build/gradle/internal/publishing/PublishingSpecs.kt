@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING
 import com.android.build.gradle.internal.scope.InternalArtifactType.APP_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.AAPT_PROGUARD_FILE
 import com.android.build.gradle.internal.scope.InternalArtifactType.BUNDLE
+import com.android.build.gradle.internal.scope.InternalArtifactType.BUNDLE_MANIFEST
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.CONSUMER_PROGUARD_FILE
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_ARTIFACT
@@ -137,6 +138,8 @@ class PublishingSpecs {
 
                 metadata(METADATA_INSTALLED_BASE_DECLARATION, ArtifactType.METADATA_BASE_MODULE_DECLARATION)
 
+                metadata(BUNDLE_MANIFEST, ArtifactType.BUNDLE_MANIFEST)
+
                 // output of bundle-tool
                 metadata(BUNDLE, ArtifactType.BUNDLE)
 
@@ -182,6 +185,7 @@ class PublishingSpecs {
 
                 // The intermediate bundle containing only this module. Input for bundle-tool
                 metadata(MODULE_BUNDLE, ArtifactType.MODULE_BUNDLE)
+                metadata(BUNDLE_MANIFEST, ArtifactType.BUNDLE_MANIFEST)
 
                 // this is only for non-base modules.
                 metadata(METADATA_FEATURE_DECLARATION, ArtifactType.METADATA_FEATURE_DECLARATION)

@@ -30,6 +30,7 @@ import com.android.utils.FileUtils
 import com.google.common.collect.Iterables
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.LogLevel
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
@@ -94,7 +95,7 @@ open class ShrinkBundleResourcesTask : AndroidVariantTask() {
 
         FileUtils.mkdirs(compressedResourceFile.parentFile)
 
-        val manifestFile = ExistingBuildElements.from(InternalArtifactType.MERGED_MANIFESTS, mergedManifests)
+        val manifestFile = ExistingBuildElements.from(InternalArtifactType.BUNDLE_MANIFEST, mergedManifests)
             .element(mainSplit)
             ?.outputFile
                 ?: throw RuntimeException("Cannot find merged manifest file")
@@ -196,8 +197,9 @@ open class ShrinkBundleResourcesTask : AndroidVariantTask() {
                             .getFinalArtifactFiles(InternalArtifactType.APK_MAPPING)
                     else
                         null
-            task.mergedManifests =
-                    scope.artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS)
+
+            task.mergedManifests = scope.artifacts.getFinalArtifactFiles(
+                InternalArtifactType.BUNDLE_MANIFEST)
             task.variantName = scope.fullVariantName
         }
     }

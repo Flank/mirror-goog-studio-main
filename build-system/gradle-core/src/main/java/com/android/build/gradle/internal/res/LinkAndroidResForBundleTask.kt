@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.res.namespaced.registerAaptService
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.build.gradle.internal.tasks.TaskInputHelper
@@ -125,7 +124,7 @@ open class LinkAndroidResForBundleTask
     @TaskAction
     fun taskAction() {
 
-        val manifestFile = ExistingBuildElements.from(MERGED_MANIFESTS, manifestFiles)
+        val manifestFile = ExistingBuildElements.from(InternalArtifactType.BUNDLE_MANIFEST, manifestFiles)
                 .element(mainSplit)
                 ?.outputFile
                 ?: throw RuntimeException("Cannot find merged manifest file")
@@ -243,8 +242,8 @@ open class LinkAndroidResForBundleTask
 
             task.mainSplit = variantData.outputScope.mainSplit
 
-            task.manifestFiles = variantScope.artifacts
-                .getFinalArtifactFiles(MERGED_MANIFESTS)
+            task.manifestFiles = variantScope.artifacts.getFinalArtifactFiles(
+                InternalArtifactType.BUNDLE_MANIFEST)
 
             task.inputResourcesDir =
                     variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_RES)

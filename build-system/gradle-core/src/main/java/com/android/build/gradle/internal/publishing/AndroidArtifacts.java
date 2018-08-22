@@ -105,6 +105,8 @@ public class AndroidArtifacts {
     // attr info extracted from the platform android.jar
     public static final String TYPE_PLATFORM_ATTR = "android-platform-attr";
 
+    private static final String TYPE_BUNDLE_MANIFEST = "android-bundle-manifest";
+
     public enum ConsumedConfigType {
         COMPILE_CLASSPATH("compileClasspath", API_ELEMENTS, true),
         RUNTIME_CLASSPATH("runtimeClasspath", RUNTIME_ELEMENTS, true),
@@ -217,6 +219,8 @@ public class AndroidArtifacts {
         MODULE_BUNDLE(TYPE_MODULE_BUNDLE),
         // final bundle generate by bundle-tool
         BUNDLE(TYPE_BUNDLE),
+        // the manifest to be used by bundle-tool
+        BUNDLE_MANIFEST(TYPE_BUNDLE_MANIFEST),
 
         // Feature split related artifacts.
 

@@ -43,6 +43,8 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
 
     private File instantRunManifestOutputDirectory;
 
+    private File bundleManifestOutputDirectory;
+
     private File reportFile;
 
     @SuppressWarnings("unused")
@@ -97,6 +99,20 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
 
     public void setAaptFriendlyManifestOutputDirectory(File aaptFriendlyManifestOutputDirectory) {
         this.aaptFriendlyManifestOutputDirectory = aaptFriendlyManifestOutputDirectory;
+    }
+
+    /**
+     * The bundle manifest which is consumed by the bundletool (as opposed to the one packaged with
+     * the apk when built directly).
+     */
+    @OutputDirectory
+    @Optional
+    public File getBundleManifestOutputDirectory() {
+        return bundleManifestOutputDirectory;
+    }
+
+    protected void setBundleManifestOutputDirectory(File bundleManifestOutputDirectory) {
+        this.bundleManifestOutputDirectory = bundleManifestOutputDirectory;
     }
 
     @OutputFile

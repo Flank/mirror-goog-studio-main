@@ -95,6 +95,7 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
                                 manifestOutputFile.get().getAsFile().getAbsolutePath(),
                                 aaptFriendlyManifestOutputFile.getAbsolutePath(),
                                 null /* outInstantRunManifestLocation */,
+                                null /* outBundleManifestLocation */,
                                 ManifestMerger2.MergeType.LIBRARY,
                                 variantConfiguration.getManifestPlaceholders(),
                                 Collections.emptyList(),

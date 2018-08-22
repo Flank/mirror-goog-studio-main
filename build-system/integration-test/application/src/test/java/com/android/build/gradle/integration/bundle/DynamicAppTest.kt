@@ -177,6 +177,26 @@ class DynamicAppTest {
         assertThat(baseManifest).doesNotContain("splitName")
         assertThat(baseManifest).doesNotContain("featureSplit")
 
+        // Check that the bundle_manifests contain splitName
+        val featureBundleManifest = FileUtils.join(project.getSubproject("feature1").buildDir,
+            "intermediates",
+            "bundle_manifest",
+            "debug",
+            "processDebugManifest",
+            "bundle-manifest",
+            "AndroidManifest.xml")
+        assertThat(featureBundleManifest).isFile()
+        assertThat(featureBundleManifest).contains("android:splitName=\"feature1\"")
+
+        val baseBundleManifest = FileUtils.join(project.getSubproject("app").buildDir,
+            "intermediates",
+            "bundle_manifest",
+            "debug",
+            "processDebugManifest",
+            "bundle-manifest",
+            "AndroidManifest.xml")
+        assertThat(baseBundleManifest).isFile()
+        assertThat(baseBundleManifest).contains("android:splitName=\"feature1\"")
     }
 
     @Test

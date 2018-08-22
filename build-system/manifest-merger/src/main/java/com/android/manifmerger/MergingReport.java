@@ -58,6 +58,9 @@ public class MergingReport {
 
         /** Blame file for merged manifest file. */
         BLAME,
+
+        /** Merged manifest file for bundletool. */
+        BUNDLE,
     }
 
     @NonNull

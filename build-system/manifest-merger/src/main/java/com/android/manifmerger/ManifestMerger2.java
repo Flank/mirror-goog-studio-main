@@ -435,7 +435,7 @@ public class ManifestMerger2 {
         }
 
         if (mOptionalFeatures.contains(Invoker.Feature.ADD_INSTANT_APP_FEATURE_SPLIT_INFO)) {
-            addInstantAppFeatureSplitInfo(document, mFeatureName);
+            adjustInstantAppFeatureSplitInfo(document, mFeatureName, true);
             mergingReport.setMergedDocument(
                     MergingReport.MergedManifestKind.MERGED, prettyPrint(document));
         }
@@ -445,6 +445,33 @@ public class ManifestMerger2 {
             mergingReport.setMergedDocument(
                     MergingReport.MergedManifestKind.MERGED, prettyPrint(document));
         }
+
+        // This should occur at the end of all optional features, so that bundletool related
+        // manifest files contains all the changes for the merged manifest as well.
+        if (mOptionalFeatures.contains(Invoker.Feature.CREATE_BUNDLETOOL_MANIFEST)) {
+            createBundleToolManifest(document, mergingReport);
+        } else if (mOptionalFeatures.contains(
+                Invoker.Feature.MERGED_MANIFEST_IS_BUNDLETOOL_MANIFEST)) {
+            mergingReport.setMergedDocument(
+                    MergingReport.MergedManifestKind.BUNDLE, prettyPrint(document));
+        }
+    }
+
+    private void createBundleToolManifest(
+            @NonNull Document document, @NonNull MergingReport.Builder mergingReport) {
+        // If this is a feature, add SplitName to the manifest.
+        if (!mFeatureName.isEmpty()) {
+            adjustInstantAppFeatureSplitInfo(document, mFeatureName, true);
+        }
+
+        mergingReport.setMergedDocument(
+                MergingReport.MergedManifestKind.BUNDLE, prettyPrint(document));
+
+        // remove split name, from all relevant attributes unconditionally.
+        // This is not gated by feature name, since it may have been added from a merge.
+        adjustInstantAppFeatureSplitInfo(document, mFeatureName, false);
+        mergingReport.setMergedDocument(
+                MergingReport.MergedManifestKind.MERGED, prettyPrint(document));
     }
 
     /**
@@ -520,9 +547,10 @@ public class ManifestMerger2 {
      *
      * @param document the document whose attributes are changed
      * @param featureName the value all of the changed attributes are set to
+     * @param addName whether to add the attribute or remove it
      */
-    private static void addInstantAppFeatureSplitInfo(
-            @NonNull Document document, @NonNull String featureName) {
+    private static void adjustInstantAppFeatureSplitInfo(
+            @NonNull Document document, @NonNull String featureName, boolean addName) {
         Element manifest = document.getDocumentElement();
         if (manifest == null) {
             return;
@@ -544,7 +572,11 @@ public class ManifestMerger2 {
                         SdkConstants.TAG_PROVIDER);
         for (String elementName : elementNamesToUpdate) {
             for (Element elementToUpdate : getChildElementsByName(application, elementName)) {
-                setAndroidAttribute(elementToUpdate, SdkConstants.ATTR_SPLIT_NAME, featureName);
+                if (addName) {
+                    setAndroidAttribute(elementToUpdate, SdkConstants.ATTR_SPLIT_NAME, featureName);
+                } else {
+                    removeAndroidAttribute(elementToUpdate, SdkConstants.ATTR_SPLIT_NAME);
+                }
             }
         }
     }
@@ -649,6 +681,18 @@ public class ManifestMerger2 {
         // having multiple processes
         setAndroidAttribute(cp, SdkConstants.ATTR_MULTIPROCESS, SdkConstants.VALUE_TRUE);
         application.appendChild(cp);
+    }
+
+    /**
+     * Remove an Android-namespaced XML attribute on the given node.
+     *
+     * @param node Node in which to remove the attribute; must be part of a document
+     * @param localName Non-prefixed attribute name
+     */
+    private static void removeAndroidAttribute(Element node, String localName) {
+        // removeAttributeNS calculates the prefix.
+        // Setting it with localName will actually prevent it from working properly.
+        node.removeAttributeNS(SdkConstants.ANDROID_URI, localName);
     }
 
     /**
@@ -1246,6 +1290,12 @@ public class ManifestMerger2 {
 
             /** Mark the entry points to the application with splitName */
             ADD_INSTANT_APP_FEATURE_SPLIT_INFO,
+
+            /** Create any bundletool related manifest changes. */
+            CREATE_BUNDLETOOL_MANIFEST,
+
+            /** Add the merged manifest as the bundletool manifest. */
+            MERGED_MANIFEST_IS_BUNDLETOOL_MANIFEST,
 
             /** Set the android:debuggable flag to the application. */
             DEBUGGABLE,
