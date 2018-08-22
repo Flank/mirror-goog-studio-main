@@ -55,6 +55,14 @@ build:remote --remote_instance_name=projects/google.com:android-studio-alphasour
 build:remote --strategy=CppCompile=remote
 build:remote --strategy=CppLink=remote
 
+# Mimics the release config to report accurate performance numbers in tests
+build:remote --copt=-fdata-sections
+build:remote --cxxopt=-fdata-sections
+build:remote --copt=-fno-exceptions
+build:remote --cxxopt=-fno-exceptions
+build:remote --copt=-ffunction-sections
+build:remote --cxxopt=-ffunction-sections
+build:remote -c opt
 
 # Depending on how many machines are in the remote execution instance, setting
 # this higher can make builds faster by allowing more jobs to run in parallel.
