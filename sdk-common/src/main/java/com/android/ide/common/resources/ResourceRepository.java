@@ -74,13 +74,17 @@ public interface ResourceRepository {
             @NonNull ResourceNamespace namespace, @NonNull ResourceType resourceType);
 
     /**
-     * Calls the {@link ResourceVisitor#visit(ResourceItem)} method for all resources in
-     * the repository. The visitor should not perform any long running operations or operations
+     * Calls the {@link ResourceVisitor#visit(ResourceItem)} method for all resources in the
+     * repository. The visitor should not perform any long running operations or operations
      * involving locks.
      *
      * @param visitor the visitor object
+     * @return the last value returned by the visitor, i.e. {@link
+     *     ResourceVisitor.VisitResult#ABORT} if the method finished because the visitor requested
+     *     it or {@link ResourceVisitor.VisitResult#CONTINUE} otherwise.
      */
-    void accept(@NonNull ResourceVisitor visitor);
+    @NonNull
+    ResourceVisitor.VisitResult accept(@NonNull ResourceVisitor visitor);
 
     /**
      * Returns a list of all resources in the repository.

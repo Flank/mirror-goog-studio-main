@@ -48,9 +48,6 @@ public abstract class AbstractResourceRepository implements ResourceRepository {
             @NonNull ResourceNamespace namespace, @NonNull ResourceType resourceType);
 
     @Override
-    public abstract void accept(@NonNull ResourceVisitor visitor);
-
-    @Override
     @NonNull
     public List<ResourceItem> getResources(
             @NonNull ResourceNamespace namespace,

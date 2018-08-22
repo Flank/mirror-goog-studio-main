@@ -49,15 +49,18 @@ public final class TestResourceRepository extends AbstractResourceRepository
     }
 
     @Override
-    public void accept(@NonNull ResourceVisitor visitor) {
+    @NonNull
+    public ResourceVisitor.VisitResult accept(@NonNull ResourceVisitor visitor) {
         if (visitor.shouldVisitNamespace(namespace)) {
             for (Map.Entry<ResourceNamespace, Map<ResourceType, ListMultimap<String, ResourceItem>>>
                     entry : resourceTable.rowMap().entrySet()) {
                 if (acceptByResources(entry.getValue(), visitor) == VisitResult.ABORT) {
-                    return;
+                    return VisitResult.ABORT;
                 }
             }
         }
+
+        return VisitResult.CONTINUE;
     }
 
     @Override
