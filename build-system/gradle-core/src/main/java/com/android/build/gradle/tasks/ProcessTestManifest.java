@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputProperty;
@@ -290,8 +291,9 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
             scope.getArtifacts()
-                    .appendArtifact(
+                    .createBuildableArtifact(
                             InternalArtifactType.MANIFEST_METADATA,
+                            BuildArtifactsHolder.OperationType.INITIAL,
                             scope.getArtifacts()
                                     .getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS));
         }

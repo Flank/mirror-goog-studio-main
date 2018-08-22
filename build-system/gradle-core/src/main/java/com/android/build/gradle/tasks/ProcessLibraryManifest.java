@@ -22,6 +22,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputScope;
@@ -248,8 +249,9 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
 
             manifestOutputFile =
                     scope.getArtifacts()
-                            .appendArtifactFile(
+                            .createArtifactFile(
                                     InternalArtifactType.LIBRARY_MANIFEST,
+                                    BuildArtifactsHolder.OperationType.INITIAL,
                                     taskName,
                                     SdkConstants.ANDROID_MANIFEST_XML);
 

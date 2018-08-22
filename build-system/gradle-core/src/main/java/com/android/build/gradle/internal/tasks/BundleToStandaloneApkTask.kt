@@ -20,6 +20,7 @@ import com.android.SdkConstants
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.res.getAapt2FromMaven
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
@@ -195,8 +196,9 @@ open class BundleToStandaloneApkTask @Inject constructor(workerExecutor: WorkerE
 
             // Mirrors logic in OutputFactory.getOutputFileName, but without splits.
             val suffix = if (scope.variantConfiguration.isSigningReady) SdkConstants.DOT_ANDROID_PACKAGE else "-unsigned.apk"
-            outputFile = scope.artifacts.setArtifactFile(
+            outputFile = scope.artifacts.createArtifactFile(
                 InternalArtifactType.UNIVERSAL_APK,
+                BuildArtifactsHolder.OperationType.INITIAL,
                 taskName,
                 "${scope.globalScope.projectBaseName}-${scope.variantConfiguration.baseName}-universal$suffix"
             )

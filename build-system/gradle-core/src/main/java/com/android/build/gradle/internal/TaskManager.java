@@ -487,7 +487,10 @@ public abstract class TaskManager {
         // but for the artifact publishing.
         BuildableArtifact lintJar = globalScope.getArtifacts().getFinalArtifactFiles(LINT_JAR);
         for (VariantScope scope : variants) {
-            scope.getArtifacts().appendArtifact(InternalArtifactType.LINT_JAR, lintJar);
+            scope.getArtifacts().createBuildableArtifact(
+                    InternalArtifactType.LINT_JAR,
+                    BuildArtifactsHolder.OperationType.INITIAL,
+                    lintJar);
         }
     }
 
@@ -1152,8 +1155,9 @@ public abstract class TaskManager {
                                     baseName));
 
             if (packageOutputType != null) {
-                artifacts.appendArtifact(
+                artifacts.createBuildableArtifact(
                         packageOutputType,
+                        BuildArtifactsHolder.OperationType.INITIAL,
                         artifacts.getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES));
             }
 
@@ -1665,15 +1669,17 @@ public abstract class TaskManager {
                     // so just re-export the artifacts here.
                     variantScope
                             .getArtifacts()
-                            .appendArtifact(
+                            .createBuildableArtifact(
                                     InternalArtifactType.PROCESSED_RES,
+                                    BuildArtifactsHolder.OperationType.INITIAL,
                                     testedVariantScope
                                             .getArtifacts()
                                             .getFinalArtifactFiles(PROCESSED_RES));
                     variantScope
                             .getArtifacts()
-                            .appendArtifact(
+                            .createBuildableArtifact(
                                     MERGED_ASSETS,
+                                    BuildArtifactsHolder.OperationType.INITIAL,
                                     testedVariantScope
                                             .getArtifacts()
                                             .getFinalArtifactFiles(MERGED_ASSETS));
@@ -1684,8 +1690,9 @@ public abstract class TaskManager {
                     // merged resources.
                     variantScope
                             .getArtifacts()
-                            .appendArtifact(
+                            .createBuildableArtifact(
                                     InternalArtifactType.MERGED_RES,
+                                    BuildArtifactsHolder.OperationType.INITIAL,
                                     testedVariantScope
                                             .getArtifacts()
                                             .getFinalArtifactFiles(MERGED_NOT_COMPILED_RES));
@@ -3752,10 +3759,11 @@ public abstract class TaskManager {
         // generating task. (This will overwrite the registration of JavaCompile as the generating
         // task that took place earlier before this method is called).
         scope.getArtifacts()
-                .appendArtifact(
+                .createBuildableArtifact(
                         InternalArtifactType.DATA_BINDING_ARTIFACT,
+                        BuildArtifactsHolder.OperationType.APPEND,
                         ImmutableList.of(scope.getBundleArtifactFolderForDataBinding()),
-                        kaptTask);
+                        kaptTask.getName());
     }
 
     protected void configureTestData(AbstractTestDataImpl testData) {

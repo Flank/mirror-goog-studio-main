@@ -73,7 +73,7 @@ class TaskArtifactsHolder<T: Task>(val artifacts: BuildArtifactsHolder) {
         }.toCollection(inputs)
 
         injectionPoints.outputs.map {
-            OutputDirectoryInjectPoint<T>(it.injectionPoint, artifacts.appendDirectory(
+            OutputDirectoryInjectPoint<T>(it.injectionPoint, artifacts.createDirectory(
                 it.id,
                 configAction.name,
                 it.out

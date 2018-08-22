@@ -23,19 +23,21 @@ import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
 import com.android.build.gradle.internal.api.artifact.toArtifactType
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.utils.FileUtils
+import com.google.common.base.Joiner
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import com.google.gson.annotations.SerializedName
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskDependency
-import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.io.FileReader
 import java.util.Locale
@@ -62,6 +64,25 @@ abstract class BuildArtifactsHolder(
 
     private val artifactRecordMap = ConcurrentHashMap<ArtifactType, ArtifactRecord>()
     private val finalArtifactsMap = ConcurrentHashMap<ArtifactType, BuildableArtifact>()
+
+    /**
+     * Types of operation on [BuildableArtifact] as indicated by tasks producing the artifact.
+     */
+    enum class OperationType {
+        /**
+         * Initial producer of the artifact
+         */
+        INITIAL,
+        /**
+         * Producer appends more files/directories to artifact
+         */
+        APPEND,
+        /**
+         * Producer transforms (replace) existing artifact files/directories with new ones.
+         */
+        TRANSFORM
+    }
+
 
     /**
      * Internal private class for storing [BuildableArtifact] created for a [ArtifactType]
@@ -211,11 +232,13 @@ abstract class BuildArtifactsHolder(
      * @param task [Task] that will create the new files.
      * @return BuildableFiles containing files that the specified task should create.
      */
-    fun replaceArtifact(
+    @JvmOverloads
+    fun createBuildableArtifact(
             artifactType: ArtifactType,
-            newFiles : Collection<File>,
-            task : Task) : BuildableArtifact {
-        val collection = project.files(newFiles).builtBy(task)
+            operationType: OperationType,
+            newFiles : Any,
+            producer : String? = null) : BuildableArtifact {
+        val collection = createFileCollection(artifactType, operationType, newFiles, producer)
         val files = BuildableArtifactImpl(collection, dslScope)
         createOutput(artifactType, files)
         return files
@@ -232,38 +255,20 @@ abstract class BuildArtifactsHolder(
      *
      * @param artifactType [ArtifactType] the new files will be classified under.
      * @param newFiles names of the new files.
-     * @param task [Task] that responsible for producing or updating the new files.
-     * @return BuildableFiles containing files that the specified task should create.
-     */
-    @Deprecated("Use TaskProvider version instead")
-    fun appendArtifact(
-            artifactType: ArtifactType,
-            newFiles : Collection<Any>,
-            task : Task) : BuildableArtifact {
-        return doAppendArtifact(artifactType,
-            createFileCollection(artifactRecordMap[artifactType], newFiles).builtBy(task))
-    }
-
-    /**
-     * Append output to the specified artifactType. The [newFiles] will be added after any
-     * existing content.
-     *
-     * After invoking this method, [getArtifactFiles] will return a [BuildableArtifact] that
-     * contains both the new files and the original files.
-     * The path of File are created from the supplied filenames and the name of the Task that will
-     * generate these files.
-     *
-     * @param artifactType [ArtifactType] the new files will be classified under.
-     * @param newFiles names of the new files.
      * @param taskName the name of the task responsible for producing or updating the new files.
      * @return BuildableFiles containing files that the specified task should create.
      */
+    @Deprecated("Use createBuildableArtifact/createDirectory/createArtifactFile APIs")
     fun appendArtifact(
         artifactType: ArtifactType,
         newFiles : Collection<Any>,
         taskName: String) : BuildableArtifact {
         return doAppendArtifact(artifactType,
-            createFileCollection(artifactRecordMap[artifactType], newFiles).builtBy(taskName))
+            createFileCollection(
+                artifactType,
+                OperationType.APPEND,
+                newFiles,
+                taskName))
     }
 
     /**
@@ -277,20 +282,13 @@ abstract class BuildArtifactsHolder(
      * @param artifactType [ArtifactType] for the existing files
      * @param existingFiles existing files' [FileCollection] with
      */
+    @Deprecated("Use createBuildableArtifact/createDirectory/createArtifactFile APIs")
     fun appendArtifact(artifactType: ArtifactType, existingFiles: FileCollection) {
         doAppendArtifact(artifactType,
-            createFileCollection(artifactRecordMap[artifactType], existingFiles))
-    }
-    /**
-     * Append existing BuildableArtifact to a specified artifact type. The new content will be added
-     * after any existing content.
-     *
-     * @param artifactType [ArtifactType] for the existing files
-     * @param buildableArtifact existing [BuildableArtifact] holding files and dependencies
-     */
-    fun appendArtifact(artifactType: ArtifactType, buildableArtifact: BuildableArtifact) {
-        doAppendArtifact(artifactType,
-            createFileCollection(artifactRecordMap[artifactType], buildableArtifact))
+            createFileCollection(
+                artifactType,
+                OperationType.APPEND,
+                existingFiles))
     }
 
     /**
@@ -303,13 +301,18 @@ abstract class BuildArtifactsHolder(
      * @return [File] handle to use to create the file or folder (potentially with subfolders
      * or multiple files)
      */
-    @Deprecated("Use Task Provider instead")
+    @Deprecated("Use createBuildableArtifact/createDirectory/createArtifactFile APIs")
     fun appendArtifact(
         artifactType: ArtifactType,
         task : Task,
         fileName: String = "out") : File {
         val output = createFile(task.name, artifactType, fileName)
-        appendArtifact(artifactType, listOf(output), task)
+        doAppendArtifact(artifactType,
+            createFileCollection(
+                artifactType,
+                OperationType.APPEND,
+                listOf(output),
+                task.name))
         return output
     }
 
@@ -323,6 +326,7 @@ abstract class BuildArtifactsHolder(
      * @return [File] handle to use to create the file or folder (potentially with subfolders
      * or multiple files)
      */
+    @Deprecated("Use createBuildableArtifact/createDirectory/createArtifactFile APIs")
     fun appendArtifact(
         artifactType: ArtifactType,
         taskName: String,
@@ -333,87 +337,137 @@ abstract class BuildArtifactsHolder(
     }
 
     /**
-     * set a new file to a specified artifact type. The new content will be added
-     * after any existing content.
+     * Create a [Provider] of [RegularFile] that can be used as a task output.
      *
-     * @param artifactType [ArtifactType] the new file will be classified under.
-     * @param task [Task] producing the file.
-     * @param fileName expected file name for the file (location is determined by the build)
-     * @return [Provider<RegularFile] object that will resolve during execution phase to the final
-     * location to write the [task] output to.
+     * @param artifactType the intended artifact type stored in the directory.
+     * @param operationType type of output (appending, replacing or initial version)
+     * @param taskName name of the producer task.
+     * @param fileName fileName for the file.
      */
-    @Deprecated("Use setArtifactFile(ArtifactType String, String")
-    fun setArtifactFile(
+    fun createArtifactFile(
         artifactType: ArtifactType,
-        task : Task,
-        fileName: String = "out") : Provider<RegularFile> =
-        setArtifactFile(artifactType, task.name, File(FileUtils.join(
-            artifactType.getOutputPath(),
-            artifactType.name().toLowerCase(),
-            getIdentifier(),
-            fileName)))
-
-    /**
-     * set a new file to a specified artifact type. The new content will be added
-     * after any existing content.
-     *
-     * @param artifactType [ArtifactType] the new file will be classified under.
-     * @param taskName the name of the task producing the file.
-     * @param fileName expected file name for the file (location is determined by the build)
-     * @return [Provider<RegularFile] object that will resolve during execution phase to the final
-     * location to write the [task] output to.
-     */
-    fun setArtifactFile(
-        artifactType: ArtifactType,
-        taskName : String,
-        fileName: String = "out") : Provider<RegularFile> =
-        setArtifactFile(artifactType, taskName, File(FileUtils.join(
-            artifactType.getOutputPath(),
-            artifactType.name().toLowerCase(),
-            getIdentifier(),
-            fileName)))
-
-    /**
-     * set a new file to a specified artifact type. The new content will be added
-     * after any existing content.
-     *
-     * @param artifactType [ArtifactType] the new file will be classified under.
-     * @param task the name of the task producing the file.
-     * @param requestedFileLocation expected location for the file
-     * @return [Provider<RegularFile] object that will resolve during execution phase to the final
-     * location to write the [task] output to.
-     */
-    fun setArtifactFile(
-        artifactType: ArtifactType,
-        taskName : String,
-        requestedFileLocation: File) : Provider<RegularFile> {
-
-        // TODO : split this method in 2, replaceArtifactFile, and setArtifactFile.
-
-        if (artifactType.kind() != ArtifactType.Kind.FILE) {
-            throw RuntimeException(
-                "setArtifactFile called with $artifactType which is an ArtifactType" +
-                        " with kind set to DIRECTORY."
-            )
-        }
-
-        val artifactRecord = artifactRecordMap[artifactType]
-        val intermediatesOutput = InternalArtifactType.Category.INTERMEDIATES.outputPath
-
-        val lastProducer = artifactRecord?.lastProducer
-        lastProducer?.fileOrDirProperty?.set(
-            project.layout.buildDirectory.file(
+        operationType: OperationType,
+        taskName: String,
+        fileName: String) : Provider<RegularFile> = createArtifactFile(
+            artifactType,
+            operationType,
+            taskName,
+            File(
                 FileUtils.join(
-                    intermediatesOutput,
+                    artifactType.getOutputPath(),
                     artifactType.name().toLowerCase(),
                     getIdentifier(),
-                    lastProducer.name,
-                    lastProducer.fileName
+                    fileName
                 )
             )
         )
 
-        val provider = project.layout.buildDirectory.file(
+    /**
+     * Create a [Provider] of [RegularFile] that can be used as a task output.
+     *
+     * @param artifactType the intended artifact type stored in the directory.
+     * @param operationType type of output (appending, replacing or initial version)
+     * @param taskName name of the producer task.
+     * @param file file location to use, relative to the project build output.
+     */
+    fun createArtifactFile(
+        artifactType: ArtifactType,
+        operationType: OperationType,
+        taskName: String,
+        requestedFileLocation: File) : Provider<RegularFile> {
+
+        if (artifactType.kind() != ArtifactType.Kind.FILE) {
+            throw RuntimeException(
+                "appendArtifactFile called with $artifactType which is an ArtifactType" +
+                        " with kind set to DIRECTORY."
+            )
+        }
+
+        return createFileOrDirectory(artifactType,
+            operationType,
+            taskName,
+            requestedFileLocation) {
+            createFileProperty<RegularFileProperty>(artifactType, it)
+        }
+    }
+
+    /**
+     * Create a [Provider] of [Directory] that can be used as a task output.
+     *
+     * @param artifactType the intended artifact type stored in the directory.
+     * @param taskName name of the producer task.
+     * @param fileName name of the directory or "out" by default.
+     */
+    fun createDirectory(artifactType: ArtifactType,
+        taskName: String,
+        fileName: String = "out"): Provider<Directory> =
+
+        createDirectory(artifactType,
+            OperationType.APPEND,
+            taskName,
+            File(FileUtils.join(
+                artifactType.getOutputPath(),
+                artifactType.name().toLowerCase(),
+                getIdentifier(),
+                fileName)))
+    /**
+     * Create a [Provider] of [Directory] that can be used as a task output.
+     *
+     * @param artifactType the intended artifact type stored in the directory.
+     * @param operationType type of output (appending, replacing or initial version)
+     * @param taskName name of the producer task.
+     * @param fileName name of the directory or "out" by default.
+     */
+    fun createDirectory(artifactType: ArtifactType,
+        operationType: OperationType,
+        taskName: String,
+        fileName: String = "out"): Provider<Directory> =
+
+        createDirectory(artifactType, operationType, taskName, File(FileUtils.join(
+            artifactType.getOutputPath(),
+            artifactType.name().toLowerCase(),
+            getIdentifier(),
+            fileName)))
+
+    /**
+     * Create a [Provider] of [Directory] that can be used as a task output.
+     *
+     * @param artifactType the intended artifact type stored in the directory.
+     * @param operationType type of output (appending, replacing or initial version)
+     * @param taskName name of the producer task.
+     * @param requestFileLocation location of the output file, relative the project build directory.
+     * @param requestFileLocation location of the output file, relative the project build directory.
+     */
+    fun createDirectory(artifactType: ArtifactType,
+        operationType: OperationType,
+        taskName: String,
+        requestFileLocation: File): Provider<Directory> {
+
+        if (artifactType.kind() != ArtifactType.Kind.DIRECTORY) {
+            throw RuntimeException("createDirectory called with $artifactType which is an " +
+                    "ArtifactType with kind set to File.")
+        }
+
+        return createFileOrDirectory(
+            artifactType,
+            operationType,
+            taskName,
+            requestFileLocation) {
+            createFileProperty<DirectoryProperty>(artifactType, it)
+        }
+    }
+
+    private fun <T: FileSystemLocation> createFileOrDirectory(
+        artifactType: ArtifactType,
+        operationType: OperationType,
+        taskName: String,
+        requestedFileLocation: File,
+        propertyCreator: (path: String)->Provider<T> ) : Provider<T> {
+
+        val artifactRecord = artifactRecordMap[artifactType]
+        val intermediatesOutput = InternalArtifactType.Category.INTERMEDIATES.outputPath
+
+        val output = propertyCreator(
             if (artifactRecord == null || artifactType.getOutputPath() != intermediatesOutput) {
                 requestedFileLocation.path
             } else {
@@ -422,138 +476,15 @@ abstract class BuildArtifactsHolder(
                     artifactType.name().toLowerCase(),
                     getIdentifier(),
                     taskName,
-                    requestedFileLocation.name
-                )
-            }
-        )
-
-        val fileProperty = project.layout.fileProperty(provider)
-        createOutput(artifactType,
-            BuildableArtifactImpl(
-                project.files(fileProperty).builtBy(taskName),
-                dslScope),
-            @Suppress("UNCHECKED_CAST")
-            BuildableProducer(
-                fileProperty as Property<in FileSystemLocation>,
-                taskName,
-                requestedFileLocation.name))
-        return fileProperty
-    }
-
-    /**
-     * set a new file to a specified artifact type. The new content will be added
-     * after any existing content.
-     *
-     * @param artifactType [ArtifactType] the new file will be classified under.
-     * @oaram taskName name of the task producing the artifact.
-     * @param fileName expected name for the file
-     * @return [Provider<RegularFile] object that will resolve during execution phase to the final
-     * location to write the [task] output to.
-     */
-    fun appendArtifactFile(
-        artifactType: ArtifactType,
-        taskName: String,
-        fileName: String) : Provider<RegularFile> {
-
-        if (artifactType.kind() != ArtifactType.Kind.FILE) {
-            throw RuntimeException(
-                "setArtifactFile called with $artifactType which is an ArtifactType" +
-                        " with kind set to DIRECTORY."
-            )
-        }
-
-        val artifactRecord = artifactRecordMap[artifactType]
-        val intermediatesOutput = InternalArtifactType.Category.INTERMEDIATES.outputPath
-
-        val lastProducer = artifactRecord?.lastProducer
-        lastProducer?.fileOrDirProperty?.set(
-            project.layout.buildDirectory.file(
-                FileUtils.join(
-                    intermediatesOutput,
-                    artifactType.name().toLowerCase(),
-                    getIdentifier(),
-                    lastProducer.name,
-                    lastProducer.fileName
-                )
-            )
-        )
-
-        val provider = project.layout.buildDirectory.file(
-            if (artifactRecord == null || artifactType.getOutputPath() != intermediatesOutput) {
-                FileUtils.join(
-                    intermediatesOutput,
-                    artifactType.name().toLowerCase(),
-                    getIdentifier(),
-                    fileName
-                )
-            } else {
-                FileUtils.join(
-                    intermediatesOutput,
-                    artifactType.name().toLowerCase(),
-                    getIdentifier(),
-                    taskName,
-                    fileName
-                )
-            }
-        )
-
-        val fileProperty = project.layout.fileProperty(provider)
-        createOutput(artifactType,
-            BuildableArtifactImpl(
-                project.files(fileProperty).builtBy(taskName),
-                dslScope),
-            @Suppress("UNCHECKED_CAST")
-            BuildableProducer(
-                fileProperty as Property<in FileSystemLocation>,
-                taskName,
-                fileName))
-        return fileProperty
-    }
-
-    /**
-     * Temporary function until all users switch from File to Provider<Directory> or
-     * Provider<RegularFile>
-     */
-    fun appendDirectory(artifactType: ArtifactType,
-        taskName: String,
-        fileName: String = "out"): Provider<Directory> {
-         if (artifactType.kind() != ArtifactType.Kind.DIRECTORY) {
-                throw RuntimeException("appendDirectory called with $artifactType which is an " +
-                        "ArtifactType with kind set to File.")
-         }
-
-        val artifactRecord = artifactRecordMap[artifactType]
-        val intermediatesOutput = InternalArtifactType.Category.INTERMEDIATES.outputPath
-        val lastProducer = artifactRecord?.lastProducer
-        lastProducer?.fileOrDirProperty?.set(
-            project.layout.buildDirectory.dir(
-                FileUtils.join(
-                    intermediatesOutput,
-                    artifactType.name().toLowerCase(),
-                    getIdentifier(),
-                    lastProducer.name,
-                    lastProducer.fileName)
-            ))
-
-        val provider = project.layout.buildDirectory.dir(
-            if (artifactRecord == null || artifactType.getOutputPath() != intermediatesOutput) {
-                FileUtils.join(
-                    artifactType.getOutputPath(),
-                    artifactType.name().toLowerCase(),
-                    getIdentifier(),
-                    fileName)
-            } else {
-                FileUtils.join(
-                    intermediatesOutput,
-                    artifactType.name().toLowerCase(),
-                    getIdentifier(),
-                    taskName,
-                    fileName)
+                    requestedFileLocation.name)
             })
 
         val fileCollection =
-            createFileCollection(artifactRecord, provider).builtBy(taskName)
-        val output= project.layout.directoryProperty(provider)
+            createFileCollection(
+                artifactType,
+                operationType,
+                output,
+                taskName)
 
         doAppendArtifact(
             artifactType,
@@ -562,16 +493,88 @@ abstract class BuildArtifactsHolder(
             BuildableProducer(
                 output as Property<in FileSystemLocation>,
                 taskName,
-                fileName))
+                requestedFileLocation.name))
         return output
     }
 
-    private fun createFileCollection(artifactRecord: ArtifactRecord?, newFiles: Any) =
-        if (artifactRecord != null) {
-            project.files(artifactRecord.last, newFiles)
-        } else {
-            project.files(newFiles)
+    private inline fun <reified T> createFileProperty(
+        artifactType: ArtifactType,
+        path: String): T {
+
+        val artifactRecord = artifactRecordMap[artifactType]
+        val intermediatesOutput = InternalArtifactType.Category.INTERMEDIATES.outputPath
+
+        // reset lastProducer's output location if present.
+        val lastProducer = artifactRecord?.lastProducer
+        if (lastProducer != null) {
+            val lastProducerNewLocation = FileUtils.join(
+                intermediatesOutput,
+                artifactType.name().toLowerCase(),
+                getIdentifier(),
+                lastProducer.name,
+                lastProducer.fileName
+            )
+
+            lastProducer.fileOrDirProperty.set(
+                when (T::class) {
+                    RegularFileProperty::class -> project.layout.buildDirectory.file(
+                        lastProducerNewLocation
+                    )
+                    DirectoryProperty::class -> project.layout.buildDirectory.dir(
+                        lastProducerNewLocation
+                    )
+                    else -> throw RuntimeException("setLastProducer called with unsupported type ${T::class}")
+                }
+            )
         }
+
+        return when(T::class) {
+            RegularFileProperty::class -> project.layout.fileProperty(
+                project.layout.buildDirectory.file(path)) as T
+            DirectoryProperty::class -> project.layout.directoryProperty(
+                project.layout.buildDirectory.dir(path)) as T
+            else -> throw RuntimeException("createFileOrDirectory called with unsupported type ${T::class}")
+        }
+    }
+
+    private fun createFileCollection(
+        artifactType: ArtifactType,
+        operationType: OperationType,
+        newFiles: Any,
+        builtBy: String?= null): FileCollection {
+
+        val artifactRecord = artifactRecordMap[artifactType]
+        @Suppress("REDUNDANT_ELSE_IN_WHEN")
+        val fileCollection = when(operationType) {
+            OperationType.INITIAL -> {
+                if (artifactRecord!= null && artifactRecord.size > 0) {
+                    val lastProducer = artifactRecord.lastProducer
+                    throw RuntimeException("Task $builtBy is expecting to be the initial producer of $artifactType, but "
+                        + "${lastProducer?.name} already registered itself as a producer at these locations : "
+                        + Joiner.on('\n').join(artifactRecord.last.files.map { it.absolutePath }))
+                }
+                project.files(newFiles)
+            }
+            OperationType.TRANSFORM -> {
+                project.files(newFiles)
+            }
+            OperationType.APPEND -> {
+                if (artifactRecord != null) {
+                    project.files(artifactRecord.last, newFiles)
+                } else {
+                    project.files(newFiles)
+                }
+            }
+            else -> {
+                throw RuntimeException("Unhandled OperationType $operationType")
+            }
+        }
+
+        if (builtBy != null) {
+            fileCollection.builtBy(builtBy)
+        }
+        return fileCollection
+    }
 
     private fun doAppendArtifact(type: ArtifactType,
         files: FileCollection,

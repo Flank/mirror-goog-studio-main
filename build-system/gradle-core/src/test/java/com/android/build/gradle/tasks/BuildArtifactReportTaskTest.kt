@@ -60,8 +60,14 @@ class BuildArtifactReportTaskTest {
                     dslScope)
         task0 = project.tasks.create("task0")
         task1 = project.tasks.create("task1")
-        artifactsHolder.appendArtifact(JAVAC_CLASSES, task0, "javac_classes")
-        artifactsHolder.appendArtifact(JAVA_COMPILE_CLASSPATH, task1, "java_compile_classpath")
+        artifactsHolder.createDirectory(JAVAC_CLASSES,
+            BuildArtifactsHolder.OperationType.INITIAL,
+            task0.name,
+            "javac_classes")
+        artifactsHolder.createDirectory(JAVA_COMPILE_CLASSPATH,
+            BuildArtifactsHolder.OperationType.INITIAL,
+            task1.name,
+            "java_compile_classpath")
         BuildableArtifactImpl.enableResolution()
     }
 
@@ -78,7 +84,11 @@ class BuildArtifactReportTaskTest {
         val outputFile = project.file("report.txt")
         task.init(artifactsHolder::createReport, outputFile)
 
-        artifactsHolder.replaceArtifact(JAVAC_CLASSES, project.files("classes").files, task1)
+        artifactsHolder.createBuildableArtifact(
+            JAVAC_CLASSES,
+            BuildArtifactsHolder.OperationType.TRANSFORM,
+            project.files("classes").files,
+            task1.name)
 
         task.report()
 

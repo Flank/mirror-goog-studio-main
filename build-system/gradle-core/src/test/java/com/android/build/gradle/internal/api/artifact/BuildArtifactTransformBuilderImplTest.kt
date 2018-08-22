@@ -118,10 +118,12 @@ class BuildArtifactTransformBuilderImplTest {
     @Test
     fun singleInput() {
         var input : InputArtifactProvider? = null
-        taskHolder.appendArtifact(JAVAC_CLASSES, project.files("javac"))
+        taskHolder.createBuildableArtifact(JAVAC_CLASSES,
+            BuildArtifactsHolder.OperationType.INITIAL,
+            project.files("javac"))
         builder
                 .append(JAVAC_CLASSES)
-                .create { i ,o ->
+                .create { i, _ ->
                     input = i
                     assertThat(this).isInstanceOf(TestClassWithExpectations::class.java)
                     assertThat(i.getArtifact(JAVAC_CLASSES)).isSameAs(i.artifact)
@@ -143,8 +145,16 @@ class BuildArtifactTransformBuilderImplTest {
                 assertFailsWith<RuntimeException> { o.file }
             }
         val task = project.tasks.single()
-        taskHolder.appendArtifact(JAVAC_CLASSES, task ,"javac")
-        taskHolder.appendArtifact(JAVA_COMPILE_CLASSPATH, task,"classpath")
+        taskHolder.createDirectory(
+            JAVAC_CLASSES,
+            BuildArtifactsHolder.OperationType.INITIAL,
+            task.name,
+            "javac")
+        taskHolder.createDirectory(
+            JAVA_COMPILE_CLASSPATH,
+            BuildArtifactsHolder.OperationType.INITIAL,
+            task.name,
+            "classpath")
         BuildableArtifactImpl.enableResolution()
         buildableArtifactsActions.runAll()
 
@@ -172,8 +182,16 @@ class BuildArtifactTransformBuilderImplTest {
                     assertFailsWith<RuntimeException> { o.file }
                 }
         val task = project.tasks.single()
-        taskHolder.appendArtifact(JAVAC_CLASSES, task, "javac")
-        taskHolder.appendArtifact(JAVA_COMPILE_CLASSPATH, task, "classpath")
+        taskHolder.createDirectory(
+            JAVAC_CLASSES,
+            BuildArtifactsHolder.OperationType.INITIAL,
+            task.name,
+            "javac")
+        taskHolder.createDirectory(
+            JAVA_COMPILE_CLASSPATH,
+            BuildArtifactsHolder.OperationType.INITIAL,
+            task.name,
+            "classpath")
         BuildableArtifactImpl.enableResolution()
         buildableArtifactsActions.runAll()
 
@@ -204,7 +222,7 @@ class BuildArtifactTransformBuilderImplTest {
             if (expectations == null || expectations!!.isEmpty()) {
                 return
             }
-            expectations!!.forEach { key, value ->
+            expectations!!.forEach { _, value ->
                 assertThat(input!!.files).containsAllIn(value)
             }
         }
@@ -212,9 +230,15 @@ class BuildArtifactTransformBuilderImplTest {
 
     @Test
     fun chainedAppend() {
-        taskHolder.appendArtifact(JAVAC_CLASSES, project.files("initial_file"))
-        taskHolder.appendArtifact(JAVAC_CLASSES, project.files("updated_file"))
-        taskHolder.appendArtifact(JAVAC_CLASSES, project.files("final_file"))
+        taskHolder.createBuildableArtifact(JAVAC_CLASSES,
+            BuildArtifactsHolder.OperationType.INITIAL,
+            project.files("initial_file"))
+        taskHolder.createBuildableArtifact(JAVAC_CLASSES,
+            BuildArtifactsHolder.OperationType.APPEND,
+            project.files("updated_file"))
+        taskHolder.createBuildableArtifact(JAVAC_CLASSES,
+            BuildArtifactsHolder.OperationType.APPEND,
+            project.files("final_file"))
         builder.append(JAVAC_CLASSES)
             .create{ i, o ->
                 this.input = i.artifact
@@ -232,10 +256,10 @@ class BuildArtifactTransformBuilderImplTest {
 
     @Test
     fun chainedReplace() {
-        taskHolder.appendArtifact(JAVAC_CLASSES, project.files("initial_file"))
-        taskHolder.replaceArtifact(JAVAC_CLASSES, project.files("replaced_file").files,
-            project.tasks.create("replaceTask"))
-        taskHolder.appendArtifact(JAVAC_CLASSES, project.files("final_file"))
+        taskHolder.createBuildableArtifact(JAVAC_CLASSES, BuildArtifactsHolder.OperationType.INITIAL, project.files("initial_file"))
+        taskHolder.createBuildableArtifact(JAVAC_CLASSES, BuildArtifactsHolder.OperationType.TRANSFORM, project.files("replaced_file").files,
+            project.tasks.create("replaceTask").name)
+        taskHolder.createBuildableArtifact(JAVAC_CLASSES, BuildArtifactsHolder.OperationType.APPEND, project.files("final_file"))
         builder.append(JAVAC_CLASSES)
             .create{ i, o ->
                 this.input = i.artifact
@@ -250,7 +274,8 @@ class BuildArtifactTransformBuilderImplTest {
    }
 
     @Test fun finalInput() {
-        taskHolder.appendArtifact(JAVAC_CLASSES, project.files("initial_file"))
+        taskHolder.createBuildableArtifact(JAVAC_CLASSES,
+            BuildArtifactsHolder.OperationType.INITIAL, project.files("initial_file"))
         builder.append(JAVAC_CLASSES)
             .create{ i, o ->
                 this.input = i.artifact
@@ -283,8 +308,12 @@ class BuildArtifactTransformBuilderImplTest {
         val anotherTask = project.tasks.withType(TestClassWithExpectations::class.java).matching { it != initialTask } .single()
 
         // add some more files to the artifact
-        taskHolder.appendArtifact(JAVAC_CLASSES, project.files("yet_another_file"))
-        taskHolder.appendArtifact(JAVAC_CLASSES, project.files("final_file"))
+        taskHolder.createBuildableArtifact(JAVAC_CLASSES,
+            BuildArtifactsHolder.OperationType.APPEND,
+            project.files("yet_another_file"))
+        taskHolder.createBuildableArtifact(JAVAC_CLASSES,
+            BuildArtifactsHolder.OperationType.APPEND,
+            project.files("final_file"))
 
         BuildableArtifactImpl.enableResolution()
         buildableArtifactsActions.runAll()

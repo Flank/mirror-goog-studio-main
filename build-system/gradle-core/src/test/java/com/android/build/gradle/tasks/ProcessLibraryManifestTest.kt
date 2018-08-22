@@ -92,9 +92,10 @@ class ProcessLibraryManifestTest {
             ProcessLibraryManifest.CreationAction(variantScope)
         val taskProvider = project!!.tasks.register<ProcessLibraryManifest>("fooRelease", ProcessLibraryManifest::class.java)
 
-        `when`(buildArtifactsHolder.appendDirectory(
-            InternalArtifactType.MERGED_MANIFESTS, "processManifest", ""))
-            .thenReturn(mergedManifestsProvider)
+        `when`(buildArtifactsHolder.createDirectory(
+            InternalArtifactType.MERGED_MANIFESTS,
+            "processManifest",
+            "")).thenReturn(mergedManifestsProvider)
 
         `when`(mergedManifestsProvider.get()).thenReturn(mergedManifests)
         `when`(mergedManifests.file(SdkConstants.FN_ANDROID_MANIFEST_XML))

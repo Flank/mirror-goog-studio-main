@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.process.JarSigner
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
@@ -242,10 +243,15 @@ open class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecutor)
             val bundleName = "${scope.globalScope.projectBaseName}.aab"
 
             bundleFile = if (apkLocationOverride == null)
-                scope.artifacts.setArtifactFile(InternalArtifactType.BUNDLE, taskName, bundleName)
-            else
-                scope.artifacts.setArtifactFile(
+                scope.artifacts.createArtifactFile(
                     InternalArtifactType.BUNDLE,
+                    BuildArtifactsHolder.OperationType.INITIAL,
+                    taskName,
+                    bundleName)
+            else
+                scope.artifacts.createArtifactFile(
+                    InternalArtifactType.BUNDLE,
+                    BuildArtifactsHolder.OperationType.INITIAL,
                     taskName,
                     FileUtils.join(
                         scope.globalScope.project.file(apkLocationOverride),

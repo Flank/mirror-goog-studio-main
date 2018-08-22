@@ -22,12 +22,12 @@ import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
 import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder.OperationType
 import com.android.build.gradle.internal.variant2.DslScopeImpl
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
@@ -40,22 +40,22 @@ import java.io.File
  */
 class BuildArtifactsHolderTest {
 
-    lateinit private var project : Project
+    private lateinit var project : Project
     lateinit var root : File
     private val dslScope = DslScopeImpl(
             FakeEvalIssueReporter(throwOnError = true),
             FakeDeprecationReporter(),
             FakeObjectFactory())
-    lateinit private var holder : BuildArtifactsHolder
-    lateinit private var task0 : Task
-    lateinit private var task1 : Task
-    lateinit private var task2 : Task
+    private lateinit var holder : BuildArtifactsHolder
+    private lateinit var task0 : Task
+    private lateinit var task1 : Task
+    private lateinit var task2 : Task
 
     @Before
     fun setUp() {
         BuildableArtifactImpl.enableResolution()
         project = ProjectBuilder.builder().build()
-        root = project.file("root")
+        root = project.file("build")
         holder = VariantBuildArtifactsHolder(
             project,
             "debug",
@@ -72,13 +72,19 @@ class BuildArtifactsHolderTest {
 
     @Test
     fun replaceOutput() {
-        val files1 = holder.replaceArtifact(JAVAC_CLASSES,
-            project.files(file("task1", "foo")).files, task1)
+        val files1 = holder.createBuildableArtifact(JAVAC_CLASSES,
+            OperationType.INITIAL,
+            project.files(file("task1", "foo")).files, task1.name)
         assertThat(holder.getArtifactFiles(JAVAC_CLASSES)).isSameAs(files1)
-        val files2 = holder.replaceArtifact(JAVAC_CLASSES,
-            project.files(file("task2", "bar")).files, task2)
+        val files2 = holder.createBuildableArtifact(JAVAC_CLASSES,
+            OperationType.TRANSFORM,
+            project.files(file("task2", "bar")).files, task2.name)
         assertThat(holder.getArtifactFiles(JAVAC_CLASSES)).isSameAs(files2)
-        holder.appendArtifact(JAVAC_CLASSES, task0, "baz")
+        holder.createDirectory(
+            JAVAC_CLASSES,
+            OperationType.APPEND,
+            task0.name,
+            "baz")
 
         assertThat(files1.single()).isEqualTo(file("task1", "foo"))
         // TaskDependency.getDependencies accepts null.
@@ -95,14 +101,14 @@ class BuildArtifactsHolderTest {
 
     @Test
     fun appendOutput() {
-        holder.appendArtifact(JAVAC_CLASSES, task1, "foo")
+        holder.createDirectory(JAVAC_CLASSES, OperationType.INITIAL, task1.name, "foo")
         val files0 = holder.getFinalArtifactFiles(JAVAC_CLASSES)
         val files1 = holder.getArtifactFiles(JAVAC_CLASSES)
         assertThat(holder.getArtifactFiles(JAVAC_CLASSES)).isSameAs(files1)
-        holder.appendArtifact(JAVAC_CLASSES, task2, "bar")
+        holder.createDirectory(JAVAC_CLASSES, OperationType.APPEND, task2.name, "bar")
         val files2 = holder.getArtifactFiles(JAVAC_CLASSES)
         assertThat(holder.getArtifactFiles(JAVAC_CLASSES)).isSameAs(files2)
-        holder.appendArtifact(JAVAC_CLASSES, task0, "baz")
+        holder.createDirectory(JAVAC_CLASSES, OperationType.APPEND, task0.name, "baz")
 
         assertThat(files1).containsExactly(
                 file("task1", "foo"))
@@ -131,7 +137,10 @@ class BuildArtifactsHolderTest {
     @Test
     fun obtainFinalOutput() {
         val finalVersion = holder.getFinalArtifactFiles(JAVAC_CLASSES)
-        holder.replaceArtifact(JAVAC_CLASSES, project.files(file("task1", "task1File")).files, task1)
+        holder.createBuildableArtifact(JAVAC_CLASSES,
+            OperationType.TRANSFORM,
+            project.files(file("task1", "task1File")).files,
+            task1.name)
         val files1 = holder.getArtifactFiles(JAVAC_CLASSES)
 
         assertThat(files1.single()).isEqualTo(file("task1", "task1File"))
@@ -139,13 +148,18 @@ class BuildArtifactsHolderTest {
         assertThat(files1.buildDependencies.getDependencies(null)).containsExactly(task1)
 
         // Now add some more files to this artifact type using all appendArtifact methods
-        holder.appendArtifact(JAVAC_CLASSES, task0, "task0File")
-        val task0_files = holder.getArtifactFiles(JAVAC_CLASSES)
-        holder.appendArtifact(JAVAC_CLASSES, project.files("single_file"))
-        holder.appendArtifact(JAVAC_CLASSES, project.files("element1", "element2"))
+        holder.createBuildableArtifact(JAVAC_CLASSES, OperationType.APPEND,
+            project.files(file("task0", "task0File")).files,
+            task0.name)
+        val task0Files = holder.getArtifactFiles(JAVAC_CLASSES)
+        holder.createBuildableArtifact(JAVAC_CLASSES,
+            OperationType.APPEND, project.files("single_file"))
+        holder.createBuildableArtifact(JAVAC_CLASSES,
+            OperationType.APPEND,
+            project.files("element1", "element2"))
 
         @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-        assertThat(task0_files.buildDependencies.getDependencies(null)).containsExactly(task0, task1)
+        assertThat(task0Files.buildDependencies.getDependencies(null)).containsExactly(task0, task1)
 
         // assert that the current buildableArtifact has all the files
         assertThat(holder.getArtifactFiles(JAVAC_CLASSES).files).containsExactly(
@@ -165,14 +179,17 @@ class BuildArtifactsHolderTest {
 
     @Test
     fun earlyFinalOutput() {
-        val finalVersion = holder.getFinalArtifactFiles(JAVAC_CLASSES);
+        val finalVersion = holder.getFinalArtifactFiles(JAVAC_CLASSES)
         // no-one appends or replaces, we should be empty files if resolved.
         assertThat(finalVersion.files).isEmpty()
     }
 
     @Test
     fun lateFinalOutput() {
-        holder.replaceArtifact(JAVAC_CLASSES, project.files(file("task1", "task1File")).files, task1)
+        holder.createBuildableArtifact(JAVAC_CLASSES,
+            OperationType.INITIAL,
+            project.files(file("task1", "task1File")),
+            task1.name)
         val files1 = holder.getArtifactFiles(JAVAC_CLASSES)
 
         assertThat(files1.single()).isEqualTo(file("task1", "task1File"))
@@ -188,12 +205,19 @@ class BuildArtifactsHolderTest {
 
     @Test
     fun addBuildableArtifact() {
-        holder.replaceArtifact(JAVAC_CLASSES, project.files(file("task1", "task1File")).files, task1)
+        holder.createBuildableArtifact(
+            JAVAC_CLASSES,
+            OperationType.INITIAL,
+            project.files(file("task1", "task1File")).files,
+            task1.name)
         val javaClasses = holder.getArtifactFiles(JAVAC_CLASSES)
 
         // register the buildable artifact under a different type.
         val newHolder = TestBuildArtifactsHolder(project, { root }, dslScope)
-        newHolder.appendArtifact(JAVAC_CLASSES, javaClasses)
+        newHolder.createBuildableArtifact(
+            JAVAC_CLASSES,
+            OperationType.INITIAL,
+            javaClasses)
         // and verify that files and dependencies are carried over.
         val newJavaClasses = newHolder.getArtifactFiles(JAVAC_CLASSES)
         assertThat(newJavaClasses.single()).isEqualTo(file("task1", "task1File"))
@@ -203,7 +227,7 @@ class BuildArtifactsHolderTest {
 
     @Test
     fun finalBuildableFileLocation() {
-        holder.setArtifactFile(InternalArtifactType.BUNDLE, task1, "finalFile")
+        holder.createArtifactFile(InternalArtifactType.BUNDLE, OperationType.INITIAL, task1.name, "finalFile")
         val finalArtifactFiles = holder.getFinalArtifactFiles(InternalArtifactType.BUNDLE)
         assertThat(finalArtifactFiles.files).hasSize(1)
         val outputFile = finalArtifactFiles.files.elementAt(0)
@@ -220,7 +244,7 @@ class BuildArtifactsHolderTest {
     fun finalBuildableDirectoryLocation() {
         val taskProvider = Mockito.mock(TaskProvider::class.java)
         Mockito.`when`(taskProvider.get()).thenReturn(task1)
-        holder.appendDirectory(InternalArtifactType.MERGED_MANIFESTS,
+        holder.createDirectory(InternalArtifactType.MERGED_MANIFESTS,
             task1.name,
             "finalFolder")
         val finalArtifactFiles = holder.getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS)
@@ -237,10 +261,10 @@ class BuildArtifactsHolderTest {
 
     @Test
     fun finalReplacedBuildableFileLocation() {
-        val task1Output = holder.setArtifactFile(
-            InternalArtifactType.BUNDLE, task1, "finalFile")
-        val task2Output = holder.setArtifactFile(
-            InternalArtifactType.BUNDLE, task2, "replacingFile")
+        val task1Output = holder.createArtifactFile(
+            InternalArtifactType.BUNDLE, OperationType.INITIAL, task1.name, "finalFile")
+        val task2Output = holder.createArtifactFile(
+            InternalArtifactType.BUNDLE, OperationType.TRANSFORM, task2.name, "replacingFile")
         val finalArtifactFiles = holder.getFinalArtifactFiles(InternalArtifactType.BUNDLE)
         assertThat(finalArtifactFiles.files).hasSize(1)
         val outputFile = finalArtifactFiles.files.elementAt(0)
@@ -273,11 +297,11 @@ class BuildArtifactsHolderTest {
 
         val finalArtifactFiles = holder.getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS)
 
-        val task1Output = holder.appendDirectory(
+        val task1Output = holder.createDirectory(
             InternalArtifactType.MERGED_MANIFESTS, task1.name, "originalFolder")
         assertThat(task1Output.get().asFile.path).isEqualTo(finalArtifactFiles.files.elementAt(0).path)
 
-        val task2Output = holder.appendDirectory(
+        val task2Output = holder.createDirectory(
             InternalArtifactType.MERGED_MANIFESTS, task2.name, "addedFolder")
         assertThat(finalArtifactFiles.files).hasSize(2)
         // check that our output file

@@ -80,11 +80,19 @@ class OutputFileProviderImpl(
 
     fun commit() {
         replacedArtifacts.forEach { artifactType ->
-            artifactsHolder.replaceArtifact(artifactType, filesMap.get(artifactType), task)
+            artifactsHolder.createBuildableArtifact(
+                artifactType,
+                BuildArtifactsHolder.OperationType.TRANSFORM,
+                filesMap.get(artifactType),
+                task.name)
         }
 
         appendedArtifacts.forEach { artifactType ->
-            artifactsHolder.appendArtifact(artifactType, filesMap.get(artifactType), task)
+            artifactsHolder.createBuildableArtifact(
+                artifactType,
+                BuildArtifactsHolder.OperationType.APPEND,
+                filesMap.get(artifactType),
+                task.name)
         }
     }
 

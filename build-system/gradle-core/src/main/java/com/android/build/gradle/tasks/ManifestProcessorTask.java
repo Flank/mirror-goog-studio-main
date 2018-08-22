@@ -70,7 +70,7 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
     /** The processed Manifests files folder. */
     @OutputDirectory
     @InternalID(InternalArtifactType.MERGED_MANIFESTS)
-    @Replace(out = "")
+    @Initial(out = "")
     public Provider<Directory> getManifestOutputDirectory() {
         return manifestOutputDirectory;
     }

@@ -63,7 +63,10 @@ class OutputFileProviderImplTest {
                         listOf(),
                         task)
         val outputFile = output.getFile("foo")
-        holder.appendArtifact(JAVAC_CLASSES, listOf(outputFile), task)
+        holder.createBuildableArtifact(JAVAC_CLASSES,
+            BuildArtifactsHolder.OperationType.TRANSFORM,
+            listOf(outputFile),
+            task.name)
         assertThat(outputFile).hasName("foo")
         BuildableArtifactImpl.enableResolution()
         assertThat(holder.getArtifactFiles(JAVAC_CLASSES).single()).hasName("foo")
@@ -79,8 +82,16 @@ class OutputFileProviderImplTest {
                         listOf(JAVAC_CLASSES),
                         task)
         val fooFile = output.getFile("foo")
-        holder.appendArtifact(JAVAC_CLASSES, listOf(fooFile), task)
-        holder.appendArtifact(JAVAC_CLASSES, task, "bar")
+        holder.createBuildableArtifact(
+            JAVAC_CLASSES,
+            BuildArtifactsHolder.OperationType.INITIAL,
+            listOf(fooFile),
+            task.name)
+        holder.createDirectory(
+            JAVAC_CLASSES,
+            BuildArtifactsHolder.OperationType.APPEND,
+            task.name,
+            "bar")
         BuildableArtifactImpl.enableResolution()
         assertThat(fooFile).hasName("foo")
         assertThat(holder.getArtifactFiles(JAVAC_CLASSES).map(File::getName)).containsExactly("foo", "bar")
@@ -97,9 +108,20 @@ class OutputFileProviderImplTest {
                         task)
         val fooFile = output.getFile("foo", JAVAC_CLASSES, JAVA_COMPILE_CLASSPATH)
         val barFile = output.getFile("bar", JAVA_COMPILE_CLASSPATH)
-        holder.appendArtifact(JAVAC_CLASSES, listOf(fooFile), task)
-        holder.appendArtifact(JAVA_COMPILE_CLASSPATH, task, "classpath")
-        holder.appendArtifact(JAVA_COMPILE_CLASSPATH, listOf(barFile, fooFile), task)
+        holder.createBuildableArtifact(
+            JAVAC_CLASSES,
+            BuildArtifactsHolder.OperationType.INITIAL,
+            listOf(fooFile),
+            task.name)
+        holder.createDirectory(JAVA_COMPILE_CLASSPATH,
+            BuildArtifactsHolder.OperationType.INITIAL,
+            task.name,
+            "classpath")
+        holder.createBuildableArtifact(
+            JAVA_COMPILE_CLASSPATH,
+            BuildArtifactsHolder.OperationType.APPEND,
+            listOf(barFile, fooFile),
+            task.name)
         BuildableArtifactImpl.enableResolution()
 
         assertThat(output.getFile("foo")).hasName("foo")

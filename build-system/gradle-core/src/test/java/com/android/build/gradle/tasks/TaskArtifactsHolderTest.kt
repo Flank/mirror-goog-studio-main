@@ -89,7 +89,7 @@ class TaskArtifactsHolderTest {
         val provider: Provider<Directory> = Mockito.mock(Provider::class.java) as Provider<Directory>
         val setupMock = { taskProvider: TaskProvider<*> ->
             Mockito.`when`(
-                artifacts.appendDirectory(
+                artifacts.createDirectory(
                     MockitoKotlinUtils.safeEq(InternalArtifactType.APP_CLASSES),
                     MockitoKotlinUtils.safeAny(String::class.java, ""),
                     MockitoKotlinUtils.safeEq("out")))

@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.gradle.internal.tasks.factory.TaskFactory
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -99,8 +100,9 @@ class NamespacedResourcesTaskManager(
            )
        )
         if (packageOutputType != null) {
-            variantScope.artifacts.appendArtifact(
+            variantScope.artifacts.createBuildableArtifact(
                 packageOutputType,
+                BuildArtifactsHolder.OperationType.INITIAL,
                 variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES))
         }
     }
@@ -109,8 +111,9 @@ class NamespacedResourcesTaskManager(
             packageOutputType: InternalArtifactType?) {
         taskFactory.register(ProcessAndroidAppResourcesTask.CreationAction(variantScope))
         if (packageOutputType != null) {
-            variantScope.artifacts.appendArtifact(
+            variantScope.artifacts.createBuildableArtifact(
                 packageOutputType,
+                BuildArtifactsHolder.OperationType.INITIAL,
                 variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES))
         }
     }

@@ -582,13 +582,15 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
 
             // for instant app features, we output the feature manifest for merging.
             if (variantType.isFeatureSplit()) {
-                artifacts.appendArtifact(
+                artifacts.createBuildableArtifact(
                         InternalArtifactType.METADATA_FEATURE_MANIFEST,
+                        BuildArtifactsHolder.OperationType.INITIAL,
                         artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS));
             }
 
-            artifacts.appendArtifact(
+            artifacts.createBuildableArtifact(
                     InternalArtifactType.MANIFEST_METADATA,
+                    BuildArtifactsHolder.OperationType.INITIAL,
                     artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS));
 
             instantRunManifestOutputDirectory =
