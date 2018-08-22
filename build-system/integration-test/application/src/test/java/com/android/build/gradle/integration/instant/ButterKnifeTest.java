@@ -73,7 +73,7 @@ public class ButterKnifeTest {
                             public void makeChange() throws Exception {
                                 TestFileUtils.searchAndReplace(
                                         mActiv.getAbsoluteFile(),
-                                        "text\\.getText\\(\\)\\.toString\\(\\)",
+                                        "text.getText().toString()",
                                         "getMessage()");
                                 TestFileUtils.addMethod(
                                         mActiv,
@@ -112,8 +112,7 @@ public class ButterKnifeTest {
 
         InstantRun instantRunModel = InstantRunTestUtils.doInitialBuild(project, androidVersion);
 
-        TestFileUtils.searchAndReplace(
-                mActiv, "text\\.getText\\(\\)\\.toString\\(\\)", "\"CHANGE\"");
+        TestFileUtils.searchAndReplace(mActiv, "text.getText().toString()", "\"CHANGE\"");
 
         project.executor().withInstantRun(androidVersion).run("assembleDebug");
 

@@ -190,7 +190,7 @@ public class AidlTest {
         project.execute("assembleDebug");
         checkAar("ITest");
 
-        TestFileUtils.searchAndReplace(iTestAidl, "int getInt\\(\\);", "");
+        TestFileUtils.searchAndReplace(iTestAidl, "int getInt();", "");
         project.execute("assembleDebug");
         checkAar("ITest");
 

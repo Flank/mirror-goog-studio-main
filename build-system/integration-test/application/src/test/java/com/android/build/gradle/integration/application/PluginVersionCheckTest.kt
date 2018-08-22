@@ -36,7 +36,7 @@ class PluginVersionCheckTest {
     @Test
     fun testCrashlyticsPlugin() {
         // Use an old version of the Crashlytics plugin, expect sync issues
-        TestFileUtils.searchVerbatimAndReplace(
+        TestFileUtils.searchAndReplace(
             project.buildFile,
             "android {\n",
             "buildscript {\n"

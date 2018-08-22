@@ -181,7 +181,7 @@ public class MinifyTest {
     public void testProguardOptimizedBuildsSuccessfully() throws Exception {
         TestFileUtils.searchAndReplace(
                 project.getBuildFile(),
-                "getDefaultProguardFile\\('proguard-android.txt'\\)",
+                "getDefaultProguardFile('proguard-android.txt')",
                 "getDefaultProguardFile('proguard-android-optimize.txt')");
         project.executor()
                 .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)

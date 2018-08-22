@@ -102,7 +102,7 @@ class AutoNamespaceTest {
 
     @Test
     fun incorrectReferencesAreStillInvalid() {
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 FileUtils.join(project.mainSrcDir, "com", "example", "namespacedApp", "Test.java"),
                 "int resRef = .*;",
                 "int resRef = android.support.constraint.R.attr.invalid_reference;"

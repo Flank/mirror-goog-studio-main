@@ -86,9 +86,7 @@ public class LintVitalTest {
     @Test
     public void lintVitalIsNotRunForLibraries() throws IOException, InterruptedException {
         TestFileUtils.searchAndReplace(
-                project.getBuildFile(),
-                "com\\.android\\.application",
-                "com.android.library");
+                project.getBuildFile(), "com.android.application", "com.android.library");
         GradleBuildResult result = project.executor().run("assembleRelease");
         TruthHelper.assertThat(result.getTask(":lintVitalRelease")).wasNotExecuted();
     }

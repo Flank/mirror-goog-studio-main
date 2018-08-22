@@ -66,7 +66,7 @@ public class CmakeJniLibTest {
         // Convert externalNativeBuild { ndkbuild { path "Android.mk" } } to
         // externalNativeBuild { cmake { path "CMakeList.txt" } }
         TestFileUtils.searchAndReplace(lib.getBuildFile(), "ndkBuild", "cmake");
-        TestFileUtils.searchAndReplace(lib.getBuildFile(), "Android\\.mk", "CMakeLists.txt");
+        TestFileUtils.searchAndReplace(lib.getBuildFile(), "Android.mk", "CMakeLists.txt");
         project.execute(
                 "clean", "assembleDebug", "generateJsonModelDebug", "generateJsonModelRelease");
         assertThat(project.getSubproject("lib").file("build/intermediates/cmake")).exists();

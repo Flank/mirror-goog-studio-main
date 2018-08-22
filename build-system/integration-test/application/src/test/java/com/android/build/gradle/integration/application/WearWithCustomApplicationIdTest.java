@@ -43,10 +43,10 @@ public class WearWithCustomApplicationIdTest {
     public static void setUp() throws Exception {
         File mainAppBuildGradle = project.file("main/build.gradle");
 
-        TestFileUtils.searchAndReplace(mainAppBuildGradle,
-                "flavor1 \\{",
-                "flavor1 {\n"
-                        + "applicationId \"com.example.change.application.id.breaks.embed\"");
+        TestFileUtils.searchAndReplace(
+                mainAppBuildGradle,
+                "flavor1 {",
+                "flavor1 {\n" + "applicationId \"com.example.change.application.id.breaks.embed\"");
     }
 
     @Test

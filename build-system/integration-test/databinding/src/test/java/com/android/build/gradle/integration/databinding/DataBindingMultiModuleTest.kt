@@ -73,7 +73,7 @@ class DataBindingMultiModuleTest(useAndroidX: Boolean) {
         project.executor().run("assembleRelease")
         assertBRs("_all", "inheritedInput", "input", "newBindableVar", "appInput")
         // rename an input field
-        TestFileUtils.searchVerbatimAndReplace(
+        TestFileUtils.searchAndReplace(
             project.file("inherited/src/main/res/layout/inherited_main.xml"),
             "inheritedInput",
             "inheritedInput2"
@@ -88,7 +88,7 @@ class DataBindingMultiModuleTest(useAndroidX: Boolean) {
     @Test
     fun checkAdaptersAreNotInherited() {
         createAdapterInInherited("customSetText")
-        TestFileUtils.searchVerbatimAndReplace(
+        TestFileUtils.searchAndReplace(
             project.file("library/src/main/res/layout/activity_main.xml"),
             "android:text=\"@{input}\"",
             "app:customSetText=\"@{input}\""
@@ -98,7 +98,7 @@ class DataBindingMultiModuleTest(useAndroidX: Boolean) {
         // now try to use it in the app, should fail
         val appLayout = project.file("app/src/main/res/layout/app_layout.xml")
         appLayout.mkdirs()
-        TestFileUtils.searchVerbatimAndReplace(
+        TestFileUtils.searchAndReplace(
             appLayout,
             "android:text=\"@{appInput}\"",
             "app:customSetText=\"@{appInput}\""
@@ -113,7 +113,7 @@ class DataBindingMultiModuleTest(useAndroidX: Boolean) {
     @Test
     fun checkCompilationAvoidanceOnLayoutChange() {
         project.executor().run(APP_COMPILE_JAVA_TASK)
-        TestFileUtils.searchVerbatimAndReplace(
+        TestFileUtils.searchAndReplace(
             project.file("inherited/src/main/res/layout/inherited_main.xml"),
             "android:text=\"@{inheritedInput}\"",
             "android:text=\"@{inheritedInput + inheritedInput}\""
@@ -126,7 +126,7 @@ class DataBindingMultiModuleTest(useAndroidX: Boolean) {
     fun checkCompilationAvoidanceOnAdapterChange() {
         project.executor().run(APP_COMPILE_JAVA_TASK)
         createAdapterInInherited("setMyText")
-        TestFileUtils.searchVerbatimAndReplace(
+        TestFileUtils.searchAndReplace(
             project.file("inherited/src/main/res/layout/inherited_main.xml"),
             "android:text=\"@{inheritedInput}\"",
             "app:setMyText=\"@{inheritedInput}\""
@@ -140,7 +140,7 @@ class DataBindingMultiModuleTest(useAndroidX: Boolean) {
     fun checkCompilationAvoidanceOnDummyAdapterChange() {
         val adapterFile = createAdapterInInherited("setMyText")
         project.executor().run(APP_COMPILE_JAVA_TASK)
-        TestFileUtils.searchVerbatimAndReplace(adapterFile,
+        TestFileUtils.searchAndReplace(adapterFile,
             "public class NewAdapter {",
             "public class //dummy comment\nNewAdapter {"
         )

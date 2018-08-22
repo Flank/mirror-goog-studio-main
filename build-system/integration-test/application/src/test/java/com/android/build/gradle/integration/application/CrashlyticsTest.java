@@ -42,7 +42,7 @@ public class CrashlyticsTest {
     public static void setUp() throws IOException {
         TestFileUtils.searchAndReplace(
                 project.getBuildFile(),
-                "android \\{\n",
+                "android {\n",
                 "buildscript {\n"
                         + "    dependencies {\n"
                         + "        classpath 'io.fabric.tools:gradle:1.25.4'\n"

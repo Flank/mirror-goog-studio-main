@@ -95,7 +95,7 @@ public class DataBindingExternalArtifactDependencyConnectedTest {
             // implementation dependencies are only supported in V2 so update the test to use
             // api instead of implementation;
             // non-androidX tests are not updated anymore so they don't test that path
-            TestFileUtils.searchVerbatimAndReplace(
+            TestFileUtils.searchAndReplace(
                     app.file("./testlibrary2/build.gradle"), "implementation ", "api ");
         }
         app.executeConnectedCheck(args);

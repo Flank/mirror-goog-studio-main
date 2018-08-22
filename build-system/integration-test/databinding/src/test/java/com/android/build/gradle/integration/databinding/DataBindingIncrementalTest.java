@@ -110,7 +110,7 @@ public class DataBindingIncrementalTest {
     @Before
     public void setUp() throws IOException {
         if (withKotlin) {
-            TestFileUtils.searchVerbatimAndReplace(
+            TestFileUtils.searchAndReplace(
                     project.getBuildFile(),
                     "apply plugin: 'com.android.application'",
                     "apply plugin: 'com.android.application'\n"
@@ -179,7 +179,7 @@ public class DataBindingIncrementalTest {
         // Make an irrelevant change, ideally data binding should not be invoked. However, since
         // data binding does not yet fully support incrementality, the sources are currently
         // re-generated for now.
-        TestFileUtils.searchVerbatimAndReplace(
+        TestFileUtils.searchAndReplace(
                 project.file(ACTIVITY_MAIN_JAVA), "return true;", "return false;");
         GradleBuildResult result = project.executor().run(COMPILE_JAVA_TASK);
 
@@ -215,7 +215,7 @@ public class DataBindingIncrementalTest {
 
         // Make a relevant change, data binding should be invoked and the sources should be
         // re-generated.
-        TestFileUtils.searchVerbatimAndReplace(
+        TestFileUtils.searchAndReplace(
                 project.file(USER_JAVA), "return this.name;", "return name;");
         GradleBuildResult result = project.executor().run(COMPILE_JAVA_TASK);
 
@@ -247,7 +247,7 @@ public class DataBindingIncrementalTest {
 
         // Make a relevant change that breaks data binding, data binding should be invoked and
         // compilation should fail.
-        TestFileUtils.searchVerbatimAndReplace(
+        TestFileUtils.searchAndReplace(
                 project.file(USER_JAVA),
                 "public String getName() {",
                 "public String getFirstName() {");
@@ -270,11 +270,11 @@ public class DataBindingIncrementalTest {
     @Test
     public void changeVariableName() throws Exception {
         project.execute(EXPORT_INFO_TASK);
-        TestFileUtils.searchVerbatimAndReplace(
+        TestFileUtils.searchAndReplace(
                 project.file(ACTIVITY_MAIN_XML),
                 "<variable name=\"foo\" type=\"String\"/>",
                 "<variable name=\"foo2\" type=\"String\"/>");
-        TestFileUtils.searchVerbatimAndReplace(
+        TestFileUtils.searchAndReplace(
                 project.file(ACTIVITY_MAIN_XML),
                 "<TextView android:text='@{foo + \" \" + foo}'",
                 "<TextView android:text='@{foo2 + \" \" + foo2}'");
@@ -295,7 +295,7 @@ public class DataBindingIncrementalTest {
     @Test
     public void addVariable() throws Exception {
         project.execute(EXPORT_INFO_TASK);
-        TestFileUtils.searchVerbatimAndReplace(
+        TestFileUtils.searchAndReplace(
                 project.file(ACTIVITY_MAIN_XML),
                 "<variable name=\"foo\" type=\"String\"/>",
                 "<variable name=\"foo\" type=\"String\"/><variable name=\"foo2\" type=\"String\"/>");
@@ -314,7 +314,7 @@ public class DataBindingIncrementalTest {
     @Test
     public void addIdToView() throws Exception {
         project.execute(EXPORT_INFO_TASK);
-        TestFileUtils.searchVerbatimAndReplace(
+        TestFileUtils.searchAndReplace(
                 project.file(ACTIVITY_MAIN_XML),
                 "<TextView android:text='@{foo + \" \" + foo}'",
                 "<TextView android:text='@{foo + \" \" + foo}'\n"
@@ -337,7 +337,7 @@ public class DataBindingIncrementalTest {
                     .doesNotHaveField("myTextView");
         }
 
-        TestFileUtils.searchVerbatimAndReplace(
+        TestFileUtils.searchAndReplace(
                 project.file(ACTIVITY_MAIN_XML), "android:id=\"@+id/myTextView\"", "");
         project.executor().run("assembleDebug");
 
@@ -448,8 +448,7 @@ public class DataBindingIncrementalTest {
         // Modify the file.
         long activity3LayoutLastModified = activity3.lastModified();
         TestUtils.waitForFileSystemTick();
-        TestFileUtils.searchVerbatimAndReplace(
-                activity3, "<data>", "<data class=\"MyCustomName\">");
+        TestFileUtils.searchAndReplace(activity3, "<data>", "<data class=\"MyCustomName\">");
 
         // Make sure that the file was actually modified.
         assertThat(activity3.lastModified()).isNotEqualTo(activity3LayoutLastModified);

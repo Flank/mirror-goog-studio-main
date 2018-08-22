@@ -35,7 +35,8 @@ public class AnnotationProcessorCompileClasspathTest {
     @Before
     public void setUp() throws IOException {
         // Remove dependencies block from build file.
-        TestFileUtils.searchAndReplace(project.getBuildFile(), "(?s)dependencies \\{.*\\}", "");
+        TestFileUtils.searchRegexAndReplace(
+                project.getBuildFile(), "(?s)dependencies \\{.*\\}", "");
     }
 
     @Test

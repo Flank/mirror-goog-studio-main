@@ -307,7 +307,7 @@ public class SigningTest {
             assertThat(apk).containsFileWithoutContent("META-INF/MANIFEST.MF", "SHA-1-Digest");
             assertThat(apk).containsFileWithoutContent("META-INF/MANIFEST.MF", "SHA-256-Digest");
 
-            TestFileUtils.searchAndReplace(
+            TestFileUtils.searchRegexAndReplace(
                     project.getBuildFile(),
                     "minSdkVersion \\d+",
                     "minSdkVersion " + DigestAlgorithm.API_SHA_256_RSA_AND_ECDSA);
@@ -332,7 +332,7 @@ public class SigningTest {
             assertThat(apk).containsFileWithoutContent("META-INF/MANIFEST.MF", "SHA-256-Digest");
         }
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.getBuildFile(),
                 "minSdkVersion \\d+",
                 "minSdkVersion " + DigestAlgorithm.API_SHA_256_ALL_ALGORITHMS);
@@ -363,7 +363,7 @@ public class SigningTest {
         // Specified: v1SigningEnabled false, v2SigningEnabled false
         TestFileUtils.searchAndReplace(
                 project.getBuildFile(),
-                "customDebug \\{",
+                "customDebug {",
                 "customDebug {\nv1SigningEnabled false\nv2SigningEnabled false");
 
         TestUtils.waitForFileSystemTick();

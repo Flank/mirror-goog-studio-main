@@ -99,7 +99,7 @@ public class CompositeBuildTest {
         // Gradle plugin.
         TestFileUtils.searchAndReplace(
                 androidLib.getBuildFile(),
-                "buildscript \\{ apply from: \"\\.\\./commonBuildScript\\.gradle\" \\}",
+                "buildscript { apply from: \"../commonBuildScript.gradle\" }",
                 "buildscript {"
                         + "    apply from: \"../commonBuildScript.gradle\"\n"
                         + "    dependencies {"

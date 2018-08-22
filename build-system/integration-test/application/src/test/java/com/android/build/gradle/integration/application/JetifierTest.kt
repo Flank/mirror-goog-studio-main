@@ -59,14 +59,14 @@ class JetifierTest(private val withKotlin: Boolean) {
     @Throws(IOException::class)
     fun setUp() {
         if (withKotlin) {
-            TestFileUtils.searchVerbatimAndReplace(
+            TestFileUtils.searchAndReplace(
                 project.getSubproject(":app").buildFile,
                 "apply plugin: 'com.android.application'",
                 "apply plugin: 'com.android.application'\n" +
                         "apply plugin: 'kotlin-android'\n" +
                         "apply plugin: 'kotlin-kapt'"
             )
-            TestFileUtils.searchVerbatimAndReplace(
+            TestFileUtils.searchAndReplace(
                 project.getSubproject(":app").buildFile,
                 "annotationProcessor 'com.example.annotationprocessor:annotationProcessor:1.0'",
                 "kapt 'com.example.annotationprocessor:annotationProcessor:1.0'"

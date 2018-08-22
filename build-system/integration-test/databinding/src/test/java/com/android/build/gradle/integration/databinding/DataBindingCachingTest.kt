@@ -71,7 +71,7 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
     fun setUp() {
         if (withKotlin) {
             for (project in listOf(project, projectCopy)) {
-                TestFileUtils.searchVerbatimAndReplace(
+                TestFileUtils.searchAndReplace(
                     project.buildFile,
                     "apply plugin: 'com.android.application'",
                     "apply plugin: 'com.android.application'\n" +

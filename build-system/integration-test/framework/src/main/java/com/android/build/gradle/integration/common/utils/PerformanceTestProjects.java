@@ -59,34 +59,34 @@ public class PerformanceTestProjects {
                 project.file(SdkConstants.FN_LOCAL_PROPERTIES).toPath(),
                 StandardCopyOption.REPLACE_EXISTING);
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.getBuildFile(),
                 "classpath \"com.android.tools.build:gradle:\\d+.\\d+.\\d+\"",
                 "classpath \"com.android.tools.build:gradle:"
                         + GradleTestProject.ANDROID_GRADLE_PLUGIN_VERSION
                         + '"');
 
-
-
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.getBuildFile(),
                 "jcenter\\(\\)",
                 generateLocalRepositoriesSnippet(mainProject).replace("\\", "\\\\"));
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.getBuildFile(),
                 "buildToolsVersion = \".*\"",
-                "buildToolsVersion = \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                "buildToolsVersion = \""
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
                         + "\" // Updated by test");
 
         List<String> subprojects =
                 ImmutableList.of("AudioPlayer/library", "afollestad/commons", "afollestad/core");
 
         for (String subproject: subprojects) {
-            TestFileUtils.searchAndReplace(
+            TestFileUtils.searchRegexAndReplace(
                     mainProject.getSubproject(subproject).getBuildFile(),
                     "buildToolsVersion \".*\"",
-                    "buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                    "buildToolsVersion \""
+                            + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
                             + "\" // Updated by test");
         }
 
@@ -98,37 +98,36 @@ public class PerformanceTestProjects {
                         mainProject.file("afollestad/commons/build.gradle"));
 
         for (File buildFile : filesWithSupportLibVersion) {
-            TestFileUtils.searchAndReplace(
-                    buildFile,
-                    " 23",
-                    " " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION);
+            TestFileUtils.searchRegexAndReplace(
+                    buildFile, " 23", " " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION);
 
-            TestFileUtils.searchAndReplace(buildFile, "23.1.1", TestVersions.SUPPORT_LIB_VERSION);
+            TestFileUtils.searchRegexAndReplace(
+                    buildFile, "23.1.1", TestVersions.SUPPORT_LIB_VERSION);
         }
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 mainProject.file("afollestad/core/build.gradle"),
                 "minSdkVersion 8",
                 "minSdkVersion rootProject.ext.minSdkVersion // Updated by test");
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 mainProject.file("afollestad/commons/build.gradle"),
                 "minSdkVersion 8",
                 "minSdkVersion rootProject.ext.minSdkVersion  // Updated by test");
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 mainProject.file("AntennaPod/build.gradle"),
                 "minSdkVersion = 10",
                 "minSdkVersion = " + TestVersions.SUPPORT_LIB_MIN_SDK + " // Updated by test");
 
         // NotificationCompat has moved.
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 mainProject.file(
                         "AntennaPod/core/src/main/java/de/danoeh/antennapod/core/service/playback/PlaybackService.java"),
                 "android\\.support\\.v7\\.app\\.NotificationCompat\\.MediaStyle",
                 "android.support.v4.media.app.NotificationCompat.MediaStyle");
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 mainProject.file(
                         "AntennaPod/core/src/main/java/de/danoeh/antennapod/core/service/playback/PlaybackService.java"),
                 "v7\\.app\\.NotificationCompat",
@@ -154,22 +153,21 @@ public class PerformanceTestProjects {
                         "AntennaPod/app/src/main/java/de/danoeh/antennapod/activity/PreferenceActivity.java");
 
         for (String activity : activities) {
-            TestFileUtils.searchAndReplace(
+            TestFileUtils.searchRegexAndReplace(
                     mainProject.file(activity), "ActionBarActivity", "AppCompatActivity");
         }
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 mainProject.file("afollestad/core/src/main/res/values-v11/styles.xml"),
                 "abc_ic_ab_back_mtrl_am_alpha",
                 "abc_ic_ab_back_material");
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 mainProject.file("AntennaPod/core/src/main/res/values/styles.xml"),
                 "<item name=\"attr/",
-                "<item type=\"att\" name=\""
-        );
+                "<item type=\"att\" name=\"");
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("app/build.gradle"),
                 ",\\s*commit: \"git rev-parse --short HEAD\".execute\\(\\).text\\]",
                 "]");
@@ -192,12 +190,12 @@ public class PerformanceTestProjects {
             replacePrefix = "//";
         }
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("app/build.gradle"),
                 searchPrefix + "apply plugin: \"me.tatarka.retrolambda\"",
                 replacePrefix + "apply plugin: \"me.tatarka.retrolambda\"");
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 mainProject.file("AntennaPod/core/build.gradle"),
                 searchPrefix + "apply plugin: \"me.tatarka.retrolambda\"",
                 replacePrefix + "apply plugin: \"me.tatarka.retrolambda\"");
@@ -238,106 +236,108 @@ public class PerformanceTestProjects {
                         .map(name -> project.file(name).toPath())
                         .collect(Collectors.toList());
 
-        TestFileUtils.searchAndReplace(
-                project.file("WordPress/build.gradle"),
-                "maven \\{ url (('.*')|(\".*\")) \\}",
-                "");
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
+                project.file("WordPress/build.gradle"), "maven \\{ url (('.*')|(\".*\")) \\}", "");
+        TestFileUtils.searchRegexAndReplace(
                 project.file("WordPress/build.gradle"),
                 "productFlavors \\{",
-                "flavorDimensions 'version'\n"
-                        + "productFlavors {");
+                "flavorDimensions 'version'\n" + "productFlavors {");
 
         // replace manual variant aware dependency with automatic one.
         // remove one line and edit the other for each dependency.
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("WordPress/build.gradle"),
-                Pattern.quote("releaseCompile project(path:':libs:utils:WordPressUtils', configuration: 'release')"),
+                Pattern.quote(
+                        "releaseCompile project(path:':libs:utils:WordPressUtils', configuration: 'release')"),
                 "compile project(path:':libs:utils:WordPressUtils') // replaced by test\n");
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("WordPress/build.gradle"),
-                Pattern.quote("debugCompile project(path:':libs:utils:WordPressUtils', configuration: 'debug')"),
+                Pattern.quote(
+                        "debugCompile project(path:':libs:utils:WordPressUtils', configuration: 'debug')"),
                 "");
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("WordPress/build.gradle"),
-                Pattern.quote("releaseCompile project(path:':libs:networking:WordPressNetworking', configuration: 'release')"),
+                Pattern.quote(
+                        "releaseCompile project(path:':libs:networking:WordPressNetworking', configuration: 'release')"),
                 "compile project(path:':libs:networking:WordPressNetworking') // replaced by test\n");
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("WordPress/build.gradle"),
-                Pattern.quote("debugCompile project(path:':libs:networking:WordPressNetworking', configuration: 'debug')"),
+                Pattern.quote(
+                        "debugCompile project(path:':libs:networking:WordPressNetworking', configuration: 'debug')"),
                 "");
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("WordPress/build.gradle"),
-                Pattern.quote("releaseCompile project(path:':libs:analytics:WordPressAnalytics', configuration: 'release')"),
+                Pattern.quote(
+                        "releaseCompile project(path:':libs:analytics:WordPressAnalytics', configuration: 'release')"),
                 "compile project(path:':libs:analytics:WordPressAnalytics') // replaced by test\n");
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("WordPress/build.gradle"),
-                Pattern.quote("debugCompile project(path:':libs:analytics:WordPressAnalytics', configuration: 'debug')"),
+                Pattern.quote(
+                        "debugCompile project(path:':libs:analytics:WordPressAnalytics', configuration: 'debug')"),
                 "");
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("WordPress/build.gradle"),
-                Pattern.quote("releaseCompile project(path:':libs:editor:WordPressEditor', configuration: 'release')"),
+                Pattern.quote(
+                        "releaseCompile project(path:':libs:editor:WordPressEditor', configuration: 'release')"),
                 "compile project(path:':libs:editor:WordPressEditor') // replaced by test\n");
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("WordPress/build.gradle"),
-                Pattern.quote("debugCompile project(path:':libs:editor:WordPressEditor', configuration: 'debug')"),
+                Pattern.quote(
+                        "debugCompile project(path:':libs:editor:WordPressEditor', configuration: 'debug')"),
                 "");
 
 
         for (Path file : buildGradleFiles) {
-            TestFileUtils.searchAndReplace(
+            TestFileUtils.searchRegexAndReplace(
                     file, "classpath 'com\\.android\\.tools\\.build:gradle:\\d+.\\d+.\\d+'", "");
 
-            TestFileUtils.searchAndReplace(
-                    file,
-                    "jcenter\\(\\)",
-                    localRepositoriesSnippet.replace("\\", "\\\\"));
+            TestFileUtils.searchRegexAndReplace(
+                    file, "jcenter\\(\\)", localRepositoriesSnippet.replace("\\", "\\\\"));
 
-            TestFileUtils.searchAndReplace(
+            TestFileUtils.searchRegexAndReplace(
                     file,
                     "buildToolsVersion \"[^\"]+\"",
                     String.format("buildToolsVersion \"%s\"", AndroidBuilder.MIN_BUILD_TOOLS_REV));
 
-            TestFileUtils.searchAndReplace(file, "compileSdkVersion \\d+", "compileSdkVersion 27");
+            TestFileUtils.searchRegexAndReplace(
+                    file, "compileSdkVersion \\d+", "compileSdkVersion 27");
         }
 
 
         // Remove crashlytics
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("WordPress/build.gradle"),
                 "classpath 'io.fabric.tools:gradle:1.+'",
                 "");
-        TestFileUtils.searchAndReplace(
-                project.file("WordPress/build.gradle"),
-                "apply plugin: 'io.fabric'",
-                "");
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
+                project.file("WordPress/build.gradle"), "apply plugin: 'io.fabric'", "");
+        TestFileUtils.searchRegexAndReplace(
                 project.file("WordPress/build.gradle"),
                 "compile\\('com.crashlytics.sdk.android:crashlytics:2.5.5\\@aar'\\) \\{\n"
                         + "        transitive = true;\n"
                         + "    \\}",
                 "");
 
-        TestFileUtils.searchAndReplace(
-                project.file("WordPress/src/main/java/org/wordpress/android/util/CrashlyticsUtils.java"),
+        TestFileUtils.searchRegexAndReplace(
+                project.file(
+                        "WordPress/src/main/java/org/wordpress/android/util/CrashlyticsUtils.java"),
                 "\n     ",
-                "\n     //"
-        );
+                "\n     //");
 
-        TestFileUtils.searchAndReplace(
-                project.file("WordPress/src/main/java/org/wordpress/android/util/CrashlyticsUtils.java"),
+        TestFileUtils.searchRegexAndReplace(
+                project.file(
+                        "WordPress/src/main/java/org/wordpress/android/util/CrashlyticsUtils.java"),
                 "\nimport",
-                "\n// import"
-        );
+                "\n// import");
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("WordPress/src/main/java/org/wordpress/android/WordPress.java"),
                 "\n(.*Fabric)",
                 "\n// $1");
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("WordPress/src/main/java/org/wordpress/android/WordPress.java"),
                 "import com\\.crashlytics\\.android\\.Crashlytics;",
                 "//import com.crashlytics.android.Crashlytics;");
@@ -345,7 +345,7 @@ public class PerformanceTestProjects {
         //TODO: Upstream some of this?
 
         // added to force version upgrade.
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("WordPress/build.gradle"),
                 "\ndependencies \\{\n",
                 "dependencies {\n"
@@ -356,33 +356,33 @@ public class PerformanceTestProjects {
                         + TestVersions.SUPPORT_LIB_VERSION
                         + "'\n");
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("WordPress/build.gradle"),
                 "compile 'org.wordpress:drag-sort-listview:0.6.1'",
                 "compile ('org.wordpress:drag-sort-listview:0.6.1') {\n"
                         + "    exclude group:'com.android.support'\n"
                         + "}");
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("WordPress/build.gradle"),
                 "compile 'org.wordpress:slidinguppanel:1.0.0'",
                 "compile ('org.wordpress:slidinguppanel:1.0.0') {\n"
                         + "    exclude group:'com.android.support'\n"
                         + "}");
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("libs/utils/WordPressUtils/build.gradle"),
                 "classpath 'com\\.novoda:bintray-release:0\\.3\\.4'",
                 "");
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("libs/utils/WordPressUtils/build.gradle"),
                 "apply plugin: 'com\\.novoda\\.bintray-release'",
                 "");
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("libs/utils/WordPressUtils/build.gradle"),
                 "publish \\{[\\s\\S]*\\}",
                 "");
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("libs/editor/WordPressEditor/build.gradle"),
                 "\ndependencies \\{\n",
                 "dependencies {\n"
@@ -390,7 +390,7 @@ public class PerformanceTestProjects {
                         + TestVersions.SUPPORT_LIB_VERSION
                         + "'\n");
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("libs/networking/WordPressNetworking/build.gradle"),
                 "maven \\{ url 'http://wordpress-mobile\\.github\\.io/WordPress-Android' \\}",
                 "");
@@ -403,7 +403,7 @@ public class PerformanceTestProjects {
                         .map(name -> project.file(name).toPath())
                         .collect(Collectors.toList());
         for (Path path: useEditor) {
-            TestFileUtils.searchAndReplace(
+            TestFileUtils.searchRegexAndReplace(
                     path,
                     "compile 'org\\.wordpress:utils:1\\.11\\.0'",
                     "compile project(':libs:utils:WordPressUtils')\n");
@@ -423,27 +423,28 @@ public class PerformanceTestProjects {
 
         // Replace support lib version
         for (File buildFile : filesWithSupportLibVersion) {
-            TestFileUtils.searchAndReplace(buildFile, "24.2.1", TestVersions.SUPPORT_LIB_VERSION);
+            TestFileUtils.searchRegexAndReplace(
+                    buildFile, "24.2.1", TestVersions.SUPPORT_LIB_VERSION);
         }
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("WordPress/build.gradle"),
                 "9.0.2",
                 TestVersions.PLAY_SERVICES_VERSION);
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("WordPress/build.gradle"),
                 "androidTestCompile 'com.squareup.okhttp:mockwebserver:2.7.5'",
                 "androidTestCompile 'com.squareup.okhttp:mockwebserver:2.7.4'");
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("WordPress/src/main/AndroidManifest.xml"),
                 "<action android:name=\"com\\.google\\.android\\.c2dm\\.intent\\.REGISTRATION\" />",
                 "");
 
         // Replace files direct access to file collection lazy access, since variants resolved
         // dependencies cannot be accessed in configuration time
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("libs/utils/WordPressUtils/build.gradle"),
                 "files\\(variant\\.javaCompile\\.classpath\\.files, android\\.getBootClasspath\\(\\)\\)",
                 "files{[variant.javaCompile.classpath.files, android.getBootClasspath()]}");
@@ -455,12 +456,12 @@ public class PerformanceTestProjects {
     public static GradleTestProject initializeUberSkeleton(@NonNull GradleTestProject project)
             throws IOException {
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.getBuildFile(),
                 "jcenter\\(\\)",
                 PerformanceTestProjects.generateLocalRepositoriesSnippet(project));
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.getBuildFile(),
                 "classpath 'com\\.android\\.tools\\.build:gradle:\\d+.\\d+.\\d+'",
                 "classpath 'com.android.tools.build:gradle:"
@@ -468,91 +469,91 @@ public class PerformanceTestProjects {
                         + "'");
 
         // matches: classpath ('com.uber:okbuck:1.0.0') {\n exclude module: 'gradle'\n }
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.getBuildFile().toPath(),
                 "classpath\\s\\('com.uber:okbuck:\\d+.\\d+.\\d+'\\)(\\s\\{\n.*\n.*})?",
                 "");
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.getBuildFile().toPath(), "apply plugin: 'com.uber.okbuck'", "");
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.getBuildFile().toPath(), "okbuck\\s\\{\n(.*\n){3}+.*}", "");
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.getBuildFile().toPath(),
                 "compile 'com.google.auto.service:auto-service:1.0-rc2'",
                 "");
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("dependencies.gradle"),
                 "buildToolsVersion: '\\d+.\\d+.\\d+',",
                 "buildToolsVersion: '" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "',");
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("dependencies.gradle"),
                 "supportVersion *: '\\d+.\\d+.\\d+',",
                 "supportVersion: '" + TestVersions.SUPPORT_LIB_VERSION + "',");
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("build.gradle"),
                 "(force 'com.android.support:[^:]*):[^']*'",
                 "$1:" + TestVersions.SUPPORT_LIB_VERSION + "'");
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("dependencies.gradle"),
                 "compileSdkVersion(\\s)*:\\s\\d+,",
                 "compileSdkVersion: " + SdkVersionInfo.HIGHEST_KNOWN_STABLE_API + ",");
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("dependencies.gradle"), "('io.reactivex:rxjava):[^']*'", "$1:1.2.3'");
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("dependencies.gradle"),
                 "('com.squareup.okio:okio):[^']*'",
                 "$1:1.9.0'");
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("dependencies.gradle"),
                 "('com.jakewharton.rxbinding:rxbinding[^:]*):[^']+'",
                 "$1:1.0.0'");
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("dependencies.gradle"),
                 "('com.google.auto.value:auto-value):[^']*'",
                 "$1:1.3'");
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("dependencies.gradle"),
                 "('com.google.code.gson:gson):[^']+'",
                 "$1:2.8.0'");
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("dependencies.gradle"),
                 "def support = \\[",
                 "def support = [\n"
                         + "leanback : \"com.android.support:leanback-v17:\\${versions.supportVersion}\",\n"
                         + "mediarouter : \"com.android.support:mediarouter-v7:\\${versions.supportVersion}\",\n");
 
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("dependencies.gradle"),
                 "playServicesVersion: '\\d+.\\d+.\\d+'",
                 "playServicesVersion: '" + TestVersions.PLAY_SERVICES_VERSION + "'");
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("dependencies.gradle"),
                 "leakCanaryVersion\\s*: '\\d+.\\d+'",
                 "leakCanaryVersion: '1.4'");
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("dependencies.gradle"),
                 "daggerVersion\\s*: '\\d+.\\d+'",
                 "daggerVersion: '2.7'");
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("dependencies.gradle"),
                 "autoCommon\\s*: 'com.google.auto:auto-common:\\d+.\\d+'",
                 "autoCommon: 'com.google.auto:auto-common:0.6'");
 
         // Hack for making test succeed with optional dependency resolution bug
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.file("dependencies.gradle"),
                 "braintreesdk\\s*: 'com.braintreepayments.api:braintree:\\d+.\\d+.\\d+'",
                 "braintreesdk: 'com.braintreepayments.api:braintree:2.3.12'");
@@ -684,7 +685,7 @@ public class PerformanceTestProjects {
                         "\\s*androidTestCompile\\s(.*)",
                         "\nandroidTestImplementation $1");
             } else if (javaPlugin.matcher(fileContent).find()) {
-                TestFileUtils.searchAndReplace(
+                TestFileUtils.searchRegexAndReplace(
                         build, javaPlugin.pattern(), "apply plugin: 'java-library'");
             }
         }
@@ -698,7 +699,7 @@ public class PerformanceTestProjects {
             throws IOException {
         Pattern compiledPattern = Pattern.compile(pattern);
         if (compiledPattern.matcher(content).find()) {
-            TestFileUtils.searchAndReplace(destination, compiledPattern.pattern(), replace);
+            TestFileUtils.searchRegexAndReplace(destination, compiledPattern.pattern(), replace);
         }
     }
 }

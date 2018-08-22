@@ -133,7 +133,7 @@ public class MinifyLibTest {
         // compile time.
         TestFileUtils.searchAndReplace(
                 project.getSubproject(":app").getBuildFile(),
-                "api project\\(':lib'\\)",
+                "api project(':lib')",
                 "androidTestImplementation project\\(':lib'\\)");
         GradleBuildResult result = getExecutor().run(":app:assembleAndroidTest");
 

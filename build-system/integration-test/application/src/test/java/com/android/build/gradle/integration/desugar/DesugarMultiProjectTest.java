@@ -29,14 +29,12 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.regex.Pattern;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -91,7 +89,7 @@ public class DesugarMultiProjectTest {
                         .toPath()
                         .resolve("com/example/CarbonForm.java")
                         .toFile(),
-                Pattern.quote("default void name() {}"),
+                "default void name() {}",
                 "");
         executor().run("assembleDebug");
         try (Apk apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG)) {
@@ -137,7 +135,7 @@ public class DesugarMultiProjectTest {
                         .toPath()
                         .resolve("com/example/Animal.java")
                         .toFile(),
-                Pattern.quote("extends CarbonForm {"),
+                "extends CarbonForm {",
                 "extends CarbonForm, IAnimal {");
         executor().run("assembleDebug");
         try (Apk apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG)) {
@@ -151,7 +149,7 @@ public class DesugarMultiProjectTest {
                         .toPath()
                         .resolve("com/example/Animal.java")
                         .toFile(),
-                Pattern.quote(", IAnimal {"),
+                ", IAnimal {",
                 "{");
         executor().run("assembleDebug");
         try (Apk apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG)) {
@@ -181,7 +179,7 @@ public class DesugarMultiProjectTest {
                         .toPath()
                         .resolve("com/example/CarbonForm.java")
                         .toFile(),
-                Pattern.quote("interface CarbonForm {"),
+                "interface CarbonForm {",
                 "interface CarbonForm extends ICarbonForm {");
         executor().run("assembleDebug");
         try (Apk apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG)) {
@@ -195,7 +193,7 @@ public class DesugarMultiProjectTest {
                         .toPath()
                         .resolve("com/example/CarbonForm.java")
                         .toFile(),
-                Pattern.quote("extends ICarbonForm {"),
+                "extends ICarbonForm {",
                 "{");
         executor().run("assembleDebug");
         try (Apk apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG)) {
