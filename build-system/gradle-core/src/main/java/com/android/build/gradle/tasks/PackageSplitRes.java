@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.internal.packaging.IncrementalPackager;
@@ -40,6 +40,7 @@ import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.TaskProvider;
 
 /** Package each split resources into a specific signed apk file. */
 public class PackageSplitRes extends AndroidBuilderTask {
@@ -120,9 +121,10 @@ public class PackageSplitRes extends AndroidBuilderTask {
 
     // ----- CreationAction -----
 
-    public static class CreationAction extends EagerTaskCreationAction<PackageSplitRes> {
+    public static class CreationAction extends LazyTaskCreationAction<PackageSplitRes> {
 
         private VariantScope scope;
+        private File splitResApkOutputDirectory;
 
         public CreationAction(VariantScope scope) {
             this.scope = scope;
@@ -141,19 +143,34 @@ public class PackageSplitRes extends AndroidBuilderTask {
         }
 
         @Override
-        public void execute(@NonNull PackageSplitRes packageSplitResourcesTask) {
+        public void preConfigure(@NonNull String taskName) {
+            super.preConfigure(taskName);
+            splitResApkOutputDirectory =
+                    scope.getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
+                                    taskName,
+                                    "out");
+        }
+
+        @Override
+        public void handleProvider(@NonNull TaskProvider<? extends PackageSplitRes> taskProvider) {
+            super.handleProvider(taskProvider);
+            scope.getTaskContainer().setPackageSplitResourcesTask(taskProvider);
+        }
+
+        @Override
+        public void configure(@NonNull PackageSplitRes task) {
             BaseVariantData variantData = scope.getVariantData();
             final VariantConfiguration config = variantData.getVariantConfiguration();
 
-            packageSplitResourcesTask.processedResources =
+            task.processedResources =
                     scope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES);
-            packageSplitResourcesTask.signingConfig = config.getSigningConfig();
-            packageSplitResourcesTask.splitResApkOutputDirectory = scope.getArtifacts()
-                    .appendArtifact(InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
-                            packageSplitResourcesTask, "out");
-            packageSplitResourcesTask.incrementalDir = scope.getIncrementalDir(getName());
-            packageSplitResourcesTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
-            packageSplitResourcesTask.setVariantName(config.getFullName());
+            task.signingConfig = config.getSigningConfig();
+            task.splitResApkOutputDirectory = splitResApkOutputDirectory;
+            task.incrementalDir = scope.getIncrementalDir(getName());
+            task.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
+            task.setVariantName(config.getFullName());
         }
     }
 }

@@ -25,9 +25,10 @@ import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
+import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.internal.packaging.IncrementalPackager;
@@ -50,6 +51,7 @@ import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.tooling.BuildException;
 
 /** Package a abi dimension specific split APK */
@@ -169,9 +171,10 @@ public class PackageSplitAbi extends AndroidBuilderTask {
 
     // ----- CreationAction -----
 
-    public static class CreationAction extends EagerTaskCreationAction<PackageSplitAbi> {
+    public static class CreationAction extends LazyTaskCreationAction<PackageSplitAbi> {
 
         private VariantScope scope;
+        private File outputDirectory;
 
         public CreationAction(VariantScope scope) {
             this.scope = scope;
@@ -190,31 +193,52 @@ public class PackageSplitAbi extends AndroidBuilderTask {
         }
 
         @Override
-        public void execute(@NonNull PackageSplitAbi packageSplitAbiTask) {
+        public void preConfigure(@NonNull String taskName) {
+            super.preConfigure(taskName);
+            outputDirectory =
+                    scope.getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.ABI_PACKAGED_SPLIT, taskName, "out");
+        }
+
+        @Override
+        public void handleProvider(@NonNull TaskProvider<? extends PackageSplitAbi> taskProvider) {
+            super.handleProvider(taskProvider);
+            scope.getTaskContainer().setPackageSplitAbiTask(taskProvider);
+        }
+
+        @Override
+        public void configure(@NonNull PackageSplitAbi task) {
             VariantConfiguration config = this.scope.getVariantConfiguration();
-            packageSplitAbiTask.processedAbiResources = scope.getArtifacts()
-                    .getFinalArtifactFiles(InternalArtifactType.ABI_PROCESSED_SPLIT_RES);
-            packageSplitAbiTask.signingConfig = config.getSigningConfig();
-            packageSplitAbiTask.outputDirectory = scope.getArtifacts().appendArtifact(
-                    InternalArtifactType.ABI_PACKAGED_SPLIT,
-                    packageSplitAbiTask,
-                    "out");
-            packageSplitAbiTask.setAndroidBuilder(this.scope.getGlobalScope().getAndroidBuilder());
-            packageSplitAbiTask.setVariantName(config.getFullName());
-            packageSplitAbiTask.minSdkVersion = config.getMinSdkVersion();
-            packageSplitAbiTask.incrementalDir =
-                    scope.getIncrementalDir(packageSplitAbiTask.getName());
+            task.processedAbiResources =
+                    scope.getArtifacts()
+                            .getFinalArtifactFiles(InternalArtifactType.ABI_PROCESSED_SPLIT_RES);
+            task.signingConfig = config.getSigningConfig();
+            task.outputDirectory = outputDirectory;
+            task.setAndroidBuilder(this.scope.getGlobalScope().getAndroidBuilder());
+            task.setVariantName(config.getFullName());
+            task.minSdkVersion = config.getMinSdkVersion();
+            task.incrementalDir = scope.getIncrementalDir(task.getName());
 
-            packageSplitAbiTask.aaptOptionsNoCompress =
+            task.aaptOptionsNoCompress =
                     scope.getGlobalScope().getExtension().getAaptOptions().getNoCompress();
-            packageSplitAbiTask.jniDebuggable = config.getBuildType().isJniDebuggable();
+            task.jniDebuggable = config.getBuildType().isJniDebuggable();
 
-            packageSplitAbiTask.jniFolders =
+            task.jniFolders =
                     scope.getTransformManager()
                             .getPipelineOutputAsFileCollection(StreamFilter.NATIVE_LIBS);
-            packageSplitAbiTask.jniDebuggable = config.getBuildType().isJniDebuggable();
-            packageSplitAbiTask.splits =
-                    scope.getVariantData().getFilters(OutputFile.FilterType.ABI);
+            task.jniDebuggable = config.getBuildType().isJniDebuggable();
+            task.splits = scope.getVariantData().getFilters(OutputFile.FilterType.ABI);
+
+            MutableTaskContainer taskContainer = scope.getTaskContainer();
+            if (taskContainer.getNdkCompileTask() != null) {
+                task.dependsOn(taskContainer.getNdkCompileTask());
+            }
+
+            if (taskContainer.getExternalNativeBuildTask() != null) {
+                task.dependsOn(taskContainer.getExternalNativeBuildTask());
+            }
+
         }
     }
 }

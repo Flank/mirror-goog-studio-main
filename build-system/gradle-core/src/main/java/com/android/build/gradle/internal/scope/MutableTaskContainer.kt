@@ -95,8 +95,8 @@ class MutableTaskContainer : TaskContainer {
     var microApkTask: TaskProvider<out Task>? = null
     var externalNativeBuildTask: TaskProvider<out ExternalNativeBuildTask>? = null
     var externalNativeJsonGenerator: ExternalNativeJsonGenerator? = null
-    var packageSplitResourcesTask: Task? = null
-    var packageSplitAbiTask: Task? = null
+    var packageSplitResourcesTask: TaskProvider<out Task>? = null
+    var packageSplitAbiTask: TaskProvider<out Task>? = null
     var generateResValuesTask: TaskProvider<out Task>? = null
     var generateApkDataTask: Task? = null
     var coverageReportTask: TaskProvider<out Task>? = null

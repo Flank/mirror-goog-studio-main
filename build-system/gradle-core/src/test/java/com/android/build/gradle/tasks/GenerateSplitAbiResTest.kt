@@ -229,10 +229,11 @@ class GenerateSplitAbiResTest {
         val task = project!!.tasks.create("test", GenerateSplitAbiRes::class.java)
 
         `when`(mockedArtifacts.appendArtifact(
-            InternalArtifactType.ABI_PROCESSED_SPLIT_RES, task, "out"))
+            InternalArtifactType.ABI_PROCESSED_SPLIT_RES, task.name, "out"))
             .thenReturn(temporaryFolder.newFolder())
 
-        configAction.execute(task)
+        configAction.preConfigure(task.name)
+        configAction.configure(task)
 
         return task
     }

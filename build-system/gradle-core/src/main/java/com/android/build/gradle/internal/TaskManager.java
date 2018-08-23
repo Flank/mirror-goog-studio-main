@@ -1206,17 +1206,16 @@ public abstract class TaskManager {
                 variantData.getMultiOutputPolicy().equals(MultiOutputPolicy.SPLITS),
                 "Can only create split resources tasks for pure splits.");
 
-        final PackageSplitRes task =
-                taskFactory.eagerCreate(new PackageSplitRes.CreationAction(scope));
-        scope.getTaskContainer().setPackageSplitResourcesTask(task);
+        TaskProvider<PackageSplitRes> task =
+                taskFactory.lazyCreate(new PackageSplitRes.CreationAction(scope));
 
         if (scope.getVariantConfiguration().getSigningConfig() != null) {
-            task.dependsOn(getValidateSigningTask(scope));
+            TaskFactoryUtils.dependsOn(task, getValidateSigningTask(scope));
         }
     }
 
     @Nullable
-    public PackageSplitAbi createSplitAbiTasks(@NonNull VariantScope scope) {
+    public TaskProvider<PackageSplitAbi> createSplitAbiTasks(@NonNull VariantScope scope) {
         BaseVariantData variantData = scope.getVariantData();
 
         checkState(
@@ -1240,23 +1239,15 @@ public abstract class TaskManager {
         }
 
         // first create the ABI specific split FULL_APK resources.
-        taskFactory.eagerCreate(new GenerateSplitAbiRes.CreationAction(scope));
+        taskFactory.lazyCreate(new GenerateSplitAbiRes.CreationAction(scope));
 
         // then package those resources with the appropriate JNI libraries.
-        PackageSplitAbi packageSplitAbiTask =
-                taskFactory.eagerCreate(new PackageSplitAbi.CreationAction(scope));
-        scope.getTaskContainer().setPackageSplitAbiTask(packageSplitAbiTask);
+        TaskProvider<PackageSplitAbi> packageSplitAbiTask =
+                taskFactory.lazyCreate(new PackageSplitAbi.CreationAction(scope));
 
-        if (scope.getTaskContainer().getNdkCompileTask() != null) {
-            packageSplitAbiTask.dependsOn(scope.getTaskContainer().getNdkCompileTask());
-        }
-
-        if (variantData.getVariantConfiguration().getSigningConfig() != null) {
-            packageSplitAbiTask.dependsOn(getValidateSigningTask(variantData.getScope()));
-        }
-
-        if (scope.getTaskContainer().getExternalNativeBuildTask() != null) {
-            packageSplitAbiTask.dependsOn(scope.getTaskContainer().getExternalNativeBuildTask());
+        if (scope.getVariantConfiguration().getSigningConfig() != null) {
+            TaskFactoryUtils.dependsOn(
+                    packageSplitAbiTask, getValidateSigningTask(variantData.getScope()));
         }
 
         return packageSplitAbiTask;

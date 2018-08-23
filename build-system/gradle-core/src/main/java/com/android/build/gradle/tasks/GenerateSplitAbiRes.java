@@ -42,7 +42,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.internal.tasks.ModuleMetadata;
 import com.android.build.gradle.internal.tasks.Workers;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
@@ -298,10 +298,11 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
 
     // ----- CreationAction -----
 
-    public static class CreationAction extends EagerTaskCreationAction<GenerateSplitAbiRes> {
+    public static class CreationAction extends LazyTaskCreationAction<GenerateSplitAbiRes> {
 
         @NonNull private final VariantScope scope;
         @NonNull private final FeatureSetMetadata.SupplierProvider provider;
+        private File outputDirectory;
 
         public CreationAction(@NonNull VariantScope scope) {
             this(scope, FeatureSetMetadata.getInstance());
@@ -328,7 +329,17 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
         }
 
         @Override
-        public void execute(@NonNull GenerateSplitAbiRes generateSplitAbiRes) {
+        public void preConfigure(@NonNull String taskName) {
+            super.preConfigure(taskName);
+
+            outputDirectory = scope.getArtifacts().appendArtifact(
+                    InternalArtifactType.ABI_PROCESSED_SPLIT_RES,
+                    taskName,
+                    "out");
+        }
+
+        @Override
+        public void configure(@NonNull GenerateSplitAbiRes generateSplitAbiRes) {
             final VariantConfiguration config = scope.getVariantConfiguration();
             VariantType variantType = config.getType();
 
@@ -346,10 +357,7 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
 
             generateSplitAbiRes.variantScope = scope;
             generateSplitAbiRes.variantType = variantType;
-            generateSplitAbiRes.outputDirectory = scope.getArtifacts().appendArtifact(
-                    InternalArtifactType.ABI_PROCESSED_SPLIT_RES,
-                    generateSplitAbiRes,
-                    "out");
+            generateSplitAbiRes.outputDirectory = outputDirectory;
             generateSplitAbiRes.splits =
                     AbiSplitOptions.getAbiFilters(
                             scope.getGlobalScope().getExtension().getSplits().getAbiFilters());
