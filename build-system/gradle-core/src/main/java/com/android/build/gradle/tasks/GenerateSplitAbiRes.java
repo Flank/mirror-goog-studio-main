@@ -25,10 +25,9 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
-import com.android.build.OutputFile;
+import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
-import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.res.Aapt2MavenUtils;
 import com.android.build.gradle.internal.res.Aapt2ProcessResourcesRunnable;
@@ -37,7 +36,6 @@ import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.internal.tasks.ModuleMetadata;
@@ -47,17 +45,18 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.AaptPackageConfig;
-import com.android.ide.common.build.ApkData;
-import com.android.ide.common.process.ProcessException;
+import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.utils.FileUtils;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.Comparator;
 import java.util.Set;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
@@ -93,13 +92,12 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
     private Supplier<String> versionName;
     private IntSupplier versionCode;
 
-    private Set<String> splits;
+    // We use a sorted map so the key set order is consistent since it's considered an input.
+    private ImmutableSortedMap<String, ApkInfo> splits;
     private File outputDirectory;
     private boolean debuggable;
     private AaptOptions aaptOptions;
-    private OutputFactory outputFactory;
     private VariantType variantType;
-    private VariantScope variantScope;
     @VisibleForTesting @Nullable Supplier<String> featureNameSupplier;
     @Nullable private FileCollection applicationIdOverride;
     @Nullable private FileCollection aapt2FromMaven;
@@ -127,7 +125,7 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
 
     @Input
     public Set<String> getSplits() {
-        return splits;
+        return splits.keySet();
     }
 
     @OutputDirectory
@@ -168,27 +166,14 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
     }
 
     @TaskAction
-    protected void doFullTaskAction() throws IOException, ProcessException {
+    protected void doFullTaskAction() throws IOException {
 
         ImmutableList.Builder<BuildOutput> buildOutputs = ImmutableList.builder();
+
         try (WorkerExecutorFacade workerExecutor = workers) {
-            for (String split : getSplits()) {
+            for (String split : splits.keySet()) {
                 File resPackageFile = getOutputFileForSplit(split);
-
-            ApkData abiApkData =
-                    outputFactory.addConfigurationSplit(
-                            OutputFile.FilterType.ABI, split, resPackageFile.getName());
-            abiApkData.setVersionCode(
-                    variantScope.getVariantConfiguration().getVersionCodeSerializableSupplier());
-            abiApkData.setVersionName(
-                    variantScope.getVariantConfiguration().getVersionNameSerializableSupplier());
-
-                // call user's script for the newly discovered ABI pure split.
-                if (variantScope.getVariantData().variantOutputFactory != null) {
-                    variantScope.getVariantData().variantOutputFactory.create(abiApkData);
-                }
-
-                File manifestFile = generateSplitManifest(split, abiApkData);
+                File manifestFile = generateSplitManifest(split, splits.get(split));
 
                 AndroidBuilder builder = getBuilder();
                 AaptPackageConfig aaptConfig =
@@ -211,7 +196,7 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
                 buildOutputs.add(
                         new BuildOutput(
                                 InternalArtifactType.ABI_PROCESSED_SPLIT_RES,
-                                abiApkData,
+                                splits.get(split),
                                 resPackageFile));
             }
         }
@@ -219,7 +204,7 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
     }
 
     @VisibleForTesting
-    File generateSplitManifest(String split, ApkData abiApkData) throws IOException {
+    File generateSplitManifest(String split, ApkInfo apkInfo) throws IOException {
         // Split name can only contains 0-9, a-z, A-Z, '.' and '_'.  Replace all other
         // characters with underscore.
         CharMatcher charMatcher =
@@ -242,9 +227,9 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
 
         File tmpFile = new File(tmpDirectory, "AndroidManifest.xml");
 
-        String versionNameToUse = abiApkData.getVersionName();
+        String versionNameToUse = apkInfo.getVersionName();
         if (versionNameToUse == null) {
-            versionNameToUse = String.valueOf(abiApkData.getVersionCode());
+            versionNameToUse = String.valueOf(apkInfo.getVersionCode());
         }
 
         // Override the applicationId for features.
@@ -267,7 +252,7 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
                             + manifestAppId
                             + "\"\n"
                             + "      android:versionCode=\""
-                            + abiApkData.getVersionCode()
+                            + apkInfo.getVersionCode()
                             + "\"\n"
                             + "      android:versionName=\""
                             + versionNameToUse
@@ -354,17 +339,13 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
             task.versionCode = config::getVersionCode;
             task.versionName = config::getVersionName;
 
-            task.variantScope = scope;
             task.variantType = variantType;
             task.outputDirectory = outputDirectory;
-            task.splits =
-                    AbiSplitOptions.getAbiFilters(
-                            scope.getGlobalScope().getExtension().getSplits().getAbiFilters());
+            task.splits = getAbiSplitData(scope);
             task.outputBaseName = config.getBaseName();
             task.applicationId = config::getApplicationId;
             task.debuggable = config.getBuildType().isDebuggable();
             task.aaptOptions = scope.getGlobalScope().getExtension().getAaptOptions();
-            task.outputFactory = scope.getVariantData().getOutputFactory();
             task.aapt2FromMaven = Aapt2MavenUtils.getAapt2FromMaven(scope.getGlobalScope());
 
             // if BASE_FEATURE get the app ID from the app module
@@ -378,6 +359,25 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
                         scope.getArtifactFileCollection(
                                 COMPILE_CLASSPATH, MODULE, FEATURE_APPLICATION_ID_DECLARATION);
             }
+        }
+
+        private static ImmutableSortedMap<String, ApkInfo> getAbiSplitData(
+                VariantScope variantScope) {
+            return variantScope
+                    .getOutputScope()
+                    .getApkDatas()
+                    .stream()
+                    .filter(
+                            apk ->
+                                    apk.isEnabled()
+                                            && apk.getFilter(VariantOutput.FilterType.ABI) != null)
+                    .collect(
+                            ImmutableSortedMap.toImmutableSortedMap(
+                                    Comparator.naturalOrder(),
+                                    apk ->
+                                            apk.getFilter(VariantOutput.FilterType.ABI)
+                                                    .getIdentifier(),
+                                    apk -> apk));
         }
     }
 }
