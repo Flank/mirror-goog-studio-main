@@ -1229,6 +1229,7 @@ public final class SdkConstants {
 
     // Tags: Drawables
     public static final String TAG_PATH = "path";
+    public static final String TAG_CLIP_PATH = "clip-path";
     public static final String TAG_GRADIENT = "gradient";
     public static final String TAG_BITMAP = "bitmap"; //$NON-NLS-1$
     public static final String TAG_VECTOR = "vector"; //$NON-NLS-1$
