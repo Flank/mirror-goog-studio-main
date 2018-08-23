@@ -51,10 +51,18 @@ message MemoryControlRequest {
     int64 timestamp = 1;
   }
 
+  // O+ only: Updates the allocation tracking sampling rate during a live
+  // session.
+  message SetSamplingRate {
+    int64 timestamp = 1;
+    AllocationSamplingRate sampling_rate = 2;
+  }
+
   int32 pid = 1;
   oneof control {
     EnableTracking enable_request = 2;
     DisableTracking disable_request = 3;
+    SetSamplingRate set_sampling_rate_request = 4;
   }
 }
 

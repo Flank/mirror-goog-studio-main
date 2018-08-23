@@ -19,6 +19,8 @@ package profiler.proto;
 option java_package = "com.android.tools.profiler.proto";
 option java_outer_classname = "Agent";
 
+import "memory.proto";
+
 service AgentService {
   // A simple ping mechanism to notify perfd of the agent's existence, vice versa.
   rpc HeartBeat(HeartBeatRequest) returns (HeartBeatResponse) {}
@@ -51,6 +53,8 @@ message AgentConfig {
     bool track_global_jni_refs = 3;
     // Path to the app dir: usually /data/app/
     string app_dir = 4;
+    // The allocation sampling rate to use when starting a profiling session.
+    AllocationSamplingRate sampling_rate = 5;
   }
 
   message CpuConfig {

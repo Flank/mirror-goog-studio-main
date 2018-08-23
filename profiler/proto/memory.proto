@@ -93,6 +93,11 @@ service MemoryService {
   rpc ForceGarbageCollection(ForceGarbageCollectionRequest)
       returns (ForceGarbageCollectionResponse) {}
 
+  // O+ only: Updates the allocation tracking sampling rate during
+  // a live session.
+  rpc SetAllocationSamplingRate(SetAllocationSamplingRateRequest)
+      returns (SetAllocationSamplingRateResponse) {}
+
   // O+ studio-side only: Given a time interval returns a set of all events
   // related to creations and deletions of global JNI references.
   rpc GetJNIGlobalRefsEvents(JNIGlobalRefsEventsRequest)
@@ -277,6 +282,14 @@ message TrackAllocationsResponse {
   }
   Status status = 1;
   AllocationsInfo info = 2;
+}
+
+message AllocationSamplingRate {
+  // Number of allocations between samples.
+  // e.g. when set to 100, we only track 1 out of every 100 allocations.
+  // When set to 0, allocation tracking is turned off.
+  // When set to 1, every allocation is tracked (i.e. full tracking).
+  int32 sampling_num_interval = 1;
 }
 
 message TrackAllocationsRequest {
@@ -653,3 +666,9 @@ message ForceGarbageCollectionRequest {
 }
 
 message ForceGarbageCollectionResponse {}
+
+message SetAllocationSamplingRateRequest {
+  AllocationSamplingRate sampling_rate = 1;
+}
+
+message SetAllocationSamplingRateResponse {}
