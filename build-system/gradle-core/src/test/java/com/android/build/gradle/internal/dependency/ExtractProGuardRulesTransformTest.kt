@@ -29,6 +29,8 @@ import java.util.zip.ZipOutputStream
 
 class ExtractProGuardRulesTransformTest {
 
+    private val slash = File.separator
+
     @Rule
     @JvmField
     val tmp = TemporaryFolder()
@@ -65,8 +67,8 @@ class ExtractProGuardRulesTransformTest {
 
         extractTransform.transform(jarFile)
 
-        assertThat(producedFileNames).containsExactly("META-INF/proguard/foo.txt")
-        FileSubject.assertThat(producedFile("META-INF/proguard/foo.txt")).hasContents("bar")
+        assertThat(producedFileNames).containsExactly("META-INF${slash}proguard${slash}foo.txt")
+        FileSubject.assertThat(producedFile("META-INF${slash}proguard${slash}foo.txt")).hasContents("bar")
     }
 
     @Test
@@ -75,8 +77,8 @@ class ExtractProGuardRulesTransformTest {
 
         extractTransform.transform(jarFile)
 
-        assertThat(producedFileNames).containsExactly("META-INF/proguard/foo.txt")
-        FileSubject.assertThat(producedFile("META-INF/proguard/foo.txt")).hasContents("bar")
+        assertThat(producedFileNames).containsExactly("META-INF${slash}proguard${slash}foo.txt")
+        FileSubject.assertThat(producedFile("META-INF${slash}proguard${slash}foo.txt")).hasContents("bar")
     }
 
     @Test
@@ -87,9 +89,9 @@ class ExtractProGuardRulesTransformTest {
 
         extractTransform.transform(jarFile)
 
-        assertThat(producedFileNames).containsExactly("META-INF/proguard/foo.pro", "META-INF/proguard/bar.txt")
-        FileSubject.assertThat(producedFile("META-INF/proguard/foo.pro")).hasContents("goodbye")
-        FileSubject.assertThat(producedFile("META-INF/proguard/bar.txt")).hasContents("hello")
+        assertThat(producedFileNames).containsExactly("META-INF${slash}proguard${slash}foo.pro", "META-INF${slash}proguard${slash}bar.txt")
+        FileSubject.assertThat(producedFile("META-INF${slash}proguard${slash}foo.pro")).hasContents("goodbye")
+        FileSubject.assertThat(producedFile("META-INF${slash}proguard${slash}bar.txt")).hasContents("hello")
     }
 
     private fun producedFile(relativePath: String) = extractTransform.outputDirectory
