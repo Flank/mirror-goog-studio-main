@@ -44,6 +44,8 @@ interface TaskFactory {
 
     // --- Lazy Actions ---
 
+    fun named(name: String): TaskProvider<Task>
+
     fun lazyCreate(name: String): TaskProvider<Task>
 
     fun <T : Task> lazyCreate(

@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
@@ -47,6 +47,7 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.TaskProvider;
 
 /** Task to generate micro app data res file. */
 public class GenerateApkDataTask extends AndroidBuilderTask {
@@ -175,7 +176,7 @@ public class GenerateApkDataTask extends AndroidBuilderTask {
         return manifestFile;
     }
 
-    public static class CreationAction extends EagerTaskCreationAction<GenerateApkDataTask> {
+    public static class CreationAction extends LazyTaskCreationAction<GenerateApkDataTask> {
 
         @NonNull
         VariantScope scope;
@@ -201,7 +202,15 @@ public class GenerateApkDataTask extends AndroidBuilderTask {
         }
 
         @Override
-        public void execute(@NonNull GenerateApkDataTask task) {
+        public void handleProvider(
+                @NonNull TaskProvider<? extends GenerateApkDataTask> taskProvider) {
+            super.handleProvider(taskProvider);
+
+            scope.getTaskContainer().setMicroApkTask(taskProvider);
+        }
+
+        @Override
+        public void configure(@NonNull GenerateApkDataTask task) {
             final ApkVariantData variantData = (ApkVariantData) scope.getVariantData();
             final GradleVariantConfiguration variantConfiguration =
                     variantData.getVariantConfiguration();

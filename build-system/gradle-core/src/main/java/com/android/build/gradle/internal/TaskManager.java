@@ -1517,9 +1517,8 @@ public abstract class TaskManager {
     public void createGenerateMicroApkDataTask(
             @NonNull VariantScope scope,
             @Nullable FileCollection config) {
-        GenerateApkDataTask generateMicroApkTask =
-                taskFactory.eagerCreate(new GenerateApkDataTask.CreationAction(scope, config));
-        scope.getTaskContainer().setMicroApkTask(generateMicroApkTask);
+        TaskProvider<GenerateApkDataTask> generateMicroApkTask =
+                taskFactory.lazyCreate(new GenerateApkDataTask.CreationAction(scope, config));
 
         // the merge res task will need to run after this one.
         TaskFactoryUtils.dependsOn(
@@ -1569,11 +1568,9 @@ public abstract class TaskManager {
         }
 
         // Set up JSON generation tasks
-        Task generateTask =
-                taskFactory.eagerCreate(
+        TaskProvider<? extends Task> generateTask =
+                taskFactory.lazyCreate(
                         ExternalNativeBuildJsonTask.createTaskConfigAction(generator, scope));
-
-        generateTask.dependsOn(taskContainer.getPreBuildTask());
 
         ProjectOptions projectOptions = globalScope.getProjectOptions();
 
@@ -1583,24 +1580,21 @@ public abstract class TaskManager {
                         : null;
 
         // Set up build tasks
-        ExternalNativeBuildTask buildTask =
-                taskFactory.eagerCreate(
+        TaskProvider<ExternalNativeBuildTask> buildTask =
+                taskFactory.lazyCreate(
                         new ExternalNativeBuildTask.CreationAction(
                                 targetAbi, generator, scope, androidBuilder));
 
-        buildTask.dependsOn(
-                generateTask, scope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, JNI));
-        taskContainer.setExternalNativeBuildTask(buildTask);
+        TaskFactoryUtils.dependsOn(buildTask, generateTask);
         TaskFactoryUtils.dependsOn(taskContainer.getCompileTask(), buildTask);
 
         // Set up clean tasks
-        Task cleanTask = checkNotNull(taskFactory.findByName("clean"));
-        cleanTask.dependsOn(
-                taskFactory
-                        .eagerCreate(
-                                new ExternalNativeCleanTask.CreationAction(
-                                        generator, scope, androidBuilder))
-                        .getName());
+        TaskProvider<Task> cleanTask = checkNotNull(taskFactory.named("clean"));
+        TaskFactoryUtils.dependsOn(
+                cleanTask,
+                taskFactory.lazyCreate(
+                        new ExternalNativeCleanTask.CreationAction(
+                                generator, scope, androidBuilder)));
     }
 
     public void createNdkTasks(@NonNull VariantScope scope) {

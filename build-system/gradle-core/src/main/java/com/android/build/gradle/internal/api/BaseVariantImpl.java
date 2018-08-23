@@ -51,6 +51,7 @@ import com.google.common.collect.Iterables;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.gradle.api.DomainObjectCollection;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Task;
@@ -61,6 +62,7 @@ import org.gradle.api.attributes.AttributesSchema;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.resources.TextResource;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.TaskProvider;
@@ -275,7 +277,12 @@ public abstract class BaseVariantImpl implements BaseVariant {
 
     @Override
     public Collection<ExternalNativeBuildTask> getExternalNativeBuildTasks() {
-        return getVariantData().getTaskContainer().getExternalNativeBuildTasks();
+        return getVariantData()
+                .getTaskContainer()
+                .getExternalNativeBuildTasks()
+                .stream()
+                .map(Provider::get)
+                .collect(Collectors.toList());
     }
 
     @Nullable

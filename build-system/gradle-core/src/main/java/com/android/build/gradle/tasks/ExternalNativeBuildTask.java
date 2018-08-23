@@ -17,6 +17,9 @@
 package com.android.build.gradle.tasks;
 
 import static com.android.build.gradle.internal.cxx.process.ProcessOutputJunctionKt.createProcessOutputJunction;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JNI;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -31,7 +34,7 @@ import com.android.build.gradle.internal.dsl.CoreExternalNativeCmakeOptions;
 import com.android.build.gradle.internal.dsl.CoreExternalNativeNdkBuildOptions;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.errors.EvalIssueReporter;
@@ -55,6 +58,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.GradleException;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.TaskProvider;
 
 /**
  * Task that takes set of JSON files of type NativeBuildConfigValue and does build steps with them.
@@ -362,7 +366,7 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
         this.stlSharedObjectFiles = stlSharedObjectFiles;
     }
 
-    public static class CreationAction extends EagerTaskCreationAction<ExternalNativeBuildTask> {
+    public static class CreationAction extends LazyTaskCreationAction<ExternalNativeBuildTask> {
         @Nullable
         private final String buildTargetAbi;
         @NonNull
@@ -396,7 +400,15 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
         }
 
         @Override
-        public void execute(@NonNull ExternalNativeBuildTask task) {
+        public void handleProvider(
+                @NonNull TaskProvider<? extends ExternalNativeBuildTask> taskProvider) {
+            super.handleProvider(taskProvider);
+            scope.getTaskContainer().getExternalNativeBuildTasks().add(taskProvider);
+            scope.getTaskContainer().setExternalNativeBuildTask(taskProvider);
+        }
+
+        @Override
+        public void configure(@NonNull ExternalNativeBuildTask task) {
             final BaseVariantData variantData = scope.getVariantData();
             final Set<String> targets;
             CoreExternalNativeBuildOptions nativeBuildOptions =
@@ -469,7 +481,8 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
             }
 
             task.setAndroidBuilder(androidBuilder);
-            variantData.getTaskContainer().getExternalNativeBuildTasks().add(task);
+
+            task.dependsOn(scope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, JNI));
         }
     }
 }
