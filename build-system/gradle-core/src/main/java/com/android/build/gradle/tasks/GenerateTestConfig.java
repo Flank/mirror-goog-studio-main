@@ -31,7 +31,7 @@ import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.ide.common.build.ApkInfo;
 import com.google.common.base.Preconditions;
@@ -180,10 +180,11 @@ public class GenerateTestConfig extends DefaultTask {
         return packageForR.get();
     }
 
-    public static class CreationAction extends EagerTaskCreationAction<GenerateTestConfig> {
+    public static class CreationAction extends LazyTaskCreationAction<GenerateTestConfig> {
 
         @NonNull private final VariantScope scope;
         @NonNull private final VariantScope testedScope;
+        private File generatedJavaResourcesDirectory;
 
         public CreationAction(@NonNull VariantScope scope) {
             this.scope = scope;
@@ -206,7 +207,19 @@ public class GenerateTestConfig extends DefaultTask {
         }
 
         @Override
-        public void execute(@NonNull GenerateTestConfig task) {
+        public void preConfigure(@NonNull String taskName) {
+            super.preConfigure(taskName);
+
+            generatedJavaResourcesDirectory =
+                    scope.getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY,
+                                    taskName,
+                                    "out");
+        }
+
+        @Override
+        public void configure(@NonNull GenerateTestConfig task) {
             // we don't actually consume the task, only the path, so make a manual dependency
             // on the filecollections.
 
@@ -232,10 +245,7 @@ public class GenerateTestConfig extends DefaultTask {
             task.mainApkInfo = testedScope.getOutputScope().getMainSplit();
             task.sdkHome =
                     Paths.get(scope.getGlobalScope().getAndroidBuilder().getTarget().getLocation());
-            task.generatedJavaResourcesDirectory =
-                    scope.getArtifacts()
-                            .appendArtifact(
-                                    InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY, task, "out");
+            task.generatedJavaResourcesDirectory = generatedJavaResourcesDirectory;
             task.packageForR = testedScope.getVariantConfiguration()::getOriginalApplicationId;
         }
     }

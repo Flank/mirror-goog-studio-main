@@ -24,7 +24,7 @@ import com.android.annotations.NonNull;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.EagerTaskCreationAction;
+import com.android.build.gradle.internal.tasks.factory.LazyTaskCreationAction;
 import com.android.utils.FileUtils;
 import com.android.utils.PathUtils;
 import com.google.common.collect.Iterables;
@@ -99,8 +99,9 @@ public class PackageForUnitTest extends DefaultTask {
                 .getOutputFile();
     }
 
-    public static class CreationAction extends EagerTaskCreationAction<PackageForUnitTest> {
+    public static class CreationAction extends LazyTaskCreationAction<PackageForUnitTest> {
         @NonNull private final VariantScope scope;
+        private File apkForUnitTest;
 
         public CreationAction(@NonNull VariantScope scope) {
             this.scope = scope;
@@ -119,12 +120,18 @@ public class PackageForUnitTest extends DefaultTask {
         }
 
         @Override
-        public void execute(@NonNull PackageForUnitTest task) {
+        public void preConfigure(@NonNull String taskName) {
+            super.preConfigure(taskName);
+            apkForUnitTest =
+                    scope.getArtifacts()
+                            .appendArtifact(APK_FOR_LOCAL_TEST, taskName, "apk-for-local-test.ap_");
+        }
+
+        @Override
+        public void configure(@NonNull PackageForUnitTest task) {
             task.resApk = scope.getArtifacts().getArtifactFiles(PROCESSED_RES);
             task.mergedAssets = scope.getArtifacts().getArtifactFiles(MERGED_ASSETS);
-
-            task.apkForUnitTest = scope.getArtifacts()
-                    .appendArtifact(APK_FOR_LOCAL_TEST, task, "apk-for-local-test.ap_");
+            task.apkForUnitTest = apkForUnitTest;
         }
     }
 }

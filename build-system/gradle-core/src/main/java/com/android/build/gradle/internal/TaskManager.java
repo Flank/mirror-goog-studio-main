@@ -1672,7 +1672,7 @@ public abstract class TaskManager {
                     createMergeResourcesTask(variantScope, true, ImmutableSet.of());
                     // Add a task to process the Android Resources and generate source files
                     createApkProcessResTask(variantScope, FEATURE_RESOURCE_PKG);
-                    taskFactory.eagerCreate(new PackageForUnitTest.CreationAction(variantScope));
+                    taskFactory.lazyCreate(new PackageForUnitTest.CreationAction(variantScope));
                 } else {
                     createMergeResourcesTask(variantScope, false, ImmutableSet.of());
                 }
@@ -1694,7 +1694,7 @@ public abstract class TaskManager {
                                     testedVariantScope
                                             .getArtifacts()
                                             .getFinalArtifactFiles(MERGED_ASSETS));
-                    taskFactory.eagerCreate(new PackageForUnitTest.CreationAction(variantScope));
+                    taskFactory.lazyCreate(new PackageForUnitTest.CreationAction(variantScope));
                 } else {
                     // TODO: don't implicitly subtract tested component in APKs, as that only
                     // makes sense for instrumentation tests. For now, rely on the production
@@ -1716,8 +1716,8 @@ public abstract class TaskManager {
                                 + " must be a library or an application to have unit tests.");
             }
 
-            GenerateTestConfig generateTestConfig =
-                    taskFactory.eagerCreate(new GenerateTestConfig.CreationAction(variantScope));
+            TaskProvider<GenerateTestConfig> generateTestConfig =
+                    taskFactory.lazyCreate(new GenerateTestConfig.CreationAction(variantScope));
             TaskFactoryUtils.dependsOn(
                     variantScope.getTaskContainer().getCompileTask(), generateTestConfig);
         }
