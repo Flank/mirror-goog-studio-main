@@ -87,7 +87,7 @@ public class ProguardFiles {
         }
 
         return FileUtils.join(
-                project.getRootProject().getBuildDir(),
+                project.getBuildDir(),
                 AndroidProject.FD_INTERMEDIATES,
                 "proguard-files",
                 name + "-" + Version.ANDROID_GRADLE_PLUGIN_VERSION);

@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.library;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.ANDROIDTEST_DEBUG;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.DEBUG;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.testutils.truth.FileSubject.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
@@ -60,6 +61,17 @@ public class MinifyLibTest {
         Apk apk = project.getSubproject(":app").getApk(DEBUG);
         TruthHelper.assertThatApk(apk).containsClass("Lcom/android/tests/basic/StringProvider;");
         TruthHelper.assertThatApk(apk).containsClass("Lcom/android/tests/basic/UnusedClass;");
+    }
+
+    @Test
+    public void checkDefaultRulesExtraction() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getSubproject(":app").getBuildFile(),
+                "\nandroid.buildTypes.debug.minifyEnabled true");
+        getExecutor().run(":app:assembleDebug");
+
+        assertThat(project.getIntermediateFile("proguard-files")).doesNotExist();
+        assertThat(project.getSubproject("app").getIntermediateFile("proguard-files")).exists();
     }
 
     @Test
