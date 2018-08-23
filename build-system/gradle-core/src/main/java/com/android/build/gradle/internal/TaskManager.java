@@ -2298,8 +2298,8 @@ public abstract class TaskManager {
 
             // add runtime classes for try-with-resources support
             String taskName = variantScope.getTaskName(ExtractTryWithResourcesSupportJar.TASK_NAME);
-            ExtractTryWithResourcesSupportJar extractTryWithResources =
-                    taskFactory.eagerCreate(
+            TaskProvider<ExtractTryWithResourcesSupportJar> extractTryWithResources =
+                    taskFactory.lazyCreate(
                             new ExtractTryWithResourcesSupportJar.CreationAction(
                                     variantScope.getTryWithResourceRuntimeSupportJar(),
                                     taskName,
@@ -3070,8 +3070,8 @@ public abstract class TaskManager {
                 throw new AssertionError("Unknown value " + codeShrinker);
         }
         if (variantScope.getPostprocessingFeatures() != null && transformTask.isPresent()) {
-            CheckProguardFiles checkFilesTask =
-                    taskFactory.eagerCreate(new CheckProguardFiles.CreationAction(variantScope));
+            TaskProvider<CheckProguardFiles> checkFilesTask =
+                    taskFactory.lazyCreate(new CheckProguardFiles.CreationAction(variantScope));
 
             TaskFactoryUtils.dependsOn(transformTask.get(), checkFilesTask);
         }

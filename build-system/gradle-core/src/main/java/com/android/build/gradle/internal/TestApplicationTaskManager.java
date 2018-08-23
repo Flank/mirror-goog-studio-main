@@ -183,8 +183,8 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                             AndroidArtifacts.ArtifactScope.ALL,
                             AndroidArtifacts.ArtifactType.APK_MAPPING));
         } else {
-            CheckTestedAppObfuscation checkObfuscation =
-                    taskFactory.eagerCreate(
+            TaskProvider<CheckTestedAppObfuscation> checkObfuscation =
+                    taskFactory.lazyCreate(
                             new CheckTestedAppObfuscation.CreationAction(variantScope));
             Preconditions.checkNotNull(variantScope.getTaskContainer().getJavacTask());
             TaskFactoryUtils.dependsOn(
