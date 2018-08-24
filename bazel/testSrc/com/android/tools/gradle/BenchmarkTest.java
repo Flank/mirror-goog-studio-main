@@ -18,6 +18,8 @@ package com.android.tools.gradle;
 
 import com.android.testutils.diff.UnifiedDiff;
 import com.android.tools.perflogger.Benchmark;
+import com.android.tools.perflogger.PerfData;
+import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -37,6 +39,7 @@ public class BenchmarkTest {
         File repo = null;
         String project = null;
         String benchmarkName = null;
+        String benchmarkCategory = null;
         int warmUps = 0;
         int iterations = 0;
         int removeUpperOutliers = 0;
@@ -57,6 +60,8 @@ public class BenchmarkTest {
                 distribution = new File(it.next());
             } else if (arg.equals("--repo") && it.hasNext()) {
                 repo = new File(it.next());
+            } else if (arg.equals("--benchmark_category")) {
+                benchmarkCategory = it.next();
             } else if (arg.equals("--warmups") && it.hasNext()) {
                 warmUps = Integer.valueOf(it.next());
             } else if (arg.equals("--iterations") && it.hasNext()) {
@@ -90,6 +95,7 @@ public class BenchmarkTest {
                         benchmarkName,
                         distribution,
                         repo,
+                        benchmarkCategory,
                         new BenchmarkRun(
                                 warmUps, iterations, removeUpperOutliers, removeLowerOutliers),
                         mutations,
@@ -125,6 +131,7 @@ public class BenchmarkTest {
             String benchmarkName,
             File distribution,
             File repo,
+            String benchmarkCategory,
             BenchmarkRun benchmarkRun,
             List<File> mutations,
             List<String> startups,
@@ -134,8 +141,13 @@ public class BenchmarkTest {
             List<String> buildProperties)
             throws Exception {
 
-        Benchmark benchmark =
-                new Benchmark.Builder(benchmarkName).setProject("Android Studio Gradle").build();
+        Benchmark.Builder benchmarkBuilder =
+                new Benchmark.Builder(benchmarkName).setProject("Android Studio Gradle");
+        if (benchmarkCategory != null) {
+            benchmarkBuilder.setMetadata(ImmutableMap.of("benchmarkCategory", benchmarkCategory));
+        }
+        Benchmark benchmark = benchmarkBuilder.build();
+
         File data = new File(ROOT + "buildbenchmarks/" + project);
         File out = new File(System.getenv("TEST_TMPDIR"), ".gradle_out");
         File src = new File(System.getenv("TEST_TMPDIR"), ".gradle_src");
@@ -178,6 +190,10 @@ public class BenchmarkTest {
                 }
             }
             listeners.forEach(BenchmarkListener::benchmarkDone);
+
+            PerfData perfData = new PerfData();
+            perfData.addBenchmark(benchmark);
+            perfData.commit();
         }
     }
 }

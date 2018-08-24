@@ -128,7 +128,7 @@ public class Benchmark {
         }
 
         @NonNull
-        Builder setMetadata(@NonNull Map<String, String> metadata) {
+        public Builder setMetadata(@NonNull Map<String, String> metadata) {
             this.metadata = ImmutableMap.copyOf(metadata);
             return this;
         }
