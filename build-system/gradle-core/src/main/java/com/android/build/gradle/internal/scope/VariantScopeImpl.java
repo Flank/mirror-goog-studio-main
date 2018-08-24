@@ -71,7 +71,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedCo
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.publishing.PublishingSpecs.OutputSpec;
 import com.android.build.gradle.internal.publishing.PublishingSpecs.VariantSpec;
-import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments;
 import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
@@ -1771,5 +1770,15 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                                 coreLambdaStubsJar);
 
         return bootClasspath;
+    }
+
+    @NonNull
+    @Override
+    public InternalArtifactType getManifestArtifactType() {
+        return globalScope.getProjectOptions().get(BooleanOption.DEPLOY_AS_INSTANT_APP)
+                ? InternalArtifactType.INSTANT_APP_MANIFEST
+                : getInstantRunBuildContext().isInInstantRunMode()
+                        ? InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS
+                        : InternalArtifactType.MERGED_MANIFESTS;
     }
 }

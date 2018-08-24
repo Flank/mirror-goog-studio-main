@@ -97,6 +97,7 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
                                 null /* outInstantRunManifestLocation */,
                                 null, /*outMetadataFeatureManifestLocation */
                                 null /* outBundleManifestLocation */,
+                                null /* outInstantAppManifestLocation */,
                                 ManifestMerger2.MergeType.LIBRARY,
                                 variantConfiguration.getManifestPlaceholders(),
                                 Collections.emptyList(),

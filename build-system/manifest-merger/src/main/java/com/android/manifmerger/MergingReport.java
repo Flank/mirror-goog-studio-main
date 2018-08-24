@@ -64,6 +64,9 @@ public class MergingReport {
 
         /** Feature manifest to be merged back into the base. */
         METADATA_FEATURE,
+
+        /** Merged manifest file for deploying app as an instant app. */
+        INSTANT_APP,
     }
 
     @NonNull

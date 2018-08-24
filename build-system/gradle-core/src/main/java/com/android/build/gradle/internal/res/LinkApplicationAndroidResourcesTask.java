@@ -756,9 +756,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             task.taskInputType =
                     aaptFriendlyManifestsFilePresent
                             ? InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS
-                            : variantScope.getInstantRunBuildContext().isInInstantRunMode()
-                                    ? InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS
-                                    : InternalArtifactType.MERGED_MANIFESTS;
+                            : variantScope.getManifestArtifactType();
             task.setManifestFiles(
                     variantScope.getArtifacts().getFinalArtifactFiles(task.taskInputType));
 

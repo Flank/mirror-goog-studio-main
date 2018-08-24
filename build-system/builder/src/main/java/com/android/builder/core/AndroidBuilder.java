@@ -457,6 +457,7 @@ public class AndroidBuilder {
             @Nullable String outInstantRunManifestLocation,
             @Nullable String outMetadataFeatureManifestLocation,
             @Nullable String outBundleManifestLocation,
+            @Nullable String outInstantAppManifestLocation,
             ManifestMerger2.MergeType mergeType,
             Map<String, Object> placeHolders,
             @NonNull Collection<Invoker.Feature> optionalFeatures,
@@ -538,6 +539,15 @@ public class AndroidBuilder {
                                         MergingReport.MergedManifestKind.BUNDLE);
                         if (bundleMergedManifest != null) {
                             save(bundleMergedManifest, new File(outBundleManifestLocation));
+                        }
+                    }
+
+                    if (outInstantAppManifestLocation != null) {
+                        String instantAppManifest =
+                                mergingReport.getMergedDocument(
+                                        MergingReport.MergedManifestKind.INSTANT_APP);
+                        if (instantAppManifest != null) {
+                            save(instantAppManifest, new File(outInstantAppManifestLocation));
                         }
                     }
                     break;

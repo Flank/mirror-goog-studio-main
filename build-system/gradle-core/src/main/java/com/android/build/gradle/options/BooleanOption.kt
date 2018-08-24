@@ -42,7 +42,7 @@ enum class BooleanOption(
 
     ENABLE_D8("android.enableD8", true, DeprecationReporter.DeprecationTarget.LEGACY_DEXER),
     ENABLE_D8_DESUGARING("android.enableD8.desugaring", true),
-    
+
     ENABLE_R8("android.enableR8", true, status = Option.Status.STABLE),
     /** Set to true by default, but has effect only if R8 is enabled. */
     ENABLE_R8_DESUGARING("android.enableR8.desugaring", true),
@@ -86,6 +86,7 @@ enum class BooleanOption(
     INJECT_SDK_MAVEN_REPOS("android.injectSdkMavenRepos", true),
     NAMESPACED_R_CLASS("android.namespacedRClass", false),
     ENABLE_DEXING_ARTIFACT_TRANSFORM("android.enableDexingArtifactTransform", false),
+    DEPLOY_AS_INSTANT_APP(AndroidProject.PROPERTY_DEPLOY_AS_INSTANT_APP, false),
     ;
     constructor(
         propertyName: String,

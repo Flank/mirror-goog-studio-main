@@ -124,6 +124,28 @@ class DynamicAppTest {
     }
 
     @Test
+    fun `test buildInstantApk task`() {
+        project.executor()
+            .with(BooleanOption.DEPLOY_AS_INSTANT_APP, true)
+            .run("assembleDebug")
+
+
+        for (moduleName in listOf("app", "feature1", "feature2")) {
+            val manifestFile =
+                FileUtils.join(
+                    project.getSubproject(moduleName).buildDir,
+                    "intermediates",
+                    "instant_app_manifest",
+                    "debug",
+                    "processDebugManifest",
+                    "instant-app-manifest",
+                    "AndroidManifest.xml")
+            FileSubject.assertThat(manifestFile).isFile()
+            FileSubject.assertThat(manifestFile).contains("android:targetSandboxVersion=\"2\"")
+        }
+    }
+
+    @Test
     fun `test bundleMinSdkDifference task`() {
         TestFileUtils.searchAndReplace(
             project.getSubproject(":feature1").buildFile,

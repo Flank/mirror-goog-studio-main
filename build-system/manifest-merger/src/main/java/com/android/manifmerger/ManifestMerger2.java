@@ -447,10 +447,38 @@ public class ManifestMerger2 {
                     MergingReport.MergedManifestKind.MERGED, prettyPrint(document));
         }
 
-        // This should occur at the end of all optional features, so that bundletool related
-        // manifest files contains all the changes for the merged manifest as well.
+        // This features should occur at the end of all optional features, as they are based off of
+        // the final merged manifest. This is true for all instant app manifests, bundletool manifests,
+        // and feature manifests.
+        if (mOptionalFeatures.contains(Invoker.Feature.ADD_INSTANT_APP_MANIFEST)) {
+            addInstantAppManifest(document, mergingReport);
+        }
         if (mOptionalFeatures.contains(Invoker.Feature.CREATE_BUNDLETOOL_MANIFEST)) {
             createBundleToolManifest(document, mergingReport);
+        }
+    }
+
+    private void addInstantAppManifest(
+            @NonNull Document document, @NonNull MergingReport.Builder mergingReport) {
+        // If we haven't already added target sandbox version or split info, add them.
+        if (!mOptionalFeatures.contains(Invoker.Feature.TARGET_SANDBOX_VERSION)) {
+            addTargetSandboxVersionAttribute(document);
+        }
+        if (!mOptionalFeatures.contains(Invoker.Feature.ADD_INSTANT_APP_FEATURE_SPLIT_INFO)
+                && !mFeatureName.isEmpty()) {
+            adjustInstantAppFeatureSplitInfo(document, mFeatureName, true);
+        }
+
+        mergingReport.setMergedDocument(
+                MergingReport.MergedManifestKind.INSTANT_APP, prettyPrint(document));
+
+        // undo any changes we have made to the document.
+        if (!mOptionalFeatures.contains(Invoker.Feature.TARGET_SANDBOX_VERSION)) {
+            removeTargetSandboxVersionAttribute(document);
+        }
+        if (!mOptionalFeatures.contains(Invoker.Feature.ADD_INSTANT_APP_FEATURE_SPLIT_INFO)
+                && !mFeatureName.isEmpty()) {
+            adjustInstantAppFeatureSplitInfo(document, mFeatureName, false);
         }
     }
 
@@ -636,6 +664,19 @@ public class ManifestMerger2 {
             return;
         }
         setAndroidAttribute(manifest, SdkConstants.ATTR_TARGET_SANDBOX_VERSION, "2");
+    }
+
+    /**
+     * Remove "android:targetSandboxVersion" attribute from the manifest element.
+     *
+     * @param document the document whose attributes are changes
+     */
+    private static void removeTargetSandboxVersionAttribute(@NonNull Document document) {
+        Element manifest = document.getDocumentElement();
+        if (manifest == null) {
+            return;
+        }
+        removeAndroidAttribute(manifest, SdkConstants.ATTR_TARGET_SANDBOX_VERSION);
     }
 
     /**
@@ -1346,6 +1387,9 @@ public class ManifestMerger2 {
 
             /** Strip the min sdk from the feature manifest. */
             STRIP_MIN_SDK_FROM_FEATURE_MANIFEST,
+
+            /** Add instant app manifest. */
+            ADD_INSTANT_APP_MANIFEST,
 
             /** Set the android:debuggable flag to the application. */
             DEBUGGABLE,

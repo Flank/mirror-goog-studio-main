@@ -47,6 +47,8 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
 
     private File bundleManifestOutputDirectory;
 
+    private File instantAppManifestOutputDirectory;
+
     private File reportFile;
 
     @SuppressWarnings("unused")
@@ -131,6 +133,17 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
     protected void setMetadataFeatureManifestOutputDirectory(
             File metadataFeatureManifestOutputDirectory) {
         this.metadataFeatureManifestOutputDirectory = metadataFeatureManifestOutputDirectory;
+    }
+
+    /** The instant app manifest which is used if we are deploying the app as an instant app. */
+    @OutputDirectory
+    @Optional
+    public File getInstantAppManifestOutputDirectory() {
+        return instantAppManifestOutputDirectory;
+    }
+
+    protected void setInstantAppManifestOutputDirectory(File bundleManifestOutputDirectory) {
+        this.instantAppManifestOutputDirectory = bundleManifestOutputDirectory;
     }
 
     @OutputFile

@@ -2764,10 +2764,7 @@ public abstract class TaskManager {
          * forcing a cold swap is triggered, the main FULL_APK must be rebuilt (even if the
          * resources were changed in a previous build).
          */
-        InternalArtifactType manifestType =
-                variantScope.getInstantRunBuildContext().isInInstantRunMode()
-                        ? INSTANT_RUN_MERGED_MANIFESTS
-                        : MERGED_MANIFESTS;
+        InternalArtifactType manifestType = variantScope.getManifestArtifactType();
 
         final boolean splitsArePossible =
                 variantScope.getVariantData().getMultiOutputPolicy() == MultiOutputPolicy.SPLITS;

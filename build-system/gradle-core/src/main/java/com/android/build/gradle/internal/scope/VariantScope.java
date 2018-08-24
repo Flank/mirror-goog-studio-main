@@ -29,7 +29,6 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
-import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexMergerTool;
@@ -319,4 +318,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     FileCollection getBootClasspath();
+
+    @NonNull
+    InternalArtifactType getManifestArtifactType();
 }

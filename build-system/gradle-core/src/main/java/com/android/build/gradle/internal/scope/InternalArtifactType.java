@@ -151,6 +151,7 @@ public enum InternalArtifactType implements ArtifactType {
     NAMESPACED_MANIFESTS,
     AAPT_FRIENDLY_MERGED_MANIFESTS,
     INSTANT_RUN_MERGED_MANIFESTS,
+    INSTANT_APP_MANIFEST,
     MANIFEST_METADATA,
     MANIFEST_MERGE_REPORT,
     // Simplified android manifest with original package name.

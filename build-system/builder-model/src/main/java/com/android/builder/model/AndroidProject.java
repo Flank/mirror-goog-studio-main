@@ -92,6 +92,8 @@ public interface AndroidProject {
     String PROPERTY_SIGNING_V1_ENABLED = "android.injected.signing.v1-enabled";
     String PROPERTY_SIGNING_V2_ENABLED = "android.injected.signing.v2-enabled";
 
+    String PROPERTY_DEPLOY_AS_INSTANT_APP = "android.injected.deploy.instant-app";
+
     String PROPERTY_SIGNING_COLDSWAP_MODE = "android.injected.coldswap.mode";
 
     String PROPERTY_APK_SELECT_CONFIG = "android.inject.apkselect.config";
