@@ -25,6 +25,7 @@
 
 #include "perfd/sessions/session.h"
 #include "proto/common.pb.h"
+#include "proto/profiler.grpc.pb.h"
 
 namespace profiler {
 
@@ -36,7 +37,7 @@ class SessionsManager final {
 
   // Begins a new session. If a session was
   // already running it will be ended.
-  void BeginSession(int64_t stream_id, int32_t pid);
+  void BeginSession(int64_t stream_id, const proto::BeginSession &data);
 
   // Returns the last session (which is the only one that can be active),
   // or nullptr if there are none.

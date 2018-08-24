@@ -31,7 +31,7 @@ Status BeginSession::ExecuteOn(Daemon* daemon) {
     return Status(StatusCode::NOT_FOUND,
                   "Process isn't running. Cannot create session.");
   }
-  daemon->sessions()->BeginSession(command().stream_id(), data_.pid());
+  daemon->sessions()->BeginSession(command().stream_id(), data_);
 
   if (data_.jvmti_config().attach_agent()) {
     daemon->TryAttachAppAgent(data_.pid(), app_name,

@@ -26,8 +26,10 @@ using std::lock_guard;
 using std::mutex;
 using std::vector;
 
-void SessionsManager::BeginSession(int64_t device_id, int32_t pid) {
+void SessionsManager::BeginSession(int64_t device_id,
+                                   const proto::BeginSession& data) {
   int64_t now = daemon_->clock()->GetCurrentTime();
+  int32_t pid = data.pid();
   for (const auto& component : daemon_->GetComponents()) {
     now = std::min(now, component->GetEarliestDataTime(pid));
   }
@@ -45,6 +47,12 @@ void SessionsManager::BeginSession(int64_t device_id, int32_t pid) {
   event.set_type(proto::Event::SESSION_STARTED);
   proto::SessionStarted* session_started = event.mutable_session_started();
   session_started->set_pid(pid);
+  session_started->set_start_timestamp_epoch_ms(data.request_time_epoch_ms());
+  session_started->set_session_name(data.session_name());
+  session_started->set_jvmti_enabled(data.jvmti_config().attach_agent());
+  session_started->set_live_allocation_enabled(
+      data.jvmti_config().live_allocation_enabled());
+  session_started->set_type(proto::SessionStarted::FULL);
   daemon_->buffer()->Add(event);
 
   sessions_.push_back(std::move(session));

@@ -373,10 +373,16 @@ message Event {
     UNSPECIFIED = 0;
     SESSION_STARTED = 1;
     SESSION_ENDED = 2;
+    PROCESS_STARTED = 3;
+    PROCESS_ENDED = 4;
+    STREAM_CONNECTED = 5;
+    STREAM_DISCONNECTED = 6;
   }
   enum Kind {
     NONE = 0;
-    SESSION = 1;
+    STREAM = 1;
+    PROCESS = 2;
+    SESSION = 3;
   }
   // The session the event belongs to. For session events this is the same as
   // |event_id|
@@ -399,6 +405,8 @@ message Event {
   oneof union {
     SessionStarted session_started = 6;
     SessionEnded session_ended = 7;
+    Process process = 8;
+    Stream stream = 9;
   }
 }
 
@@ -406,7 +414,42 @@ message SessionStarted {
   // The PID of the app. Note that this is actually an int16, but gRPC only
   // provides int32.
   int32 pid = 1;
+
+  // The session type here maps directly to the SessionMetadata.SessionType.
+  // After the move to the new pipeline we can remove SessionMetadata.
+  enum SessionType {
+    UNSPECIFIED = 0;
+    FULL = 1;
+    MEMORY_CAPTURE = 2;
+    CPU_CAPTURE = 3;
+  }
+  // Session start time (unix epoch) as provided by the BeginSessionRequest.
+  // For Studio-side display only.
+  int64 start_timestamp_epoch_ms = 2;
+  // Session name as provided by the BeginSessionRequest.
+  // For Studio-side display only.
+  string session_name = 3;
+  // Whether JVMTI is used for the session
+  bool jvmti_enabled = 4;
+  // Whether JVMTI live allocation is enabled for the session.
+  bool live_allocation_enabled = 5;
+  // Session's type which indicates what data it has.
+  SessionType type = 6;
 }
 
 message SessionEnded {
+}
+
+message Stream {
+  // A list of supported stream types.
+  enum Type {
+    UNSPECIFIED_STREAM_TYPE = 0;
+    DEVICE = 1;
+  }
+  // The id of a stream. This is set by the multiplexer.
+  int64 stream_id = 1;
+  Stream.Type type = 2;
+  oneof union {
+    Device device = 3;
+  }
 }
