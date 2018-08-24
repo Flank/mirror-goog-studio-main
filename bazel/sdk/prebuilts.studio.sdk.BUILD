@@ -352,7 +352,13 @@ filegroup(
 
 filegroup(
     name = "ndk-bundle",
-    srcs = sdk_glob(["ndk-bundle/**"]),
+    srcs = sdk_glob(
+        include = ["ndk-bundle/**"],
+        exclude = [
+            "ndk-bundle/platforms/android-19/**",
+            "ndk-bundle/platforms/android-21/**",
+        ],
+    ),
     visibility = ["//visibility:public"],
 )
 
