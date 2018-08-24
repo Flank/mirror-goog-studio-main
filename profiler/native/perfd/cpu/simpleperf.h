@@ -38,9 +38,13 @@ const int kStartupProfilingPid = -12345;
 class Simpleperf {
  public:
   explicit Simpleperf()
-      : Simpleperf(CurrentProcess::dir(), DeviceInfo::is_emulator()) {}
-  explicit Simpleperf(const std::string& simpleperf_dir, const bool is_emulator)
-      : simpleperf_dir_(simpleperf_dir), is_emulator_(is_emulator) {}
+      : Simpleperf(CurrentProcess::dir(), DeviceInfo::is_emulator(),
+                   DeviceInfo::is_user_build()) {}
+  explicit Simpleperf(const std::string& simpleperf_dir, const bool is_emulator,
+                      const bool is_user_build)
+      : simpleperf_dir_(simpleperf_dir),
+        is_emulator_(is_emulator),
+        is_user_build_(is_user_build) {}
   ~Simpleperf() = default;
 
   // Invoke `simpleperf record` given the |pid| of the process to be profiled,
@@ -91,6 +95,7 @@ class Simpleperf {
  private:
   const std::string simpleperf_dir_;
   const bool is_emulator_;
+  const bool is_user_build_;
 
   // Returns a string with the full simpleperf path (e.g. /path/simpleperf_arm).
   std::string GetSimpleperfPath(const std::string& abi_arch) const;

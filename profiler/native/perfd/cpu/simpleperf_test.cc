@@ -84,8 +84,10 @@ namespace profiler {
 // --show-features`, which affects the result of |GetRecordCommand|.
 class FakeSimpleperfGetFeatures final : public Simpleperf {
  public:
-  explicit FakeSimpleperfGetFeatures(bool is_emulator)
-      : Simpleperf(kFakeSimpleperfDir, is_emulator) {}
+  explicit FakeSimpleperfGetFeatures()
+      : FakeSimpleperfGetFeatures(false, true) {}
+  explicit FakeSimpleperfGetFeatures(bool is_emulator, bool is_user_build)
+      : Simpleperf(kFakeSimpleperfDir, is_emulator, is_user_build) {}
 
   // A public wrapper for the homonym protected method, for testing.
   string GetRecordCommand(int pid, const string& pkg_name,
@@ -109,7 +111,7 @@ class FakeSimpleperfGetFeatures final : public Simpleperf {
 };
 
 TEST(SimpleperfTest, RecordCommandParams) {
-  FakeSimpleperfGetFeatures simpleperf{false};
+  FakeSimpleperfGetFeatures simpleperf;
 
   string record_command = simpleperf.GetRecordCommand(3039, "my.package", "arm",
                                                       kFakeTracePath, 100);
@@ -129,8 +131,62 @@ TEST(SimpleperfTest, RecordCommandParams) {
   EXPECT_THAT(record_command, HasArgument("--exit-with-parent"));
 }
 
+TEST(SimpleperfTest, NonUserBuildUseSuRoot) {
+  FakeSimpleperfGetFeatures simpleperf{false /* is_emulator */,
+                                       false /* is_user_build */};
+
+  string record_command = simpleperf.GetRecordCommand(3039, "my.package", "arm",
+                                                      kFakeTracePath, 100);
+  // Record should be run as root
+  EXPECT_THAT(record_command, StartsWith("su root "));
+  // PID should be present
+  EXPECT_THAT(record_command, HasArgument("-p 3039"));
+  // --app flag shouldn't be present
+  EXPECT_THAT(record_command, Not(HasArgument("--app")));
+}
+
+TEST(SimpleperfTest, NonUserBuildWithStartupUsesRunAs) {
+  FakeSimpleperfGetFeatures simpleperf{false /* is_emulator */,
+                                       false /* is_user_build */};
+
+  string record_command = simpleperf.GetRecordCommand(
+      kStartupProfilingPid, "my.package", "arm", kFakeTracePath, 100);
+
+  // Record should not be run as root
+  EXPECT_THAT(record_command, StartsWith("/fake/path/simpleperf_arm record"));
+  // PID should not be present as it's not available
+  EXPECT_THAT(record_command, Not(HasArgument("-p")));
+  // package name should be present
+  EXPECT_THAT(record_command, HasArgument("--app my.package"));
+}
+
+TEST(SimpleperfTest, UserBuildAlwaysUsesRunAs) {
+  FakeSimpleperfGetFeatures simpleperf{false /* is_emulator */,
+                                       true /* is_user_build */};
+
+  string record_command = simpleperf.GetRecordCommand(
+      kStartupProfilingPid, "my.package", "arm", kFakeTracePath, 100);
+
+  // Record should not be run as root
+  EXPECT_THAT(record_command, StartsWith("/fake/path/simpleperf_arm record"));
+  // PID should not be present as it's not available
+  EXPECT_THAT(record_command, Not(HasArgument("-p")));
+  // package name should be present
+  EXPECT_THAT(record_command, HasArgument("--app my.package"));
+
+  record_command = simpleperf.GetRecordCommand(
+      20 /* any other PID */, "my.package", "arm", kFakeTracePath, 100);
+
+  // Record should not be run as root
+  EXPECT_THAT(record_command, StartsWith("/fake/path/simpleperf_arm record"));
+  // PID should not be present as it's not available
+  EXPECT_THAT(record_command, Not(HasArgument("-p")));
+  // package name should be present
+  EXPECT_THAT(record_command, HasArgument("--app my.package"));
+}
+
 TEST(SimpleperfTest, StartupProfilingPid) {
-  FakeSimpleperfGetFeatures simpleperf{false};
+  FakeSimpleperfGetFeatures simpleperf;
 
   string record_command = simpleperf.GetRecordCommand(
       kStartupProfilingPid, "my.package", "arm", kFakeTracePath, 100);
@@ -140,23 +196,8 @@ TEST(SimpleperfTest, StartupProfilingPid) {
   EXPECT_THAT(record_command, HasArgument("--app my.package"));
 }
 
-TEST(SimpleperfTest, SystemServerCommand) {
-  FakeSimpleperfGetFeatures simpleperf{false};
-  int pid = 42;
-
-  string record_command = simpleperf.GetRecordCommand(
-      pid, "system_server", "arm", kFakeTracePath, 100);
-
-  // Command should be run as root
-  EXPECT_THAT(record_command, StartsWith("su root"));
-  // PID should be passed
-  EXPECT_THAT(record_command, HasArgument("-p 42"));
-  // package name shouldn't be passed
-  EXPECT_THAT(record_command, Not(HasArgument("--app")));
-}
-
 TEST(SimpleperfTest, SimpleperfBinaryName) {
-  FakeSimpleperfGetFeatures simpleperf{false};
+  FakeSimpleperfGetFeatures simpleperf;
   int pid = 42;
   string app = "my.good.app";
   int sampling_interval = 100;
@@ -180,19 +221,21 @@ TEST(SimpleperfTest, SimpleperfBinaryName) {
 }
 
 TEST(SimpleperfTest, EmulatorUsesCpuClockEvents) {
-  FakeSimpleperfGetFeatures simpleperf_emulator{true /* is_emulator */};
+  FakeSimpleperfGetFeatures simpleperf_emulator{true /* is_emulator */,
+                                                true /* is_user_build */};
   string record_command = simpleperf_emulator.GetRecordCommand(
       1, "any.package", "arm", kFakeTracePath, 1);
   EXPECT_THAT(record_command, HasArgument("-e cpu-clock"));
 
-  FakeSimpleperfGetFeatures simpleperf{false /* is_emulator */};
+  FakeSimpleperfGetFeatures simpleperf{false /* is_emulator */,
+                                       true /* is_user_build */};
   record_command =
       simpleperf.GetRecordCommand(1, "any.package", "arm", kFakeTracePath, 1);
   EXPECT_THAT(record_command, Not(HasArgument("-e cpu-clock")));
 }
 
 TEST(SimpleperfTest, TraceOffCpuFlag) {
-  FakeSimpleperfGetFeatures simpleperf{false};
+  FakeSimpleperfGetFeatures simpleperf;
   simpleperf.SetFeatures("trace-offcpu\nother feature");
   string record_command =
       simpleperf.GetRecordCommand(1, "any.package", "arm", kFakeTracePath, 1);
@@ -205,7 +248,7 @@ TEST(SimpleperfTest, TraceOffCpuFlag) {
 }
 
 TEST(SimpleperfTest, DwarfVsFpCallGraph) {
-  FakeSimpleperfGetFeatures simpleperf{false};
+  FakeSimpleperfGetFeatures simpleperf;
   simpleperf.SetFeatures("dwarf-based-call-graph");
   string record_command =
       simpleperf.GetRecordCommand(1, "any.package", "arm", kFakeTracePath, 1);
@@ -218,7 +261,7 @@ TEST(SimpleperfTest, DwarfVsFpCallGraph) {
 }
 
 TEST(SimpleperfTest, SplitRecordCommand) {
-  FakeSimpleperfGetFeatures simpleperf{false};
+  FakeSimpleperfGetFeatures simpleperf;
   char* split_str[5];
   std::unique_ptr<char[]> original_str;
 

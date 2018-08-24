@@ -36,10 +36,6 @@ namespace {
 
 const char* const kSimpleperfExecutable = "simpleperf";
 
-bool IsSystemServer(const string& pkg_name) {
-  return pkg_name == "system_server";
-}
-
 }  // namespace
 
 namespace profiler {
@@ -54,11 +50,12 @@ bool Simpleperf::EnableProfiling() const {
 
 bool Simpleperf::KillSimpleperf(int simpleperf_pid, const string& pkg_name) {
   string kill_cmd;
-  if (IsSystemServer(pkg_name)) {
-    // When profiling system_server, kill should be called as root.
-    kill_cmd = "su root kill";
-  } else {
+  if (is_user_build_) {
     kill_cmd = "kill";
+  } else {
+    // In userdebug and eng devices, kill simpleperf as root because it might
+    // have been started as root.
+    kill_cmd = "su root kill";
   }
   ostringstream string_pid;
   string_pid << simpleperf_pid;
@@ -117,10 +114,16 @@ string Simpleperf::GetRecordCommand(int pid, const string& pkg_name,
                                     const string& trace_path,
                                     int sampling_interval_us) const {
   ostringstream command;
-  bool is_system_server = IsSystemServer(pkg_name);
-  if (is_system_server) {
-    // System process is owned by the system and can't be run with run-as.
-    // Therefore, we run it as root.
+  bool is_startup_profiling = pid == kStartupProfilingPid;
+  if (!is_user_build_ && !is_startup_profiling) {
+    // In userdebug/eng builds, we want to be able to profile processes that
+    // don't have a corresponding package name (e.g. system_server) and also
+    // non-debuggable apps. Running simpleperf as a normal user passing the
+    // --app flag wouldn't work for these scenarios because it invokes
+    // simpleperf using "run-as", and that only works with processes that
+    // represent a debuggable app. A workaround for that is to invoke simpleperf
+    // as root except for startup profiling, which is not a problem as startup
+    // profiling is only used with debuggable apps.
     command << "su root ";
   }
 
@@ -133,9 +136,11 @@ string Simpleperf::GetRecordCommand(int pid, const string& pkg_name,
   if (pid != kStartupProfilingPid) {
     command << " -p " << pid;
   }
-  
-  // Don't add --app when profiling system_process
-  if (!is_system_server) {
+
+  // Don't add --app when profiling userdebug/eng devices unless when we're
+  // using startup profiling, because in this case we don't want simpleperf to
+  // be invoked using "run-as".
+  if (is_user_build_ || is_startup_profiling) {
     command << " --app " << pkg_name;
   }
 

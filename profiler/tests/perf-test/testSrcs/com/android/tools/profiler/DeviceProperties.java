@@ -13,6 +13,7 @@ import org.junit.rules.ExternalResource;
 public class DeviceProperties extends ExternalResource {
 
     public static final String FAKE_SERIAL = "0123456789abcdef";
+    public static final String FAKE_BUILD_TYPE = "user";
     private static final String FAKE_CHARACTERISTIC = "nosdcard";
 
     private String mySerial;
@@ -40,6 +41,7 @@ public class DeviceProperties extends ExternalResource {
             stream.println("ro.build.version.codename=" + myCodeName);
             stream.println("ro.build.version.release=" + myRelease);
             stream.println("ro.build.version.sdk=" + mySdk);
+            stream.println("ro.build.type=" + FAKE_BUILD_TYPE);
             stream.println("ro.build.characteristics=" + FAKE_CHARACTERISTIC);
         } catch (IOException ex) {
             Assert.fail("Failed to write prop file: " + ex);

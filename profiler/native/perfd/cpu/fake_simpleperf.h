@@ -34,7 +34,7 @@ namespace profiler {
 class FakeSimpleperf final : public Simpleperf {
  public:
   explicit FakeSimpleperf()
-      : Simpleperf("/fake/path/", false),
+      : Simpleperf("/fake/path/", false, true),
         enable_profiling_success_(true),
         kill_simpleperf_success_(true),
         report_sample_success_(true),
