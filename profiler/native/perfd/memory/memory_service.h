@@ -73,6 +73,11 @@ class MemoryServiceImpl final
       const ::profiler::proto::TrackAllocationsRequest* request,
       ::profiler::proto::TrackAllocationsResponse* response) override;
 
+  ::grpc::Status SetAllocationSamplingRate(
+      ::grpc::ServerContext* context,
+      const ::profiler::proto::SetAllocationSamplingRateRequest* request,
+      ::profiler::proto::SetAllocationSamplingRateResponse* response) override;
+
   ::grpc::Status ListHeapDumpInfos(
       ::grpc::ServerContext* context,
       const ::profiler::proto::ListDumpInfosRequest* request,

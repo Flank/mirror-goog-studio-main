@@ -137,4 +137,22 @@ public class MemoryTest {
         // allocationCount of instances should have been created/deleted.
         assertThat(deallocTags).isEqualTo(allocTags);
     }
+
+    @Test
+    public void setSamplingRate() throws Exception {
+        MemoryStubWrapper stubWrapper =
+                new MemoryStubWrapper(myPerfDriver.getGrpc().getMemoryStub());
+        FakeAndroidDriver androidDriver = myPerfDriver.getFakeAndroidDriver();
+        final int samplingNumInterval = 10;
+
+        // Start memory tracking.
+        TrackAllocationsResponse trackResponse =
+                stubWrapper.startAllocationTracking(myPerfDriver.getSession());
+        assertThat(trackResponse.getStatus()).isEqualTo(TrackAllocationsResponse.Status.SUCCESS);
+
+        // Set sampling rate.
+        stubWrapper.setSamplingRate(myPerfDriver.getSession(), samplingNumInterval);
+        assertThat(androidDriver.waitForInput("sampling_num_interval=" + samplingNumInterval))
+                .isTrue();
+    }
 }

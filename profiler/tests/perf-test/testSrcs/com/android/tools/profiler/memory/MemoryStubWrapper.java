@@ -18,6 +18,9 @@ package com.android.tools.profiler.memory;
 
 import com.android.tools.profiler.proto.Common.*;
 import com.android.tools.profiler.proto.MemoryProfiler;
+import com.android.tools.profiler.proto.MemoryProfiler.AllocationSamplingRate;
+import com.android.tools.profiler.proto.MemoryProfiler.SetAllocationSamplingRateRequest;
+import com.android.tools.profiler.proto.MemoryProfiler.SetAllocationSamplingRateResponse;
 import com.android.tools.profiler.proto.MemoryServiceGrpc.MemoryServiceBlockingStub;
 
 /** Wrapper of stub calls that is shared among tests. */
@@ -47,6 +50,16 @@ public final class MemoryStubWrapper {
                 MemoryProfiler.TrackAllocationsRequest.newBuilder()
                         .setSession(session)
                         .setEnabled(true)
+                        .build());
+    }
+
+    SetAllocationSamplingRateResponse setSamplingRate(Session session, int samplingNumInterval) {
+        return myMemoryStub.setAllocationSamplingRate(
+                SetAllocationSamplingRateRequest.newBuilder()
+                        .setSession(session)
+                        .setSamplingRate(
+                                AllocationSamplingRate.newBuilder()
+                                        .setSamplingNumInterval(samplingNumInterval))
                         .build());
     }
 }

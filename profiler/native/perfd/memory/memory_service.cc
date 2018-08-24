@@ -39,6 +39,8 @@ using profiler::proto::MemoryStartResponse;
 using profiler::proto::MemoryStopRequest;
 using profiler::proto::MemoryStopResponse;
 using profiler::proto::Session;
+using profiler::proto::SetAllocationSamplingRateRequest;
+using profiler::proto::SetAllocationSamplingRateResponse;
 using profiler::proto::TrackAllocationsRequest;
 using profiler::proto::TrackAllocationsResponse;
 using profiler::proto::TriggerHeapDumpRequest;
@@ -102,6 +104,24 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(
   result->second.memory_cache()->LoadMemoryJvmtiData(
       request->start_time(), request->end_time(), response);
 
+  return ::grpc::Status::OK;
+}
+
+::grpc::Status MemoryServiceImpl::SetAllocationSamplingRate(
+    ::grpc::ServerContext* context,
+    const SetAllocationSamplingRateRequest* request,
+    SetAllocationSamplingRateResponse* reponse) {
+  Trace trace("MEM:SetAllocationSamplingRate");
+  MemoryControlRequest control_request;
+  control_request.set_pid(request->session().pid());
+  MemoryControlRequest::SetSamplingRate* set_sampling_rate_request =
+      control_request.mutable_set_sampling_rate_request();
+  set_sampling_rate_request->mutable_sampling_rate()->set_sampling_num_interval(
+      request->sampling_rate().sampling_num_interval());
+  if (!private_service_->SendRequestToAgent(control_request)) {
+    return ::grpc::Status(::grpc::StatusCode::UNKNOWN,
+                          "Unable to update live allocation sampling rate.");
+  }
   return ::grpc::Status::OK;
 }
 
@@ -212,7 +232,8 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(
 
 #undef PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND
 
-MemoryCollector* MemoryServiceImpl::GetCollector(const proto::Session& session) {
+MemoryCollector* MemoryServiceImpl::GetCollector(
+    const proto::Session& session) {
   auto got = collectors_.find(session.pid());
   if (got == collectors_.end()) {
     // Use the forward version of pair to avoid defining a move constructor.

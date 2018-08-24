@@ -518,6 +518,14 @@ void MemoryTrackingEnv::HandleControlSignal(
       Log::V("Live memory tracking disabled.");
       StopLiveTracking(request->disable_request().timestamp());
       break;
+    case MemoryControlRequest::kSetSamplingRateRequest:
+      Log::V(
+          "Live memory tracking sampling rate updated: "
+          "sampling_num_interval=%d.",
+          request->set_sampling_rate_request()
+              .sampling_rate()
+              .sampling_num_interval());
+      break;
     default:
       Log::V("Unknown memory control signal.");
   }
@@ -616,7 +624,8 @@ void MemoryTrackingEnv::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
     int32_t tag = g_env->GetNextObjectTag();
     Stopwatch stopwatch_settag;
     error = jvmti->SetTag(object, tag);
-    g_env->timing_stats_.Track(TimingStats::kSetTag, stopwatch_settag.GetElapsed());
+    g_env->timing_stats_.Track(TimingStats::kSetTag,
+                               stopwatch_settag.GetElapsed());
     CheckJvmtiError(jvmti, error);
 
     auto itr = g_env->class_tag_map_.find(klass_info);
