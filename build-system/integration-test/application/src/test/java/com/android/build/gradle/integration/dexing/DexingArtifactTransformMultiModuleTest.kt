@@ -50,10 +50,11 @@ class DexingArtifactTransformMultiModuleTest {
             .buildFile.appendText("\nandroid.defaultConfig.multiDexEnabled = false")
         executor().run(":app:assembleDebug")
 
-        val apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG)
-        assertThatApk(apk).containsClass("Lcom/example/app/BuildConfig;")
-        assertThatApk(apk).containsClass("Lcom/example/app/R;")
-        assertThatApk(apk).containsClass("Lcom/example/lib/R;")
+        project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG).use {
+            assertThatApk(it).containsClass("Lcom/example/app/BuildConfig;")
+            assertThatApk(it).containsClass("Lcom/example/app/R;")
+            assertThatApk(it).containsClass("Lcom/example/lib/R;")
+        }
     }
 
     @Test
@@ -69,8 +70,9 @@ class DexingArtifactTransformMultiModuleTest {
         }
         executor().run(":app:assembleDebug")
 
-        val apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG)
-        assertThatApk(apk).containsClass("Lcom/Data;")
+        project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG).use {
+            assertThatApk(it).containsClass("Lcom/Data;")
+        }
     }
 
     @Test
@@ -118,8 +120,9 @@ class DexingArtifactTransformMultiModuleTest {
         }
         executor().run(":app:assembleDebug")
 
-        val apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG)
-        assertThatApk(apk).containsClass("Lcom/Data;")
+        project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG).use {
+            assertThatApk(it).containsClass("Lcom/Data;")
+        }
     }
 
     @Test
@@ -183,10 +186,11 @@ class DexingArtifactTransformMultiModuleTest {
         }
         executor().run(":app:assembleDebug")
 
-        val apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG)
-        assertThatApk(apk).containsClass("Llib/Data;")
-        assertThatApk(apk).containsClass("LjavaLib/Data;")
-        assertThatApk(apk).containsClass("Lcom/google/common/collect/ImmutableList;")
+        project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG).use {
+            assertThatApk(it).containsClass("Llib/Data;")
+            assertThatApk(it).containsClass("LjavaLib/Data;")
+            assertThatApk(it).containsClass("Lcom/google/common/collect/ImmutableList;")
+        }
     }
 
     private fun executor() =

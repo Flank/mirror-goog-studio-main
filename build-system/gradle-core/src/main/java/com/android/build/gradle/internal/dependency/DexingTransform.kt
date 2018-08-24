@@ -51,12 +51,14 @@ class DexingTransform
             )
         )
 
-        ClassFileInputs.fromPath(input.toPath()).entries { _ -> true }.use { classesInput ->
-            d8DexBuilder.convert(
-                classesInput,
-                outputDir.toPath(),
-                false
-            )
+        ClassFileInputs.fromPath(input.toPath()).use {
+                classFileInput -> classFileInput .entries { _ -> true }.use { classesInput ->
+                    d8DexBuilder.convert(
+                        classesInput,
+                        outputDir.toPath(),
+                        false
+                    )
+                }
         }
 
         return listOf(outputDir)

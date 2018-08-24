@@ -21,11 +21,6 @@ public class SeparateTestWithDependenciesTest {
                     .fromTestProject("separateTestModuleWithDependencies")
                     .create();
 
-    @BeforeClass
-    public static void setup() throws IOException, InterruptedException {
-        project.execute("clean", "assemble");
-    }
-
     @AfterClass
     public static void cleanUp() {
         project = null;
@@ -33,27 +28,31 @@ public class SeparateTestWithDependenciesTest {
 
     @Test
     public void checkAppContainsAllDependentClasses()
-            throws IOException, ProcessException, InterruptedException {
+            throws Exception {
         project.execute("clean", "assemble");
-        Apk apk = project.getSubproject("app").getApk("debug");
-        TruthHelper.assertThatApk(apk)
-                .containsClass("Lcom/android/tests/jarDep/JarDependencyUtil;");
+        try (Apk apk = project.getSubproject("app").getApk("debug")) {
+            TruthHelper.assertThatApk(apk)
+                    .containsClass("Lcom/android/tests/jarDep/JarDependencyUtil;");
+        }
 
-        apk = project.getSubproject("app").getApk("minified");
-        TruthHelper.assertThatApk(apk)
-                .doesNotContainClass("Lcom/android/tests/jarDep/JarDependencyUtil;");
+        try (Apk apk = project.getSubproject("app").getApk("minified")) {
+            TruthHelper.assertThatApk(apk)
+                    .doesNotContainClass("Lcom/android/tests/jarDep/JarDependencyUtil;");
+        }
     }
 
     @Test
     public void checkTestAppDoesNotContainAnyMinifiedApplicationDependentClasses()
-            throws IOException, ProcessException, InterruptedException {
+            throws Exception {
         project.execute("clean", ":test:assemble");
-        Apk apk = project.getSubproject("test").getApk("debug");
-        TruthHelper.assertThatApk(apk)
-                .doesNotContainClass("Lcom/android/tests/jarDep/JarDependencyUtil;");
+        try (Apk apk = project.getSubproject("test").getApk("debug")) {
+            TruthHelper.assertThatApk(apk)
+                    .doesNotContainClass("Lcom/android/tests/jarDep/JarDependencyUtil;");
+        }
 
-        apk = project.getSubproject("test").getApk("minified");
-        TruthHelper.assertThatApk(apk)
-                .doesNotContainClass("Lcom/android/tests/jarDep/JarDependencyUtil;");
+        try (Apk apk = project.getSubproject("test").getApk("minified")) {
+            TruthHelper.assertThatApk(apk)
+                    .doesNotContainClass("Lcom/android/tests/jarDep/JarDependencyUtil;");
+        }
     }
 }
