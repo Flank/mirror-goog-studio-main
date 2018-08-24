@@ -76,6 +76,7 @@ MAVEN_REPOS = [
 
 #keep sorted
 TAGS = [
+    "no_test_mac_psq",  # b/113099009
     "no_test_windows",  # b/73306170
 ]
 
