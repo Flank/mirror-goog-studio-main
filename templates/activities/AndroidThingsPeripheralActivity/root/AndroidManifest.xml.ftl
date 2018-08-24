@@ -1,6 +1,5 @@
 <#import "../../common/shared_manifest_macros.ftl" as manifestMacros>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="${packageName}">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
 <#if integrateGps>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
