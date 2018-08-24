@@ -2510,11 +2510,10 @@ public final class SdkConstants {
 
     public static final String ANDROIDX_MATERIAL_ARTIFACT = "com.google.android.material:material";
     public static final String ANDROIDX_CORE_UI_ARTIFACT = "androidx.core:core-ui";
-    public static final String ANDROIDX_CARD_VIEW_ARTIFACT = "androidx.widget.cardview:cardview";
-    public static final String ANDROIDX_GRID_LAYOUT_ARTIFACT =
-            "androidx.widget.gridlayout:gridlayout";
+    public static final String ANDROIDX_CARD_VIEW_ARTIFACT = "androidx.cardview:cardview";
+    public static final String ANDROIDX_GRID_LAYOUT_ARTIFACT = "androidx.gridlayout:gridlayout";
     public static final String ANDROIDX_RECYCLER_VIEW_ARTIFACT =
-            "androidx.widget.recyclerview:recyclerview";
+            "androidx.recyclerview:recyclerview";
     public static final String ANDROIDX_LEANBACK_ARTIFACT = "androidx.leanback:leanback";
     public static final String ANDROIDX_ANNOTATIONS_ARTIFACT = "androidx.annotations:annotations";
     public static final String ANDROIDX_SUPPORT_LIB_ARTIFACT = "androidx.legacy:legacy-support-v4";
