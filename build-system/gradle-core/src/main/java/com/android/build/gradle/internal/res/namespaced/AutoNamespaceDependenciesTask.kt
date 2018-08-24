@@ -396,6 +396,7 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
         private lateinit var outputClassesJar: File
         private lateinit var outputRClassesJar: File
         private lateinit var outputStaticLibraries: File
+        private lateinit var outputRewrittenManifests: File
 
         override fun preConfigure(taskName: String) {
             super.preConfigure(taskName)
@@ -412,6 +413,10 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
                 InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES,
                 taskName
             )
+
+            outputRewrittenManifests = variantScope.artifacts.appendArtifact(
+                InternalArtifactType.NAMESPACED_MANIFESTS, taskName)
+
         }
 
         override fun configure(task: AutoNamespaceDependenciesTask) {
@@ -442,9 +447,7 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
                     ArtifactType.PUBLIC_RES
             )
 
-            task.outputRewrittenManifests = variantScope.artifacts.appendArtifact(
-                    InternalArtifactType.NAMESPACED_MANIFESTS, task)
-
+            task.outputRewrittenManifests = outputRewrittenManifests
             task.outputClassesJar = outputClassesJar
             task.outputRClassesJar = outputRClassesJar
             task.outputStaticLibraries = outputStaticLibraries
