@@ -173,6 +173,7 @@ message MemoryData {
   repeated AllocationsInfo allocations_info = 6;
   repeated BatchAllocationSample allocation_samples = 7;
   repeated BatchJNIGlobalRefEvent jni_reference_event_batches = 8;
+  repeated AllocationSamplingRange allocation_sampling_ranges = 9;
 }
 
 // Proto for describing a heap dump record.
@@ -282,6 +283,15 @@ message TrackAllocationsResponse {
   }
   Status status = 1;
   AllocationsInfo info = 2;
+}
+
+// Represents the start and end times when live allocations are recorded with
+// a particular AllocationSamplingRate. Note that this message is not used by
+// the legacy allocation tracking.
+message AllocationSamplingRange {
+  int64 start_time = 1;
+  int64 end_time = 2;
+  AllocationSamplingRate sampling_rate = 3;
 }
 
 message AllocationSamplingRate {
