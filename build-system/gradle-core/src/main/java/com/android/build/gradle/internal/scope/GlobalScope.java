@@ -39,8 +39,11 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.OptionalCompilationStep;
+import com.android.builder.sdk.TargetInfo;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.blame.MessageReceiver;
+import com.android.ide.common.process.ProcessExecutor;
+import com.google.common.base.Preconditions;
 import java.io.File;
 import java.util.Set;
 import org.gradle.api.Action;
@@ -125,6 +128,20 @@ public class GlobalScope implements TransformGlobalScope {
     @NonNull
     public AndroidBuilder getAndroidBuilder() {
         return androidBuilder;
+    }
+
+    @NonNull
+    public TargetInfo getTargetInfo() {
+        // Workaround to give access to task that they need without knowing about the
+        // androidbuilder which will be removed in the long term.
+        return Preconditions.checkNotNull(androidBuilder.getTargetInfo(), "TargetInfo unavailable");
+    }
+
+    @NonNull
+    public ProcessExecutor getProcessExecutor() {
+        // Workaround to give access to task that they need without knowing about the
+        // androidbuilder which will be removed in the long term.
+        return androidBuilder.getProcessExecutor();
     }
 
     @NonNull
