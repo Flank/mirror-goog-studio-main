@@ -229,7 +229,7 @@ abstract class BuildArtifactsHolder(
      *
      * @param artifactType artifactType to be replaced.
      * @param newFiles names of the new files.
-     * @param task [Task] that will create the new files.
+     * @param taskName [Task] name that will create the new files.
      * @return BuildableFiles containing files that the specified task should create.
      */
     @JvmOverloads
@@ -237,8 +237,8 @@ abstract class BuildArtifactsHolder(
             artifactType: ArtifactType,
             operationType: OperationType,
             newFiles : Any,
-            producer : String? = null) : BuildableArtifact {
-        val collection = createFileCollection(artifactType, operationType, newFiles, producer)
+            taskName : String? = null) : BuildableArtifact {
+        val collection = createFileCollection(artifactType, operationType, newFiles, taskName)
         val files = BuildableArtifactImpl(collection, dslScope)
         createOutput(artifactType, files)
         return files
