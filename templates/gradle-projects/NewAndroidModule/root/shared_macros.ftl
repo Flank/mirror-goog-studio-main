@@ -66,7 +66,7 @@ android {
 <#if canHaveCpp && (includeCppSupport!false)>
     externalNativeBuild {
         cmake {
-            path "CMakeLists.txt"
+            path "src/main/cpp/CMakeLists.txt"
         }
     }
 </#if>
