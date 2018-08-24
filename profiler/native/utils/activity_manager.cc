@@ -69,7 +69,11 @@ bool ActivityManager::StartProfiling(const ProfilingMode profiling_mode,
       // Use streaming output mode on O or greater.
       parameters << "--streaming ";
     }
-    parameters << app_package_name << " " << *trace_path;
+    // "system_server" from /proc/PID/comm has a different name "system" in the
+    // eyes of Activity Service. See b/112379230 for details.
+    parameters << (app_package_name == "system_server" ? "system"
+                                                       : app_package_name);
+    parameters << " " << *trace_path;
     if (!bash_->Run(parameters.str(), error_string)) {
       *error_string = "Unable to run profile start command";
       return false;

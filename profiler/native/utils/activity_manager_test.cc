@@ -99,4 +99,25 @@ TEST(ActivityManagerTest, InstrumentStart) {
   EXPECT_THAT(output_string, StrEq(kMockOutputString));
 }
 
+TEST(ActivityManagerTest, InstrumentSystemServerStart) {
+  string trace_path;
+  string output_string;
+  string cmd;
+  std::unique_ptr<BashCommandRunner> bash{
+      new MockBashCommandRunner(kAmExecutable)};
+  EXPECT_CALL(*(static_cast<MockBashCommandRunner*>(bash.get())),
+              RunAndReadOutput(testing::A<const string&>(), &output_string))
+      .WillOnce(DoAll(SaveArg<0>(&cmd), SetArgPointee<1>(kMockOutputString),
+                      Return(true)));
+  TestActivityManager manager{std::move(bash)};
+  manager.StartProfiling(ActivityManager::ProfilingMode::INSTRUMENTED,
+                         "system_server", 1000, &trace_path, &output_string);
+  EXPECT_THAT(cmd, StartsWith(kAmExecutable));
+  EXPECT_THAT(cmd, HasSubstr(kProfileStart));
+  EXPECT_THAT(cmd, HasSubstr(" system "));
+  EXPECT_THAT(cmd, Not(HasSubstr(" system_server ")));
+  EXPECT_THAT(trace_path, StrNe(""));
+  EXPECT_THAT(output_string, StrEq(kMockOutputString));
+}
+
 }  // nampespace profiler
