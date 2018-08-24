@@ -26,26 +26,28 @@
 #include <fcntl.h>
 
 #include "command_cmd.h"
-#include "dump.h"
+#include "message_pipe_wrapper.h"
 #include "shell_command.h"
 
 #include "agent.so.cc"
+#include "agent_server.cc"
 
 namespace deployer {
 
 namespace {
-const std::string kAgentPrefix = "agent-";
-const std::string kAgentSuffix = ".so";
-const std::string kConfig = "config.pb";
+const std::string kAgentFilename =
+    "agent-" + std::string(agent_so_hash) + ".so";
+const std::string kServerFilename =
+    "server-" + std::string(agent_server_hash) + ".so";
 const int kRwFileMode =
     S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR | S_IWGRP | S_IWOTH;
 const int kRxFileMode =
     S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
 }  // namespace
 
-// In this class the use of shell commands for what would typically be
-// regular stdlib filesystem io. This is because the installer does not have
-// permissions in the /data/data/<app> directory and needs to utilize run-as.
+// Note: the use of shell commands for what would typically be regular stdlib
+// filesystem io is because the installer does not have permissions in the
+// /data/data/<app> directory and needs to utilize run-as.
 
 void SwapCommand::ParseParameters(int argc, char** argv) {
   int size = -1;
@@ -56,7 +58,6 @@ void SwapCommand::ParseParameters(int argc, char** argv) {
   }
 
   size = atoi(argv[0]);
-
   static std::string data;
   std::copy_n(std::istreambuf_iterator<char>(std::cin), size,
               std::back_inserter(data));
@@ -67,66 +68,9 @@ void SwapCommand::ParseParameters(int argc, char** argv) {
   }
   package_name_ = request_.package_name();
 
-  // TODO(noahz): Better way of handling the "update" scenario.
-  // If we modify/delete the agent after ART has already loaded it, the app
-  // will crash, so we want to be careful here.
-
   // Set this value here so we can re-use it in other methods.
   target_dir_ = "/data/data/" + package_name_ + "/.studio/";
   ready_to_run_ = true;
-}
-
-std::string SwapCommand::GetAgentFilename() const noexcept {
-  return kAgentPrefix + agent_so_hash + kAgentSuffix;
-}
-
-bool SwapCommand::WriteAgentToDisk(const std::string& agent_dst_path) const
-    noexcept {
-  int fd = open(agent_dst_path.c_str(), O_WRONLY | O_CREAT, kRwFileMode);
-  if (fd == -1) {
-    std::cerr << "CopyAgentIfNecessary(). Unable to open()." << std::endl;
-    return false;
-  }
-  int written = write(fd, agent_so, agent_so_len);
-  if (written == -1) {
-    std::cerr << "CopyAgentIfNecessary(). Unable to write()." << std::endl;
-    return false;
-  }
-
-  int close_result = close(fd);
-  if (close_result == -1) {
-    std::cerr << "CopyAgentIfNecessary(). Unable to close()." << std::endl;
-    return false;
-  }
-
-  chmod(agent_dst_path.c_str(), kRxFileMode);
-
-  return true;
-}
-
-bool SwapCommand::CopyAgent(const std::string& agent_src_path,
-                            const std::string& agent_dst_path) const noexcept {
-  // TODO: Cleanup previous version of the agent ?
-
-  // Check if the agent is already in the app "data" folder.
-  if (RunCmd("stat", User::APP_PACKAGE, {agent_dst_path}, nullptr)) {
-    std::cout << "Binary already in data folder, skipping copy." << std::endl;
-    return true;
-  }
-
-  // Make sure the agent library binary is on the disk.
-  if (access(agent_src_path.c_str(), F_OK) == -1) {
-    WriteAgentToDisk(agent_src_path);
-  }
-
-  // Copy to agent directory.
-  std::string cp_output;
-  if (!RunCmd("cp", User::APP_PACKAGE, {agent_src_path, agent_dst_path},
-              &cp_output)) {
-    std::cerr << "Could not copy agent binary." << cp_output << std::endl;
-    return false;
-  }
-  return true;
 }
 
 bool SwapCommand::Run(const Workspace& workspace) {
@@ -137,64 +81,52 @@ bool SwapCommand::Run(const Workspace& workspace) {
   // Get the pid(s) of the running application using the package name.
   std::string pidof_output;
   if (!RunCmd("pidof", User::SHELL_USER, {package_name_}, &pidof_output)) {
-    std::cerr << "Could not get application pid for package : '" +
-                     package_name_ + "':"
-              << pidof_output << std::endl;
+    std::cerr << "Could not get application pid for package : " + package_name_
+              << std::endl;
+    return false;
+  }
+
+  // Start a swap server with fork/exec.
+  int read_fd;
+  int write_fd;
+  if (!StartServer(&read_fd, &write_fd)) {
     return false;
   }
 
   int pid;
-  std::istringstream pids(pidof_output);  // This constructor copies 'output',
-                                          // so we can re-use output safely.
+  std::istringstream pids(pidof_output);
 
-  // Attach the agent to the application process(es)
+  // Attach the agent to the application process(es).
   CmdCommand cmd;
   while (pids >> pid) {
     std::string output;
-    if (!cmd.AttachAgent(pid, target_dir_ + GetAgentFilename(),
-                         {target_dir_ + kConfig}, &output)) {
-      std::cerr << "Could not attach agent to process." << output << std::endl;
+    if (!cmd.AttachAgent(pid, target_dir_ + kAgentFilename, {}, &output)) {
+      std::cerr << "Could not attach agent to process: " << output << std::endl;
       return false;
     }
   }
 
-  return true;
-}
+  std::string request_string;
+  request_.SerializeToString(&request_string);
 
-bool SwapCommand::SetupAgent(const std::string& agent_src_path,
-                             const std::string& agent_dst_path) const noexcept {
-  if (!CopyAgent(agent_src_path, agent_dst_path)) {
-    std::cerr << "Could not copy agent library to app data folder."
-              << std::endl;
-    return false;
+  deploy::MessagePipeWrapper server_input(write_fd);
+  if (!server_input.Write(request_string)) {
+    std::cerr << "Could not write to agent proxy server." << std::endl;
   }
-  return true;
-}
 
-bool SwapCommand::SetupConfigFile(const Workspace& workspace,
-                                  const std::string& dst_path) noexcept {
-  std::string config_local_path = workspace.GetTmpFolder() + kConfig;
-
-  // Create the agent config, passing the agent the swap request.
-  proto::AgentConfig agent_config;
-  agent_config.set_allocated_swap_request(&request_);
-
-  // Write out the configuration file.
-  std::ofstream ofile(config_local_path, std::ios::binary);
-  std::string configurationString;
-  if (!agent_config.SerializeToString(&configurationString)) {
-    std::cerr << "Could not write agent configuration proto." << std::endl;
-    return false;
+  // TODO(noahz): Debug code; remove when agent sends a real response.
+  std::string response_string;
+  deploy::MessagePipeWrapper server_output(read_fd);
+  while (server_output.Read(&response_string)) {
+    std::cout << response_string;
+    std::cout.flush();
+    response_string.clear();
   }
-  ofile << configurationString;
-  ofile.close();
 
-  // Copy to app data folder.
-  std::string output;
-  if (!RunCmd("cp", User::APP_PACKAGE, {config_local_path, dst_path},
-              &output)) {
-    return false;
-  }
+  // End debug code.
+
+  close(read_fd);
+  close(write_fd);
   return true;
 }
 
@@ -206,18 +138,141 @@ bool SwapCommand::Setup(const Workspace& workspace) noexcept {
     return false;
   }
 
-  // Make sure the agent is in the data folder.
-  std::string agent_src_path = workspace.GetTmpFolder() + GetAgentFilename();
-  std::string agent_dst_path = target_dir_ + GetAgentFilename();
-  if (!SetupAgent(agent_src_path, agent_dst_path)) {
+  if (!CopyBinaries(workspace.GetTmpFolder(), target_dir_)) {
     return false;
   }
 
-  // Write the config file in the data folder.
-  if (!SetupConfigFile(workspace, target_dir_ + kConfig)) {
+  return true;
+}
+
+bool SwapCommand::CopyBinaries(const std::string& src_path,
+                               const std::string& dst_path) const noexcept {
+  // TODO: Cleanup previous version of the binaries?
+  // If we modify/delete the agent after ART has already loaded it, the app
+  // will crash, so we want to be careful here.
+
+  std::string agent_src_path = src_path + kAgentFilename;
+  std::string agent_dst_path = dst_path + kAgentFilename;
+
+  std::string server_src_path = src_path + kServerFilename;
+  std::string server_dst_path = dst_path + kServerFilename;
+
+  // Checks if both binaries are in the data folder of the agent. Since the
+  // common case expects that both binaries will be present, we do both checks
+  // at once to minimize the expected number of additional run-as invocations.
+  if (RunCmd("stat", User::APP_PACKAGE, {agent_dst_path, server_dst_path},
+             nullptr)) {
+    std::cout << "Binaries already in data folder, skipping copy." << std::endl;
+    return true;
+  }
+
+  // Since we did both checks at once, we still need to individually check for
+  // each missing file. This adds one run-as invocation in the "update required"
+  // case, but allows for one fewer run-as in the more common "no update" case.
+
+  std::vector<std::string> copy_args;
+
+  if (!RunCmd("stat", User::APP_PACKAGE, {agent_dst_path}, nullptr)) {
+    // If the agent library is not already on disk, write it there now.
+    if (access(agent_src_path.c_str(), F_OK) == -1) {
+      WriteArrayToDisk(agent_so, agent_so_len, agent_src_path);
+    }
+
+    // Done using agent_src_path, so its safe to use emplace().
+    copy_args.emplace_back(agent_src_path);
+  }
+
+  if (!RunCmd("stat", User::APP_PACKAGE, {server_dst_path}, nullptr)) {
+    // If the server binary is not already on disk, write it there now.
+    if (access(server_src_path.c_str(), F_OK) == -1) {
+      WriteArrayToDisk(agent_server, agent_server_len, server_src_path);
+    }
+
+    // Done using server_src_path, so its safe to use emplace().
+    copy_args.push_back(server_src_path);
+  }
+
+  // Add the destination path to the argument list. We don't use dst_path again,
+  // so it's safe to use emplace().
+  copy_args.push_back(dst_path);
+
+  // Copy the binaries to the agent directory.
+  std::string cp_output;
+  if (!RunCmd("cp", User::APP_PACKAGE, copy_args, &cp_output)) {
+    std::cerr << "Could not copy agent binary: " << cp_output << std::endl;
     return false;
   }
 
+  return true;
+}
+
+bool SwapCommand::WriteArrayToDisk(const unsigned char* array,
+                                   uint64_t array_len,
+                                   const std::string& dst_path) const noexcept {
+  int fd = open(dst_path.c_str(), O_WRONLY | O_CREAT, kRwFileMode);
+  if (fd == -1) {
+    std::cerr << "WriteArrayToDisk(). Unable to open(): "
+              << std::string(strerror(errno)) << std::endl;
+    return false;
+  }
+  int written = write(fd, array, array_len);
+  if (written == -1) {
+    std::cerr << "WriteArrayToDisk(). Unable to write(): "
+              << std::string(strerror(errno)) << std::endl;
+    return false;
+  }
+
+  int close_result = close(fd);
+  if (close_result == -1) {
+    std::cerr << "WriteArrayToDisk(). Unable to close(): "
+              << std::string(strerror(errno)) << std::endl;
+    return false;
+  }
+
+  chmod(dst_path.c_str(), kRxFileMode);
+  return true;
+}
+
+bool SwapCommand::StartServer(int* read_fd, int* write_fd) const {
+  int read_pipe[2];
+  int write_pipe[2];
+
+  if (pipe(write_pipe) < 0 || pipe(read_pipe) < 0) {
+    return false;
+  }
+
+  int fork_pid = fork();
+  if (fork_pid == 0) {
+    close(write_pipe[1]);
+    close(read_pipe[0]);
+
+    // Map the output of the parent-write pipe to stdin and the input of the
+    // parent-read pipe to stdout. This lets us communicate between the
+    // swap_server and the installer.
+    dup2(write_pipe[0], STDIN_FILENO);
+    dup2(read_pipe[1], STDOUT_FILENO);
+
+    close(write_pipe[0]);
+    close(read_pipe[1]);
+
+    std::string command = target_dir_ + kServerFilename;
+
+    execlp("run-as", command.c_str() /* argv[0] for run-as*/,
+           request_.package_name().c_str() /* package to execute as */,
+           command.c_str() /* command to start swap-server */,
+           "1" /* number of agents (hardcoded for now) */,
+           (char*)nullptr /* must end in null-terminator */);
+
+    // If we get here, the execlp failed, so we should return false.
+    std::cerr << "Could not exec swap_server: " << strerror(errno) << std::endl;
+    return false;
+  }
+
+  close(write_pipe[0]);
+  close(read_pipe[1]);
+
+  *read_fd = read_pipe[0];
+  *write_fd = write_pipe[1];
   return true;
 }
 

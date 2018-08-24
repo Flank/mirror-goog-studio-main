@@ -16,6 +16,7 @@
 
 #include "config.h"
 
+#include <unistd.h>
 #include <fstream>
 
 #include "utils/log.h"
@@ -25,22 +26,26 @@ namespace swapper {
 Config Config::instance_;
 
 bool Config::ParseFromFile(const std::string& file_location) {
-  proto::AgentConfig* config = new proto::AgentConfig();
   std::fstream stream(file_location, std::ios::in | std::ios::binary);
-  std::string config_string((std::istreambuf_iterator<char>(stream)),
-          std::istreambuf_iterator<char>());
-  if (config->ParseFromString(config_string)) {
-    instance_ = Config(config);
+  std::string request_string((std::istreambuf_iterator<char>(stream)),
+                            std::istreambuf_iterator<char>());
+  return ParseFromString(request_string);
+}
+
+bool Config::ParseFromString(const std::string& request_string) {
+  proto::SwapRequest* request = new proto::SwapRequest();
+  if (request->ParseFromString(request_string)) {
+    instance_ = Config(request);
     return true;
   }
-  delete config;
+  delete request;
   return false;
 }
 
 const Config& Config::GetInstance() { return instance_; }
 
 const proto::SwapRequest& Config::GetSwapRequest() const {
-  return agent_config_->swap_request();
+  return *swap_request_;
 }
 
 }  // namespace swapper

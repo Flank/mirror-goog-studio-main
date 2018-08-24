@@ -26,8 +26,8 @@ namespace deployer {
 
 class SwapCommand : public Command {
  public:
-  SwapCommand() {};
-  ~SwapCommand() {}
+  SwapCommand(){};
+  ~SwapCommand(){};
 
   void ParseParameters(int argc, char** argv) override;
   bool Run(const Workspace& workspace) override;
@@ -44,19 +44,26 @@ class SwapCommand : public Command {
   // - Make sure the  configuration file to app data folder.
   bool Setup(const Workspace& workspace) noexcept;
 
+  // Starts the agent server using fork/exec. Populates the read_fd field with a
+  // file descriptor to allow reading from the server; populates the write_fd
+  // field with a descriptor to allow writing to the server.
+  bool StartServer(int* read_fd, int* write_fd) const;
+
   // Runs a command with the provided arguments. If run_as_package is true, the
   // command is invoked with 'run-as'. If the command fails, prints the string
   // specified in 'error' to standard error.
   bool RunCmd(const std::string& shell_cmd, User run_as,
               const std::vector<std::string>& args, std::string* output) const;
-  std::string GetAgentFilename() const noexcept;
-  bool CopyAgent(const std::string& agent_src_path,
-                 const std::string& agent_dst_path) const noexcept;
-  bool SetupAgent(const std::string& agent_src_path,
-                  const std::string& agent_dst_path) const noexcept;
-  bool SetupConfigFile(const Workspace& workspace,
-                       const std::string& dst_path) noexcept;
-  bool WriteAgentToDisk(const std::string& agent_dst_path) const noexcept;
+
+  // Copies the agent and server binarys from the directory specified by
+  // src_path to the destination specified by dst_path.
+  bool CopyBinaries(const std::string& src_path,
+                    const std::string& dst_path) const noexcept;
+
+  // Given an unsigned character array of length array_len, writes it out as a
+  // file to the path specified by dst_path.
+  bool WriteArrayToDisk(const unsigned char* array, uint64_t array_len,
+                        const std::string& dst_path) const noexcept;
 };
 
 }  // namespace deployer

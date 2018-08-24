@@ -9,6 +9,7 @@ package_group(
 cc_binary(
     name = "libswap.so",
     srcs = [
+        "agent.cc",
         "android_wrapper.cc",
         "android_wrapper.h",
         "capabilities.h",
@@ -16,13 +17,14 @@ cc_binary(
         "config.h",
         "hotswap.cc",
         "hotswap.h",
-        "instant.cc",
         "instrumenter.cc",
         "instrumenter.h",
         "native_callbacks.cc",
         "native_callbacks.h",
     ],
-    copts = ANDROID_COPTS + ["-I$(GENDIR)/tools/base/deploy/proto"] + [
+    copts = ANDROID_COPTS + [
+        "-I$(GENDIR)/tools/base/deploy/proto",
+        "-Itools/base/deploy/common",
         "-I$(GENDIR)/tools/base/deploy/agent/native",
     ],
     linkopts = ANDROID_LINKOPTS,
@@ -37,6 +39,7 @@ cc_binary(
         "//prebuilts/studio/jdk:jni_headers",
         "//tools/base/deploy/agent/native/jni:agent_jni",
         "//tools/base/deploy/agent/native/utils:agent_utils",
+        "//tools/base/deploy/common:common_lib",
         "//tools/base/deploy/proto:cc_proto",
     ],
 )
@@ -81,4 +84,31 @@ android_cc_binary(
     tags = [
         "no_windows",
     ],
+)
+
+cc_binary(
+    name = "agent_server",
+    srcs = [
+        "agent_server.cc",
+    ],
+    copts = ANDROID_COPTS + ["-Itools/base/deploy/common"],
+    linkopts = ANDROID_LINKOPTS + ["-pthread"],
+    tags = ["no_windows"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tools/base/deploy/common:common_lib",
+    ],
+)
+
+android_cc_binary(
+    name = "agent_server_android",
+    abis = [
+        "x86",
+        "armeabi-v7a",
+        "arm64-v8a",
+    ],
+    binary = ":agent_server.stripped",
+    filename = "agent_server",
+    tags = ["no_windows"],
+    visibility = ["//visibility:public"],
 )

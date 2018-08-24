@@ -26,6 +26,7 @@ namespace swapper {
 class Config {
  public:
   static bool ParseFromFile(const std::string& file_location);
+  static bool ParseFromString(const std::string& request_string);
   static const Config& GetInstance();
 
   const proto::SwapRequest& GetSwapRequest() const;
@@ -33,8 +34,8 @@ class Config {
  private:
   static Config instance_;
   Config() {}
-  Config(proto::AgentConfig* agent_config) : agent_config_(agent_config) {}
-  std::unique_ptr<proto::AgentConfig> agent_config_;
+  Config(proto::SwapRequest* swap_request) : swap_request_(swap_request) {}
+  std::unique_ptr<proto::SwapRequest> swap_request_;
 };
 }  // namespace swapper
 

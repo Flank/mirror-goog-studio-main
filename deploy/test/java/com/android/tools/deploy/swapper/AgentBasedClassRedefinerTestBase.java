@@ -16,7 +16,6 @@
 package com.android.tools.deploy.swapper;
 
 import com.android.tools.deploy.proto.Deploy;
-import com.android.tools.deploy.proto.Deploy.AgentConfig;
 import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.fakeandroid.ProcessRunner;
 import com.google.protobuf.ByteString;
@@ -91,12 +90,9 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
 
         protected void redefine(Deploy.SwapRequest request, boolean shouldSucceed) {
             try {
-                AgentConfig.Builder agentConfig = AgentConfig.newBuilder();
-                agentConfig.setSwapRequest(request);
-
                 File pb = Files.createTempFile("messageDir", "msg.pb").toFile();
                 FileOutputStream out = new FileOutputStream(pb);
-                agentConfig.build().writeTo(out);
+                request.writeTo(out);
 
                 android.attachAgent(
                         ProcessRunner.getProcessPath("swap.agent.location")

@@ -25,9 +25,7 @@ message ClassDef {
   bytes dex = 2;
 }
 
-// Agent configuration for a swap.
-message AgentConfig {
-  // The SwapRequest that was passed to the installer.
-  SwapRequest swap_request = 1;
-}
+// A response detailing the results of a swap request.
+message SwapResponse {
 
+}

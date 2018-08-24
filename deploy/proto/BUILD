@@ -1,8 +1,6 @@
 load("//tools/base/bazel:proto.bzl", "cc_grpc_proto_library", "java_proto_library")
 
-package(default_visibility = [
-    "//tools/base/deploy:__subpackages__",
-])
+package(default_visibility = ["//tools/base/deploy:__subpackages__"])
 
 cc_grpc_proto_library(
     name = "cc_proto",
@@ -22,14 +20,8 @@ java_proto_library(
 
 cc_binary(
     name = "proto_tool",
-    srcs = [
-        "proto_tool.cc",
-    ],
+    srcs = ["proto_tool.cc"],
     copts = ["-I$(GENDIR)/tools/base/deploy/proto"],
-    tags = [
-        "no_windows",
-    ],
-    deps = [
-        "//tools/base/deploy/proto:cc_proto",
-    ],
+    tags = ["no_windows"],
+    deps = ["//tools/base/deploy/proto:cc_proto"],
 )

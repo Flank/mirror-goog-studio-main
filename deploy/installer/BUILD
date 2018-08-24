@@ -19,6 +19,7 @@ cc_library(
         "command.cc",
         "command_cmd.cc",
         "dump.cc",
+        "dump.h",
         "package_manager.cc",
         "shell_command.cc",
         "swap.cc",
@@ -37,7 +38,11 @@ cc_library(
         "trace.h",
         "workspace.h",
     ],
-    copts = ANDROID_COPTS + ["-I$(GENDIR)/tools/base/deploy/proto"],
+    copts = ANDROID_COPTS + [
+        "-Itools/base/deploy/common",
+        "-Itools/base/deploy/proto",
+        "-I$(GENDIR)/tools/base/deploy/proto",
+    ],
     includes = [
         ".",
     ],
@@ -46,6 +51,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":agent_header",
+        "//tools/base/deploy/common:common_lib",
         "//tools/base/deploy/proto:cc_proto",
     ],
 )
@@ -126,11 +132,12 @@ cc_library(
     name = "agent_header",
     hdrs = [
         ":agent.so.cc",
+        ":agent_server.cc",
     ],
     tags = ["no_windows"],
 )
 
-# Converts the jar containing agent.so cc_library to an array in a CC source file.
+# Converts the binary output of the agent.so cc_library to an array in a CC source file.
 genrule(
     name = "agent_header_generator",
     srcs = [
@@ -142,6 +149,25 @@ genrule(
     cmd = "$(location //tools/base/bazel:bin2c) -lang=cxx -variable=agent_so" +
           " -output=$(location agent.so.cc)" +
           " $(location //tools/base/deploy/agent/native:libswap.so)",
+    tags = ["no_windows"],
+    tools = [
+        "//tools/base/bazel:bin2c",
+    ],
+    visibility = ["//visibility:private"],
+)
+
+# Converts the binary output of the agent_server cc binary to an array in a CC source file.
+genrule(
+    name = "agent_server_header_generator",
+    srcs = [
+        "//tools/base/deploy/agent/native:agent_server",
+    ],
+    outs = [
+        "agent_server.cc",
+    ],
+    cmd = "$(location //tools/base/bazel:bin2c) -lang=cxx -variable=agent_server" +
+          " -output=$(location agent_server.cc)" +
+          " $(location //tools/base/deploy/agent/native:agent_server)",
     tags = ["no_windows"],
     tools = [
         "//tools/base/bazel:bin2c",
