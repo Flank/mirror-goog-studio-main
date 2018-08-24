@@ -915,11 +915,52 @@ final class Device implements IDevice {
     }
 
     @Override
-    public void installPackages(@NonNull List<File> apks, boolean reinstall,
-            @NonNull List<String> installOptions, long timeout, @NonNull TimeUnit timeoutUnit)
+    public void installPackages(
+            @NonNull List<File> apks,
+            boolean reinstall,
+            @NonNull List<String> installOptions,
+            long timeout,
+            @NonNull TimeUnit timeoutUnit)
             throws InstallException {
         try {
             SplitApkInstaller.create(this, apks, reinstall, installOptions)
+                    .install(timeout, timeoutUnit);
+        } catch (InstallException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new InstallException(e);
+        }
+    }
+
+    @Override
+    public void installPackages(
+            @NonNull List<File> apks, boolean reinstall, @NonNull List<String> installOptions)
+            throws InstallException {
+        // Use the default single apk installer timeout.
+        installPackages(apks, reinstall, installOptions, INSTALL_TIMEOUT_MINUTES, TimeUnit.MINUTES);
+    }
+
+    @Override
+    public void installRemotePackages(
+            @NonNull List<String> remoteApks,
+            boolean reinstall,
+            @NonNull List<String> installOptions)
+            throws InstallException {
+        // Use the default installer timeout.
+        installRemotePackages(
+                remoteApks, reinstall, installOptions, INSTALL_TIMEOUT_MINUTES, TimeUnit.MINUTES);
+    }
+
+    @Override
+    public void installRemotePackages(
+            @NonNull List<String> remoteApks,
+            boolean reinstall,
+            @NonNull List<String> installOptions,
+            long timeout,
+            @NonNull TimeUnit timeoutUnit)
+            throws InstallException {
+        try {
+            RemoteSplitApkInstaller.create(this, remoteApks, reinstall, installOptions)
                     .install(timeout, timeoutUnit);
         } catch (InstallException e) {
             throw e;
@@ -1169,4 +1210,5 @@ final class Device implements IDevice {
     public String getRegion() {
         return getProperty(IDevice.PROP_DEVICE_REGION);
     }
+
 }

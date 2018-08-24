@@ -16,10 +16,6 @@
 package com.android.ddmlib;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.sdklib.AndroidVersion;
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Joiner;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,29 +23,25 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-public class SplitApkInstaller {
+public class SplitApkInstaller extends SplitApkInstallerBase {
     private static final String LOG_TAG = "SplitApkInstaller";
 
-    @NonNull private final IDevice mDevice;
     @NonNull private final List<File> mApks;
-    @NonNull private final String mOptions;
-
-    private final String mPrefix;
 
     private SplitApkInstaller(@NonNull IDevice device, @NonNull List<File> apks,
             @NonNull String options) {
-        mDevice = device;
-        mApks = apks;
-        mOptions = options;
-
-        // Use "cmd package" when possible to avoid starting up a new VM
-        mPrefix = mDevice.getVersion().isGreaterOrEqualThan(
-                AndroidVersion.BINDER_CMD_AVAILABLE.getApiLevel()) ? "cmd package" : "pm";
+        super(device, options);
+        this.mApks = apks;
     }
 
+    /**
+     * Installs an Android application made of several APK files by streaming from files on host
+     *
+     * @param timeout installation timeout
+     * @param timeoutUnit {@link TimeUnit} corresponding to the timeout parameter
+     * @throws InstallException if the installation fails.
+     */
     public void install(long timeout, @NonNull TimeUnit unit) throws InstallException {
         // Installing multiple APK's is perfomed as follows:
         //  # First we create a install session passing in the total size of all APKs
@@ -64,35 +56,30 @@ public class SplitApkInstaller {
 
         try {
             // create a installation session.
-            String sessionId = createMultiInstallSession(mApks, mOptions, timeout, unit);
-            if (sessionId == null) {
-                Log.d(LOG_TAG, "Failed to establish session, quit installation");
-                throw new InstallException("Failed to establish session");
+            long totalFileSize = 0L;
+            for (File apkFile : mApks) {
+                totalFileSize += apkFile.length();
             }
+            String option = String.format("-S %d", totalFileSize);
+            if (getOptions() != null) {
+                option = getOptions() + " " + option;
+            }
+            String sessionId = createMultiInstallSession(option, timeout, unit);
 
             // now upload each APK in turn.
             int index = 0;
             boolean allUploadSucceeded = true;
             while (allUploadSucceeded && index < mApks.size()) {
-                allUploadSucceeded = uploadApk(sessionId, mApks.get(index), index++, timeout,
-                        unit);
+                allUploadSucceeded = uploadApk(sessionId, mApks.get(index), index++, timeout, unit);
             }
 
             // if all files were upload successfully, commit otherwise abandon the installation.
-            String command = mPrefix + " install-" +
-                    (allUploadSucceeded ? "commit " : "abandon ") +
-                    sessionId;
-            InstallReceiver receiver = new InstallReceiver();
-            mDevice.executeShellCommand(command, receiver, timeout, unit);
-            String errorMessage = receiver.getErrorMessage();
-            if (errorMessage != null) {
-                String message = String.format("Failed to finalize session : %1$s", errorMessage);
-                Log.e(LOG_TAG, message);
-                throw new InstallException(message);
-            }
-
             if (!allUploadSucceeded) {
-                throw new InstallException("Failed to install all ");
+                installAbandon(sessionId, timeout, unit);
+                throw new InstallException("Failed to install-write all apks");
+            } else {
+                installCommit(sessionId, timeout, unit);
+                Log.d(LOG_TAG, "Successfully install apks: " + mApks.toString());
             }
         } catch (InstallException e) {
             throw e;
@@ -101,69 +88,67 @@ public class SplitApkInstaller {
         }
     }
 
-    @Nullable
-    private String createMultiInstallSession(@NonNull List<File> apkFiles,
-            @NonNull String pmOptions, long timeout, @NonNull TimeUnit unit)
-            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
-            IOException {
-
-        long totalFileSize = 0L;
-        for (File apkFile : apkFiles) {
-            totalFileSize += apkFile.length();
-        }
-
-        InstallCreateReceiver receiver = new InstallCreateReceiver();
-        String cmd = String.format(mPrefix + " install-create %1$s -S %2$d", pmOptions, totalFileSize);
-        mDevice.executeShellCommand(cmd, receiver, timeout, unit);
-        return receiver.getSessionId();
-    }
-
-    private static final CharMatcher UNSAFE_PM_INSTALL_SESSION_SPLIT_NAME_CHARS =
-            CharMatcher.inRange('a','z').or(CharMatcher.inRange('A','Z'))
-                    .or(CharMatcher.anyOf("_-")).negate();
-
-    private boolean uploadApk(@NonNull String sessionId, @NonNull File fileToUpload, int uniqueId,
-            long timeout, @NonNull TimeUnit unit) {
-        Log.d(sessionId, String.format("Uploading APK %1$s ", fileToUpload.getPath()));
+    protected boolean uploadApk(
+            @NonNull String sessionId,
+            @NonNull File fileToUpload,
+            int uniqueId,
+            long timeout,
+            @NonNull TimeUnit unit) {
+        Log.i(
+                LOG_TAG,
+                String.format("Uploading APK %s to session %s", fileToUpload.getPath(), sessionId));
         if (!fileToUpload.exists()) {
-            Log.e(sessionId, String.format("File not found: %1$s", fileToUpload.getPath()));
+            Log.e(LOG_TAG, String.format("File not found: %1$s", fileToUpload.getPath()));
             return false;
         }
         if (fileToUpload.isDirectory()) {
-            Log.e(sessionId, String.format("Directory upload not supported: %1$s",
-                    fileToUpload.getAbsolutePath()));
+            Log.e(
+                    LOG_TAG,
+                    String.format(
+                            "Directory upload not supported: %s", fileToUpload.getAbsolutePath()));
             return false;
         }
-        String baseName = fileToUpload.getName().lastIndexOf('.') != -1
-                ? fileToUpload.getName().substring(0, fileToUpload.getName().lastIndexOf('.'))
-                : fileToUpload.getName();
+        String baseName =
+                fileToUpload.getName().lastIndexOf('.') != -1
+                        ? fileToUpload
+                                .getName()
+                                .substring(0, fileToUpload.getName().lastIndexOf('.'))
+                        : fileToUpload.getName();
 
         baseName = UNSAFE_PM_INSTALL_SESSION_SPLIT_NAME_CHARS.replaceFrom(baseName, '_');
 
-        String command = String.format(mPrefix + " install-write -S %d %s %d_%s -",
-                fileToUpload.length(), sessionId, uniqueId, baseName);
+        String command =
+                String.format(
+                        getPrefix() + " install-write -S %d %s %d_%s -",
+                        fileToUpload.length(),
+                        sessionId,
+                        uniqueId,
+                        baseName);
 
-        Log.d(sessionId, String.format("Executing : %1$s", command));
+        Log.d(LOG_TAG, String.format("Executing : %1$s", command));
         InputStream inputStream = null;
         try {
             inputStream = new BufferedInputStream(new FileInputStream(fileToUpload));
-            InstallWriteReceiver receiver = new InstallWriteReceiver();
+            InstallReceiver receiver = new InstallReceiver();
             AdbHelper.executeRemoteCommand(
                     AndroidDebugBridge.getSocketAddress(),
                     AdbHelper.AdbService.EXEC,
                     command,
-                    mDevice,
+                    getDevice(),
                     receiver,
                     timeout,
                     unit,
                     inputStream);
-            if (receiver.getErrorMessage() != null) {
-                Log.e(sessionId, String.format("Error while uploading %1$s : %2$s", fileToUpload.getName(),
-                        receiver.getErrorMessage()));
+            if (receiver.isSuccessfullyCompleted()) {
+                Log.d(LOG_TAG, String.format("Successfully uploaded %1$s", fileToUpload.getName()));
             } else {
-                Log.d(sessionId, String.format("Successfully uploaded %1$s", fileToUpload.getName()));
+                Log.e(
+                        LOG_TAG,
+                        String.format(
+                                "Error while uploading %1$s : %2$s",
+                                fileToUpload.getName(), receiver.getErrorMessage()));
             }
-            return receiver.getErrorMessage() == null;
+            return receiver.isSuccessfullyCompleted();
         } catch (Exception e) {
             Log.e(sessionId, e);
             return false;
@@ -175,142 +160,61 @@ public class SplitApkInstaller {
                     Log.e(sessionId, e);
                 }
             }
-
         }
-    }
-
-    @NonNull
-    private static String getOptions(boolean reInstall, @NonNull List<String> pmOptions) {
-        return getOptions(reInstall, false, null, pmOptions);
-    }
-
-    @NonNull
-    private static String getOptions(boolean reInstall, boolean partialInstall,
-            @Nullable String applicationId, List<String> pmOptions) {
-        StringBuilder sb = new StringBuilder();
-
-        if (reInstall) {
-            sb.append("-r ");
-        }
-
-        if (partialInstall) {
-            if (applicationId == null) {
-                throw new IllegalArgumentException(
-                        "Cannot do a partial install without knowing the application id");
-            }
-
-            sb.append("-p ");
-            sb.append(applicationId);
-            sb.append(' ');
-        }
-
-        sb.append(Joiner.on(' ').join(pmOptions));
-
-        return sb.toString();
     }
 
     private static void validateArguments(@NonNull IDevice device, @NonNull List<File> apks) {
+        validateApiLevel(device);
+
         if (apks.isEmpty()) {
             throw new IllegalArgumentException(
-              "List of APKs is empty: the main APK must be specified.");
+                    "List of APKs is empty: the main APK must be specified.");
         }
 
-        for (File apk: apks) {
+        for (File apk : apks) {
             if (!apk.isFile()) {
                 throw new IllegalArgumentException("Invalid File: " + apk.getPath());
             }
         }
-
-        int apiWithSplitApk = AndroidVersion.ALLOW_SPLIT_APK_INSTALLATION.getApiLevel();
-        if (!device.getVersion().isGreaterOrEqualThan(apiWithSplitApk)) {
-            throw new IllegalArgumentException(
-              "Cannot install split APKs on device with API level < " + apiWithSplitApk);
-        }
     }
 
     /**
-     * Returns a {@link SplitApkInstaller} for the given list of APKs on the given device.
-     * @param apks list of APKs, must include at least the main APK
+     * Returns a {@link SplitApkInstaller} for the given list of APK files from host to the given
+     * device.
+     *
+     * @param device the device to install APK, must include at least the main APK.
+     * @param apks list of APK files.
+     * @param reInstall whether to enable reinstall option.
+     * @param options list of install options.
      */
-    public static SplitApkInstaller create(@NonNull IDevice device, @NonNull List<File> apks,
-            boolean reInstall, @NonNull List<String> pmOptions) {
+    public static SplitApkInstaller create(
+            @NonNull IDevice device,
+            @NonNull List<File> apks,
+            boolean reInstall,
+            @NonNull List<String> installOptions) {
         validateArguments(device, apks);
-        return new SplitApkInstaller(device, apks, getOptions(reInstall, pmOptions));
-    }
-
-    public static SplitApkInstaller create(@NonNull IDevice device, @NonNull String applicationId,
-      @NonNull List<File> apks, boolean reInstall, @NonNull List<String> pmOptions) {
-        validateArguments(device, apks);
-        return new SplitApkInstaller(device, apks,
-          getOptions(reInstall, true, applicationId, pmOptions));
+        return new SplitApkInstaller(device, apks, getOptions(reInstall, installOptions));
     }
 
     /**
-     * Implementation of {@link com.android.ddmlib.MultiLineReceiver} that can receive a
-     * Success message from ADB followed by a session ID.
+     * Returns a {@link SplitApkInstaller} to install given list of APK files from host to an
+     * existing application on the given device.
+     *
+     * @param device the device to install APK.
+     * @param applicationId the application id of the existing application that to install new APKs
+     *     with.
+     * @param apks list of APK files.
+     * @param reInstall whether to enable reinstall option.
+     * @param pmOptions list of install options.
      */
-    private static class InstallCreateReceiver extends MultiLineReceiver {
-        private static final Pattern successPattern = Pattern.compile("Success: .*\\[(\\d*)\\]");
-
-        @Nullable String sessionId = null;
-
-        @Override
-        public boolean isCancelled() {
-            return false;
-        }
-
-        @Override
-        public void processNewLines(@NonNull String[] lines) {
-            for (String line : lines) {
-                Matcher matcher = successPattern.matcher(line);
-                if (matcher.matches()) {
-                    sessionId = matcher.group(1);
-                }
-            }
-        }
-
-        @Nullable
-        public String getSessionId() {
-            return sessionId;
-        }
-    }
-
-    static class InstallWriteReceiver extends MultiLineReceiver {
-        private boolean processedFirstLine;
-        private boolean success;
-        private StringBuffer errorBuffer;
-
-        @Override
-        public boolean isCancelled() {
-            return false;
-        }
-
-        @Override
-        public void processNewLines(@NonNull String[] lines) {
-            if (!processedFirstLine) {
-                processedFirstLine = true;
-                success = lines[0].startsWith("Success");
-            }
-
-            if (!success) {
-                if (errorBuffer == null) {
-                    errorBuffer = new StringBuffer(100);
-                }
-
-                for (String line : lines) {
-                    errorBuffer.append(line);
-                    errorBuffer.append('\n');
-                }
-            }
-        }
-
-        public boolean isSuccess() {
-            return success;
-        }
-
-        @Nullable
-        public String getErrorMessage() {
-            return errorBuffer == null ? null : errorBuffer.toString();
-        }
+    public static SplitApkInstaller create(
+            @NonNull IDevice device,
+            @NonNull String applicationId,
+            @NonNull List<File> apks,
+            boolean reInstall,
+            @NonNull List<String> installOptions) {
+        validateArguments(device, apks);
+        return new SplitApkInstaller(
+                device, apks, getOptions(reInstall, true, applicationId, installOptions));
     }
 }
