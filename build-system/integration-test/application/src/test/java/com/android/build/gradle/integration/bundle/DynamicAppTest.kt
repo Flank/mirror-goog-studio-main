@@ -124,6 +124,59 @@ class DynamicAppTest {
     }
 
     @Test
+    fun `test bundleMinSdkDifference task`() {
+        TestFileUtils.searchAndReplace(
+            project.getSubproject(":feature1").buildFile,
+            "minSdkVersion 18",
+            "minSdkVersion 21")
+        val bundleTaskName = getBundleTaskName("debug")
+        project.execute("app:$bundleTaskName")
+
+        val bundleFile = getApkFolderOutput("debug").bundleFile
+        FileSubject.assertThat(bundleFile).exists()
+
+        val manifestFile = FileUtils.join(project.getSubproject("feature1").buildDir,
+            "intermediates",
+            "merged_manifests",
+            "debug",
+            "AndroidManifest.xml")
+        FileSubject.assertThat(manifestFile).isFile()
+        FileSubject.assertThat(manifestFile).doesNotContain("splitName")
+        FileSubject.assertThat(manifestFile).contains("minSdkVersion=\"21\"")
+
+        val bundleManifest = FileUtils.join(project.getSubproject("feature1").buildDir,
+            "intermediates",
+            "bundle_manifest",
+            "debug",
+            "processDebugManifest",
+            "bundle-manifest",
+            "AndroidManifest.xml")
+        FileSubject.assertThat(bundleManifest).isFile()
+        FileSubject.assertThat(bundleManifest).contains("android:splitName=\"feature1\"")
+        FileSubject.assertThat(bundleManifest).contains("minSdkVersion=\"21\"")
+
+        val baseManifest = FileUtils.join(project.getSubproject("app").buildDir,
+            "intermediates",
+            "merged_manifests",
+            "debug",
+            "AndroidManifest.xml")
+        FileSubject.assertThat(baseManifest).isFile()
+        FileSubject.assertThat(baseManifest).doesNotContain("splitName")
+        FileSubject.assertThat(baseManifest).contains("minSdkVersion=\"18\"")
+
+        val baseBundleManifest = FileUtils.join(project.getSubproject("app").buildDir,
+            "intermediates",
+            "bundle_manifest",
+            "debug",
+            "processDebugManifest",
+            "bundle-manifest",
+            "AndroidManifest.xml")
+        FileSubject.assertThat(baseBundleManifest).isFile()
+        FileSubject.assertThat(baseBundleManifest).contains("android:splitName=\"feature1\"")
+        FileSubject.assertThat(baseBundleManifest).contains("minSdkVersion=\"18\"")
+    }
+
+    @Test
     fun `test bundleDebug task`() {
         val bundleTaskName = getBundleTaskName("debug")
         project.execute("app:$bundleTaskName")

@@ -61,6 +61,9 @@ public class MergingReport {
 
         /** Merged manifest file for bundletool. */
         BUNDLE,
+
+        /** Feature manifest to be merged back into the base. */
+        METADATA_FEATURE,
     }
 
     @NonNull

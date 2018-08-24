@@ -455,6 +455,7 @@ public class AndroidBuilder {
             @NonNull String outManifestLocation,
             @Nullable String outAaptSafeManifestLocation,
             @Nullable String outInstantRunManifestLocation,
+            @Nullable String outMetadataFeatureManifestLocation,
             @Nullable String outBundleManifestLocation,
             ManifestMerger2.MergeType mergeType,
             Map<String, Object> placeHolders,
@@ -517,6 +518,17 @@ public class AndroidBuilder {
                                         MergingReport.MergedManifestKind.INSTANT_RUN);
                         if (instantRunMergedManifest != null) {
                             save(instantRunMergedManifest, new File(outInstantRunManifestLocation));
+                        }
+                    }
+
+                    if (outMetadataFeatureManifestLocation != null) {
+                        // This is the manifest used for merging back to the base. This is created
+                        // by both dynamic-features and normal features.
+                        String featureManifest =
+                                mergingReport.getMergedDocument(
+                                        MergingReport.MergedManifestKind.METADATA_FEATURE);
+                        if (featureManifest != null) {
+                            save(featureManifest, new File(outMetadataFeatureManifestLocation));
                         }
                     }
 
