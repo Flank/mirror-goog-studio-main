@@ -141,7 +141,7 @@ class NativeModelBuilder(
         variantName: String,
         abiName: String
     ): NativeVariantAbi {
-        val builder = NativeAndroidProjectBuilder(project.name)
+        val builder = NativeAndroidProjectBuilder(project.name, abiName)
         var built = 0
         generators
             .filter { generator -> generator.variantName == variantName }
@@ -162,7 +162,7 @@ class NativeModelBuilder(
                 }
 
             }
-        return builder.buildNativeVariantAbi(variantName, abiName)!!
+        return builder.buildNativeVariantAbi(variantName)!!
     }
 
     /**

@@ -49,6 +49,7 @@ import java.util.UUID;
 /** Builder class for {@link NativeAndroidProject} or {@link NativeVariantAbi}. */
 class NativeAndroidProjectBuilder {
     @NonNull private final String projectName;
+    @Nullable private final String selectedAbiName;
     @NonNull private final Set<File> buildFiles = Sets.newHashSet();
     @NonNull private final Map<String, NativeVariantInfo> variantInfos = Maps.newHashMap();
     @NonNull private final Map<String, String> extensions = Maps.newHashMap();
@@ -59,6 +60,12 @@ class NativeAndroidProjectBuilder {
 
     NativeAndroidProjectBuilder(@NonNull String projectName) {
         this.projectName = projectName;
+        this.selectedAbiName = null;
+    }
+
+    NativeAndroidProjectBuilder(@NonNull String projectName, @NonNull String selectedAbiName) {
+        this.projectName = projectName;
+        this.selectedAbiName = selectedAbiName;
     }
 
     /** Add information about a particular variant. */
@@ -82,7 +89,8 @@ class NativeAndroidProjectBuilder {
             @NonNull String variantName,
             @NonNull GradleBuildVariant.NativeBuildConfigInfo.Builder config)
             throws IOException {
-        JsonStreamingVisitor modelBuildingVisitor = new JsonStreamingVisitor(this, variantName);
+        JsonStreamingVisitor modelBuildingVisitor =
+                new JsonStreamingVisitor(this, variantName, selectedAbiName);
         AndroidBuildGradleJsonStatsBuildingVisitor statsVisitor =
                 new AndroidBuildGradleJsonStatsBuildingVisitor(config);
         AndroidBuildGradleJsonCompositeVisitor composite =
@@ -98,7 +106,8 @@ class NativeAndroidProjectBuilder {
      * once.
      */
     void addJson(@NonNull JsonReader reader, @NonNull String variantName) throws IOException {
-        JsonStreamingVisitor modelBuildingVisitor = new JsonStreamingVisitor(this, variantName);
+        JsonStreamingVisitor modelBuildingVisitor =
+                new JsonStreamingVisitor(this, variantName, selectedAbiName);
         try (AndroidBuildGradleJsonStreamingParser parser =
                 new AndroidBuildGradleJsonStreamingParser(reader, modelBuildingVisitor)) {
             parser.parse();
@@ -107,6 +116,7 @@ class NativeAndroidProjectBuilder {
 
     /** Build the final {@link NativeAndroidProject}. */
     NativeAndroidProject buildNativeAndroidProject() {
+        assert (selectedAbiName == null);
         // If there are no build files and no build variant configurations then return null
         // to indicate there is no C++ in this project.
         if (this.buildFiles.isEmpty() && this.variantInfos.isEmpty()) {
@@ -126,14 +136,15 @@ class NativeAndroidProjectBuilder {
     }
 
     /** Build a {@link NativeVariantAbi} which is partial information about a project. */
-    NativeVariantAbi buildNativeVariantAbi(@NonNull String variantName, @NonNull String abi) {
+    NativeVariantAbi buildNativeVariantAbi(@NonNull String variantName) {
+        assert (selectedAbiName != null); // Should have called constructor that takes ABI
         // If there are no build files (therefore no native configurations) don't return a model
         if (this.buildFiles.isEmpty()) {
             return null;
         }
         return new NativeVariantAbiImpl(
                 variantName,
-                abi,
+                selectedAbiName,
                 this.buildFiles,
                 this.artifacts,
                 this.toolChains,
@@ -147,6 +158,7 @@ class NativeAndroidProjectBuilder {
     static class JsonStreamingVisitor extends AndroidBuildGradleJsonStreamingVisitor {
         @NonNull private final NativeAndroidProjectBuilder builder;
         @NonNull private final String variantName;
+        @Nullable private final String selectedAbiName;
         @NonNull private final Map<Integer, String> stringTable = Maps.newHashMap();
         @Nullable private String currentToolchain = null;
         @Nullable private String currentCExecutable = null;
@@ -163,8 +175,11 @@ class NativeAndroidProjectBuilder {
         @Nullable private String currentLibraryFileWorkingDirectory = null;
 
         JsonStreamingVisitor(
-                @NonNull NativeAndroidProjectBuilder builder, @NonNull String variantName) {
+                @NonNull NativeAndroidProjectBuilder builder,
+                @NonNull String variantName,
+                @Nullable String selectedAbiName) {
             this.variantName = variantName;
+            this.selectedAbiName = selectedAbiName;
             this.builder = builder;
         }
 
@@ -195,18 +210,20 @@ class NativeAndroidProjectBuilder {
             checkNotNull(currentLibraryAbi);
             checkNotNull(currentLibraryArtifactName);
 
-            builder.artifacts.add(
-                    new NativeArtifactImpl(
-                            currentLibraryName,
-                            currentLibraryToolchain,
-                            variantName,
-                            "",
-                            currentLibrarySourceFiles,
-                            ImmutableList.of(),
-                            newFileOrNull(currentLibraryOutput),
-                            currentLibraryRuntimeFiles,
-                            currentLibraryAbi,
-                            currentLibraryArtifactName));
+            if (isCurrentAbiAcceptable()) {
+                builder.artifacts.add(
+                        new NativeArtifactImpl(
+                                currentLibraryName,
+                                currentLibraryToolchain,
+                                variantName,
+                                "",
+                                currentLibrarySourceFiles,
+                                ImmutableList.of(),
+                                newFileOrNull(currentLibraryOutput),
+                                currentLibraryRuntimeFiles,
+                                currentLibraryAbi,
+                                currentLibraryArtifactName));
+            }
 
             this.currentLibraryName = null;
             this.currentLibraryToolchain = null;
@@ -215,6 +232,11 @@ class NativeAndroidProjectBuilder {
             this.currentLibraryArtifactName = null;
             this.currentLibraryRuntimeFiles = null;
             this.currentLibrarySourceFiles = null;
+        }
+
+        private boolean isCurrentAbiAcceptable() {
+            assert (this.currentLibraryAbi != null);
+            return this.selectedAbiName == null || this.selectedAbiName.equals(currentLibraryAbi);
         }
 
         @Override
@@ -275,8 +297,10 @@ class NativeAndroidProjectBuilder {
 
         @Override
         public void visitLibraryFileFlags(@NonNull String flags) {
-            this.currentLibraryFileSettingsName =
-                    getSettingsName(StringHelper.tokenizeCommandLineToEscaped(flags));
+            if (isCurrentAbiAcceptable()) {
+                this.currentLibraryFileSettingsName =
+                        getSettingsName(StringHelper.tokenizeCommandLineToEscaped(flags));
+            }
         }
 
         @Override
