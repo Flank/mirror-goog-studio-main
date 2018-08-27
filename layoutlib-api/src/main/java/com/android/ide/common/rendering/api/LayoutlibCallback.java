@@ -29,7 +29,7 @@ import org.intellij.lang.annotations.MagicConstant;
  * version}.
  */
 @SuppressWarnings({"MethodMayBeStatic", "unused"})
-public abstract class LayoutlibCallback implements IProjectCallback, XmlParserFactory {
+public abstract class LayoutlibCallback implements XmlParserFactory {
 
     public enum ViewAttribute {
         TEXT(String.class),
@@ -132,26 +132,6 @@ public abstract class LayoutlibCallback implements IProjectCallback, XmlParserFa
             int parentPositionPerType,
             ResourceReference viewRef,
             ViewAttribute viewAttribute,
-            Object defaultValue) {
-        return null;
-    }
-
-    /**
-     * @deprecated Use {@link #getAdapterItemValue(ResourceReference, Object, ResourceReference,
-     *     int, int, int, int, ResourceReference, ViewAttribute, Object)}.
-     */
-    @Deprecated
-    @Nullable
-    public Object getAdapterItemValue(
-            ResourceReference adapterView,
-            Object adapterCookie,
-            ResourceReference itemRef,
-            int fullPosition,
-            int positionPerType,
-            int fullParentPosition,
-            int parentPositionPerType,
-            ResourceReference viewRef,
-            IProjectCallback.ViewAttribute viewAttribute,
             Object defaultValue) {
         return null;
     }
