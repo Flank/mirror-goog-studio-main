@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="${packageName}">
 
     <uses-feature android:name="android.hardware.type.watch" />
 
