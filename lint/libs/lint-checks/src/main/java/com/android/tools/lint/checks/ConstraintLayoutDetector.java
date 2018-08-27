@@ -16,10 +16,14 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.SdkConstants.ATTR_LAYOUT_HEIGHT;
+import static com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX;
+import static com.android.SdkConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_GUIDELINE;
 import static com.android.SdkConstants.CONSTRAINT_LAYOUT;
 import static com.android.SdkConstants.CONSTRAINT_LAYOUT_LIB_ARTIFACT_ID;
 import static com.android.SdkConstants.CONSTRAINT_LAYOUT_LIB_GROUP_ID;
+import static com.android.SdkConstants.VALUE_MATCH_PARENT;
 import static com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_LOWER;
 
 import com.android.SdkConstants;
@@ -69,8 +73,6 @@ public class ConstraintLayoutDetector extends LayoutDetector {
                     6,
                     Severity.ERROR,
                     new Implementation(ConstraintLayoutDetector.class, Scope.RESOURCE_FILE_SCOPE));
-
-    private static final String LAYOUT_CONSTRAINT_PREFIX = "layout_constraint";
 
     /** Latest known version of the ConstraintLayout library (as a {@link GradleVersion} */
     @SuppressWarnings("ConstantConditions")
@@ -155,10 +157,14 @@ public class ConstraintLayoutDetector extends LayoutDetector {
                 if (name == null) {
                     continue;
                 }
-                if (!name.startsWith(LAYOUT_CONSTRAINT_PREFIX) || name.endsWith("_creator")) {
+
+                if (!name.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX) || name.endsWith("_creator")) {
                     continue;
                 }
-                if (name.endsWith("toLeftOf")
+
+                if ((ATTR_LAYOUT_WIDTH.equals(name)
+                                && VALUE_MATCH_PARENT.equals(attribute.getNodeValue()))
+                        || name.endsWith("toLeftOf")
                         || name.endsWith("toRightOf")
                         || name.endsWith("toStartOf")
                         || name.endsWith("toEndOf")
@@ -167,7 +173,9 @@ public class ConstraintLayoutDetector extends LayoutDetector {
                     if (isConstrainedVertically) {
                         break;
                     }
-                } else if (name.endsWith("toTopOf")
+                } else if ((ATTR_LAYOUT_HEIGHT.equals(name)
+                                && VALUE_MATCH_PARENT.equals(attribute.getNodeValue()))
+                        || name.endsWith("toTopOf")
                         || name.endsWith("toBottomOf")
                         || name.endsWith("toCenterY")
                         || name.endsWith("toBaselineOf")) {

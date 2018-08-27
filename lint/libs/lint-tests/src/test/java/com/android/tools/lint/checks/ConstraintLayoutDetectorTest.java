@@ -27,6 +27,8 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Severity;
 
 public class ConstraintLayoutDetectorTest extends AbstractCheckTest {
+
+    private static final String NO_WARNING = "No warnings.";
     public void testMissingConstraints() {
         String expected =
                 ""
@@ -215,8 +217,6 @@ public class ConstraintLayoutDetectorTest extends AbstractCheckTest {
     }
 
     public void testBarrierHasConstraint() {
-        String expected = "No warnings.";
-
         ProjectDescription project =
                 project()
                         .files(
@@ -289,7 +289,176 @@ public class ConstraintLayoutDetectorTest extends AbstractCheckTest {
                                                 + "    compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha3\"'\n"
                                                 + "}"));
 
+        lint().projects(project).checkMessage(this::checkReportedError).run().expect(NO_WARNING);
+    }
+
+    public void testWidthHeightMatchParent() {
+        ProjectDescription project =
+                project()
+                        .files(
+                                xml(
+                                        "res/layout/layout1.xml",
+                                        ""
+                                                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                                + "<android.support.constraint.ConstraintLayout xmlns:android=\"http://schemas.android.com/apk/res/android\""
+                                                + "   xmlns:app=\"http://schemas.android.com/apk/res-auto\""
+                                                + "   xmlns:tools=\"http://schemas.android.com/tools\""
+                                                + "   android:layout_width=\"match_parent\""
+                                                + "   android:layout_height=\"match_parent\">"
+                                                + "\n"
+                                                + "    <Button\n"
+                                                + "        android:id=\"@+id/button\"\n"
+                                                + "        android:layout_width=\"match_parent\"\n"
+                                                + "        android:layout_height=\"match_parent\"\n /> "
+                                                + "\n"
+                                                + "</android.support.constraint.ConstraintLayout>\n"),
+                                gradle(
+                                        ""
+                                                + "apply plugin: 'com.android.application'\n"
+                                                + "\n"
+                                                + "dependencies {\n"
+                                                + "    compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha3\"'\n"
+                                                + "}"));
+
+        lint().projects(project).checkMessage(this::checkReportedError).run().expect(NO_WARNING);
+    }
+
+    public void testWidthMatchParentOnlyError() {
+        String expected =
+                "res/layout/layout1.xml:3: Error: This view is not constrained vertically: at runtime it will jump to the top unless you add a vertical constraint [MissingConstraints]\n"
+                        + "    <Button\n"
+                        + "     ~~~~~~\n"
+                        + "1 errors, 0 warnings";
+
+        ProjectDescription project =
+                project()
+                        .files(
+                                xml(
+                                        "res/layout/layout1.xml",
+                                        ""
+                                                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                                + "<android.support.constraint.ConstraintLayout xmlns:android=\"http://schemas.android.com/apk/res/android\""
+                                                + "   xmlns:app=\"http://schemas.android.com/apk/res-auto\""
+                                                + "   xmlns:tools=\"http://schemas.android.com/tools\""
+                                                + "   android:layout_width=\"match_parent\""
+                                                + "   android:layout_height=\"match_parent\">"
+                                                + "\n"
+                                                + "    <Button\n"
+                                                + "        android:id=\"@+id/button\"\n"
+                                                + "        android:layout_width=\"match_parent\"\n"
+                                                + "        android:layout_height=\"100dp\"\n /> "
+                                                + "\n"
+                                                + "</android.support.constraint.ConstraintLayout>\n"),
+                                gradle(
+                                        ""
+                                                + "apply plugin: 'com.android.application'\n"
+                                                + "\n"
+                                                + "dependencies {\n"
+                                                + "    compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha3\"'\n"
+                                                + "}"));
+
         lint().projects(project).checkMessage(this::checkReportedError).run().expect(expected);
+    }
+
+    public void testHeightMatchParentOnlyError() {
+        String expected =
+                "res/layout/layout1.xml:3: Error: This view is not constrained horizontally: at runtime it will jump to the left unless you add a horizontal constraint [MissingConstraints]\n"
+                        + "    <Button\n"
+                        + "     ~~~~~~\n"
+                        + "1 errors, 0 warnings";
+
+        ProjectDescription project =
+                project()
+                        .files(
+                                xml(
+                                        "res/layout/layout1.xml",
+                                        ""
+                                                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                                + "<android.support.constraint.ConstraintLayout xmlns:android=\"http://schemas.android.com/apk/res/android\""
+                                                + "   xmlns:app=\"http://schemas.android.com/apk/res-auto\""
+                                                + "   xmlns:tools=\"http://schemas.android.com/tools\""
+                                                + "   android:layout_width=\"match_parent\""
+                                                + "   android:layout_height=\"match_parent\">"
+                                                + "\n"
+                                                + "    <Button\n"
+                                                + "        android:id=\"@+id/button\"\n"
+                                                + "        android:layout_width=\"100dp\"\n"
+                                                + "        android:layout_height=\"match_parent\"\n /> "
+                                                + "\n"
+                                                + "</android.support.constraint.ConstraintLayout>\n"),
+                                gradle(
+                                        ""
+                                                + "apply plugin: 'com.android.application'\n"
+                                                + "\n"
+                                                + "dependencies {\n"
+                                                + "    compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha3\"'\n"
+                                                + "}"));
+
+        lint().projects(project).checkMessage(this::checkReportedError).run().expect(expected);
+    }
+
+    public void testWidthMatchParentHeightConstraint() {
+        ProjectDescription project =
+                project()
+                        .files(
+                                xml(
+                                        "res/layout/layout1.xml",
+                                        ""
+                                                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                                + "<android.support.constraint.ConstraintLayout xmlns:android=\"http://schemas.android.com/apk/res/android\""
+                                                + "   xmlns:app=\"http://schemas.android.com/apk/res-auto\""
+                                                + "   xmlns:tools=\"http://schemas.android.com/tools\""
+                                                + "   android:layout_width=\"match_parent\""
+                                                + "   android:layout_height=\"match_parent\">"
+                                                + "\n"
+                                                + "    <Button\n"
+                                                + "        android:id=\"@+id/button\"\n"
+                                                + "        android:layout_width=\"match_parent\"\n"
+                                                + "        android:layout_height=\"100dp\"\n "
+                                                + "        app:layout_constraintTop_toTopOf=\"parent\" /> "
+                                                + "\n"
+                                                + "</android.support.constraint.ConstraintLayout>\n"),
+                                gradle(
+                                        ""
+                                                + "apply plugin: 'com.android.application'\n"
+                                                + "\n"
+                                                + "dependencies {\n"
+                                                + "    compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha3\"'\n"
+                                                + "}"));
+
+        lint().projects(project).checkMessage(this::checkReportedError).run().expect(NO_WARNING);
+    }
+
+    public void testHeightMatchParentWidthConstraint() {
+        ProjectDescription project =
+                project()
+                        .files(
+                                xml(
+                                        "res/layout/layout1.xml",
+                                        ""
+                                                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                                + "<android.support.constraint.ConstraintLayout xmlns:android=\"http://schemas.android.com/apk/res/android\""
+                                                + "   xmlns:app=\"http://schemas.android.com/apk/res-auto\""
+                                                + "   xmlns:tools=\"http://schemas.android.com/tools\""
+                                                + "   android:layout_width=\"match_parent\""
+                                                + "   android:layout_height=\"match_parent\">"
+                                                + "\n"
+                                                + "    <Button\n"
+                                                + "        android:id=\"@+id/button\"\n"
+                                                + "        android:layout_width=\"100dp\"\n"
+                                                + "        android:layout_height=\"match_parent\"\n "
+                                                + "        app:layout_constraintEnd_toEndOf=\"parent\" /> "
+                                                + "\n"
+                                                + "</android.support.constraint.ConstraintLayout>\n"),
+                                gradle(
+                                        ""
+                                                + "apply plugin: 'com.android.application'\n"
+                                                + "\n"
+                                                + "dependencies {\n"
+                                                + "    compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha3\"'\n"
+                                                + "}"));
+
+        lint().projects(project).checkMessage(this::checkReportedError).run().expect(NO_WARNING);
     }
 
     @Override
