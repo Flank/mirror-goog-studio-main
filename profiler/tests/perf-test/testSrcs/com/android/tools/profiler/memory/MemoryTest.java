@@ -143,16 +143,105 @@ public class MemoryTest {
         MemoryStubWrapper stubWrapper =
                 new MemoryStubWrapper(myPerfDriver.getGrpc().getMemoryStub());
         FakeAndroidDriver androidDriver = myPerfDriver.getFakeAndroidDriver();
-        final int samplingNumInterval = 10;
+        final int samplingNumInterval = 2;
+        final int allocationCount = 10;
+        HashSet<Integer> allocTags = new HashSet<>();
+        HashSet<Integer> noiseAllocTags = new HashSet<>();
 
         // Start memory tracking.
         TrackAllocationsResponse trackResponse =
                 stubWrapper.startAllocationTracking(myPerfDriver.getSession());
         assertThat(trackResponse.getStatus()).isEqualTo(TrackAllocationsResponse.Status.SUCCESS);
 
+        // Get initial tracking data and find the class tags we need.
+        MemoryData jvmtiData =
+                TestUtils.waitForAndReturn(
+                        () ->
+                                stubWrapper.getJvmtiData(
+                                        myPerfDriver.getSession(), 0, Long.MAX_VALUE),
+                        value -> value.getAllocationSamplesList().size() != 0);
+        long startTime = jvmtiData.getEndTimestamp();
+        int memTestEntityId = findClassTag(jvmtiData.getAllocationSamplesList(), "MemTestEntity");
+        int memNoiseEntityId = findClassTag(jvmtiData.getAllocationSamplesList(), "MemNoiseEntity");
+        assertThat(memTestEntityId).isNotEqualTo(0);
+        assertThat(memNoiseEntityId).isNotEqualTo(0);
+
         // Set sampling rate.
         stubWrapper.setSamplingRate(myPerfDriver.getSession(), samplingNumInterval);
         assertThat(androidDriver.waitForInput("sampling_num_interval=" + samplingNumInterval))
                 .isTrue();
+
+        // Create several instances of MemTestEntity.
+        androidDriver.setProperty("allocation.count", Integer.toString(allocationCount));
+        androidDriver.triggerMethod(ACTIVITY_CLASS, "allocate");
+        assertThat(androidDriver.waitForInput("allocation_count=" + allocationCount)).isTrue();
+        // Make some allocation noise so we count MemTestEntity correctly.
+        androidDriver.triggerMethod(ACTIVITY_CLASS, "makeAllocationNoise");
+
+        // Verify allocation data are now sampled.
+        while (allocTags.size() == 0 || noiseAllocTags.size() == 0) {
+            jvmtiData =
+                    stubWrapper.getJvmtiData(myPerfDriver.getSession(), startTime, Long.MAX_VALUE);
+            System.out.println(
+                    "getJvmtiData called. alloc samples="
+                            + jvmtiData.getAllocationSamplesList().size());
+
+            for (BatchAllocationSample sample : jvmtiData.getAllocationSamplesList()) {
+                for (AllocationEvent event : sample.getEventsList()) {
+                    if (event.getEventCase() == AllocationEvent.EventCase.ALLOC_DATA) {
+                        AllocationEvent.Allocation alloc = event.getAllocData();
+                        if (alloc.getClassTag() == memTestEntityId) {
+                            System.out.println("Alloc recorded: tag=" + alloc.getTag());
+                            assertThat(allocTags.add(alloc.getTag())).isTrue();
+                        } else if (alloc.getClassTag() == memNoiseEntityId) {
+                            noiseAllocTags.add(alloc.getTag());
+                        }
+                    }
+                }
+            }
+            if (jvmtiData.getAllocationSamplesList().size() > 0) {
+                startTime = jvmtiData.getEndTimestamp();
+            }
+        }
+        // If other objects are allocated between the MemTestEntity objects, we may get more than
+        // (allocationCount / samplingNumInterval) MemTestEntity objects. So we just need to verify
+        // that the number of tagged MemTestEntity is less than total. There is a chance that all
+        // MemTestEntity objects happen to be selected as samples but that should be extremely rare.
+        assertThat(allocTags.size()).isLessThan(allocationCount);
+
+        // Set sampling rate back to full.
+        stubWrapper.setSamplingRate(myPerfDriver.getSession(), 1);
+        assertThat(androidDriver.waitForInput("sampling_num_interval=1")).isTrue();
+
+        // Create more instances of MemTestEntity. We keep the previously allocated objects so we
+        // can verify a new heap walk was performed.
+        androidDriver.setProperty("allocation.count", Integer.toString(allocationCount));
+        androidDriver.triggerMethod(ACTIVITY_CLASS, "allocate");
+        assertThat(androidDriver.waitForInput("allocation_count=" + allocationCount * 2)).isTrue();
+
+        // Verify allocation data are no longer sampled and we get what's already on the heap.
+        while (allocTags.size() < allocationCount * 2) {
+            jvmtiData =
+                    stubWrapper.getJvmtiData(myPerfDriver.getSession(), startTime, Long.MAX_VALUE);
+            System.out.println(
+                    "getJvmtiData called. alloc samples="
+                            + jvmtiData.getAllocationSamplesList().size());
+
+            for (BatchAllocationSample sample : jvmtiData.getAllocationSamplesList()) {
+                for (AllocationEvent event : sample.getEventsList()) {
+                    if (event.getEventCase() == AllocationEvent.EventCase.ALLOC_DATA) {
+                        AllocationEvent.Allocation alloc = event.getAllocData();
+                        if (alloc.getClassTag() == memTestEntityId) {
+                            System.out.println("Alloc recorded: tag=" + alloc.getTag());
+                            assertThat(allocTags.add(alloc.getTag())).isTrue();
+                        }
+                    }
+                }
+            }
+            if (jvmtiData.getAllocationSamplesList().size() > 0) {
+                startTime = jvmtiData.getEndTimestamp();
+            }
+        }
+        assertThat(allocTags.size()).isEqualTo(allocationCount * 2);
     }
 }

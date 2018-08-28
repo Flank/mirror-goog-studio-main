@@ -117,6 +117,7 @@ class MemoryTrackingEnv : public GlobalRefListener {
   void Initialize();
   void StartLiveTracking(int64_t timestamp);
   void StopLiveTracking(int64_t timestamp);
+  void SetSamplingRate(int64_t timestamp, int32_t sampling_num_interval);
   const AllocatedClass& RegisterNewClass(jvmtiEnv* jvmti, JNIEnv* jni,
                                          jclass klass);
   void SendBackClassData();
@@ -124,9 +125,14 @@ class MemoryTrackingEnv : public GlobalRefListener {
   void SetJNIRefCallbacksStatus(bool enabled);
   void LogGcStart();
   void LogGcFinish();
+  void IterateThroughHeap();
 
   inline int32_t GetNextClassTag() { return current_class_tag_++; }
   inline int32_t GetNextObjectTag() { return current_object_tag_++; }
+  inline bool ShouldSelectSample(int32_t sampling_num) {
+    return sampling_num_interval_ != 0 &&
+           sampling_num % sampling_num_interval_ == 0;
+  }
 
   void HandleControlSignal(const MemoryControlRequest* request);
 
@@ -209,10 +215,15 @@ class MemoryTrackingEnv : public GlobalRefListener {
   int64_t current_capture_time_ns_;
   int64_t last_gc_start_ns_;
   int32_t max_stack_depth_;
+  int32_t sampling_num_interval_;
   std::mutex tracking_data_mutex_;
   std::mutex tracking_count_mutex_;
-  std::atomic<int32_t> total_live_count_;
+  std::atomic<int32_t> total_alloc_count_;
+
+  // We only get free events for tagged objects so in sampled mode this will be
+  // inaccurate.
   std::atomic<int32_t> total_free_count_;
+
   std::atomic<int32_t> current_class_tag_;
   std::atomic<int32_t> current_object_tag_;
 

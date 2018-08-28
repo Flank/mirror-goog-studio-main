@@ -32,6 +32,8 @@ public class MemoryActivity extends PerfdTestActivity {
         }
     }
 
+    static class MemNoiseEntity {}
+
     public MemoryActivity() {
         super("MemoryActivity");
         makeSureTestEntityClassLoaded(null);
@@ -53,7 +55,7 @@ public class MemoryActivity extends PerfdTestActivity {
         List<Object> objs = new ArrayList<Object>();
         final int DataBatchSize = 2000;
         for (int i = 0; i < DataBatchSize; i++) {
-            objs.add(new Object());
+            objs.add(new MemNoiseEntity());
         }
         System.out.println("MemoryActivity.makeAllocationNoise");
     }

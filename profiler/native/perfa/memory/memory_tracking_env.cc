@@ -73,6 +73,9 @@ static IterateThroughHeapExt g_iterate_heap_ext_func = nullptr;
 // call. We simply presumme everything allocated after the app starts
 // belongs to the app heap.
 constexpr int32_t kAppHeapId = 3;
+
+// Sampling rate for full tracking.
+constexpr int32_t kSamplingRateFull = 1;
 }  // namespace
 
 namespace profiler {
@@ -131,7 +134,9 @@ MemoryTrackingEnv::MemoryTrackingEnv(
       current_capture_time_ns_(-1),
       last_gc_start_ns_(-1),
       max_stack_depth_(mem_config.max_stack_depth()),
-      total_live_count_(0),
+      sampling_num_interval_(
+          mem_config.sampling_rate().sampling_num_interval()),
+      total_alloc_count_(0),
       total_free_count_(0),
       current_class_tag_(kClassStartTag),
       current_object_tag_(kObjectStartTag),
@@ -308,7 +313,7 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
   Stopwatch stopwatch;
   is_live_tracking_ = true;
   current_capture_time_ns_ = timestamp;
-  total_live_count_ = 0;
+  total_alloc_count_ = 0;
   total_free_count_ = 0;
   current_object_tag_ = kObjectStartTag;
 
@@ -356,13 +361,7 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
 
   // Tag and send all objects already allocated on the heap unless they are
   // already tagged.
-  jvmtiHeapCallbacks heap_callbacks;
-  memset(&heap_callbacks, 0, sizeof(heap_callbacks));
-  heap_callbacks.heap_iteration_callback =
-      reinterpret_cast<decltype(heap_callbacks.heap_iteration_callback)>(
-          HeapIterationCallback);
-  error = g_iterate_heap_ext_func(jvmti_, 0, nullptr, &heap_callbacks, nullptr);
-  CheckJvmtiError(jvmti_, error);
+  IterateThroughHeap();
   Log::V("Tracking initialization took: %lldns",
          (long long)stopwatch.GetElapsed());
 }
@@ -394,6 +393,49 @@ void MemoryTrackingEnv::StopLiveTracking(int64_t timestamp) {
   }
   known_methods_.clear();
   thread_id_map_.clear();
+}
+
+/**
+ * Updates live allocation sampling rate.
+ * Allocation callbacks from this point on will use the new sampling rate
+ * to filter allocation events.
+ */
+void MemoryTrackingEnv::SetSamplingRate(int64_t timestamp,
+                                        int32_t sampling_num_interval) {
+  if (sampling_num_interval == sampling_num_interval_) {
+    // No value change, short circuit.
+    return;
+  }
+
+  std::lock_guard<std::mutex> data_lock(tracking_data_mutex_);
+  std::lock_guard<std::mutex> count_lock(tracking_count_mutex_);
+
+  Stopwatch stopwatch;
+  sampling_num_interval_ = sampling_num_interval;
+
+  // If resuming full tracking in an ongoing tracking session, we need to
+  // capture a new heap snapshot.
+  if (is_live_tracking_ && sampling_num_interval == kSamplingRateFull) {
+    current_capture_time_ns_ = timestamp;
+    total_alloc_count_ = 0;
+    total_free_count_ = 0;
+    IterateThroughHeap();
+  }
+  Log::V("Setting sampling rate took: %lldns",
+         (long long)stopwatch.GetElapsed());
+}
+
+void MemoryTrackingEnv::IterateThroughHeap() {
+  jvmtiError error;
+  jvmtiHeapCallbacks heap_callbacks;
+  memset(&heap_callbacks, 0, sizeof(heap_callbacks));
+  heap_callbacks.heap_iteration_callback =
+      reinterpret_cast<decltype(heap_callbacks.heap_iteration_callback)>(
+          HeapIterationCallback);
+  error = g_iterate_heap_ext_func(
+      jvmti_, JVMTI_HEAP_FILTER_CLASS_UNTAGGED | JVMTI_HEAP_FILTER_TAGGED,
+      nullptr, &heap_callbacks, nullptr);
+  CheckJvmtiError(jvmti_, error);
 }
 
 /**
@@ -509,6 +551,7 @@ void MemoryTrackingEnv::LogGcFinish() {
 
 void MemoryTrackingEnv::HandleControlSignal(
     const MemoryControlRequest* request) {
+  int32_t new_sampling_num_interval;
   switch (request->control_case()) {
     case MemoryControlRequest::kEnableRequest:
       Log::V("Live memory tracking enabled.");
@@ -519,13 +562,18 @@ void MemoryTrackingEnv::HandleControlSignal(
       StopLiveTracking(request->disable_request().timestamp());
       break;
     case MemoryControlRequest::kSetSamplingRateRequest:
+      new_sampling_num_interval = request->set_sampling_rate_request()
+                                      .sampling_rate()
+                                      .sampling_num_interval();
       Log::V(
           "Live memory tracking sampling rate updated: "
           "sampling_num_interval=%d.",
-          request->set_sampling_rate_request()
-              .sampling_rate()
-              .sampling_num_interval());
+          new_sampling_num_interval);
+      SetSamplingRate(request->set_sampling_rate_request().timestamp(),
+                      new_sampling_num_interval);
       break;
+    case MemoryControlRequest::CONTROL_NOT_SET:
+      // Fall through.
     default:
       Log::V("Unknown memory control signal.");
   }
@@ -534,27 +582,18 @@ void MemoryTrackingEnv::HandleControlSignal(
 jint MemoryTrackingEnv::HeapIterationCallback(jlong class_tag, jlong size,
                                               jlong* tag_ptr, jint length,
                                               void* user_data, jint heap_id) {
-  assert(class_tag != 0);  // All classes should be tagged by this point.
+  // When we call IterateThroughHeap we filter out untagged classes and tagged
+  // objects, so there's no need to check for tag_ptr.
   assert(g_env->class_data_.size() >= class_tag);
   if (class_tag == g_env->class_class_tag_) {
-    // Do not retag Class objects as they should already be tagged.
     // Note - we can have remnant Class objects from the ClassLoad phase, which
     // we would't see from GetLoadedClasses and would not be tagged. We don't
     // want to send AllocationEvent for them so simply ignore.
-    if (*tag_ptr == 0) {
-      return JVMTI_VISIT_OBJECTS;
-    }
-  } else {
-    // We set the object allocation callbacks before we walk the heap, so we
-    // might see a race where non-class objects are already tagged before the
-    // heap walk, ignore them here.
-    if (*tag_ptr != 0) {
-      return JVMTI_VISIT_OBJECTS;
-    }
-
-    int32_t tag = g_env->GetNextObjectTag();
-    *tag_ptr = tag;
+    return JVMTI_VISIT_OBJECTS;
   }
+
+  int32_t tag = g_env->GetNextObjectTag();
+  *tag_ptr = tag;
 
   AllocationEvent event;
   event.set_timestamp(g_env->current_capture_time_ns_);
@@ -567,7 +606,7 @@ jint MemoryTrackingEnv::HeapIterationCallback(jlong class_tag, jlong size,
   alloc->set_heap_id(heap_id);
 
   g_env->allocation_event_queue_.Push(event);
-  g_env->total_live_count_++;
+  g_env->total_alloc_count_++;
 
   return JVMTI_VISIT_OBJECTS;
 }
@@ -605,7 +644,9 @@ void MemoryTrackingEnv::ClassPrepareCallback(jvmtiEnv* jvmti, JNIEnv* jni,
 void MemoryTrackingEnv::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
                                             jthread thread, jobject object,
                                             jclass klass, jlong size) {
-  g_env->total_live_count_++;
+  if (!g_env->ShouldSelectSample(g_env->total_alloc_count_++)) {
+    return;
+  }
 
   Stopwatch stopwatch;
   {
@@ -676,7 +717,7 @@ void MemoryTrackingEnv::AllocCountWorker(jvmtiEnv* jvmti, JNIEnv* jni,
     {
       std::lock_guard<std::mutex> lock(env->tracking_count_mutex_);
       if (env->is_live_tracking_) {
-        profiler::EnqueueAllocStats(env->total_live_count_,
+        profiler::EnqueueAllocStats(env->total_alloc_count_,
                                     env->total_free_count_);
       }
     }
