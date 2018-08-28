@@ -126,8 +126,7 @@ public class ExternalNativeCleanTask extends AndroidBuilderTask {
             diagnostic("%s", processBuilder);
             createProcessOutputJunction(
                             this.objFolder,
-                            "eandroid_gradle_clean_"
-                                    + targetNames.get(commandIndex).replace(" ", "_"),
+                            "android_gradle_clean_" + commandIndex,
                             processBuilder,
                             getBuilder(),
                             "")
