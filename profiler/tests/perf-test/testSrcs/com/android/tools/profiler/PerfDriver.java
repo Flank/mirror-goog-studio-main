@@ -19,7 +19,9 @@ package com.android.tools.profiler;
 import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.fakeandroid.ProcessRunner;
 import com.android.tools.profiler.proto.Agent;
+import com.android.tools.profiler.proto.Agent.AgentConfig.MemoryConfig;
 import com.android.tools.profiler.proto.Common.Session;
+import com.android.tools.profiler.proto.MemoryProfiler.AllocationSamplingRate;
 import io.grpc.StatusRuntimeException;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -236,10 +238,14 @@ public class PerfDriver implements TestRule {
                     File.createTempFile("agent_config", ".data", myTemporaryFolder.getRoot());
             FileOutputStream outputStream = new FileOutputStream(myConfigFile);
             Agent.AgentConfig.MemoryConfig memConfig =
-                    Agent.AgentConfig.MemoryConfig.newBuilder()
+                    MemoryConfig.newBuilder()
                             .setTrackGlobalJniRefs(true)
                             .setAppDir("/")
                             .setMaxStackDepth(50)
+                            .setSamplingRate(
+                                    AllocationSamplingRate.newBuilder()
+                                            .setSamplingNumInterval(1)
+                                            .build())
                             .build();
 
             Agent.AgentConfig config =
