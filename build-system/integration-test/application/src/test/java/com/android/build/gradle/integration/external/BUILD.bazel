@@ -102,7 +102,10 @@ gradle_integration_test(
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/external:uber_skeleton_prebuilts",
         "//tools/base/build-system/integration-test:support_library_latest",
     ],
-    tags = ["no_test_windows"],  # b/73306170
+    tags = [
+        "no_test_mac_psq",  # b/113099009
+        "no_test_windows",  # b/73306170
+    ],
     deps = TEST_DEPS,
 )
 
