@@ -210,6 +210,11 @@ public class ConstraintLayoutDetector extends LayoutDetector {
         for (int i = 0; i < attributes.getLength(); i++) {
             Node attribute = attributes.item(i);
             String name = attribute.getLocalName();
+
+            if (name == null) {
+                continue;
+            }
+
             if (name.endsWith("barrierDirection")) {
                 return true;
             }
