@@ -163,6 +163,10 @@ class InstallVariantViaBundleTaskTest {
             return this
         }
 
+        override fun setInstant(instant: Boolean): ExtractApksCommand.Builder {
+            return this
+        }
+
         override fun build(): ExtractApksCommand {
             val commandMock = Mockito.mock(ExtractApksCommand::class.java)
 

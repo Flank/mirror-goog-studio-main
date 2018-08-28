@@ -74,7 +74,7 @@ class InstantAppBundleTest {
         "/META-INF/ANDROIDD.RSA",
         "/META-INF/ANDROIDD.SF",
         "/META-INF/MANIFEST.MF"))
-    
+
     @Test
     @Throws(IOException::class)
     fun `test model contains feature information`() {
@@ -224,15 +224,15 @@ class InstantAppBundleTest {
         var apkFileArray = apkFolder.list() ?: fail("No Files at $apkFolder")
         Truth.assertThat(apkFileArray.toList()).named("APK List for API 27")
             .containsExactly(
-                "base-fr.apk",
-                "base-master.apk",
-                "base-xxhdpi.apk",
-                "feature1-master.apk",
-                "feature1-xxhdpi.apk",
-                "feature2-master.apk",
-                "feature2-xxhdpi.apk")
+                "base-fr_2.apk",
+                "base-master_2.apk",
+                "base-xxhdpi_2.apk",
+                "feature1-master_2.apk",
+                "feature1-xxhdpi_2.apk",
+                "feature2-master_2.apk",
+                "feature2-xxhdpi_2.apk")
 
-        val baseApk = File(apkFolder, "base-master.apk")
+        val baseApk = File(apkFolder, "base-master_2.apk")
         Zip(baseApk).use {
             Truth.assertThat(it.entries.map { it.toString() })
                     .containsAllOf("/META-INF/CERT.RSA", "/META-INF/CERT.SF")
