@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:JvmName("ConfigTableUtil")
 package com.android.projectmodel
 
 /**
@@ -137,12 +138,61 @@ data class ConfigTable(
 }
 
 /**
+ * Trivial schema for a table containing exactly one variant and one artifact. Note that the
+ * main artifact name is required to be [ARTIFACT_NAME_MAIN], so all trivial schemas will always
+ * look exactly like this.
+ */
+internal val TRIVIAL_SCHEMA = ConfigTableSchema(
+    listOf(
+        ConfigDimension(
+            ARTIFACT_DIMENSION_NAME,
+            listOf(ARTIFACT_NAME_MAIN)
+        )
+    )
+)
+
+/**
+ * Path to the main artifact in a [TRIVIAL_SCHEMA].
+ */
+internal val TRIVIAL_MAIN_ARTIFACT_PATH = matchArtifactsWith(listOf(ARTIFACT_NAME_MAIN))
+
+/**
+ * Creates a [ConfigTable] for a project containing exactly one variant of one artifact, given
+ * the resolved [Config] of that artifact. The main artifact is always required to be named
+ * [ARTIFACT_NAME_MAIN], so the schema and artifact paths for trivial [ConfigTable] instances is
+ * always the same.
+ *
+ * This is a convenience method for constructing such trivial instances. In addition to saving
+ * boilerplate, it also saves memory by reusing the same schema instance for all trivial
+ * [ConfigTable] instances.
+ *
+ */
+fun configTableWith(config: Config) = ConfigTable(
+    TRIVIAL_SCHEMA,
+    listOf(
+        ConfigAssociation(
+            TRIVIAL_MAIN_ARTIFACT_PATH,
+            config
+        )
+    )
+)
+
+/**
  * Constructs a [ConfigTable] from the given [ConfigTableSchema]. This is intended primarily
- * as a convenient way to construct hardcoded [ConfigTable] instances.
+ * as a convenient way to construct hardcoded [ConfigTable] instances from Java, in cases where
+ * there may be more than one variant or artifact.
+ */
+fun configTableWith(schema: ConfigTableSchema, associations: Map<String?, Config>) = ConfigTable(
+    schema, associations.map { ConfigAssociation(schema.pathFor(it.key), it.value)}
+)
+
+/**
+ * Constructs a [ConfigTable] from the given [ConfigTableSchema]. This is intended primarily
+ * as a convenient way to construct hardcoded [ConfigTable] instances from Kotlin.
  *
  * @param schema the schema to use for the table
  * @param associations the entries to include in the table, where the keys map onto entries
  * in the schema.
  */
-fun configTableWith(schema: ConfigTableSchema, associations: Map<String?, Config>) = ConfigTable(
-    schema, associations.entries.map { ConfigAssociation(schema.pathFor(it.key), it.value) })
+fun ConfigTableSchema.buildTable(vararg associations: Pair<String?, Config>) = ConfigTable(
+    this, associations.map { ConfigAssociation(this.pathFor(it.first), it.second) })

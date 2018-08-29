@@ -43,6 +43,8 @@ data class ConfigTableSchema(
      * artifacts.
      */
     fun pathFor(dimensionValue: String?): ConfigPath {
+        // TODO: Allow dimensionValue to be any ConfigPath simpleName. This would allow construction
+        // of more elaborate multidimensional test cases using this utility method.
         dimensionValue ?: return matchAllArtifacts()
         val index = dimensions.indexOfFirst { it.values.contains(dimensionValue) }
         if (index == -1) {

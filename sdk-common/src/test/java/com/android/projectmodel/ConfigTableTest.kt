@@ -231,4 +231,78 @@ class ConfigTableTest {
                 ConfigAssociation(matchArtifactsWith("*/*/*/${ARTIFACT_NAME_UNIT_TEST}"), tests)
         ))
     }
+
+    @Test
+    fun testSingleElementConfigTableConstructor() {
+        val config = Config(versionNameSuffix = "foo")
+        val actual = configTableWith(config)
+        val expected = configTableWith(
+            ConfigTableSchema(
+                listOf(
+                    ConfigDimension(
+                        ARTIFACT_DIMENSION_NAME,
+                        listOf(ARTIFACT_NAME_MAIN)
+                    )
+                )
+            ),
+            mapOf(ARTIFACT_NAME_MAIN to config)
+        )
+        assertThat(actual).isEqualTo(expected)
+    }
+
+    /**
+     * Tests the [ConfigTableSchema.buildTable] factory method that builds [ConfigTable] instances
+     * given a schema and a list of [Config] instances along with their simple path names.
+     */
+    @Test
+    fun testBuildTable() {
+        val actual = schema.buildTable(
+            null to main,
+            "full" to full,
+            "hires" to hires,
+            "lowres" to lowres,
+            ARTIFACT_NAME_MAIN to app
+        )
+
+        val expected = ConfigTable(
+            schema, listOf(
+                ConfigAssociation(matchAllArtifacts(), main),
+                ConfigAssociation(schema.pathFor("full"), full),
+                ConfigAssociation(schema.pathFor("hires"), hires),
+                ConfigAssociation(schema.pathFor("lowres"), lowres),
+                ConfigAssociation(schema.pathFor(ARTIFACT_NAME_MAIN), app)
+            )
+        )
+
+        assertThat(actual).isEqualTo(expected)
+    }
+
+    /**
+     * Tests the [configTableWith] factory method that builds [ConfigTable] instances
+     * given a schema and a map list of [Config] instances along with their simple path names.
+     */
+    @Test
+    fun testConfigTableWith() {
+        val actual = configTableWith(
+            schema, mapOf(
+                null to main,
+                "full" to full,
+                "hires" to hires,
+                "lowres" to lowres,
+                ARTIFACT_NAME_MAIN to app
+            )
+        )
+
+        val expected = ConfigTable(
+            schema, listOf(
+                ConfigAssociation(matchAllArtifacts(), main),
+                ConfigAssociation(schema.pathFor("full"), full),
+                ConfigAssociation(schema.pathFor("hires"), hires),
+                ConfigAssociation(schema.pathFor("lowres"), lowres),
+                ConfigAssociation(schema.pathFor(ARTIFACT_NAME_MAIN), app)
+            )
+        )
+
+        assertThat(actual).isEqualTo(expected)
+    }
 }
