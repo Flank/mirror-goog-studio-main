@@ -95,45 +95,33 @@ data class ConfigTable(
      * Generates all possible [Variant] instances for this [ConfigTable] by merging every
      * combination of schema dimensions.
      */
-    fun generateVariants(): List<Variant> {
-        val result = ArrayList<Variant>()
-        generateVariants(result, emptyList())
-        return result
-    }
+    fun generateVariants() = generateVariantsFor(generateArtifacts())
 
-    private fun generateVariants(result: MutableList<Variant>, prefix: List<String>) {
-        if (prefix.size < schema.dimensions.size - 1) {
-            val dimension = schema.dimensions[prefix.size]
-            for (dimensionValue in dimension.values) {
-                generateVariants(result, prefix + dimensionValue)
-            }
-        }
+    /**
+     * Generates all possible [Artifact] instances for this [ConfigTable] by merging every
+     * combination of schema dimensions.
+     */
+    fun generateArtifacts(): Map<ConfigPath, Artifact> =
+        schema.allPaths().associate { it to Artifact(
+            // We can rely on segments being non-null since allPaths returns the paths to artifacts,
+            // and null segments indicates a path that never matches any artifact. We can rely on
+            // there being at least one segment because there needs to be at least one dimension
+            // in order for allPaths() to return a non-empty sequence and the number of segments
+            // equals the number of dimensions.
+            name = it.segments!!.last()!!,
+            resolved = configsIntersecting(it).merged()
+        )}
 
-        if (prefix.size == schema.dimensions.size - 1) {
-            val artifacts = schema.dimensions[prefix.size].values.map {
-                val configPath = matchArtifactsWith(prefix + it)
-                Artifact(
-                    name = it,
-                    resolved = configsIntersecting(configPath).merged()
-                )
-            }
+    /**
+     * Given a map of all the [Artifact] instances and their associated [ConfigPath], generates
+     * appropriate [Variant] instances to hold those [Artifact] instances.
+     */
+    fun generateVariantsFor(artifacts:Map<ConfigPath, Artifact>): List<Variant> {
+        val groupedByVariant =
+            artifacts.keys.filter { it.segments != null && it.segments.size == schema.dimensions.size }
+                .groupBy { it.parent() }
 
-            val variantPath = ConfigPath(prefix)
-
-            val mainArtifact = artifacts.find { it.name == ARTIFACT_NAME_MAIN }
-            if (mainArtifact == null) {
-                throw IllegalStateException("No main artifact found")
-            }
-
-            result.add(Variant(
-                name = variantPath.simpleName,
-                configPath = variantPath,
-                mainArtifact = mainArtifact,
-                androidTestArtifact = artifacts.find { it.name == ARTIFACT_NAME_ANDROID_TEST },
-                unitTestArtifact = artifacts.find { it.name == ARTIFACT_NAME_UNIT_TEST },
-                extraArtifacts = artifacts.filter { !defaultArtifactDimension.values.contains(it.name) }
-            ))
-        }
+        return groupedByVariant.map { Variant(it.key, it.value.mapNotNull { artifacts[it] }) }
     }
 }
 
