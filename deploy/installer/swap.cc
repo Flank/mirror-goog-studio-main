@@ -37,8 +37,10 @@ namespace {
 const std::string kAgentPrefix = "agent-";
 const std::string kAgentSuffix = ".so";
 const std::string kConfig = "config.pb";
-const int kRwFileMode =  S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR | S_IWGRP | S_IWOTH;
-const int kRxFileMode =  S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+const int kRwFileMode =
+    S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR | S_IWGRP | S_IWOTH;
+const int kRxFileMode =
+    S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
 }  // namespace
 
 // In this class the use of shell commands for what would typically be
@@ -85,7 +87,8 @@ std::string SwapCommand::GetAgentFilename() const noexcept {
   return kAgentPrefix + agent_so_hash + kAgentSuffix;
 }
 
-bool SwapCommand::WriteAgentToDisk(const std::string& agent_dst_path) const noexcept {
+bool SwapCommand::WriteAgentToDisk(const std::string& agent_dst_path) const
+    noexcept {
   int fd = open(agent_dst_path.c_str(), O_WRONLY | O_CREAT, kRwFileMode);
   if (fd == -1) {
     std::cerr << "CopyAgentIfNecessary(). Unable to open()." << std::endl;
@@ -103,7 +106,7 @@ bool SwapCommand::WriteAgentToDisk(const std::string& agent_dst_path) const noex
     return false;
   }
 
-  chmod(agent_dst_path.c_str(),kRxFileMode);
+  chmod(agent_dst_path.c_str(), kRxFileMode);
 
   return true;
 }
@@ -113,10 +116,8 @@ bool SwapCommand::CopyAgent(const std::string& agent_src_path,
   // TODO: Cleanup previous version of the agent ?
 
   // Check if the agent is already in the app "data" folder.
-  std::string test_output;
-  if (RunCmd("test", User::APP_PACKAGE, {"-e", agent_dst_path}, &test_output)) {
-    std::cout << "Binary already in data folde, skipping copy." << test_output
-              << std::endl;
+  if (RunCmd("stat", User::APP_PACKAGE, {agent_dst_path}, nullptr)) {
+    std::cout << "Binary already in data folder, skipping copy." << std::endl;
     return true;
   }
 
@@ -169,9 +170,9 @@ bool SwapCommand::Run(const Workspace& workspace) {
 
 bool SwapCommand::SetupAgent(const std::string& agent_src_path,
                              const std::string& agent_dst_path) const noexcept {
-  // Check if the agent is already in the app directory.
-  if (!force_update_ &&
-      RunCmd("stat", User::APP_PACKAGE, {agent_dst_path}, nullptr)) {
+  // TODO(noahz): Remove this flag; we don't need it now that we don't ever
+  // overwrite 'old' agent versions.
+  if (!force_update_) {
     return true;
   }
 
