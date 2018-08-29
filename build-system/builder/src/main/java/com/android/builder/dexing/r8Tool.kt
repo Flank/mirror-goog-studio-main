@@ -143,6 +143,13 @@ fun runR8(
     }
 
     R8.run(r8CommandBuilder.build())
+
+    proguardConfig.proguardMapOutput?.let {
+        if (Files.notExists(it)) {
+            // R8 might not create a mapping file, so we have to create it, http://b/37053758.
+            Files.createFile(it)
+        }
+    }
 }
 
 enum class R8OutputType {
