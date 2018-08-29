@@ -191,9 +191,12 @@ public class BenchmarkTest {
             }
             listeners.forEach(BenchmarkListener::benchmarkDone);
 
-            PerfData perfData = new PerfData();
-            perfData.addBenchmark(benchmark);
-            perfData.commit();
+            // If only warm-up builds were executed, no data needs to be written with PerfData
+            if (benchmarkRun.iterations > 0) {
+                PerfData perfData = new PerfData();
+                perfData.addBenchmark(benchmark);
+                perfData.commit();
+            }
         }
     }
 }
