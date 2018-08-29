@@ -41,7 +41,6 @@ import java.nio.file.Path
 import java.util.logging.Level
 import java.util.logging.Logger
 
-
 fun isProguardRule(name: String): Boolean {
     val lowerCaseName = name.toLowerCase()
     return lowerCaseName.startsWith("meta-inf/proguard/")
@@ -181,6 +180,13 @@ fun runR8(
     }
 
     R8.run(r8CommandBuilder.build())
+
+    proguardConfig.proguardMapOutput?.let {
+        if (Files.notExists(it)) {
+            // R8 might not create a mapping file, so we have to create it, http://b/37053758.
+            Files.createFile(it)
+        }
+    }
 }
 
 enum class R8OutputType {
