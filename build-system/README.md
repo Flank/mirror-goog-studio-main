@@ -14,34 +14,53 @@ Once you have checked out the source code, the Gradle Plugin code can be found u
 All of the projects are built together in a multi-module Gradle project setup.
 The root of that project is `tools/`
 
-To ensure you are using the right version of Gradle, please use the gradle wrapper scripts (gradlew)
+To ensure you are using the right version of Gradle, please use the Gradle wrapper scripts (gradlew)
 at the root of the project to build
 ([more Gradle wrapper info here](http://gradle.org/docs/current/userguide/gradle_wrapper.html))
 
-You can build the Gradle plugin (and associated libraries) with
+To build the Android Gradle Plugin, run
 
-```$ ./gradlew assemble```
+```$ ./gradlew :publishAndroidGradleLocal```
 
-If assemble fails the first time you execute it, try the following
+(Tip: Gradle allows camel-case abbreviations for task names.
+So, to execute the command above, you can simply run `gradlew :pAGL`).
 
-```$ ./gradlew clean assemble```
+The above command publishes the plugin to a local Maven repository located in `../out/repo/`
 
-To test the plugin, you need to run the following command
+To build the Android Gradle Plugin with the data binding runtime libraries, run
+
+```$ ./gradlew :publishLocal```
+
+## Test your build
+
+To run the tests for everything built with Gradle, including the local build of the plugin, run the following command
+
 ```$ ./gradlew check```
 
 Additionally, you should connect a device to your workstation and run:
+
 ```$ ./gradlew connectedIntegrationTest```
 
 To run a specific connectedIntegrationTest, run:
+
 ```$ ./gradlew connectedIntegrationTest -D:base:build-system:integration-test:application:connectedIntegrationTest.single=MultiProjectConnectedTest```
 
-More generally, to run a specific integration test, run:
-```$ ./gradlew <integration test task> -D:base:build-system:integration-test:<integration test module>:<integration test task name>.single=<specific integration test>```
+Ro run a specific integration test, run:
+
+```$ ./gradlew :base:build-system:integration-test:<integration test module>:<integration test task name> -D:base:build-system:integration-test:<integration test module>:<integration test task name>.single=<specific integration test>```
+
+This command is more verbose, but runs faster than using the Gradle `--tests` filter.
 
 ## Editing the plugin
 
 The code of the plugin and its dependencies is located in `tools/base`.
 You can open this project with IntelliJ as there is already a `tools/base/.idea` setup.
+
+To get tools/base to compile in IntelliJ, first run
+
+```$ ./gradlew compileTestJava```
+
+to make sure all the generated sources are present.
 
 There are tests in multiple modules of the project.
 `tools/base/build-system/integration-test` contains the integration tests and compose of the
@@ -56,11 +75,9 @@ or use the system property flag (see Gradle docs for the difference: link, link)
 ```$ ./gradlew :b:b-s:integ:app:test -D:base:build-system:integration-test:application:test.single=BasicTest```
 
 To compile the samples manually, publish the plugin and its libraries first with
-```$ ./gradlew publishLocal```
-(Tip: you can use camelcase prefixes for target names,
-so for the above you can just run gradlew pL).
-(Also, running `check`, `:base:build-system:integration-test:application:test`, and `connectedIntegrationTest` does
-publishLocal first).
+`$ ./gradlew :publishLocal`
+(Also, running `check`, `:base:build-system:integration-test:application:test`, and `connectedIntegrationTest` first runs
+`:publishAndroidGradleLocal` and `:publishLocal` as needed).
 
 ## Debugging
 
@@ -100,7 +117,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.0.0'
+        classpath 'com.android.tools.build:gradle:3.1.0'
     }
 }
 
@@ -128,7 +145,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.1.0-dev'
+        classpath 'com.android.tools.build:gradle:3.3.0-dev'
     }
 }
 
