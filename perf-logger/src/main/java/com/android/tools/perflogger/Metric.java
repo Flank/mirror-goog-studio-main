@@ -108,9 +108,8 @@ public class Metric {
         myAnalyzers = new LinkedHashMap<>();
     }
 
-    @VisibleForTesting
     @NonNull
-    String getMetricName() {
+    public String getMetricName() {
         return myMetricName;
     }
 

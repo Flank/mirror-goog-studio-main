@@ -59,7 +59,7 @@ public class ProfilerToBenchmarkAdapter {
     @NonNull private final Map<String, Metric> metrics;
 
     @NonNull
-    private static final Analyzer ANALYZER =
+    private static final Analyzer DEFAULT_ANALYZER =
             new MedianWindowDeviationAnalyzer.Builder()
                     .setMetricAggregate(Analyzer.MetricAggregate.MEDIAN)
                     .setRunInfoQueryLimit(50)
@@ -71,6 +71,24 @@ public class ProfilerToBenchmarkAdapter {
                     // flag 10% regressions
                     .setMedianCoeff(0.10)
                     .build();
+
+    @NonNull
+    private static final Analyzer MIN_ANALYZER =
+            new MedianWindowDeviationAnalyzer.Builder()
+                    .setMetricAggregate(Analyzer.MetricAggregate.MIN)
+                    .setRunInfoQueryLimit(50)
+                    .setRecentWindowSize(25)
+                    // constant term of 10.0 ms to ignore regressions in trivial tasks
+                    .setConstTerm(10.0)
+                    // recommended value
+                    .setMadCoeff(1.0)
+                    // flag 10% regressions
+                    .setMedianCoeff(0.10)
+                    .build();
+
+    @NonNull
+    private static final List<String> MIN_ANALYZER_METRICS =
+            Arrays.asList("DEX_MERGER", "EXTERNAL_LIBS_MERGER");
 
     @NonNull
     private final List<ConsolidatedRunTimings> consolidatedTimingsPerIterations = new ArrayList<>();
@@ -143,7 +161,7 @@ public class ProfilerToBenchmarkAdapter {
                                                     consolidatedRunTimings.startTime,
                                                     timing));
                         });
-        metrics.values().forEach(it -> it.setAnalyzers(benchmark, Arrays.asList(ANALYZER)));
+        metrics.values().forEach(it -> setAnalyzers(it, benchmark));
         metrics.values().forEach(Metric::commit);
         totalBuildTime.commit();
     }
@@ -160,6 +178,21 @@ public class ProfilerToBenchmarkAdapter {
         metric.addSamples(benchmark, new Metric.MetricSample(utcMs, timing));
         LOGGER.info(metricName + " : " + timing);
     }
+
+    /**
+     * Set the analyzers for the metric
+     *
+     * @param metric the metric whose analyzers are set
+     * @param benchmark the benchmark for which the metric's analyzers are set
+     */
+    private static void setAnalyzers(Metric metric, Benchmark benchmark) {
+        if (MIN_ANALYZER_METRICS.contains(metric.getMetricName())) {
+            metric.setAnalyzers(benchmark, Arrays.asList(MIN_ANALYZER));
+        } else {
+            metric.setAnalyzers(benchmark, Arrays.asList(DEFAULT_ANALYZER));
+        }
+    }
+
 
     /**
      * Consolidate all tasks or transforms of the same type under a single value by adding each

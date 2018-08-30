@@ -28,6 +28,7 @@ public interface Analyzer {
     enum MetricAggregate {
         MEAN,
         MEDIAN,
+        MIN,
     }
 
     /** specifies regression direction. */
