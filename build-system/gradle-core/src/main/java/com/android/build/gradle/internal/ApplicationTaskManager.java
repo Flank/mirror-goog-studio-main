@@ -416,14 +416,23 @@ public class ApplicationTaskManager extends TaskManager {
         final VariantType variantType = scope.getVariantConfiguration().getType();
 
         if (variantType.isApk()) {
-            TaskProvider<? extends Task> task =
-                    (variantType.isTestComponent()
-                            ? taskFactory.register(new TestPreBuildTask.CreationAction(scope))
-                            : taskFactory.register(new AppPreBuildTask.CreationAction(scope)));
+            boolean useDependencyConstraints =
+                    scope.getGlobalScope()
+                            .getProjectOptions()
+                            .get(BooleanOption.USE_DEPENDENCY_CONSTRAINTS);
 
-            if (!scope.getGlobalScope()
-                    .getProjectOptions()
-                    .get(BooleanOption.USE_DEPENDENCY_CONSTRAINTS)) {
+            TaskProvider<? extends Task> task;
+
+            if (variantType.isTestComponent()) {
+                task = taskFactory.register(new TestPreBuildTask.CreationAction(scope));
+                if (useDependencyConstraints) {
+                    task.configure(t -> t.setEnabled(false));
+                }
+            } else {
+                task = taskFactory.register(new AppPreBuildTask.CreationAction(scope));
+            }
+
+            if (!useDependencyConstraints) {
                 TaskProvider<AppClasspathCheckTask> classpathCheck =
                         taskFactory.register(new AppClasspathCheckTask.CreationAction(scope));
                 TaskFactoryUtils.dependsOn(task, classpathCheck);

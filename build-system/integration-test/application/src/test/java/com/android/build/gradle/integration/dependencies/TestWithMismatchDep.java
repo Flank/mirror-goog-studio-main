@@ -45,11 +45,20 @@ public class TestWithMismatchDep {
                         + "}\n");
     }
 
+    private static final String EXCEPTION_MSG =
+            "Cannot find a version of 'com.google.guava:guava' that satisfies the version constraints: \n"
+                    + "   Dependency path ':testDependency:unspecified' --> 'com.google.guava:guava' prefers '19.0'\n"
+                    + "   Dependency path ':testDependency:unspecified' --> 'com.google.guava:guava' prefers '18.0'\n"
+                    + "   Constraint path ':testDependency:unspecified' --> 'com.google.guava:guava' prefers '18.0', rejects ']18.0,)' because of the following reason: debugRuntimeClasspath uses version 18.0\n";
     private static final String ERROR_MSG =
-            "Conflict with dependency \'com.google.guava:guava\' in"
-                    + " project ':'."
-                    + " Resolved versions for app (18.0) and test app (19.0) differ."
-                    + " See https://d.android.com/r/tools/test-apk-dependency-conflicts.html for details.";
+            "Could not resolve all files for configuration ':debugAndroidTestRuntimeClasspath'.\n"
+                    + "> Could not resolve com.google.guava:guava:19.0.\n"
+                    + "  Required by:\n"
+                    + "      project :\n"
+                    + "   > Cannot find a version of 'com.google.guava:guava' that satisfies the version constraints: \n"
+                    + "        Dependency path ':testDependency:unspecified' --> 'com.google.guava:guava' prefers '19.0'\n"
+                    + "        Dependency path ':testDependency:unspecified' --> 'com.google.guava:guava' prefers '18.0'\n"
+                    + "        Constraint path ':testDependency:unspecified' --> 'com.google.guava:guava' prefers '18.0', rejects ']18.0,)' because of the following reason: debugRuntimeClasspath uses version 18.0\n";
 
     @Test
     public void testMismatchDependencyBreaksTestBuild() throws Exception {
@@ -65,7 +74,7 @@ public class TestWithMismatchDep {
         // looks like we can't actually test the instance t against GradleException
         // due to it coming through the tooling API from a different class loader.
         assertThat(t.getClass().getCanonicalName()).isEqualTo("org.gradle.api.GradleException");
-        assertThat(t.getMessage()).isEqualTo(ERROR_MSG);
+        assertThat(t.getMessage()).isEqualTo(EXCEPTION_MSG);
 
         // check there is a version of the error, after the task name:
         assertThat(result.getStdout()).contains(ERROR_MSG);
@@ -74,12 +83,5 @@ public class TestWithMismatchDep {
     @Test
     public void testMismatchDependencyDoesNotBreakDebugBuild() throws Exception {
         project.executor().run("assembleDebug");
-    }
-
-    @Test
-    public void testMismatchDependencyCanRunNonBuildTasks() throws Exception {
-        // it's important to be able to run the dependencies task to
-        // investigate dependency issues.
-        project.executor().run("dependencies");
     }
 }

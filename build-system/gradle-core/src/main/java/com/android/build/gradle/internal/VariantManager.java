@@ -450,7 +450,7 @@ public class VariantManager implements VariantModel {
                             .setConsumeType(consumeAndroidTypeAttr)
                             .addSourceSets(testVariantSourceSets)
                             .setFlavorSelection(getFlavorSelection(variantConfig))
-                            .setTestedVariantDependencies(testedVariantData.getVariantDependency());
+                            .setTestedVariantScope(testedVariantData.getScope());
 
             final VariantDependencies variantDep = builder.build(variantScope);
             variantData.setVariantDependency(variantDep);

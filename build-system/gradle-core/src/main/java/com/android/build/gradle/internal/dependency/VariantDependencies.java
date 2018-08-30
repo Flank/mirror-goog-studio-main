@@ -126,7 +126,7 @@ public class VariantDependencies {
         private final Set<Configuration> runtimeClasspaths = Sets.newLinkedHashSet();
         private final Set<Configuration> annotationConfigs = Sets.newLinkedHashSet();
         private final Set<Configuration> wearAppConfigs = Sets.newLinkedHashSet();
-        private VariantDependencies testedVariantDependencies;
+        private VariantScope testedVariantScope;
 
         @Nullable private Set<String> featureList;
 
@@ -163,9 +163,8 @@ public class VariantDependencies {
             return this;
         }
 
-        public Builder setTestedVariantDependencies(
-                @NonNull VariantDependencies testedVariantDependencies) {
-            this.testedVariantDependencies = testedVariantDependencies;
+        public Builder setTestedVariantScope(@NonNull VariantScope testedVariantScope) {
+            this.testedVariantScope = testedVariantScope;
             return this;
         }
 
@@ -226,9 +225,10 @@ public class VariantDependencies {
             compileClasspath.setVisible(false);
             compileClasspath.setDescription("Resolved configuration for compilation for variant: " + variantName);
             compileClasspath.setExtendsFrom(compileClasspaths);
-            if (testedVariantDependencies != null) {
+            if (testedVariantScope != null) {
                 for (Configuration configuration :
-                        testedVariantDependencies.sourceSetImplementationConfigurations) {
+                        testedVariantScope.getVariantDependencies()
+                                .sourceSetImplementationConfigurations) {
                     compileClasspath.extendsFrom(configuration);
                 }
             }
@@ -256,9 +256,10 @@ public class VariantDependencies {
             runtimeClasspath.setVisible(false);
             runtimeClasspath.setDescription("Resolved configuration for runtime for variant: " + variantName);
             runtimeClasspath.setExtendsFrom(runtimeClasspaths);
-            if (testedVariantDependencies != null) {
+            if (testedVariantScope != null) {
                 for (Configuration configuration :
-                        testedVariantDependencies.sourceSetRuntimeConfigurations) {
+                        testedVariantScope.getVariantDependencies()
+                                .sourceSetRuntimeConfigurations) {
                     runtimeClasspath.extendsFrom(configuration);
                 }
             }
@@ -281,6 +282,19 @@ public class VariantDependencies {
                                         variantScope,
                                         project.getDependencies().getConstraints(),
                                         runtimeClasspath.getName()));
+
+                // if this is a test App, then also synchronize the 2 runtime classpaths
+                if (variantType.isApk() && testedVariantScope != null) {
+                    Configuration testedRuntimeClasspath =
+                            testedVariantScope.getVariantDependencies().getRuntimeClasspath();
+                    runtimeClasspath
+                            .getIncoming()
+                            .beforeResolve(
+                                    new ConstraintHandler(
+                                            testedVariantScope,
+                                            project.getDependencies().getConstraints(),
+                                            testedRuntimeClasspath.getName()));
+                }
             }
 
             Configuration globalTestedApks = configurations.findByName(CONFIG_NAME_TESTED_APKS);
