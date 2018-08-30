@@ -44,6 +44,12 @@ dependencies {
     }
 }
 
+compileTestKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
 configurations {
     // google-api-client depends on guava-jdk5.
     testCompile.exclude group: 'com.google.guava', module: 'guava-jdk5'
