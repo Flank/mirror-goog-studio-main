@@ -188,8 +188,33 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
 
             // loop on each node that represent a resource
             NodeList resNodes = fileNode.getChildNodes();
-            for (int iii = 0, nnn = resNodes.getLength(); iii < nnn; iii++) {
-                Node resNode = resNodes.item(iii);
+            int i = 0;
+
+            // See if this is an "id generating" file, which means the first child is actually for the
+            // file itself and the rest are for "@+id" resources defined inside.
+            File parent = file.getParentFile();
+            if (parent != null) {
+                ResourceFolderType folderType = ResourceFolderType.getFolderType(parent.getName());
+                if (folderType != ResourceFolderType.VALUES) {
+                    if (resNodes.getLength() > 0) {
+                        Node firstChild = resNodes.item(0);
+                        String name = NodeUtils.getAttribute(firstChild, SdkConstants.ATTR_NAME);
+                        String type = NodeUtils.getAttribute(firstChild, SdkConstants.ATTR_TYPE);
+                        if (name != null && type != null) {
+                            ResourceType resourceType = ResourceType.fromClassName(type);
+                            if (resourceType != null) {
+                                resourceList.add(
+                                        new IdGeneratingResourceParser.IdResourceMergerItem(
+                                                name, mNamespace, resourceType, mLibraryName));
+                                i++;
+                            }
+                        }
+                    }
+                }
+            }
+
+            for (int nodesCount = resNodes.getLength(); i < nodesCount; i++) {
+                Node resNode = resNodes.item(i);
 
                 if (resNode.getNodeType() != Node.ELEMENT_NODE) {
                     continue;
@@ -486,7 +511,7 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
                                     file, resourceName, folderData.type, mNamespace, mLibraryName);
                     items = parser.getIdResourceMergerItems();
                     ResourceMergerItem fileItem = parser.getFileResourceMergerItem();
-                    items.add(fileItem);
+                    items.add(0, fileItem);
                 }
                 return new ResourceFile(file, items, folderData.folderConfiguration);
             } else {

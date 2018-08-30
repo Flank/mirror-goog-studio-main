@@ -193,7 +193,7 @@ class IdGeneratingResourceParser {
      * (ResourceType.LAYOUT, etc), from an ID-generating XML file that supports blob writing without
      * having to link to the source XML.
      */
-    private static class IdResourceMergerItem extends ResourceMergerItem {
+    public static class IdResourceMergerItem extends ResourceMergerItem {
         /**
          * Constructs the resource with a given name and type. Note that the object is not fully
          * usable as-is. It must be added to a ResourceFile first.
@@ -223,12 +223,17 @@ class IdGeneratingResourceParser {
             // Normally layouts are file-based resources and the ResourceValue is the file path.
             // However, we're serializing it as XML and in that case the ResourceValue comes from
             // parsing the XML. So store the file path in the XML to make the ResourceValues equivalent.
-            if (getType() != ResourceType.ID) {
+            if (isFileBased()) {
                 ResourceFile sourceFile = getSourceFile();
                 assert sourceFile != null;
                 newNode.setTextContent(sourceFile.getFile().getAbsolutePath());
             }
             return newNode;
+        }
+
+        @Override
+        public boolean isFileBased() {
+            return getType() != ResourceType.ID;
         }
     }
 }
