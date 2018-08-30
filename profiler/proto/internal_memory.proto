@@ -36,6 +36,9 @@ service InternalMemoryService {
 
   rpc RecordJNIRefEvents(BatchJNIGlobalRefEvent)
     returns (EmptyMemoryReply) {}
+
+  rpc RecordAllocationSamplingRateEvent(AllocationSamplingRateEventRequest)
+    returns (EmptyMemoryReply) {}
 }
 
 message RegisterMemoryAgentRequest {
@@ -74,6 +77,11 @@ message AllocStatsRequest {
 message GcStatsRequest {
   int32 pid = 1;
   MemoryData.GcStatsSample gc_stats_sample = 2;
+}
+
+message AllocationSamplingRateEventRequest {
+  int32 pid = 1;
+  AllocationSamplingRateEvent event = 2;
 }
 
 message EmptyMemoryReply {}
