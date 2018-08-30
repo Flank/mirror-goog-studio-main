@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.builder.packaging.PackagingUtils
 import com.android.bundle.Config
@@ -89,6 +90,10 @@ open class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecutor)
     lateinit var bundleOptions: BundleOptions
         private set
 
+    @get:Nested
+    lateinit var bundleFlags: BundleFlags
+        private set
+
     @get:InputFile
     @get:Optional
     var keystoreFile: File? = null
@@ -137,6 +142,7 @@ open class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecutor)
                     obfuscationMappingFile = obsfuscationMappingFile?.singleFile(),
                     aaptOptionsNoCompress = aaptOptionsNoCompress,
                     bundleOptions = bundleOptions,
+                    bundleFlags = bundleFlags,
                     signature = signature,
                     bundleFile = bundleFile.get().asFile
                 )
@@ -151,6 +157,7 @@ open class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecutor)
         val obfuscationMappingFile: File?,
         val aaptOptionsNoCompress: Collection<String>,
         val bundleOptions: BundleOptions,
+        val bundleFlags: BundleFlags,
         val signature: JarSigner.Signature?,
         val bundleFile: File
     ) : Serializable
@@ -174,6 +181,9 @@ open class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecutor)
                 .splitBy(Config.SplitDimension.Value.SCREEN_DENSITY, params.bundleOptions.enableDensity)
                 .splitBy(Config.SplitDimension.Value.LANGUAGE, params.bundleOptions.enableLanguage)
 
+            val uncompressNativeLibrariesConfig = Config.UncompressNativeLibraries.newBuilder()
+                .setEnabled(params.bundleFlags.enableUncompressedNativeLibs)
+
             val bundleConfig =
                 Config.BundleConfig.newBuilder()
                     .setCompression(
@@ -181,7 +191,8 @@ open class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecutor)
                             .addAllUncompressedGlob(noCompressGlobsForBundle))
                     .setOptimizations(
                         Config.Optimizations.newBuilder()
-                            .setSplitsConfig(splitsConfig))
+                            .setSplitsConfig(splitsConfig)
+                            .setUncompressNativeLibraries(uncompressNativeLibrariesConfig))
 
             val command = BuildBundleCommand.builder()
                 .setBundleConfig(bundleConfig.build())
@@ -226,6 +237,11 @@ open class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecutor)
         @get:Input
         @get:Optional
         val enableLanguage: Boolean?) : Serializable
+
+    data class BundleFlags(
+        @get:Input
+        val enableUncompressedNativeLibs: Boolean
+    ) : Serializable
 
     class CreationAction(variantScope: VariantScope) :
         VariantTaskCreationAction<PackageBundleTask>(variantScope) {
@@ -285,6 +301,10 @@ open class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecutor)
                 task.bundleOptions =
                         ((variantScope.globalScope.extension as BaseAppModuleExtension).bundle).convert()
             }
+
+            task.bundleFlags = BundleFlags(
+                enableUncompressedNativeLibs = variantScope.globalScope.projectOptions[BooleanOption.ENABLE_UNCOMPRESSED_NATIVE_LIBS_IN_BUNDLE]
+            )
 
             if (variantScope.needsMainDexListForBundle) {
                 task.mainDexList =
