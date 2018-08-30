@@ -284,7 +284,8 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      * side will be called the same as for library plugins, while the feature side will add
      * 'feature' to the name.
      *
-     * <p>The hybrid name below will always rename the library side to contain 'aar'
+     * <p>Using {@link #computeHybridVariantName()} will always put 'aar' in the library variant
+     * names (for feature plugins), making it different from the library plugin.
      *
      * @param flavorName the flavor name, as computed by {@link #computeFlavorName(List)}
      * @param buildType the build type
