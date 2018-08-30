@@ -31,7 +31,9 @@ import com.android.builder.internal.aapt.BlockingResourceLinker
 import com.android.ide.common.build.ApkInfo
 import com.android.ide.common.process.ProcessException
 import com.google.common.collect.ImmutableList
+import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
@@ -59,7 +61,8 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
     lateinit var outputDirectory: File private set
 
     @get:InputFiles
-    lateinit var manifestFiles: BuildableArtifact private set
+    lateinit var manifestFiles: Provider<Directory>
+        private set
 
     @get:InputFiles
     @get:Optional
@@ -135,7 +138,7 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
             val artifacts = variantScope.artifacts
             task.resourceFiles = artifacts.getFinalArtifactFiles(taskInputType)
             task.manifestFiles = artifacts
-                .getFinalArtifactFiles(INSTANT_RUN_MERGED_MANIFESTS)
+                .getFinalProduct(INSTANT_RUN_MERGED_MANIFESTS)
             task.outputDirectory = outputDirectory
             task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
         }

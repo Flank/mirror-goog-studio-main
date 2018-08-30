@@ -123,8 +123,8 @@ import com.android.build.gradle.internal.tasks.PackageForUnitTest;
 import com.android.build.gradle.internal.tasks.PrepareLintJar;
 import com.android.build.gradle.internal.tasks.PrepareLintJarForPublish;
 import com.android.build.gradle.internal.tasks.ProcessJavaResTask;
-import com.android.build.gradle.internal.tasks.SigningConfigWriterTask;
 import com.android.build.gradle.internal.tasks.RecalculateStackFramesTask;
+import com.android.build.gradle.internal.tasks.SigningConfigWriterTask;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
 import com.android.build.gradle.internal.tasks.SourceSetsTask;
 import com.android.build.gradle.internal.tasks.TestServerTask;
@@ -265,6 +265,7 @@ import org.gradle.api.artifacts.PublishArtifact;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
@@ -273,7 +274,6 @@ import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
@@ -786,7 +786,7 @@ public abstract class TaskManager {
 
         taskFactory.register(
                 new ProcessTestManifest.CreationAction(
-                        scope, testedScope.getArtifacts().getFinalArtifactFiles(MERGED_MANIFESTS)));
+                        scope, testedScope.getArtifacts().getFinalProduct(MERGED_MANIFESTS)));
     }
 
     public void createRenderscriptTask(@NonNull VariantScope scope) {
@@ -2577,8 +2577,12 @@ public abstract class TaskManager {
                         taskFactory,
                         recorder);
 
-        BuildableArtifact instantRunMergedManifests =
-                variantScope.getArtifacts().getFinalArtifactFiles(INSTANT_RUN_MERGED_MANIFESTS);
+        // setting up a fake dependency on the merged manifest to force initialization
+        Provider<Directory> mergedManifests =
+                variantScope.getArtifacts().getFinalProduct(MERGED_MANIFESTS);
+
+        Provider<Directory> instantRunMergedManifests =
+                variantScope.getArtifacts().getFinalProduct(INSTANT_RUN_MERGED_MANIFESTS);
 
         variantScope.setInstantRunTaskManager(instantRunTaskManager);
         AndroidVersion minSdkForDx = variantScope.getMinSdkVersion();
@@ -2587,6 +2591,7 @@ public abstract class TaskManager {
                         extractJarsTask.orElse(null),
                         allActionAnchorTask,
                         getResMergingScopes(variantScope),
+                        mergedManifests,
                         instantRunMergedManifests,
                         true /* addResourceVerifier */,
                         minSdkForDx.getFeatureLevel(),
@@ -2797,8 +2802,8 @@ public abstract class TaskManager {
         final boolean splitsArePossible =
                 variantScope.getVariantData().getMultiOutputPolicy() == MultiOutputPolicy.SPLITS;
 
-        BuildableArtifact manifests =
-                variantScope.getArtifacts().getFinalArtifactFiles(manifestType);
+        Provider<Directory> manifests = variantScope.getArtifacts().getFinalProduct(manifestType);
+
         // this is where the final APKs will be located.
         File finalApkLocation = variantScope.getApkLocation();
         // if we are not dealing with possible splits, we can generate in the final folder

@@ -136,8 +136,6 @@ class DynamicAppTest {
                     "intermediates",
                     "instant_app_manifest",
                     "debug",
-                    "processDebugManifest",
-                    "instant-app-manifest",
                     "AndroidManifest.xml")
             FileSubject.assertThat(manifestFile).isFile()
             FileSubject.assertThat(manifestFile).contains("android:targetSandboxVersion=\"2\"")

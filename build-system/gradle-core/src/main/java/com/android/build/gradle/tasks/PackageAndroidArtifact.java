@@ -94,7 +94,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 import org.gradle.api.Project;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
@@ -113,7 +115,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     // Path sensitivity here is absolute due to http://b/72085541
     @InputFiles
     @PathSensitive(PathSensitivity.ABSOLUTE)
-    public BuildableArtifact getManifests() {
+    public Provider<Directory> getManifests() {
         return manifests;
     }
 
@@ -206,7 +208,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     protected Supplier<InstantRunBuildContext> instantRunContext;
 
-    protected BuildableArtifact manifests;
+    protected Provider<Directory> manifests;
 
     @Nullable protected Collection<String> aaptOptionsNoCompress;
 
@@ -296,6 +298,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     public List<String> getNativeLibrariesPackagingModeName() {
         ImmutableList.Builder<String> listBuilder = ImmutableList.builder();
         manifests
+                .get()
+                .getAsFileTree()
                 .getFiles()
                 .forEach(
                         manifest -> {
@@ -508,7 +512,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         ImmutableMap<RelativeFile, FileStatus> updatedJniResources =
                 IncrementalRelativeFileSets.fromZipsAndDirectories(getJniFolders());
 
-        BuildElements manifestOutputs = ExistingBuildElements.from(manifestType, manifests);
+        BuildElements manifestOutputs =
+                ExistingBuildElements.from(manifestType, manifests.get().getAsFile());
         doTask(
                 apkData,
                 incrementalDirForSplit,
@@ -844,7 +849,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         BuildOutput buildOutput = computeBuildOutputFile(apkData);
         File outputFile = buildOutput.getOutputFile();
 
-        BuildElements manifestOutputs = ExistingBuildElements.from(manifestType, manifests);
+        BuildElements manifestOutputs =
+                ExistingBuildElements.from(manifestType, manifests.get().getAsFile());
 
         doTask(
                 apkData,
@@ -897,7 +903,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             extends VariantTaskCreationAction<T> {
 
         protected final Project project;
-        @NonNull protected final BuildableArtifact manifests;
+        @NonNull protected final Provider<Directory> manifests;
         @NonNull protected final InternalArtifactType inputResourceFilesType;
         @NonNull protected final File outputDirectory;
         @NonNull protected final OutputScope outputScope;
@@ -908,7 +914,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                 @NonNull VariantScope variantScope,
                 @NonNull File outputDirectory,
                 @NonNull InternalArtifactType inputResourceFilesType,
-                @NonNull BuildableArtifact manifests,
+                @NonNull Provider<Directory> manifests,
                 @NonNull InternalArtifactType manifestType,
                 @Nullable FileCache fileCache,
                 @NonNull OutputScope outputScope) {
