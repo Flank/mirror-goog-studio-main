@@ -56,6 +56,14 @@ class DeprecationReporterImpl(
                 "$oldDslElement::$newDslElement::${deprecationTarget.name}")
     }
 
+    override fun reportDeprecatedApi(
+        newApiElement: String,
+        oldApiElement: String,
+        url: String,
+        deprecationTarget: DeprecationTarget
+    ) {
+    }
+
     override fun reportObsoleteUsage(oldDslElement: String,
             deprecationTarget: DeprecationTarget) {
         issueReporter.reportIssue(

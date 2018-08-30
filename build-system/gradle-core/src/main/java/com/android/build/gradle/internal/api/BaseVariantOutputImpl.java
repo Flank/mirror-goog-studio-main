@@ -16,11 +16,14 @@
 
 package com.android.build.gradle.internal.api;
 
+import static com.android.build.gradle.internal.api.BaseVariantImpl.TASK_ACCESS_DEPRECATION_URL;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.gradle.api.BaseVariantOutput;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.scope.TaskContainer;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
@@ -30,6 +33,7 @@ import java.io.File;
 import java.util.Collection;
 import org.gradle.api.GradleException;
 import org.gradle.api.Task;
+import org.gradle.api.tasks.TaskProvider;
 
 /**
  * Implementation of the base variant output. This is the base class for items common to apps,
@@ -41,12 +45,16 @@ import org.gradle.api.Task;
 public abstract class BaseVariantOutputImpl implements BaseVariantOutput {
 
     @NonNull protected final TaskContainer taskContainer;
-    protected final ApkData apkData;
+    @NonNull protected final DeprecationReporter deprecationReporter;
+    @NonNull protected final ApkData apkData;
 
     protected BaseVariantOutputImpl(
-            @NonNull ApkData apkData, @NonNull TaskContainer taskContainer) {
+            @NonNull ApkData apkData,
+            @NonNull TaskContainer taskContainer,
+            @NonNull DeprecationReporter deprecationReporter) {
         this.apkData = apkData;
         this.taskContainer = taskContainer;
+        this.deprecationReporter = deprecationReporter;
     }
 
     @NonNull
@@ -72,21 +80,50 @@ public abstract class BaseVariantOutputImpl implements BaseVariantOutput {
         return ImmutableList.of(this);
     }
 
-    @Nullable
+    @NonNull
     @Override
     public ProcessAndroidResources getProcessResources() {
+        deprecationReporter.reportDeprecatedApi(
+                "variantOutput.getProcessResourcesProvider()",
+                "variantOutput.getProcessResources()",
+                TASK_ACCESS_DEPRECATION_URL,
+                DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
         return taskContainer.getProcessAndroidResTask().getOrNull();
+    }
+
+    @NonNull
+    @Override
+    public TaskProvider<ProcessAndroidResources> getProcessResourcesProvider() {
+        //noinspection unchecked
+        return (TaskProvider<ProcessAndroidResources>) taskContainer.getProcessAndroidResTask();
     }
 
     @Override
     @NonNull
     public ManifestProcessorTask getProcessManifest() {
+        deprecationReporter.reportDeprecatedApi(
+                "variantOutput.getProcessManifestProvider()",
+                "variantOutput.getProcessManifest()",
+                TASK_ACCESS_DEPRECATION_URL,
+                DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
         return taskContainer.getProcessManifestTask().get();
+    }
+
+    @NonNull
+    @Override
+    public TaskProvider<ManifestProcessorTask> getProcessManifestProvider() {
+        //noinspection unchecked
+        return (TaskProvider<ManifestProcessorTask>) taskContainer.getProcessManifestTask();
     }
 
     @Nullable
     @Override
     public Task getAssemble() {
+        deprecationReporter.reportDeprecatedApi(
+                "variant.getAssembleProvider()",
+                "variantOutput.getAssemble()",
+                TASK_ACCESS_DEPRECATION_URL,
+                DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
         return taskContainer.getAssembleTask().get();
     }
 

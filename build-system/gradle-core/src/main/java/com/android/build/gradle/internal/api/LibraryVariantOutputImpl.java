@@ -16,9 +16,12 @@
 
 package com.android.build.gradle.internal.api;
 
+import static com.android.build.gradle.internal.api.BaseVariantImpl.TASK_ACCESS_DEPRECATION_URL;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.api.LibraryVariantOutput;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.scope.TaskContainer;
 import com.android.ide.common.build.ApkData;
 import java.io.File;
@@ -35,8 +38,10 @@ public class LibraryVariantOutputImpl extends BaseVariantOutputImpl implements L
 
     @Inject
     public LibraryVariantOutputImpl(
-            @NonNull ApkData apkData, @NonNull TaskContainer taskContainer) {
-        super(apkData, taskContainer);
+            @NonNull ApkData apkData,
+            @NonNull TaskContainer taskContainer,
+            @NonNull DeprecationReporter deprecationReporter) {
+        super(apkData, taskContainer, deprecationReporter);
     }
 
     @Override
@@ -48,6 +53,11 @@ public class LibraryVariantOutputImpl extends BaseVariantOutputImpl implements L
     @Nullable
     @Override
     public Zip getPackageLibrary() {
+        deprecationReporter.reportDeprecatedApi(
+                "variant.getPackageLibraryProvider()",
+                "variantOutput.getPackageLibrary()",
+                TASK_ACCESS_DEPRECATION_URL,
+                DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
         return taskContainer.getBundleLibraryTask().getOrNull();
     }
 

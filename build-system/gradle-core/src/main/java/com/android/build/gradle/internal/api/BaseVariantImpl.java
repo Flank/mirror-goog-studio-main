@@ -25,6 +25,7 @@ import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.api.SourceKind;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -64,6 +65,7 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.resources.TextResource;
+import org.gradle.api.tasks.AbstractCopyTask;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.bundling.Zip;
@@ -76,6 +78,8 @@ import org.gradle.api.tasks.compile.JavaCompile;
  * through the external API.
  */
 public abstract class BaseVariantImpl implements BaseVariant {
+
+    public static final String TASK_ACCESS_DEPRECATION_URL = "TBD";
 
     @NonNull private final ObjectFactory objectFactory;
     @NonNull protected final AndroidBuilder androidBuilder;
@@ -221,67 +225,272 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @NonNull
     public Task getPreBuild() {
-        return getVariantData().getTaskContainer().getPreBuildTask().get();
+        BaseVariantData variantData = getVariantData();
+        variantData
+                .getScope()
+                .getGlobalScope()
+                .getDslScope()
+                .getDeprecationReporter()
+                .reportDeprecatedApi(
+                        "variant.getPreBuildProvider()",
+                        "variant.getPreBuild()",
+                        TASK_ACCESS_DEPRECATION_URL,
+                        DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
+        return variantData.getTaskContainer().getPreBuildTask().get();
+    }
+
+    @NonNull
+    @Override
+    public TaskProvider<Task> getPreBuildProvider() {
+        //noinspection unchecked
+        return (TaskProvider<Task>) getVariantData().getTaskContainer().getPreBuildTask();
     }
 
     @Override
     @NonNull
     public Task getCheckManifest() {
-        return getVariantData().getTaskContainer().getCheckManifestTask().get();
+        BaseVariantData variantData = getVariantData();
+        variantData
+                .getScope()
+                .getGlobalScope()
+                .getDslScope()
+                .getDeprecationReporter()
+                .reportDeprecatedApi(
+                        "variant.getCheckManifestProvider()",
+                        "variant.getCheckManifest()",
+                        TASK_ACCESS_DEPRECATION_URL,
+                        DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
+        return variantData.getTaskContainer().getCheckManifestTask().get();
+    }
+
+    @NonNull
+    @Override
+    public TaskProvider<Task> getCheckManifestProvider() {
+        // Double cast needed to satisfy the compiler
+        //noinspection unchecked
+        return (TaskProvider<Task>)
+                (TaskProvider<?>) getVariantData().getTaskContainer().getCheckManifestTask();
     }
 
     @Override
     @NonNull
     public AidlCompile getAidlCompile() {
-        return getVariantData().getTaskContainer().getAidlCompileTask().get();
+        BaseVariantData variantData = getVariantData();
+        variantData
+                .getScope()
+                .getGlobalScope()
+                .getDslScope()
+                .getDeprecationReporter()
+                .reportDeprecatedApi(
+                        "variant.getAidlCompileProvider()",
+                        "variant.getAidlCompile()",
+                        TASK_ACCESS_DEPRECATION_URL,
+                        DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
+        return variantData.getTaskContainer().getAidlCompileTask().get();
+    }
+
+    @NonNull
+    @Override
+    public TaskProvider<AidlCompile> getAidlCompileProvider() {
+        //noinspection unchecked
+        return (TaskProvider<AidlCompile>) getVariantData().getTaskContainer().getAidlCompileTask();
     }
 
     @Override
     @NonNull
     public RenderscriptCompile getRenderscriptCompile() {
-        return getVariantData().getTaskContainer().getRenderscriptCompileTask().get();
+        BaseVariantData variantData = getVariantData();
+        variantData
+                .getScope()
+                .getGlobalScope()
+                .getDslScope()
+                .getDeprecationReporter()
+                .reportDeprecatedApi(
+                        "variant.getRenderscriptCompileProvider()",
+                        "variant.getRenderscriptCompile()",
+                        TASK_ACCESS_DEPRECATION_URL,
+                        DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
+        return variantData.getTaskContainer().getRenderscriptCompileTask().get();
+    }
+
+    @NonNull
+    @Override
+    public TaskProvider<RenderscriptCompile> getRenderscriptCompileProvider() {
+        //noinspection unchecked
+        return (TaskProvider<RenderscriptCompile>)
+                getVariantData().getTaskContainer().getRenderscriptCompileTask();
     }
 
     @Override
     public MergeResources getMergeResources() {
-        return getVariantData().getTaskContainer().getMergeResourcesTask().getOrNull();
+        BaseVariantData variantData = getVariantData();
+        variantData
+                .getScope()
+                .getGlobalScope()
+                .getDslScope()
+                .getDeprecationReporter()
+                .reportDeprecatedApi(
+                        "variant.getMergeResourcesProvider()",
+                        "variant.getMergeResources()",
+                        TASK_ACCESS_DEPRECATION_URL,
+                        DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
+        return variantData.getTaskContainer().getMergeResourcesTask().getOrNull();
+    }
+
+    @Nullable
+    @Override
+    public TaskProvider<MergeResources> getMergeResourcesProvider() {
+        //noinspection unchecked
+        return (TaskProvider<MergeResources>)
+                getVariantData().getTaskContainer().getMergeResourcesTask();
     }
 
     @Override
     public MergeSourceSetFolders getMergeAssets() {
-        return getVariantData().getTaskContainer().getMergeAssetsTask().getOrNull();
+        BaseVariantData variantData = getVariantData();
+        variantData
+                .getScope()
+                .getGlobalScope()
+                .getDslScope()
+                .getDeprecationReporter()
+                .reportDeprecatedApi(
+                        "variant.getMergeAssetsProvider()",
+                        "variant.getMergeAssets()",
+                        TASK_ACCESS_DEPRECATION_URL,
+                        DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
+        return variantData.getTaskContainer().getMergeAssetsTask().getOrNull();
+    }
+
+    @Nullable
+    @Override
+    public TaskProvider<MergeSourceSetFolders> getMergeAssetsProvider() {
+        //noinspection unchecked
+        return (TaskProvider<MergeSourceSetFolders>)
+                getVariantData().getTaskContainer().getMergeAssetsTask();
     }
 
     @Override
     public GenerateBuildConfig getGenerateBuildConfig() {
-        return getVariantData().getTaskContainer().getGenerateBuildConfigTask().get();
+        BaseVariantData variantData = getVariantData();
+        variantData
+                .getScope()
+                .getGlobalScope()
+                .getDslScope()
+                .getDeprecationReporter()
+                .reportDeprecatedApi(
+                        "variant.getGenerateBuildConfigProvider()",
+                        "variant.getGenerateBuildConfig()",
+                        TASK_ACCESS_DEPRECATION_URL,
+                        DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
+        return variantData.getTaskContainer().getGenerateBuildConfigTask().get();
+    }
+
+    @Nullable
+    @Override
+    public TaskProvider<GenerateBuildConfig> getGenerateBuildConfigProvider() {
+        //noinspection unchecked
+        return (TaskProvider<GenerateBuildConfig>)
+                getVariantData().getTaskContainer().getGenerateBuildConfigTask();
     }
 
     @Override
-    @Nullable
+    @NonNull
     public JavaCompile getJavaCompile() {
-        return getVariantData().getTaskContainer().getJavacTask().getOrNull();
+        BaseVariantData variantData = getVariantData();
+        variantData
+                .getScope()
+                .getGlobalScope()
+                .getDslScope()
+                .getDeprecationReporter()
+                .reportDeprecatedApi(
+                        "variant.getJavaCompileProvider()",
+                        "variant.getJavaCompile()",
+                        TASK_ACCESS_DEPRECATION_URL,
+                        DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
+        return variantData.getTaskContainer().getJavacTask().get();
+    }
+
+    @NonNull
+    @Override
+    public TaskProvider<JavaCompile> getJavaCompileProvider() {
+        //noinspection unchecked
+        return (TaskProvider<JavaCompile>) getVariantData().getTaskContainer().getJavacTask();
     }
 
     @NonNull
     @Override
     public Task getJavaCompiler() {
-        return getVariantData().getTaskContainer().getJavacTask().getOrNull();
+        BaseVariantData variantData = getVariantData();
+        variantData
+                .getScope()
+                .getGlobalScope()
+                .getDslScope()
+                .getDeprecationReporter()
+                .reportDeprecatedApi(
+                        "variant.getJavaCompileProvider()",
+                        "variant.getJavaCompiler()",
+                        TASK_ACCESS_DEPRECATION_URL,
+                        DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
+        return variantData.getTaskContainer().getJavacTask().get();
     }
 
     @NonNull
     @Override
     public NdkCompile getNdkCompile() {
-        return getVariantData().getTaskContainer().getNdkCompileTask().get();
+        BaseVariantData variantData = getVariantData();
+        variantData
+                .getScope()
+                .getGlobalScope()
+                .getDslScope()
+                .getDeprecationReporter()
+                .reportDeprecatedApi(
+                        "variant.getNdkCompileProvider()",
+                        "variant.getNdkCompile()",
+                        TASK_ACCESS_DEPRECATION_URL,
+                        DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
+        return variantData.getTaskContainer().getNdkCompileTask().get();
     }
 
+    @NonNull
+    @Override
+    public TaskProvider<NdkCompile> getNdkCompileProvider() {
+        return (TaskProvider<NdkCompile>) getVariantData().getTaskContainer().getNdkCompileTask();
+    }
+
+    @NonNull
     @Override
     public Collection<ExternalNativeBuildTask> getExternalNativeBuildTasks() {
+        BaseVariantData variantData = getVariantData();
+        variantData
+                .getScope()
+                .getGlobalScope()
+                .getDslScope()
+                .getDeprecationReporter()
+                .reportDeprecatedApi(
+                        "variant.getExternalNativeBuildProviders()",
+                        "variant.getExternalNativeBuildTasks()",
+                        TASK_ACCESS_DEPRECATION_URL,
+                        DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
         return getVariantData()
                 .getTaskContainer()
                 .getExternalNativeBuildTasks()
                 .stream()
                 .map(Provider::get)
+                .collect(Collectors.toList());
+    }
+
+    @NonNull
+    @Override
+    public Collection<TaskProvider<ExternalNativeBuildTask>> getExternalNativeBuildProviders() {
+        return getVariantData()
+                .getTaskContainer()
+                .getExternalNativeBuildTasks()
+                .stream()
+                .map(
+                        taskProvider -> {
+                            //noinspection unchecked
+                            return (TaskProvider<ExternalNativeBuildTask>) taskProvider;
+                        })
                 .collect(Collectors.toList());
     }
 
@@ -309,13 +518,51 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @NonNull
     public Sync getProcessJavaResources() {
-        return getVariantData().getTaskContainer().getProcessJavaResourcesTask().get();
+        BaseVariantData variantData = getVariantData();
+        variantData
+                .getScope()
+                .getGlobalScope()
+                .getDslScope()
+                .getDeprecationReporter()
+                .reportDeprecatedApi(
+                        "variant.getProcessJavaResourcesProvider()",
+                        "variant.getProcessJavaResources()",
+                        TASK_ACCESS_DEPRECATION_URL,
+                        DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
+        return variantData.getTaskContainer().getProcessJavaResourcesTask().get();
+    }
+
+    @NonNull
+    @Override
+    public TaskProvider<AbstractCopyTask> getProcessJavaResourcesProvider() {
+        // Double cast needed to satisfy the compiler
+        //noinspection unchecked
+        return (TaskProvider<AbstractCopyTask>)
+                (TaskProvider<?>) getVariantData().getTaskContainer().getProcessJavaResourcesTask();
     }
 
     @Override
     @Nullable
     public Task getAssemble() {
-        return getVariantData().getTaskContainer().getAssembleTask().get();
+        BaseVariantData variantData = getVariantData();
+        variantData
+                .getScope()
+                .getGlobalScope()
+                .getDslScope()
+                .getDeprecationReporter()
+                .reportDeprecatedApi(
+                        "variant.getAssembleProvider()",
+                        "variant.getAssemble()",
+                        TASK_ACCESS_DEPRECATION_URL,
+                        DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
+        return variantData.getTaskContainer().getAssembleTask().get();
+    }
+
+    @Nullable
+    @Override
+    public TaskProvider<Task> getAssembleProvider() {
+        //noinspection unchecked
+        return (TaskProvider<Task>) getVariantData().getTaskContainer().getAssembleTask();
     }
 
     @Override

@@ -56,6 +56,15 @@ public class NoOpDeprecationReporter implements DeprecationReporter {
     }
 
     @Override
+    public void reportDeprecatedApi(
+            @NonNull String newApiElement,
+            @NonNull String oldApiElement,
+            @NonNull String url,
+            @NonNull DeprecationTarget deprecationTarget) {
+        // do nothing
+    }
+
+    @Override
     public void reportRenamedConfiguration(
             @NonNull String newConfiguration,
             @NonNull String oldConfiguration,

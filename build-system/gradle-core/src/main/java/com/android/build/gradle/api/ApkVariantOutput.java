@@ -27,13 +27,22 @@ import org.gradle.api.Task;
 public interface ApkVariantOutput extends BaseVariantOutput {
 
     /**
-     * Returns the packaging task
+     * Returns the packaging tas
+     *
+     * @deprecated Use {@link
+     *     com.android.build.gradle.api.ApkVariant#getPackageApplicationProvider()}
      */
     @Nullable
+    @Deprecated
     PackageAndroidArtifact getPackageApplication();
 
-    /** Returns the Zip align task. */
+    /**
+     * Returns the Zip align task.
+     *
+     * @deprecated This returns the packaging task as it now does the zip-align step.
+     */
     @Nullable
+    @Deprecated
     Task getZipAlign();
 
     /**

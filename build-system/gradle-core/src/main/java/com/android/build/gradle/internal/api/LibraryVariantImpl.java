@@ -22,12 +22,14 @@ import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.LibraryVariant;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.api.UnitTestVariant;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.LibraryVariantData;
 import com.android.builder.core.AndroidBuilder;
 import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.bundling.Zip;
 
 /**
@@ -89,7 +91,23 @@ public class LibraryVariantImpl extends BaseVariantImpl implements LibraryVarian
     @Override
     @Nullable
     public Zip getPackageLibrary() {
+        variantData
+                .getScope()
+                .getGlobalScope()
+                .getDslScope()
+                .getDeprecationReporter()
+                .reportDeprecatedApi(
+                        "variant.getPackageLibraryProvider()",
+                        "variant.getPackageLibrary()",
+                        TASK_ACCESS_DEPRECATION_URL,
+                        DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
         return variantData.getTaskContainer().getBundleLibraryTask().getOrNull();
     }
 
+    @Nullable
+    @Override
+    public TaskProvider<Zip> getPackageLibraryProvider() {
+        //noinspection unchecked
+        return (TaskProvider<Zip>) variantData.getTaskContainer().getBundleLibraryTask();
+    }
 }

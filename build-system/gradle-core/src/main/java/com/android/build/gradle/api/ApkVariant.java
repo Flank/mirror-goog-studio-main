@@ -18,6 +18,7 @@ package com.android.build.gradle.api;
 
 import com.android.annotations.Nullable;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
+import org.gradle.api.tasks.TaskProvider;
 
 /**
  * A Build variant and all its public data.
@@ -35,8 +36,22 @@ public interface ApkVariant extends BaseVariant, InstallableVariant, AndroidArti
     @Nullable
     Object getDex();
 
-    /** Returns the packaging task */
+    /**
+     * Returns the packaging tas
+     *
+     * @deprecated Use {@link #getPackageApplicationProvider()}
+     */
     @Nullable
+    @Deprecated
     PackageAndroidArtifact getPackageApplication();
+
+    /**
+     * Returns the packaging task
+     *
+     * <p>Prefer this to {@link #getPackageApplication()} as it triggers eager configuration of the
+     * task.
+     */
+    @Nullable
+    TaskProvider<PackageAndroidArtifact> getPackageApplicationProvider();
 
 }

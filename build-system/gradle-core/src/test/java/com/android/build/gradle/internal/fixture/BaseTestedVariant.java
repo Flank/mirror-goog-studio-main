@@ -46,6 +46,7 @@ import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.resources.TextResource;
 import org.gradle.api.tasks.AbstractCopyTask;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 
 public interface BaseTestedVariant extends BaseVariant, TestedVariant {
@@ -173,7 +174,14 @@ public interface BaseTestedVariant extends BaseVariant, TestedVariant {
         @NonNull
         @Override
         public Task getPreBuild() {
+            //noinspection deprecation
             return variant.getPreBuild();
+        }
+
+        @NonNull
+        @Override
+        public TaskProvider<Task> getPreBuildProvider() {
+            return variant.getPreBuildProvider();
         }
 
         @NonNull
@@ -184,43 +192,92 @@ public interface BaseTestedVariant extends BaseVariant, TestedVariant {
 
         @NonNull
         @Override
+        public TaskProvider<Task> getCheckManifestProvider() {
+            return variant.getCheckManifestProvider();
+        }
+
+        @NonNull
+        @Override
         public AidlCompile getAidlCompile() {
+            //noinspection deprecation
             return variant.getAidlCompile();
         }
 
         @NonNull
         @Override
+        public TaskProvider<AidlCompile> getAidlCompileProvider() {
+            return variant.getAidlCompileProvider();
+        }
+
+        @NonNull
+        @Override
         public RenderscriptCompile getRenderscriptCompile() {
+            //noinspection deprecation
             return variant.getRenderscriptCompile();
+        }
+
+        @NonNull
+        @Override
+        public TaskProvider<RenderscriptCompile> getRenderscriptCompileProvider() {
+            return variant.getRenderscriptCompileProvider();
         }
 
         @Nullable
         @Override
         public MergeResources getMergeResources() {
+            //noinspection deprecation
             return variant.getMergeResources();
         }
 
         @Nullable
         @Override
+        public TaskProvider<MergeResources> getMergeResourcesProvider() {
+            return variant.getMergeResourcesProvider();
+        }
+
+        @Nullable
+        @Override
         public MergeSourceSetFolders getMergeAssets() {
+            //noinspection deprecation
             return variant.getMergeAssets();
         }
 
         @Nullable
         @Override
+        public TaskProvider<MergeSourceSetFolders> getMergeAssetsProvider() {
+            return variant.getMergeAssetsProvider();
+        }
+
+        @Nullable
+        @Override
         public GenerateBuildConfig getGenerateBuildConfig() {
+            //noinspection deprecation
             return variant.getGenerateBuildConfig();
         }
 
         @Nullable
         @Override
-        public JavaCompile getJavaCompile() throws IllegalStateException {
+        public TaskProvider<GenerateBuildConfig> getGenerateBuildConfigProvider() {
+            return variant.getGenerateBuildConfigProvider();
+        }
+
+        @NonNull
+        @Override
+        public JavaCompile getJavaCompile() {
+            //noinspection deprecation
             return variant.getJavaCompile();
         }
 
         @NonNull
         @Override
+        public TaskProvider<JavaCompile> getJavaCompileProvider() {
+            return variant.getJavaCompileProvider();
+        }
+
+        @NonNull
+        @Override
         public Task getJavaCompiler() {
+            //noinspection deprecation
             return variant.getJavaCompiler();
         }
 
@@ -239,18 +296,33 @@ public interface BaseTestedVariant extends BaseVariant, TestedVariant {
         @NonNull
         @Override
         public NdkCompile getNdkCompile() {
+            //noinspection deprecation
             return variant.getNdkCompile();
         }
 
+        @NonNull
+        @Override
+        public TaskProvider<NdkCompile> getNdkCompileProvider() {
+            return variant.getNdkCompileProvider();
+        }
+
+        @NonNull
         @Override
         public Collection<ExternalNativeBuildTask> getExternalNativeBuildTasks() {
+            //noinspection deprecation
             return variant.getExternalNativeBuildTasks();
+        }
+
+        @NonNull
+        @Override
+        public Collection<TaskProvider<ExternalNativeBuildTask>> getExternalNativeBuildProviders() {
+            return variant.getExternalNativeBuildProviders();
         }
 
         @Nullable
         @Override
         public Task getObfuscation() {
-            return variant.getObfuscation();
+            return null;
         }
 
         @Nullable
@@ -262,13 +334,27 @@ public interface BaseTestedVariant extends BaseVariant, TestedVariant {
         @NonNull
         @Override
         public AbstractCopyTask getProcessJavaResources() {
+            //noinspection deprecation
             return variant.getProcessJavaResources();
+        }
+
+        @NonNull
+        @Override
+        public TaskProvider<AbstractCopyTask> getProcessJavaResourcesProvider() {
+            return variant.getProcessJavaResourcesProvider();
         }
 
         @Nullable
         @Override
         public Task getAssemble() {
+            //noinspection deprecation
             return variant.getAssemble();
+        }
+
+        @Nullable
+        @Override
+        public TaskProvider<Task> getAssembleProvider() {
+            return variant.getAssembleProvider();
         }
 
         @Override

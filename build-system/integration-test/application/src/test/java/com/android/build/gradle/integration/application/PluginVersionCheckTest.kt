@@ -19,6 +19,8 @@ package com.android.build.gradle.integration.application
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.builder.model.AndroidProject
+import com.android.builder.model.SyncIssue
 import com.android.builder.model.SyncIssue.SEVERITY_ERROR
 import com.android.builder.model.SyncIssue.TYPE_THIRD_PARTY_GRADLE_PLUGIN_TOO_OLD
 import com.google.common.truth.Truth.assertThat
@@ -53,7 +55,7 @@ class PluginVersionCheckTest {
                 "-Duser.home=" + CrashlyticsTest.getCustomUserHomeForCrashlytics(project)
             )
                 .ignoreSyncIssues().fetchAndroidProjects()
-        val syncIssues = model.onlyModel.syncIssues
+        val syncIssues = model.onlyModel.syncIssues.filter { it.type != SyncIssue.TYPE_DEPRECATED_DSL }
 
         assertThat(syncIssues).hasSize(1)
         val syncIssue = syncIssues.iterator().next()

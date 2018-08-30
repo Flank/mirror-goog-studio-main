@@ -22,6 +22,7 @@ import com.android.build.VariantOutput;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.scope.TaskContainer;
 import com.android.ide.common.build.ApkData;
 import com.google.common.collect.ImmutableList;
@@ -38,23 +39,26 @@ public class VariantOutputFactory {
     @Nullable private final BaseVariantImpl variantPublicApi;
     @NonNull private final TaskContainer taskContainer;
     @NonNull private final AndroidConfig androidConfig;
+    @NonNull private final DeprecationReporter deprecationReporter;
 
     public VariantOutputFactory(
             @NonNull Class<? extends BaseVariantOutput> targetClass,
             @NonNull ObjectFactory objectFactory,
             @NonNull AndroidConfig androidConfig,
             @Nullable BaseVariantImpl variantPublicApi,
-            @NonNull TaskContainer taskContainer) {
+            @NonNull TaskContainer taskContainer,
+            @NonNull DeprecationReporter deprecationReporter) {
         this.targetClass = targetClass;
         this.objectFactory = objectFactory;
         this.variantPublicApi = variantPublicApi;
         this.taskContainer = taskContainer;
         this.androidConfig = androidConfig;
+        this.deprecationReporter = deprecationReporter;
     }
 
     public VariantOutput create(ApkData apkData) {
         BaseVariantOutput variantOutput =
-                objectFactory.newInstance(targetClass, apkData, taskContainer);
+                objectFactory.newInstance(targetClass, apkData, taskContainer, deprecationReporter);
         androidConfig.getBuildOutputs().add(variantOutput);
         if (variantPublicApi != null) {
             variantPublicApi.addOutputs(ImmutableList.of(variantOutput));

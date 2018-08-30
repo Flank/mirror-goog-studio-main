@@ -22,6 +22,7 @@ import com.android.build.OutputFile;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import org.gradle.api.Task;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.model.Managed;
 
 /**
@@ -33,18 +34,47 @@ public interface BaseVariantOutput extends OutputFile {
 
     /**
      * Returns the Android Resources processing task.
+     *
+     * @deprecated Use {@link #getProcessResourcesProvider()}
      */
     @NonNull
+    @Deprecated
     ProcessAndroidResources getProcessResources();
 
-
+    /**
+     * Returns the {@link TaskProvider} for the Android Resources processing task.
+     *
+     * <p>Prefer this to {@link #getProcessResources()} as it triggers eager configuration of the
+     * task.
+     */
     @NonNull
+    TaskProvider<ProcessAndroidResources> getProcessResourcesProvider();
+
+    /**
+     * Returns the manifest merging task.
+     *
+     * @deprecated Use {@link #getProcessResourcesProvider()}
+     */
+    @NonNull
+    @Deprecated
     ManifestProcessorTask getProcessManifest();
 
     /**
+     * Returns the {@link TaskProvider} for the manifest merging task
+     *
+     * <p>Prefer this to {@link #getProcessManifest()} as it triggers eager configuration of the
+     * task.
+     */
+    @NonNull
+    TaskProvider<ManifestProcessorTask> getProcessManifestProvider();
+
+    /**
      * Returns the assemble task for this particular output
+     *
+     * @deprecated Use {@link BaseVariant#getAssembleProvider()}
      */
     @Nullable
+    @Deprecated
     Task getAssemble();
 
     /**

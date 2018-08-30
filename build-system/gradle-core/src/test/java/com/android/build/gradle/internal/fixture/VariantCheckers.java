@@ -220,38 +220,50 @@ public class VariantCheckers {
         private static void checkTasks(@NonNull ApkVariant variant) {
             boolean isTestVariant = variant instanceof TestVariant;
 
-            assertThat(variant.getAidlCompile()).named("variant.getAidlCompile()").isNotNull();
-            assertThat(variant.getMergeResources())
-                    .named("variant.getMergeResources()")
+            assertThat(variant.getAidlCompileProvider())
+                    .named("variant.getAidlCompileProvider()")
                     .isNotNull();
-            assertThat(variant.getMergeAssets()).named("variant.getMergeAssets()").isNotNull();
-            assertThat(variant.getGenerateBuildConfig())
-                    .named("variant.getGenerateBuildConfig()")
+            assertThat(variant.getMergeResourcesProvider())
+                    .named("variant.getMergeResourcesProvider()")
                     .isNotNull();
-            assertThat(variant.getJavaCompiler()).named("variant.getJavaCompiler()").isNotNull();
-            assertThat(variant.getProcessJavaResources())
-                    .named("variant.getProcessJavaResources()")
+            assertThat(variant.getMergeAssetsProvider())
+                    .named("variant.getMergeAssetsProvider()")
                     .isNotNull();
-            assertThat(variant.getAssemble()).named("variant.getAssemble()").isNotNull();
-            assertThat(variant.getUninstall()).named("variant.getUninstall()").isNotNull();
+            assertThat(variant.getGenerateBuildConfigProvider())
+                    .named("variant.getGenerateBuildConfigProvider()")
+                    .isNotNull();
+            assertThat(variant.getJavaCompileProvider())
+                    .named("variant.getJavaCompileProvider()")
+                    .isNotNull();
+            assertThat(variant.getProcessJavaResourcesProvider())
+                    .named("variant.getProcessJavaResourcesProvider()")
+                    .isNotNull();
+            assertThat(variant.getAssembleProvider())
+                    .named("variant.getAssembleProvider()")
+                    .isNotNull();
+            assertThat(variant.getUninstallProvider())
+                    .named("variant.getUninstallProvider()")
+                    .isNotNull();
+            assertThat(variant.getPackageApplicationProvider())
+                    .named("variant.getPackageApplication()")
+                    .isNotNull();
 
             for (BaseVariantOutput baseVariantOutput : variant.getOutputs()) {
                 Assert.assertTrue(baseVariantOutput instanceof ApkVariantOutput);
                 ApkVariantOutput apkVariantOutput = (ApkVariantOutput) baseVariantOutput;
 
-                assertThat(apkVariantOutput.getProcessManifest())
-                        .named("apkVariantOutput.getProcessManifest()")
+                assertThat(apkVariantOutput.getProcessManifestProvider())
+                        .named("apkVariantOutput.getProcessManifestProvider()")
                         .isNotNull();
-                assertThat(apkVariantOutput.getProcessResources())
-                        .named("apkVariantOutput.getProcessResources()")
-                        .isNotNull();
-                assertThat(apkVariantOutput.getPackageApplication())
-                        .named("apkVariantOutput.getPackageApplication()")
+                assertThat(apkVariantOutput.getProcessResourcesProvider())
+                        .named("apkVariantOutput.getProcessResourcesProvider()")
                         .isNotNull();
             }
 
             if (variant.isSigningReady()) {
-                assertThat(variant.getInstall()).named("variant.getInstall()").isNotNull();
+                assertThat(variant.getInstallProvider())
+                        .named("variant.getInstallProvider()")
+                        .isNotNull();
 
                 for (BaseVariantOutput baseVariantOutput : variant.getOutputs()) {
                     ApkVariantOutput apkVariantOutput = (ApkVariantOutput) baseVariantOutput;
@@ -263,7 +275,9 @@ public class VariantCheckers {
                 }
 
             } else {
-                assertThat(variant.getInstall()).named("variant.getInstall()").isNull();
+                assertThat(variant.getInstallProvider())
+                        .named("variant.getInstallProvider()")
+                        .isNull();
             }
 
             if (isTestVariant) {
@@ -296,29 +310,40 @@ public class VariantCheckers {
         }
 
         private static void checkTestTasks(@NonNull TestVariant variant) {
-            assertThat(variant.getAidlCompile()).named("variant.getAidlCompile()").isNotNull();
-            assertThat(variant.getMergeResources())
-                    .named("variant.getMergeResources()")
+            assertThat(variant.getAidlCompileProvider())
+                    .named("variant.getAidlCompileProvider()")
                     .isNotNull();
-            assertThat(variant.getMergeAssets()).named("variant.getMergeAssets()").isNotNull();
-            assertThat(variant.getMergeResources())
-                    .named("variant.getMergeResources()")
+            assertThat(variant.getMergeResourcesProvider())
+                    .named("variant.getMergeResourcesProvider()")
                     .isNotNull();
-            assertThat(variant.getGenerateBuildConfig())
-                    .named("variant.getGenerateBuildConfig()")
+            assertThat(variant.getMergeAssetsProvider())
+                    .named("variant.getMergeAssetsProvider()")
                     .isNotNull();
-            assertThat(variant.getJavaCompile()).named("variant.getJavaCompile()").isNotNull();
-            assertThat(variant.getProcessJavaResources())
-                    .named("variant.getProcessJavaResources()")
+            assertThat(variant.getGenerateBuildConfigProvider())
+                    .named("variant.getGenerateBuildConfigProvider()")
+                    .isNotNull();
+            assertThat(variant.getJavaCompileProvider())
+                    .named("variant.getJavaCompileProvider()")
+                    .isNotNull();
+            assertThat(variant.getProcessJavaResourcesProvider())
+                    .named("variant.getProcessJavaResourcesProvider()")
                     .isNotNull();
 
-            assertThat(variant.getAssemble()).named("variant.getAssemble()").isNotNull();
-            assertThat(variant.getUninstall()).named("variant.getUninstall()").isNotNull();
+            assertThat(variant.getAssembleProvider())
+                    .named("variant.getAssembleProvider()")
+                    .isNotNull();
+            assertThat(variant.getUninstallProvider())
+                    .named("variant.getUninstallProvider()")
+                    .isNotNull();
 
             if (variant.isSigningReady()) {
-                assertThat(variant.getInstall()).named("variant.getInstall()").isNotNull();
+                assertThat(variant.getInstallProvider())
+                        .named("variant.getInstallProvider()")
+                        .isNotNull();
             } else {
-                assertThat(variant.getInstall()).named("variant.getInstall()").isNull();
+                assertThat(variant.getInstallProvider())
+                        .named("variant.getInstallProvider()")
+                        .isNull();
             }
 
             assertThat(variant.getConnectedInstrumentTest())
@@ -327,19 +352,27 @@ public class VariantCheckers {
         }
 
         private static void checkLibraryTasks(@NonNull LibraryVariant variant) {
-            assertThat(variant.getCheckManifest()).named("variant.getCheckManifest()").isNotNull();
-            assertThat(variant.getAidlCompile()).named("variant.getAidlCompile()").isNotNull();
-            assertThat(variant.getMergeResources())
-                    .named("variant.getMergeResources()")
+            assertThat(variant.getCheckManifestProvider())
+                    .named("variant.getCheckManifestProvider()")
                     .isNotNull();
-            assertThat(variant.getGenerateBuildConfig())
-                    .named("variant.getGenerateBuildConfig()")
+            assertThat(variant.getAidlCompileProvider())
+                    .named("variant.getAidlCompileProvider()")
                     .isNotNull();
-            assertThat(variant.getJavaCompile()).named("variant.getJavaCompile()").isNotNull();
-            assertThat(variant.getProcessJavaResources())
-                    .named("variant.getProcessJavaResources()")
+            assertThat(variant.getMergeResourcesProvider())
+                    .named("variant.getMergeResourcesProvider()")
                     .isNotNull();
-            assertThat(variant.getAssemble()).named("variant.getAssemble()").isNotNull();
+            assertThat(variant.getGenerateBuildConfigProvider())
+                    .named("variant.getGenerateBuildConfigProvider()")
+                    .isNotNull();
+            assertThat(variant.getJavaCompileProvider())
+                    .named("variant.getJavaCompileProvider()")
+                    .isNotNull();
+            assertThat(variant.getProcessJavaResourcesProvider())
+                    .named("variant.getProcessJavaResourcesProvider()")
+                    .isNotNull();
+            assertThat(variant.getAssembleProvider())
+                    .named("variant.getAssembleProvider()")
+                    .isNotNull();
         }
 
         @NonNull

@@ -40,6 +40,7 @@ import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.resources.TextResource;
 import org.gradle.api.tasks.AbstractCopyTask;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 
 /**
@@ -165,60 +166,152 @@ public interface BaseVariant {
     @NonNull
     TextResource getApplicationIdTextResource();
 
-    /** Returns the pre-build anchor task */
+    /**
+     * Returns the pre-build anchor task
+     *
+     * @deprecated Use {@link #getPreBuildProvider()}
+     */
     @NonNull
+    @Deprecated
     Task getPreBuild();
 
     /**
-     * Returns the check manifest task.
+     * Returns the {@link TaskProvider} for the pre-build anchor task.
+     *
+     * <p>Prefer this to {@link #getPreBuild()} as it triggers eager configuration of the task.
      */
     @NonNull
+    TaskProvider<Task> getPreBuildProvider();
+
+    /**
+     * Returns the check manifest task.
+     *
+     * @deprecated Use {@link #getPreBuildProvider()}
+     */
+    @NonNull
+    @Deprecated
     Task getCheckManifest();
 
     /**
-     * Returns the AIDL compilation task.
+     * Returns the {@link TaskProvider} for the check manifest task.
+     *
+     * <p>Prefer this to {@link #getCheckManifest()} as it triggers eager configuration of the task.
      */
     @NonNull
+    TaskProvider<Task> getCheckManifestProvider();
+
+    /**
+     * Returns the AIDL compilation task.
+     *
+     * @deprecated Use {@link #getAidlCompileProvider()}
+     */
+    @NonNull
+    @Deprecated
     AidlCompile getAidlCompile();
 
     /**
-     * Returns the Renderscript compilation task.
+     * Returns the {@link TaskProvider} for the AIDL compilation task.
+     *
+     * <p>Prefer this to {@link #getAidlCompile()} as it triggers eager configuration of the task.
      */
     @NonNull
+    TaskProvider<AidlCompile> getAidlCompileProvider();
+
+    /**
+     * Returns the Renderscript compilation task.
+     *
+     * @deprecated Use {@link #getRenderscriptCompileProvider()}
+     */
+    @NonNull
+    @Deprecated
     RenderscriptCompile getRenderscriptCompile();
 
     /**
+     * Returns the {@link TaskProvider} for the Renderscript compilation task.
+     *
+     * <p>Prefer this to {@link #getRenderscriptCompile()} as it triggers eager configuration of the
+     * task.
+     */
+    @NonNull
+    TaskProvider<RenderscriptCompile> getRenderscriptCompileProvider();
+
+    /**
      * Returns the resource merging task.
-     */
-    @Nullable
-    MergeResources getMergeResources();
-
-    /**
-     * Returns the asset merging task.
-     */
-    @Nullable
-    MergeSourceSetFolders getMergeAssets();
-
-    /**
-     * Returns the BuildConfig generation task.
-     */
-    @Nullable
-    GenerateBuildConfig getGenerateBuildConfig();
-
-    /**
-     * Returns the Java Compilation task if javac was configured to compile the source files.
-     * @deprecated prefer {@link #getJavaCompiler} which always return the java compiler task
-     * irrespective of which tool chain (javac or jack) used.
+     *
+     * @deprecated Use {@link #getMergeResourcesProvider()}
      */
     @Nullable
     @Deprecated
-    JavaCompile getJavaCompile() throws IllegalStateException;
+    MergeResources getMergeResources();
 
     /**
-     * Returns the Java Compiler task which can be either javac or jack depending on the project
-     * configuration.
+     * Returns the {@link TaskProvider} for the resource merging task.
+     *
+     * <p>Prefer this to {@link #getMergeResources()} as it triggers eager configuration of the
+     * task.
+     */
+    @Nullable
+    TaskProvider<MergeResources> getMergeResourcesProvider();
+
+    /**
+     * Returns the asset merging task.
+     *
+     * @deprecated Use {@link #getMergeResourcesProvider()}
+     */
+    @Nullable
+    @Deprecated
+    MergeSourceSetFolders getMergeAssets();
+
+    /**
+     * Returns the {@link TaskProvider} for the asset merging task.
+     *
+     * <p>Prefer this to {@link #getMergeAssets()} as it triggers eager configuration of the task.
+     */
+    @Nullable
+    TaskProvider<MergeSourceSetFolders> getMergeAssetsProvider();
+
+    /**
+     * Returns the BuildConfig generation task.
+     *
+     * @deprecated Use {@link #getGenerateBuildConfigProvider()}
+     */
+    @Nullable
+    @Deprecated
+    GenerateBuildConfig getGenerateBuildConfig();
+
+    /**
+     * Returns the {@link TaskProvider} for the BuildConfig generation task.
+     *
+     * <p>Prefer this to {@link #getGenerateBuildConfig()} as it triggers eager configuration of the
+     * task.
+     */
+    @Nullable
+    TaskProvider<GenerateBuildConfig> getGenerateBuildConfigProvider();
+
+    /**
+     * Returns the Java Compilation task
+     *
+     * @deprecated Use {@link #getGenerateBuildConfigProvider()}
      */
     @NonNull
+    @Deprecated
+    JavaCompile getJavaCompile();
+
+    /**
+     * Returns the {@link TaskProvider} for the Java Compilation task
+     *
+     * <p>Prefer this to {@link #getJavaCompile()} as it triggers eager configuration of the task.
+     */
+    @NonNull
+    TaskProvider<JavaCompile> getJavaCompileProvider();
+
+    /**
+     * Returns the Java Compiler task.
+     *
+     * @deprecated Use {@link #getJavaCompileProvider()}
+     */
+    @NonNull
+    @Deprecated
     Task getJavaCompiler();
 
     /**
@@ -255,19 +348,44 @@ public interface BaseVariant {
     @NonNull
     ArtifactCollection getCompileClasspathArtifacts(@Nullable Object key);
 
-    /** Returns the NDK Compilation task. */
+    /** Returns the NDK Compilation task. @Deprecated Use {@link #getNdkCompileProvider()} */
     @NonNull
+    @Deprecated
     NdkCompile getNdkCompile();
 
     /**
-     * Returns the tasks for building external native projects.
+     * Returns the NDK Compilation task.
+     *
+     * <p>Prefer this to {@link #getNdkCompile()} as it triggers eager configuration of the task.
      */
+    @NonNull
+    TaskProvider<NdkCompile> getNdkCompileProvider();
+
+    /**
+     * Returns the tasks for building external native projects.
+     *
+     * @deprecated Use {@link #getExternalNativeBuildProviders()}
+     */
+    @NonNull
+    @Deprecated
     Collection<ExternalNativeBuildTask> getExternalNativeBuildTasks();
 
     /**
+     * Returns the tasks for building external native projects.
+     *
+     * <p>Prefer this to {@link #getExternalNativeBuildTasks()} as it triggers eager configuration
+     * of the tasks.
+     */
+    @NonNull
+    Collection<TaskProvider<ExternalNativeBuildTask>> getExternalNativeBuildProviders();
+
+    /**
      * Returns the obfuscation task. This can be null if obfuscation is not enabled.
+     *
+     * @deprecated This always returns null
      */
     @Nullable
+    @Deprecated
     Task getObfuscation();
 
     /**
@@ -278,15 +396,38 @@ public interface BaseVariant {
 
     /**
      * Returns the Java resource processing task.
+     *
+     * @deprecated Use {@link #getProcessJavaResourcesProvider()}
      */
     @NonNull
+    @Deprecated
     AbstractCopyTask getProcessJavaResources();
 
     /**
+     * Returns the Java resource processing task.
+     *
+     * <p>Prefer this to {@link #getProcessJavaResources()} as it triggers eager configuration of
+     * the task.
+     */
+    @NonNull
+    TaskProvider<AbstractCopyTask> getProcessJavaResourcesProvider();
+
+    /**
      * Returns the assemble task for all this variant's output
+     *
+     * @deprecated Use {@link #getAssembleProvider()}
      */
     @Nullable
+    @Deprecated
     Task getAssemble();
+
+    /**
+     * Returns the {@link TaskProvider} for the assemble task.
+     *
+     * <p>Prefer this to {@link #getAssemble()} as it triggers eager configuration of the task.
+     */
+    @Nullable
+    TaskProvider<Task> getAssembleProvider();
 
     /**
      * Adds new Java source folders to the model.

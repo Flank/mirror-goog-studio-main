@@ -43,6 +43,8 @@ interface DeprecationReporter {
                     "https://d.android.com/r/studio-ui/d8-overview.html"),
         // Deprecation of disabling Desugar
         DESUGAR_TOOL("in AGP version 3.3."),
+        // Deprecation of Task Access in the variant API
+        TASK_ACCESS_VIA_VARIANT("at the end of 2019"),
     }
 
     /**
@@ -73,6 +75,21 @@ interface DeprecationReporter {
             oldDslElement: String,
             url: String,
             deprecationTarget: DeprecationTarget)
+
+    /**
+     * Reports a deprecation usage in the DSL/API.
+     *
+     * @param newDslElement the DSL element to use instead, with the name of the class owning it
+     * @param oldDslElement the name of the deprecated element, with the name of the class
+     * owning it.
+     * @param deprecationTarget when the deprecated element is going to be removed. A line about the
+     * timing is added to the message.
+     */
+    fun reportDeprecatedApi(
+        newApiElement: String,
+        oldApiElement: String,
+        url: String,
+        deprecationTarget: DeprecationTarget)
 
     /**
      * Reports a deprecated value usage for a DSL element in the DSL/API.

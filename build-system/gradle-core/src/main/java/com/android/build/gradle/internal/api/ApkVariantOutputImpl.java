@@ -16,11 +16,14 @@
 
 package com.android.build.gradle.internal.api;
 
+import static com.android.build.gradle.internal.api.BaseVariantImpl.TASK_ACCESS_DEPRECATION_URL;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.api.ApkVariantOutput;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.scope.TaskContainer;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import com.android.ide.common.build.ApkData;
@@ -41,13 +44,21 @@ import org.gradle.api.Task;
 public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVariantOutput {
 
     @Inject
-    public ApkVariantOutputImpl(@NonNull ApkData apkData, @NonNull TaskContainer taskContainer) {
-        super(apkData, taskContainer);
+    public ApkVariantOutputImpl(
+            @NonNull ApkData apkData,
+            @NonNull TaskContainer taskContainer,
+            @NonNull DeprecationReporter deprecationReporter) {
+        super(apkData, taskContainer, deprecationReporter);
     }
 
     @Nullable
     @Override
     public PackageAndroidArtifact getPackageApplication() {
+        deprecationReporter.reportDeprecatedApi(
+                "variant.getPackageApplicationProvider()",
+                "variantOutput.getPackageApplication()",
+                TASK_ACCESS_DEPRECATION_URL,
+                DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
         return taskContainer.getPackageAndroidTask().getOrNull();
     }
 

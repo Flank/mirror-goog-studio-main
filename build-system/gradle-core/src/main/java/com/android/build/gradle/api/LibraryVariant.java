@@ -18,12 +18,27 @@ package com.android.build.gradle.api;
 
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.api.TestedVariant;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.bundling.Zip;
 
 /** A Build variant and all its public data. */
 public interface LibraryVariant extends BaseVariant, TestedVariant {
 
-    /** Returns the Library AAR packaging task. */
+    /**
+     * Returns the Library AAR packaging task.
+     *
+     * @deprecated Use {@link #getPackageLibraryProvider()}
+     */
     @Nullable
+    @Deprecated
     Zip getPackageLibrary();
+
+    /**
+     * Returns the {@TaskProvider} for the Library AAR packaging task.
+     *
+     * <p>Prefer this to {@link #getPackageLibrary()} as it triggers eager configuration of the
+     * task.
+     */
+    @Nullable
+    TaskProvider<Zip> getPackageLibraryProvider();
 }

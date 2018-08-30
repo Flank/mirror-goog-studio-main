@@ -20,10 +20,13 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.api.ApkVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
+import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import com.android.builder.core.AndroidBuilder;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.tasks.TaskProvider;
 
 /**
  * Implementation of the apk-generating variant.
@@ -52,6 +55,24 @@ public abstract class ApkVariantImpl extends InstallableVariantImpl implements A
     @Nullable
     @Override
     public PackageAndroidArtifact getPackageApplication() {
-        return getVariantData().getTaskContainer().getPackageAndroidTask().getOrNull();
+        BaseVariantData variantData = getVariantData();
+        variantData
+                .getScope()
+                .getGlobalScope()
+                .getDslScope()
+                .getDeprecationReporter()
+                .reportDeprecatedApi(
+                        "variant.getPackageApplicationProvider()",
+                        "variant.getPackageApplication()",
+                        TASK_ACCESS_DEPRECATION_URL,
+                        DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
+        return variantData.getTaskContainer().getPackageAndroidTask().getOrNull();
+    }
+
+    @Nullable
+    @Override
+    public TaskProvider<PackageAndroidArtifact> getPackageApplicationProvider() {
+        return (TaskProvider<PackageAndroidArtifact>)
+                getVariantData().getTaskContainer().getPackageAndroidTask();
     }
 }

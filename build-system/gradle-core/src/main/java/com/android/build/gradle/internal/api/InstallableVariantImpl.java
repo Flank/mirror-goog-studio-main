@@ -17,16 +17,21 @@
 package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.InstallableVariant;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
+import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.InstallableVariantData;
 import com.android.builder.core.AndroidBuilder;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Incubating;
 import org.gradle.api.NamedDomainObjectContainer;
+import org.gradle.api.Task;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.tasks.TaskProvider;
 
 /**
  * Implementation of an installable variant.
@@ -47,20 +52,62 @@ public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl 
 
     @Override
     public DefaultTask getInstall() {
-        if (getVariantData().getTaskContainer().getInstallTask() != null) {
-            return getVariantData().getTaskContainer().getInstallTask().getOrNull();
+        BaseVariantData variantData = getVariantData();
+        variantData
+                .getScope()
+                .getGlobalScope()
+                .getDslScope()
+                .getDeprecationReporter()
+                .reportDeprecatedApi(
+                        "variantOutput.getInstallProvider()",
+                        "variantOutput.getInstall()",
+                        TASK_ACCESS_DEPRECATION_URL,
+                        DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
+
+        if (variantData.getTaskContainer().getInstallTask() != null) {
+            return variantData.getTaskContainer().getInstallTask().getOrNull();
         }
 
         return null;
     }
 
+    @Nullable
+    @Override
+    public TaskProvider<Task> getInstallProvider() {
+        // Double cast needed to satisfy the compiler
+        //noinspection unchecked
+        return (TaskProvider<Task>)
+                (TaskProvider<?>) getVariantData().getTaskContainer().getInstallTask();
+    }
+
     @Override
     public DefaultTask getUninstall() {
-        if (getVariantData().getTaskContainer().getUninstallTask() != null) {
-            return getVariantData().getTaskContainer().getUninstallTask().getOrNull();
+        BaseVariantData variantData = getVariantData();
+        variantData
+                .getScope()
+                .getGlobalScope()
+                .getDslScope()
+                .getDeprecationReporter()
+                .reportDeprecatedApi(
+                        "variantOutput.getUninstallProvider()",
+                        "variantOutput.getUninstall()",
+                        TASK_ACCESS_DEPRECATION_URL,
+                        DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
+
+        if (variantData.getTaskContainer().getUninstallTask() != null) {
+            return variantData.getTaskContainer().getUninstallTask().getOrNull();
         }
 
         return null;
+    }
+
+    @Nullable
+    @Override
+    public TaskProvider<Task> getUninstallProvider() {
+        // Double cast needed to satisfy the compiler
+        //noinspection unchecked
+        return (TaskProvider<Task>)
+                (TaskProvider<?>) getVariantData().getTaskContainer().getUninstallTask();
     }
 
     /**

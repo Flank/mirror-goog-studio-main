@@ -149,7 +149,12 @@ public class ApiObjectFactory {
                         objectFactory,
                         extension,
                         variantApi,
-                        variantData.getTaskContainer());
+                        variantData.getTaskContainer(),
+                        variantData
+                                .getScope()
+                                .getGlobalScope()
+                                .getDslScope()
+                                .getDeprecationReporter());
         GradleVariantConfiguration config = variantData.getVariantConfiguration();
         variantData
                 .getOutputScope()
