@@ -170,6 +170,30 @@ public class AppCompatResourceDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void test112159117() {
+        // Regression test for https://issuetracker.google.com/112159117
+        lint().files(
+                        mShowAction1,
+                        gradle(
+                                ""
+                                        + "apply plugin: 'com.android.application'\n"
+                                        + "\n"
+                                        + "android {\n"
+                                        + "    compileSdkVersion 19\n"
+                                        + "\n"
+                                        + "    defaultConfig {\n"
+                                        + "        minSdkVersion 15\n"
+                                        + "        targetSdkVersion 17\n"
+                                        + "    }\n"
+                                        + "}\n"
+                                        + "\n"
+                                        + "dependencies {\n"
+                                        + "    compile 'androidx.appcompat:appcompat:+'\n"
+                                        + "}\n"))
+                .run()
+                .expectClean();
+    }
+
     @Override
     protected Detector getDetector() {
         return new AppCompatResourceDetector();

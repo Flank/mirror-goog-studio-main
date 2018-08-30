@@ -23,6 +23,7 @@
             </thead>
             <tr><td>classNames</td></tr>
             <tr><td>arguments</td></tr>
+            <tr><td>compilerArgumentProviders</td></tr>
             <tr><td>includeCompileClasspath</td></tr>
         </table>
     </section>

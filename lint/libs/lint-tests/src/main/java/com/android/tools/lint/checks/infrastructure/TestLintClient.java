@@ -56,6 +56,7 @@ import com.android.resources.ResourceType;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
+import com.android.support.AndroidxNameUtils;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.LintCliFlags;
@@ -681,7 +682,7 @@ public class TestLintClient extends LintCliClient {
                         PsiErrorElement error =
                                 PsiTreeUtil.findChildOfType(file.getPsi(), PsiErrorElement.class);
                         if (error != null) {
-                            fail("Found error element " + error);
+                            fail("Found error element " + error + " in " + context.file.getName());
                         }
                     } else {
                         fail(
@@ -1203,6 +1204,8 @@ public class TestLintClient extends LintCliClient {
         @Nullable
         @Override
         public Boolean dependsOn(@NonNull String artifact) {
+            artifact = AndroidxNameUtils.getCoordinateMapping(artifact);
+
             if (mocker != null) {
                 Dependencies deps = mocker.getVariant().getMainArtifact().getDependencies();
                 for (AndroidLibrary lib : deps.getLibraries()) {
@@ -1220,11 +1223,11 @@ public class TestLintClient extends LintCliClient {
             return super.dependsOn(artifact);
         }
 
-        private boolean libraryMatches(@NonNull String artifact, Library lib) {
+        private static boolean libraryMatches(@NonNull String artifact, Library lib) {
             MavenCoordinates coordinates = lib.getResolvedCoordinates();
-            return artifact.startsWith(coordinates.getGroupId())
-                    && artifact.equals(
-                            coordinates.getGroupId() + ':' + coordinates.getArtifactId());
+            String c = coordinates.getGroupId() + ':' + coordinates.getArtifactId();
+            c = AndroidxNameUtils.getCoordinateMapping(c);
+            return artifact.equals(c);
         }
 
         @Override
