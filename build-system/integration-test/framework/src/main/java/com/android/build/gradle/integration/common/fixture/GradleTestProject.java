@@ -54,16 +54,12 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
-import com.google.common.io.MoreFiles;
-import com.google.common.io.RecursiveDeleteOption;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.DirectoryNotEmptyException;
-import java.nio.file.FileSystemException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -502,29 +498,7 @@ public final class GradleTestProject implements TestRule {
 
         buildFile = new File(testDir, "build.gradle");
 
-        try {
-            deleteRecursivelyIfExistsExperimental(testDir.toPath());
-        } catch (FileSystemException e) {
-            // https://issuetracker.google.com/69271554
-            // This exception is unexpected, let's investigate further.
-            // This handling can be removed once the root cause has been found and fixed.
-            System.err.println(
-                    String.format(
-                            "Failed to delete directory the first time: %s.",
-                            testDir.getAbsolutePath()));
-            System.err.println("Exception : " + e);
-            for (Throwable suppressedException : e.getSuppressed()) {
-                System.err.println("\tSuppressed: " + suppressedException);
-            }
-
-            System.err.println("Now printing thread dump for debugging:");
-            printThreadDump();
-
-            System.err.println("Retrying to delete directory.");
-            forceDeleteDirectory(testDir);
-            System.err.println("Directory deleted after second attempt.");
-        }
-
+        FileUtils.deleteRecursivelyIfExists(testDir);
         FileUtils.mkdirs(testDir);
 
         Files.write(
@@ -555,90 +529,6 @@ public final class GradleTestProject implements TestRule {
 
         localProp = createLocalProp();
         createGradleProp();
-    }
-
-    /**
-     * Deletes a file or a directory if it exists. If the directory is not empty, its contents will
-     * be deleted recursively.
-     *
-     * <p>This method is experimental. It is used to debug the DirectoryNotEmptyException when
-     * deleting directories on Windows.
-     */
-    private static void deleteRecursivelyIfExistsExperimental(@NonNull Path path)
-            throws IOException {
-        try {
-            if (java.nio.file.Files.exists(path)) {
-                // Allow insecure delete for Guava's recursive file deletion to work on Windows,
-                // otherwise this method will throw an exception on Windows. An insecure delete
-                // means that files outside the given directory can be deleted if an inside
-                // directory is replaced by a symbolic link to an outside directory while the
-                // deletion is taking place. However, that scenario is unlikely to occur in
-                // practice, so it's probably not a problem to allow it here.
-                MoreFiles.deleteRecursively(path, RecursiveDeleteOption.ALLOW_INSECURE);
-            }
-        } catch (IOException e) {
-            // Theory: There seems to be a timing/visibility issue on Windows filesystem, such that
-            // even if we delete the contents of the directory before deleting the directory itself
-            // (and no other thread/process is accessing the directory), the directory is still
-            // being seen as non-empty. Let's try again and hope that the directory will be seen as
-            // empty shortly.
-            System.err.println("IOException was thrown when deleting " + path.toAbsolutePath());
-            System.err.println(
-                    "Number of files in directory: " + checkNotNull(path.toFile().list()).length);
-            boolean directoryDeleted = false;
-            int attempts = 0;
-            while (!directoryDeleted && attempts < 3) {
-                System.err.println("Trying to delete directory again, attempt " + (++attempts));
-                try {
-                    java.nio.file.Files.deleteIfExists(path);
-                    directoryDeleted = true;
-                } catch (DirectoryNotEmptyException ignored) {
-                    System.err.println("Failed with DirectoryNotEmptyException again");
-                    System.err.println(
-                            "Number of files in directory: "
-                                    + checkNotNull(path.toFile().list()).length);
-                }
-            }
-            if (directoryDeleted) {
-                System.err.println("Directory deleted");
-            } else {
-                throw e;
-            }
-        }
-    }
-
-    /** Prints out the current thread dump for debugging. */
-    private static void printThreadDump() {
-        for (Map.Entry<Thread, StackTraceElement[]> entry : Thread.getAllStackTraces().entrySet()) {
-            System.err.println(entry.getKey().toString());
-            for (StackTraceElement stackTraceElement : entry.getValue()) {
-                System.err.println("    " + stackTraceElement.toString());
-            }
-        }
-    }
-
-    /**
-     * Deletes an existing directory and all its contents, and logs debugging info as much as
-     * possible when it fails. This method should typically be used when a prior attempt to delete
-     * the directory did not succeed and we want to try again and find out the root cause.
-     */
-    private static void forceDeleteDirectory(@NonNull File directory) throws IOException {
-        Preconditions.checkArgument(directory.isDirectory());
-        String[] filesInDirBefore = checkNotNull(directory.list());
-        try {
-            deleteRecursivelyIfExistsExperimental(directory.toPath());
-        } catch (IOException e) {
-            String[] filesInDirAfter = checkNotNull(directory.list());
-            throw new IOException(
-                    String.format(
-                            "Failed to delete directory the second time: %s.\n"
-                                    + "Files in directory before deletion: %s.\n"
-                                    + "Files in directory after deletion: %s.",
-                            directory.getAbsolutePath(),
-                            Joiner.on(", ").join(filesInDirBefore),
-                            Joiner.on(", ").join(filesInDirAfter)),
-                    e);
-        }
     }
 
     @NonNull

@@ -22,6 +22,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -35,6 +36,12 @@ import java.util.stream.Stream;
 
 /** Utility methods for {@link java.nio.file.Path}. */
 public final class PathUtils {
+
+    /**
+     * The number of times we should try deleting an empty directory, due to a limitation of the
+     * Windows filesystem. See {@link #deleteRecursivelyIfExists(Path)}.
+     */
+    private static final int EMPTY_DIRECTORY_DELETION_ATTEMPTS = 10;
 
     private PathUtils() {}
 
@@ -55,7 +62,45 @@ public final class PathUtils {
             }
         }
 
-        Files.deleteIfExists(path);
+        /*
+         * HACK ALERT (http://issuetracker.google.com/77478235):
+         *
+         * We have confirmed through a number of experiments (see the bug above) that there is a
+         * timing issue on the Windows filesystem, such that if we delete a directory immediately
+         * after deleting its contents, the deletion might occasionally fail. If we wait for a
+         * little after deleting its contents, then it has a higher chance to succeed.
+         *
+         * Note that in our experiments, we did not see any other thread/process accessing the same
+         * directory at the time of deletion, so this is not a concurrency issue.
+         *
+         * We have also tried using Guava (com.google.common.io.MoreFiles.deleteRecursively) for
+         * file deletion, but (surprisingly) Guava also faces this same problem.
+         *
+         * To work around the issue, we could wait for a fixed amount of time, but it's unclear how
+         * long we should wait to be effective but not wasteful. Therefore, let's just keep deleting
+         * the directory until it succeeds or hits a reasonable limit.
+         */
+        try {
+            Files.deleteIfExists(path);
+        } catch (DirectoryNotEmptyException exception) {
+            int failedAttempts = 1; // Count the failed deletion above
+            while (failedAttempts < EMPTY_DIRECTORY_DELETION_ATTEMPTS) {
+                try {
+                    Files.deleteIfExists(path);
+                } catch (DirectoryNotEmptyException e) {
+                    failedAttempts++;
+                    continue;
+                }
+                break;
+            }
+            if (failedAttempts >= EMPTY_DIRECTORY_DELETION_ATTEMPTS) {
+                throw new RuntimeException(
+                        String.format(
+                                "Unable to delete directory '%s' after %d attempts",
+                                path.toString(), failedAttempts),
+                        exception);
+            }
+        }
     }
 
     /** Returns a system-independent path. */
