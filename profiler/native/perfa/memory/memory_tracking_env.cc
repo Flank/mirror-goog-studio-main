@@ -317,6 +317,10 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
   total_free_count_ = 0;
   current_object_tag_ = kObjectStartTag;
 
+  // Starts an open range of the first allocation sampling mode change.
+  profiler::EnqueueAllocationSamplingRateEvent(clock_.GetCurrentTime(),
+                                               sampling_num_interval_);
+
   // Called from grpc so we need to attach.
   JNIEnv* jni = GetThreadLocalJNI(g_vm);
   jvmtiError error;
@@ -412,6 +416,8 @@ void MemoryTrackingEnv::SetSamplingRate(int64_t timestamp,
 
   Stopwatch stopwatch;
   sampling_num_interval_ = sampling_num_interval;
+  profiler::EnqueueAllocationSamplingRateEvent(clock_.GetCurrentTime(),
+                                               sampling_num_interval);
 
   // If resuming full tracking in an ongoing tracking session, we need to
   // capture a new heap snapshot.
@@ -421,6 +427,7 @@ void MemoryTrackingEnv::SetSamplingRate(int64_t timestamp,
     total_free_count_ = 0;
     IterateThroughHeap();
   }
+
   Log::V("Setting sampling rate took: %lldns",
          (long long)stopwatch.GetElapsed());
 }

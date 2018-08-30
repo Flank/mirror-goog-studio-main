@@ -38,6 +38,10 @@ void EnqueueAllocationEvents(proto::BatchAllocationSample& request);
 // Note the non-const request, as pid is set on the request before the queue.
 void EnqueueJNIGlobalRefEvents(proto::BatchJNIGlobalRefEvent& request);
 
+// Queues the AllocationSamplingRateEvent to be sent to perfd.
+void EnqueueAllocationSamplingRateEvent(int64_t timestamp,
+                                        int32_t sampling_num_interval);
+
 }  // end of namespace profiler
 
 #endif  // MEMORY_STATS_LOGGER_H

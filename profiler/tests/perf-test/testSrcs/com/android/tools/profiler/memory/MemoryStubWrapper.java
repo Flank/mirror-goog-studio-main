@@ -16,11 +16,13 @@
 
 package com.android.tools.profiler.memory;
 
-import com.android.tools.profiler.proto.Common.*;
+import com.android.tools.profiler.proto.Common.Session;
 import com.android.tools.profiler.proto.MemoryProfiler;
 import com.android.tools.profiler.proto.MemoryProfiler.AllocationSamplingRate;
 import com.android.tools.profiler.proto.MemoryProfiler.SetAllocationSamplingRateRequest;
 import com.android.tools.profiler.proto.MemoryProfiler.SetAllocationSamplingRateResponse;
+import com.android.tools.profiler.proto.MemoryProfiler.TrackAllocationsRequest;
+import com.android.tools.profiler.proto.MemoryProfiler.TrackAllocationsResponse;
 import com.android.tools.profiler.proto.MemoryServiceGrpc.MemoryServiceBlockingStub;
 
 /** Wrapper of stub calls that is shared among tests. */
@@ -40,17 +42,9 @@ public final class MemoryStubWrapper {
                         .build());
     }
 
-    MemoryProfiler.TrackAllocationsResponse trackAllocations(Session session) {
+    public TrackAllocationsResponse startAllocationTracking(Session session) {
         return myMemoryStub.trackAllocations(
-                MemoryProfiler.TrackAllocationsRequest.newBuilder().setSession(session).build());
-    }
-
-    public MemoryProfiler.TrackAllocationsResponse startAllocationTracking(Session session) {
-        return myMemoryStub.trackAllocations(
-                MemoryProfiler.TrackAllocationsRequest.newBuilder()
-                        .setSession(session)
-                        .setEnabled(true)
-                        .build());
+                TrackAllocationsRequest.newBuilder().setSession(session).setEnabled(true).build());
     }
 
     SetAllocationSamplingRateResponse setSamplingRate(Session session, int samplingNumInterval) {

@@ -24,13 +24,14 @@
 
 using grpc::ClientContext;
 using grpc::Status;
-using profiler::SteadyClock;
 using profiler::Agent;
-using profiler::proto::EmptyMemoryReply;
+using profiler::SteadyClock;
+using profiler::proto::AllocationSamplingRateEventRequest;
 using profiler::proto::AllocStatsRequest;
+using profiler::proto::EmptyMemoryReply;
 using profiler::proto::GcStatsRequest;
-using profiler::proto::MemoryData;
 using profiler::proto::InternalMemoryService;
+using profiler::proto::MemoryData;
 
 namespace {
 const SteadyClock& GetClock() {
@@ -46,7 +47,7 @@ void EnqueueAllocStats(int32_t alloc_count, int32_t free_count) {
   int32_t pid = getpid();
   Agent::Instance().memory_component().SubmitMemoryTasks(
       {[alloc_count, free_count, pid, timestamp](
-          InternalMemoryService::Stub& stub, ClientContext& ctx) {
+           InternalMemoryService::Stub& stub, ClientContext& ctx) {
         AllocStatsRequest alloc_stats_request;
         alloc_stats_request.set_pid(pid);
         MemoryData::AllocStatsSample* stats =
@@ -94,6 +95,24 @@ void EnqueueJNIGlobalRefEvents(proto::BatchJNIGlobalRefEvent& request) {
       {[request](InternalMemoryService::Stub& stub, ClientContext& ctx) {
         EmptyMemoryReply reply;
         return stub.RecordJNIRefEvents(&ctx, request, &reply);
+      }});
+}
+
+void EnqueueAllocationSamplingRateEvent(int64_t timestamp,
+                                        int32_t sampling_num_interval) {
+  int32_t pid = getpid();
+  Agent::Instance().memory_component().SubmitMemoryTasks(
+      {[timestamp, sampling_num_interval, pid](
+           InternalMemoryService::Stub& stub, ClientContext& ctx) {
+        AllocationSamplingRateEventRequest request;
+        request.set_pid(pid);
+        auto event = request.mutable_event();
+        event->set_timestamp(timestamp);
+        event->mutable_sampling_rate()->set_sampling_num_interval(
+            sampling_num_interval);
+
+        EmptyMemoryReply reply;
+        return stub.RecordAllocationSamplingRateEvent(&ctx, request, &reply);
       }});
 }
 
