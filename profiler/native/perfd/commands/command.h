@@ -35,7 +35,7 @@ class Command {
   // to run holding the daemon's lock.
   virtual grpc::Status ExecuteOn(Daemon* daemon) = 0;
 
- protected:
+ private:
   proto::Command command_;
 };
 
