@@ -119,6 +119,21 @@ grpc::Status InternalMemoryServiceImpl::RecordJNIRefEvents(
   return Status::OK;
 }
 
+grpc::Status InternalMemoryServiceImpl::RecordAllocationSamplingRateEvent(
+    grpc::ServerContext *context,
+    const proto::AllocationSamplingRateEventRequest *request,
+    proto::EmptyMemoryReply *reply) {
+  auto result = collectors_.find(request->pid());
+  if (result == collectors_.end()) {
+    return Status(
+        StatusCode::NOT_FOUND,
+        "The memory collector for the specified pid has not been started yet.");
+  }
+  result->second.memory_cache()->SaveAllocationSamplingRateEvent(
+      request->event());
+  return Status::OK;
+}
+
 bool InternalMemoryServiceImpl::SendRequestToAgent(
     const proto::MemoryControlRequest &request) {
   // Protect this method from being called from multiple threads,

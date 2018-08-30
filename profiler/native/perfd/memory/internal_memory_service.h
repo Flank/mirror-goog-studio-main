@@ -57,6 +57,11 @@ class InternalMemoryServiceImpl final
                                   const proto::BatchJNIGlobalRefEvent *request,
                                   proto::EmptyMemoryReply *reply) override;
 
+  grpc::Status RecordAllocationSamplingRateEvent(
+      grpc::ServerContext *context,
+      const proto::AllocationSamplingRateEventRequest *request,
+      proto::EmptyMemoryReply *reply) override;
+
   /**
    * Sends a MemoryControlRequest to the profiling agent.
    * Returns true if the signal is sent, false otherwise (if the agent

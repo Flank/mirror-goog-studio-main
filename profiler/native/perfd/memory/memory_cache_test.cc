@@ -21,8 +21,11 @@
 
 #include <gtest/gtest.h>
 
-using profiler::proto::MemoryData;
+using profiler::proto::AllocationSamplingRateEvent;
 using profiler::proto::AllocationsInfo;
+using profiler::proto::BatchAllocationSample;
+using profiler::proto::BatchJNIGlobalRefEvent;
+using profiler::proto::MemoryData;
 using profiler::proto::TrackAllocationsResponse;
 using profiler::proto::TriggerHeapDumpResponse;
 
@@ -163,4 +166,36 @@ TEST(MemoryCache, HeapDump) {
   EXPECT_EQ(20, data_response.heap_dump_infos(1).start_time());
   EXPECT_EQ(profiler::MemoryCache::kUnfinishedTimestamp,
             data_response.heap_dump_infos(1).end_time());
+}
+
+TEST(MemoryCache, GetMemoryJvmtiData) {
+  profiler::FileCache file_cache(
+      std::unique_ptr<profiler::FileSystem>(new profiler::MemoryFileSystem()),
+      "/");
+  profiler::FakeClock fake_clock(0);
+  profiler::MemoryCache cache(&fake_clock, &file_cache, 2);
+  MemoryData response;
+
+  fake_clock.Elapse(1);
+
+  BatchAllocationSample alloc_sample;
+  cache.SaveAllocationEvents(&alloc_sample);
+
+  BatchJNIGlobalRefEvent jni_ref_event;
+  cache.SaveJNIRefEvents(&jni_ref_event);
+
+  AllocationSamplingRateEvent event;
+  event.set_timestamp(1);
+  event.mutable_sampling_rate()->set_sampling_num_interval(10);
+  cache.SaveAllocationSamplingRateEvent(event);
+
+  cache.LoadMemoryJvmtiData(0, 1, &response);
+  EXPECT_EQ(1, response.allocation_samples_size());
+  EXPECT_EQ(1, response.jni_reference_event_batches_size());
+  EXPECT_EQ(1, response.alloc_sampling_rate_events_size());
+  EXPECT_EQ(1, response.alloc_sampling_rate_events(0).timestamp());
+  EXPECT_EQ(10, response.alloc_sampling_rate_events(0)
+                    .sampling_rate()
+                    .sampling_num_interval());
+  EXPECT_EQ(1, response.end_timestamp());
 }

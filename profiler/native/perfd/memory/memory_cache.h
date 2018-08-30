@@ -43,6 +43,8 @@ class MemoryCache {
   void SaveGcStatsSample(const proto::MemoryData::GcStatsSample& sample);
   void SaveAllocationEvents(const proto::BatchAllocationSample* request);
   void SaveJNIRefEvents(const proto::BatchJNIGlobalRefEvent* request);
+  void SaveAllocationSamplingRateEvent(
+      const proto::AllocationSamplingRateEvent& event);
 
   // Saves a new HeapDumpInfo sample based on the dump_file_name and
   // request_time parameters. This method returns false if a heap dump
@@ -60,7 +62,7 @@ class MemoryCache {
   void LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
                       proto::MemoryData* response);
   void LoadMemoryJvmtiData(int64_t start_time_exl, int64_t end_time_inc,
-                      proto::MemoryData* response);
+                           proto::MemoryData* response);
   void ReadHeapDumpFileContents(int64_t dump_time,
                                 proto::DumpDataResponse* response);
 
@@ -80,6 +82,8 @@ class MemoryCache {
   CircularBuffer<proto::AllocationsInfo> allocations_info_;
   CircularBuffer<proto::BatchAllocationSample> allocations_samples_;
   CircularBuffer<proto::BatchJNIGlobalRefEvent> jni_refs_event_batches_;
+  CircularBuffer<proto::AllocationSamplingRateEvent>
+      alloc_sampling_rate_events_;
   std::mutex memory_samples_mutex_;
   std::mutex alloc_stats_samples_mutex_;
   std::mutex gc_stats_samples_mutex_;
@@ -87,6 +91,7 @@ class MemoryCache {
   std::mutex allocations_info_mutex_;
   std::mutex allocations_samples_mutex_;
   std::mutex jni_ref_batches_mutex_;
+  std::mutex alloc_sampling_rate_mutex_;
 
   bool has_unfinished_heap_dump_;
   bool is_allocation_tracking_enabled_;
