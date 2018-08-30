@@ -352,7 +352,7 @@ private class CmakeSearchContext(
         val packages = repositoryPackages().associateBy({ it.version }, { it }).toMutableMap()
 
         if (packages.containsKey(requestedCmakeVersion)) {
-            tryAcceptFoundCmake(packages[forkCmakeSdkVersionRevision]!!.location, requestedCmakeVersion!!, "in SDK")
+            tryAcceptFoundCmake(packages[requestedCmakeVersion]!!.location, requestedCmakeVersion!!, "in SDK")
             return this
         } else if (requestedCmakeVersion == forkCmakeSdkVersionRevision) {
             // The version is exactly the default version. Download it if possible.

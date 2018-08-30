@@ -539,6 +539,32 @@ class CmakeLocatorTest {
     }
 
     @Test
+    fun dslWithMultipleVersionInSdk2() {
+        /**
+         * In this scenario, there are multiple versions of CMake in the SDK and the user has
+         * chosen the higher version in build.gradle
+         */
+        val threeSix = fakeLocalPackageOf("cmake;3.6.4111459", "3.6.4111459")
+        val threeTen = fakeLocalPackageOf("cmake;3.10.4111459", "3.10.2")
+        val encounter = findCmakePath(
+            cmakeVersionFromDsl = "3.10.2",
+            environmentPaths = {
+                listOf(
+                    File("/a/b/c/cmake/bin"),
+                    File("/d/e/f")
+                )
+            },
+            repositoryPackages = { listOf(threeTen, threeSix) })
+        assertThat(encounter.result).isNotNull()
+        assertThat(encounter.result!!.toString()).isEqualTo(
+            "/sdk/cmake/3.10.4111459"
+        )
+        assertThat(encounter.warnings).hasSize(0)
+        assertThat(encounter.errors).hasSize(0)
+        assertThat(encounter.downloadAttempts).isEqualTo(0)
+    }
+
+    @Test
     fun dslWithForkCmakeVersion3dot6() {
         /**
          * In this scenario, the user has asked for 3.6.0-rc2. This is the CMake-reported version
