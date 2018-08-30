@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -534,6 +535,15 @@ public class XmlElement extends OrphanXmlElement {
             @NonNull MergingReport.Builder mergingReport) {
 
         if (lowerPriorityChild.getType().getMergeType() == MergeType.IGNORE) {
+            return true;
+        }
+
+        // See if the lowerPriorityChild's XmlDocument.Type is mergeable. For example, <dist:module>
+        // elements are only mergeable from OVERLAY or MAIN types, not LIBRARY types.
+        EnumSet<XmlDocument.Type> mergeableLowerPriorityXmlTypes =
+                lowerPriorityChild.getType().getMergeableLowerPriorityTypes();
+        XmlDocument.Type lowerPriorityXmlType = lowerPriorityChild.getDocument().getFileType();
+        if (!mergeableLowerPriorityXmlTypes.contains(lowerPriorityXmlType)) {
             return true;
         }
 

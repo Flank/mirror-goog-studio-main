@@ -16,6 +16,11 @@
 
 package com.android.manifmerger;
 
+import static com.android.SdkConstants.ATTR_ON_DEMAND;
+import static com.android.SdkConstants.DIST_URI;
+import static com.android.SdkConstants.MANIFEST_ATTR_TITLE;
+import static com.android.SdkConstants.TAG_MODULE;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -32,7 +37,6 @@ import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.truth.Truth;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -803,7 +807,7 @@ public class ManifestMerger2SmallTest {
         Node application = applications.item(0);
         // verify hasCode is false.
         NamedNodeMap applicationAttributes = application.getAttributes();
-        Truth.assertThat(
+        assertThat(
                         Boolean.parseBoolean(
                                 applicationAttributes
                                         .getNamedItemNS(
@@ -850,9 +854,9 @@ public class ManifestMerger2SmallTest {
         NodeList applications = xmlDocument.getElementsByTagName(SdkConstants.TAG_APPLICATION);
         assertEquals(1, applications.getLength());
         Node application = applications.item(0);
-        // verify hasCode if true.
+        // verify hasCode is true.
         NamedNodeMap applicationAttributes = application.getAttributes();
-        Truth.assertThat(
+        assertThat(
                         Boolean.parseBoolean(
                                 applicationAttributes
                                         .getNamedItemNS(
@@ -898,10 +902,101 @@ public class ManifestMerger2SmallTest {
         Node application = applications.item(0);
         // verify hasCode is unspecified.
         NamedNodeMap applicationAttributes = application.getAttributes();
-        Truth.assertThat(
+        assertThat(
                         applicationAttributes.getNamedItemNS(
                                 SdkConstants.ANDROID_URI, SdkConstants.ATTR_HAS_CODE))
                 .isNull();
+    }
+
+    /** dist:module should be merged from an overlay module. */
+    @Test
+    public void testThatDistModuleFromOverlayIsMerged() throws Exception {
+        String input =
+                ""
+                        + "<manifest\n"
+                        + "    package=\"com.foo.bar\""
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                        + "    <application android:hasCode=\"false\"/>\n"
+                        + "</manifest>";
+
+        String overlay =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:dist=\"http://schemas.android.com/apk/distribution\">\n"
+                        + "    <dist:module dist:onDemand=\"true\" dist:title=\"foo\">\n"
+                        + "        <dist:fusing dist:include=\"true\" />\n"
+                        + "    </dist:module>\n"
+                        + "    <application/>\n"
+                        + "</manifest>";
+
+        File inputFile = TestUtils.inputAsFile("testDistModule1Input", input);
+        File overlayFile = TestUtils.inputAsFile("testDistModule1Overlay", overlay);
+
+        MockLog mockLog = new MockLog();
+        MergingReport mergingReport =
+                ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                        .addFlavorAndBuildTypeManifest(overlayFile)
+                        .merge();
+
+        assertThat(mergingReport.getResult().isSuccess()).isTrue();
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+
+        NodeList modules = xmlDocument.getElementsByTagNameNS(DIST_URI, TAG_MODULE);
+        assertThat(modules.getLength()).isEqualTo(1);
+        Node module = modules.item(0);
+        // verify module is as expected
+        NamedNodeMap moduleAttributes = module.getAttributes();
+        assertThat(
+                        Boolean.parseBoolean(
+                                moduleAttributes
+                                        .getNamedItemNS(DIST_URI, ATTR_ON_DEMAND)
+                                        .getNodeValue()))
+                .isTrue();
+        assertThat(moduleAttributes.getNamedItemNS(DIST_URI, MANIFEST_ATTR_TITLE).getNodeValue())
+                .isEqualTo("foo");
+        NodeList moduleChildNodes = module.getChildNodes();
+        // moduleChildNodes.getLength() is 3 because of 2 child attributes and 1 child element.
+        assertThat(moduleChildNodes.getLength()).isEqualTo(3);
+    }
+
+    /** dist:module should never be merged from a library (or feature) module. */
+    @Test
+    public void testThatDistModuleFromLibraryIsNotMerged() throws Exception {
+        String input =
+                ""
+                        + "<manifest\n"
+                        + "    package=\"com.foo.bar\""
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                        + "    <application/>\n"
+                        + "</manifest>";
+
+        String library =
+                ""
+                        + "<manifest\n"
+                        + "    package=\"com.foo.baz\""
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:dist=\"http://schemas.android.com/apk/distribution\">\n"
+                        + "    <dist:module dist:onDemand=\"true\" dist:title=\"foo\">\n"
+                        + "        <dist:fusing dist:include=\"true\" />\n"
+                        + "    </dist:module>\n"
+                        + "    <application/>\n"
+                        + "</manifest>";
+
+        File inputFile = TestUtils.inputAsFile("testDistModule2Input", input);
+        File libraryFile = TestUtils.inputAsFile("testDistModule2Library", library);
+
+        MockLog mockLog = new MockLog();
+        MergingReport mergingReport =
+                ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                        .addLibraryManifest(libraryFile)
+                        .merge();
+
+        assertThat(mergingReport.getResult().isSuccess()).isTrue();
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+
+        NodeList modules = xmlDocument.getElementsByTagNameNS(DIST_URI, TAG_MODULE);
+        assertThat(modules.getLength()).isEqualTo(0);
     }
 
     @Test

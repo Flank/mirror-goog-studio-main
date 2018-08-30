@@ -383,13 +383,10 @@ class ManifestModel {
          */
         META_DATA(MergeType.MERGE, DEFAULT_NAME_ATTRIBUTE_RESOLVER),
 
-        // TODO add nav-graph info to page below?
-        /**
-         * Nav-graph (contained in activity) <br>
-         * <b>See also : </b> {@link <a
-         * href=http://developer.android.com/guide/topics/manifest/nav-graph-element.html>Nav-graph
-         * Xml documentation</a>}
-         */
+        /** Module node for bundle */
+        MODULE(MergeType.MERGE, DEFAULT_NO_KEY_NODE_RESOLVER, EnumSet.of(Type.MAIN, Type.OVERLAY)),
+
+        /** Nav-graph (contained in activity), expanded into intent-filter by manifest merger */
         NAV_GRAPH(MergeType.MERGE, DEFAULT_NO_KEY_NODE_RESOLVER),
 
         /** Child packages declaration (contained in manifest) */
@@ -590,9 +587,6 @@ class ManifestModel {
                         .setMergingPolicy(AttributeModel.NO_MERGING_POLICY)
         ),
 
-        /** Module node for bundle */
-        MODULE(MergeType.IGNORE, DEFAULT_NO_KEY_NODE_RESOLVER),
-
         /**
          * Custom tag for any application specific element
          */
@@ -602,18 +596,51 @@ class ManifestModel {
         private final NodeKeyResolver mNodeKeyResolver;
         private final ImmutableList<AttributeModel> mAttributeModels;
         private final boolean mMultipleDeclarationAllowed;
+        private final EnumSet<XmlDocument.Type> mMergeableLowerPriorityTypes;
 
         NodeTypes(
                 @NonNull MergeType mergeType,
                 @NonNull NodeKeyResolver nodeKeyResolver,
                 @Nullable AttributeModel.Builder... attributeModelBuilders) {
-            this(mergeType, nodeKeyResolver, false, attributeModelBuilders);
+            this(
+                    mergeType,
+                    nodeKeyResolver,
+                    false,
+                    EnumSet.allOf(XmlDocument.Type.class),
+                    attributeModelBuilders);
+        }
+
+        NodeTypes(
+                @NonNull MergeType mergeType,
+                @NonNull NodeKeyResolver nodeKeyResolver,
+                boolean multipleDeclarationAllowed,
+                @Nullable AttributeModel.Builder... attributeModelBuilders) {
+            this(
+                    mergeType,
+                    nodeKeyResolver,
+                    multipleDeclarationAllowed,
+                    EnumSet.allOf(XmlDocument.Type.class),
+                    attributeModelBuilders);
+        }
+
+        NodeTypes(
+                @NonNull MergeType mergeType,
+                @NonNull NodeKeyResolver nodeKeyResolver,
+                @NonNull EnumSet<XmlDocument.Type> mergeableLowerPriorityTypes,
+                @Nullable AttributeModel.Builder... attributeModelBuilders) {
+            this(
+                    mergeType,
+                    nodeKeyResolver,
+                    false,
+                    mergeableLowerPriorityTypes,
+                    attributeModelBuilders);
         }
 
         NodeTypes(
                 @NonNull MergeType mergeType,
                 @NonNull NodeKeyResolver nodeKeyResolver,
                 boolean mutipleDeclarationAllowed,
+                @NonNull EnumSet<XmlDocument.Type> mergeableLowerPriorityTypes,
                 @Nullable AttributeModel.Builder... attributeModelBuilders) {
             this.mMergeType = Preconditions.checkNotNull(mergeType);
             this.mNodeKeyResolver = Preconditions.checkNotNull(nodeKeyResolver);
@@ -626,6 +653,7 @@ class ManifestModel {
             }
             this.mAttributeModels = attributeModels.build();
             this.mMultipleDeclarationAllowed = mutipleDeclarationAllowed;
+            this.mMergeableLowerPriorityTypes = mergeableLowerPriorityTypes;
         }
 
         @NonNull
@@ -696,5 +724,15 @@ class ManifestModel {
         boolean areMultipleDeclarationAllowed() {
             return mMultipleDeclarationAllowed;
         }
+
+        /**
+         * Returns an XmlDocument.Type EnumSet which contains the types of lower priority
+         * XmlDocuments this node can be merged from.
+         */
+        @NonNull
+        EnumSet<XmlDocument.Type> getMergeableLowerPriorityTypes() {
+            return mMergeableLowerPriorityTypes;
+        }
+
     }
 }

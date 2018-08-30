@@ -1027,6 +1027,8 @@ public final class SdkConstants {
     public static final String TOOLS_URI = "http://schemas.android.com/tools"; //$NON-NLS-1$
     /** Namespace used for auto-adjusting namespaces */
     public static final String AUTO_URI = "http://schemas.android.com/apk/res-auto"; //$NON-NLS-1$
+    /** Namespace used for specifying module distribution */
+    public static final String DIST_URI = "http://schemas.android.com/apk/distribution";
 
     public static final String AAPT_URI = "http://schemas.android.com/aapt"; //$NON-NLS-1$
     /** Namespace for xliff in string resources. */
@@ -1073,6 +1075,7 @@ public final class SdkConstants {
     public static final String TAG_INSTRUMENTATION = "instrumentation";
     public static final String TAG_META_DATA = "meta-data";
     public static final String TAG_RESOURCE = "resource";
+    public static final String TAG_MODULE = "module";
 
     // Tags: Resources
     public static final String TAG_RESOURCES = "resources"; //$NON-NLS-1$
@@ -1283,6 +1286,8 @@ public final class SdkConstants {
     public static final String ATTR_FEATURE_SPLIT = "featureSplit";
     public static final String ATTR_TARGET_SANDBOX_VERSION = "targetSandboxVersion";
     public static final String ATTR_REQUIRED = "required";
+    public static final String ATTR_ON_DEMAND = "onDemand";
+    public static final String MANIFEST_ATTR_TITLE = "title";
 
     // Attributes: Resources
     public static final String ATTR_ATTR = "attr";
