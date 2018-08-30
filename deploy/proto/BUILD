@@ -13,7 +13,7 @@ cc_grpc_proto_library(
 )
 
 java_proto_library(
-    name = "java_proto",
+    name = "deploy_java_proto",
     srcs = glob(["*.proto"]),
     # Seems to be ok here.
     grpc_support = 0,

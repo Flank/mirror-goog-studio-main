@@ -40,7 +40,7 @@ fake_android_test(
         "//tools/base/deploy/agent/instrumentation",
         "//tools/base/deploy/agent/native:libswap.so",
         "//tools/base/deploy/deployer:tools.deployer",
-        "//tools/base/deploy/proto:libjava_proto.jar",
+        "//tools/base/deploy/proto:deploy_java_proto",
         "//tools/base/deploy/test/apk1:apk",
         "//tools/base/deploy/test/apk2:apk",
         "//tools/base/fakeandroid",

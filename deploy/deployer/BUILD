@@ -20,7 +20,7 @@ iml_module(
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/base/apkparser:studio.android.sdktools.binary-resources[module]",
         "//tools/idea/.idea/libraries:Guava",
-        "//tools/base/deploy/proto:java_proto",
+        "//tools/base/deploy/proto:deploy_java_proto",
         "//tools/idea/.idea/libraries:protobuf",
         "//prebuilts/r8:d8-master",
     ],
@@ -43,7 +43,7 @@ java_library(
         "//tools/base/bazel:langtools",
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",
-        "//tools/base/deploy/proto:java_proto",
+        "//tools/base/deploy/proto:deploy_java_proto",
     ],
 )
 
