@@ -30,7 +30,27 @@ class CompileAndRuntimeClasspathTest {
         .create()
 
     @Test
-    fun testDifferentCompileAndRuntimeCauseFailure() {
+    fun `Higher Compile than Runtime causes failure`() {
+        project.buildFile.appendText(
+            """
+            |dependencies {
+            |    compileOnly'com.google.guava:guava:20.0'
+            |    runtimeOnly'com.google.guava:guava:19.0'
+            |}""".trimMargin()
+        )
+
+        val result = project.executor().expectFailure().run("preDebugBuild")
+        assertThat(result.stdout).contains("Could not resolve all files for configuration ':debugCompileClasspath'.\n" +
+                "> Could not resolve com.google.guava:guava:20.0.\n" +
+                "  Required by:\n" +
+                "      project :\n" +
+                "   > Cannot find a version of 'com.google.guava:guava' that satisfies the version constraints: \n" +
+                "        Dependency path ':project:unspecified' --> 'com.google.guava:guava' prefers '20.0'\n" +
+                "        Constraint path ':project:unspecified' --> 'com.google.guava:guava' prefers '19.0', rejects ']19.0,)' because of the following reason: debugRuntimeClasspath uses version 19.0\n")
+    }
+
+    @Test
+    fun `Lower Compile than Runtime leads to promoted version`() {
         project.buildFile.appendText(
             """
             |dependencies {
@@ -39,7 +59,11 @@ class CompileAndRuntimeClasspathTest {
             |}""".trimMargin()
         )
 
-        val result = project.executor().expectFailure().run("checkDebugClasspath")
-        assertThat(result.stdout).contains("Resolved versions for runtime classpath (20.0) and compile classpath (19.0) differ.")
+        val result = project.executor().run("dependencies")
+        assertThat(result.stdout).contains("debugCompileClasspath - Resolved configuration for compilation for variant: debug\n" +
+                "Executing transform IdentityTransform -> IdentityTransform on artifact guava.jar (com.google.guava:guava:20.0)\n" +
+                "+--- com.google.guava:guava:19.0 -> 20.0\n" +
+                "\\--- com.google.guava:guava:20.0\n")
     }
+
 }

@@ -63,6 +63,7 @@ import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuild
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.internal.variant.VariantFactory;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.MainApkListPersistence;
 import com.android.build.gradle.tasks.MergeResources;
@@ -415,15 +416,18 @@ public class ApplicationTaskManager extends TaskManager {
         final VariantType variantType = scope.getVariantConfiguration().getType();
 
         if (variantType.isApk()) {
-            TaskProvider<AppClasspathCheckTask> classpathCheck =
-                    taskFactory.register(new AppClasspathCheckTask.CreationAction(scope));
-
             TaskProvider<? extends Task> task =
                     (variantType.isTestComponent()
                             ? taskFactory.register(new TestPreBuildTask.CreationAction(scope))
                             : taskFactory.register(new AppPreBuildTask.CreationAction(scope)));
 
-            TaskFactoryUtils.dependsOn(task, classpathCheck);
+            if (!scope.getGlobalScope()
+                    .getProjectOptions()
+                    .get(BooleanOption.USE_DEPENDENCY_CONSTRAINTS)) {
+                TaskProvider<AppClasspathCheckTask> classpathCheck =
+                        taskFactory.register(new AppClasspathCheckTask.CreationAction(scope));
+                TaskFactoryUtils.dependsOn(task, classpathCheck);
+            }
 
             if (variantType.isBaseModule() && globalScope.hasDynamicFeatures()) {
                 TaskProvider<CheckMultiApkLibrariesTask> checkMultiApkLibrariesTask =

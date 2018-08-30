@@ -452,7 +452,7 @@ public class VariantManager implements VariantModel {
                             .setFlavorSelection(getFlavorSelection(variantConfig))
                             .setTestedVariantDependencies(testedVariantData.getVariantDependency());
 
-            final VariantDependencies variantDep = builder.build();
+            final VariantDependencies variantDep = builder.build(variantScope);
             variantData.setVariantDependency(variantDep);
 
             if (testedVariantData.getVariantConfiguration().getRenderscriptSupportModeEnabled()) {
@@ -1073,10 +1073,11 @@ public class VariantManager implements VariantModel {
         BaseVariantData variantData =
                 variantFactory.createVariantData(variantConfig, taskManager, recorder);
 
+        VariantScope variantScope = variantData.getScope();
         VariantDependencies.Builder builder =
                 VariantDependencies.builder(
                                 project,
-                                variantData.getScope().getGlobalScope().getErrorHandler(),
+                                variantScope.getGlobalScope().getErrorHandler(),
                                 variantConfig)
                         .setConsumeType(instantiateAndroidTypeAttr(variantType.getConsumeType()))
                         .setFlavorSelection(getFlavorSelection(variantConfig))
@@ -1091,7 +1092,7 @@ public class VariantManager implements VariantModel {
             builder.setFeatureList(((BaseAppModuleExtension) extension).getDynamicFeatures());
         }
 
-        final VariantDependencies variantDep = builder.build();
+        final VariantDependencies variantDep = builder.build(variantScope);
         variantData.setVariantDependency(variantDep);
 
         if (variantConfig.isLegacyMultiDexMode()) {

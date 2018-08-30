@@ -32,7 +32,9 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.errors.SyncIssueHandler;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.TestVariantFactory;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.VariantType;
 import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
@@ -203,7 +205,7 @@ public class VariantDependencies {
             return this;
         }
 
-        public VariantDependencies build() {
+        public VariantDependencies build(@NonNull VariantScope variantScope) {
             Preconditions.checkNotNull(consumeType);
 
             ObjectFactory factory = project.getObjects();
@@ -266,6 +268,20 @@ public class VariantDependencies {
             applyVariantAttributes(runtimeAttributes, buildType, consumptionFlavorMap);
             runtimeAttributes.attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
             runtimeAttributes.attribute(AndroidTypeAttr.ATTRIBUTE, consumeType);
+
+            if (variantScope
+                    .getGlobalScope()
+                    .getProjectOptions()
+                    .get(BooleanOption.USE_DEPENDENCY_CONSTRAINTS)) {
+                // make compileClasspath match runtimeClasspath
+                compileClasspath
+                        .getIncoming()
+                        .beforeResolve(
+                                new ConstraintHandler(
+                                        variantScope,
+                                        project.getDependencies().getConstraints(),
+                                        runtimeClasspath.getName()));
+            }
 
             Configuration globalTestedApks = configurations.findByName(CONFIG_NAME_TESTED_APKS);
             if (variantType.isApk() && globalTestedApks != null) {

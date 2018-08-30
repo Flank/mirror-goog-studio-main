@@ -91,7 +91,8 @@ enum class BooleanOption(
     NAMESPACED_R_CLASS("android.namespacedRClass", false),
     ENABLE_DEXING_ARTIFACT_TRANSFORM("android.enableDexingArtifactTransform", false),
     DEPLOY_AS_INSTANT_APP(AndroidProject.PROPERTY_DEPLOY_AS_INSTANT_APP, false),
-    ENABLE_UNCOMPRESSED_NATIVE_LIBS_IN_BUNDLE("android.bundle.enableUncompressedNativeLibs", true)
+    ENABLE_UNCOMPRESSED_NATIVE_LIBS_IN_BUNDLE("android.bundle.enableUncompressedNativeLibs", true),
+    USE_DEPENDENCY_CONSTRAINTS("android.dependency.useConstraints", true),
     ;
     constructor(
         propertyName: String,
