@@ -34,7 +34,7 @@ public interface LibraryVariant extends BaseVariant, TestedVariant {
     Zip getPackageLibrary();
 
     /**
-     * Returns the {@TaskProvider} for the Library AAR packaging task.
+     * Returns the {@link TaskProvider} for the Library AAR packaging task.
      *
      * <p>Prefer this to {@link #getPackageLibrary()} as it triggers eager configuration of the
      * task.

@@ -67,7 +67,7 @@ public interface TestVariant extends ApkVariant {
     List<? extends DefaultTask> getProviderInstrumentTests();
 
     /**
-     * Returns the {@TaskProvider}s for the tasks to run the tests.
+     * Returns the {@link TaskProvider}s for the tasks to run the tests.
      *
      * <p>Only valid for test project.
      *
