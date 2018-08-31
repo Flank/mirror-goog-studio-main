@@ -39,6 +39,7 @@ import com.android.resources.ResourceUrl;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import java.util.Arrays;
 import java.util.Collection;
@@ -337,14 +338,26 @@ public class ResourceResolver extends RenderResources {
         return mThemes;
     }
 
-    @Override
-    public boolean themeIsParentOf(
-            @NonNull StyleResourceValue parentTheme, @NonNull StyleResourceValue childTheme) {
+    /**
+     * Returns whether a theme is a child of at least one of the specified parents.
+     *
+     * @param childTheme the child theme
+     * @param parentThemes the parent themes
+     * @return true if the child theme is indeed a child theme of one of the parent themes.
+     * @throws RuntimeException if no parent themes are specified
+     */
+    public boolean themeIsChildOfAny(
+            @NonNull StyleResourceValue childTheme, @NonNull StyleResourceValue... parentThemes) {
+        if (parentThemes.length == 0) {
+            throw new RuntimeException("At least 1 parent must be specified.");
+        }
+        Set<StyleResourceValue> parents = ImmutableSet.copyOf(parentThemes);
+        StyleResourceValue theme = childTheme;
         do {
-            childTheme = mStyleInheritanceMap.get(childTheme);
-            if (childTheme == null) {
+            theme = mStyleInheritanceMap.get(theme);
+            if (theme == null) {
                 return false;
-            } else if (childTheme == parentTheme) {
+            } else if (parents.contains(theme)) {
                 return true;
             }
         } while (true);

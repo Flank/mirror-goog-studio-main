@@ -306,18 +306,26 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
         assertNotNull(randomStyle2);
         assertThat(resolver.getChildren(randomStyle2)).isEmpty();
         // themeIsParentOf
-        assertTrue(resolver.themeIsParentOf(themeLight, myTheme));
-        assertFalse(resolver.themeIsParentOf(myTheme, themeLight));
-        assertTrue(resolver.themeIsParentOf(theme, themeLight));
-        assertFalse(resolver.themeIsParentOf(themeLight, theme));
-        assertTrue(resolver.themeIsParentOf(theme, myTheme));
-        assertFalse(resolver.themeIsParentOf(myTheme, theme));
+        try {
+            resolver.themeIsChildOfAny(myTheme);
+            fail("Should not accept a call to themeIsChildOfAny without specifying any parent");
+        } catch (RuntimeException ex) {
+            assertThat(ex).hasMessageThat().isEqualTo("At least 1 parent must be specified.");
+        }
+        assertTrue(resolver.themeIsChildOfAny(myTheme, themeLight));
+        assertFalse(resolver.themeIsChildOfAny(themeLight, myTheme));
+
+        assertTrue(resolver.themeIsChildOfAny(themeLight, theme));
+        assertFalse(resolver.themeIsChildOfAny(theme, themeLight));
+        assertTrue(resolver.themeIsChildOfAny(myTheme, theme));
+        assertFalse(resolver.themeIsChildOfAny(theme, myTheme));
         StyleResourceValue dotted1 = resolver.getTheme("MyTheme.Dotted1", false);
         assertNotNull(dotted1);
         StyleResourceValue dotted2 = resolver.getTheme("MyTheme.Dotted2", false);
         assertNotNull(dotted2);
-        assertTrue(resolver.themeIsParentOf(myTheme, dotted2));
-        assertFalse(resolver.themeIsParentOf(myTheme, dotted1)); // because parent=""
+        assertTrue(resolver.themeIsChildOfAny(dotted2, myTheme));
+        assertFalse(resolver.themeIsChildOfAny(dotted1, myTheme)); // because parent=""
+        assertTrue(resolver.themeIsChildOfAny(myTheme, themeLight, dotted1));
 
         // isTheme
         assertFalse(resolver.isTheme(resolver.findResValue("@style/RandomStyle", false), null));

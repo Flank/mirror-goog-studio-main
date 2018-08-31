@@ -72,18 +72,6 @@ public class RenderResources {
     }
 
     /**
-     * Returns whether a theme is a parent of a given theme.
-     *
-     * @param parentTheme the parent theme
-     * @param childTheme the child theme.
-     * @return true if the parent theme is indeed a parent theme of the child theme.
-     */
-    public boolean themeIsParentOf(
-            @NonNull StyleResourceValue parentTheme, @NonNull StyleResourceValue childTheme) {
-        return false;
-    }
-
-    /**
      * Returns the {@link ResourceValue} for a given attr in the all themes returned by {@link
      * #getAllThemes()}. If the item is not directly available in a theme, its parent theme is
      * used before checking the next theme from the list.

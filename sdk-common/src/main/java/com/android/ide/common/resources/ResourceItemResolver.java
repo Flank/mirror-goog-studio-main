@@ -223,13 +223,6 @@ public class ResourceItemResolver extends RenderResources {
     }
 
     @Override
-    public boolean themeIsParentOf(
-            @NonNull StyleResourceValue parentTheme, @NonNull StyleResourceValue childTheme) {
-        assert false; // This method shouldn't be called on this resolver
-        return super.themeIsParentOf(parentTheme, childTheme);
-    }
-
-    @Override
     public ResourceValue findItemInTheme(@NonNull ResourceReference attr) {
         ResourceResolver resolver = getFullResolver();
         return resolver != null ? resolver.findItemInTheme(attr) : null;
