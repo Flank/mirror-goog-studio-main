@@ -44,7 +44,7 @@ interface DeprecationReporter {
         // Deprecation of disabling Desugar
         DESUGAR_TOOL("in AGP version 3.4."),
         // Deprecation of Task Access in the variant API
-        TASK_ACCESS_VIA_VARIANT("at the end of 2019"),
+        TASK_ACCESS_VIA_VARIANT("at the end of 2019."),
     }
 
     /**
@@ -79,9 +79,10 @@ interface DeprecationReporter {
     /**
      * Reports a deprecation usage in the DSL/API.
      *
-     * @param newDslElement the DSL element to use instead, with the name of the class owning it
-     * @param oldDslElement the name of the deprecated element, with the name of the class
+     * @param newApiElement the DSL element to use instead, with the name of the class owning it
+     * @param oldApiElement the name of the deprecated element, with the name of the class
      * owning it.
+     * @param url URL to documentation about the deprecation
      * @param deprecationTarget when the deprecated element is going to be removed. A line about the
      * timing is added to the message.
      */

@@ -17,18 +17,22 @@
 package com.android.build.gradle.internal.errors
 
 import com.android.build.gradle.internal.errors.DeprecationReporter.DeprecationTarget
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.Option
+import com.android.build.gradle.options.ProjectOptions
+import com.android.build.gradle.options.StringOption
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.errors.EvalIssueReporter.Severity
 import com.android.builder.errors.EvalIssueReporter.Type
 
 class DeprecationReporterImpl(
         private val issueReporter: EvalIssueReporter,
-        suppressedOptionWarningOption: String?,
+        private val projectOptions: ProjectOptions,
         private val projectPath: String) : DeprecationReporter {
 
     private val suppressedOptionWarnings: Set<String> =
-        suppressedOptionWarningOption?.splitToSequence(',')?.toSet() ?: setOf()
+        projectOptions[StringOption.SUPPRESS_UNSUPPORTED_OPTION_WARNINGS]?.splitToSequence(',')?.toSet()
+                ?: setOf()
 
     override fun reportDeprecatedUsage(
             newDslElement: String,
@@ -62,6 +66,22 @@ class DeprecationReporterImpl(
         url: String,
         deprecationTarget: DeprecationTarget
     ) {
+        if (!checkAndSet(oldApiElement)) {
+            val severity = if (projectOptions.get(BooleanOption.IDE_INVOKED_FROM_IDE)
+                && projectOptions.get(BooleanOption.DEBUG_OBSOLETE_API)
+            )
+                Severity.ERROR
+            else
+                Severity.WARNING
+
+            issueReporter.reportIssue(
+                Type.DEPRECATED_DSL,
+                severity,
+                "API '$oldApiElement' is obsolete and has been replaced with '$newApiElement'.\n" +
+                        "It will be removed ${deprecationTarget.removalTime}\n" +
+                        "For more information, see $url"
+            )
+        }
     }
 
     override fun reportObsoleteUsage(oldDslElement: String,
@@ -157,5 +177,32 @@ class DeprecationReporterImpl(
                     (if (option.defaultValue != null)"The current default is '${option.defaultValue.toString()}'\n" else "") +
                     option.additionalInfo,
             option.propertyName)
+    }
+
+    companion object {
+        /**
+         * Set of obsolete APIs that have been warned already.
+         */
+        private val obsoleteApis = mutableSetOf<String>()
+
+        /**
+         * Checks if the given API is part of the set already and adds it if not.
+         *
+         * @return true if the api is already part of the set.
+         */
+        fun checkAndSet(api: String): Boolean = synchronized(obsoleteApis) {
+            return if (obsoleteApis.contains(api)) {
+                true
+            } else {
+                obsoleteApis.add(api)
+                false
+            }
+        }
+
+        fun clean() {
+            synchronized(obsoleteApis) {
+                obsoleteApis.clear()
+            }
+        }
     }
 }

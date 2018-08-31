@@ -79,7 +79,8 @@ import org.gradle.api.tasks.compile.JavaCompile;
  */
 public abstract class BaseVariantImpl implements BaseVariant {
 
-    public static final String TASK_ACCESS_DEPRECATION_URL = "TBD";
+    public static final String TASK_ACCESS_DEPRECATION_URL =
+            "https://d.android.com/r/tools/task-configuration-avoidance";
 
     @NonNull private final ObjectFactory objectFactory;
     @NonNull protected final AndroidBuilder androidBuilder;

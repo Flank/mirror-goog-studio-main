@@ -50,6 +50,7 @@ import com.android.build.gradle.internal.dsl.ProductFlavorFactory;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.SigningConfigFactory;
 import com.android.build.gradle.internal.dsl.Splits;
+import com.android.build.gradle.internal.errors.DeprecationReporterImpl;
 import com.android.build.gradle.internal.ide.ModelBuilder;
 import com.android.build.gradle.internal.ide.NativeModelBuilder;
 import com.android.build.gradle.internal.ndk.NdkHandler;
@@ -445,6 +446,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                                                     ForkJoinPool.commonPool());
                                     Main.clearInternTables();
                                 });
+                        DeprecationReporterImpl.Companion.clean();
                     }
                 });
 

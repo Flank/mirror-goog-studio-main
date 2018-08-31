@@ -49,7 +49,7 @@ enum class BooleanOption(
     ENABLE_PROFILE_JSON("android.enableProfileJson", false),
     WARN_ABOUT_DEPENDENCY_RESOLUTION_AT_CONFIGURATION("android.dependencyResolutionAtConfigurationTime.warn"),
     DISALLOW_DEPENDENCY_RESOLUTION_AT_CONFIGURATION("android.dependencyResolutionAtConfigurationTime.disallow"),
-
+    DEBUG_OBSOLETE_API("android.debug.obsoleteApi", false, Option.Status.STABLE),
 
     // ---------------
     // Lifecycle flags: Experimental stage, not yet enabled by default

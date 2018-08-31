@@ -97,7 +97,7 @@ class PluginDelegate<out E: BaseExtension2>(
 
         dslScope = DslScopeImpl(
                 issueReporter,
-                DeprecationReporterImpl(issueReporter, projectOptions[StringOption.SUPPRESS_UNSUPPORTED_OPTION_WARNINGS], projectPath),
+                DeprecationReporterImpl(issueReporter, projectOptions, projectPath),
                 objectFactory)
 
         if (projectOptions.hasRemovedOptions()) {
