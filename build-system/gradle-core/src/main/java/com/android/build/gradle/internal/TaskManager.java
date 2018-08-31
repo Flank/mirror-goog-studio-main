@@ -52,6 +52,7 @@ import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Strings.nullToEmpty;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.SdkConstants;
@@ -135,6 +136,7 @@ import com.android.build.gradle.internal.tasks.factory.TaskFactory;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitUtils;
 import com.android.build.gradle.internal.test.AbstractTestDataImpl;
 import com.android.build.gradle.internal.test.TestDataImpl;
 import com.android.build.gradle.internal.transforms.CustomClassTransform;
@@ -3608,15 +3610,14 @@ public abstract class TaskManager {
         BuildableArtifact artifact =
                 variantScope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.FEATURE_DEX);
         for (String modulePath : modulePaths) {
-            final String absoluteModulePath = project.absoluteProjectPath(modulePath);
             Provider<File> file =
                     project.provider(
                             () ->
                                     new File(
                                             Iterables.getOnlyElement(artifact.getFiles()),
-                                            "features" + absoluteModulePath.replace(":", "/")));
+                                            getFeatureFileName(modulePath, null)));
             Map<Attribute<String>, String> attributeMap =
-                    ImmutableMap.of(MODULE_PATH, absoluteModulePath);
+                    ImmutableMap.of(MODULE_PATH, project.absoluteProjectPath(modulePath));
             publishArtifactToConfiguration(
                     configuration,
                     file,
@@ -3628,15 +3629,16 @@ public abstract class TaskManager {
 
     private void createMergeClassesTransform(@NonNull VariantScope variantScope) {
 
+        String fileName =
+                getFeatureFileName(globalScope.getProject().getPath(), SdkConstants.DOT_JAR);
         File outputJar =
                 FileUtils.join(
                         globalScope.getIntermediatesDir(),
                         "merged-classes",
                         variantScope.getVariantConfiguration().getDirName(),
-                        SdkConstants.FN_CLASSES_JAR);
+                        fileName);
 
-        MergeClassesTransform transform =
-                new MergeClassesTransform(outputJar, globalScope.getProject().getPath());
+        MergeClassesTransform transform = new MergeClassesTransform(outputJar);
 
         Optional<TaskProvider<TransformTask>> transformTask =
                 variantScope
@@ -3665,6 +3667,22 @@ public abstract class TaskManager {
                             new EvalIssueException(
                                     "Internal error, could not add the MergeClassesTransform"));
         }
+    }
+
+    /**
+     * Helper method to reliably generate matching feature file names when dex splitter is used.
+     *
+     * @param modulePath the gradle module path for the feature
+     * @param fileExtension the desired file extension (e.g., ".jar"), or null if no file extension
+     *     (e.g., for a folder)
+     * @return name of file
+     */
+    private static String getFeatureFileName(
+            @NonNull String modulePath, @Nullable String fileExtension) {
+        final String featureName = FeatureSplitUtils.getFeatureName(modulePath);
+        final String sanitizedFeatureName = ":".equals(featureName) ? "" : featureName;
+        // Prepend "feature-" to fileName in case a non-base module has module path ":base".
+        return "feature-" + sanitizedFeatureName + nullToEmpty(fileExtension);
     }
 
     /**

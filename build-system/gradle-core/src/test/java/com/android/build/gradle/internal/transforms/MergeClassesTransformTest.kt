@@ -47,7 +47,6 @@ class MergeClassesTransformTest {
     @get: Rule
     val tmp: TemporaryFolder = TemporaryFolder()
     private lateinit var outputJar: File
-    private lateinit var modulePath: String
     private lateinit var transform: MergeClassesTransform
     private lateinit var context: Context
 
@@ -75,9 +74,8 @@ class MergeClassesTransformTest {
 
     @Before
     fun setUp() {
-        outputJar = tmp.root.toPath().resolve("classes.jar").toFile()
-        modulePath = ":foo:bar"
-        transform = MergeClassesTransform(outputJar, modulePath)
+        outputJar = tmp.root.toPath().resolve("feature-foo.jar").toFile()
+        transform = MergeClassesTransform(outputJar)
 
         context = Mockito.mock(Context::class.java)
         Mockito.`when`(context.workerExecutor).thenReturn(workerExecutor)
@@ -107,12 +105,6 @@ class MergeClassesTransformTest {
             .build()
 
         transform.transform(invocation)
-
-        // outputJar's manifest should specify the module path.
-        JarFile(outputJar).use {
-            Truth.assertThat(it.manifest).isNotNull()
-            Truth.assertThat(it.manifest.mainAttributes.getValue(MODULE_PATH)).isEqualTo(":foo:bar")
-        }
 
         // outputJar should only contain classes, not java resources.
         Zip(outputJar).use {

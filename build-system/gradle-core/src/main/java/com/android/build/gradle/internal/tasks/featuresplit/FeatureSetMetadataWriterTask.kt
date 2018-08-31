@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+@file:JvmName("FeatureSplitUtils")
+
 package com.android.build.gradle.internal.tasks.featuresplit
 
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -150,12 +152,12 @@ open class FeatureSetMetadataWriterTask @Inject constructor(workerExecutor: Work
     }
 }
 
-/** Regular expression defining invalid characters for split names  */
+/** Regular expression defining valid characters for split names  */
 private val FEATURE_NAME_CHARS = Pattern.compile("[a-zA-Z0-9_]+")
 
-private fun String.getLeaf(): String =
-    if (this == ":") this else substring(lastIndexOf(':') + 1)
-
+/** Returns the feature name based on the module path. */
+fun getFeatureName(modulePath: String): String =
+    if (modulePath == ":") modulePath else modulePath.substring(modulePath.lastIndexOf(':') + 1)
 
 /**
  * Converts from a list of [FeatureSplitDeclaration] to a map of (module-path -> feature name)
@@ -167,7 +169,7 @@ internal fun computeFeatureNames(features: List<FeatureSplitDeclaration>): Map<S
 
     // build a map of (leaf -> list(full paths)). This will allow us to detect duplicates
     // and properly display error messages with all the paths containing the same leaf.
-    val leafMap = features.groupBy({ it.modulePath.getLeaf() }, { it.modulePath })
+    val leafMap = features.groupBy({ getFeatureName(it.modulePath) }, { it.modulePath })
 
     // check for root module name (root module)
     if (leafMap.keys.contains(":")) {
@@ -187,6 +189,7 @@ internal fun computeFeatureNames(features: List<FeatureSplitDeclaration>): Map<S
     }
 
     // check for duplicate names while building the final (path, leaf) map.
+    // Dex splitting relies on all features having unique names.
     for ((leaf, modules) in leafMap) {
         val module = modules.singleOrNull() ?: throw RuntimeException(
             modules.joinTo(

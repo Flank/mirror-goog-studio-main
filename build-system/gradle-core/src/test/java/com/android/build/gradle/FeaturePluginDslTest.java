@@ -29,7 +29,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-/** Tests for the public DSL of the App plugin ("com.android.application") */
+/** Tests for the public DSL of the Feature plugin ("com.android.feature") */
 public class FeaturePluginDslTest {
     @Rule public TemporaryFolder projectDirectory = new TemporaryFolder();
 

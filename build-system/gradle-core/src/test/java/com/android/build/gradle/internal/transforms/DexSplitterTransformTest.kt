@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.packaging.JarMerger
 import com.android.builder.packaging.JarMerger.MODULE_PATH
-import com.android.ide.common.blame.MessageReceiver
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
 import com.android.testutils.apk.Dex
@@ -82,15 +81,10 @@ class DexSplitterTransformTest {
         FileUtils.mkdirs(baseClasses.parentFile)
         TestInputsGenerator.jarWithEmptyClasses(baseClasses.toPath(), listOf("base/A", "base/B"))
 
-        val featureClassesNoManifest = File(tmp.root, "feature/classesNoManifest.jar")
-        featureClasses = File(tmp.root, "feature/classes.jar")
+        featureClasses = File(tmp.root, "feature-foo.jar")
         FileUtils.mkdirs(featureClasses.parentFile)
         TestInputsGenerator.jarWithEmptyClasses(
-            featureClassesNoManifest.toPath(), listOf("feature/A", "feature/B"))
-        JarMerger(featureClasses.toPath()).use {
-            it.addJar(featureClassesNoManifest.toPath())
-            it.setManifestProperties(mapOf<String, String>(Pair(MODULE_PATH, ":foo:feature")))
-        }
+            featureClasses.toPath(), listOf("feature/A", "feature/B"))
     }
 
     @Test
@@ -170,7 +164,7 @@ class DexSplitterTransformTest {
         assertThat(baseDex).containsClasses("Lbase/A;", "Lbase/B;")
         assertThat(baseDex).doesNotContainClasses("Lfeature/A;", "Lfeature/B;")
 
-        val featureDex = getDex(File(dexSplitterOutputDir, "features/foo/feature").toPath())
+        val featureDex = getDex(File(dexSplitterOutputDir, "feature-foo").toPath())
         assertThat(featureDex).containsClasses("Lfeature/A;", "Lfeature/B;")
         assertThat(featureDex).doesNotContainClasses("Lbase/A;", "Lbase/B;")
 

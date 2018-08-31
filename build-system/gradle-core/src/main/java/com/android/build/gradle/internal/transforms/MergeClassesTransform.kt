@@ -40,8 +40,7 @@ import java.util.regex.Pattern
  * uses secondary outputs to write directly into the given folder.
  */
 class MergeClassesTransform(
-    private val outputJarFile: File,
-    private val modulePath: String
+    private val outputJarFile: File
 ) : Transform() {
 
     override fun getName() = "mergeClasses"
@@ -84,7 +83,6 @@ class MergeClassesTransform(
                     toFile = outputJarFile,
                     fromJars = fromJars,
                     fromDirectories = fromDirectories,
-                    manifestProperties = mapOf(MODULE_PATH to modulePath),
                     filter = classFilter
                 )
             )
