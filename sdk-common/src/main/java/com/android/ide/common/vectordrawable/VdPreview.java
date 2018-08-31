@@ -15,11 +15,12 @@
  */
 package com.android.ide.common.vectordrawable;
 
+import static com.google.common.math.DoubleMath.roundToInt;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.util.AssetUtil;
 import com.android.utils.XmlUtils;
-import com.google.common.base.Charsets;
 import com.sun.org.apache.xml.internal.serialize.OutputFormat;
 import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
 import java.awt.image.BufferedImage;
@@ -28,6 +29,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
@@ -38,8 +41,6 @@ import org.xml.sax.InputSource;
 
 /**
  * Generates an image based on the VectorDrawable's XML content.
- *
- * <p>This class also contains a main method, which can be used to preview a vector drawable file.
  */
 public class VdPreview {
     private static final String ANDROID_ALPHA = "android:alpha";
@@ -51,15 +52,15 @@ public class VdPreview {
     public static final int MIN_PREVIEW_IMAGE_SIZE = 1;
 
     /**
-     * Parses the VectorDrawable's XML file into a document object.
+     * Parses a vector drawable XML file into a {@link Document} object.
      *
      * @param xmlFileContent the content of the VectorDrawable's XML file.
      * @param errorLog when errors were found, log them in this builder if it is not null.
      * @return parsed document or null if errors happened.
      */
     @Nullable
-    public static Document parseVdStringIntoDocument(@NonNull String xmlFileContent,
-                                                     @Nullable StringBuilder errorLog) {
+    public static Document parseVdStringIntoDocument(
+            @NonNull String xmlFileContent, @Nullable StringBuilder errorLog) {
       DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
       DocumentBuilder db;
       Document document;
@@ -77,31 +78,27 @@ public class VdPreview {
     }
 
     /**
-     * Encapsulates the information used to determine the preview image size.
-     * The reason we have different ways here is that both Studio UI and build process need
-     * to use this common code path to generate images for vector drawables.
-     * When {@code mUseWidth} is true, use {@code mImageMaxDimension} as the maximum
-     * dimension value while keeping the aspect ratio.
-     * Otherwise, use {@code mImageScale} to scale the image based on the XML's size information.
+     * Encapsulates the information used to determine the preview image size. The reason we have
+     * different ways here is that both Studio UI and build process need to use this common code
+     * path to generate images for vector drawables. When {@code maxDimension} is not zero, use
+     * {@code maxDimension} as the maximum dimension value while keeping the aspect ratio.
+     * Otherwise, use {@code imageScale} to scale the image based on the XML's size information.
      */
     public static class TargetSize {
-        private boolean mUseWidth;
+        private int imageMaxDimension;
+        private double imageScale;
 
-        private int mImageMaxDimension;
-        private float mImageScale;
-
-        private TargetSize(boolean useWidth, int imageWidth, float imageScale) {
-            mUseWidth = useWidth;
-            mImageMaxDimension = imageWidth;
-            mImageScale = imageScale;
+        private TargetSize(int maxDimension, double imageScale) {
+            this.imageMaxDimension = maxDimension;
+            this.imageScale = imageScale;
         }
 
-        public static TargetSize createSizeFromWidth(int imageWidth) {
-            return new TargetSize(true, imageWidth, 0.0f);
+        public static TargetSize createFromMaxDimension(int maxDimension) {
+            return new TargetSize(maxDimension, 0);
         }
 
-        public static TargetSize createSizeFromScale(float imageScale) {
-            return new TargetSize(false, 0, imageScale);
+        public static TargetSize createFromScale(float imageScale) {
+            return new TargetSize(0, imageScale);
         }
     }
 
@@ -111,17 +108,16 @@ public class VdPreview {
      */
     public static class SourceSize {
         public float getHeight() {
-            return mSourceHeight;
+            return sourceHeight;
         }
 
         public float getWidth() {
-            return mSourceWidth;
+            return sourceWidth;
         }
 
-        private float mSourceWidth;
-        private float mSourceHeight;
+        private float sourceWidth;
+        private float sourceHeight;
     }
-
 
     /**
      * Returns a format object for XML formatting.
@@ -149,11 +145,11 @@ public class VdPreview {
         NamedNodeMap attr = root.getAttributes();
         Node nodeAttr = attr.getNamedItem(ANDROID_WIDTH);
         assert nodeAttr != null;
-        srcSize.mSourceWidth = parseDimension(0, nodeAttr, false);
+        srcSize.sourceWidth = parseDimension(0, nodeAttr, false);
 
         nodeAttr = attr.getNamedItem(ANDROID_HEIGHT);
         assert nodeAttr != null;
-        srcSize.mSourceHeight = parseDimension(0, nodeAttr, false);
+        srcSize.sourceHeight = parseDimension(0, nodeAttr, false);
         return srcSize;
     }
 
@@ -285,7 +281,8 @@ public class VdPreview {
             return null;
         }
 
-        InputStream inputStream = new ByteArrayInputStream(xmlFileContent.getBytes(Charsets.UTF_8));
+        InputStream inputStream =
+                new ByteArrayInputStream(xmlFileContent.getBytes(StandardCharsets.UTF_8));
         VdTree vdTree = VdParser.parse(inputStream, errorLog);
 
         return getPreviewFromVectorTree(targetSize, vdTree, errorLog);
@@ -322,22 +319,22 @@ public class VdPreview {
                                                          @NonNull VdTree vdTree,
                                                          @Nullable StringBuilder errorLog) {
         // If the forceImageSize is set (>0), then we honor that.
-        // Otherwise, we will ask the vectorDrawable for the prefer size, then apply the imageScale.
-        float vdWidth = vdTree.getBaseWidth();
-        float vdHeight = vdTree.getBaseHeight();
-        float imageWidth;
-        float imageHeight;
-        int forceImageSize = targetSize.mImageMaxDimension;
-        float imageScale = targetSize.mImageScale;
+        // Otherwise, we will ask the vector drawable for the prefer size, then apply the imageScale.
+        double vdWidth = vdTree.getBaseWidth();
+        double vdHeight = vdTree.getBaseHeight();
+        double imageWidth;
+        double imageHeight;
+        int forceImageSize = targetSize.imageMaxDimension;
+        double imageScale = targetSize.imageScale;
 
         if (forceImageSize > 0) {
             // The goal here is to generate an image within certain size, while preserving
             // the aspect ratio as accurately as we can. If it is scaling too much to fit in,
             // we log an error.
-            float maxVdSize = Math.max(vdWidth, vdHeight);
-            float ratioToForceImageSize = forceImageSize / maxVdSize;
-            float scaledWidth = ratioToForceImageSize * vdWidth;
-            float scaledHeight = ratioToForceImageSize * vdHeight;
+            double maxVdSize = Math.max(vdWidth, vdHeight);
+            double ratioToForceImageSize = forceImageSize / maxVdSize;
+            double scaledWidth = ratioToForceImageSize * vdWidth;
+            double scaledHeight = ratioToForceImageSize * vdHeight;
             imageWidth =
                     limitToInterval(scaledWidth, MIN_PREVIEW_IMAGE_SIZE, MAX_PREVIEW_IMAGE_SIZE);
             imageHeight =
@@ -351,13 +348,16 @@ public class VdPreview {
             imageHeight = vdHeight * imageScale;
         }
 
-        // Create the image according to the vectorDrawable's aspect ratio.
-        BufferedImage image = AssetUtil.newArgbBufferedImage((int)imageWidth, (int)imageHeight);
+        // Create the image according to the vector drawable's aspect ratio.
+        BufferedImage image =
+                AssetUtil.newArgbBufferedImage(
+                        roundToInt(imageWidth, RoundingMode.HALF_UP),
+                        roundToInt(imageHeight, RoundingMode.HALF_UP));
         vdTree.drawIntoImage(image);
         return image;
     }
 
-    private static float limitToInterval(float value, float begin, float end) {
+    private static double limitToInterval(double value, double begin, double end) {
         return Math.max(begin, Math.min(end, value));
     }
 }

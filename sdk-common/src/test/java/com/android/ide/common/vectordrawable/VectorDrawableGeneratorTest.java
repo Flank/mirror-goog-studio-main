@@ -95,7 +95,8 @@ public class VectorDrawableGeneratorTest extends TestCase {
             xmlContent = Files.asCharSource(incomingFile, StandardCharsets.UTF_8).read();
         }
 
-        VdPreview.TargetSize imageTargetSize = VdPreview.TargetSize.createSizeFromWidth(IMAGE_SIZE);
+        VdPreview.TargetSize imageTargetSize =
+                VdPreview.TargetSize.createFromMaxDimension(IMAGE_SIZE);
         StringBuilder builder = new StringBuilder();
         BufferedImage image =
                 VdPreview.getPreviewFromVectorXml(imageTargetSize, xmlContent, builder);

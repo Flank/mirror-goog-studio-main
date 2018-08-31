@@ -23,7 +23,6 @@ import static java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB;
 
 import com.android.annotations.NonNull;
 import com.android.ide.common.util.AssetUtil;
-
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.FontMetrics;
@@ -40,8 +39,8 @@ import java.awt.image.LookupOp;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Map;
-
 import javax.swing.Icon;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * VdIcon wraps every vector drawable from Material Library into an icon. All of them are shown in
@@ -146,6 +145,26 @@ public class VdIcon implements Icon, Comparable<VdIcon> {
 
     public URL getURL() {
         return mUrl;
+    }
+
+    /**
+     * Returns the icon image.
+     *
+     * @param width the width of the image
+     * @param height the height of the image
+     */
+    @Nullable
+    public BufferedImage renderIcon(int width, int height) {
+        if (mVdTree == null) {
+            return null;
+        }
+        if (width <= 0 || height <= 0) {
+            width = Math.round(mVdTree.getBaseWidth());
+            height = Math.round(mVdTree.getBaseHeight());
+        }
+        BufferedImage image = AssetUtil.newArgbBufferedImage(width, height);
+        mVdTree.drawIntoImage(image);
+        return image;
     }
 
     @NonNull

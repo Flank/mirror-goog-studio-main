@@ -17,6 +17,7 @@ package com.android.ide.common.vectordrawable;
 
 import static com.android.ide.common.vectordrawable.VdUtil.parseColorValue;
 
+import com.android.annotations.NonNull;
 import com.android.ide.common.util.AssetUtil;
 import java.awt.AlphaComposite;
 import java.awt.Color;
@@ -80,11 +81,9 @@ class VdTree {
         mRootGroup.draw(g, rootMatrix, scaleX, scaleY);
     }
 
-    /**
-     * Draws the VdTree into an image.
-     */
+    /** Draws the VdTree into an image. */
     @SuppressWarnings("UseJBColor") // No need to use JBColor here.
-    public void drawIntoImage(BufferedImage image) {
+    public void drawIntoImage(@NonNull BufferedImage image) {
         Graphics2D gFinal = (Graphics2D) image.getGraphics();
         int width = image.getWidth();
         int height = image.getHeight();
@@ -117,7 +116,7 @@ class VdTree {
         gFinal.dispose();
     }
 
-    public void parse(Document doc) {
+    public void parse(@NonNull Document doc) {
         NodeList rootNodeList = doc.getElementsByTagName(SHAPE_VECTOR);
         assert rootNodeList.getLength() == 1;
         Node rootNode = rootNodeList.item(0);
@@ -130,7 +129,7 @@ class VdTree {
         }
     }
 
-    private static void parseTree(Node currentNode, VdGroup currentGroup) {
+    private static void parseTree(@NonNull Node currentNode, @NonNull VdGroup currentGroup) {
         NodeList childrenNodes = currentNode.getChildNodes();
         int length = childrenNodes.getLength();
         for (int i = 0; i < length; i++) {
@@ -153,7 +152,7 @@ class VdTree {
         }
     }
 
-    private static void debugPrintTree(int level, VdGroup mRootGroup) {
+    private static void debugPrintTree(int level, @NonNull VdGroup mRootGroup) {
         int len = mRootGroup.size();
         if (len == 0) {
             return;
@@ -173,13 +172,13 @@ class VdTree {
         }
     }
 
-    private void parseRootNode(Node rootNode) {
+    private void parseRootNode(@NonNull Node rootNode) {
         if (rootNode.hasAttributes()) {
             parseSize(rootNode.getAttributes());
         }
     }
 
-    private void parseSize(NamedNodeMap attributes) {
+    private void parseSize(@NonNull NamedNodeMap attributes) {
         int len = attributes.getLength();
         for (int i = 0; i < len; i++) {
             String name = attributes.item(i).getNodeName();
@@ -207,13 +206,13 @@ class VdTree {
         }
     }
 
-    private static VdPath parsePathAttributes(NamedNodeMap attributes) {
+    private static VdPath parsePathAttributes(@NonNull NamedNodeMap attributes) {
         VdPath vgPath = new VdPath();
         vgPath.parseAttributes(attributes);
         return vgPath;
     }
 
-    private static VdGroup parseGroupAttributes(NamedNodeMap attributes) {
+    private static VdGroup parseGroupAttributes(@NonNull NamedNodeMap attributes) {
         VdGroup vgGroup = new VdGroup();
         vgGroup.parseAttributes(attributes);
         return vgGroup;
