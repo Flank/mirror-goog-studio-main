@@ -20,6 +20,7 @@ buildscript {<#if includeKotlinSupport!false>
         <@useProperties/>
         google()
         jcenter()
+        <#if includeKotlinEapRepo!false>maven { url '${kotlinEapRepoUrl}' }</#if>
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:${gradlePluginVersion}'
@@ -35,6 +36,7 @@ allprojects {
         <@useProperties/>
         google()
         jcenter()
+        <#if includeKotlinEapRepo!false>maven { url '${kotlinEapRepoUrl}' }</#if>
     }
 }
 
