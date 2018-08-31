@@ -16,7 +16,10 @@
 
 package com.android.build.gradle.internal.fixtures
 
+import org.gradle.api.Action
+import org.gradle.api.NamedDomainObjectCollectionSchema
 import org.gradle.api.NamedDomainObjectFactory
+import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.artifacts.Dependency
@@ -26,6 +29,25 @@ class FakeConfigurationContainer
         ConfigurationContainer {
 
     override fun detachedConfiguration(vararg p0: Dependency?): Configuration {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun register(
+        p0: String?,
+        p1: Action<in Configuration>?
+    ): NamedDomainObjectProvider<Configuration> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun register(p0: String?): NamedDomainObjectProvider<Configuration> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun named(p0: String?): NamedDomainObjectProvider<Configuration> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun getCollectionSchema(): NamedDomainObjectCollectionSchema {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }

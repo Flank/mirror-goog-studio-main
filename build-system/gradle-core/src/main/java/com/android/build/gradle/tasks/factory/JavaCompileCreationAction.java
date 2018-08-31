@@ -128,11 +128,11 @@ public class JavaCompileCreationAction extends VariantTaskCreationAction<Android
         if (incremental) {
             LOG.verbose("Using incremental javac compilation for %1$s %2$s.",
                     project.getPath(), scope.getFullVariantName());
-            task.getOptions().setIncremental(true);
         } else {
             LOG.verbose("Not using incremental javac compilation for %1$s %2$s.",
                     project.getPath(), scope.getFullVariantName());
         }
+        task.getOptions().setIncremental(incremental);
 
         AnnotationProcessorOptions annotationProcessorOptions =
                 scope.getVariantConfiguration()
