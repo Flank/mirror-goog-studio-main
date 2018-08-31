@@ -278,6 +278,7 @@ public class InstallVariantTask extends AndroidBuilderTask {
         public void configure(@NonNull InstallVariantTask task) {
             super.configure(task);
             VariantScope scope = getVariantScope();
+            task.setVariantData(scope.getVariantData());
 
             task.setDescription("Installs the " + scope.getVariantData().getDescription() + ".");
             task.setGroup(TaskManager.INSTALL_GROUP);
