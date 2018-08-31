@@ -269,74 +269,119 @@ class WorkManagerDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun testEnqueueSync() {
+        // Regression test for https://issuetracker.google.com/113167619
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import androidx.work.ExistingWorkPolicy
+                import androidx.work.OneTimeWorkRequest
+                import androidx.work.WorkManager
+
+                class WorkTest {
+                    fun test1(manager: WorkManager, workRequest1: OneTimeWorkRequest) {
+                        manager.beginUniqueWork(
+                                "name",
+                                ExistingWorkPolicy.KEEP,
+                                workRequest1).synchronous().enqueueSync()
+                    }
+                }
+                """
+            ).indented(),
+            *workManagerStubs
+        ).run().expectClean()
+    }
+
     private val workManagerStubs = arrayOf(
         // WorkManager stubs
         java(
             """
-                    package androidx.work;
-                    @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
-                    public class WorkManager {
-                       public static WorkManager getInstance() { return null; }
-                       public WorkContinuation beginWith(OneTimeWorkRequest...work) { return null; }
-                        public final WorkContinuation beginUniqueWork(
-                                String uniqueWorkName,
-                                ExistingWorkPolicy existingWorkPolicy,
-                                OneTimeWorkRequest... work) {
-                            return null;
-                        }
-                    }
+            package androidx.work;
+            @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+            public abstract class WorkManager {
+               public static WorkManager getInstance() { return null; }
+               public WorkContinuation beginWith(OneTimeWorkRequest...work) { return null; }
+                public final WorkContinuation beginUniqueWork(
+                        String uniqueWorkName,
+                        ExistingWorkPolicy existingWorkPolicy,
+                        OneTimeWorkRequest... work) {
+                    return null;
+                }
 
-                """
+            }
+            """
         ).indented(),
         java(
             """
-                    package androidx.work;
-                    import java.util.List;
+            package androidx.work;
+            import java.util.List;
 
-                    @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
-                    public abstract class WorkContinuation {
-                        public final WorkContinuation then(OneTimeWorkRequest... work) {
-                            return null;
-                        }
-                        public abstract WorkContinuation then(List<OneTimeWorkRequest> work);
+            @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+            public abstract class WorkContinuation {
+                public final WorkContinuation then(OneTimeWorkRequest... work) {
+                    return null;
+                }
+                public abstract WorkContinuation then(List<OneTimeWorkRequest> work);
 
-                        public static WorkContinuation combine(WorkContinuation... continuations) {
-                            return null;
-                        }
-                        public static WorkContinuation combine(
-                                OneTimeWorkRequest work,
-                                WorkContinuation... continuations) {
-                            return nul;
-                        }
-                        public static WorkContinuation combine(
-                                OneTimeWorkRequest work,
-                                List<WorkContinuation> continuations) {
-                            return nul;
-                        }
+                public static WorkContinuation combine(WorkContinuation... continuations) {
+                    return null;
+                }
+                public static WorkContinuation combine(
+                        OneTimeWorkRequest work,
+                        WorkContinuation... continuations) {
+                    return nul;
+                }
+                public static WorkContinuation combine(
+                        OneTimeWorkRequest work,
+                        List<WorkContinuation> continuations) {
+                    return nul;
+                }
 
-                        public abstract void enqueue();
-                    }
-                """
+                public abstract void enqueue();
+
+                public abstract SynchronousWorkContinuation synchronous();
+            }
+            """
         ).indented(),
         java(
             """
-                    package androidx.work;
-                    @SuppressWarnings("ClassNameDiffersFromFileName")
-                    public class OneTimeWorkRequest {
-                    }
-                """
+            package androidx.work;
+            @SuppressWarnings("ClassNameDiffersFromFileName")
+            public class OneTimeWorkRequest {
+            }
+            """
         ).indented(),
         java(
             """
-                    package androidx.work;
-                    @SuppressWarnings("ClassNameDiffersFromFileName")
-                    public enum ExistingWorkPolicy {
-                        REPLACE,
-                        KEEP,
-                        APPEND
-                    }
+            package androidx.work;
+            @SuppressWarnings("ClassNameDiffersFromFileName")
+            public enum ExistingWorkPolicy {
+                REPLACE,
+                KEEP,
+                APPEND
+            }
+            """
+        ).indented(),
+        java(
+            """
+            package androidx.work;
+            @SuppressWarnings("ClassNameDiffersFromFileName")
+            public interface SynchronousWorkContinuation {
+                void enqueueSync();
+            }
 
-                """
-        ).indented()
+            """
+        ).indented(),
+        java(
+            """
+            package androidx.work;
+            @SuppressWarnings("ClassNameDiffersFromFileName")
+            public interface SynchronousWorkContinuation {
+                void enqueueSync();
+            }
+            """
+        )
     )
 }

@@ -141,6 +141,15 @@ class SyntheticAccessorDetector : Detector(), SourceCodeScanner {
                         return
                     }
 
+                    val from = node.getContainingUClass()
+                    if (from != null && from.name == "Companion") {
+                        // TODO: Companion objects can be named with a different name;
+                        // we need be able to look this up in UAST
+                        // Another way to do it is
+                        //  from.psi.modifierList.text.contains("companion")
+                        return
+                    }
+
                     // Mention it's an implicit constructor here?
                     reportError(context, node, method, aClass)
                 }

@@ -436,4 +436,21 @@ class SyntheticAccessorDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expectClean()
     }
+
+    fun testCompanion() {
+        // Regression test for https://issuetracker.google.com/113119778
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                class Foo private constructor() {
+                    companion object {
+                        fun gimme() = Foo()
+                    }
+                }
+                """
+            ).indented()
+        ).run().expectClean()
+    }
 }

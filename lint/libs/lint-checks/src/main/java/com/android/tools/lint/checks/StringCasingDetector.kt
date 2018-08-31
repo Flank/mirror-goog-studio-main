@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks
 
+import com.android.SdkConstants.ATTR_NAME
 import com.android.SdkConstants.ATTR_TRANSLATABLE
 import com.android.SdkConstants.TAG_STRING
 import com.android.SdkConstants.VALUE_FALSE
@@ -24,17 +25,18 @@ import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
-import com.android.tools.lint.detector.api.getLocale
-import com.android.tools.lint.detector.api.Location.Handle
+import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.ResourceXmlDetector
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
+import com.android.tools.lint.detector.api.formatList
+import com.android.tools.lint.detector.api.getLocale
 import com.android.utils.Pair
-import java.util.ArrayList
-import java.util.HashMap
 import org.w3c.dom.Element
 import org.w3c.dom.Node
+import java.util.ArrayList
+import java.util.HashMap
 import java.util.Locale
 
 /** Constructs a new [StringCasingDetector] check  */
@@ -69,7 +71,7 @@ class StringCasingDetector : ResourceXmlDetector() {
      * Map of all locale,strings in lower case, to their raw elements to ensure that there are no
      * duplicate strings.
      */
-    private val allStrings = HashMap<Pair<String, String>, MutableList<Pair<String, Handle>>>()
+    private val allStrings = HashMap<Pair<String, String>, MutableList<StringDeclaration>>()
 
     override fun appliesTo(folderType: ResourceFolderType): Boolean {
         return folderType == ResourceFolderType.VALUES
@@ -113,22 +115,52 @@ class StringCasingDetector : ResourceXmlDetector() {
         val handle = context.createLocationHandle(element)
         handle.clientData = element
         val handleList = allStrings.getOrDefault(key, ArrayList())
-        handleList.add(Pair.of(text, handle))
+        handleList.add(StringDeclaration(element.getAttribute(ATTR_NAME), text, handle))
         allStrings[key] = handleList
     }
+
+    data class StringDeclaration(val name: String, val text: String, val location: Location.Handle)
 
     override fun afterCheckRootProject(context: Context) {
         for ((_, duplicates) in allStrings) {
             if (duplicates.size > 1) {
-                // we have detected a duplicated string in the string resources, notify the developer.
-                for (dup in duplicates) {
-                    val message =
-                        """
-                        Duplicate string detected `${dup.first}`; Please use android:inputType or \
-                        android:capitalize to avoid string duplication in resources.
-                        """.trimIndent()
-                    context.report(DUPLICATE_STRINGS, dup.second.resolve(), message)
+                var firstLocation: Location? = null
+                var prevLocation: Location? = null
+                var prevString = ""
+                var caseVaries = false
+                val names = mutableListOf<String>()
+                for (duplicate in duplicates) {
+                    names.add(duplicate.name)
+                    val string = duplicate.text
+                    val location = duplicate.location.resolve()
+                    if (prevLocation == null) {
+                        firstLocation = location
+                    } else {
+                        prevLocation.secondary = location
+                        location.message = "Duplicates value in `${names[0]}`"
+                        location.setSelfExplanatory(false)
+                        if (string != prevString) {
+                            caseVaries = true
+                            location.message += " (case varies, but you can use " +
+                                    "`android:inputType` or `android:capitalize` in the " +
+                                    "presentation)"
+                        }
+                    }
+
+                    prevLocation = location
+                    prevString = string
                 }
+
+                firstLocation ?: continue
+
+                val nameList = formatList(names.map { "`$it`" }, useConjunction = true)
+                var message = "Duplicate string value `$prevString`, used in $nameList"
+
+                if (caseVaries) {
+                    message += ". Use `android:inputType` or `android:capitalize` " +
+                        "to treat these as the same and avoid string duplication."
+                }
+                context.report(DUPLICATE_STRINGS, firstLocation, message)
             }
         }
     }

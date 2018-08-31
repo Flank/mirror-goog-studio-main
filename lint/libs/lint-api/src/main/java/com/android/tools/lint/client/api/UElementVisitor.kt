@@ -21,6 +21,7 @@ import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.XmlScannerConstants
 import com.android.tools.lint.detector.api.interprocedural.CallGraphResult
@@ -233,7 +234,11 @@ internal class UElementVisitor constructor(
         try {
             val uastParser = context.uastParser
 
-            val uFile = uastParser.parse(context) ?: return
+            val uFile = uastParser.parse(context) ?: run {
+                context.client.log(Severity.WARNING, null,
+                    "Lint could not build AST for ${context.file}; ignoring file")
+                return
+            }
 
             // (Immediate return if null: No need to log this; the parser should be reporting
             // a full warning (such as IssueRegistry#PARSER_ERROR) with details, location, etc.)

@@ -118,7 +118,7 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector implements Sour
                     Object clientData = handle.getClientData();
                     if (clientData instanceof Node) {
                         if (context.getDriver().isSuppressed(null, ISSUE, (Node) clientData)) {
-                            return;
+                            continue;
                         }
                     }
 

@@ -204,6 +204,14 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             // given permission is available.
             if (!handlesMissingPermission) {
 
+                // See if the requirement is passed on via surrounding requires permissions
+                val localRequirements = addLocalPermissions(
+                    PermissionHolder.SetPermissionLookup(mutableSetOf(), mutableSetOf(),
+                        permissions.minSdkVersion, permissions.targetSdkVersion), node)
+                if (requirement.isSatisfied(localRequirements)) {
+                    return
+                }
+
                 val methodNode = node.getParentOfType<UMethod>(UMethod::class.java, true)
                 if (methodNode != null) {
                     val visitor = CheckPermissionVisitor(node)

@@ -2463,6 +2463,37 @@ public class VersionChecksTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void test113198297() {
+        // Regression test for https://issuetracker.google.com/113198297
+        lint().files(
+                        manifest().minSdk(15),
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "import android.os.Build\n"
+                                        + "import android.support.annotation.RequiresApi\n"
+                                        + "\n"
+                                        + "class UnconditionalReturn2 {\n"
+                                        + "    fun test() =\n"
+                                        + "            run {\n"
+                                        + "                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {\n"
+                                        + "                    println(\"hello something\")\n"
+                                        + "                    return\n"
+                                        + "                }\n"
+                                        + "                requires21()\n"
+                                        + "            }\n"
+                                        + "\n"
+                                        + "    @RequiresApi(21)\n"
+                                        + "    fun requires21() {\n"
+                                        + "    }\n"
+                                        + "}\n"
+                                        + "\n"),
+                        mSupportJar)
+                .run()
+                .expectClean();
+    }
+
     @Override
     protected Detector getDetector() {
         return new ApiDetector();

@@ -66,6 +66,8 @@ class WorkManagerDetector : Detector(), SourceCodeScanner {
         private const val METHOD_BEGIN_WITH = "beginWith"
         private const val METHOD_BEGIN_UNIQUE_WORK = "beginUniqueWork"
         private const val METHOD_ENQUEUE = "enqueue"
+        private const val METHOD_ENQUEUE_SYNC = "enqueueSync"
+        private const val METHOD_ENQUEUE_UNIQUE = "enqueueUniquePeriodicWork"
         private const val METHOD_THEN = "then"
         private const val METHOD_COMBINE = "combine"
     }
@@ -88,7 +90,10 @@ class WorkManagerDetector : Detector(), SourceCodeScanner {
         surrounding.accept(object : DataFlowAnalyzer(listOf(node)) {
             override fun receiver(call: UCallExpression) {
                 val methodName = getMethodName(call)
-                if (methodName == METHOD_ENQUEUE) {
+                if (methodName == METHOD_ENQUEUE ||
+                    methodName == METHOD_ENQUEUE_SYNC ||
+                    methodName == METHOD_ENQUEUE_UNIQUE
+                ) {
                     // TODO: check that it's called on the WorkContinuation?
                     enqueued = true
                 } else if (methodName == METHOD_THEN || methodName == METHOD_COMBINE) {
@@ -120,6 +125,14 @@ class WorkManagerDetector : Detector(), SourceCodeScanner {
                         addVariableReference(parent)
                     }
                 }
+            }
+
+            override fun returnsSelf(call: UCallExpression): Boolean {
+                val methodName = getMethodName(call)
+                if (methodName == "synchronous") {
+                    return true
+                }
+                return super.returnsSelf(call)
             }
         })
 

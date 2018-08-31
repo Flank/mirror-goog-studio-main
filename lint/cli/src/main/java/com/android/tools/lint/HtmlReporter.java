@@ -1539,7 +1539,8 @@ public class HtmlReporter extends Reporter {
             int startOffset,
             int endOffset,
             @NonNull Severity severity) {
-        getHighlighter(file, contents)
-                .generateHtml(builder, startOffset, endOffset, severity.isError());
+        int start = Math.max(0, startOffset);
+        int end = Math.max(start, Math.min(endOffset, contents.length()));
+        getHighlighter(file, contents).generateHtml(builder, start, end, severity.isError());
     }
 }

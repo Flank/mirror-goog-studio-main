@@ -104,6 +104,11 @@ class LintUtilsTest : TestCase() {
             "foo, bar, baz",
             formatList(Arrays.asList("foo", "bar", "baz"), 0, false)
         )
+
+        assertEquals(
+            "foo, bar and baz",
+            formatList(Arrays.asList("foo", "bar", "baz"), 0, false, true)
+        )
     }
 
     fun testIsDataBindingExpression() {

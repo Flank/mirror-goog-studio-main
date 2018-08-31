@@ -426,6 +426,40 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testKotlin4() {
+        // Regression test for https://issuetracker.google.com/113198298
+        //noinspection all // Sample code
+        lint().files(
+                        mLayout1,
+                        kotlin(
+                                ""
+                                        + "package test.pkg.other\n"
+                                        + "\n"
+                                        + "import android.app.Activity\n"
+                                        + "import android.os.Bundle\n"
+                                        + "import test.pkg.R as RC\n"
+                                        + "\n"
+                                        + "class MainIsUsed : Activity() {\n"
+                                        + "    public override fun onCreate(savedInstanceState: Bundle?) {\n"
+                                        + "        super.onCreate(savedInstanceState)\n"
+                                        + "        setContentView(RC.layout.main)\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        java(
+                                "src/test/pkg/R.java",
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "public class R {\n"
+                                        + "    public static class layout {\n"
+                                        + "        public static final int main = 1;\n"
+                                        + "    }\n"
+                                        + "}"),
+                        manifest().minSdk(14))
+                .issues(UnusedResourceDetector.ISSUE) // Not id's
+                .run()
+                .expectClean();
+    }
+
     /* Not sure about this -- why would we ignore drawable XML?
     public void testIgnoreXmlDrawable() throws Exception {
         assertEquals(

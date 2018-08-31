@@ -28,7 +28,6 @@ import com.android.tools.lint.detector.api.Severity;
 
 public class ConstraintLayoutDetectorTest extends AbstractCheckTest {
 
-    private static final String NO_WARNING = "No warnings.";
     public void testMissingConstraints() {
         String expected =
                 ""
@@ -289,7 +288,7 @@ public class ConstraintLayoutDetectorTest extends AbstractCheckTest {
                                                 + "    compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha3\"'\n"
                                                 + "}"));
 
-        lint().projects(project).checkMessage(this::checkReportedError).run().expect(NO_WARNING);
+        lint().projects(project).checkMessage(this::checkReportedError).run().expectClean();
     }
 
     public void testWidthHeightMatchParent() {
@@ -320,7 +319,7 @@ public class ConstraintLayoutDetectorTest extends AbstractCheckTest {
                                                 + "    compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha3\"'\n"
                                                 + "}"));
 
-        lint().projects(project).checkMessage(this::checkReportedError).run().expect(NO_WARNING);
+        lint().projects(project).checkMessage(this::checkReportedError).run().expectClean();
     }
 
     public void testWidthMatchParentOnlyError() {
@@ -426,7 +425,7 @@ public class ConstraintLayoutDetectorTest extends AbstractCheckTest {
                                                 + "    compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha3\"'\n"
                                                 + "}"));
 
-        lint().projects(project).checkMessage(this::checkReportedError).run().expect(NO_WARNING);
+        lint().projects(project).checkMessage(this::checkReportedError).run().expectClean();
     }
 
     public void testHeightMatchParentWidthConstraint() {
@@ -458,7 +457,7 @@ public class ConstraintLayoutDetectorTest extends AbstractCheckTest {
                                                 + "    compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha3\"'\n"
                                                 + "}"));
 
-        lint().projects(project).checkMessage(this::checkReportedError).run().expect(NO_WARNING);
+        lint().projects(project).checkMessage(this::checkReportedError).run().expectClean();
     }
 
     @Override

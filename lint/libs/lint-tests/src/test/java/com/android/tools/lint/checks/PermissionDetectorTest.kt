@@ -19,7 +19,6 @@ package com.android.tools.lint.checks
 import com.android.SdkConstants.TAG_USES_PERMISSION
 import com.android.SdkConstants.TAG_USES_PERMISSION_SDK_23
 import com.android.SdkConstants.TAG_USES_PERMISSION_SDK_M
-import com.android.tools.lint.checks.infrastructure.LintDetectorTest
 import com.android.tools.lint.detector.api.Detector
 
 class PermissionDetectorTest : AbstractCheckTest() {
@@ -30,10 +29,10 @@ class PermissionDetectorTest : AbstractCheckTest() {
         """
                 package android.location;
 
-                import android.support.annotation.RequiresPermission;
-
                 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
                 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
+
+                import android.support.annotation.RequiresPermission;
 
                 @SuppressWarnings({"UnusedDeclaration", "ClassNameDiffersFromFileName"})
                 public abstract class LocationManager {
@@ -109,7 +108,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
             permissionBlock.append("    <uses-permission android:name=\"").append(permission)
                 .append("\" />\n")
         }
-        return LintDetectorTest.xml(
+        return xml(
             "AndroidManifest.xml", "" +
                     "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                     "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
@@ -647,7 +646,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
 
     fun testRequiresPermissionWithinRequires() {
         lint().files(
-            LintDetectorTest.java(
+            java(
                 "" +
                         "package com.example.mylibrary1;\n" +
                         "\n" +
@@ -673,7 +672,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
     fun testMissingPermission() {
 
         lint().files(
-            LintDetectorTest.java(
+            java(
                 "" +
                         "package test.pkg;\n" +
                         "import android.Manifest;\n" +
@@ -709,7 +708,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
         //   https://code.google.com/p/android/issues/detail?id=177381
 
         lint().files(
-            LintDetectorTest.java(
+            java(
                 "" +
                         "package test.pkg;\n" +
                         "import android.support.annotation.RequiresPermission;\n" +
@@ -739,9 +738,8 @@ class PermissionDetectorTest : AbstractCheckTest() {
     }
 
     fun testLibraryRevocablePermission() {
-
         lint().files(
-            LintDetectorTest.manifest(
+            manifest(
                 "" +
                         "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                         "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
@@ -762,7 +760,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
                         "\n" +
                         "</manifest>\n"
             ),
-            LintDetectorTest.java(
+            java(
                 "" +
                         "package test.pkg;\n" +
                         "\n" +
@@ -791,7 +789,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
     fun testHandledPermission() {
 
         lint().files(
-            LintDetectorTest.manifest(
+            manifest(
                 "" +
                         "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                         "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
@@ -812,7 +810,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
                         "\n" +
                         "</manifest>\n"
             ),
-            LintDetectorTest.java(
+            java(
                 "" +
                         "package test.pkg;\n" +
                         "\n" +
@@ -921,7 +919,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
 
     fun testIntentsAndContentResolvers() {
         lint().files(
-            LintDetectorTest.java(
+            java(
                 "" +
                         "package test.pkg;\n" +
                         "\n" +
@@ -1022,7 +1020,9 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     }
                 }
                 """
-            ).indented()
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
             src/test/pkg/PermissionTest.java:13: Error: Missing permissions required by Builder.setPersisted: android.permission.RECEIVE_BOOT_COMPLETED [MissingPermission]
@@ -1031,5 +1031,55 @@ class PermissionDetectorTest : AbstractCheckTest() {
             1 errors, 0 warnings
             """
         )
+    }
+
+    fun test113159124() {
+        lint().files(
+            manifest(
+                "" +
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    package=\"test.pkg.permissiontest\">\n" +
+                        "\n" +
+                        "    <uses-sdk android:minSdkVersion=\"17\" android:targetSdkVersion=\"23\" />\n" +
+                        "\n" +
+                        "    <permission\n" +
+                        "        android:name=\"my.normal.P1\"\n" +
+                        "        android:protectionLevel=\"normal\" />\n" +
+                        "\n" +
+                        "    <permission\n" +
+                        "        android:name=\"my.dangerous.P2\"\n" +
+                        "        android:protectionLevel=\"dangerous\" />\n" +
+                        "\n" +
+                        "    <uses-permission android:name=\"my.normal.P1\" />\n" +
+                        "    <uses-permission android:name=\"my.dangerous.P2\" />\n" +
+                        "\n" +
+                        "</manifest>\n"
+            ),
+            java(
+                "" +
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import android.support.annotation.RequiresPermission;\n" +
+                        "\n" +
+                        "public class X {\n" +
+                        "    @RequiresPermission(\"my.dangerous.P2\")\n" +
+                        "    public void something() {\n" +
+                        "        methodRequiresNormal();\n" +
+                        "        methodRequiresDangerous();\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    @RequiresPermission(\"my.normal.P1\")\n" +
+                        "    public void methodRequiresNormal() {\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    @RequiresPermission(\"my.dangerous.P2\")\n" +
+                        "    public void methodRequiresDangerous() {\n" +
+                        "    }\n" +
+                        "}\n"
+            ),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
     }
 }

@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.checks
 
-import com.android.tools.lint.checks.infrastructure.LintDetectorTest.xml
 import com.android.tools.lint.detector.api.Detector
 
 class StringCasingDetectorTest : AbstractCheckTest() {
@@ -38,21 +37,17 @@ class StringCasingDetectorTest : AbstractCheckTest() {
     }
 
     fun testDuplicateStrings() {
-        val expected = ("""
-                res/values/duplicate_strings.xml:3: Warning: Duplicate string detected hello; Please use android:inputType or android:capitalize to avoid string duplication in resources. [DuplicateStrings]
+        val expected = """
+                res/values/duplicate_strings.xml:3: Warning: Duplicate string value HELLO, used in hello_caps and hello. Use android:inputType or android:capitalize to treat these as the same and avoid string duplication. [DuplicateStrings]
                                     <string name="hello">hello</string>
                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                res/values/duplicate_strings.xml:4: Warning: Duplicate string detected HELLO; Please use android:inputType or android:capitalize to avoid string duplication in resources. [DuplicateStrings]
-                                    <string name="hello_caps">HELLO</string>
-                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                res/values/duplicate_strings.xml:5: Warning: Duplicate string detected hello world; Please use android:inputType or android:capitalize to avoid string duplication in resources. [DuplicateStrings]
+                    res/values/duplicate_strings.xml:4: Duplicates value in hello (case varies, but you can use android:inputType or android:capitalize in the presentation)
+                res/values/duplicate_strings.xml:5: Warning: Duplicate string value Hello World, used in hello_world and title_casing_hello_world. Use android:inputType or android:capitalize to treat these as the same and avoid string duplication. [DuplicateStrings]
                                     <string name="hello_world">hello world</string>
                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                res/values/duplicate_strings.xml:6: Warning: Duplicate string detected Hello World; Please use android:inputType or android:capitalize to avoid string duplication in resources. [DuplicateStrings]
-                                    <string name="title_casing_hello_world">Hello World</string>
-                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                0 errors, 4 warnings
-                """)
+                    res/values/duplicate_strings.xml:6: Duplicates value in hello_world (case varies, but you can use android:inputType or android:capitalize in the presentation)
+                0 errors, 2 warnings
+                """
         lint().files(duplicateStrings).run().expect(expected)
     }
 
@@ -81,16 +76,37 @@ class StringCasingDetectorTest : AbstractCheckTest() {
     )
 
     fun testTurkishDuplicateStrings() {
-        val expected = ("""
-                res/values-tr/duplicate_strings.xml:3: Warning: Duplicate string detected hello i; Please use android:inputType or android:capitalize to avoid string duplication in resources. [DuplicateStrings]
+        val expected = """
+                res/values-tr/duplicate_strings.xml:3: Warning: Duplicate string value hello İ, used in hello_caps and hello. Use android:inputType or android:capitalize to treat these as the same and avoid string duplication. [DuplicateStrings]
                                     <string name="hello">hello i</string>
                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                res/values-tr/duplicate_strings.xml:4: Warning: Duplicate string detected hello İ; Please use android:inputType or android:capitalize to avoid string duplication in resources. [DuplicateStrings]
-                                    <string name="hello_caps">hello İ</string>
-                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                0 errors, 2 warnings
-                """)
+                    res/values-tr/duplicate_strings.xml:4: Duplicates value in hello (case varies, but you can use android:inputType or android:capitalize in the presentation)
+                0 errors, 1 warnings
+                """
         lint().files(turkishDuplicateStrings).run().expect(expected)
+    }
+
+    fun testDuplicatesWithoutCaseDifferences() {
+        val expected = """
+                res/values/duplicate_strings.xml:3: Warning: Duplicate string value Hello, used in hello1, hello2 and hello3 [DuplicateStrings]
+                                    <string name="hello1">Hello</string>
+                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    res/values/duplicate_strings.xml:4: Duplicates value in hello1
+                    res/values/duplicate_strings.xml:5: Duplicates value in hello1
+                0 errors, 1 warnings
+                """
+        lint().files(
+            xml(
+                "res/values/duplicate_strings.xml",
+                """<?xml version="1.0" encoding="utf-8"?>
+                <resources>
+                    <string name="hello1">Hello</string>
+                    <string name="hello2">Hello</string>
+                    <string name="hello3">Hello</string>
+                </resources>
+                """
+            )
+        ).run().expect(expected)
     }
 
     fun testIgnoredNonTranslatable() {

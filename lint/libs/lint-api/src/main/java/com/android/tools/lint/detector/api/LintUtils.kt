@@ -173,7 +173,7 @@ fun getInternalMethodName(method: PsiMethod): String {
  * @param maxItems the maximum number of items to print
  * @return a comma separated list-string
  */
-fun formatList(strings: List<String>, maxItems: Int): String {
+fun formatList(strings: List<String>, maxItems: Int = Integer.MAX_VALUE): String {
     return formatList(strings, maxItems, true)
 }
 
@@ -184,9 +184,15 @@ fun formatList(strings: List<String>, maxItems: Int): String {
  * @param strings the list of strings to print out as a comma separated list
  * @param maxItems the maximum number of items to print
  * @param sort whether the items should be sorted before printing.
+ * @param useConjunction whether the last two items should be joined with "and" instead of ","
  * @return a comma separated list-string
  */
-fun formatList(strings: List<String>, maxItems: Int, sort: Boolean): String {
+fun formatList(
+    strings: List<String>,
+    maxItems: Int = Integer.MAX_VALUE,
+    sort: Boolean = true,
+    useConjunction: Boolean = false
+): String {
     var sortedStrings = strings
     if (sort) {
         val sorted = ArrayList(sortedStrings)
@@ -200,7 +206,11 @@ fun formatList(strings: List<String>, maxItems: Int, sort: Boolean): String {
     val n = sortedStrings.size
     while (i < n) {
         if (sb.isNotEmpty()) {
-            sb.append(", ")
+            if (useConjunction && i == n - 1) {
+                sb.append(" and ")
+            } else {
+                sb.append(", ")
+            }
         }
         sb.append(sortedStrings[i])
 

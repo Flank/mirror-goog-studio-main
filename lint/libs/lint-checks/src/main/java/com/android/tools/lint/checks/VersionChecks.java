@@ -301,7 +301,8 @@ public class VersionChecks {
     private static boolean isUnconditionalReturn(UExpression statement) {
         if (statement instanceof UBlockExpression) {
             List<UExpression> expressions = ((UBlockExpression) statement).getExpressions();
-            if (expressions.size() == 1 && expressions.get(0) instanceof UReturnExpression) {
+            int statements = expressions.size();
+            if (statements > 0 && expressions.get(statements - 1) instanceof UReturnExpression) {
                 return true;
             }
         }
