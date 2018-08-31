@@ -87,7 +87,7 @@ public final class IdeVariantImpl extends IdeModel implements IdeVariant {
         myTestedTargetVariants = getTestedTargetVariants(variant, modelCache);
         myInstantAppCompatible =
                 modelVersion != null
-                        && modelVersion.isAtLeastIncludingPreviews(3, 3, 0)
+                        && modelVersion.isAtLeast(3, 3, 0, "alpha", 10, true)
                         && variant.isInstantAppCompatible();
 
         myHashCode = calculateHashCode();
