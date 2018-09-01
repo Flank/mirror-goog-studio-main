@@ -20,6 +20,7 @@ import com.android.ide.common.util.PathString
 import com.android.ide.common.util.toPathString
 import com.android.projectmodel.ExternalLibrary
 import com.android.projectmodel.DynamicResourceValue
+import com.android.projectmodel.RecursiveResourceFolder
 import com.android.resources.ResourceType
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
@@ -57,7 +58,7 @@ class GradleModelConverterUtilTest {
                     manifestFile = PathString(manifest),
                     classJars = listOf(PathString(jarFile)),
                     dependencyJars = localJars.map(::PathString),
-                    resFolder = PathString(resFolder),
+                    resFolder = RecursiveResourceFolder(PathString(resFolder)),
                     symbolFile = PathString(symbolFile),
                     resApkFile = resStaticLibrary?.let(::PathString)
                 )

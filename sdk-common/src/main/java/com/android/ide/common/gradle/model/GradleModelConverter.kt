@@ -48,6 +48,7 @@ import com.android.projectmodel.DynamicResourceValue
 import com.android.projectmodel.ManifestAttributes
 import com.android.projectmodel.NamespacingType
 import com.android.projectmodel.ProjectType
+import com.android.projectmodel.RecursiveResourceFolder
 import com.android.projectmodel.SourceSet
 import com.android.projectmodel.Variant
 import com.android.projectmodel.matchAllArtifacts
@@ -572,7 +573,7 @@ fun convertLibrary(builderModelLibrary: Library): com.android.projectmodel.Libra
                 manifestFile = PathString(manifest),
                 classJars = listOf(PathString(jarFile)),
                 dependencyJars = localJars.map(::PathString),
-                resFolder = PathString(resFolder),
+                resFolder = RecursiveResourceFolder(PathString(resFolder)),
                 symbolFile = PathString(symbolFile),
                 resApkFile = resStaticLibrary?.let(::PathString)
             )

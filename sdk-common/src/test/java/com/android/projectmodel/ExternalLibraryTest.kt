@@ -82,8 +82,8 @@ class ExternalLibraryTest {
 
     @Test
     fun withResFolderTest() {
-        assertThat(ExternalLibrary("foo").withResFolder(barPath))
-            .isEqualTo(ExternalLibrary(address = "foo", resFolder = barPath))
+        assertThat(ExternalLibrary("foo").withResFolder(RecursiveResourceFolder(barPath)))
+            .isEqualTo(ExternalLibrary(address = "foo", resFolder = RecursiveResourceFolder(barPath)))
     }
 
     @Test
@@ -111,7 +111,7 @@ class ExternalLibraryTest {
         assertThat(testLib.copy(manifestFile = PathString("bar")).isEmpty()).isFalse()
         assertThat(testLib.copy(classJars = listOf(PathString("bar"))).isEmpty()).isFalse()
         assertThat(testLib.copy(dependencyJars = listOf(PathString("bar"))).isEmpty()).isFalse()
-        assertThat(testLib.copy(resFolder = PathString("res")).isEmpty()).isFalse()
+        assertThat(testLib.copy(resFolder = RecursiveResourceFolder(PathString("res"))).isEmpty()).isFalse()
         assertThat(testLib.copy(symbolFile = PathString("res")).isEmpty()).isFalse()
         assertThat(testLib.copy(resApkFile = PathString("res")).isEmpty()).isFalse()
     }

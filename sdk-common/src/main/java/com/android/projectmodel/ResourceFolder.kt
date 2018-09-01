@@ -28,25 +28,30 @@ import com.android.ide.common.util.PathString
  * and equals.
  */
 sealed class ResourceFolder {
-    /**
-     * filesystem Location of the Resource Folder
-     */
-    abstract val root: PathString
+  /**
+   * filesystem Location of the Resource Folder
+   */
+  abstract val root: PathString
+  /**
+   * List of paths to the resources being included by this resource folder that need to be included as resources. These are all located
+   * within the [root] folder. It means caller is recommended (but not required) to ignore all other resources.
+   * If resources is null, all files under [root] should be included
+   */
+  abstract val resources: List<PathString>?
 }
 
 /**
  * Represents a resource folder that includes all of its contents as resources.
  */
-data class RecursiveResourceFolder(override val root: PathString) : ResourceFolder()
+data class RecursiveResourceFolder(override val root: PathString) : ResourceFolder() {
+  override val resources: List<PathString>?
+    get() = null
+}
 
 /**
  * Represents a resource folder that selectively includes a subset of its contents as resources.
  */
 data class SelectiveResourceFolder(
-    override val root: PathString,
-    /**
-     * List of paths to the resources being included by this resource folder. These are all located
-     * within the [root] folder.
-     */
-    val resources: List<PathString>
+  override val root: PathString,
+  override val resources: List<PathString>?
 ) : ResourceFolder()

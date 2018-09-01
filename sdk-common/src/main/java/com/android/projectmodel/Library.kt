@@ -84,7 +84,7 @@ data class ExternalLibrary(
      * Path to the folder containing unzipped, plain-text, non-namespaced resources. Or null
      * for libraries that contain no resources.
      */
-    val resFolder: PathString? = null,
+    val resFolder: ResourceFolder? = null,
 
     /**
      * Path to the symbol file (`R.txt`) containing information necessary to generate the
@@ -127,7 +127,7 @@ data class ExternalLibrary(
     /**
      * Returns a copy of the receiver with the given res folder. Intended to simplify construction from Java.
      */
-    fun withResFolder(path: PathString?) = copy(resFolder = path)
+    fun withResFolder(path: ResourceFolder?) = copy(resFolder = path)
 
     /**
      * Returns a copy of the receiver with the given location. Intended to simplify construction from Java.
