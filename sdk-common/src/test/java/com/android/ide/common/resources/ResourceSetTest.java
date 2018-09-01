@@ -116,6 +116,19 @@ public class ResourceSetTest extends BaseTestCase {
         assertTrue(gotException);
     }
 
+    @Test
+    public void testResourceSet_singleFile() throws Exception {
+        File resourceFile =
+                TestResources.getFile(getClass(), "/testData/resources/baseSet/layout/main.xml");
+        ResourceSet set = createResourceSet();
+        set.addSource(resourceFile);
+        RecordingLogger logger = new RecordingLogger();
+        set.loadFromFiles(logger);
+        checkLogger(logger);
+        assertThat(set.size()).isEqualTo(1);
+        assertThat(set.getDataMap().get("layout/main")).isNotEmpty();
+    }
+
     @NonNull
     private static ResourceSet createResourceSet() {
         return new ResourceSet("main", ResourceNamespace.RES_AUTO, null, true);

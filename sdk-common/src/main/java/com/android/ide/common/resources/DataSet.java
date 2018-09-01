@@ -250,6 +250,7 @@ abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>>
 
             } else if (file.isFile()) {
                 // TODO support resource bundle
+                loadFile(file, file, logger);
             }
         }
         MergingException.throwIfNonEmpty(errors);
