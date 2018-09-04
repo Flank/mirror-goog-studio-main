@@ -51,21 +51,22 @@ data class Artifact(
         /**
          * List of class folders and .jar files containing the output of java compilation for this artifact.
          */
-        val classFolders: List<PathString> = emptyList(),
-        /**
-         * The package name of the R file. Application projects may also use this as the default
-         * value for the application ID. It is defined here:
-         * https://developer.android.com/studio/build/application-id.html. Null if undefined.
-         * This will be undefined if it is unknown to the build system at sync time or if this is
-         * not an Android artifact.
-         */
-        val packageName: String? = null
+        val classFolders: List<PathString> = emptyList()
 ) {
     /**
      * The compile-time dependencies for this artifact. This is a shorthand for accessing the compile time dependencies from [resolved].
      */
     val compileDeps: List<ArtifactDependency>
         get() = resolved.compileDeps ?: emptyList()
+
+    /**
+     * The package name of the R file. Application projects may also use this as the default
+     * value for the application ID. It is defined here:
+     * https://developer.android.com/studio/build/application-id.html. Null if undefined.
+     * This will be undefined if it is unknown to the build system at sync time or if this is
+     * not an Android artifact.
+     */
+    val packageName: String? get() = resolved.packageName
 
     override fun toString(): String = printProperties(this, Artifact(name = ""))
 }
