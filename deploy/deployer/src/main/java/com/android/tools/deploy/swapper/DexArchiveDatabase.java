@@ -61,6 +61,9 @@ public abstract class DexArchiveDatabase {
 
     // Low level implementations below.
 
+    /** Invoked when we want to terminate connection to the database */
+    public void close() {}
+
     /** Returns Classname -> Checksum Map of the given dex file index. */
     public abstract Map<String, Long> getClassesChecksum(int dexFileIndex);
 
