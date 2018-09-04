@@ -80,11 +80,16 @@ data class ConfigTableSchema(
 }
 
 /**
+ * Name of the dimension that identifies the artifact.
+ */
+val ARTIFACT_DIMENSION_NAME = "artifact"
+
+/**
  * Default last dimension for a config table. It contains the default three artifacts for each
  * variant (a main artifact, a unit test artifact, and an android test artifact).
  */
 val defaultArtifactDimension = ConfigDimension(
-    "artifact", listOf(
+    ARTIFACT_DIMENSION_NAME, listOf(
         ARTIFACT_NAME_MAIN,
         ARTIFACT_NAME_UNIT_TEST,
         ARTIFACT_NAME_ANDROID_TEST
