@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 @file:JvmName("ConfigUtil")
+
 package com.android.projectmodel
 
 /**
@@ -26,115 +27,119 @@ package com.android.projectmodel
  * use Kotlin named arguments to stay source compatible.
  */
 data class Config(
-        /**
-         * Returns the application ID suffix for this [Config] or null if none.
-         */
-        val applicationIdSuffix: String? = null,
-        /**
-         * Returns the version name suffix for this [Config] or null if none.
-         */
-        val versionNameSuffix: String? = null,
-        /**
-         * Metadata representing the set of manifest attributes that are set explicitly by this [Config]. These attributes will
-         * override values from lower-priority [Config] instances.
-         */
-        val manifestValues: ManifestAttributes = ManifestAttributes(),
-        /**
-         * The map of key value pairs for placeholder substitution in the android manifest file. This map will be used by the manifest merger.
-         */
-        val manifestPlaceholderValues: Map<String, Any> = emptyMap(),
-        /**
-         * List of sources contributed by this [Config].
-         */
-        val sources: SourceSet = SourceSet(),
-        /**
-         * Dynamic resources. Map of resource names onto resource values.
-         */
-        val resValues: Map<String, DynamicResourceValue> = emptyMap(),
-        /**
-         * List of dependencies needed to build an artifact that uses this [Config]. Jars and class files in this list may be interface-only.
-         * That is, they are required to contain enough information for compilation - such as method signatures. Any content that would
-         * only be used for execution - such as method bodies - is not required.
-         *
-         * This is null if the [Config]'s compile-time dependencies are unknown.
-         */
-        val compileDeps: List<ArtifactDependency>? = null,
-        /**
-         * True if legacy multi-dex is enabled. Null if not set.
-         */
-        val legacyMultidexEnabled: Boolean? = null,
-        @get:JvmName("isMinifyEnabled")
-        /**
-         * True if there's a possibility that a proguard-like tool will be used to perform
-         * minification in this configuration.
-         */
-        val minifyEnabled: Boolean = false,
-        /**
-         * The fully qualified class name of the test instrumentation runner, or null if none.
-         */
-        val testInstrumentationRunner: String? = null,
-        /**
-         * The arguments for the test instrumentation runner.
-         */
-        val testInstrumentationRunnerArguments: Map<String, String> = emptyMap(),
-        /**
-         * The resource configurations for this [Config]. This is the list of -c parameters passed to aapt.
-         */
-        val resourceConfigurations: Collection<String> = emptyList(),
-        @get:JvmName("isUsingSupportLibVectors")
-        /**
-         * True iff the [Config] is using the support library to draw vectors at runtime.
-         */
-        val usingSupportLibVectors: Boolean = false,
-        /**
-         * The package name of the R file. Application projects may also use this as the default
-         * value for the application ID. It is defined here:
-         * https://developer.android.com/studio/build/application-id.html.
-         */
-        val packageName: String? = null
+    /**
+     * Returns the application ID suffix for this [Config] or null if none.
+     */
+    val applicationIdSuffix: String? = null,
+    /**
+     * Returns the version name suffix for this [Config] or null if none.
+     */
+    val versionNameSuffix: String? = null,
+    /**
+     * Metadata representing the set of manifest attributes that are set explicitly by this [Config]. These attributes will
+     * override values from lower-priority [Config] instances.
+     */
+    val manifestValues: ManifestAttributes = ManifestAttributes(),
+    /**
+     * The map of key value pairs for placeholder substitution in the android manifest file. This map will be used by the manifest merger.
+     */
+    val manifestPlaceholderValues: Map<String, Any> = emptyMap(),
+    /**
+     * List of sources contributed by this [Config].
+     */
+    val sources: SourceSet = SourceSet(),
+    /**
+     * Dynamic resources. Map of resource names onto resource values.
+     */
+    val resValues: Map<String, DynamicResourceValue> = emptyMap(),
+    /**
+     * List of dependencies needed to build an artifact that uses this [Config]. Jars and class files in this list may be interface-only.
+     * That is, they are required to contain enough information for compilation - such as method signatures. Any content that would
+     * only be used for execution - such as method bodies - is not required.
+     *
+     * This is null if the [Config]'s compile-time dependencies are unknown.
+     */
+    val compileDeps: List<ArtifactDependency>? = null,
+    /**
+     * True if legacy multi-dex is enabled. Null if not set.
+     */
+    val legacyMultidexEnabled: Boolean? = null,
+    @get:JvmName("isMinifyEnabled")
+    /**
+     * True if there's a possibility that a proguard-like tool will be used to perform
+     * minification in this configuration.
+     */
+    val minifyEnabled: Boolean = false,
+    /**
+     * The fully qualified class name of the test instrumentation runner, or null if none.
+     */
+    val testInstrumentationRunner: String? = null,
+    /**
+     * The arguments for the test instrumentation runner.
+     */
+    val testInstrumentationRunnerArguments: Map<String, String> = emptyMap(),
+    /**
+     * The resource configurations for this [Config]. This is the list of -c parameters passed to aapt.
+     */
+    val resourceConfigurations: Collection<String> = emptyList(),
+    @get:JvmName("isUsingSupportLibVectors")
+    /**
+     * True iff the [Config] is using the support library to draw vectors at runtime.
+     */
+    val usingSupportLibVectors: Boolean = false,
+    /**
+     * The package name of the R file. Application projects may also use this as the default
+     * value for the application ID. It is defined here:
+     * https://developer.android.com/studio/build/application-id.html.
+     */
+    val packageName: String? = null
 ) {
     override fun toString(): String = printProperties(this, Config())
 
-  /**
-   * Merges this [Config] with another higher-priority [Config].
-   */
-  fun mergeWith(other: Config): Config =
-      Config(
-          applicationIdSuffix = mergeNullable(applicationIdSuffix, other.applicationIdSuffix, { a, b -> a + b} ),
-          versionNameSuffix = mergeNullable(versionNameSuffix, other.versionNameSuffix, { a, b -> a + b} ),
-          manifestValues = manifestValues + other.manifestValues,
-          manifestPlaceholderValues = manifestPlaceholderValues + other.manifestPlaceholderValues,
-          sources = sources + other.sources,
-          resValues = resValues + other.resValues,
-          compileDeps = mergeNullable(compileDeps, other.compileDeps, { a, b -> a + b}),
-          legacyMultidexEnabled = other.legacyMultidexEnabled ?: legacyMultidexEnabled,
-          minifyEnabled = minifyEnabled || other.minifyEnabled,
-          testInstrumentationRunner = other.testInstrumentationRunner ?: testInstrumentationRunner,
-          testInstrumentationRunnerArguments = if (other.testInstrumentationRunner != null)
-            other.testInstrumentationRunnerArguments
-          else testInstrumentationRunnerArguments,
-          resourceConfigurations = resourceConfigurations + other.resourceConfigurations,
-          usingSupportLibVectors = usingSupportLibVectors || other.usingSupportLibVectors,
-          packageName = other.packageName ?: packageName
-      )
+    /**
+     * Merges this [Config] with another higher-priority [Config].
+     */
+    fun mergeWith(other: Config): Config =
+        Config(
+            applicationIdSuffix = mergeNullable(
+                applicationIdSuffix,
+                other.applicationIdSuffix,
+                { a, b -> a + b }),
+            versionNameSuffix = mergeNullable(
+                versionNameSuffix,
+                other.versionNameSuffix,
+                { a, b -> a + b }),
+            manifestValues = manifestValues + other.manifestValues,
+            manifestPlaceholderValues = manifestPlaceholderValues + other.manifestPlaceholderValues,
+            sources = sources + other.sources,
+            resValues = resValues + other.resValues,
+            compileDeps = mergeNullable(compileDeps, other.compileDeps, { a, b -> a + b }),
+            legacyMultidexEnabled = other.legacyMultidexEnabled ?: legacyMultidexEnabled,
+            minifyEnabled = minifyEnabled || other.minifyEnabled,
+            testInstrumentationRunner = other.testInstrumentationRunner
+                ?: testInstrumentationRunner,
+            testInstrumentationRunnerArguments = if (other.testInstrumentationRunner != null)
+                other.testInstrumentationRunnerArguments
+            else testInstrumentationRunnerArguments,
+            resourceConfigurations = resourceConfigurations + other.resourceConfigurations,
+            usingSupportLibVectors = usingSupportLibVectors || other.usingSupportLibVectors,
+            packageName = other.packageName ?: packageName
+        )
 }
 
 /**
  * Computes the [SourceSet] that includes all sources from all [Config] instances in the list.
  */
-fun Iterable<Config>.mergedSourceSet(): SourceSet
-  = fold(SourceSet()) {a, b -> a + b.sources}
+fun Iterable<Config>.mergedSourceSet(): SourceSet = fold(SourceSet()) { a, b -> a + b.sources }
 
 /**
  * Returns the [Config] produced by merging all the given configs in order.
  */
-fun Iterable<Config>.merged(): Config
-  = fold(Config()) {a, b -> a.mergeWith(b)}
+fun Iterable<Config>.merged(): Config = fold(Config()) { a, b -> a.mergeWith(b) }
 
-
-private fun <T> mergeNullable(deps: T?, moreDeps: T?, merger: (T, T)-> T) : T? =
-  when {
-      (deps == null) -> moreDeps
-      (moreDeps == null) -> deps
-      else -> merger(deps, moreDeps)
-  }
+private fun <T> mergeNullable(deps: T?, moreDeps: T?, merger: (T, T) -> T): T? =
+    when {
+        (deps == null) -> moreDeps
+        (moreDeps == null) -> deps
+        else -> merger(deps, moreDeps)
+    }
