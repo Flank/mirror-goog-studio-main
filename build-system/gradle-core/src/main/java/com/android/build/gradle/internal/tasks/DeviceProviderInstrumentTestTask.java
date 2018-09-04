@@ -341,6 +341,12 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
         return testData.getTestedApksDir();
     }
 
+    @InputFiles
+    @Optional
+    public FileCollection getTestedApksFromBundle() {
+        return testData.getTestedApksFromBundle();
+    }
+
     public static class CreationAction
             extends VariantTaskCreationAction<DeviceProviderInstrumentTestTask> {
 

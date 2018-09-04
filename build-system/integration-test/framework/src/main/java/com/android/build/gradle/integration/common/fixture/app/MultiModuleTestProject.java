@@ -114,6 +114,14 @@ public class MultiModuleTestProject implements TestProject {
         }
 
         @NonNull
+        public Builder androidTestDependency(@NonNull AndroidTestModule from, @NonNull String to) {
+            String snippet =
+                    "\ndependencies {\n    " + "androidTestImplementation '" + to + "'\n}\n";
+            from.replaceFile(from.getFile("build.gradle").appendContent(snippet));
+            return this;
+        }
+
+        @NonNull
         public Builder dependency(@NonNull AndroidTestModule from, @NonNull AndroidTestModule to) {
             return dependency("implementation", from, to);
         }

@@ -37,6 +37,8 @@ public class AndroidArtifacts {
     private static final String TYPE_APK = "apk";
     private static final String TYPE_JAR = ArtifactTypeDefinition.JAR_TYPE;
     private static final String TYPE_BUNDLE = "aab";
+    // The apks produced from the android app bundle
+    private static final String TYPE_APKS_FROM_BUNDLE = "bundle-apks";
 
     // type for processed jars (the jars may need to be processed, e.g. jetified to AndroidX, before
     // they can be used)
@@ -219,6 +221,8 @@ public class AndroidArtifacts {
         MODULE_BUNDLE(TYPE_MODULE_BUNDLE),
         // final bundle generate by bundle-tool
         BUNDLE(TYPE_BUNDLE),
+        // apks produced from the bundle, for consumption by tests.
+        APKS_FROM_BUNDLE(TYPE_APKS_FROM_BUNDLE),
         // the manifest to be used by bundle-tool
         BUNDLE_MANIFEST(TYPE_BUNDLE_MANIFEST),
 

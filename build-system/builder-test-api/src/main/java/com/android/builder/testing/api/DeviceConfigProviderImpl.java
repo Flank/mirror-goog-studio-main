@@ -19,6 +19,7 @@ package com.android.builder.testing.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Implementation of {@link DeviceConfigProvider} using a {@link DeviceConnector} and
@@ -54,6 +55,16 @@ public class DeviceConfigProviderImpl implements DeviceConfigProvider {
 
     @Nullable
     @Override
+    public Set<String> getLanguageSplits() {
+        try {
+            return deviceConnector.getLanguageSplits();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    @Nullable
+    @Override
     public String getRegion() {
         return deviceConnector.getRegion();
     }
@@ -62,5 +73,16 @@ public class DeviceConfigProviderImpl implements DeviceConfigProvider {
     @Override
     public List<String> getAbis() {
         return deviceConnector.getAbis();
+    }
+
+    @Nullable
+    @Override
+    public String getApiCodeName() {
+        return deviceConnector.getApiCodeName();
+    }
+
+    @Override
+    public int getApiLevel() {
+        return deviceConnector.getApiLevel();
     }
 }

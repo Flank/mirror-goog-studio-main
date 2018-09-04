@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.builder.model.SourceProvider;
 import com.android.builder.testing.TestData;
 import com.android.builder.testing.api.DeviceConfigProvider;
 import com.android.ide.common.build.SplitOutputMatcher;
@@ -129,19 +128,6 @@ public class TestApplicationTestData extends AbstractTestDataImpl {
                             .collect(Collectors.toList()));
         }
         return selectedApks.build();
-    }
-
-    @NonNull
-    @Override
-    public List<File> getTestDirectories() {
-        // For now we check if there are any test sources. We could inspect the test classes and
-        // apply JUnit logic to see if there's something to run, but that would not catch the case
-        // where user makes a typo in a test name or forgets to inherit from a JUnit class
-        ImmutableList.Builder<File> javaDirectories = ImmutableList.builder();
-        for (SourceProvider sourceProvider : variantConfiguration.getSortedSourceProviders()) {
-            javaDirectories.addAll(sourceProvider.getJavaDirectories());
-        }
-        return javaDirectories.build();
     }
 
     @NonNull

@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.tasks
 
+import com.android.annotations.VisibleForTesting
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.TaskManager
@@ -24,15 +25,12 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.internal.InstallUtils
 import com.android.builder.testing.ConnectedDeviceProvider
+import com.android.builder.testing.api.DeviceConfigProviderImpl
 import com.android.builder.testing.api.DeviceConnector
 import com.android.builder.testing.api.DeviceProvider
-import com.android.bundle.Devices
 import com.android.sdklib.AndroidVersion
-import com.android.tools.build.bundletool.commands.ExtractApksCommand
 import com.android.utils.FileUtils
 import com.android.utils.ILogger
-import com.google.common.base.Joiner
-import com.google.protobuf.util.JsonFormat
 import org.gradle.api.GradleException
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
@@ -42,7 +40,6 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
-import java.nio.file.Files
 import java.nio.file.Path
 import javax.inject.Inject
 
@@ -130,20 +127,7 @@ open class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: Work
                         params.variantName
                     )
 
-                    // get the device info to create the APKs
-                    val jsonFile = getDeviceJson(device)
-                    val tempFolder: Path = Files.createTempDirectory("apkSelect")
-
-                    val builder: Devices.DeviceSpec.Builder = Devices.DeviceSpec.newBuilder()
-
-                    Files.newBufferedReader(jsonFile, Charsets.UTF_8).use {
-                        JsonFormat.parser().merge(it, builder)
-                    }
-
-                    val command = createExtractApkCommand(builder, tempFolder)
-
-                    // create the APKs
-                    val apkPaths = command.build().execute()
+                    val apkPaths = getApkFiles(device)
 
                     if (apkPaths.isEmpty()) {
                         logger.lifecycle(
@@ -188,17 +172,6 @@ open class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: Work
             }
         }
 
-        protected open fun createExtractApkCommand(
-            builder: Devices.DeviceSpec.Builder,
-            tempFolder: Path
-        ): ExtractApksCommand.Builder {
-            return ExtractApksCommand
-                .builder()
-                .setApksArchivePath(params.apkBundle.toPath())
-                .setDeviceSpec(builder.build())
-                .setOutputDirectory(tempFolder)
-        }
-
         protected open fun createDeviceProvider(iLogger: ILogger): DeviceProvider =
             ConnectedDeviceProvider(
                 params.adbExe,
@@ -206,27 +179,11 @@ open class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: Work
                 iLogger
             )
 
-        private fun getDeviceJson(device: DeviceConnector): Path {
-
-            val api = device.apiCodeName ?: device.apiLevel
-            val density = device.density
-            val abis = device.abis
-            val languages: Set<String>? = device.languageSplits
-
-            return Files.createTempFile("apkSelect", "").apply {
-                var json = "{\n" +
-                        "  \"supportedAbis\": [${abis.joinToString()}],\n" +
-                        "  \"screenDensity\": $density,\n" +
-                        "  \"sdkVersion\": $api"
-
-                if (languages != null && !languages.isEmpty()) {
-                    json = "$json,\n  \"supportedLocales\": [ ${Joiner.on(',').join(languages)} ]\n"
-                }
-
-                json = "$json}"
-
-                Files.write(this, json.toByteArray(Charsets.UTF_8))
-            }
+        @VisibleForTesting
+        protected open fun getApkFiles(device: DeviceConnector) : List<Path> {
+            return getApkFiles(
+                params.apkBundle.toPath(),
+                DeviceConfigProviderImpl(device))
         }
      }
 

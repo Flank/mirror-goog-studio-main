@@ -60,6 +60,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.RES_STATIC_L
 import com.android.build.gradle.internal.scope.InternalArtifactType.SYMBOL_LIST
 import com.android.build.gradle.internal.scope.InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME
 import com.android.build.gradle.internal.scope.AnchorOutputType.ALL_CLASSES
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.utils.toImmutableMap
 import com.android.build.gradle.internal.utils.toImmutableSet
 import com.android.builder.core.VariantType
@@ -132,6 +133,7 @@ class PublishingSpecs {
                 // FIXME: need data binding artifacts as well for Dynamic apps.
 
                 runtime(APK, ArtifactType.APK)
+                runtime(InternalArtifactType.APKS_FROM_BUNDLE, ArtifactType.APKS_FROM_BUNDLE)
                 runtime(FEATURE_TRANSITIVE_DEPS, ArtifactType.FEATURE_TRANSITIVE_DEPS)
 
                 metadata(METADATA_INSTALLED_BASE_DECLARATION, ArtifactType.METADATA_BASE_MODULE_DECLARATION)

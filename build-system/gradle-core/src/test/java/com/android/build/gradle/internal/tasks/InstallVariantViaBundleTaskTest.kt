@@ -74,10 +74,6 @@ class InstallVariantViaBundleTaskTest {
 
         verify<DeviceConnector>(deviceConnector, atLeastOnce()).name
         verify<DeviceConnector>(deviceConnector, atLeastOnce()).apiLevel
-        verify<DeviceConnector>(deviceConnector, atLeastOnce()).apiCodeName
-        verify<DeviceConnector>(deviceConnector, atLeastOnce()).density
-        verify<DeviceConnector>(deviceConnector, atLeastOnce()).abis
-        verify<DeviceConnector>(deviceConnector, atLeastOnce()).languageSplits
 
         verify<DeviceConnector>(deviceConnector).installPackage(
             ArgumentMatchers.eq(outputPath.toFile()),
@@ -116,10 +112,6 @@ class InstallVariantViaBundleTaskTest {
 
         verify<DeviceConnector>(deviceConnector, atLeastOnce()).name
         verify<DeviceConnector>(deviceConnector, atLeastOnce()).apiLevel
-        verify<DeviceConnector>(deviceConnector, atLeastOnce()).apiCodeName
-        verify<DeviceConnector>(deviceConnector, atLeastOnce()).density
-        verify<DeviceConnector>(deviceConnector, atLeastOnce()).abis
-        verify<DeviceConnector>(deviceConnector, atLeastOnce()).languageSplits
 
         verify<DeviceConnector>(deviceConnector).installPackages(
             ArgumentMatchers.eq(listOf(outputPath.toFile(), outputPath2.toFile())),
@@ -139,40 +131,8 @@ class InstallVariantViaBundleTaskTest {
         override fun createDeviceProvider(iLogger: ILogger): DeviceProvider =
             InstallVariantTaskTest.FakeDeviceProvider(ImmutableList.of(deviceConnector))
 
-        override fun createExtractApkCommand(
-            builder: Devices.DeviceSpec.Builder,
-            tempFolder: Path
-        ): ExtractApksCommand.Builder = TestBuilder(*outputPaths)
-    }
-
-    private class TestBuilder(private vararg val outputPaths: Path) : ExtractApksCommand.Builder() {
-
-        override fun setOutputDirectory(path: Path?): ExtractApksCommand.Builder {
-            return this
-        }
-
-        override fun setApksArchivePath(path: Path?): ExtractApksCommand.Builder {
-            return this
-        }
-
-        override fun setDeviceSpec(spec: Devices.DeviceSpec?): ExtractApksCommand.Builder {
-            return this
-        }
-
-        override fun setModules(modules: ImmutableSet<String>?): ExtractApksCommand.Builder {
-            return this
-        }
-
-        override fun setInstant(instant: Boolean): ExtractApksCommand.Builder {
-            return this
-        }
-
-        override fun build(): ExtractApksCommand {
-            val commandMock = Mockito.mock(ExtractApksCommand::class.java)
-
-            `when`(commandMock.execute()).thenReturn(ImmutableList.copyOf(outputPaths))
-
-            return commandMock
+        override fun getApkFiles(device: DeviceConnector): List<Path> {
+            return ImmutableList.copyOf(outputPaths)
         }
     }
 }

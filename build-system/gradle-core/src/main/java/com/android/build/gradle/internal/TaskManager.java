@@ -23,6 +23,7 @@ import static com.android.build.gradle.internal.dependency.VariantDependencies.C
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APKS_FROM_BUNDLE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CONSUMER_PROGUARD_RULES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT;
@@ -139,6 +140,7 @@ import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitUtils;
 import com.android.build.gradle.internal.test.AbstractTestDataImpl;
+import com.android.build.gradle.internal.test.BundleTestDataImpl;
 import com.android.build.gradle.internal.test.TestDataImpl;
 import com.android.build.gradle.internal.transforms.CustomClassTransform;
 import com.android.build.gradle.internal.transforms.D8MainDexListTransform;
@@ -1997,19 +1999,33 @@ public abstract class TaskManager {
 
         boolean isLibrary = baseVariantData.getVariantConfiguration().getType().isAar();
 
-        TestDataImpl testData =
-                new TestDataImpl(
-                        testVariantData,
-                        testVariantScope
-                                .getArtifacts()
-                                .getFinalArtifactFiles(InternalArtifactType.APK),
-                        isLibrary
-                                ? null
-                                : testVariantData
-                                        .getTestedVariantData()
-                                        .getScope()
-                                        .getArtifacts()
-                                        .getFinalArtifactFiles(InternalArtifactType.APK));
+        AbstractTestDataImpl testData;
+        if (baseVariantData.getVariantConfiguration().getType().isDynamicFeature()) {
+            testData =
+                    new BundleTestDataImpl(
+                            testVariantData,
+                            testVariantScope
+                                    .getArtifacts()
+                                    .getFinalArtifactFiles(InternalArtifactType.APK),
+                            baseVariantData
+                                    .getScope()
+                                    .getArtifactFileCollection(
+                                            RUNTIME_CLASSPATH, MODULE, APKS_FROM_BUNDLE));
+        } else {
+            testData =
+                    new TestDataImpl(
+                            testVariantData,
+                            testVariantScope
+                                    .getArtifacts()
+                                    .getFinalArtifactFiles(InternalArtifactType.APK),
+                            isLibrary
+                                    ? null
+                                    : testVariantData
+                                            .getTestedVariantData()
+                                            .getScope()
+                                            .getArtifacts()
+                                            .getFinalArtifactFiles(InternalArtifactType.APK));
+        }
 
         configureTestData(testData);
 

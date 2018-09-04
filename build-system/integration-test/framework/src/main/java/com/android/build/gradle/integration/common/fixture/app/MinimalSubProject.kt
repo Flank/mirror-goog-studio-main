@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.common.fixture.app
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_MIN_SDK
 
 /** An empty subproject.  */
 class MinimalSubProject private constructor(val plugin: String, val packageName: String?) :
@@ -26,10 +27,12 @@ class MinimalSubProject private constructor(val plugin: String, val packageName:
     init {
         var content = "\napply plugin: '$plugin'\n"
         if (plugin != "java-library" && plugin != "com.android.instantapp") {
-            content += "\nandroid.compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}\n"
+            content += "\nandroid.compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}\n" +
+                    "\nandroid.defaultConfig.minSdkVersion $SUPPORT_LIB_MIN_SDK\n"
             val manifest = TestSourceFile(
                 "src/main/AndroidManifest.xml", """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                         xmlns:dist="http://schemas.android.com/apk/distribution"
                     package="${packageName!!}">
                     <application />
                 </manifest>""".trimMargin()
