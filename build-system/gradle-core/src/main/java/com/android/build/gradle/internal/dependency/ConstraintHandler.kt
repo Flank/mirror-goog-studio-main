@@ -16,12 +16,12 @@
 
 package com.android.build.gradle.internal.dependency
 
-import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.VariantScope
 import org.gradle.api.Action
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ResolvableDependencies
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.dsl.DependencyConstraintHandler
+import org.gradle.api.artifacts.result.ResolvedComponentResult
 
 /**
  * An Action to synchronize a dependency with a runtimeClasspath.
@@ -29,36 +29,28 @@ import org.gradle.api.artifacts.dsl.DependencyConstraintHandler
  * This is meant to be passed to [ResolvableDependencies.beforeResolve]
  */
 class ConstraintHandler(
-    private val variantScope: VariantScope,
-    private val constraints: DependencyConstraintHandler,
-    private val runtimeConfigName: String
+    private val srcConfiguration: Configuration,
+    private val constraints: DependencyConstraintHandler
 ) : Action<ResolvableDependencies> {
-    override fun execute(compile: ResolvableDependencies) {
-        // Resolve the runtime dependencies to get the full resolved artifacts.
-        // Only cares about EXTERNAL scope as it's the only one that has versioned dependencies.
-        // Also, querying for MODULE would try to run ArtifactTransform on the sub-modules which
-        // would fail since they have not been built yet.
-        // Query for CLASSES so that we get Android and non-Android dependencies.
-        val runtimeArtifacts = variantScope.getArtifactCollection(
-            AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-            AndroidArtifacts.ArtifactScope.EXTERNAL,
-            AndroidArtifacts.ArtifactType.CLASSES
-        )
+    override fun execute(resolvableDependencies: ResolvableDependencies) {
+        val srcConfigName = srcConfiguration.name
+        val srcComponents: Set<ResolvedComponentResult> =
+            srcConfiguration.incoming.resolutionResult.allComponents
 
-        val compileConfigName = compile.name
+        val configName = resolvableDependencies.name
 
         // loop on all the artifacts and set constraints for the compile classpath.
-        runtimeArtifacts.artifacts.forEach { artifact ->
-            val id = artifact.id.componentIdentifier
+        srcComponents.forEach { resolvedComponentResult ->
+            val id = resolvedComponentResult.id
             if (id is ModuleComponentIdentifier) {
                 // using a repository with a flatDir to stock local AARs will result in an
                 // external module dependency with no version.
                 if (!id.version.isNullOrEmpty()) {
                     constraints.add(
-                        compileConfigName,
+                        configName,
                         "${id.group}:${id.module}:${id.version}"
                     ) { constraint ->
-                        constraint.because("$runtimeConfigName uses version ${id.version}")
+                        constraint.because("$srcConfigName uses version ${id.version}")
                         constraint.version { versionConstraint ->
                             versionConstraint.strictly(id.version)
                         }

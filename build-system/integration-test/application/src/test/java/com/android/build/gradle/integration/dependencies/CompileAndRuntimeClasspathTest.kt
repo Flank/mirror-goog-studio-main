@@ -61,7 +61,6 @@ class CompileAndRuntimeClasspathTest {
 
         val result = project.executor().run("dependencies")
         assertThat(result.stdout).contains("debugCompileClasspath - Resolved configuration for compilation for variant: debug\n" +
-                "Executing transform IdentityTransform -> IdentityTransform on artifact guava.jar (com.google.guava:guava:20.0)\n" +
                 "+--- com.google.guava:guava:19.0 -> 20.0\n" +
                 "\\--- com.google.guava:guava:20.0\n")
     }
