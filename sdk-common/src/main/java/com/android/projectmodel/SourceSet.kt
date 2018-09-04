@@ -17,6 +17,8 @@
 package com.android.projectmodel
 
 import com.android.ide.common.util.PathString
+import com.google.common.collect.ArrayListMultimap
+import com.google.common.collect.Multimaps
 
 /**
  * Describes the filesystem for a given [Config]. It holds all source locations associated with a [Config].
@@ -94,4 +96,43 @@ data class SourceSet(private val paths: Map<AndroidPathType, List<PathString>> =
      * The list of android assets folders.
      */
     val assetsDirectories get() = get(AndroidPathType.ASSETS)
+
+    /**
+     * Builder for [SourceSet] instances. Intended primarily for constructing [SourceSet] instances
+     * from Java. For Kotlin, it is normally simpler to use the constructor directly.
+     */
+    class Builder() {
+        private val contents = ArrayListMultimap.create<AndroidPathType, PathString>()
+
+        /**
+         * Adds the given [path] if and only if it is not null. Returns this.
+         */
+        fun addIfNotNull(type: AndroidPathType, path: PathString?): Builder =
+            if (path != null) add(type, path) else this
+
+        /**
+         * Adds the given [path]. Returns this.
+         */
+        fun add(type: AndroidPathType, path: PathString): Builder {
+            contents.put(type, path); return this
+        }
+
+        /**
+         * Adds the given list of [paths]. Returns this.
+         */
+        fun add(type: AndroidPathType, paths: List<PathString>): Builder {
+            contents.putAll(type, paths); return this
+        }
+
+        /**
+         * Adds the given [paths]. Returns this.
+         */
+        fun add(type: AndroidPathType, vararg paths: PathString): Builder =
+            add(type, paths.asList())
+
+        /**
+         * Builds and returns the [SourceSet] described by this builder.
+         */
+        fun build() = SourceSet(Multimaps.asMap(contents))
+    }
 }
