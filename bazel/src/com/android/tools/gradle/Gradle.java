@@ -148,13 +148,11 @@ public class Gradle implements Closeable {
         DefaultGradleConnector.close();
         try {
             FileUtils.cleanOutputDir(outDir);
-        } catch (IOException e) {
+        } catch (Exception e) {
             // Allow this to fail, as it will be cleaned up by the next run (b/77804450)
             // This is an issue on windows without the sandbox and with stricter file locking
-            new IOException(
-                            "Failed to cleanup output directory. Will be cleaned up at next invocation",
-                            e)
-                    .printStackTrace();
+            System.err.println(
+                    "Failed to cleanup output directory. Will be cleaned up at next invocation");
         }
     }
 
