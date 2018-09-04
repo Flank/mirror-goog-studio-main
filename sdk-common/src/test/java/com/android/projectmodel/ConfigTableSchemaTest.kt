@@ -48,4 +48,44 @@ class ConfigTableSchemaTest {
         assertThat(schema.pathFor(ARTIFACT_NAME_MAIN)).isEqualTo(matchArtifactsWith("*/*/*/${ARTIFACT_NAME_MAIN}"))
         assertThat(schema.pathFor("")).isEqualTo(matchNoArtifacts())
     }
+
+    @Test
+    fun testAllPaths() {
+        assertThat(schema.allPaths().toList()).containsExactly(
+            matchArtifactsWith("paid/hires/debug/_main_"),
+            matchArtifactsWith("paid/hires/debug/_unit_test_"),
+            matchArtifactsWith("paid/hires/debug/_android_test_"),
+            matchArtifactsWith("paid/hires/release/_main_"),
+            matchArtifactsWith("paid/hires/release/_unit_test_"),
+            matchArtifactsWith("paid/hires/release/_android_test_"),
+            matchArtifactsWith("paid/lowres/debug/_main_"),
+            matchArtifactsWith("paid/lowres/debug/_unit_test_"),
+            matchArtifactsWith("paid/lowres/debug/_android_test_"),
+            matchArtifactsWith("paid/lowres/release/_main_"),
+            matchArtifactsWith("paid/lowres/release/_unit_test_"),
+            matchArtifactsWith("paid/lowres/release/_android_test_"),
+            matchArtifactsWith("free/hires/debug/_main_"),
+            matchArtifactsWith("free/hires/debug/_unit_test_"),
+            matchArtifactsWith("free/hires/debug/_android_test_"),
+            matchArtifactsWith("free/hires/release/_main_"),
+            matchArtifactsWith("free/hires/release/_unit_test_"),
+            matchArtifactsWith("free/hires/release/_android_test_"),
+            matchArtifactsWith("free/lowres/debug/_main_"),
+            matchArtifactsWith("free/lowres/debug/_unit_test_"),
+            matchArtifactsWith("free/lowres/debug/_android_test_"),
+            matchArtifactsWith("free/lowres/release/_main_"),
+            matchArtifactsWith("free/lowres/release/_unit_test_"),
+            matchArtifactsWith("free/lowres/release/_android_test_")
+        )
+    }
+
+    @Test
+    fun testAllPathsOfLength() {
+        assertThat(schema.allPathsOfLength(2).toList()).containsExactly(
+            matchArtifactsWith("paid/hires"),
+            matchArtifactsWith("paid/lowres"),
+            matchArtifactsWith("free/hires"),
+            matchArtifactsWith("free/lowres")
+        )
+    }
 }

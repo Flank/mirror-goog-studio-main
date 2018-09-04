@@ -61,6 +61,40 @@ data class ConfigTableSchema(
         return matchDimension(dimensions.size - 1, artifactName)
     }
 
+    /**
+     * Returns a sequence containing every valid [ConfigPath] in this schema.
+     */
+    fun allPaths(): Sequence<ConfigPath> = allPathsOfLength(dimensions.size)
+
+    /**
+     * Returns a sequence containing every valid [ConfigPath] prefix in this schema with the given
+     * length.
+     */
+    fun allPathsOfLength(desiredPathLength: Int): Sequence<ConfigPath> =
+        if (desiredPathLength > dimensions.size)
+            throw IllegalArgumentException("desiredPathLength ${desiredPathLength} must not be larger than the number of dimensions (${dimensions.size})")
+        else allPathsOfLength(desiredPathLength, emptyList())
+
+    private fun allPathsOfLength(
+        desiredPathLength: Int,
+        prefix: List<String>
+    ): Sequence<ConfigPath> {
+        return when {
+            prefix.size == desiredPathLength - 1 -> dimensions[prefix.size].values.map {
+                ConfigPath(
+                    prefix + it
+                )
+            }.asSequence()
+            prefix.size < desiredPathLength - 1 -> dimensions[prefix.size].values.asSequence().flatMap {
+                allPathsOfLength(
+                    desiredPathLength,
+                    prefix + it
+                )
+            }
+            else -> emptySequence()
+        }
+    }
+
     override fun toString(): String
         = "ConfigTableSchema(${dimensions.map {"${it.dimensionName}[${it.values.joinToString(",")}]"}.joinToString(",")})"
 
