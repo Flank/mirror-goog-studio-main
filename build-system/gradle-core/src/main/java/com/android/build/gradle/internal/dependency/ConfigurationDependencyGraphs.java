@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.dependency;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.ide.ArtifactDependencyGraph;
+import com.android.build.gradle.internal.ide.dependencies.ArtifactUtils;
 import com.android.build.gradle.internal.ide.level2.GraphItemImpl;
 import com.android.build.gradle.internal.ide.level2.JavaLibraryImpl;
 import com.android.builder.model.level2.DependencyGraphs;
@@ -103,9 +103,7 @@ public class ConfigurationDependencyGraphs implements DependencyGraphs {
         for (File file : files) {
             Library javaLib =
                     new JavaLibraryImpl(
-                            ArtifactDependencyGraph.getMavenCoordForLocalFile(file)
-                                    .toString()
-                                    .intern(),
+                            ArtifactUtils.getMavenCoordForLocalFile(file).toString().intern(),
                             file);
             libraries.add(javaLib);
             graphItems.add(new GraphItemImpl(javaLib.getArtifactAddress(), ImmutableList.of()));

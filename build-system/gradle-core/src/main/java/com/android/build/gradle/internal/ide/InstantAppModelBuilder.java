@@ -32,6 +32,7 @@ import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.LintOptions;
+import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.InstantAppOutputScope;
@@ -292,7 +293,7 @@ public class InstantAppModelBuilder
     private VariantImpl createVariant(@NonNull BaseVariantData variantData) {
         VariantScope variantScope = variantData.getScope();
         ImmutableMap<String, String> buildMapping =
-                ModelBuilder.computeBuildMapping(
+                BuildMappingUtils.computeBuildMapping(
                         variantScope.getGlobalScope().getProject().getGradle());
         GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
         Pair<Dependencies, DependencyGraphs> dependencies =

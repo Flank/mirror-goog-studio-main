@@ -25,7 +25,8 @@ import static org.gradle.internal.logging.text.StyledTextOutput.Style.Info;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.ide.ArtifactDependencyGraph;
 import com.android.build.gradle.internal.ide.ArtifactDependencyGraph.HashableResolvedArtifactResult;
-import com.android.build.gradle.internal.ide.ModelBuilder;
+import com.android.build.gradle.internal.ide.dependencies.ArtifactUtils;
+import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.google.common.collect.ImmutableList;
@@ -74,7 +75,8 @@ public class AndroidDependenciesRenderer extends TextReportRenderer {
 
     public void render(@NonNull VariantScope variant) {
         ImmutableMap<String, String> buildMapping =
-                ModelBuilder.computeBuildMapping(variant.getGlobalScope().getProject().getGradle());
+                BuildMappingUtils.computeBuildMapping(
+                        variant.getGlobalScope().getProject().getGradle());
 
         Set<HashableResolvedArtifactResult> compileArtifacts =
                 ArtifactDependencyGraph.getAllArtifacts(
@@ -139,7 +141,7 @@ public class AndroidDependenciesRenderer extends TextReportRenderer {
                                 text = String.format("%s (file: %s)", project, file);
                             } else if (artifact.getDependencyType() == ANDROID) {
                                 String project = ((ProjectComponentIdentifier) id).getProjectPath();
-                                String variant = ArtifactDependencyGraph.getVariant(artifact);
+                                String variant = ArtifactUtils.getVariantName(artifact);
 
                                 text = String.format("%s (variant: %s)", project, variant);
                             } else {
@@ -147,7 +149,7 @@ public class AndroidDependenciesRenderer extends TextReportRenderer {
                             }
 
                         } else if (id instanceof ModuleComponentIdentifier) {
-                            text = ArtifactDependencyGraph.computeAddress(artifact);
+                            text = ArtifactUtils.computeModelAddress(artifact);
 
                         } else {
                             // local files?

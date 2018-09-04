@@ -44,6 +44,8 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import com.android.build.gradle.internal.dsl.TestOptions;
+import com.android.build.gradle.internal.ide.dependencies.ArtifactUtils;
+import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
 import com.android.build.gradle.internal.ide.level2.EmptyDependencyGraphs;
 import com.android.build.gradle.internal.ide.level2.GlobalLibraryMapImpl;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
@@ -136,14 +138,11 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.component.BuildIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.initialization.IncludedBuild;
-import org.gradle.api.invocation.Gradle;
 import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder;
 
 /** Builder for the custom Android model. */
 public class ModelBuilder<Extension extends AndroidConfig>
         implements ParameterizedToolingModelBuilder<ModelBuilderParameter> {
-    public static final String CURRENT_BUILD_NAME = "__current_build__";
 
     @NonNull
     static final DependenciesImpl EMPTY_DEPENDENCIES_IMPL =
@@ -197,6 +196,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
 
     public static void clearCaches() {
         ArtifactDependencyGraph.clearCaches();
+        ArtifactUtils.clearCaches();
     }
 
     @Override
@@ -691,7 +691,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
             if (apkArtifacts.getArtifacts().size() == 1) {
                 ResolvedArtifactResult result =
                         Iterables.getOnlyElement(apkArtifacts.getArtifacts());
-                String variant = ArtifactDependencyGraph.getVariant(result);
+                String variant = ArtifactUtils.getVariantName(result);
 
                 return ImmutableList.of(
                         new TestedTargetVariantImpl(testConfig.getTargetProjectPath(), variant));
@@ -1293,43 +1293,8 @@ public class ModelBuilder<Extension extends AndroidConfig>
 
     private void initBuildMapping(@NonNull Project project) {
         if (buildMapping == null) {
-            buildMapping = computeBuildMapping(project.getGradle());
+            buildMapping = BuildMappingUtils.computeBuildMapping(project.getGradle());
         }
     }
 
-    @NonNull
-    public static ImmutableMap<String, String> computeBuildMapping(@NonNull Gradle gradle) {
-        ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-
-        // Get the root dir for current build.
-        // This is necessary to handle the case when dependency comes from the same build with consumer,
-        // i.e. when BuildIdentifier.isCurrentBuild returns true. In that case, BuildIdentifier.getName
-        // returns ":" instead of the actual build name.
-        String currentBuildPath = gradle.getRootProject().getProjectDir().getAbsolutePath();
-        builder.put(CURRENT_BUILD_NAME, currentBuildPath);
-
-        Gradle rootGradleProject = gradle;
-        // first, ensure we are starting from the root Gradle object.
-        //noinspection ConstantConditions
-        while (rootGradleProject.getParent() != null) {
-            rootGradleProject = rootGradleProject.getParent();
-        }
-
-        // get the root dir for the top project if different from current project.
-        if (rootGradleProject != gradle) {
-            builder.put(
-                    rootGradleProject.getRootProject().getName(),
-                    rootGradleProject.getRootProject().getProjectDir().getAbsolutePath());
-        }
-
-        for (IncludedBuild includedBuild : rootGradleProject.getIncludedBuilds()) {
-            String includedBuildPath = includedBuild.getProjectDir().getAbsolutePath();
-            // current build has been added with key CURRENT_BUIlD_NAME, avoid redundant entry.
-            if (!includedBuildPath.equals(currentBuildPath)) {
-                builder.put(includedBuild.getName(), includedBuildPath);
-            }
-        }
-
-        return builder.build();
-    }
 }
