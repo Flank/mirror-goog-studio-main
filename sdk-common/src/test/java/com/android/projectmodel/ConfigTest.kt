@@ -60,4 +60,17 @@ class ConfigTest {
         assertThat(sourceSet[AndroidPathType.JAVA]).containsExactly(PathString("foo"))
         assertThat(sourceSet[AndroidPathType.JNI_LIBS]).containsExactly(PathString("bar"))
     }
+
+    @Test
+    fun testWithSources() {
+        val sources = SourceSet(mapOf(AndroidPathType.C to listOf(PathString("myFolder"))))
+        assertThat(Config(applicationIdSuffix = "foo").withSources(sources))
+            .isEqualTo(Config(applicationIdSuffix = "foo", sources = sources))
+    }
+
+    @Test
+    fun testWithPackageName() {
+        assertThat(Config(applicationIdSuffix = "foo").withPackageName("package"))
+            .isEqualTo(Config(applicationIdSuffix = "foo", packageName = "package"))
+    }
 }

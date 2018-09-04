@@ -125,6 +125,18 @@ data class Config(
             usingSupportLibVectors = usingSupportLibVectors || other.usingSupportLibVectors,
             packageName = other.packageName ?: packageName
         )
+
+    /**
+     * Returns a copy of the receiver with the given package name. Intended to simplify construction
+     * from Java.
+     */
+    fun withPackageName(packageName: String?) = copy(packageName = packageName)
+
+    /**
+     * Returns a copy of the receiver with the given sources. Intended to simplify construction
+     * from Java.
+     */
+    fun withSources(sources: SourceSet) = copy(sources = sources)
 }
 
 /**
