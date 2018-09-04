@@ -62,6 +62,19 @@ data class Variant(
      */
     val configPath: ConfigPath = matchAllArtifacts()
 ) {
+    constructor(
+        configPath: ConfigPath,
+        artifacts: List<Artifact>
+    ) : this(
+        name = configPath.simpleName,
+        configPath = configPath,
+        mainArtifact = findArtifact(artifacts, ARTIFACT_NAME_MAIN)
+            ?: throw IllegalArgumentException("No main artifact found in list ${artifacts}"),
+        androidTestArtifact = findArtifact(artifacts, ARTIFACT_NAME_ANDROID_TEST),
+        unitTestArtifact = findArtifact(artifacts, ARTIFACT_NAME_UNIT_TEST),
+        extraArtifacts = artifacts.filter { !defaultArtifactDimension.values.contains(it.name) }
+    )
+
     /**
      * Returns the [ConfigPath] for the main artifact in this [Variant].
      */
@@ -75,18 +88,23 @@ data class Variant(
             ARTIFACT_NAME_MAIN -> mainArtifact
             ARTIFACT_NAME_UNIT_TEST -> unitTestArtifact
             ARTIFACT_NAME_ANDROID_TEST -> androidTestArtifact
-            else -> extraArtifacts.find { it.name == name }
-                    ?: extraJavaArtifacts.find { it.name == name }
+            else -> findArtifact(extraArtifacts, name)
+                ?: findArtifact(extraJavaArtifacts, name)
         }
     }
 
     /**
      * Returns all [Artifact] instances that are part of this [Variant].
      */
-    val artifacts: List<Artifact> = listOfNotNull(mainArtifact, androidTestArtifact, unitTestArtifact) + extraArtifacts + extraJavaArtifacts
+    val artifacts: List<Artifact> = listOfNotNull(
+        mainArtifact,
+        androidTestArtifact,
+        unitTestArtifact
+    ) + extraArtifacts + extraJavaArtifacts
 
     override fun toString(): String = printProperties(
-        this, Variant(name = "", mainArtifact = Artifact("")))
+        this, Variant(name = "", mainArtifact = Artifact(""))
+    )
 }
 
 /**
@@ -103,3 +121,5 @@ const val ARTIFACT_NAME_ANDROID_TEST = "_android_test_"
  * Name reserved the unit test artifact in a [Variant].
  */
 const val ARTIFACT_NAME_UNIT_TEST = "_unit_test_"
+
+internal fun findArtifact(list: Collection<Artifact>, name: String) = list.find { it.name == name }

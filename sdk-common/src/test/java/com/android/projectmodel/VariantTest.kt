@@ -28,10 +28,12 @@ class VariantTest {
     val artAndroidExtra1 = Artifact(name = "androidExtra1")
     val artAndroidExtra2 = Artifact(name = "androidExtra2")
 
-    val mainOnly = Variant("mainOnly", mainArtifact = artMain)
-    val mainAndTest = Variant("mainAndTest", mainArtifact = artMain, unitTestArtifact = artTest)
-    val mainAndAndroidTest = Variant("mainAndAndroidTest", mainArtifact = artMain, androidTestArtifact = artAndroidTest)
-    val mainAndExtras = Variant("mainAndExtras", mainArtifact = artMain, extraArtifacts = listOf(artExtra1, artExtra2))
+    val configPath = matchAllArtifacts()
+
+    val mainOnly = Variant(configPath, listOf(artMain))
+    val mainAndTest = Variant(configPath, listOf(artMain, artTest))
+    val mainAndAndroidTest = Variant(configPath, listOf(artMain, artAndroidTest))
+    val mainAndExtras = Variant(configPath, listOf(artMain, artExtra1, artExtra2))
     val mainAndJavaExtras = Variant("mainAndExtras", mainArtifact = artMain, extraJavaArtifacts = listOf(artAndroidExtra1, artAndroidExtra2))
     val allArtifacts = Variant("mainAndExtras", mainArtifact = artMain, unitTestArtifact = artTest, androidTestArtifact = artAndroidTest, extraArtifacts = listOf(artExtra1, artExtra2), extraJavaArtifacts = listOf(artAndroidExtra1, artAndroidExtra2))
 
@@ -55,5 +57,14 @@ class VariantTest {
         assertThat(allArtifacts.artifactNamed("extra2")).isEqualTo(artExtra2)
         assertThat(allArtifacts.artifactNamed("androidExtra1")).isEqualTo(artAndroidExtra1)
         assertThat(allArtifacts.artifactNamed("androidExtra2")).isEqualTo(artAndroidExtra2)
+    }
+
+    @Test
+    fun testExtras() {
+        assertThat(mainOnly.extraArtifacts).isEmpty()
+        assertThat(mainAndTest.extraArtifacts).isEmpty()
+        // Ensure that we don't waste memory on empty list instances
+        assertThat(mainAndTest.extraArtifacts == mainOnly.extraArtifacts).isTrue()
+        assertThat(mainAndExtras.extraArtifacts).containsExactly(artExtra1, artExtra2)
     }
 }
