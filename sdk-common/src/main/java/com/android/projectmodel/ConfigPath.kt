@@ -31,6 +31,9 @@ package com.android.projectmodel
  *
  * The [ConfigPath] with a null segments list matches nothing. The [ConfigPath] with an empty
  * segments list matches everything.
+ *
+ * [ConfigPath] segments are ordered, where the nth element in the path matches the nth dimension
+ * of the [ConfigTableSchema].
  */
 data class ConfigPath internal constructor(
         /**
@@ -103,6 +106,29 @@ data class ConfigPath internal constructor(
             }
         }
         return true
+    }
+
+    /**
+     * Adds a segment to this [ConfigPath]. The resulting path will match artifacts that both match
+     * this path and match the following segment. If this [ConfigPath] matches nothing, the result
+     * will also match nothing.
+     */
+    operator fun plus(nextSegment: String): ConfigPath {
+        // If this path already matched nothing, adding further restrictions won't change it.
+        segments ?: return this
+
+        return ConfigPath(segments + nextSegment)
+    }
+
+    /**
+     * Returns the parent of this [ConfigPath]. That is, it returns the prefix containing everything
+     * except the last segment. Returns this if the path has no parent.
+     */
+    fun parent(): ConfigPath {
+        segments ?: return this
+        return if (segments.isEmpty()) this else {
+            ConfigPath(segments.subList(0, segments.size - 1))
+        }
     }
 
     /**
