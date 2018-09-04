@@ -675,13 +675,19 @@ public class ResourceUsageModel {
             @Nullable ResourceFolderType folderType,
             @NonNull File file) {
         Resource from = null;
-        if (folderType != ResourceFolderType.VALUES) {
+        if (folderType != null && folderType != ResourceFolderType.VALUES) {
             // Record resource for the whole file
             List<ResourceType> types = FolderTypeRelationship.getRelatedResourceTypes(
                     folderType);
             ResourceType type = types.get(0);
             assert type != ResourceType.ID : folderType;
-            String name = fileNameToResourceName(file.getName());
+            String fileName = file.getName();
+            if (fileName.startsWith(".")
+                    || fileName.endsWith("~")
+                    || fileName.equals("Thumbs.db")) {
+                return;
+            }
+            String name = fileNameToResourceName(fileName);
             from = declareResource(type, name, null);
         }
 

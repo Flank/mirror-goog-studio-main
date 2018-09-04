@@ -105,7 +105,9 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                         mTest,
                         mR,
                         manifest().minSdk(14),
-                        mAccessibility));
+                        mAccessibility,
+                        // https://issuetracker.google.com/113686968
+                        source("res/raw/.DS_Store", "")));
     }
 
     public void testUnusedIds() throws Exception {
