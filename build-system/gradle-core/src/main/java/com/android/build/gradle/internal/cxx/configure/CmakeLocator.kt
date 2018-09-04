@@ -50,7 +50,7 @@ import java.io.IOException
  * (1) A version like "3.6.0-rc2" which is the compiled-in version that is emitted by a call to
  *     cmake --version.
  * (2) A version like "3.6.4111459" which is the SDK's version for the CMake package. In this case,
- *     4111459 is the ADRT "bid" number used for deployment withing SDK.
+ *     4111459 is the ADRT "bid" number used for deployment within SDK.
  *
  * The searching algorithm needs to take into account that new SDK versions of CMake will be added
  * in the future. We can't assume we know versions a priori.
@@ -62,8 +62,8 @@ import java.io.IOException
  *
  * The search algorithm tries to enforce several invariants:
  * (1) If a cmake is specified in local.properties then that CMake must be used or it's an error.
- * (2) If a CMake version *is* specified in build.gradle externalNativeBuild.cmake.version then that
- *     version must be matched or it's an error.
+ * (2) If a CMake version *is* specified in build.gradle externalNativeBuild.cmake.version then
+ *     that version must be matched or it's an error.
  * (3) If a CMake version *is not* specified in build.gradle externalNativeBuild.cmake.version then
  *     fork CMake must be used. We won't use a random CMake found on the path.
  * (4) Combining (2) and (3) creates the additional invariant that there is always a specific CMake
@@ -78,10 +78,13 @@ import java.io.IOException
  *
  * Version matching:
  * An incomplete version like "3.12" is allowed in build.gradle. In this case, the version of the
- * found CMake must exactly match what is specified in build.gradle. If multiple are found in PATH
- * then the highest version is used. This means, for example, if build.gradle specifies 3.12 and
- * only version 3.13 is found then 3.13 WON'T be used. User may specify "3" if they want to match
- * the highest version among 3.*.
+ * found CMake must exactly match what is specified in build.gradle. This means, for example,
+ * if build.gradle specifies 3.12 and only version 3.13 is found then 3.13 WON'T be used. User may
+ * specify "3" if they want to match the highest version among 3.*.
+ *
+ * User may also append a "+" to the version. In this case, the highest version is accepted.
+ *
+ * If multiple are found in PATH then only the first CMake is considered for use.
  *
  * Error Handling:
  * A lot of the logic in this algorithm is dedicated toward giving good error messages in the case
@@ -108,15 +111,19 @@ import java.io.IOException
 /**
  * This is the default CMake version to use for this Android Gradle Plugin.
  */
-private const val forkCmakeSdkVersion = "3.6.4111459"
-private val forkCmakeSdkVersionRevision = Revision.parseRevision(forkCmakeSdkVersion)
+private const val FORK_CMAKE_SDK_VERSION = "3.6.4111459"
+private val forkCmakeSdkVersionRevision = Revision.parseRevision(FORK_CMAKE_SDK_VERSION)
 
 /**
- *  This is the version that forked CMake (which has SDK version 3.6.4111459) reports
+ *  This is the base version that forked CMake (which has SDK version 3.6.4111459) reports
  *  when cmake --version is called. For backward compatibility we locate 3.6.4111459
  *  when this version is requested.
+ *
+ *  Note: cmake --version actually returns "3.6.0-rc2" rather than "3.6.0". Use the less precise
+ *  version to avoid giving the impression that fork CMake is not a shipping version in Android
+ *  Studio.
  */
-private val forkCmakeReportedVersion = Revision.parseRevision("3.6.0-rc2")
+private val forkCmakeReportedVersion = Revision.parseRevision("3.6.0")
 
 private val newline = System.lineSeparator()
 
@@ -148,57 +155,51 @@ private class CmakeSearchContext(
         error(message)
     }
 
-    /**
-     * Return true if the user specified a version in build.gradle.
-     */
-    internal fun versionInDsl() = cmakeVersionFromDsl != null
+    private fun cmakeVersionFromDslNoPlus(): String? {
+        if (cmakeVersionFromDsl == null) {
+            return null
+        }
+        return cmakeVersionFromDsl.trimEnd('+')
+    }
+
+    private fun dslVersionHasPlus(): Boolean {
+        if (cmakeVersionFromDsl == null) {
+            return false
+        }
+        return cmakeVersionFromDsl.endsWith('+')
+    }
 
     fun tryAcceptFoundCmake(
-        candidateCmakeInstallFolder: File, candidateVersion: Revision,
+        candidateCmakeInstallFolder: File,
+        candidateVersion: Revision,
         locationTag: String
     ) {
         assert(requestedCmakeVersion != null)
 
-        // If there is not version in the DSL then exactly forkCmakeSdkVersion (which is forever
-        // 3.6.4111459) is required
-        if (!versionInDsl()) {
-            if (candidateVersion == forkCmakeSdkVersionRevision) {
-                resultCmakeVersion = candidateVersion
-                resultCmakeInstallFolder = candidateCmakeInstallFolder
-            } else {
-                recordUnsuitableCmakeMessage(
-                    "CMake found $locationTag at " +
-                            "'$candidateCmakeInstallFolder' had version '$candidateVersion'."
-                )
-            }
-            return
-        }
-
         // First, any candidate version must explicitly match whatever was typed in the gradle
         // DSL. So for example, if the user put version "3.10" in build.gradle then 3.10.2 is
         // a candidate but 3.9 will never match.
-        val requestedParts = requestedCmakeVersion!!.toIntArray(true)
-        val candidateParts = candidateVersion.toIntArray(true)
-        if (candidateParts.size < requestedParts.size) {
-            // The candidate did not have enough precision to possible match the requested
-            // CMake version.
-            recordUnsuitableCmakeMessage(
-                "CMake '$candidateVersion' found at " +
-                        "${candidateCmakeInstallFolder.parent} could not satisfy requested version " +
-                        "'$requestedCmakeVersion' because it didn't have enough precision."
-            )
-            return
-        }
-        for ((index, requestedPart) in requestedParts.withIndex()) {
-            val candidatePart = candidateParts[index]
-            if (requestedPart != candidatePart) {
-                val segment = Revision.Precision.values()[index]
-                recordUnsuitableCmakeMessage(
-                    "CMake '$candidateVersion' found " +
-                            "$locationTag did not satisfy requested version " +
-                            "'$requestedCmakeVersion' because $segment value $candidatePart wasn't " +
-                            "exactly $requestedPart."
-                )
+        val (matchedByParts, matchedByPartsErrorMessage) = tryAcceptCandidateVersionByParts(
+            requestedCmakeVersion!!,
+            candidateVersion,
+            candidateCmakeInstallFolder,
+            locationTag
+        )
+        if (!matchedByParts) {
+            // The version didn't match according to piece-wise matching, if the version has a "+"
+            // at the end then check whether the candidate version is greater than or equal to
+            // the requested version.
+            if (dslVersionHasPlus()) {
+                if (requestedCmakeVersion!! >= candidateVersion) {
+                    recordUnsuitableCmakeMessage(
+                        "CMake '$candidateVersion' found at " +
+                                "$candidateCmakeInstallFolder could not satisfy requested version " +
+                                "'$cmakeVersionFromDsl' because it was lower."
+                    )
+                    return
+                }
+            } else {
+                recordUnsuitableCmakeMessage(matchedByPartsErrorMessage)
                 return
             }
         }
@@ -247,15 +248,16 @@ private class CmakeSearchContext(
      * version for them.
      */
     internal fun useDefaultCmakeVersionIfNecessary(): CmakeSearchContext {
-        requestedCmakeVersion = if (cmakeVersionFromDsl == null) {
+        val cmakeVersionFromDslNoPlus = cmakeVersionFromDslNoPlus()
+        requestedCmakeVersion = if (cmakeVersionFromDslNoPlus == null) {
             info("No CMake version was specified in build.gradle. Choosing a suitable version.")
-            forkCmakeSdkVersionRevision
+            forkCmakeReportedVersion
         } else {
             try {
-                Revision.parseRevision(cmakeVersionFromDsl)
+                Revision.parseRevision(cmakeVersionFromDslNoPlus)
             } catch (e: NumberFormatException) {
                 error("CMake version '$cmakeVersionFromDsl' is not formatted correctly.")
-                forkCmakeSdkVersionRevision
+                forkCmakeReportedVersion
             }
         }
         return this
@@ -266,7 +268,6 @@ private class CmakeSearchContext(
      * In this case issue an error and recover by using forkCmakeSdkVersion.
      */
     internal fun checkForCmakeVersionTooLow(): CmakeSearchContext {
-
         requestedCmakeVersion =
                 if (requestedCmakeVersion!!.major < 3
                     || (requestedCmakeVersion!!.major == 3 && requestedCmakeVersion!!.minor < 6)
@@ -276,7 +277,7 @@ private class CmakeSearchContext(
                     // in the error message indicates the lowest non-deprecated version we can
                     // work with.
                     error("CMake version '$requestedCmakeVersion' is too low. Use 3.7.0 or higher.")
-                    forkCmakeSdkVersionRevision
+                    forkCmakeReportedVersion
                 } else {
                     requestedCmakeVersion
                 }
@@ -291,9 +292,7 @@ private class CmakeSearchContext(
         cmakeVersionGetter: (File) -> Revision?,
         pathFromLocalProperties: File?
     ): CmakeSearchContext {
-        if (resultCmakeInstallFolder != null) {
-            return this
-        }
+        assert(resultCmakeInstallFolder == null)
         if (pathFromLocalProperties == null) {
             return this
         }
@@ -322,18 +321,6 @@ private class CmakeSearchContext(
     }
 
     /**
-     * If the user specifies the reported version from fork cmake (which is 3.6.0-rc2) then
-     * translate that into the SDK-style version number so it can be found.
-     */
-    internal fun translateForkCmakeVersionForBackCompatibility()
-            : CmakeSearchContext {
-        if (requestedCmakeVersion == forkCmakeReportedVersion) {
-            requestedCmakeVersion = forkCmakeSdkVersionRevision
-        }
-        return this
-    }
-
-    /**
      * Search within the already-download SDK packages.
      */
     internal fun tryLocalRepositoryPackages(
@@ -347,34 +334,48 @@ private class CmakeSearchContext(
 
         // Iterate over the local packages and to identify the best match.
         repositoryPackages().onEach { pkg ->
-            tryAcceptFoundCmake(pkg.location, pkg.version, "in SDK")
+            tryAcceptFoundCmake(
+                pkg.location,
+                convertSdkVersionToCmakeVersion(pkg.version),
+                "in SDK"
+            )
         }
         if (resultCmakeInstallFolder != null) {
             return this
         }
 
         // Cmake was not found in local packages. If the user asked the fork Cmake version, auto-download it.
-        if (requestedCmakeVersion == forkCmakeSdkVersionRevision) {
+        if (requestedCmakeVersion == forkCmakeReportedVersion) {
             // The version is exactly the default version. Download it if possible.
             info("- Downloading '$forkCmakeSdkVersionRevision'.")
-            downloader(forkCmakeSdkVersion)
+            downloader(FORK_CMAKE_SDK_VERSION)
 
             val res = repositoryPackages().find { it.version == forkCmakeSdkVersionRevision }
             if (res != null) {
-                tryAcceptFoundCmake(res.location, res.version, "in SDK")
+                tryAcceptFoundCmake(
+                    res.location,
+                    convertSdkVersionToCmakeVersion(res.version),
+                    "in SDK"
+                )
             }
 
             if (resultCmakeInstallFolder == null) {
                 requestDownloadFromAndroidStudio = true
-                error(
-                    "CMake '${requestedCmakeVersion.toString()}' is required but has not yet been " +
-                            "downloaded from the SDK."
-                )
             }
             return this
         }
 
         return this
+    }
+
+    /**
+     * Recognizes the special fork SDK version and converts to "3.6.0"
+     */
+    private fun convertSdkVersionToCmakeVersion(version: Revision): Revision {
+        if (version == forkCmakeSdkVersionRevision) {
+            return forkCmakeReportedVersion
+        }
+        return version
     }
 
     /**
@@ -436,11 +437,10 @@ private class CmakeSearchContext(
         }
 
 
-        if (!versionInDsl()) {
-            // There was no CMake version specified in the DSL.
+        if (dslVersionHasPlus()) {
             throw RuntimeException(
-                "No suitable version of CMake found from SDK, PATH, or " +
-                        "cmake.dir property.$unsuitableCMakes"
+                "CMake '${requestedCmakeVersion.toString()}' or higher was not found in " +
+                        "PATH or by cmake.dir property.$unsuitableCMakes"
             )
         } else {
             throw RuntimeException(
@@ -449,6 +449,50 @@ private class CmakeSearchContext(
             )
         }
     }
+
+}
+
+/**
+ * Try to match candidateVersion with requested version by looking at the individual parts of the
+ * version. This is the method that allows request 3.10 to match 3.10.2.
+ *
+ * If failed to match then return error message describing why there was no match.
+ * If succeeded then return null.
+ */
+private fun tryAcceptCandidateVersionByParts(
+    requestedCmakeVersion: Revision,
+    candidateVersion: Revision,
+    candidateCmakeInstallFolder: File,
+    locationTag: String
+): Pair<Boolean, String> {
+    val requestedParts = requestedCmakeVersion.toIntArray(true)
+    val candidateParts = candidateVersion.toIntArray(true)
+    if (candidateParts.size < requestedParts.size) {
+        return if (candidateVersion > requestedCmakeVersion) {
+            Pair(false, "CMake '$candidateVersion' found at " +
+                    "${candidateCmakeInstallFolder.parent} could not satisfy requested version " +
+                    "'$requestedCmakeVersion' because it was too high and " +
+                    "'$requestedCmakeVersion+' wasn't requested.")
+        } else {
+            // The candidate did not have enough precision to possibly match the requested
+            // CMake version.
+            Pair(false, "CMake '$candidateVersion' found at " +
+                    "${candidateCmakeInstallFolder.parent} could not satisfy requested version " +
+                    "'$requestedCmakeVersion' because it didn't have enough precision.")
+        }
+    }
+    for ((index, requestedPart) in requestedParts.withIndex()) {
+        val candidatePart = candidateParts[index]
+        if (requestedPart != candidatePart) {
+            val segment = Revision.Precision.values()[index]
+            return Pair(false,
+                    "CMake '$candidateVersion' found " +
+                    "$locationTag did not satisfy requested version " +
+                    "'$requestedCmakeVersion' because $segment value $candidatePart wasn't " +
+                    "exactly $requestedPart.")
+        }
+    }
+    return Pair(true, "")
 }
 
 /**
@@ -530,7 +574,6 @@ fun findCmakePathLogic(
         { message -> info(message) })
         .useDefaultCmakeVersionIfNecessary()
         .checkForCmakeVersionTooLow()
-        .translateForkCmakeVersionForBackCompatibility()
         .tryPathFromLocalProperties(cmakeVersion, cmakePathFromLocalProperties)
         .tryLocalRepositoryPackages(downloader, repositoryPackages)
         .tryFindInPath(cmakeVersion, environmentPaths)
