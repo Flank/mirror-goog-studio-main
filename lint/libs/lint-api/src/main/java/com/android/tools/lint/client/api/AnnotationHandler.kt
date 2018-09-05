@@ -392,10 +392,6 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         val (classAnnotations, pkgAnnotations) = getClassAndPkgAnnotations(
             containingClass, evaluator, call
         )
-        // This block is duplicated in checkCall. Pulling this into its own method turns
-        // out not to save many lines of code due to the number of parameters and that two variables
-        // are being initialized.
-
         doCheckCall(context, null, methodAnnotations, classAnnotations, pkgAnnotations, call)
     }
 
@@ -408,7 +404,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         // Yes, returning a pair is ugly. But we are initializing two lists, and splitting this
         // into two methods takes more lines of code then it saves over copying this block into
         // two methods.
-        // Plus, destructuring assignment makes calling this method
+        // Plus, destructuring assignment makes using the results less verbose.
         val classAnnotations: List<UAnnotation>
         val pkgAnnotations: List<UAnnotation>
 
