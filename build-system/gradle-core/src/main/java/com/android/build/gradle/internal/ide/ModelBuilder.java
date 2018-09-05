@@ -44,8 +44,9 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import com.android.build.gradle.internal.dsl.TestOptions;
-import com.android.build.gradle.internal.ide.dependencies.ArtifactDependencyGraph;
 import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
+import com.android.build.gradle.internal.ide.dependencies.DependencyGraphBuilder;
+import com.android.build.gradle.internal.ide.dependencies.DependencyGraphBuilderKt;
 import com.android.build.gradle.internal.ide.dependencies.LibraryUtils;
 import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesUtils;
 import com.android.build.gradle.internal.ide.level2.EmptyDependencyGraphs;
@@ -782,7 +783,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
             result = Pair.of(DependenciesImpl.EMPTY, EmptyDependencyGraphs.EMPTY);
         } else {
             final Project project = variantScope.getGlobalScope().getProject();
-            ArtifactDependencyGraph graph = new ArtifactDependencyGraph();
+            DependencyGraphBuilder graphBuilder = DependencyGraphBuilderKt.getDependencyGraphBuilder();
             // can't use ProjectOptions as this is likely to change from the initialization of
             // ProjectOptions due to how lint dynamically add/remove this property.
             boolean downloadSources =
@@ -797,7 +798,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
                 result =
                         Pair.of(
                                 DependenciesImpl.EMPTY,
-                                graph.createLevel4DependencyGraph(
+                                graphBuilder.createLevel4DependencyGraph(
                                         variantScope,
                                         modelWithFullDependency,
                                         downloadSources,
@@ -806,7 +807,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
             } else {
                 result =
                         Pair.of(
-                                graph.createDependencies(
+                                graphBuilder.createDependencies(
                                         variantScope,
                                         downloadSources,
                                         buildMapping,

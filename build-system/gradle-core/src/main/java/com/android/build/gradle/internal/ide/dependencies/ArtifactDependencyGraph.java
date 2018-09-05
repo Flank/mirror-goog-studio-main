@@ -69,7 +69,7 @@ import org.gradle.language.base.artifact.SourcesArtifact;
 import org.gradle.language.java.artifact.JavadocArtifact;
 
 /** For creating dependency graph based on {@link ResolvedArtifactResult}. */
-public class ArtifactDependencyGraph {
+class ArtifactDependencyGraph implements DependencyGraphBuilder {
 
     private DependencyFailureHandler dependencyFailureHandler = new DependencyFailureHandler();
 
@@ -78,6 +78,7 @@ public class ArtifactDependencyGraph {
      *
      * @see AndroidProject#MODEL_LEVEL_4_NEW_DEP_MODEL
      */
+    @Override
     public DependencyGraphs createLevel4DependencyGraph(
             @NonNull VariantScope variantScope,
             boolean withFullDependency,
@@ -196,6 +197,7 @@ public class ArtifactDependencyGraph {
 
     /** Create a level 1 dependency list. */
     @NonNull
+    @Override
     public DependenciesImpl createDependencies(
             @NonNull VariantScope variantScope,
             boolean downloadSources,
@@ -379,5 +381,8 @@ public class ArtifactDependencyGraph {
         }
 
         return ImmutableList.of();
+    }
+
+    ArtifactDependencyGraph() {
     }
 }
