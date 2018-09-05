@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal;
 
-import static com.android.build.gradle.internal.ide.ArtifactDependencyGraph.DependencyType.ANDROID;
 import static org.gradle.internal.logging.text.StyledTextOutput.Style.Description;
 import static org.gradle.internal.logging.text.StyledTextOutput.Style.Header;
 import static org.gradle.internal.logging.text.StyledTextOutput.Style.Identifier;
@@ -24,9 +23,10 @@ import static org.gradle.internal.logging.text.StyledTextOutput.Style.Info;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.ide.ArtifactDependencyGraph;
-import com.android.build.gradle.internal.ide.ArtifactDependencyGraph.HashableResolvedArtifactResult;
 import com.android.build.gradle.internal.ide.dependencies.ArtifactUtils;
 import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
+import com.android.build.gradle.internal.ide.dependencies.HashableResolvedArtifactResult;
+import com.android.build.gradle.internal.ide.dependencies.HashableResolvedArtifactResult.DependencyType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.google.common.collect.ImmutableList;
@@ -139,7 +139,7 @@ public class AndroidDependenciesRenderer extends TextReportRenderer {
                                 String file = artifact.getFile().getAbsolutePath();
 
                                 text = String.format("%s (file: %s)", project, file);
-                            } else if (artifact.getDependencyType() == ANDROID) {
+                            } else if (artifact.getDependencyType() == DependencyType.ANDROID) {
                                 String project = ((ProjectComponentIdentifier) id).getProjectPath();
                                 String variant = ArtifactUtils.getVariantName(artifact);
 

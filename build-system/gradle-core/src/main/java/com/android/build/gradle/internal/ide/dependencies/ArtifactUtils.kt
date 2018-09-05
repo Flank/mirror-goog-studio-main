@@ -18,8 +18,6 @@
 package com.android.build.gradle.internal.ide.dependencies
 
 import com.android.build.api.attributes.VariantAttr
-import com.android.build.gradle.internal.ide.ArtifactDependencyGraph
-import com.android.build.gradle.internal.ide.ArtifactDependencyGraph.HashableResolvedArtifactResult
 import com.android.builder.dependency.MavenCoordinatesImpl
 import com.android.builder.model.MavenCoordinates
 import com.android.ide.common.caching.CreatingCache
@@ -28,7 +26,6 @@ import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 import java.io.File
-import java.util.regex.Pattern
 
 private const val LOCAL_AAR_GROUPID = "__local_aars__"
 
@@ -72,68 +69,6 @@ fun HashableResolvedArtifactResult.computeModelAddress(): String = when (id.comp
 
 fun clearCaches() {
     mavenCoordinatesCache.clear()
-}
-
-/**
- * Computes Maven Coordinate for a given artifact result.
- */
-private fun HashableResolvedArtifactResult.computeMavenCoordinates(): MavenCoordinates {
-
-    val id = id.componentIdentifier
-
-    val artifactFile = file
-    val fileName = artifactFile.name
-    val extension = dependencyType.extension
-
-    return when (id) {
-        is ModuleComponentIdentifier -> {
-            val module = id.module
-            val version = id.version
-            var classifier: String? = null
-
-            if (!file.isDirectory) {
-                // attempts to compute classifier based on the filename.
-                val pattern = "^$module-$version-(.+)\\.$extension$"
-
-                val p = Pattern.compile(pattern)
-                val m = p.matcher(fileName)
-                if (m.matches()) {
-                    classifier = m.group(1)
-                }
-            }
-
-            MavenCoordinatesImpl(id.group, module, version, extension, classifier)
-        }
-
-        is ProjectComponentIdentifier -> {
-            MavenCoordinatesImpl("artifacts", id.projectPath, "unspecified")
-        }
-
-        is OpaqueComponentArtifactIdentifier -> {
-            // We have a file based dependency
-            if (dependencyType == ArtifactDependencyGraph.DependencyType.JAVA) {
-                getMavenCoordForLocalFile(
-                    artifactFile
-                )
-            } else {
-                // local aar?
-                assert(artifactFile.isDirectory)
-                getMavenCoordForLocalFile(
-                    artifactFile
-                )
-            }
-        }
-
-         else -> {
-             throw RuntimeException(
-                 "Don't know how to compute maven coordinate for artifact '"
-                         + id.displayName
-                         + "' with component identifier of type '"
-                         + id.javaClass
-                         + "'."
-             )
-         }
-    }
 }
 
 fun getMavenCoordForLocalFile(artifactFile: File): MavenCoordinatesImpl {

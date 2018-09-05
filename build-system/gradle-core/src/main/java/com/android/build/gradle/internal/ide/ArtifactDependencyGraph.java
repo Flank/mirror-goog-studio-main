@@ -17,13 +17,9 @@
 package com.android.build.gradle.internal.ide;
 
 import static com.android.SdkConstants.DOT_JAR;
-import static com.android.SdkConstants.EXT_AAR;
-import static com.android.SdkConstants.EXT_JAR;
 import static com.android.SdkConstants.FD_AAR_LIBS;
 import static com.android.SdkConstants.FD_JARS;
 import static com.android.SdkConstants.FN_RESOURCE_STATIC_LIBRARY;
-import static com.android.build.gradle.internal.ide.ArtifactDependencyGraph.DependencyType.ANDROID;
-import static com.android.build.gradle.internal.ide.ArtifactDependencyGraph.DependencyType.JAVA;
 import static com.android.build.gradle.internal.ide.ModelBuilder.EMPTY_DEPENDENCIES_IMPL;
 import static com.android.build.gradle.internal.ide.ModelBuilder.EMPTY_DEPENDENCY_GRAPH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
@@ -35,6 +31,8 @@ import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraA
 import com.android.build.gradle.internal.dependency.ConfigurationDependencyGraphs;
 import com.android.build.gradle.internal.ide.dependencies.ArtifactUtils;
 import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
+import com.android.build.gradle.internal.ide.dependencies.HashableResolvedArtifactResult;
+import com.android.build.gradle.internal.ide.dependencies.HashableResolvedArtifactResult.DependencyType;
 import com.android.build.gradle.internal.ide.level2.AndroidLibraryImpl;
 import com.android.build.gradle.internal.ide.level2.FullDependencyGraphsImpl;
 import com.android.build.gradle.internal.ide.level2.GraphItemImpl;
@@ -59,7 +57,6 @@ import com.android.builder.model.level2.Library;
 import com.android.ide.common.caching.CreatingCache;
 import com.android.utils.FileUtils;
 import com.android.utils.ImmutableCollectors;
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -76,7 +73,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
-import org.gradle.api.artifacts.component.ComponentArtifactIdentifier;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
@@ -85,7 +81,6 @@ import org.gradle.api.artifacts.result.ArtifactResolutionResult;
 import org.gradle.api.artifacts.result.ArtifactResult;
 import org.gradle.api.artifacts.result.ComponentArtifactsResult;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
-import org.gradle.api.artifacts.result.ResolvedVariantResult;
 import org.gradle.api.component.Artifact;
 import org.gradle.jvm.JvmLibrary;
 import org.gradle.language.base.artifact.SourcesArtifact;
@@ -111,13 +106,13 @@ public class ArtifactDependencyGraph {
         String address = ArtifactUtils.computeModelAddress(artifact);
 
         if (!(id instanceof ProjectComponentIdentifier) || artifact.isWrappedModule()) {
-            if (artifact.getDependencyType() == ANDROID) {
+            if (artifact.getDependencyType() == DependencyType.ANDROID) {
                 File explodedFolder = artifact.getFile();
                 library =
                         new AndroidLibraryImpl(
                                 address,
-                                artifact.bundleResult != null
-                                        ? artifact.bundleResult.getFile()
+                                artifact.getBundleResult() != null
+                                        ? artifact.getBundleResult().getFile()
                                         : explodedFolder, // fallback so that the value is non-null
                                 explodedFolder,
                                 // TODO(b/110879504): Auto-namespacing in level4 model
@@ -282,12 +277,12 @@ public class ArtifactDependencyGraph {
             // check if this is an android external module. In this case, we want to use the exploded
             // aar as the artifact we depend on rather than just the JAR, so we swap out the
             // ResolvedArtifactResult.
-            DependencyType dependencyType = JAVA;
+            DependencyType dependencyType = DependencyType.JAVA;
             // optional result that will point to the artifact (AAR) when the current result
             // is the exploded AAR.
             ResolvedArtifactResult aarResult = null;
             if (manifestIds.contains(componentIdentifier)) {
-                dependencyType = ANDROID;
+                dependencyType = DependencyType.ANDROID;
                 // if it's an android dependency, we swap out the manifest result for the exploded
                 // AAR result.
                 // If the exploded AAR is null then it's a sub-project and we can keep the manifest
@@ -510,7 +505,7 @@ public class ArtifactDependencyGraph {
                     buildId = BuildMappingUtils.getBuildId(projectId, buildMapping);
                 }
 
-                if (artifact.getDependencyType() == JAVA) {
+                if (artifact.getDependencyType() == DependencyType.JAVA) {
                     if (projectPath != null) {
                         projects.add(
                                 new DependenciesImpl.ProjectIdentifierImpl(buildId, projectPath));
@@ -541,8 +536,8 @@ public class ArtifactDependencyGraph {
                                     ArtifactUtils.getMavenCoordinates(artifact),
                                     buildId,
                                     projectPath,
-                                    artifact.bundleResult != null
-                                            ? artifact.bundleResult.getFile()
+                                    artifact.getBundleResult() != null
+                                            ? artifact.getBundleResult().getFile()
                                             : explodedFolder, // fallback so that the value is
                                     // non-null
                                     explodedFolder,
@@ -671,21 +666,6 @@ public class ArtifactDependencyGraph {
         }
     }
 
-    public enum DependencyType {
-        JAVA(EXT_JAR),
-        ANDROID(EXT_AAR);
-
-        @NonNull private final String extension;
-
-        DependencyType(@NonNull String extension) {
-            this.extension = extension;
-        }
-
-        @NonNull
-        public String getExtension() {
-            return extension;
-        }
-    }
 
     @NonNull
     private static List<String> findLocalJarsAsStrings(@NonNull File folder) {
@@ -767,93 +747,4 @@ public class ArtifactDependencyGraph {
         return file;
     }
 
-    public static class HashableResolvedArtifactResult implements ResolvedArtifactResult {
-        @NonNull private final ResolvedArtifactResult delegate;
-        @NonNull private final DependencyType dependencyType;
-        private final boolean wrappedModule;
-        /**
-         * An optional sub-result that represents the bundle file, when the current result
-         * represents an exploded aar
-         */
-        private final ResolvedArtifactResult bundleResult;
-        @NonNull private final ImmutableMap<String, String> buildMapping;
-
-        public HashableResolvedArtifactResult(
-                @NonNull ResolvedArtifactResult delegate,
-                @NonNull DependencyType dependencyType,
-                boolean wrappedModule,
-                @Nullable ResolvedArtifactResult bundleResult,
-                @NonNull ImmutableMap<String, String> buildMapping) {
-            this.delegate = delegate;
-            this.dependencyType = dependencyType;
-            this.wrappedModule = wrappedModule;
-            this.bundleResult = bundleResult;
-            this.buildMapping = buildMapping;
-        }
-
-        @NonNull
-        @Override
-        public File getFile() {
-            return delegate.getFile();
-        }
-
-        @NonNull
-        @Override
-        public ResolvedVariantResult getVariant() {
-            return delegate.getVariant();
-        }
-
-        @NonNull
-        @Override
-        public ComponentArtifactIdentifier getId() {
-            return delegate.getId();
-        }
-
-        @NonNull
-        @Override
-        public Class<? extends Artifact> getType() {
-            return delegate.getType();
-        }
-
-        @NonNull
-        public DependencyType getDependencyType() {
-            return dependencyType;
-        }
-
-        public boolean isWrappedModule() {
-            return wrappedModule;
-        }
-
-        @NonNull
-        public ImmutableMap<String, String> getBuildMapping() {
-            return buildMapping;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-            HashableResolvedArtifactResult that = (HashableResolvedArtifactResult) o;
-            return wrappedModule == that.wrappedModule
-                    && dependencyType == that.dependencyType
-                    && Objects.equal(getFile(), that.getFile())
-                    && Objects.equal(getId(), that.getId())
-                    && Objects.equal(getType(), that.getType())
-                    && Objects.equal(getBuildMapping(), that.getBuildMapping());
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(delegate, dependencyType, wrappedModule, buildMapping);
-        }
-
-        @Override
-        public String toString() {
-            return getId().toString();
-        }
-    }
 }
