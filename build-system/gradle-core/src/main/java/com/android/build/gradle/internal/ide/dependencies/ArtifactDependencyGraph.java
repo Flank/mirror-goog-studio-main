@@ -23,8 +23,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact;
 import com.android.build.gradle.internal.ide.DependenciesImpl;
 import com.android.build.gradle.internal.ide.DependencyFailureHandler;
 import com.android.build.gradle.internal.ide.DependencyFailureHandlerKt;
@@ -49,12 +47,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import org.gradle.api.Project;
@@ -78,194 +74,6 @@ public class ArtifactDependencyGraph {
     private DependencyFailureHandler dependencyFailureHandler = new DependencyFailureHandler();
 
     /**
-     * Returns a set of ResolvedArtifact where the {@link ResolvedArtifact#getDependencyType()} and
-     * {@link ResolvedArtifact#isWrappedModule()} fields have been setup properly.
-     *
-     * @param variantScope the variant to get the artifacts from
-     * @param consumedConfigType the type of the dependency to resolve (compile vs runtime)
-     * @param dependencyFailureHandler handler for dependency resolution errors
-     * @param buildMapping a build mapping from build name to root dir.
-     */
-    public static Set<ResolvedArtifact> getAllArtifacts(
-            @NonNull VariantScope variantScope,
-            @NonNull AndroidArtifacts.ConsumedConfigType consumedConfigType,
-            @Nullable DependencyFailureHandler dependencyFailureHandler,
-            @NonNull ImmutableMap<String, String> buildMapping) {
-        // FIXME change the way we compare dependencies b/64387392
-
-        // we need to figure out the following:
-        // - Is it an external dependency or a sub-project?
-        // - Is it an android or a java dependency
-
-        // Querying for JAR type gives us all the dependencies we care about, and we can use this
-        // to differentiate external vs sub-projects (to a certain degree).
-        // Note: Query for JAR instead of PROCESSED_JAR due to b/110054209
-        ArtifactCollection allArtifactList =
-                computeArtifactList(
-                        variantScope,
-                        consumedConfigType,
-                        AndroidArtifacts.ArtifactScope.ALL,
-                        AndroidArtifacts.ArtifactType.JAR);
-
-        // Then we can query for MANIFEST that will give us only the Android project so that we
-        // can detect JAVA vs ANDROID.
-        ArtifactCollection manifestList =
-                computeArtifactList(
-                        variantScope,
-                        consumedConfigType,
-                        AndroidArtifacts.ArtifactScope.ALL,
-                        AndroidArtifacts.ArtifactType.MANIFEST);
-        ArtifactCollection nonNamespacedManifestList =
-                computeArtifactList(
-                        variantScope,
-                        consumedConfigType,
-                        AndroidArtifacts.ArtifactScope.ALL,
-                        AndroidArtifacts.ArtifactType.NON_NAMESPACED_MANIFEST);
-
-        // We still need to understand wrapped jars and aars. The former is difficult (TBD), but
-        // the latter can be done by querying for EXPLODED_AAR. If a sub-project is in this list,
-        // then we need to override the type to be external, rather than sub-project.
-        // This is why we query for Scope.ALL
-        // But we also simply need the exploded AARs for external Android dependencies so that
-        // Studio can access the content.
-        ArtifactCollection explodedAarList =
-                computeArtifactList(
-                        variantScope,
-                        consumedConfigType,
-                        AndroidArtifacts.ArtifactScope.ALL,
-                        AndroidArtifacts.ArtifactType.EXPLODED_AAR);
-
-        // We also need the actual AARs so that we can get the artifact location and find the source
-        // location from it.
-        // Note: Query for AAR instead of PROCESSED_AAR due to b/110054209
-        ArtifactCollection aarList =
-                computeArtifactList(
-                        variantScope,
-                        consumedConfigType,
-                        AndroidArtifacts.ArtifactScope.EXTERNAL,
-                        AndroidArtifacts.ArtifactType.AAR);
-
-
-        // collect dependency resolution failures
-        if (dependencyFailureHandler != null) {
-            // compute the name of the configuration
-            dependencyFailureHandler.addErrors(
-                    variantScope.getGlobalScope().getProject().getPath()
-                            + "@"
-                            + variantScope.getFullVariantName()
-                            + "/"
-                            + consumedConfigType.getName(),
-                    allArtifactList.getFailures());
-        }
-
-        // build a list of wrapped AAR, and a map of all the exploded-aar artifacts
-        final Set<ComponentIdentifier> wrapperModules = new HashSet<>();
-        final Set<ResolvedArtifactResult> explodedAarArtifacts = explodedAarList.getArtifacts();
-        final Map<ComponentIdentifier, ResolvedArtifactResult> explodedAarResults =
-                Maps.newHashMapWithExpectedSize(explodedAarArtifacts.size());
-        for (ResolvedArtifactResult result : explodedAarArtifacts) {
-            final ComponentIdentifier componentIdentifier = result.getId().getComponentIdentifier();
-            if (componentIdentifier instanceof ProjectComponentIdentifier) {
-                wrapperModules.add(componentIdentifier);
-            }
-            explodedAarResults.put(componentIdentifier, result);
-        }
-
-        final Set<ResolvedArtifactResult> aarArtifacts = aarList.getArtifacts();
-        final Map<ComponentIdentifier, ResolvedArtifactResult> aarResults =
-                Maps.newHashMapWithExpectedSize(aarArtifacts.size());
-        for (ResolvedArtifactResult result : aarArtifacts) {
-            aarResults.put(result.getId().getComponentIdentifier(), result);
-        }
-
-        // build a list of android dependencies based on them publishing a MANIFEST element
-        final Set<ResolvedArtifactResult> manifestArtifacts = new HashSet<>();
-        manifestArtifacts.addAll(manifestList.getArtifacts());
-        manifestArtifacts.addAll(nonNamespacedManifestList.getArtifacts());
-
-        final Set<ComponentIdentifier> manifestIds =
-                Sets.newHashSetWithExpectedSize(manifestArtifacts.size());
-        for (ResolvedArtifactResult result : manifestArtifacts) {
-            manifestIds.add(result.getId().getComponentIdentifier());
-        }
-
-        // build the final list, using the main list augmented with data from the previous lists.
-        final Set<ResolvedArtifactResult> allArtifacts = allArtifactList.getArtifacts();
-
-        // use a linked hash set to keep the artifact order.
-        final Set<ResolvedArtifact> artifacts =
-                Sets.newLinkedHashSetWithExpectedSize(allArtifacts.size());
-
-        for (ResolvedArtifactResult artifact : allArtifacts) {
-            final ComponentIdentifier componentIdentifier =
-                    artifact.getId().getComponentIdentifier();
-
-            // check if this is a wrapped module
-            boolean isWrappedModule = wrapperModules.contains(componentIdentifier);
-
-            // check if this is an android external module. In this case, we want to use the exploded
-            // aar as the artifact we depend on rather than just the JAR, so we swap out the
-            // ResolvedArtifactResult.
-            DependencyType dependencyType = DependencyType.JAVA;
-
-            // in case of AAR, the current artifact is the extracted artifacts. It needs to
-            // be swapped with the AAR bundle one.
-            ResolvedArtifactResult mainArtifact = artifact;
-            ResolvedArtifactResult extractedAar = null;
-
-            // optional result that will point to the artifact (AAR) when the current result
-            // is the exploded AAR.
-            if (manifestIds.contains(componentIdentifier)) {
-                dependencyType = DependencyType.ANDROID;
-                // if it's an android dependency, we swap out the manifest result for the exploded
-                // AAR result.
-                // If the exploded AAR is null then it's a sub-project and we can keep the manifest
-                // as the Library we'll create will be a ModuleLibrary which doesn't care about
-                // the artifact file anyway.
-                ResolvedArtifactResult explodedAar = explodedAarResults.get(componentIdentifier);
-                if (explodedAar != null) {
-                    extractedAar = explodedAar;
-
-                    // and we need the AAR bundle itself (if it exists)
-                    ResolvedArtifactResult aarBundle = aarResults.get(componentIdentifier);
-                    if (aarBundle != null) {
-                        mainArtifact = aarBundle;
-                    }
-                }
-            }
-
-            artifacts.add(
-                    new ResolvedArtifact(
-                            mainArtifact,
-                            extractedAar,
-                            dependencyType,
-                            isWrappedModule,
-                            buildMapping));
-        }
-
-        return artifacts;
-    }
-
-    @NonNull
-    private static ArtifactCollection computeArtifactList(
-            @NonNull VariantScope variantScope,
-            @NonNull AndroidArtifacts.ConsumedConfigType consumedConfigType,
-            @NonNull AndroidArtifacts.ArtifactScope scope,
-            @NonNull AndroidArtifacts.ArtifactType type) {
-        ArtifactCollection artifacts =
-                variantScope.getArtifactCollection(consumedConfigType, scope, type);
-
-        // because the ArtifactCollection could be a collection over a test variant which ends
-        // up being a ArtifactCollectionWithExtraArtifact, we need to get the actual list
-        // without the tested artifact.
-        if (artifacts instanceof ArtifactCollectionWithExtraArtifact) {
-            return ((ArtifactCollectionWithExtraArtifact) artifacts).getParentArtifacts();
-        }
-
-        return artifacts;
-    }
-
-    /**
      * Create a level 4 dependency graph.
      *
      * @see AndroidProject#MODEL_LEVEL_4_NEW_DEP_MODEL
@@ -281,7 +89,7 @@ public class ArtifactDependencyGraph {
         try {
             // get the compile artifact first.
             Set<ResolvedArtifact> compileArtifacts =
-                    getAllArtifacts(
+                    ArtifactUtils.getAllArtifacts(
                             variantScope,
                             COMPILE_CLASSPATH,
                             dependencyFailureHandler,
@@ -308,7 +116,7 @@ public class ArtifactDependencyGraph {
                 // Instead just get all the jars to get all the dependencies.
                 // Note: Query for JAR instead of PROCESSED_JAR due to b/110054209
                 ArtifactCollection runtimeArtifactCollection =
-                        computeArtifactList(
+                        ArtifactUtils.computeArtifactList(
                                 variantScope,
                                 RUNTIME_CLASSPATH,
                                 AndroidArtifacts.ArtifactScope.ALL,
@@ -351,7 +159,7 @@ public class ArtifactDependencyGraph {
             // in this mode, compute GraphItem for the runtime configuration
             // get the runtime artifacts.
             Set<ResolvedArtifact> runtimeArtifacts =
-                    getAllArtifacts(
+                    ArtifactUtils.getAllArtifacts(
                             variantScope,
                             RUNTIME_CLASSPATH,
                             dependencyFailureHandler,
@@ -406,7 +214,7 @@ public class ArtifactDependencyGraph {
             // Instead just get all the jars to get all the dependencies.
             // Note: Query for JAR instead of PROCESSED_JAR due to b/110054209
             ArtifactCollection runtimeArtifactCollection =
-                    computeArtifactList(
+                    ArtifactUtils.computeArtifactList(
                             variantScope,
                             RUNTIME_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,
@@ -420,7 +228,7 @@ public class ArtifactDependencyGraph {
             }
 
             Set<ResolvedArtifact> artifacts =
-                    getAllArtifacts(
+                    ArtifactUtils.getAllArtifacts(
                             variantScope,
                             COMPILE_CLASSPATH,
                             dependencyFailureHandler,

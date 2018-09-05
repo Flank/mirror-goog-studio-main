@@ -22,7 +22,7 @@ import static org.gradle.internal.logging.text.StyledTextOutput.Style.Identifier
 import static org.gradle.internal.logging.text.StyledTextOutput.Style.Info;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.ide.dependencies.ArtifactDependencyGraph;
+import com.android.build.gradle.internal.ide.dependencies.ArtifactUtils;
 import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
 import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact;
 import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact.DependencyType;
@@ -78,7 +78,7 @@ public class AndroidDependenciesRenderer extends TextReportRenderer {
                         variant.getGlobalScope().getProject().getGradle());
 
         Set<ResolvedArtifact> compileArtifacts =
-                ArtifactDependencyGraph.getAllArtifacts(
+                ArtifactUtils.getAllArtifacts(
                         variant,
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                         null,
@@ -94,7 +94,7 @@ public class AndroidDependenciesRenderer extends TextReportRenderer {
         renderer.completeChildren();
 
         Set<ResolvedArtifact> runtimeArtifacts =
-                ArtifactDependencyGraph.getAllArtifacts(
+                ArtifactUtils.getAllArtifacts(
                         variant,
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                         null,
