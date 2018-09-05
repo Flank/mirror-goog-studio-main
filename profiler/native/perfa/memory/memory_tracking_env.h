@@ -117,7 +117,7 @@ class MemoryTrackingEnv : public GlobalRefListener {
   void Initialize();
   void StartLiveTracking(int64_t timestamp);
   void StopLiveTracking(int64_t timestamp);
-  void SetSamplingRate(int64_t timestamp, int32_t sampling_num_interval);
+  void SetSamplingRate(int32_t sampling_num_interval);
   const AllocatedClass& RegisterNewClass(jvmtiEnv* jvmti, JNIEnv* jni,
                                          jclass klass);
   void SendBackClassData();

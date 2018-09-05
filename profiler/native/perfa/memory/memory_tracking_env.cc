@@ -404,8 +404,7 @@ void MemoryTrackingEnv::StopLiveTracking(int64_t timestamp) {
  * Allocation callbacks from this point on will use the new sampling rate
  * to filter allocation events.
  */
-void MemoryTrackingEnv::SetSamplingRate(int64_t timestamp,
-                                        int32_t sampling_num_interval) {
+void MemoryTrackingEnv::SetSamplingRate(int32_t sampling_num_interval) {
   if (sampling_num_interval == sampling_num_interval_) {
     // No value change, short circuit.
     return;
@@ -422,7 +421,7 @@ void MemoryTrackingEnv::SetSamplingRate(int64_t timestamp,
   // If resuming full tracking in an ongoing tracking session, we need to
   // capture a new heap snapshot.
   if (is_live_tracking_ && sampling_num_interval == kSamplingRateFull) {
-    current_capture_time_ns_ = timestamp;
+    current_capture_time_ns_ = clock_.GetCurrentTime();
     total_alloc_count_ = 0;
     total_free_count_ = 0;
     IterateThroughHeap();
@@ -576,8 +575,7 @@ void MemoryTrackingEnv::HandleControlSignal(
           "Live memory tracking sampling rate updated: "
           "sampling_num_interval=%d.",
           new_sampling_num_interval);
-      SetSamplingRate(request->set_sampling_rate_request().timestamp(),
-                      new_sampling_num_interval);
+      SetSamplingRate(new_sampling_num_interval);
       break;
     case MemoryControlRequest::CONTROL_NOT_SET:
       // Fall through.

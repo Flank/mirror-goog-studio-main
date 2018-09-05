@@ -256,6 +256,7 @@ public class MemoryTest {
             for (BatchAllocationSample sample : jvmtiData.getAllocationSamplesList()) {
                 for (AllocationEvent event : sample.getEventsList()) {
                     if (event.getEventCase() == AllocationEvent.EventCase.ALLOC_DATA) {
+                        assertThat(event.getTimestamp()).isGreaterThan(0L);
                         AllocationEvent.Allocation alloc = event.getAllocData();
                         if (alloc.getClassTag() == memTestEntityId) {
                             System.out.println("Alloc recorded: tag=" + alloc.getTag());
