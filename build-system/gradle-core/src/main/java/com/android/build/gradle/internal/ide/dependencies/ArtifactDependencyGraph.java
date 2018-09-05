@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,37 +14,27 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.ide;
+package com.android.build.gradle.internal.ide.dependencies;
 
 import static com.android.SdkConstants.DOT_JAR;
 import static com.android.SdkConstants.FD_AAR_LIBS;
 import static com.android.SdkConstants.FD_JARS;
-import static com.android.SdkConstants.FN_RESOURCE_STATIC_LIBRARY;
-import static com.android.build.gradle.internal.ide.ModelBuilder.EMPTY_DEPENDENCIES_IMPL;
-import static com.android.build.gradle.internal.ide.ModelBuilder.EMPTY_DEPENDENCY_GRAPH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact;
-import com.android.build.gradle.internal.dependency.ConfigurationDependencyGraphs;
-import com.android.build.gradle.internal.ide.dependencies.ArtifactUtils;
-import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
-import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact;
+import com.android.build.gradle.internal.ide.DependenciesImpl;
+import com.android.build.gradle.internal.ide.DependencyFailureHandler;
+import com.android.build.gradle.internal.ide.DependencyFailureHandlerKt;
+import com.android.build.gradle.internal.ide.SyncIssueImpl;
 import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact.DependencyType;
-import com.android.build.gradle.internal.ide.level2.AndroidLibraryImpl;
 import com.android.build.gradle.internal.ide.level2.FullDependencyGraphsImpl;
 import com.android.build.gradle.internal.ide.level2.GraphItemImpl;
-import com.android.build.gradle.internal.ide.level2.JavaLibraryImpl;
-import com.android.build.gradle.internal.ide.level2.ModuleLibraryImpl;
 import com.android.build.gradle.internal.ide.level2.SimpleDependencyGraphsImpl;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.res.namespaced.AutoNamespaceLocation;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
@@ -53,19 +43,15 @@ import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GraphItem;
-import com.android.builder.model.level2.Library;
-import com.android.ide.common.caching.CreatingCache;
 import com.android.utils.FileUtils;
 import com.android.utils.ImmutableCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -89,62 +75,7 @@ import org.gradle.language.java.artifact.JavadocArtifact;
 /** For creating dependency graph based on {@link ResolvedArtifactResult}. */
 public class ArtifactDependencyGraph {
 
-    private static final CreatingCache<ResolvedArtifact, Library> sLibraryCache =
-            new CreatingCache<>(ArtifactDependencyGraph::instantiateLibrary);
-    private static final Map<String, Library> sGlobalLibrary = Maps.newHashMap();
-
     private DependencyFailureHandler dependencyFailureHandler = new DependencyFailureHandler();
-
-    public static void clearCaches() {
-        sLibraryCache.clear();
-    }
-
-    @NonNull
-    private static Library instantiateLibrary(@NonNull ResolvedArtifact artifact) {
-        Library library;
-        ComponentIdentifier id = artifact.getId().getComponentIdentifier();
-        String address = artifact.computeModelAddress();
-
-        if (!(id instanceof ProjectComponentIdentifier) || artifact.isWrappedModule()) {
-            if (artifact.getDependencyType() == DependencyType.ANDROID) {
-                final File extractedFolder =
-                        Preconditions.checkNotNull(artifact.getExtractedFolder());
-                library =
-                        new AndroidLibraryImpl(
-                                address,
-                                artifact.getArtifactFile(),
-                                extractedFolder,
-                                // TODO(b/110879504): Auto-namespacing in level4 model
-                                findResStaticLibrary(artifact),
-                                findLocalJarsAsStrings(extractedFolder));
-            } else {
-                library = new JavaLibraryImpl(address, artifact.getArtifactFile());
-            }
-        } else {
-            // get the build ID
-            final ProjectComponentIdentifier projectId = (ProjectComponentIdentifier) id;
-            String buildId = BuildMappingUtils.getBuildId(projectId, artifact.getBuildMapping());
-
-            library =
-                    new ModuleLibraryImpl(
-                            address,
-                            buildId,
-                            projectId.getProjectPath(),
-                            artifact.getVariantName());
-        }
-
-        synchronized (sGlobalLibrary) {
-            sGlobalLibrary.put(library.getArtifactAddress(), library);
-        }
-
-        return library;
-    }
-
-    public static Map<String, Library> getGlobalLibMap() {
-        return ImmutableMap.copyOf(sGlobalLibrary);
-    }
-
-
 
     /**
      * Returns a set of ResolvedArtifact where the {@link ResolvedArtifact#getDependencyType()} and
@@ -400,7 +331,7 @@ public class ArtifactDependencyGraph {
                     final GraphItemImpl graphItem =
                             new GraphItemImpl(artifact.computeModelAddress(), ImmutableList.of());
                     compileItems.add(graphItem);
-                    sLibraryCache.get(artifact);
+                    ArtifactUtils.getLibraryCache().get(artifact);
                     if (!runtimeIdentifiers.contains(artifact.getId().getComponentIdentifier())) {
                         providedAddresses.add(graphItem.getArtifactAddress());
                     }
@@ -414,7 +345,7 @@ public class ArtifactDependencyGraph {
             for (ResolvedArtifact artifact : compileArtifacts) {
                 compileItems.add(
                         new GraphItemImpl(artifact.computeModelAddress(), ImmutableList.of()));
-                sLibraryCache.get(artifact);
+                ArtifactUtils.getLibraryCache().get(artifact);
             }
 
             // in this mode, compute GraphItem for the runtime configuration
@@ -430,7 +361,7 @@ public class ArtifactDependencyGraph {
             for (ResolvedArtifact artifact : runtimeArtifacts) {
                 runtimeItems.add(
                         new GraphItemImpl(artifact.computeModelAddress(), ImmutableList.of()));
-                sLibraryCache.get(artifact);
+                ArtifactUtils.getLibraryCache().get(artifact);
             }
 
             // compute the provided dependency list, by comparing the compile and runtime items
@@ -524,7 +455,7 @@ public class ArtifactDependencyGraph {
                                     null, /* projectPath */
                                     ImmutableList.of(), /* dependencies */
                                     null, /* requestedCoordinates */
-                                    ArtifactUtils.getMavenCoordinates(artifact),
+                                    MavenCoordinatesUtils.getMavenCoordinates(artifact),
                                     false, /* isSkipped */
                                     isProvided));
                 } else {
@@ -543,12 +474,12 @@ public class ArtifactDependencyGraph {
 
                     androidLibraries.add(
                             new com.android.build.gradle.internal.ide.AndroidLibraryImpl(
-                                    ArtifactUtils.getMavenCoordinates(artifact),
+                                    MavenCoordinatesUtils.getMavenCoordinates(artifact),
                                     buildId,
                                     projectPath,
                                     artifact.getArtifactFile(),
                                     extractedFolder,
-                                    findResStaticLibrary(variantScope, artifact),
+                                    ArtifactUtils.findResStaticLibrary(variantScope, artifact),
                                     artifact.getVariantName(),
                                     isProvided,
                                     false, /* dependencyItem.isSkipped() */
@@ -573,53 +504,6 @@ public class ArtifactDependencyGraph {
         } finally {
             dependencyFailureHandler.collectIssues().forEach(failureConsumer);
         }
-    }
-
-    @NonNull
-    public static Dependencies clone(@NonNull Dependencies dependencies, int modelLevel) {
-        if (modelLevel >= AndroidProject.MODEL_LEVEL_4_NEW_DEP_MODEL) {
-            return EMPTY_DEPENDENCIES_IMPL;
-        }
-
-        // these items are already ready for serializable, all we need to clone is
-        // the Dependencies instance.
-        List<AndroidLibrary> libraries = Collections.emptyList();
-        List<JavaLibrary> javaLibraries = Lists.newArrayList(dependencies.getJavaLibraries());
-        List<Dependencies.ProjectIdentifier> projects = Collections.emptyList();
-
-        return new DependenciesImpl(libraries, javaLibraries, projects);
-    }
-
-    public static DependencyGraphs clone(
-            @NonNull DependencyGraphs dependencyGraphs,
-            int modelLevel,
-            boolean modelWithFullDependency) {
-        if (modelLevel < AndroidProject.MODEL_LEVEL_4_NEW_DEP_MODEL) {
-            return EMPTY_DEPENDENCY_GRAPH;
-        }
-
-        Preconditions.checkState(dependencyGraphs instanceof ConfigurationDependencyGraphs);
-        ConfigurationDependencyGraphs cdg = (ConfigurationDependencyGraphs) dependencyGraphs;
-
-        // these items are already ready for serializable, all we need to clone is
-        // the DependencyGraphs instance.
-
-        List<Library> libs = cdg.getLibraries();
-        synchronized (sGlobalLibrary) {
-            for (Library library : libs) {
-                sGlobalLibrary.put(library.getArtifactAddress(), library);
-            }
-        }
-
-        final List<GraphItem> nodes = cdg.getCompileDependencies();
-
-        if (modelWithFullDependency) {
-            return new FullDependencyGraphsImpl(
-                    nodes, nodes, ImmutableList.of(), ImmutableList.of());
-        }
-
-        // just need to register the libraries in the global libraries.
-        return new SimpleDependencyGraphsImpl(nodes, cdg.getProvidedLibraries());
     }
 
     private static void handleSources(
@@ -673,28 +557,6 @@ public class ArtifactDependencyGraph {
         }
     }
 
-
-    @NonNull
-    private static List<String> findLocalJarsAsStrings(@NonNull File folder) {
-        File localJarRoot = FileUtils.join(folder, FD_JARS, FD_AAR_LIBS);
-
-        if (!localJarRoot.isDirectory()) {
-            return ImmutableList.of();
-        }
-
-        String[] jarFiles = localJarRoot.list((dir, name) -> name.endsWith(DOT_JAR));
-        if (jarFiles != null && jarFiles.length > 0) {
-            List<String> list = Lists.newArrayListWithCapacity(jarFiles.length);
-            for (String jarFile : jarFiles) {
-                list.add(FD_JARS + File.separatorChar + FD_AAR_LIBS + File.separatorChar + jarFile);
-            }
-
-            return list;
-        }
-
-        return ImmutableList.of();
-    }
-
     @NonNull
     private static List<File> findLocalJarsAsFiles(@NonNull File folder) {
         File localJarRoot = FileUtils.join(folder, FD_JARS, FD_AAR_LIBS);
@@ -710,51 +572,4 @@ public class ArtifactDependencyGraph {
 
         return ImmutableList.of();
     }
-
-    @Nullable
-    private static File findResStaticLibrary(
-            @NonNull VariantScope variantScope, @NonNull ResolvedArtifact explodedAar) {
-        File file = findResStaticLibrary(explodedAar);
-        if (file != null) {
-            return file;
-        }
-
-        if (variantScope.getGlobalScope().getExtension().getAaptOptions().getNamespaced()
-                && variantScope
-                        .getGlobalScope()
-                        .getProjectOptions()
-                        .get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
-            BuildArtifactsHolder artifacts = variantScope.getArtifacts();
-            if (artifacts.hasArtifact(
-                    InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES)) {
-                // If it will be auto-namespaced.
-                File convertedDirectory =
-                        Iterables.get(
-                                artifacts.getFinalArtifactFiles(
-                                        InternalArtifactType
-                                                .RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES),
-                                0);
-                return new File(
-                        convertedDirectory,
-                        AutoNamespaceLocation.getAutoNamespacedLibraryFileName(
-                                explodedAar.getId().getComponentIdentifier()));
-            }
-        }
-        // Not auto-namespaced, nor present in the original artifact
-        return null;
-    }
-
-    @Nullable
-    private static File findResStaticLibrary(@NonNull ResolvedArtifact explodedAar) {
-        if (explodedAar.getExtractedFolder() == null) {
-            return null;
-        }
-
-        File file = new File(explodedAar.getExtractedFolder(), FN_RESOURCE_STATIC_LIBRARY);
-        if (!file.exists()) {
-            return null;
-        }
-        return file;
-    }
-
 }

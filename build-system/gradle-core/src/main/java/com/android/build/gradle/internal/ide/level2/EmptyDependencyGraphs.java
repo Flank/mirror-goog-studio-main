@@ -23,12 +23,11 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Empty libraryGraph
- */
-public class EmptyDependencyGraphs implements DependencyGraphs, Serializable{
+/** Empty libraryGraph */
+public final class EmptyDependencyGraphs implements DependencyGraphs, Serializable {
     private static final long serialVersionUID = 1L;
 
+    @NonNull public static final DependencyGraphs EMPTY = new EmptyDependencyGraphs();
 
     @NonNull
     @Override

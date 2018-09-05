@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.Serializable;
 import java.util.Collection;
@@ -34,6 +35,11 @@ import java.util.Set;
 @Immutable
 public class DependenciesImpl implements Dependencies, Serializable {
     private static final long serialVersionUID = 1L;
+
+    @NonNull
+    public static final Dependencies EMPTY =
+            new DependenciesImpl(ImmutableList.of(), ImmutableList.of(), ImmutableList.of());
+
 
     @Immutable
     public static class ProjectIdentifierImpl implements ProjectIdentifier, Serializable {
@@ -83,7 +89,7 @@ public class DependenciesImpl implements Dependencies, Serializable {
     @NonNull private final Set<String> projects;
     @NonNull private final List<ProjectIdentifier> javaModules;
 
-    DependenciesImpl(
+    public DependenciesImpl(
             @NonNull List<AndroidLibrary> libraries,
             @NonNull List<JavaLibrary> javaLibraries,
             @NonNull List<ProjectIdentifier> javaModules) {

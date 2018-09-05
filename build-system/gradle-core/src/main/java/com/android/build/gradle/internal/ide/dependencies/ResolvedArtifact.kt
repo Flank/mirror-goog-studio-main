@@ -151,7 +151,7 @@ data class ResolvedArtifact(
         else -> {
             throw RuntimeException(
                 "Don't know how to handle ComponentIdentifier '"
-                        + id.getDisplayName()
+                        + id.displayName
                         + "'of type "
                         + id.javaClass)
 

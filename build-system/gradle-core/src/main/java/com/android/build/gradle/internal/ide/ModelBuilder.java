@@ -44,8 +44,10 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import com.android.build.gradle.internal.dsl.TestOptions;
+import com.android.build.gradle.internal.ide.dependencies.ArtifactDependencyGraph;
 import com.android.build.gradle.internal.ide.dependencies.ArtifactUtils;
 import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
+import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesUtils;
 import com.android.build.gradle.internal.ide.level2.EmptyDependencyGraphs;
 import com.android.build.gradle.internal.ide.level2.GlobalLibraryMapImpl;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
@@ -144,11 +146,6 @@ import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder;
 public class ModelBuilder<Extension extends AndroidConfig>
         implements ParameterizedToolingModelBuilder<ModelBuilderParameter> {
 
-    @NonNull
-    static final DependenciesImpl EMPTY_DEPENDENCIES_IMPL =
-            new DependenciesImpl(ImmutableList.of(), ImmutableList.of(), ImmutableList.of());
-
-    @NonNull static final DependencyGraphs EMPTY_DEPENDENCY_GRAPH = new EmptyDependencyGraphs();
     @NonNull protected final GlobalScope globalScope;
     @NonNull private final AndroidBuilder androidBuilder;
     @NonNull protected final Extension extension;
@@ -195,8 +192,8 @@ public class ModelBuilder<Extension extends AndroidConfig>
     }
 
     public static void clearCaches() {
-        ArtifactDependencyGraph.clearCaches();
         ArtifactUtils.clearCaches();
+        MavenCoordinatesUtils.clearMavenCaches();
     }
 
     @Override
@@ -320,7 +317,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
     }
 
     private static Object buildGlobalLibraryMap() {
-        return new GlobalLibraryMapImpl(ArtifactDependencyGraph.getGlobalLibMap());
+        return new GlobalLibraryMapImpl(ArtifactUtils.getGlobalLibMap());
     }
 
     private Object buildAndroidProject(Project project, boolean shouldBuildVariant) {
@@ -782,7 +779,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
         // If there is a missing flavor dimension then we don't even try to resolve dependencies
         // as it may fail due to improperly setup configuration attributes.
         if (extraModelInfo.getSyncIssueHandler().hasSyncIssue(Type.UNNAMED_FLAVOR_DIMENSION)) {
-            result = Pair.of(EMPTY_DEPENDENCIES_IMPL, EMPTY_DEPENDENCY_GRAPH);
+            result = Pair.of(DependenciesImpl.EMPTY, EmptyDependencyGraphs.EMPTY);
         } else {
             final Project project = variantScope.getGlobalScope().getProject();
             ArtifactDependencyGraph graph = new ArtifactDependencyGraph();
@@ -799,7 +796,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
             if (modelLevel >= AndroidProject.MODEL_LEVEL_4_NEW_DEP_MODEL) {
                 result =
                         Pair.of(
-                                EMPTY_DEPENDENCIES_IMPL,
+                                DependenciesImpl.EMPTY,
                                 graph.createLevel4DependencyGraph(
                                         variantScope,
                                         modelWithFullDependency,
@@ -814,7 +811,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
                                         downloadSources,
                                         buildMapping,
                                         syncIssues::add),
-                                EMPTY_DEPENDENCY_GRAPH);
+                                EmptyDependencyGraphs.EMPTY);
             }
         }
 

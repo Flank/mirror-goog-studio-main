@@ -45,11 +45,9 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 
-/**
- * Serializable implementation of AndroidLibrary for use in the model.
- */
+/** Serializable implementation of AndroidLibrary for use in the model. */
 @Immutable
-final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Serializable {
+public final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Serializable {
     private static final long serialVersionUID = 1L;
 
     @Nullable
@@ -66,7 +64,7 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
 
     private final int hashcode;
 
-    AndroidLibraryImpl(
+    public AndroidLibraryImpl(
             @NonNull MavenCoordinates coordinates,
             @Nullable String buildId,
             @Nullable String projectPath,

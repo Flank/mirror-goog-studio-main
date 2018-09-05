@@ -22,7 +22,7 @@ import static org.gradle.internal.logging.text.StyledTextOutput.Style.Identifier
 import static org.gradle.internal.logging.text.StyledTextOutput.Style.Info;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.ide.ArtifactDependencyGraph;
+import com.android.build.gradle.internal.ide.dependencies.ArtifactDependencyGraph;
 import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
 import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact;
 import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact.DependencyType;
