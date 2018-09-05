@@ -26,17 +26,3 @@ java_test(
     tags = ["manual"],
     test_class = "FoundryTest",
 )
-
-# CPU, disk and memory benchmark baseline tests to measure go/adt-perfgate
-# foundry remote build execution pool.
-java_test(
-    name = "perfgate-baseline-tests",
-    srcs = ["FoundryPerfgateMetrics.java"],
-    # The memory test stresses memory usage, thus the jvm memory arg.
-    jvm_flags = ["-Djava.security.debug=all, -Xmx100000M"],
-    tags = ["no_psq"],
-    test_class = "FoundryPerfgateMetrics",
-    deps = [
-        "//tools/base/perf-logger:studio.perf-logger_testlib",
-    ],
-)
