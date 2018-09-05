@@ -20,81 +20,76 @@ import com.android.SdkConstants.EXT_AAR
 import com.android.SdkConstants.EXT_JAR
 import com.android.builder.dependency.MavenCoordinatesImpl
 import com.android.builder.model.MavenCoordinates
-import com.google.common.base.Objects
 import com.google.common.collect.ImmutableMap
 import org.gradle.api.artifacts.component.ComponentArtifactIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
-import org.gradle.api.artifacts.result.ResolvedVariantResult
-import org.gradle.api.component.Artifact
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 import java.io.File
 import java.util.regex.Pattern
 
 /**
- * Wrapper around [ResolvedArtifactResult] so that we can making hashable (implements [equals] and
- * [hashCode]) so that it can be used as a [Map] key.
+ * Artifact information relevant about the computation of the dependency model sent to the IDE.
  *
- * We cannot directly use a data class as [ResolvedArtifactResult] does not itself implements
- * [equals] and [hashCode].
+ * This is generally computed from a [ResolvedArtifactResult] (which is not usable as a [Map]
+ * key) plus additional information.
  */
-class HashableResolvedArtifactResult(
-    private val delegate: ResolvedArtifactResult,
-    val dependencyType: DependencyType,
-    val isWrappedModule: Boolean,
+data class ResolvedArtifact(
+    val id: ComponentArtifactIdentifier,
+    val variantName: String?,
+    val artifactFile: File,
     /**
      * An optional sub-result that represents the bundle file, when the current result
      * represents an exploded aar
      */
-    val bundleResult: ResolvedArtifactResult?,
+    val extractedFolder: File?,
+    val dependencyType: DependencyType,
+    val isWrappedModule: Boolean,
     val buildMapping: ImmutableMap<String, String>
-) : ResolvedArtifactResult {
+)  {
+
+    constructor(
+        mainArtifactResult: ResolvedArtifactResult,
+        secondaryArtifactResult: ResolvedArtifactResult?,
+        dependencyType: DependencyType,
+        isWrappedModule: Boolean,
+        buildMapping: ImmutableMap<String, String>
+    ) :
+            this(
+                mainArtifactResult.id,
+                mainArtifactResult.getVariantName(),
+                mainArtifactResult.file,
+                secondaryArtifactResult?.file,
+                dependencyType,
+                isWrappedModule,
+                buildMapping
+            )
 
     enum class DependencyType constructor(val extension: String) {
         JAVA(EXT_JAR),
         ANDROID(EXT_AAR)
     }
 
-    override fun getFile(): File {
-        return delegate.file
-    }
-
-    override fun getVariant(): ResolvedVariantResult {
-        return delegate.variant
-    }
-
-    override fun getId(): ComponentArtifactIdentifier {
-        return delegate.id
-    }
-
-    override fun getType(): Class<out Artifact> {
-        return delegate.type
-    }
-
     /**
      * Computes Maven Coordinate for a given artifact result.
      */
     fun computeMavenCoordinates(): MavenCoordinates {
-
         val id = id.componentIdentifier
-
-        val artifactFile = file
-        val fileName = artifactFile.name
-        val extension = dependencyType.extension
 
         return when (id) {
             is ModuleComponentIdentifier -> {
                 val module = id.module
                 val version = id.version
+                val extension = dependencyType.extension
                 var classifier: String? = null
 
-                if (!file.isDirectory) {
+                if (!artifactFile.isDirectory) {
                     // attempts to compute classifier based on the filename.
                     val pattern = "^$module-$version-(.+)\\.$extension$"
 
                     val p = Pattern.compile(pattern)
-                    val m = p.matcher(fileName)
+                    val m = p.matcher(artifactFile.name)
                     if (m.matches()) {
                         classifier = m.group(1)
                     }
@@ -134,31 +129,32 @@ class HashableResolvedArtifactResult(
         }
     }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) {
-            return true
+    /**
+     * Computes a unique address to use in the level 4 model
+     */
+    fun computeModelAddress(): String = when (id.componentIdentifier) {
+        is ProjectComponentIdentifier -> {
+            val projectId = id.componentIdentifier as ProjectComponentIdentifier
+
+            StringBuilder(100)
+                .append(projectId.getBuildId(buildMapping))
+                .append("@@")
+                .append(projectId.projectPath)
+                .also { sb ->
+                    this.variantName?.let{ sb.append("::").append(it) }
+                }
+                .toString().intern()
         }
-        if (javaClass != other?.javaClass) {
-            return false
+        is ModuleComponentIdentifier, is OpaqueComponentArtifactIdentifier -> {
+            this.getMavenCoordinates().toString().intern()
         }
+        else -> {
+            throw RuntimeException(
+                "Don't know how to handle ComponentIdentifier '"
+                        + id.getDisplayName()
+                        + "'of type "
+                        + id.javaClass)
 
-        other as HashableResolvedArtifactResult
-
-        // compare the properties of [ResolvedArtifactResult] instead of the instance itself
-        // as it does not implement [equals]
-        return (isWrappedModule == other.isWrappedModule
-                && dependencyType == other.dependencyType
-                && Objects.equal(file, other.file)
-                && Objects.equal(id, other.id)
-                && Objects.equal(type, other.type)
-                && Objects.equal(buildMapping, other.buildMapping))
+        }
     }
-    override fun hashCode(): Int {
-        return java.util.Objects.hash(delegate, dependencyType, isWrappedModule, buildMapping)
-    }
-
-    override fun toString(): String {
-        return id.toString()
-    }
-
 }

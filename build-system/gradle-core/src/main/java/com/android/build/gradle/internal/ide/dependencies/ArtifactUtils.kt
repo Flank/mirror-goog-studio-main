@@ -21,50 +21,17 @@ import com.android.build.api.attributes.VariantAttr
 import com.android.builder.dependency.MavenCoordinatesImpl
 import com.android.builder.model.MavenCoordinates
 import com.android.ide.common.caching.CreatingCache
-import org.gradle.api.artifacts.component.ModuleComponentIdentifier
-import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
-import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 import java.io.File
 
 private const val LOCAL_AAR_GROUPID = "__local_aars__"
 
 fun ResolvedArtifactResult.getVariantName(): String? {
-    val variantAttr = variant.attributes.getAttribute(VariantAttr.ATTRIBUTE)
-    return variantAttr?.name
+    return variant.attributes.getAttribute(VariantAttr.ATTRIBUTE)?.name
 }
 
-fun HashableResolvedArtifactResult.getMavenCoordinates(): MavenCoordinates {
+fun ResolvedArtifact.getMavenCoordinates(): MavenCoordinates {
     return mavenCoordinatesCache.get(this) ?: throw RuntimeException("Failed to compute maven coordinates for $this")
-}
-
-/**
- * Computes a uniq address to use in the level 4 model
- */
-fun HashableResolvedArtifactResult.computeModelAddress(): String = when (id.componentIdentifier) {
-    is ProjectComponentIdentifier -> {
-        val projectId = id.componentIdentifier as ProjectComponentIdentifier
-
-        StringBuilder(100)
-            .append(projectId.getBuildId(buildMapping))
-            .append("@@")
-            .append(projectId.projectPath)
-            .also { sb ->
-                getVariantName()?.let{ sb.append("::").append(it) }
-            }
-            .toString().intern()
-    }
-    is ModuleComponentIdentifier, is OpaqueComponentArtifactIdentifier -> {
-        this.getMavenCoordinates().toString().intern()
-    }
-    else -> {
-        throw RuntimeException(
-            "Don't know how to handle ComponentIdentifier '"
-                    + id.getDisplayName()
-                    + "'of type "
-                    + id.javaClass)
-
-    }
 }
 
 fun clearCaches() {
@@ -76,7 +43,7 @@ fun getMavenCoordForLocalFile(artifactFile: File): MavenCoordinatesImpl {
 }
 
 private val mavenCoordinatesCache =
-    CreatingCache<HashableResolvedArtifactResult, MavenCoordinates>(
-        CreatingCache.ValueFactory<HashableResolvedArtifactResult, MavenCoordinates> {
+    CreatingCache<ResolvedArtifact, MavenCoordinates>(
+        CreatingCache.ValueFactory<ResolvedArtifact, MavenCoordinates> {
             it.computeMavenCoordinates()
         })
