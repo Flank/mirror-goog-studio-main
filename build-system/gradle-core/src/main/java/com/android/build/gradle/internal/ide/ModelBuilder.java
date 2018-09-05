@@ -45,8 +45,8 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.internal.ide.dependencies.ArtifactDependencyGraph;
-import com.android.build.gradle.internal.ide.dependencies.ArtifactUtils;
 import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
+import com.android.build.gradle.internal.ide.dependencies.LibraryUtils;
 import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesUtils;
 import com.android.build.gradle.internal.ide.level2.EmptyDependencyGraphs;
 import com.android.build.gradle.internal.ide.level2.GlobalLibraryMapImpl;
@@ -192,7 +192,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
     }
 
     public static void clearCaches() {
-        ArtifactUtils.clearCaches();
+        LibraryUtils.clearCaches();
         MavenCoordinatesUtils.clearMavenCaches();
     }
 
@@ -317,7 +317,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
     }
 
     private static Object buildGlobalLibraryMap() {
-        return new GlobalLibraryMapImpl(ArtifactUtils.getGlobalLibMap());
+        return new GlobalLibraryMapImpl(LibraryUtils.getGlobalLibMap());
     }
 
     private Object buildAndroidProject(Project project, boolean shouldBuildVariant) {
@@ -688,7 +688,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
             if (apkArtifacts.getArtifacts().size() == 1) {
                 ResolvedArtifactResult result =
                         Iterables.getOnlyElement(apkArtifacts.getArtifacts());
-                String variant = ArtifactUtils.getVariantName(result);
+                String variant = LibraryUtils.getVariantName(result);
 
                 return ImmutableList.of(
                         new TestedTargetVariantImpl(testConfig.getTargetProjectPath(), variant));

@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.ide;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
-import com.android.build.gradle.internal.ide.dependencies.ArtifactUtils;
+import com.android.build.gradle.internal.ide.dependencies.LibraryUtils;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.SourceProvider;
@@ -56,8 +56,8 @@ public final class JavaArtifactImpl extends BaseArtifactImpl implements JavaArti
                 javaArtifact.getAdditionalClassesFolders(),
                 javaArtifact.getJavaResourcesFolder(),
                 javaArtifact.getMockablePlatformJar(),
-                ArtifactUtils.clone(javaArtifact.getDependencies(), modelLevel),
-                ArtifactUtils.clone(
+                LibraryUtils.clone(javaArtifact.getDependencies(), modelLevel),
+                LibraryUtils.clone(
                         javaArtifact.getDependencyGraphs(), modelLevel, modelWithFullDependency),
                 variantSP != null ? new SourceProviderImpl(variantSP) : null,
                 flavorsSP != null ? new SourceProviderImpl(flavorsSP) : null);

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-@file:JvmName("ArtifactUtils")
+@file:JvmName("LibraryUtils")
 package com.android.build.gradle.internal.ide.dependencies
 
 import com.android.SdkConstants.DOT_JAR

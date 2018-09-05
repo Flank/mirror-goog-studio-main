@@ -331,7 +331,7 @@ public class ArtifactDependencyGraph {
                     final GraphItemImpl graphItem =
                             new GraphItemImpl(artifact.computeModelAddress(), ImmutableList.of());
                     compileItems.add(graphItem);
-                    ArtifactUtils.getLibraryCache().get(artifact);
+                    LibraryUtils.getLibraryCache().get(artifact);
                     if (!runtimeIdentifiers.contains(artifact.getId().getComponentIdentifier())) {
                         providedAddresses.add(graphItem.getArtifactAddress());
                     }
@@ -345,7 +345,7 @@ public class ArtifactDependencyGraph {
             for (ResolvedArtifact artifact : compileArtifacts) {
                 compileItems.add(
                         new GraphItemImpl(artifact.computeModelAddress(), ImmutableList.of()));
-                ArtifactUtils.getLibraryCache().get(artifact);
+                LibraryUtils.getLibraryCache().get(artifact);
             }
 
             // in this mode, compute GraphItem for the runtime configuration
@@ -361,7 +361,7 @@ public class ArtifactDependencyGraph {
             for (ResolvedArtifact artifact : runtimeArtifacts) {
                 runtimeItems.add(
                         new GraphItemImpl(artifact.computeModelAddress(), ImmutableList.of()));
-                ArtifactUtils.getLibraryCache().get(artifact);
+                LibraryUtils.getLibraryCache().get(artifact);
             }
 
             // compute the provided dependency list, by comparing the compile and runtime items
@@ -479,7 +479,7 @@ public class ArtifactDependencyGraph {
                                     projectPath,
                                     artifact.getArtifactFile(),
                                     extractedFolder,
-                                    ArtifactUtils.findResStaticLibrary(variantScope, artifact),
+                                    LibraryUtils.findResStaticLibrary(variantScope, artifact),
                                     artifact.getVariantName(),
                                     isProvided,
                                     false, /* dependencyItem.isSkipped() */
