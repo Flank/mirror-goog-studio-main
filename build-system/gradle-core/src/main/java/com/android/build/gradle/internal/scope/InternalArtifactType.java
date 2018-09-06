@@ -59,7 +59,10 @@ public enum InternalArtifactType implements ArtifactType {
     FULL_JAR,
 
     JACOCO_INSTRUMENTED_CLASSES,
-    JACOCO_COVERAGE_DIR,
+    // The jacoco code coverage from the connected task
+    CODE_COVERAGE(Category.OUTPUTS),
+    // The jacoco code coverage from the device provider tasks.
+    DEVICE_PROVIDER_CODE_COVERAGE(Category.OUTPUTS),
 
     // --- android res ---
     // output of the resource merger ready for aapt.

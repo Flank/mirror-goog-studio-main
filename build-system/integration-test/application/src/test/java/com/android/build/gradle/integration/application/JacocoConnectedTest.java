@@ -103,8 +103,7 @@ public class JacocoConnectedTest {
         project.executor().run("connectedCheck");
         List<File> files =
                 FileUtils.find(
-                        project.file("build/outputs/code-coverage/connected"),
-                        Pattern.compile(".*\\.ec"));
+                        project.file("build/outputs/code_coverage"), Pattern.compile(".*\\.ec"));
 
         // ExampleTest has 2 methods, and there should be at least 2 .ec files
         Truth.assertThat(files.size()).isAtLeast(2);

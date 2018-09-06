@@ -39,10 +39,10 @@ import java.util.Collection;
 import java.util.Locale;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.FileTreeElement;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.Input;
@@ -152,10 +152,10 @@ public class JacocoReportTask extends AndroidVariantTask {
                 coverageDirectories
                         .get()
                         .getAsFileTree()
-                        .matching(
-                                patternFilterable ->
-                                        patternFilterable.exclude(FileTreeElement::isDirectory))
-                        .getFiles();
+                        .getFiles()
+                        .stream()
+                        .filter(File::isFile)
+                        .collect(Collectors.toSet());
 
         if (coverageFiles.isEmpty()) {
             throw new IOException(
@@ -221,8 +221,7 @@ public class JacocoReportTask extends AndroidVariantTask {
             task.jacocoClasspath = jacocoAntConfiguration;
 
             task.coverageDirectories =
-                    scope.getArtifacts()
-                            .getFinalArtifactFiles(InternalArtifactType.JACOCO_COVERAGE_DIR);
+                    scope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.CODE_COVERAGE);
 
             task.classFileCollection =
                     testedScope

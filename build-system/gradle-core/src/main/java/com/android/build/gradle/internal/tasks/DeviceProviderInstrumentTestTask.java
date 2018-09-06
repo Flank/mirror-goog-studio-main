@@ -29,6 +29,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -73,8 +74,10 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.gradle.api.GradleException;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.JavaBasePlugin;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
@@ -96,7 +99,7 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
     }
 
     private DeviceProvider deviceProvider;
-    private File coverageDir;
+    private Provider<Directory> coverageDir;
     private File reportsDir;
     private File resultsDir;
     private FileCollection buddyApks;
@@ -241,7 +244,7 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
 
     @OutputDirectory
     public File getCoverageDir() {
-        return coverageDir;
+        return coverageDir.get().getAsFile();
     }
 
     @Deprecated
@@ -345,7 +348,7 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
         private final DeviceProvider deviceProvider;
         @NonNull private final AbstractTestDataImpl testData;
         @NonNull private final FileCollection testTargetManifests;
-        private File coverageDir;
+        private Provider<Directory> coverageDir;
 
         public CreationAction(
                 @NonNull VariantScope scope,
@@ -374,13 +377,24 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
         public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
 
-            coverageDir =
-                    getVariantScope()
-                            .getArtifacts()
-                            .appendArtifact(
-                                    InternalArtifactType.JACOCO_COVERAGE_DIR,
-                                    taskName,
-                                    "code-coverage");
+            if (deviceProvider instanceof ConnectedDeviceProvider) {
+                coverageDir =
+                        getVariantScope()
+                                .getArtifacts()
+                                .createDirectory(
+                                        InternalArtifactType.CODE_COVERAGE,
+                                        taskName,
+                                        deviceProvider.getName());
+            } else {
+                coverageDir =
+                        getVariantScope()
+                                .getArtifacts()
+                                .createDirectory(
+                                        InternalArtifactType.DEVICE_PROVIDER_CODE_COVERAGE,
+                                        BuildArtifactsHolder.OperationType.APPEND,
+                                        taskName,
+                                        deviceProvider.getName());
+            }
         }
 
         @Override
