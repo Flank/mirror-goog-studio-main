@@ -1,3 +1,4 @@
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -84,5 +85,21 @@ public final class FoundryTest {
             t.printStackTrace();
             fail("Could not run latest build-tools linker.");
         }
+    }
+
+    @Test
+    public void testJdkVersion() throws IOException {
+        String javaVersionInUse = System.getProperty("java.version");
+        // Get the java version from our prebuilts jdk.
+        ProcessBuilder builder =
+                new ProcessBuilder("prebuilts/studio/jdk/linux/bin/java", "-version");
+        builder.redirectErrorStream(true);
+        Process p = builder.start();
+        BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        String firstLine = r.readLine(); // e.g. openjdk version "1.8.0_152-release"
+        int lastQuote = firstLine.lastIndexOf("\"");
+        int openQuote = firstLine.substring(0, lastQuote).lastIndexOf("\"");
+        String prebuiltsJavaVersion = firstLine.substring(openQuote + 1, lastQuote);
+        assertEquals(javaVersionInUse, prebuiltsJavaVersion);
     }
 }

@@ -21,8 +21,15 @@ platform(
 java_test(
     name = "test",
     srcs = ["FoundryTest.java"],
-    data = ["//prebuilts/studio/sdk:build-tools/latest"],
+    data = [
+        "//prebuilts/studio/jdk:jdk_runtime",
+        "//prebuilts/studio/sdk:build-tools/latest",
+    ],
     jvm_flags = ["-Djava.security.debug=all"],
-    tags = ["manual"],
+    tags = [
+        "manual",
+        "no_mac",
+        "no_windows",
+    ],
     test_class = "FoundryTest",
 )
