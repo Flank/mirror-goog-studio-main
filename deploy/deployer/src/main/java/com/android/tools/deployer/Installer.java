@@ -17,7 +17,6 @@ package com.android.tools.deployer;
 
 import com.android.tools.deploy.proto.Deploy;
 import com.google.common.base.Charsets;
-import com.google.common.collect.ObjectArrays;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -56,7 +55,7 @@ public class Installer {
     }
 
     public Map<String, ApkDump> dump(String packageName) throws IOException {
-        String[] cmd = buildCmd(new String[] {"dump", packageName});
+        String[] cmd = {INSTALLER_PATH, "dump", packageName};
         retryShell(cmd, null);
 
         // Pull entire directory of dumps from remote device.
@@ -90,7 +89,7 @@ public class Installer {
 
     public void swap(Deploy.SwapRequest request) {
         byte[] data = request.toByteArray();
-        String[] cmd = buildCmd(new String[] {"swap", String.valueOf(data.length)});
+        String[] cmd = {INSTALLER_PATH, "swap", "0", String.valueOf(data.length)};
         retryShell(cmd, data);
     }
 
@@ -152,10 +151,5 @@ public class Installer {
             stream = new FileInputStream(installersFolder + "/" + path);
         }
         return stream;
-    }
-
-    private String[] buildCmd(String[] parameters) {
-        String[] base = {INSTALLER_PATH, "-version=" + Version.hash};
-        return ObjectArrays.concat(base, parameters, String.class);
     }
 }

@@ -34,53 +34,16 @@ public class Bin2CTest {
         Path in = Files.createTempFile("input", ".bin");
         Files.write(in, buffer);
         Path out = Files.createTempFile("output", ".cc");
-        Bin2C.main(
-                new String[] {
-                    "-lang=cxx",
-                    "-embed=true",
-                    "-output=" + out.toString(),
-                    "-variable=test_name",
-                    in.toString()
-                });
+        Bin2C.main(new String[] {in.toString(), out.toString(), "test_name"});
         String[] strings = Files.readAllLines(out).toArray(new String[] {});
         assertArrayEquals(
                 new String[] {
-                    "const char* test_name_hash = \"e7aebf57\";",
                     "unsigned char test_name[] = {",
                     "0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, ",
                     "0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, };",
-                    "long long test_name_len = 20;",
+                    "uint64_t test_name_len = 20;",
+                    "const char* test_name_hash = \"e7aebf577f60412f0312d442c70a1fa6148c090bf5bab404caec29482ae779e8\";",
                 },
                 strings);
-    }
-
-    @Test
-    public void converToJava() throws IOException {
-        byte[] buffer = new byte[20];
-        for (byte i = 0; i < buffer.length; i++) {
-            buffer[i] = i;
-        }
-        Path in = Files.createTempFile("input_java", ".bin");
-        Files.write(in, buffer);
-        Path out = Files.createTempFile("output_java", ".cc");
-        Bin2C.main(
-                new String[] {
-                    "-lang=java",
-                    "-embed=false",
-                    "-output=" + out.toString(),
-                    "-variable=my.package.TestName",
-                    in.toString()
-                });
-        String[] strings = Files.readAllLines(out).toArray(new String[] {});
-        assertArrayEquals(
-                new String[] {
-                    "package my.package;",
-                    "",
-                    "public class TestName {",
-                    "    public static final String hash = \"e7aebf57\";",
-                    "}",
-                },
-                strings);
- 
     }
 }

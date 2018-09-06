@@ -57,9 +57,10 @@ genrule(
     outs = [
         "instrumentation.jar.cc",
     ],
-    cmd = "$(location //tools/base/bazel:bin2c) -lang=cxx -variable=instrumentation_jar" +
-          " -output=$(location instrumentation.jar.cc)" +
-          " $(location //tools/base/deploy/agent/instrumentation:instrumentation)",
+    cmd = "$(location //tools/base/bazel:bin2c)" +
+          " $(location //tools/base/deploy/agent/instrumentation:instrumentation)" +
+          " $(location instrumentation.jar.cc)" +
+          " instrumentation_jar",
     tools = [
         "//tools/base/bazel:bin2c",
     ],

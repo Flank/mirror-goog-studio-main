@@ -1,7 +1,7 @@
 #!/bin/bash
 
-mkdir -p .studio/bin
-cp ./tools/base/deploy/installer/versioned_installer .studio/bin/installer
+mkdir -p .studio/{bin,dumps}
+cp ./tools/base/deploy/installer/installer .studio/bin
 
 function fail {
    echo $1

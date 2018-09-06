@@ -26,7 +26,7 @@ namespace deployer {
 
 class SwapCommand : public Command {
  public:
-  SwapCommand() {};
+  SwapCommand() : force_update_(false){};
   ~SwapCommand() {}
 
   void ParseParameters(int argc, char** argv) override;
@@ -36,6 +36,7 @@ class SwapCommand : public Command {
   std::string package_name_;
   proto::SwapRequest request_;
   std::string target_dir_;
+  bool force_update_;
 
   enum class User { SHELL_USER, APP_PACKAGE };
 

@@ -1,16 +1,5 @@
 load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS", "android_cc_binary", "select_android")
 
-# A few lines of explanation because what is happening in this BUILD file is not trivial.
-# In order to keep the Deployer and the Installer in sync (a.k.a: Installer and Deployer were built
-# at the same time and are compatible), we embed a "version" in both the Deployer jar and the
-# installer android binaries. This version is the SHA-256 of the installer with a placeholder
-# version number which we call "unversioned". The Installer linked with with a version is called
-# "versioned".
-
-# Installer lib is incomplete. It needs a version lib to link properly. Either provide:
-# - :version_placeholder_lib
-# - :version
-# to have a fully resolved lib.
 cc_library(
     name = "installer_lib",
     srcs = [
@@ -50,56 +39,11 @@ cc_library(
     ],
 )
 
-# Provide a default version for installer_lib to link properly.
-cc_library(
-    name = "version_placeholder_lib",
-    srcs = [
-        "placeholder_version.cc",
-    ],
-)
-
-# Provide a version for installer_lib based on the unversioned installer.
-genrule(
-    name = "version_generator",
-    outs = [
-        "version.cc",
-    ],
-    cmd = "$(location //tools/base/bazel:bin2c) -lang=cxx -embed=false -variable=kVersion " +
-          " -output=$(location version.cc)" +
-          " $(locations //tools/base/deploy/installer:unversioned_installer)",
-    tags = ["no_windows"],
-    tools = [
-        ":unversioned_installer",  # Used as hash function input. This is built for HOST arch.
-        "//tools/base/bazel:bin2c",
-    ],
-    visibility = ["//visibility:private"],
-)
-
-# Installer linked with a placeholder. The sole purpose of this target is to be used as a tool in
-# a genrule so it is hashed into a SHA-256 value in order to feed the versioned_installer.
 cc_binary(
-    name = "unversioned_installer",
+    name = "installer",
     srcs = [
         "main.cc",
     ],
-    copts = ANDROID_COPTS,
-    linkopts = ANDROID_LINKOPTS,
-    tags = ["no_windows"],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":installer_lib",
-        ":version_placeholder_lib",
-    ],
-)
-
-cc_binary(
-    name = "versioned_installer",
-    srcs = [
-        "main.cc",
-    ] + select({
-        "//tools/base/bazel:host_windows": [":version_placeholder_lib"],
-        "//conditions:default": [":version.cc"],
-    }),
     copts = ANDROID_COPTS,
     linkopts = ANDROID_LINKOPTS,
     tags = ["no_windows"],
@@ -116,7 +60,10 @@ android_cc_binary(
         "armeabi-v7a",
         "arm64-v8a",
     ],
-    binary = ":versioned_installer",
+    binary = select({
+        "//tools/base/bazel:windows": ":installer",
+        "//conditions:default": ":installer.stripped",
+    }),
     filename = "installer",
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
@@ -139,9 +86,10 @@ genrule(
     outs = [
         "agent.so.cc",
     ],
-    cmd = "$(location //tools/base/bazel:bin2c) -lang=cxx -variable=agent_so" +
-          " -output=$(location agent.so.cc)" +
-          " $(location //tools/base/deploy/agent/native:libswap.so)",
+    cmd = "$(location //tools/base/bazel:bin2c)" +
+          " $(location //tools/base/deploy/agent/native:libswap.so)" +
+          " $(location agent.so.cc)" +
+          " agent_so",
     tags = ["no_windows"],
     tools = [
         "//tools/base/bazel:bin2c",
@@ -163,7 +111,6 @@ cc_test(
     visibility = ["//visibility:public"],
     deps = [
         ":installer_lib",
-        ":version_placeholder_lib",
         "//external:gmock_main",
         "//tools/base/profiler/native/test:testutils",
     ],
@@ -176,7 +123,7 @@ sh_test(
         "tests/endtoend_p.sh",
     ],
     data = [
-        ":versioned_installer",
+        ":installer",
     ] + glob(["tests/**/*"]),
     tags = [
         "no_windows",
@@ -190,7 +137,7 @@ sh_test(
         "tests/endtoend_o.sh",
     ],
     data = [
-        "versioned_installer",
+        ":installer",
     ] + glob(["tests/**/*"]),
     tags = [
         "no_windows",
@@ -204,7 +151,7 @@ sh_test(
         "tests/endtoend_p_with_splits.sh",
     ],
     data = [
-        ":versioned_installer",
+        ":installer",
     ] + glob(["tests/**/*"]),
     tags = [
         "no_windows",
