@@ -18,6 +18,14 @@ java_binary(
     ],
 )
 
+config_setting(
+    name = "agent_coverage",
+    values = {
+        "define": "agent_coverage=true",
+    },
+    visibility = ["//visibility:public"],
+)
+
 java_library(
     name = "groovy-compiler",
     srcs = glob(["src/com/android/tools/groovy/*.java"]),

@@ -1,3 +1,4 @@
+load(":coverage.bzl", "coverage_java_test")
 load(":functions.bzl", "create_java_compiler_args_srcs", "create_option_file", "explicit_target", "label_workspace_path", "workspace_path")
 load(":groovy.bzl", "groovy_impl")
 load(":kotlin.bzl", "kotlin_impl")
@@ -542,7 +543,7 @@ def iml_module(
 
     test_tags = tags + test_tags if tags and test_tags else (tags if tags else test_tags)
     if test_srcs:
-        native.java_test(
+        coverage_java_test(
             name = name + "_tests",
             tags = test_tags,
             runtime_deps = manual_test_runtime_deps + [":" + name + "_testlib"],

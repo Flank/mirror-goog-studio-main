@@ -1,3 +1,4 @@
+load(":coverage.bzl", "coverage_java_test")
 load(":functions.bzl", "create_java_compiler_args_srcs", "explicit_target", "label_workspace_path", "workspace_path")
 load(":maven.bzl", "maven_pom")
 load(":utils.bzl", "singlejar")
@@ -173,7 +174,7 @@ def kotlin_test(name, srcs, deps=[], runtime_deps=[], friends=[], visibility=Non
     friends = friends,
   )
 
-  native.java_test(
+  coverage_java_test(
       name = name + ".test",
       runtime_deps = [
           ":" + name + ".testlib",
