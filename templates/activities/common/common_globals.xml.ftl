@@ -5,7 +5,7 @@
     <#assign appCompat=backwardsCompatibility!(theme.isAppCompat)!false>
     <#assign appCompatActivity=appCompat && (buildApi gte 22)>
     <#assign espresso=hasDependency('com.android.support.test.espresso:espresso-core', 'androidTestCompile')>
-    <#assign useAndroidX=isAndroidxEnabled() && (buildApi gte 28)>
+    <#assign useAndroidX=isAndroidxEnabled()>
     <#assign useMaterial2=useAndroidX || hasDependency('com.google.android.material:material')>
     <#assign supportRunner=hasDependency('com.android.support.test:runner', 'androidTestCompile')>
     <#assign testSupportLib=espresso && supportRunner>
