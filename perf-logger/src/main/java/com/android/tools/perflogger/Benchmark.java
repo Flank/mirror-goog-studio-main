@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.annotations.Expose;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
@@ -71,9 +72,16 @@ public class Benchmark {
      * manually instead.
      */
     public void log(@NonNull String metricName, long data) {
+        log(metricName, data, null);
+    }
+
+    public void log(@NonNull String metricName, long data, @Nullable Analyzer analyzer) {
         long utcMs = Instant.now().toEpochMilli();
         Metric metric = new Metric(metricName);
         metric.addSamples(this, new Metric.MetricSample(utcMs, data));
+        if (analyzer != null) {
+            metric.setAnalyzers(this, Collections.singleton(analyzer));
+        }
         metric.commit();
     }
 
