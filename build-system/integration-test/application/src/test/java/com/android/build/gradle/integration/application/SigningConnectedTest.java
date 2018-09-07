@@ -163,7 +163,7 @@ public class SigningConnectedTest {
     public void shaAlgorithmChange_OnDevice() throws Exception {
 
         // Check APK with minimum SDK 21.
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.getBuildFile(),
                 "minSdkVersion \\d+",
                 "minSdkVersion " + DigestAlgorithm.API_SHA_256_ALL_ALGORITHMS);
@@ -173,7 +173,7 @@ public class SigningConnectedTest {
 
         // Check APK with minimum SDK 18.
         // Don't run on the oldest device, it's not compatible with the APK.
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.searchRegexAndReplace(
                 project.getBuildFile(),
                 "minSdkVersion \\d+",
                 "minSdkVersion " + DigestAlgorithm.API_SHA_256_RSA_AND_ECDSA);
@@ -183,7 +183,7 @@ public class SigningConnectedTest {
 
         // Check APK with minimum SDK 1. Skip this for ECDSA.
         if (minSdkVersion < DigestAlgorithm.API_SHA_256_RSA_AND_ECDSA) {
-            TestFileUtils.searchAndReplace(
+            TestFileUtils.searchRegexAndReplace(
                     project.getBuildFile(), "minSdkVersion \\d+", "minSdkVersion " + minSdkVersion);
 
             checkOnDevice(device19);
