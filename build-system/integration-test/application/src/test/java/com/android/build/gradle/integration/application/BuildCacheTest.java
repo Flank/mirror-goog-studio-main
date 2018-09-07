@@ -67,6 +67,7 @@ public class BuildCacheTest {
         GradleTaskExecutor executor =
                 project.executor()
                         .with(BooleanOption.ENABLE_BUILD_CACHE, true)
+                        .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, false)
                         .with(StringOption.BUILD_CACHE_DIR, sharedBuildCacheDir.getAbsolutePath());
         executor.run("clean", "assembleDebug");
 
@@ -119,6 +120,7 @@ public class BuildCacheTest {
 
         project.executor()
                 .with(BooleanOption.ENABLE_BUILD_CACHE, false)
+                .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, false)
                 .with(StringOption.BUILD_CACHE_DIR, sharedBuildCacheDir.getAbsolutePath())
                 .run("clean", "assembleDebug");
 

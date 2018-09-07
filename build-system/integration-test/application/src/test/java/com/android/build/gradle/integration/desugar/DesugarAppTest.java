@@ -175,14 +175,7 @@ public class DesugarAppTest {
         GradleBuildResult result = getProjectExecutor().expectFailure().run("assembleDebug");
         assertThat(result.getStdout())
                 .contains(
-                        "The dependency contains Java 8 bytecode. Please enable desugaring by "
-                                + "adding the following to build.gradle\n"
-                                + "android {\n"
-                                + "    compileOptions {\n"
-                                + "        sourceCompatibility 1.8\n"
-                                + "        targetCompatibility 1.8\n"
-                                + "    }\n"
-                                + "}\n");
+                        "The dependency contains Java 8 bytecode. Please enable desugaring by adding the following to build.gradle\n");
     }
 
     @Test

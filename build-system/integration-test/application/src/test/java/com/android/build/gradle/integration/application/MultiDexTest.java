@@ -96,8 +96,8 @@ public class MultiDexTest {
         // around when we packaged them.
         List<File> allClassesDex =
                 FileUtils.find(
-                        project.getIntermediateFile("transforms"),
-                        Pattern.compile("(dex|dexMerger)/ics/debug/.*/classes\\.dex"));
+                        project.getIntermediateFile("dex"),
+                        Pattern.compile("icsDebug/mergeDexIcsDebug/out/classes\\.dex"));
         assertThat(allClassesDex).hasSize(1);
         File classesDex = allClassesDex.get(0);
 

@@ -19,12 +19,13 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.testutils.truth.MoreTruth.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.testutils.apk.Apk;
+import com.android.testutils.apk.Dex;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import java.io.IOException;
@@ -91,7 +92,6 @@ public class SwitchMultidexTest {
         project.executor()
                 .withProperty("inject.minsdk", "19")
                 .withProperty("inject.multidex", "true")
-                .with(BooleanOption.ENABLE_D8, false)
                 .run("assembleDebug");
         Apk debug = project.getApk("debug");
         assertTrue(debug.getMainDexFile().isPresent());
@@ -109,13 +109,17 @@ public class SwitchMultidexTest {
                                 "Landroid/support/multidex/ZipUtil$CentralDirectory;",
                                 "Landroid/support/multidex/ZipUtil;",
                                 "Lcom/example/helloworld/HelloWorld;"));
-        assertThat(debug.getSecondaryDexFiles()).hasSize(2);
-        Set<String> classes2 = debug.getSecondaryDexFiles().get(0).getClasses().keySet();
-        Set<String> classes3 = debug.getSecondaryDexFiles().get(1).getClasses().keySet();
 
-        assertThat(classes2).named("No duplicate class definitions").containsNoneIn(classes3);
+        Set<String> secondaryClasses = Sets.newHashSet();
+        for (Dex dex : debug.getSecondaryDexFiles()) {
+            for (String c : dex.getClasses().keySet()) {
+                if (!secondaryClasses.add(c)) {
+                    fail("Duplicate classes found in secondary dex files.");
+                }
+            }
+        }
 
-        assertThat(Sets.union(classes2, classes3))
+        assertThat(secondaryClasses)
                 .containsExactly(
                         "Landroid/support/multidex/BuildConfig;",
                         "Landroid/support/multidex/R;",

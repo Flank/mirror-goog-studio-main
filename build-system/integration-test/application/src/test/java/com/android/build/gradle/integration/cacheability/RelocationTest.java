@@ -68,7 +68,6 @@ public class RelocationTest {
                     .add(":checkDebugManifest")
                     .add(":mainApkListPersistenceDebug")
                     .add(":transformClassesWithDexBuilderForDebug")
-                    .add(":transformDexArchiveWithExternalLibsDexMergerForDebug")
                     .add(":transformNativeLibsWithMergeJniLibsForDebug")
                     .add(":transformResourcesWithMergeJavaResForDebug")
                     .add(":packageDebug")

@@ -44,8 +44,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Collection;
 import java.util.List;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -80,7 +78,9 @@ public class DexArchivesTest {
 
         checkIntermediaryDexArchives(getInitialDexEntries());
 
-        checkIntermediaryDexFiles(ImmutableList.of("classes.dex"));
+        File merged = project.getIntermediateFile("dex/debug/mergeDexDebug/out/");
+        assertThat(merged).isDirectory();
+        assertThat(merged.list()).hasLength(1);
 
         Dex mainDex = project.getApk(GradleTestProject.ApkType.DEBUG).getMainDexFile().get();
         MoreTruth.assertThat(mainDex).containsExactlyClassesIn(getInitialDexClasses());
@@ -158,7 +158,7 @@ public class DexArchivesTest {
         assertThat(result.getNotUpToDateTasks())
                 .contains(":transformClassesWithDexBuilderForRelease");
         assertThat(result.getNotUpToDateTasks())
-                .contains(":transformDexArchiveWithDexMergerForRelease");
+                .containsAllOf(":mergeDexRelease", ":mergeExtDexRelease");
     }
 
     /** Regression test for http://b/68144982. */
@@ -196,22 +196,6 @@ public class DexArchivesTest {
         assertThat(produced).containsExactlyElementsIn(dexEntryNames);
     }
 
-    private void checkIntermediaryDexFiles(@NonNull Collection<String> expectedNames) {
-        TransformOutputContent content = new TransformOutputContent(mergerDir());
-        assertThat(content).hasSize(1);
-
-        SubStream stream = content.getSingleStream();
-        assertThat(stream).hasFormat(Format.DIRECTORY);
-
-        List<String> dexFiles =
-                FileUtils.find(content.getLocation(stream), Pattern.compile(".*\\.dex"))
-                        .stream()
-                        .map(File::getName)
-                        .collect(Collectors.toList());
-
-        assertThat(dexFiles).containsExactlyElementsIn(expectedNames);
-    }
-
     @NonNull
     private List<String> getInitialDexEntries() {
         return Lists.newArrayList(
@@ -244,10 +228,5 @@ public class DexArchivesTest {
     @NonNull
     private File builderDir() {
         return project.getIntermediateFile("transforms", "dexBuilder", "debug");
-    }
-
-    @NonNull
-    private File mergerDir() {
-        return project.getIntermediateFile("transforms", "dexMerger", "debug");
     }
 }

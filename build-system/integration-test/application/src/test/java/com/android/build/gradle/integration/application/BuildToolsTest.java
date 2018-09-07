@@ -41,10 +41,11 @@ public class BuildToolsTest {
             ImmutableList.<String>builder()
                     .addAll(COMMON_TASKS)
                     .add(":transformClassesWithDexBuilderForDebug")
-                    .add(":transformDexArchiveWithExternalLibsDexMergerForDebug")
                     .add(":transformClassesWithDexBuilderForRelease")
-                    .add(":transformDexArchiveWithDexMergerForDebug")
-                    .add(":transformDexArchiveWithDexMergerForRelease")
+                    .add(":mergeDexDebug")
+                    .add(":mergeExtDexDebug")
+                    .add(":mergeDexRelease")
+                    .add(":mergeExtDexRelease")
                     .build();
 
     @Rule
