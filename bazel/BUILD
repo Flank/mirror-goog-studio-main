@@ -353,6 +353,12 @@ config_setting(
     visibility = ["//visibility:public"],
 )
 
+config_setting(
+    name = "coverage",
+    values = {"define": "coverage=true"},
+    visibility = ["//visibility:public"],
+)
+
 java_test(
     name = "iml_to_build_tests",
     srcs = ["testSrc/com/android/tools/binaries/ImlToBazelTest.java"],

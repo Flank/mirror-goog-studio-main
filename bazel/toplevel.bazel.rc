@@ -18,6 +18,13 @@ test --sandbox_fake_username
 
 test --sandbox_tmpfs_path=/tmp
 
+# When running bazel coverage, make sure to set this user-defined setting.
+# This is useful, for instance, to mark our version of jacocoant.jar as neverlink
+# when running coverage, otherwise it will conflict at runtime with the version
+# bazel uses and coverage won't be collected for targets that depend on it, directly
+# and indirectly. See b/112891050 for more details.
+coverage --define coverage=true
+
 build --sandbox_tmpfs_path=/tmp
 build --javacopt="-g:source,lines,vars"  # Keep debug info
 build --javacopt=-Xep:FallThrough:OFF  # enforcing Google style, essentially
