@@ -34,9 +34,9 @@ class ExternalLibraryTest {
     fun toStringOverrideTest() {
         val cfg = ExternalLibrary(
             address = "foo",
-            classesJar = PathString("/bar/baz")
+            classJars = listOf(PathString("/bar/baz"))
         )
-        assertThat(cfg.toString()).isEqualTo("ExternalLibrary(address=foo,classesJar=file:///bar/baz)")
+        assertThat(cfg.toString()).isEqualTo("ExternalLibrary(address=foo,classJars=[file:///bar/baz])")
     }
 
     @Test
@@ -92,8 +92,8 @@ class ExternalLibraryTest {
 
     @Test
     fun withClassesJarTest() {
-        assertThat(ExternalLibrary("foo").withClassesJar(barPath))
-            .isEqualTo(ExternalLibrary(address = "foo", classesJar = barPath))
+        assertThat(ExternalLibrary("foo").withClassJars(listOf(barPath)))
+            .isEqualTo(ExternalLibrary(address = "foo", classJars = listOf(barPath)))
     }
 
     @Test

@@ -554,7 +554,7 @@ fun convertLibrary(builderModelLibrary: Library): com.android.projectmodel.Libra
                 address = artifactAddress,
                 location = artifact.toPathString(),
                 manifestFile = PathString(manifest),
-                classesJar = PathString(jarFile),
+                classJars = listOf(PathString(jarFile)),
                 dependencyJars = localJars.map(::PathString),
                 resFolder = PathString(resFolder),
                 symbolFile = PathString(symbolFile),
@@ -562,7 +562,7 @@ fun convertLibrary(builderModelLibrary: Library): com.android.projectmodel.Libra
             )
             com.android.builder.model.level2.Library.LIBRARY_JAVA -> com.android.projectmodel.ExternalLibrary(
                 address = artifactAddress,
-                classesJar = artifact.toPathString()
+                classJars = listOf(artifact.toPathString())
             )
             com.android.builder.model.level2.Library.LIBRARY_MODULE -> {
                 val path = projectPath

@@ -82,10 +82,10 @@ data class ExternalLibrary(
     val representativeManifestFile: PathString? = manifestFile,
 
     /**
-     * Path to .jar file containing the library classes or null if this library does not include
-     * any java classes.
+     * Path to .jar file(s) containing the library classes. This list will be empty if the library
+     * does not include any java classes.
      */
-    val classesJar: PathString? = null,
+    val classJars: List<PathString> = emptyList(),
 
     /**
      * Paths to jars that were packaged inside the AAR and are dependencies of it.
@@ -143,9 +143,9 @@ data class ExternalLibrary(
     )
 
     /**
-     * Returns a copy of the receiver with the given classes jar. Intended to simplify construction from Java.
+     * Returns a copy of the receiver with the given list of java class jars. Intended to simplify construction from Java.
      */
-    fun withClassesJar(path: PathString?) = copy(classesJar = path)
+    fun withClassJars(paths: List<PathString>) = copy(classJars = paths)
 
     /**
      * Returns a copy of the receiver with the given res folder. Intended to simplify construction from Java.

@@ -55,7 +55,7 @@ class GradleModelConverterUtilTest {
                     address = artifactAddress,
                     location = artifact.toPathString(),
                     manifestFile = PathString(manifest),
-                    classesJar = PathString(jarFile),
+                    classJars = listOf(PathString(jarFile)),
                     dependencyJars = localJars.map(::PathString),
                     resFolder = PathString(resFolder),
                     symbolFile = PathString(symbolFile),
