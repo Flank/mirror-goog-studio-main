@@ -255,7 +255,7 @@ public class Main {
 
                     private byte[] readSrcJar(@NonNull File file) {
                         String path = file.getPath();
-                        int srcJarIndex = path.indexOf("srcjar!/");
+                        int srcJarIndex = path.indexOf("srcjar!");
                         if (srcJarIndex != -1) {
                             File jarFile = new File(path.substring(0, srcJarIndex + 6));
                             if (jarFile.exists()) {

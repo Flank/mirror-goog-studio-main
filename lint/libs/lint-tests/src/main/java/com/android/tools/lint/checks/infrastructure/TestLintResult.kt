@@ -484,10 +484,14 @@ class TestLintResult internal constructor(
     ): TestLintResult {
         return checkXmlReport(
             TestResultChecker { s ->
-                assertEquals(
-                    expected,
-                    s
-                )
+                if (s != expected && s.replace('\\', '/') == expected) {
+                    // Allow Windows file separators to differ
+                } else {
+                    assertEquals(
+                        expected,
+                        s
+                    )
+                }
             },
             transformer = transformer
         )
@@ -529,10 +533,14 @@ class TestLintResult internal constructor(
     ): TestLintResult {
         return checkXmlReport(
             checkers = *arrayOf(TestResultChecker { s ->
-                assertEquals(
-                    expected,
-                    s
-                )
+                if (s != expected && s.replace('\\', '/') == expected) {
+                    // Allow Windows file separators to differ
+                } else {
+                    assertEquals(
+                        expected,
+                        s
+                    )
+                }
             }),
             includeFixes = includeFixes,
             fullPaths = fullPaths,

@@ -116,7 +116,7 @@ class XmlReporterTest {
                         .next()
                         .dir
                         .parent
-                    val actual = xml.replace(testRoot, "TESTROOT")
+                    val actual = xml.replace(testRoot, "TESTROOT").replace('\\', '/')
                     @Language("XML")
                     val expected = """
                         <issues format="5" by="lint unittest">

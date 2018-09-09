@@ -16,7 +16,6 @@
 
 package com.android.tools.lint
 
-import com.android.SdkConstants
 import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_NAME
 import com.android.SdkConstants.FN_PUBLIC_TXT
@@ -43,7 +42,6 @@ import com.google.common.base.Charsets
 import com.google.common.io.Files
 import com.google.common.truth.Truth.assertThat
 import org.intellij.lang.annotations.Language
-import org.junit.Assume
 import org.junit.ClassRule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -752,8 +750,6 @@ class ProjectInitializerTest {
 
     @Test
     fun testSrcJar() {
-        // b/111699656
-        Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS)
         // Checks that source files can be read from srcjar files as well
         val root = temp.newFolder()
         val projects = lint().files(
