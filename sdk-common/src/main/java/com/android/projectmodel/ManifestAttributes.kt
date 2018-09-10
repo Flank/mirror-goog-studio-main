@@ -99,6 +99,17 @@ data class ManifestAttributes(
         )
 
     override fun toString(): String = printProperties(this, emptyManifestAttributes)
+
+    /**
+     * Returns a copy of the receiver, with the [targetSdkVersion], [minSdkVersion], [apiVersion],
+     * and [compileSdkVersion] all set to the given version number.
+     */
+    fun withVersion(version: AndroidVersion?) = copy(
+        targetSdkVersion = version,
+        minSdkVersion = version,
+        apiVersion = version,
+        compileSdkVersion = version
+    )
 }
 
 val emptyManifestAttributes = ManifestAttributes()

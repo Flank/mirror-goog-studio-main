@@ -60,6 +60,19 @@ class ManifestAttributesTest {
                 overrideEverything.copy(applicationId = "overriddenApplicationId"))
     }
 
+    @Test
+    fun testWithVersion() {
+        val version = AndroidVersion(3)
+        assertThat(ManifestAttributes().withVersion(version)).isEqualTo(
+            ManifestAttributes(
+                minSdkVersion = version,
+                targetSdkVersion = version,
+                apiVersion = version,
+                compileSdkVersion = version
+            )
+        )
+    }
+
     private val overrideApplicationId = ManifestAttributes(
             applicationId = "overriddenApplicationId"
     )
