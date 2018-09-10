@@ -56,7 +56,7 @@ import org.mockito.Mockito;
  * containing a single {@link JarInput}
  *
  */
-class TransformTestHelper {
+public class TransformTestHelper {
 
     static InvocationBuilder invocationBuilder() {
         return new InvocationBuilder();
@@ -64,7 +64,7 @@ class TransformTestHelper {
     static TransformInputBuilder inputBuilder() {
         return new TransformInputBuilder();
     }
-    static JarInputBuilder jarBuilder(@NonNull File jarFile) {
+    public static JarInputBuilder jarBuilder(@NonNull File jarFile) {
         return new JarInputBuilder(jarFile);
     }
     static SingleJarInputBuilder singleJarBuilder(@NonNull File jarFile) {
@@ -296,13 +296,13 @@ class TransformTestHelper {
         }
     }
 
-    static class JarInputBuilder extends BaseJarInputBuilder<JarInputBuilder> {
+    public static class JarInputBuilder extends BaseJarInputBuilder<JarInputBuilder> {
 
         JarInputBuilder(File jarFile) {
             super(jarFile);
         }
 
-        JarInput build() {
+        public JarInput build() {
             return new FakeJarInput(
                     status,
                     name,

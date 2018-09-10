@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.transforms;
 
 import static com.android.testutils.truth.PathSubject.assertThat;
+import static com.android.testutils.truth.ZipFileSubject.assertThatZip;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -97,6 +98,8 @@ public class MergeJavaResourcesTransformTest {
 
         // Make sure the output is a jar file, not the contents of the jar file
         assertThat(new File(outputDir, "resources.jar")).exists();
+        assertThatZip(new File(outputDir, "resources.jar")).contains("fileEndingWithDot.");
+        assertThatZip(new File(outputDir, "resources.jar")).contains("fileNotEndingWithDot");
         assertThat(new File(outputDir, "resources/fileEndingWithDot.")).doesNotExist();
         assertThat(new File(outputDir, "resources/fileNotEndingWithDot")).doesNotExist();
     }
