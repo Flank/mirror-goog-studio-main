@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.nativebuild;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
@@ -55,7 +54,7 @@ public class CmakeJniLibConnectedTest {
         // Convert externalNativeBuild { ndkbuild { path "Android.mk" } } to
         // externalNativeBuild { cmake { path "CMakeList.txt" } }
         TestFileUtils.searchAndReplace(lib.getBuildFile(), "ndkBuild", "cmake");
-        TestFileUtils.searchAndReplace(lib.getBuildFile(), "Android\\.mk", "CMakeLists.txt");
+        TestFileUtils.searchAndReplace(lib.getBuildFile(), "Android.mk", "CMakeLists.txt");
         project.execute(
                 "clean", "assembleDebug", "generateJsonModelDebug", "generateJsonModelRelease");
         assertThat(project.getSubproject("lib").file("build/intermediates/cmake")).exists();
