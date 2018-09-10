@@ -44,6 +44,12 @@ data class ArtifactDependency(
          */
         val resolvedMavenCoordinate: GradleCoordinate? = null
 ) {
+    /**
+     * Constructs a new [ArtifactDependency] with no dependencies or gradle coordinates. Intended
+     * to simplify construction from Java.
+     */
+    constructor(library: Library) : this(library=library, dependencies=emptyList())
+
     override fun toString(): String = printProperties(
         this, ArtifactDependency(ExternalLibrary("")))
 }
