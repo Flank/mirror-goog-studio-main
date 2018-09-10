@@ -53,33 +53,18 @@ data class ExternalLibrary(
      * to understand the library and its contents are intended to be merged into any application
      * that uses the library.
      *
-     * Not all libraries include a manifest. For example, some libraries may only contain class
-     * files and do not require any manifest content to be merged into applications that use them.
-     * Other libraries may not include their own manifest but may have documentation for content
-     * that the developer is expected to include inline in their app before using the library.
-     * In either case, if the library does not include a manifest that the build system is expected
-     * to merge into consuming apps, this attribute will be null.
+     * Any library that contains resources must either provide a [manifestFile] or a [packageName].
+     * Not all libraries include a manifest. For example, some libraries may not contain resources.
+     * Other libraries may contain resources but use some other mechanism to inform the build system
+     * of the package name. The latter will fill in [packageName] rather than providing a
+     * [manifestFile].
      */
     val manifestFile: PathString? = null,
 
     /**
-     * Location of any manifest file that can be used to understand the contents of this
-     * [ExternalLibrary]. In the case of libraries that include their own manifest, this will always
-     * point to [manifestFile]. In the case of libraries that don't include their own manifest,
-     * this may point to any manifest file that contains sufficient information to understand
-     * the contents of the library.
-     *
-     * For example, if the library contains resources this manifest is expected to contain the
-     * correct package name for those resources. The build system may point this file to the
-     * merged manifest for any application that is known to use the library, and it may
-     * contain extra content that is unrelated to the library.
-     *
-     * If no manifest is needed to understand the library, this will be null. This manifest must
-     * not be merged into the application's manifest. If the [ExternalLibrary] fills in this field but
-     * not [manifestFile], it the needed content will already have been inlined in the
-     * application's manifest.
+     * Java package name for the resources in this library.
      */
-    val representativeManifestFile: PathString? = manifestFile,
+    val packageName: String? = null,
 
     /**
      * Path to .jar file(s) containing the library classes. This list will be empty if the library
@@ -130,17 +115,9 @@ data class ExternalLibrary(
     val hasResources get() = resApkFile != null || resFolder != null
 
     /**
-     * Returns a copy of the receiver with the given representative manifest file. Intended to simplify construction from Java.
-     */
-    fun withRepresentativeManifestFile(path: PathString?) = copy(representativeManifestFile = path)
-
-    /**
      * Returns a copy of the receiver with the given manifest file. Intended to simplify construction from Java.
      */
-    fun withManifestFile(path: PathString?) = copy(
-        manifestFile = path,
-        representativeManifestFile = if (manifestFile == representativeManifestFile) path else representativeManifestFile
-    )
+    fun withManifestFile(path: PathString?) = copy(manifestFile = path)
 
     /**
      * Returns a copy of the receiver with the given list of java class jars. Intended to simplify construction from Java.
@@ -161,6 +138,12 @@ data class ExternalLibrary(
      * Returns a copy of the receiver with the given symbol file. Intended to simplify construction from Java.
      */
     fun withSymbolFile(path: PathString?) = copy(symbolFile = path)
+
+    /**
+     * Returns a copy of the receiver with the given [packageName]. Intended to simplify construction from Java.
+     */
+    fun withPackageName(packageName: String?) = copy(packageName = packageName)
+
 }
 
 /**

@@ -54,13 +54,11 @@ class ExternalLibraryTest {
     @Test
     fun withManifestFileTest() {
         val manifest = barPath
-        val representativeManifest = PathString("representative")
         val address = "foo"
         val lib = ExternalLibrary(address)
         val withManifest = ExternalLibrary(
             address = address,
-            manifestFile = manifest,
-            representativeManifestFile = representativeManifest
+            manifestFile = manifest
         )
 
         assertThat(lib.withManifestFile(manifest)).isEqualTo(
@@ -70,24 +68,10 @@ class ExternalLibraryTest {
             )
         )
         assertThat(
-            lib.withRepresentativeManifestFile(representativeManifest).withManifestFile(
+            lib.withManifestFile(
                 manifest
             )
-        )
-            .isEqualTo(withManifest)
-        assertThat(
-            lib.withManifestFile(manifest).withRepresentativeManifestFile(
-                representativeManifest
-            )
-        )
-            .isEqualTo(withManifest)
-        assertThat(lib.withRepresentativeManifestFile(representativeManifest))
-            .isEqualTo(
-                ExternalLibrary(
-                    address = address,
-                    representativeManifestFile = representativeManifest
-                )
-            )
+        ).isEqualTo(withManifest)
     }
 
     @Test
