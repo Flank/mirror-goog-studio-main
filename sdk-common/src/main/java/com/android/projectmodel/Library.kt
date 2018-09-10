@@ -144,6 +144,10 @@ data class ExternalLibrary(
      */
     fun withPackageName(packageName: String?) = copy(packageName = packageName)
 
+    /**
+     * Returns true iff this [Library] contains no files
+     */
+    fun isEmpty() = this == ExternalLibrary(address = address, packageName = packageName)
 }
 
 /**

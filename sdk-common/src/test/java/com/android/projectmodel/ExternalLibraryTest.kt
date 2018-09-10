@@ -97,4 +97,22 @@ class ExternalLibraryTest {
         assertThat(ExternalLibrary("foo").withSymbolFile(barPath))
             .isEqualTo(ExternalLibrary(address = "foo", symbolFile = barPath))
     }
+
+    @Test
+    fun testIsEmpty() {
+        val testLib = ExternalLibrary("foo")
+
+        // Metadata-only libs are considered to be "empty"
+        assertThat(testLib.isEmpty()).isTrue()
+        assertThat(testLib.copy(packageName = "bar").isEmpty()).isTrue()
+
+        // Libs with any content are considered non-empty.
+        assertThat(testLib.copy(location = PathString("bar")).isEmpty()).isFalse()
+        assertThat(testLib.copy(manifestFile = PathString("bar")).isEmpty()).isFalse()
+        assertThat(testLib.copy(classJars = listOf(PathString("bar"))).isEmpty()).isFalse()
+        assertThat(testLib.copy(dependencyJars = listOf(PathString("bar"))).isEmpty()).isFalse()
+        assertThat(testLib.copy(resFolder = PathString("res")).isEmpty()).isFalse()
+        assertThat(testLib.copy(symbolFile = PathString("res")).isEmpty()).isFalse()
+        assertThat(testLib.copy(resApkFile = PathString("res")).isEmpty()).isFalse()
+    }
 }
