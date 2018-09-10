@@ -39,7 +39,7 @@ data class Config(
      * Metadata representing the set of manifest attributes that are set explicitly by this [Config]. These attributes will
      * override values from lower-priority [Config] instances.
      */
-    val manifestValues: ManifestAttributes = ManifestAttributes(),
+    val manifestValues: ManifestAttributes = emptyManifestAttributes,
     /**
      * The map of key value pairs for placeholder substitution in the android manifest file. This map will be used by the manifest merger.
      */
@@ -47,7 +47,7 @@ data class Config(
     /**
      * List of sources contributed by this [Config].
      */
-    val sources: SourceSet = SourceSet(),
+    val sources: SourceSet = emptySourceSet,
     /**
      * Dynamic resources. Map of resource names onto resource values.
      */
@@ -94,7 +94,7 @@ data class Config(
      */
     val packageName: String? = null
 ) {
-    override fun toString(): String = printProperties(this, Config())
+    override fun toString(): String = printProperties(this, emptyConfig)
 
     /**
      * Merges this [Config] with another higher-priority [Config].
@@ -155,3 +155,5 @@ private fun <T> mergeNullable(deps: T?, moreDeps: T?, merger: (T, T) -> T): T? =
         (moreDeps == null) -> deps
         else -> merger(deps, moreDeps)
     }
+
+val emptyConfig = Config()

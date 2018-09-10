@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:JvmName("ManifestAttributesUtil")
 package com.android.projectmodel
 
 import com.android.sdklib.AndroidVersion
-import kotlin.reflect.full.memberProperties
 
 /**
  * Holds the set of simple values that can be present in an Android manifest. Multiple [ManifestAttributes] instances
@@ -97,5 +97,7 @@ data class ManifestAttributes(
                     debuggable = other.debuggable ?: debuggable
             )
 
-    override fun toString(): String = printProperties(this, ManifestAttributes())
+    override fun toString(): String = printProperties(this, emptyManifestAttributes)
 }
+
+val emptyManifestAttributes = ManifestAttributes()

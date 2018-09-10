@@ -136,3 +136,5 @@ data class SourceSet(private val paths: Map<AndroidPathType, List<PathString>> =
         fun build() = SourceSet(Multimaps.asMap(contents))
     }
 }
+
+val emptySourceSet = SourceSet()
