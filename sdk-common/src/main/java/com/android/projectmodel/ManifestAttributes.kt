@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 @file:JvmName("ManifestAttributesUtil")
+
 package com.android.projectmodel
 
 import com.android.sdklib.AndroidVersion
@@ -31,71 +32,71 @@ import com.android.sdklib.AndroidVersion
  * use Kotlin named arguments to stay source compatible.
  */
 data class ManifestAttributes(
-        /**
-         * The application ID. This is the name of the application, and is defined here:
-         * https://developer.android.com/studio/build/application-id.html. Null if undefined.
-         * Non-application [Artifact] instances do not normally specify this attribute and should
-         * ignore it if present. If this [ManifestAttributes] was produced directly from a manifest
-         * file, this property will hold the value of the _package_ attribute.
-         */
-        val applicationId: String? = null,
-        /**
-         * The internal version number of the Android application. For the full specification of this attribute, see
-         * https://developer.android.com/guide/topics/manifest/manifest-element.html#vcode. Null if undefined.
-         */
-        val versionCode: Int? = null,
-        /**
-         * The version name shown to users. For more information, see
-         * https://developer.android.com/studio/publish/versioning.html
-         */
-        val versionName: String? = null,
-        /**
-         * The minimum supported SDK version or null if not set. For more information, see
-         * https://developer.android.com/guide/topics/manifest/uses-sdk-element.html. Null if undefined.
-         */
-        val minSdkVersion: AndroidVersion? = null,
-        /**
-         * The min SDK version that we pass at runtime. This is normally the same as [minSdkVersion], but with "preview"
-         * platforms the [minSdkVersion], [targetSdkVersion], and [compileSdkVersion] are all coerced to the same "preview"
-         * platform value. This should only be used by the launch code, packaging code, etc. Null if undefined.
-         */
-        val apiVersion: AndroidVersion? = null,
-        /**
-         * The maximum supported SDK version or null if not set. For more information, see
-         * https://developer.android.com/guide/topics/manifest/uses-sdk-element.html. Null if undefined.
-         */
-        val maxSdkVersion: AndroidVersion? = null,
-        /**
-         * The target SDK version. For more information, see
-         * https://developer.android.com/guide/topics/manifest/uses-sdk-element.html. Null if undefined.
-         */
-        val targetSdkVersion: AndroidVersion? = null,
-        /**
-         * The SDK version the app is meant to be compiled against. Also known as buildSdkVersion.
-         * For more information: https://developer.android.com/studio/build/index.html. Null if not overridden.
-         */
-        val compileSdkVersion: AndroidVersion? = null,
-        /**
-         * True if the application is debuggable, false if the application is not debuggable. Null if undefined.
-         */
-        val debuggable: Boolean? = null
+    /**
+     * The application ID. This is the name of the application, and is defined here:
+     * https://developer.android.com/studio/build/application-id.html. Null if undefined.
+     * Non-application [Artifact] instances do not normally specify this attribute and should
+     * ignore it if present. If this [ManifestAttributes] was produced directly from a manifest
+     * file, this property will hold the value of the _package_ attribute.
+     */
+    val applicationId: String? = null,
+    /**
+     * The internal version number of the Android application. For the full specification of this attribute, see
+     * https://developer.android.com/guide/topics/manifest/manifest-element.html#vcode. Null if undefined.
+     */
+    val versionCode: Int? = null,
+    /**
+     * The version name shown to users. For more information, see
+     * https://developer.android.com/studio/publish/versioning.html
+     */
+    val versionName: String? = null,
+    /**
+     * The minimum supported SDK version or null if not set. For more information, see
+     * https://developer.android.com/guide/topics/manifest/uses-sdk-element.html. Null if undefined.
+     */
+    val minSdkVersion: AndroidVersion? = null,
+    /**
+     * The min SDK version that we pass at runtime. This is normally the same as [minSdkVersion], but with "preview"
+     * platforms the [minSdkVersion], [targetSdkVersion], and [compileSdkVersion] are all coerced to the same "preview"
+     * platform value. This should only be used by the launch code, packaging code, etc. Null if undefined.
+     */
+    val apiVersion: AndroidVersion? = null,
+    /**
+     * The maximum supported SDK version or null if not set. For more information, see
+     * https://developer.android.com/guide/topics/manifest/uses-sdk-element.html. Null if undefined.
+     */
+    val maxSdkVersion: AndroidVersion? = null,
+    /**
+     * The target SDK version. For more information, see
+     * https://developer.android.com/guide/topics/manifest/uses-sdk-element.html. Null if undefined.
+     */
+    val targetSdkVersion: AndroidVersion? = null,
+    /**
+     * The SDK version the app is meant to be compiled against. Also known as buildSdkVersion.
+     * For more information: https://developer.android.com/studio/build/index.html. Null if not overridden.
+     */
+    val compileSdkVersion: AndroidVersion? = null,
+    /**
+     * True if the application is debuggable, false if the application is not debuggable. Null if undefined.
+     */
+    val debuggable: Boolean? = null
 ) {
     /**
      * Creates a new set of attributes by replacing any attribute in this object if there is a corresponding
      * non-null property in the other set.
      */
     operator fun plus(other: ManifestAttributes): ManifestAttributes =
-            ManifestAttributes(
-                    applicationId = other.applicationId ?: applicationId,
-                    versionCode = other.versionCode ?: versionCode,
-                    versionName = other.versionName ?: versionName,
-                    apiVersion = other.apiVersion ?: apiVersion,
-                    minSdkVersion = other.minSdkVersion ?: minSdkVersion,
-                    maxSdkVersion = other.maxSdkVersion ?: maxSdkVersion,
-                    targetSdkVersion = other.targetSdkVersion ?: targetSdkVersion,
-                    compileSdkVersion = other.compileSdkVersion ?: compileSdkVersion,
-                    debuggable = other.debuggable ?: debuggable
-            )
+        ManifestAttributes(
+            applicationId = other.applicationId ?: applicationId,
+            versionCode = other.versionCode ?: versionCode,
+            versionName = other.versionName ?: versionName,
+            apiVersion = other.apiVersion ?: apiVersion,
+            minSdkVersion = other.minSdkVersion ?: minSdkVersion,
+            maxSdkVersion = other.maxSdkVersion ?: maxSdkVersion,
+            targetSdkVersion = other.targetSdkVersion ?: targetSdkVersion,
+            compileSdkVersion = other.compileSdkVersion ?: compileSdkVersion,
+            debuggable = other.debuggable ?: debuggable
+        )
 
     override fun toString(): String = printProperties(this, emptyManifestAttributes)
 }
