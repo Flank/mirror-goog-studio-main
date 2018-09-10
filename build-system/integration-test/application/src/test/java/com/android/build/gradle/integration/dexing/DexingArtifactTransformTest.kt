@@ -88,6 +88,24 @@ class DexingArtifactTransformTest {
     }
 
     @Test
+    fun testAndroidTest() {
+        project.buildFile.appendText(
+            """
+            android.defaultConfig.multiDexEnabled = true
+            android.defaultConfig.minSdkVersion = 21
+        """.trimIndent()
+        )
+        val result = executor().run("assembleAndroidTest")
+        assertThat(result.tasks).containsAllIn(
+            listOf(
+                ":mergeExtDexDebugAndroidTest",
+                ":mergeLibDexDebugAndroidTest",
+                ":mergeProjectDexDebugAndroidTest"
+            )
+        )
+    }
+
+    @Test
     fun testExternalDeps() {
         project.buildFile.appendText(
             """

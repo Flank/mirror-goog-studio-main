@@ -111,6 +111,7 @@ import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -905,6 +906,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                     configType,
                     scope,
                     artifactType,
+                    attributeMap,
                     (mainCollection, testedCollection, unused) ->
                             mainCollection.plus(testedCollection),
                     (collection, artifactCollection) ->
@@ -947,6 +949,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                     configType,
                     scope,
                     artifactType,
+                    Collections.emptyMap(),
                     (artifactResults, collection, variantName) ->
                             ArtifactCollectionWithExtraArtifact.makeExtraCollectionForTest(
                                     artifactResults,
@@ -967,6 +970,16 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         }
 
         return artifacts;
+    }
+
+    @NonNull
+    @Override
+    public ArtifactCollection getArtifactCollection(
+            @NonNull ConsumedConfigType configType,
+            @NonNull ArtifactScope scope,
+            @NonNull ArtifactType artifactType,
+            @Nullable Map<Attribute<String>, String> attributeMap) {
+        return computeArtifactCollection(configType, scope, artifactType, attributeMap);
     }
 
     @NonNull
@@ -1526,6 +1539,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             @NonNull final ConsumedConfigType configType,
             @NonNull final ArtifactScope artifactScope,
             @NonNull final ArtifactType artifactType,
+            @Nullable Map<Attribute<String>, String> attributeMap,
             @NonNull final TriFunction<T, FileCollection, String, T> plusFunction,
             @NonNull final BiFunction<T, ArtifactCollection, T> minusFunction,
             @NonNull final BiFunction<T, ArtifactCollection, T> resourceMinusFunction) {
@@ -1584,18 +1598,13 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                     && configType == RUNTIME_CLASSPATH
                     && variantType.isTestComponent()
                     && variantType.isApk()) {
+                ArtifactCollection testedArtifactCollection =
+                        testedScope.getArtifactCollection(
+                                configType, artifactScope, artifactType, attributeMap);
                 if (artifactType == ArtifactType.ANDROID_RES) {
-                    result =
-                            resourceMinusFunction.apply(
-                                    result,
-                                    testedScope.getArtifactCollection(
-                                            configType, artifactScope, artifactType));
+                    result = resourceMinusFunction.apply(result, testedArtifactCollection);
                 } else {
-                    result =
-                            minusFunction.apply(
-                                    result,
-                                    testedScope.getArtifactCollection(
-                                            configType, artifactScope, artifactType));
+                    result = minusFunction.apply(result, testedArtifactCollection);
                 }
             }
         }
