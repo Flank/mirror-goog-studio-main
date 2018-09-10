@@ -73,4 +73,16 @@ class ConfigTest {
         assertThat(Config(applicationIdSuffix = "foo").withPackageName("package"))
             .isEqualTo(Config(applicationIdSuffix = "foo", packageName = "package"))
     }
+
+    @Test
+    fun testWithManifestValues() {
+        val manifestAttributes = ManifestAttributes(applicationId = "foo")
+        assertThat(Config().withManifestValues(manifestAttributes)).isEqualTo(Config(manifestValues = manifestAttributes))
+    }
+
+    @Test
+    fun testWithCompileDeps() {
+        val deps = listOf(ArtifactDependency(ExternalLibrary("bar")))
+        assertThat(Config().withCompileDeps(deps)).isEqualTo(Config(compileDeps = deps))
+    }
 }

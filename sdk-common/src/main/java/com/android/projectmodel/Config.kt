@@ -137,6 +137,18 @@ data class Config(
      * from Java.
      */
     fun withSources(sources: SourceSet) = copy(sources = sources)
+
+    /**
+     * Returns a copy of the receiver with the given manifest attributes. Intended to simplify
+     * construction from Java.
+     */
+    fun withManifestValues(attributes: ManifestAttributes) = copy(manifestValues = attributes)
+
+    /**
+     * Returns a copy of the receiver with the given compile deps. Intended to simplify
+     * construction from Java.
+     */
+    fun withCompileDeps(compileDeps: List<ArtifactDependency>?) = copy(compileDeps = compileDeps)
 }
 
 /**
