@@ -239,6 +239,7 @@ public class PerfDriver implements TestRule {
             FileOutputStream outputStream = new FileOutputStream(myConfigFile);
             Agent.AgentConfig.MemoryConfig memConfig =
                     MemoryConfig.newBuilder()
+                            .setUseLiveAlloc(true)
                             .setTrackGlobalJniRefs(true)
                             .setAppDir("/")
                             .setMaxStackDepth(50)

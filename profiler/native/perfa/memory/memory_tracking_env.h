@@ -224,6 +224,10 @@ class MemoryTrackingEnv : public GlobalRefListener {
   // inaccurate.
   std::atomic<int32_t> total_free_count_;
 
+  // Keep track of tagged allocation count so we don't have to visit tagged
+  // objects again during subsequent heap walks for sampling mode change.
+  std::atomic<int32_t> tagged_alloc_count_;
+
   std::atomic<int32_t> current_class_tag_;
   std::atomic<int32_t> current_object_tag_;
 

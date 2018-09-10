@@ -17,8 +17,9 @@
 package com.android.tools.profiler.memory;
 
 import com.android.tools.profiler.proto.Common.Session;
-import com.android.tools.profiler.proto.MemoryProfiler;
 import com.android.tools.profiler.proto.MemoryProfiler.AllocationSamplingRate;
+import com.android.tools.profiler.proto.MemoryProfiler.MemoryData;
+import com.android.tools.profiler.proto.MemoryProfiler.MemoryRequest;
 import com.android.tools.profiler.proto.MemoryProfiler.SetAllocationSamplingRateRequest;
 import com.android.tools.profiler.proto.MemoryProfiler.SetAllocationSamplingRateResponse;
 import com.android.tools.profiler.proto.MemoryProfiler.TrackAllocationsRequest;
@@ -33,9 +34,18 @@ public final class MemoryStubWrapper {
         myMemoryStub = memoryStub;
     }
 
-    MemoryProfiler.MemoryData getJvmtiData(Session session, long startTime, long endTime) {
+    MemoryData getJvmtiData(Session session, long startTime, long endTime) {
         return myMemoryStub.getJvmtiData(
-                MemoryProfiler.MemoryRequest.newBuilder()
+                MemoryRequest.newBuilder()
+                        .setSession(session)
+                        .setStartTime(startTime)
+                        .setEndTime(endTime)
+                        .build());
+    }
+
+    MemoryData getMemoryData(Session session, long startTime, long endTime) {
+        return myMemoryStub.getData(
+                MemoryRequest.newBuilder()
                         .setSession(session)
                         .setStartTime(startTime)
                         .setEndTime(endTime)

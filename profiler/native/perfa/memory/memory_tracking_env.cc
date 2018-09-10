@@ -138,6 +138,7 @@ MemoryTrackingEnv::MemoryTrackingEnv(
           mem_config.sampling_rate().sampling_num_interval()),
       total_alloc_count_(0),
       total_free_count_(0),
+      tagged_alloc_count_(0),
       current_class_tag_(kClassStartTag),
       current_object_tag_(kObjectStartTag),
       memory_map_(procfs_, getpid()),
@@ -315,6 +316,7 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
   current_capture_time_ns_ = timestamp;
   total_alloc_count_ = 0;
   total_free_count_ = 0;
+  tagged_alloc_count_ = 0;
   current_object_tag_ = kObjectStartTag;
 
   // Starts an open range of the first allocation sampling mode change.
@@ -422,7 +424,7 @@ void MemoryTrackingEnv::SetSamplingRate(int32_t sampling_num_interval) {
   // capture a new heap snapshot.
   if (is_live_tracking_ && sampling_num_interval == kSamplingRateFull) {
     current_capture_time_ns_ = clock_.GetCurrentTime();
-    total_alloc_count_ = 0;
+    total_alloc_count_ = (tagged_alloc_count_ -= total_free_count_);
     total_free_count_ = 0;
     IterateThroughHeap();
   }
@@ -612,6 +614,7 @@ jint MemoryTrackingEnv::HeapIterationCallback(jlong class_tag, jlong size,
 
   g_env->allocation_event_queue_.Push(event);
   g_env->total_alloc_count_++;
+  g_env->tagged_alloc_count_++;
 
   return JVMTI_VISIT_OBJECTS;
 }
@@ -655,6 +658,7 @@ void MemoryTrackingEnv::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
 
   Stopwatch stopwatch;
   {
+    g_env->tagged_alloc_count_++;
     jvmtiError error;
 
     ClassInfo klass_info;

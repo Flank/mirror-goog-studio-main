@@ -235,6 +235,14 @@ public class MemoryTest {
                 .isEqualTo(samplingNumInterval);
         lastSamplingRateEventTimestamp = samplingRateEvent.getTimestamp();
 
+        // Record allocation count
+        MemoryData memoryData =
+                stubWrapper.getMemoryData(myPerfDriver.getSession(), 0, Long.MAX_VALUE);
+        int allocStatsCount = memoryData.getAllocStatsSamplesCount();
+        assertThat(allocStatsCount).isGreaterThan(0);
+        int allocCount =
+                memoryData.getAllocStatsSamples(allocStatsCount - 1).getJavaAllocationCount();
+
         // Set sampling rate back to full.
         stubWrapper.setSamplingRate(myPerfDriver.getSession(), SAMPLING_RATE_FULL);
         assertThat(androidDriver.waitForInput("sampling_num_interval=1")).isTrue();
@@ -279,5 +287,14 @@ public class MemoryTest {
         assertThat(samplingRateEvent.getTimestamp()).isGreaterThan(lastSamplingRateEventTimestamp);
         assertThat(samplingRateEvent.getSamplingRate().getSamplingNumInterval())
                 .isEqualTo(SAMPLING_RATE_FULL);
+
+        // Verify alloc count did not reset after switching back to full.
+        memoryData =
+                stubWrapper.getMemoryData(
+                        myPerfDriver.getSession(), memoryData.getEndTimestamp(), Long.MAX_VALUE);
+        allocStatsCount = memoryData.getAllocStatsSamplesCount();
+        assertThat(allocStatsCount).isGreaterThan(0);
+        assertThat(memoryData.getAllocStatsSamples(allocStatsCount - 1).getJavaAllocationCount())
+                .isAtLeast(allocCount);
     }
 }
