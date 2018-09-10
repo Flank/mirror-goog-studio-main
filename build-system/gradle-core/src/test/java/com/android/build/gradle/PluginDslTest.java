@@ -520,6 +520,33 @@ public class PluginDslTest {
     }
 
     @Test
+    public void testSettingLanguageLevelFromCompileSdkWithJavaVersion_doNotOverride() {
+        Eval.me(
+                "project",
+                project,
+                "\n"
+                        + "import org.gradle.api.JavaVersion\n"
+                        + "project.android {\n"
+                        + "    compileOptions {\n"
+                        + "        sourceCompatibility = JavaVersion.VERSION_1_8\n"
+                        + "        targetCompatibility = JavaVersion.VERSION_1_8\n"
+                        + "    }\n"
+                        + "}\n");
+        plugin.createAndroidTasks();
+
+        AndroidJavaCompile compileReleaseJavaWithJavac =
+                (AndroidJavaCompile)
+                        project.getTasks().getByName(checker.getReleaseJavacTaskName());
+
+        assertThat(compileReleaseJavaWithJavac.getTargetCompatibility())
+                .named("target compat")
+                .isEqualTo(JavaVersion.VERSION_1_8.toString());
+        assertThat(compileReleaseJavaWithJavac.getSourceCompatibility())
+                .named("source compat")
+                .isEqualTo(JavaVersion.VERSION_1_8.toString());
+    }
+
+    @Test
     public void testMockableJarName() {
         android.setCompileSdkVersion(
                 "Google Inc.:Google APIs:" + TestConstants.COMPILE_SDK_VERSION_WITH_GOOGLE_APIS);

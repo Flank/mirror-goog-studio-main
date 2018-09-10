@@ -56,6 +56,11 @@ public class CompileOptions {
         this.sourceCompatibility = convert(sourceCompatibility);
     }
 
+    /** @see #getSourceCompatibility() */
+    public void setSourceCompatibility(@NonNull JavaVersion sourceCompatibility) {
+        this.sourceCompatibility = sourceCompatibility;
+    }
+
     /**
      * Language level of the java source code.
      *
@@ -76,6 +81,11 @@ public class CompileOptions {
     /** @see #getTargetCompatibility() */
     public void setTargetCompatibility(@NonNull Object targetCompatibility) {
         this.targetCompatibility = convert(targetCompatibility);
+    }
+
+    /** @see #getTargetCompatibility() */
+    public void setTargetCompatibility(@NonNull JavaVersion targetCompatibility) {
+        this.targetCompatibility = targetCompatibility;
     }
 
     /**
