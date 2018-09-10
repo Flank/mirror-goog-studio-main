@@ -260,6 +260,23 @@ java_binary(
     ],
 )
 
+java_library(
+    name = "coverage_report_generator",
+    srcs = [
+        "src/com/android/tools/coverage/CoverageReportGenerator.java",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":utils",
+        "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.core/0.8.2:jar",
+        "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.report/0.8.2:jar",
+        "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-commons/6.2.1:jar",
+        "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-tree/6.2.1:jar",
+        "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm/6.2.1:jar",
+        "//tools/base/third_party:com.google.guava_guava",
+    ],
+)
+
 java_binary(
     name = "gradlew",
     main_class = "com.android.tools.gradle.GradleW",
