@@ -243,6 +243,10 @@ message CpuProfilerConfiguration {
   int32 buffer_size_in_mb = 4;
   // When using sampling, the sampling interval in microseconds.
   int32 sampling_interval_us = 5;
+  // Whether to disable live allocation tracking during CPU recording.
+  // This is primarily used to reduce app performance overhead from live
+  // allocation tracking. For Studio-side only.
+  bool disable_live_allocation = 6;
 }
 
 // Request profiling of app (identified by its |session|) to stop.
