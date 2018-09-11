@@ -6,6 +6,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.management.GarbageCollectorMXBean;
+import java.lang.management.ManagementFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -59,8 +61,28 @@ public final class FoundryPerfgateMetrics {
         benchmark.log("disk_test", elapsedTime);
     }
 
+    private static long getGCTotalTime() {
+        long gcTime = 0;
+        for (GarbageCollectorMXBean gc : ManagementFactory.getGarbageCollectorMXBeans()) {
+            long time = gc.getCollectionTime();
+            if (time >= 0) gcTime += time;
+        }
+        return gcTime;
+    }
+
+    private static long getGCTotalCount() {
+        long gcCount = 0;
+        for (GarbageCollectorMXBean gc : ManagementFactory.getGarbageCollectorMXBeans()) {
+            long count = gc.getCollectionCount();
+            if (count >= 0) gcCount += count;
+        }
+        return gcCount;
+    }
+
     @Test
     public void testPerfgateMemoryTest() {
+        long gcTimeBefore = getGCTotalTime();
+        long gcCountBefore = getGCTotalCount();
         int byteArraySize = 1024 * 1024 * 12;
         int numArrays = 512;
         System.out.println("testPerfgateMemoryTest");
@@ -70,11 +92,16 @@ public final class FoundryPerfgateMetrics {
             // Allocate a large byte array and keep it around to avoid GC
             byte b[] = new byte[byteArraySize];
             v[i] = b;
-            if (i % 200 == 0)
-                System.out.println("free memory: " + Runtime.getRuntime().freeMemory());
         }
         long elapsedTime = System.currentTimeMillis() - startTime;
+        long gcElapsedTime = getGCTotalTime() - gcTimeBefore;
+        long gcCount = getGCTotalCount() - gcCountBefore;
+        System.out.println("gcTime: " + gcElapsedTime);
+        System.out.println("gcCount: " + gcCount);
         System.out.println("elapsedTime: " + elapsedTime);
         benchmark.log("memory_test", elapsedTime);
+        benchmark.log("memory_test_gc", gcElapsedTime);
+        benchmark.log("memory_test_nogc", (elapsedTime - gcElapsedTime));
+        benchmark.log("memory_test_gc_count", gcCount);
     }
 }
