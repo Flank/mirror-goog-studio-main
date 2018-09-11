@@ -249,7 +249,7 @@ public class MergeJavaResourcesTransform extends Transform {
         Map<IncrementalFileMergerInput, QualifiedContent> contentMap = new HashMap<>();
         List<IncrementalFileMergerInput> inputs =
                 new ArrayList<>(
-                        IncrementalFileMergerTransformUtils.toInput(
+                        IncrementalFileMergerTransformUtils.INSTANCE.toInput(
                                 invocation,
                                 zipCache,
                                 cacheUpdates,
