@@ -21,55 +21,57 @@ import com.android.annotations.concurrency.GuardedBy
  * A [Runnable] that can be cancelled while it is running or before it gets a chance to run.
  */
 class CancelableRunnable(private val myRunnable: Runnable) : Runnable {
-  @GuardedBy("myLock")
-  private var canceled: Boolean = false
-  @GuardedBy("myLock")
-  private var thread: Thread? = null
-  private val lock = Any()
+    @GuardedBy("myLock")
+    private var canceled: Boolean = false
+    @GuardedBy("myLock")
+    private val activeThreads = HashSet<Thread>()
+    private val lock = Any()
 
-  /**
-   * Attempts to cancel execution of this runnable. If this runnable has not started when [cancel] is called,
-   * this runnable will never run. If the runnable has already started, then the [mayInterruptIfRunning]
-   * parameter determines whether the thread executing this runnable should be interrupted in an attempt to
-   * stop the runnable. If the runnable has already finished running, then this call has no effect on that
-   * execution but will prevent the runnable from executing again.
-   *
-   * @param mayInterruptIfRunning `true` if the thread executing this runnable should be interrupted;
-   * otherwise, an in-progress runnable is allowed to complete
-   * @return `true` if the runnable was canceled, `false` if the runnable has ben canceled already
-   */
-  fun cancel(mayInterruptIfRunning: Boolean): Unit {
-    synchronized (lock) {
-      if (!canceled) {
-        canceled = true
-        if (mayInterruptIfRunning) {
-          thread?.interrupt()
+    /**
+     * Attempts to cancel execution of this runnable. If this runnable has not started when [cancel] is called,
+     * this runnable will never run. If the runnable has already started, then the [mayInterruptIfRunning]
+     * parameter determines whether the thread executing this runnable should be interrupted in an attempt to
+     * stop the runnable. If the runnable has already finished running, then this call has no effect on that
+     * execution but will prevent the runnable from executing again.
+     *
+     * @param mayInterruptIfRunning `true` if the thread executing this runnable should be interrupted;
+     * otherwise, an in-progress runnable is allowed to complete
+     * @return `true` if the runnable was canceled, `false` if the runnable has ben canceled already
+     */
+    fun cancel(mayInterruptIfRunning: Boolean) {
+        synchronized(lock) {
+            if (!canceled) {
+                canceled = true
+                if (mayInterruptIfRunning) {
+                    activeThreads.forEach(Thread::interrupt)
+                }
+            }
         }
-      }
-    }
-  }
-
-  /**
-   * Returns `true` if this runnable was cancelled before it completed normally.
-   */
-  val isCancelled: Boolean
-    get() = synchronized(lock) {
-      return canceled
     }
 
-  override fun run() {
-    synchronized (lock) {
-      if (canceled) {
-        return
-      }
-      thread = Thread.currentThread()
-    }
+    /**
+     * Returns `true` if the [cancel] method was called for this runnable.
+     */
+    val isCancelled: Boolean
+        get() = synchronized(lock) {
+            return canceled
+        }
 
-    myRunnable.run()
+    override fun run() {
+        synchronized(lock) {
+            if (canceled) {
+                return
+            }
+            activeThreads.add(Thread.currentThread())
+        }
 
-    synchronized (lock) {
-      Thread.interrupted() // Clear interrupted status of the thread just in case.
-      thread = null
+        try {
+            myRunnable.run()
+        } finally {
+            synchronized(lock) {
+                activeThreads.remove(Thread.currentThread())
+                Thread.interrupted() // Clear interrupted status of the thread just in case.
+            }
+        }
     }
-  }
 }
