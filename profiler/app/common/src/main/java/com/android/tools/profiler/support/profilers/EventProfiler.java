@@ -282,32 +282,36 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
                             ic.setAccessible(true);
                             // Replace the object with a wrapper
                             Object input = ic.get(connection);
-                            InputConnection inputConnection = null;
-                            boolean isWeakReference =
-                                    input.getClass().isAssignableFrom(WeakReference.class);
-                            if (isWeakReference) {
-                                inputConnection = ((WeakReference<InputConnection>) input).get();
-                            } else if (InputConnection.class.isInstance(input)) {
-                                // Only set the input connection object if it is of type input connection.
-                                // on HTC Honor devices they modified the WeakReference to be a SoftReference as such
-                                // we do not want to default to this case.
-                                inputConnection = (InputConnection) input;
-                            }
-                            if (inputConnection != null
-                                    && !InputConnectionWrapper.class.isInstance(inputConnection)) {
+                            if (input != null) {
+                                InputConnection inputConnection = null;
+                                boolean isWeakReference =
+                                        input.getClass().isAssignableFrom(WeakReference.class);
                                 if (isWeakReference) {
-                                    // Store this instance of the wrapper on a thread local
-                                    // variable this prevents the wrapper from getting cleaned
-                                    // while still potentially in use. This thread does not get
-                                    // terminated until the application is terminated.
-                                    inputConnectionWrapper.setTarget(inputConnection);
-                                    ic.set(
-                                            connection,
-                                            new WeakReference<InputConnection>(
-                                                    inputConnectionWrapper));
-                                } else {
-                                    inputConnectionWrapper.setTarget((InputConnection) input);
-                                    ic.set(connection, inputConnectionWrapper);
+                                    inputConnection =
+                                            ((WeakReference<InputConnection>) input).get();
+                                } else if (InputConnection.class.isInstance(input)) {
+                                    // Only set the input connection object if it is of type input connection.
+                                    // on HTC Honor devices they modified the WeakReference to be a SoftReference as such
+                                    // we do not want to default to this case.
+                                    inputConnection = (InputConnection) input;
+                                }
+                                if (inputConnection != null
+                                        && !InputConnectionWrapper.class.isInstance(
+                                                inputConnection)) {
+                                    if (isWeakReference) {
+                                        // Store this instance of the wrapper on a thread local
+                                        // variable this prevents the wrapper from getting cleaned
+                                        // while still potentially in use. This thread does not get
+                                        // terminated until the application is terminated.
+                                        inputConnectionWrapper.setTarget(inputConnection);
+                                        ic.set(
+                                                connection,
+                                                new WeakReference<InputConnection>(
+                                                        inputConnectionWrapper));
+                                    } else {
+                                        inputConnectionWrapper.setTarget((InputConnection) input);
+                                        ic.set(connection, inputConnectionWrapper);
+                                    }
                                 }
                             }
                             //Clean up and set state so we don't do this more than once.
