@@ -42,7 +42,7 @@ class ${className} : SliceProvider() {
      */
     override fun onBindSlice(sliceUri: Uri): Slice? {
         // Note: you should switch your build.gradle dependency to
-	// slice-builders-ktx for a nicer interface in Kotlin.
+        // slice-builders-ktx for a nicer interface in Kotlin.
         val context = context ?: return null
         val activityAction = createActivityAction() ?: return null
         return if (sliceUri.path == "/") {
@@ -74,7 +74,7 @@ class ${className} : SliceProvider() {
         Instead of returning null, you should create a SliceAction. Here is an example:
         return SliceAction.create(
             PendingIntent.getActivity(
-                context, 0, Intent(context, MainActivity::class.java), 0
+                context, 0, Intent(context, ${activityClass}::class.java), 0
             ),
             IconCompat.createWithResource(context, R.drawable.ic_launcher_foreground),
             ListBuilder.ICON_IMAGE,

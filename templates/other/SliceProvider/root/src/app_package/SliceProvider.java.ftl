@@ -83,7 +83,7 @@ public class ${className} extends SliceProvider {
         /*
         return SliceAction.create(
             PendingIntent.getActivity(
-                getContext(), 0, new Intent(getContext(), MainActivity.class), 0
+                getContext(), 0, new Intent(getContext(), ${activityClass}.class), 0
             ),
             IconCompat.createWithResource(getContext(), R.drawable.ic_launcher_foreground),
             ListBuilder.ICON_IMAGE,

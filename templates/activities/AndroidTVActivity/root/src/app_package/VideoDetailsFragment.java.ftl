@@ -90,7 +90,7 @@ public class ${detailsFragment} extends DetailsFragment {
             initializeBackground(mSelectedMovie);
             setOnItemViewClickedListener(new ItemViewClickedListener());
         } else {
-            Intent intent = new Intent(getActivity(), MainActivity.class);
+            Intent intent = new Intent(getActivity(), ${activityClass}.class);
             startActivity(intent);
         }
     }

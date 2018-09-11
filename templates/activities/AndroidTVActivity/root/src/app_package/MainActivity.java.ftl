@@ -18,7 +18,7 @@ import android.app.Activity;
 import android.os.Bundle;
 
 /*
- * MainActivity class that loads {@link ${mainFragment}}.
+ * Main Activity class that loads {@link ${mainFragment}}.
  */
 public class ${activityClass} extends Activity {
 
