@@ -30,21 +30,21 @@ interface DeprecationReporter {
     /** Enum for deprecated element removal target.  */
     enum class DeprecationTarget  constructor(val removalTime: String) {
         // deprecation of compile in favor of api/implementation
-        CONFIG_NAME("at the end of 2018."),
+        CONFIG_NAME("at the end of 2018"),
         // deprecation due to the move to the new DSL.
-        OLD_DSL("at the end of 2018."),
+        OLD_DSL("at the end of 2018"),
         // Obsolete Dex Options
-        DEX_OPTIONS("at the end of 2018."),
+        DEX_OPTIONS("at the end of 2018"),
         // Deprecation of AAPT, replaced by AAPT2.
-        AAPT("at the end of 2018."),
+        AAPT("at the end of 2018"),
         // When legacy dexer will be removed and fully replaced by D8.
         LEGACY_DEXER(
             "in the future AGP versions. For more details, see " +
                     "https://d.android.com/r/studio-ui/d8-overview.html"),
         // Deprecation of disabling Desugar
-        DESUGAR_TOOL("in AGP version 3.4."),
+        DESUGAR_TOOL("in AGP version 3.4"),
         // Deprecation of Task Access in the variant API
-        TASK_ACCESS_VIA_VARIANT("at the end of 2019."),
+        TASK_ACCESS_VIA_VARIANT("at the end of 2019"),
     }
 
     /**

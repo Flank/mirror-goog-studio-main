@@ -42,7 +42,7 @@ class DeprecationReporterImpl(
                 Type.DEPRECATED_DSL,
                 Severity.WARNING,
                 "DSL element '$oldDslElement' is obsolete and has been replaced with '$newDslElement'.\n" +
-                        "It will be removed ${deprecationTarget.removalTime}",
+                        "It will be removed ${deprecationTarget.removalTime}.",
                 "$oldDslElement::$newDslElement::${deprecationTarget.name}")
     }
 
@@ -55,8 +55,8 @@ class DeprecationReporterImpl(
                 Type.DEPRECATED_DSL,
                 Severity.WARNING,
                 "DSL element '$oldDslElement' is obsolete and has been replaced with '$newDslElement'.\n" +
-                        "It will be removed ${deprecationTarget.removalTime}\n" +
-                        "For more information, see $url",
+                        "It will be removed ${deprecationTarget.removalTime}.\n" +
+                        "For more information, see $url.",
                 "$oldDslElement::$newDslElement::${deprecationTarget.name}")
     }
 
@@ -78,9 +78,9 @@ class DeprecationReporterImpl(
                 Type.DEPRECATED_DSL,
                 severity,
                 "API '$oldApiElement' is obsolete and has been replaced with '$newApiElement'.\n" +
-                        "It will be removed ${deprecationTarget.removalTime}\n" +
-                        "For more information, see $url\n\n" +
-                        "To determine what is calling $oldApiElement, use -P${BooleanOption.DEBUG_OBSOLETE_API.propertyName}=true on the command line to display a stack trace"
+                        "It will be removed ${deprecationTarget.removalTime}.\n" +
+                        "For more information, see $url.\n\n" +
+                        "To determine what is calling $oldApiElement, use -P${BooleanOption.DEBUG_OBSOLETE_API.propertyName}=true on the command line to display a stack trace."
             )
         }
     }
@@ -90,7 +90,7 @@ class DeprecationReporterImpl(
         issueReporter.reportIssue(
                 Type.DEPRECATED_DSL,
                 Severity.WARNING,
-                "DSL element '$oldDslElement' is obsolete and will be removed ${deprecationTarget.removalTime}",
+                "DSL element '$oldDslElement' is obsolete and will be removed ${deprecationTarget.removalTime}.",
                 "$oldDslElement::::${deprecationTarget.name}")
     }
 
@@ -101,8 +101,8 @@ class DeprecationReporterImpl(
         issueReporter.reportIssue(
                 Type.DEPRECATED_DSL,
                 Severity.WARNING,
-                "DSL element '$oldDslElement' is obsolete and will be removed ${deprecationTarget.removalTime}\n" +
-                        "For more information, see $url",
+                "DSL element '$oldDslElement' is obsolete and will be removed ${deprecationTarget.removalTime}.\n" +
+                        "For more information, see $url.",
                 "$oldDslElement::::${deprecationTarget.name}")
     }
 
@@ -113,7 +113,7 @@ class DeprecationReporterImpl(
             url: String?) {
         val msg =
             "Configuration '$oldConfiguration' is obsolete and has been replaced with '$newConfiguration'.\n" +
-                    "It will be removed ${deprecationTarget.removalTime}"
+                    "It will be removed ${deprecationTarget.removalTime}."
 
         issueReporter.reportIssue(
                 Type.DEPRECATED_CONFIGURATION,
@@ -131,7 +131,7 @@ class DeprecationReporterImpl(
             Type.DEPRECATED_CONFIGURATION,
             Severity.WARNING,
             "Configuration '$oldConfiguration' is obsolete and has been replaced with DSL element '$newDslElement'.\n" +
-                    "It will be removed ${deprecationTarget.removalTime}",
+                    "It will be removed ${deprecationTarget.removalTime}.",
             "$oldConfiguration::$newDslElement::${deprecationTarget.name}")
     }
 
@@ -147,7 +147,7 @@ class DeprecationReporterImpl(
                             "and has been replaced with '$newValue'.\n"
                         else
                             "and has not been replaced.\n" +
-                        "It will be removed ${deprecationTarget.removalTime}\n",
+                        "It will be removed ${deprecationTarget.removalTime}.\n",
                 url)
     }
 
@@ -175,7 +175,7 @@ class DeprecationReporterImpl(
             Type.UNSUPPORTED_PROJECT_OPTION_USE,
             Severity.WARNING,
             "The option setting '${option.propertyName}=$value' is experimental and unsupported.\n" +
-                    (if (option.defaultValue != null)"The current default is '${option.defaultValue.toString()}'\n" else "") +
+                    (if (option.defaultValue != null)"The current default is '${option.defaultValue.toString()}'.\n" else "") +
                     option.additionalInfo,
             option.propertyName)
     }
