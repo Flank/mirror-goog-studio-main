@@ -27,7 +27,7 @@ readonly script_dir="$(dirname "$0")"
 
 if [[ -d "${dist_dir}" ]]; then
   # follow conventions to use gtest-testlog-forwarding on ATP
-  readonly testlogs_dir="$(${script_dir}/bazel info bazel-testlogs)"
+  readonly testlogs_dir="$(${script_dir}/bazel info -c opt bazel-testlogs)"
   mkdir "${dist_dir}"/gtest
   # This does not handle spaces in file names.
   for source_xml in $(cd "${testlogs_dir}" && find -name '*.xml' -printf '%P\n'); do
