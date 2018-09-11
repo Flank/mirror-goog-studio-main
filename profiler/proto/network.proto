@@ -72,24 +72,12 @@ message SpeedData {
 message ConnectionData { int32 connection_number = 1; }
 
 message ConnectivityData {
-  enum RadioState {
-    UNSPECIFIED = 0;
-    // The radio is in a high-energy state, having recently sent out some
-    // network traffic
-    HIGH = 1;
-    // The radio is in a low-energy state, having powered down after a period
-    // of inactivity.
-    LOW = 3; // Set to 3 for backwards-compatibility reasons
-  }
-
-  RadioState radio_state = 1;
-
   enum NetworkType {
     INVALID = 0;
     MOBILE = 1;
     WIFI = 2;
   }
-  NetworkType default_network_type = 2;
+  NetworkType network_type = 2;
 }
 
 message NetworkDataRequest {

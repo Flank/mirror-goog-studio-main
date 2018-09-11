@@ -27,15 +27,12 @@ namespace profiler {
 
 class ConnectivitySampler final : public NetworkSampler {
  public:
-  ConnectivitySampler(const std::string &radio_state_command)
-      : ConnectivitySampler(radio_state_command,
-                            std::make_shared<IoNetworkTypeProvider>()) {}
+  ConnectivitySampler()
+      : ConnectivitySampler(std::make_shared<IoNetworkTypeProvider>()) {}
 
   // Constructor that takes a given network type provider, use for testing.
-  explicit ConnectivitySampler(const std::string &radio_state_command,
-      const std::shared_ptr<NetworkTypeProvider>& network_type_provider)
-      : radio_state_command_(radio_state_command),
-        network_type_provider_(network_type_provider) {}
+  explicit ConnectivitySampler(const std::shared_ptr<NetworkTypeProvider>& network_type_provider)
+      : network_type_provider_(network_type_provider) {}
 
   // Read device's connectivity information like selected network type.
   void Refresh() override;
@@ -45,13 +42,6 @@ class ConnectivitySampler final : public NetworkSampler {
   proto::NetworkProfilerData Sample(const uint32_t uid = 0) override;
 
  private:
-  // Returns network radio power status when using mobile data, it is not
-  // applicable when using non mobile data like wifi.
-  proto::ConnectivityData::RadioState GetRadioState();
-
-  const std::string radio_state_command_;
-  proto::ConnectivityData::RadioState radio_state_;
-
   std::shared_ptr<NetworkTypeProvider> network_type_provider_;
   proto::ConnectivityData::NetworkType network_type_;
 };

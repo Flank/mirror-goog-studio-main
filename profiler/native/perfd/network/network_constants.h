@@ -39,11 +39,6 @@ class NetworkConstants final {
 
     return std::vector<std::string>(file_paths, file_paths + len);
   }
-
-  // Dumpsys command that is relatively efficient to get radio power status.
-  static const char *const GetRadioStatusCommand() {
-    return "dumpsys network_management";
-  }
 };
 
 }  // namespace profiler

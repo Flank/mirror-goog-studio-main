@@ -1,3 +1,0 @@
-Bandwidth control enabled: true
-mMobileActivityFromRadio=true mLastPowerStateFromRadio=1
-mNetworkActive=true
