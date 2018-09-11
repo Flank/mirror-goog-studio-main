@@ -55,7 +55,7 @@ def resources_impl(ctx, name, roots, resources, resources_jar):
 def accumulate_provider(provider, deps, runtime, compile_time):
     deps += [provider]
     runtime += provider.transitive_runtime_jars
-    compile_time += provider.transitive_compile_time_jars
+    compile_time += provider.full_compile_jars
     return deps, runtime, compile_time
 
 def _iml_module_jar_impl(
@@ -101,7 +101,7 @@ def _iml_module_jar_impl(
             roots,
             java_srcs,
             kotlin_srcs,
-            transitive_runtime_jars + transitive_compile_time_jars,
+            transitive_compile_time_jars,
             ctx.attr.package_prefixes,
             kotlin_jar,
             friends,
