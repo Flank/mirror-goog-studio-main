@@ -159,6 +159,15 @@ public class MavenRepositories {
                 && "5.2.08".equals(coordinate.getRevision());
     }
 
+    /**
+     * Returns true if the group is an AndroidX group.
+     *
+     * @param groupId
+     */
+    public static boolean isAndroidX(@NonNull String groupId) {
+        return groupId.startsWith("androidx.");
+    }
+
     public static File getArtifactIdDirectory(
             @NonNull File repository,
             @NonNull String groupId,
