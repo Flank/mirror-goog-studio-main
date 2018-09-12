@@ -1237,20 +1237,20 @@ maven_java_library(
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
-    name = "org.jetbrains.kotlin_kotlin-stdlib-jre7",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jre7/1.2.61:jar",
+    name = "org.jetbrains.kotlin_kotlin-stdlib-jdk7",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.2.61:jar",
     visibility = ["//visibility:public"],
     exports = [":org.jetbrains.kotlin_kotlin-stdlib"],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
-    name = "org.jetbrains.kotlin_kotlin-stdlib-jre8",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jre8/1.2.61:jar",
+    name = "org.jetbrains.kotlin_kotlin-stdlib-jdk8",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.2.61:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":org.jetbrains.kotlin_kotlin-stdlib",
-        ":org.jetbrains.kotlin_kotlin-stdlib-jre7",
+        ":org.jetbrains.kotlin_kotlin-stdlib-jdk7",
     ],
 )
 

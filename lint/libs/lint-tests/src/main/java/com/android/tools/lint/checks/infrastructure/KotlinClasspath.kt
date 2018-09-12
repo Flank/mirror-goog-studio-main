@@ -32,7 +32,7 @@ fun findKotlinStdlibPath(): List<String> {
         }
     }
     if (paths.isEmpty()) {
-        error("Did not find kotlin-stdlib-jre8 in classpath: $classPath")
+        error("Did not find kotlin-stdlib-jdk8 in classpath: $classPath")
     }
     return paths
 }

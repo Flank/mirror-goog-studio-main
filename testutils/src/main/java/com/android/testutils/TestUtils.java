@@ -60,8 +60,8 @@ public class TestUtils {
      *   <li>tools/base/build-system/integration-test/application/BUILD
      *   <li>tools/base/build-system/integration-test/databinding/BUILD.bazel
      *   <li>tools/adt/idea/android/BUILD
-     *   <li>tools/base/.idea/libraries definition for kotlin-stdlib-jre8
-     *   <li>tools/idea/.idea/libraries definition for kotlin-stdlib-jre8
+     *   <li>tools/base/.idea/libraries definition for kotlin-stdlib-jdk8
+     *   <li>tools/idea/.idea/libraries definition for kotlin-stdlib-jdk8
      * </ul>
      */
     @NonNull

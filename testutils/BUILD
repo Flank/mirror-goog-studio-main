@@ -82,7 +82,7 @@ kotlin_test(
         "//tools/base/common:tools.common",
         "//tools/base/third_party:com.google.jimfs_jimfs",
         "//tools/base/third_party:com.google.truth_truth",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib-jre8",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib-jdk8",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-test",
         "//tools/base/third_party:org.smali_dexlib2",
     ],
