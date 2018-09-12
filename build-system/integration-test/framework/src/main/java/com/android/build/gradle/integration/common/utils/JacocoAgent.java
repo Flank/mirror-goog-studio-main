@@ -16,10 +16,17 @@
 
 package com.android.build.gradle.integration.common.utils;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.testutils.TestUtils;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
+import java.util.List;
+import java.util.Objects;
 import org.jacoco.agent.AgentJar;
 
 /**
@@ -27,11 +34,22 @@ import org.jacoco.agent.AgentJar;
  */
 public class JacocoAgent {
     public static boolean isJacocoEnabled() {
+        if (TestUtils.runningFromBazel()) {
+            return getJacocoJavaAgent() != null;
+        }
         String attachJacoco = System.getenv("ATTACH_JACOCO_AGENT");
         return attachJacoco != null;
     }
 
     public static String getJvmArg() {
+        if (TestUtils.runningFromBazel()) {
+            return getBazelJacocoAgentJvmArg();
+        }
+        return getJvmArgGradle();
+    }
+
+    @NonNull
+    private static String getJvmArgGradle() {
         File buildDir = GradleTestProject.BUILD_DIR;
         File jacocoAgent = new File(buildDir, "jacoco/agent.jar");
         if (!jacocoAgent.isFile()) {
@@ -43,5 +61,29 @@ public class JacocoAgent {
         }
 
         return "-javaagent:" + jacocoAgent.toString() + "=destfile=" + buildDir + "/jacoco/test.exec";
+    }
+
+
+    private static String getBazelJacocoAgentJvmArg() {
+        String jacocoJavaAgent = Objects.requireNonNull(getJacocoJavaAgent());
+        return "-javaagent:"
+                // The java agent of the outer JVM uses a relative path, convert it to absolute.
+                + System.getProperty("user.dir")
+                + "/"
+                // Make the inner exec file distinct to avoid two processes trying to write to
+                // it at the same time.
+                + jacocoJavaAgent.substring("-javaagent:".length()).replace(".exec", "_inner.exec");
+    }
+
+    @Nullable
+    private static String getJacocoJavaAgent() {
+        RuntimeMXBean mxBean = ManagementFactory.getRuntimeMXBean();
+        List<String> inputArguments = mxBean.getInputArguments();
+        for (String inputArgument : inputArguments) {
+            if (inputArgument.startsWith("-javaagent") && inputArgument.contains("jacoco.agent")) {
+                return inputArgument;
+            }
+        }
+        return null;
     }
 }

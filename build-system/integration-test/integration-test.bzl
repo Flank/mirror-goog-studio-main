@@ -1,4 +1,5 @@
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_jar")
+load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
 
 # A gradle integration test
 #
@@ -57,7 +58,7 @@ def gradle_integration_test(name, srcs, deps, data, maven_repos, dirs=["src/test
   zip_targets = [maven_repo + '.zip' for maven_repo in maven_repos]
   zip_file_names = ','.join([maven_repo[2:].replace(':','/') + '.zip' for maven_repo in maven_repos])
 
-  native.java_test(
+  coverage_java_test(
       name = name,
       timeout = timeout,
       data = data + zip_targets,
