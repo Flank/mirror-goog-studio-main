@@ -92,6 +92,8 @@ public final class FoundryPerfgateMetrics {
             // Allocate a large byte array and keep it around to avoid GC
             byte b[] = new byte[byteArraySize];
             v[i] = b;
+            if (i % 200 == 0)
+                System.out.println("free memory: " + Runtime.getRuntime().freeMemory());
         }
         long elapsedTime = System.currentTimeMillis() - startTime;
         long gcElapsedTime = getGCTotalTime() - gcTimeBefore;

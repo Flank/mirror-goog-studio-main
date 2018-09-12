@@ -40,7 +40,10 @@ java_test(
     name = "perfgate-baseline-tests",
     srcs = ["FoundryPerfgateMetrics.java"],
     # The memory test stresses memory usage, thus the jvm memory arg.
-    jvm_flags = ["-Xmx10000M"],
+    jvm_flags = [
+        "-Xms10000M",
+        "-Xmx10000M",
+    ],
     test_class = "FoundryPerfgateMetrics",
     deps = [
         "//tools/base/perf-logger:studio.perf-logger_testlib",
