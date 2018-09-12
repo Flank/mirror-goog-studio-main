@@ -73,7 +73,7 @@ public enum ResourceType {
      * drawable as part of a layout. When the parser, encounters one of this nodes, it will generate
      * a synthetic _aaptattr reference.
      */
-    AAPT("aapt", "Aapt Attribute", Kind.SYNTHETIC),
+    AAPT("_aapt", "Aapt Attribute", Kind.SYNTHETIC),
 
     /** Represents item tags inside a style definition. */
     STYLE_ITEM("item", "Style Item", Kind.SYNTHETIC),
@@ -139,6 +139,7 @@ public enum ResourceType {
 
         ImmutableMap.Builder<String, ResourceType> classNames = ImmutableMap.builder();
         classNames.put(STYLEABLE.mName, STYLEABLE);
+        classNames.put(AAPT.mName, AAPT);
 
         for (ResourceType type : ResourceType.values()) {
             if (type.mKind != Kind.REAL || type == STYLEABLE) {

@@ -15,6 +15,7 @@
  */
 package com.android.ide.common.resources
 
+import com.android.resources.ResourceType.AAPT
 import com.android.resources.ResourceType.ATTR
 import com.android.resources.ResourceType.DIMEN
 import com.android.resources.ResourceType.ID
@@ -83,6 +84,7 @@ class ResourceUrlTest {
         assertTrue(ResourceUrl.parse("?attr/foo", true)!!.isFramework)
         assertFalse(ResourceUrl.parse("@my_package:layout/my_name")!!.isPrivateAccessOverride)
         assertTrue(ResourceUrl.parse("@*my_package:layout/my_name")!!.isPrivateAccessOverride)
+        assertEquals(AAPT, ResourceUrl.parse("@aapt:_aapt/34")!!.type)
     }
 
     @Test

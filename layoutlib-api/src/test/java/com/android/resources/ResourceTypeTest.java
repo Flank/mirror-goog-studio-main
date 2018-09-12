@@ -126,6 +126,9 @@ public class ResourceTypeTest extends TestCase {
         assertNull(ResourceType.fromXmlValue("declare"));
         assertNull(ResourceType.fromXmlValue("pluralz"));
         assertNull(ResourceType.fromXmlValue("strin"));
+
+        // Required by Layoutlib for dealing with appt attributes
+        assertEquals(ResourceType.AAPT, ResourceType.fromXmlValue("_aapt"));
   }
 
 }
