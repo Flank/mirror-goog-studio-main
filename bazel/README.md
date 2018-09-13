@@ -74,6 +74,25 @@ bazel test //tools/adt/idea/android/... --test_filter=AndroidLayoutDomTest --jav
    anything.
  * `--test_filter=<TestName>` to run a specific test
 
+## Running with coverage
+
+We currently do not use the in-built Bazel coverage support.
+
+To gather coverage from tests define `agent_coverage=true`, e.g.
+
+```
+bazel test --define agent_coverage=true //tools/...
+```
+
+To create the coverage reports (xml and html) from those test logs run
+
+```
+tools/base/bazel/agent_coverage_reports.py
+```
+
+The reports will be output to `out/agent-coverage/`
+
+
 ## BUILD files
 
 BUILD files define a package with a set build and test rules. In order to
