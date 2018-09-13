@@ -9,6 +9,7 @@ kotlin_library(
     visibility = ["//visibility:public"],
     deps = [
         "//prebuilts/tools/common/lint-psi/intellij-core",
+        "//prebuilts/tools/common/lint-psi/kotlin-compiler",
         "//prebuilts/tools/common/lint-psi/uast",
         "//tools/base/annotations",
         "//tools/base/build-system/builder-model",
@@ -56,6 +57,7 @@ kotlin_test(
     deps = [
         ":lint-tests",
         "//prebuilts/tools/common/lint-psi/intellij-core",
+        "//prebuilts/tools/common/lint-psi/kotlin-compiler",
         "//prebuilts/tools/common/lint-psi/uast",
         "//prebuilts/tools/common/m2/repository/org/mockito/mockito-all/1.9.5:jar",
         "//tools/analytics-library/protos/src/main/proto",

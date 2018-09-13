@@ -9,6 +9,7 @@ version = rootProject.ext.baseVersion
 dependencies {
     compile project(':base:lint')
     compile project(':base:intellij-core')
+    compile project(':base:kotlin-compiler')
     compile project(':base:uast')
     compile project(':base:layoutlib-api')
     compile project(':base:testutils')

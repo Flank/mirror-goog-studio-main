@@ -21,6 +21,7 @@
     <orderEntry type="module" module-name="android.sdktools.repository" />
     <orderEntry type="library" name="intellij-core" level="project" />
     <orderEntry type="library" name="uast" level="project" />
+    <orderEntry type="library" name="kotlin-compiler" level="project" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
   </component>
 </module>

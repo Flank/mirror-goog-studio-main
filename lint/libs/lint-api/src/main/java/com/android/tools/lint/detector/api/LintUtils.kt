@@ -88,6 +88,7 @@ import com.google.common.collect.Iterables
 import com.google.common.io.ByteStreams
 import com.intellij.ide.util.JavaAnonymousClassesHelper
 import com.intellij.lang.Language
+import com.intellij.openapi.components.ServiceManager
 import com.intellij.pom.java.LanguageLevel
 import com.intellij.psi.CommonClassNames
 import com.intellij.psi.PsiAnonymousClass
@@ -98,15 +99,20 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiLiteral
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiParenthesizedExpression
 import com.intellij.psi.PsiType
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.ClassUtil
 import com.intellij.psi.util.PsiTreeUtil
+import org.jetbrains.kotlin.psi.KtElement
+import org.jetbrains.kotlin.resolve.calls.callUtil.getResolvedCall
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
+import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.getContainingFile
+import org.jetbrains.uast.kotlin.KotlinUastResolveProviderService
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.AbstractInsnNode
 import org.objectweb.asm.tree.ClassNode
@@ -1971,6 +1977,62 @@ fun isNumberString(s: String?): Boolean {
     }
 
     return true
+}
+
+/**
+ * Computes argument mapping from arguments to parameters (or returns
+ * null if the mapping is 1-1, e.g. in Java), or if the mapping is trivial
+ * (Kotlin 0 or 1 args), or if there's some kind of error.
+ */
+fun computeKotlinArgumentMapping(call: UCallExpression, method: PsiMethod):
+  Map<UExpression, PsiParameter>? {
+    if (method.parameterList.parametersCount <= 1) {
+        // When there is at most one parameter the mapping is easy to figure out!
+        return null
+    }
+
+    // Kotlin? If not, mapping is trivial
+    val receiver = call.psi as? KtElement ?: return null
+
+    val service = ServiceManager.getService(
+        receiver.project,
+        KotlinUastResolveProviderService::class.java
+    ) ?: return null
+    val bindingContext = service.getBindingContext(receiver)
+    val parameters = method.parameterList.parameters
+    val resolvedCall = receiver.getResolvedCall(bindingContext) ?: return null
+    val valueArguments = resolvedCall.valueArguments
+    val elementMap = mutableMapOf<PsiElement, UExpression>()
+    for (parameter in call.valueArguments) {
+        elementMap[parameter.psi ?: continue] = parameter
+    }
+    if (valueArguments.isNotEmpty()) {
+        var firstParameterIndex = 0
+        // Kotlin extension method? Not included in valueArguments indices.
+        if (parameters.isNotEmpty() && "\$receiver" == parameters[0].name) {
+            firstParameterIndex++
+        }
+
+        val mapping = mutableMapOf<UExpression, PsiParameter>()
+        for ((parameterDescriptor, valueArgument) in valueArguments) {
+            for (argument in valueArgument.arguments) {
+                val expression = argument.getArgumentExpression() ?: continue
+                @Suppress("USELESS_CAST")
+                val arg = elementMap[expression as PsiElement]
+                    ?: continue  // cast only needed to avoid Kotlin compiler frontend bug KT-24309.
+                val index = firstParameterIndex + parameterDescriptor.index
+                if (index < parameters.size) {
+                    mapping[arg] = parameters[index]
+                }
+            }
+        }
+
+        if (mapping.isNotEmpty()) {
+            return mapping
+        }
+    }
+
+    return null
 }
 
 // For compatibility reasons

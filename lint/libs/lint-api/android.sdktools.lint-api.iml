@@ -21,5 +21,6 @@
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="module" module-name="intellij.platform.uast" exported="" />
     <orderEntry type="module" module-name="intellij.java.uast" exported="" />
+    <orderEntry type="library" exported="" scope="PROVIDED" name="kotlin-plugin" level="project" />
   </component>
 </module>

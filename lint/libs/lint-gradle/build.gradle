@@ -15,6 +15,7 @@ dependencies {
     compile project(':base:builder')
     compile project(':base:builder-model')
     compile project(':base:intellij-core')
+    compile project(':base:kotlin-compiler')
     compile project(':base:uast')
     compile project(':base:manifest-merger')
     compile project(':base:lint')

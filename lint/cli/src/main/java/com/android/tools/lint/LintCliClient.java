@@ -75,9 +75,7 @@ import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
-import com.android.tools.lint.helpers.DefaultJavaEvaluator;
 import com.android.tools.lint.helpers.DefaultUastParser;
-import com.android.tools.lint.kotlin.LintKotlinUtils;
 import com.android.utils.CharSequences;
 import com.android.utils.NullLogger;
 import com.android.utils.StdLogger;
@@ -97,8 +95,6 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.pom.java.LanguageLevel;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
-import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiParameter;
 import com.intellij.psi.impl.file.impl.JavaFileManager;
 import com.intellij.util.io.URLUtil;
 import com.intellij.util.lang.UrlClassLoader;
@@ -122,8 +118,6 @@ import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl;
 import org.jetbrains.kotlin.cli.jvm.index.JavaRoot;
 import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesIndexImpl;
 import org.jetbrains.kotlin.cli.jvm.index.SingleJavaFileRootsIndex;
-import org.jetbrains.uast.UCallExpression;
-import org.jetbrains.uast.UExpression;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -1671,38 +1665,9 @@ public class LintCliClient extends LintClient {
 
     protected class LintCliUastParser extends DefaultUastParser {
 
-        private final Project project;
-
         public LintCliUastParser(Project project) {
             //noinspection ConstantConditions
             super(project, ideaProject);
-            this.project = project;
-        }
-
-        @NonNull
-        @Override
-        protected DefaultJavaEvaluator createEvaluator(
-                @Nullable Project project, @NonNull com.intellij.openapi.project.Project p) {
-            assert project != null;
-            return new DefaultJavaEvaluator(p, project) {
-                @NonNull
-                @Override
-                public Map<UExpression, PsiParameter> computeArgumentMapping(
-                        @NonNull UCallExpression call, @NonNull PsiMethod method) {
-
-                    if (method.getParameterList().getParametersCount() == 0) {
-                        return Collections.emptyMap();
-                    }
-
-                    Map<UExpression, PsiParameter> kotlinMap =
-                            LintKotlinUtils.computeKotlinArgumentMapping(call, method);
-                    if (kotlinMap != null) {
-                        return kotlinMap;
-                    }
-
-                    return super.computeArgumentMapping(call, method);
-                }
-            };
         }
 
         @Override

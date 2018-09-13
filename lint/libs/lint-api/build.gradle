@@ -17,8 +17,8 @@ dependencies {
     compile project(':base:sdk-common')
     compile project(':base:builder-model')
     compile libs.guava
-    compile project(':base:lint-kotlin')
     compile project(':base:intellij-core')
+    compile project(':base:kotlin-compiler')
     compile project(':base:uast')
     compile project(':base:manifest-merger')
 

@@ -20,6 +20,8 @@ iml_module(
         "//tools/base/build-system:studio.android.sdktools.manifest-merger",
         "//tools/idea/uast/uast-common:intellij.platform.uast",
         "//tools/idea/uast/uast-java:intellij.java.uast",
+        "//prebuilts/tools/common/kotlin-plugin:Kotlin/lib/kotlin-plugin",
+        "//prebuilts/tools/common/kotlin-plugin:Kotlin/lib/android-lint",
     ],
     # do not sort: must match IML order
     deps = [
@@ -37,6 +39,8 @@ iml_module(
         "//tools/idea/.idea/libraries:KotlinJavaRuntime",
         "//tools/idea/uast/uast-common:intellij.platform.uast[module]",
         "//tools/idea/uast/uast-java:intellij.java.uast[module]",
+        "//prebuilts/tools/common/kotlin-plugin:Kotlin/lib/kotlin-plugin",
+        "//prebuilts/tools/common/kotlin-plugin:Kotlin/lib/android-lint",
     ],
 )
 
@@ -55,8 +59,8 @@ kotlin_library(
     ) + ["libs/lint-api/NOTICE"],
     visibility = ["//visibility:public"],
     deps = [
-        ":tools.lint-kotlin",
         "//prebuilts/tools/common/lint-psi/intellij-core",
+        "//prebuilts/tools/common/lint-psi/kotlin-compiler",
         "//prebuilts/tools/common/lint-psi/uast",
         "//tools/base/annotations",
         "//tools/base/build-system:tools.manifest-merger",
@@ -106,6 +110,7 @@ kotlin_library(
     deps = [
         ":tools.lint-api",
         "//prebuilts/tools/common/lint-psi/intellij-core",
+        "//prebuilts/tools/common/lint-psi/kotlin-compiler",
         "//prebuilts/tools/common/lint-psi/uast",
         "//tools/base/annotations",
         "//tools/base/build-system/builder-model",
@@ -181,6 +186,7 @@ kotlin_library(
         # so update both in sync
         ":tools.lint-gradle-api",
         "//prebuilts/tools/common/lint-psi/intellij-core",
+        "//prebuilts/tools/common/lint-psi/kotlin-compiler",
         "//prebuilts/tools/common/lint-psi/uast",
         "//tools/base/annotations",
         "//tools/base/build-system:gradle-api_neverlink",
@@ -208,33 +214,6 @@ kotlin_library(
 maven_pom(
     name = "lint-gradle.pom",
     artifact = "lint-gradle",
-    group = "com.android.tools.lint",
-    source = "//tools/buildSrc/base:base_version",
-)
-
-kotlin_library(
-    name = "tools.lint-kotlin",
-    srcs = ["libs/lint-kotlin/src/main/java"],
-    pom = "lint-kotlin.pom",
-    resource_strip_prefix = "tools/base/lint/libs/lint-kotlin",
-    resources = glob(
-        include = ["libs/lint-kotlin/src/main/java/**"],
-        exclude = [
-            "libs/lint-kotlin/src/main/java/**/*.java",
-            "libs/lint-kotlin/src/main/java/**/*.kt",
-        ],
-    ) + ["libs/lint-kotlin/NOTICE"],
-    visibility = ["//visibility:public"],
-    deps = [
-        "//prebuilts/tools/common/lint-psi/intellij-core",
-        "//prebuilts/tools/common/lint-psi/kotlin-compiler",
-        "//prebuilts/tools/common/lint-psi/uast",
-    ],
-)
-
-maven_pom(
-    name = "lint-kotlin.pom",
-    artifact = "lint-kotlin",
     group = "com.android.tools.lint",
     source = "//tools/buildSrc/base:base_version",
 )

@@ -19,6 +19,7 @@ package com.android.tools.lint.helpers
 import com.android.builder.model.Dependencies
 import com.android.tools.lint.client.api.JavaEvaluator
 import com.android.tools.lint.detector.api.Project
+import com.android.tools.lint.detector.api.computeKotlinArgumentMapping
 import com.android.tools.lint.detector.api.isKotlin
 import com.google.common.collect.Sets
 import com.intellij.codeInsight.AnnotationUtil
@@ -299,7 +300,11 @@ open class DefaultJavaEvaluator(
             return emptyMap()
         }
 
-        // TODO: In Kotlin, produce argument mapping based on the BindingContext
+        // Call into lint-kotlin to look up the argument mapping if this call is a Kotlin method.
+        val kotlinMap = computeKotlinArgumentMapping(call, method)
+        if (kotlinMap != null) {
+            return kotlinMap
+        }
 
         val arguments = call.valueArguments
         val parameters = parameterList.parameters

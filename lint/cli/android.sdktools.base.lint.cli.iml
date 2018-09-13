@@ -24,9 +24,8 @@
     <orderEntry type="module" module-name="android.sdktools.repository" />
     <orderEntry type="library" name="intellij-core" level="project" />
     <orderEntry type="library" name="uast" level="project" />
-    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="library" name="kotlin-compiler" level="project" />
-    <orderEntry type="module" module-name="android.sdktools.base.lint.kotlin" />
+    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="library" name="studio-analytics-proto" level="project" />
     <orderEntry type="module" module-name="android.sdktools.analytics.shared-base" />
     <orderEntry type="module" module-name="android.sdktools.analytics.tracker-base" />
