@@ -134,9 +134,9 @@ open class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
                     "Gradle may disable incremental compilation" +
                             " as the following annotation processors are not incremental:" +
                             " ${Joiner.on(", ").join(nonIncrementalAPs.keys)}.\n" +
-                            " Consider setting the experimental feature flag" +
-                            " ${BooleanOption.ENABLE_SEPARATE_ANNOTATION_PROCESSING}=true" +
-                            " in the gradle.properties file to run annotation processing" +
+                            "Consider setting the experimental feature flag" +
+                            " ${BooleanOption.ENABLE_SEPARATE_ANNOTATION_PROCESSING.propertyName}" +
+                            "=true in the gradle.properties file to run annotation processing" +
                             " in a separate task and make compilation incremental."
                 )
         }
