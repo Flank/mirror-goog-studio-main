@@ -21,8 +21,9 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.api.transform.DirectoryInput
 import com.android.build.api.transform.JarInput
 import com.android.build.api.transform.QualifiedContent
+import com.android.build.api.transform.QualifiedContent.ContentType
+import com.android.build.api.transform.QualifiedContent.Scope
 import com.android.build.api.transform.Status
-import com.android.build.api.transform.TransformInput
 import com.android.build.api.transform.TransformInvocation
 import com.android.builder.files.FileCacheByPath
 import com.android.builder.files.IncrementalRelativeFileSets
@@ -34,7 +35,6 @@ import com.android.builder.merge.LazyIncrementalFileMergerInputs
 import com.android.ide.common.resources.FileStatus
 import com.android.tools.build.apkzlib.utils.CachedSupplier
 import com.android.tools.build.apkzlib.utils.IOExceptionRunnable
-import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
@@ -44,6 +44,7 @@ import java.io.UncheckedIOException
 import java.util.HashSet
 
 
+// TODO update this method in subsequent CL
 /**
  * Creates an [IncrementalFileMergerInput] from a [JarInput]. All files in the jar
  * will be reported in the incremental input. This method assumes the input contains
@@ -79,6 +80,7 @@ fun toIncrementalInput(
     return input
 }
 
+// TODO update this method in subsequent CL
 /**
  * Creates an [IncrementalFileMergerInput] from a [DirectoryInput]. All files in the
  * directory will be reported in the incremental input. This method assumes the input contains
@@ -104,68 +106,32 @@ fun toIncrementalInput(
 }
 
 /**
- * Creates an [IncrementalFileMergerInput] from a [JarInput]. All files in
- * the zip will be reported in the incremental input. This method assumes the input does not
+ * Creates an [IncrementalFileMergerInput] from a [File]. This method assumes the input does not
  * contain incremental information. All files will be reported as new.
  *
- * @param jarInput the jar input
+ * @param file the file input
  * @param zipCache the zip cache; the cache will not be modified
- * @param cacheUpdate will receive actions to update the cache for the next iteration
- * @param contentMap if not `null`, receives a mapping from all generated inputs to
- * [QualifiedContent] they came from
- * @return the input or `null` if the jar input does not exist
+ * @param cacheUpdates will receive actions to update the cache for the next iteration, if
+ *        file.isFile is true, in which case it's assumed to be a jar file.
+ * @return the input or `null` if the file does not exist
  */
 fun toNonIncrementalInput(
-    jarInput: JarInput,
-    zipCache: FileCacheByPath,
-    cacheUpdate: MutableList<Runnable>,
-    contentMap: MutableMap<IncrementalFileMergerInput, QualifiedContent>?
+    file: File,
+    fileCache: FileCacheByPath,
+    cacheUpdates: MutableList<Runnable>
 ): IncrementalFileMergerInput? {
-    val jarFile = jarInput.file
-    if (!jarFile.isFile) {
+    if (!file.isFile && !file.isDirectory) {
         return null
     }
 
-    cacheUpdate.add(IOExceptionRunnable.asRunnable { zipCache.add(jarFile) })
-
-    val input = LazyIncrementalFileMergerInputs.fromNew(
-        jarFile.absolutePath,
-        ImmutableSet.of(jarFile)
-    )
-    contentMap?.let { it[input] = jarInput }
-
-    return input
-}
-
-/**
- * Creates an [IncrementalFileMergerInput] from a [DirectoryInput]. All files in
- * the directory will be reported in the incremental input. This method assumes the input does
- * not contain incremental information. All files will be reported as new.
- *
- * @param directoryInput the directory input
- * @param contentMap if not `null`, receives a mapping from all generated inputs to
- * [QualifiedContent] they came from
- * @return the input or `null` if the jar input does not exist
- */
-fun toNonIncrementalInput(
-    directoryInput: DirectoryInput,
-    contentMap: MutableMap<IncrementalFileMergerInput, QualifiedContent>?
-): IncrementalFileMergerInput? {
-    val dirFile = directoryInput.file
-    if (!dirFile.isDirectory) {
-        return null
+    if (file.isFile) {
+        cacheUpdates.add(IOExceptionRunnable.asRunnable {  fileCache.add(file) })
     }
 
-    val input = LazyIncrementalFileMergerInputs.fromNew(
-        dirFile.absolutePath,
-        ImmutableSet.of(dirFile)
-    )
-
-    contentMap?.let { it[input] = directoryInput }
-
-    return input
+    return LazyIncrementalFileMergerInputs.fromNew(file.absolutePath, ImmutableSet.of(file))
 }
 
+// TODO update this method in subsequent CL
 /**
  * Computes all updates in a [JarInput].
  *
@@ -205,6 +171,7 @@ private fun computeUpdates(
 
 }
 
+// TODO update this method in subsequent CL
 /**
  * Computes a set with all files in a [JarInput].
  *
@@ -223,6 +190,7 @@ private fun computeFiles(jarInput: JarInput): ImmutableSet<RelativeFile> {
 
 }
 
+// TODO update this method in subsequent CL
 /**
  * Computes all updates in a [DirectoryInput].
  *
@@ -246,6 +214,7 @@ private fun computeUpdates(
     return builder.build()
 }
 
+// TODO update this method in subsequent CL
 /**
  * Computes a set with all files in a [DirectoryInput].
  *
@@ -259,105 +228,61 @@ private fun computeFiles(directoryInput: DirectoryInput): ImmutableSet<RelativeF
 }
 
 /**
- * Creates a list of [IncrementalFileMergerInput] from a [TransformInput]. All files
- * in the input will be reported in the incremental input, including those inside zips. This
- * method assumes the input contains incremental information.
+ * Creates a list of [IncrementalFileMergerInput] from a map of [File]s to [Scope]s.
  *
- * @param transformInput the transform input
- * @param zipCache the zip cache; the cache will not be modified
- * @param cacheUpdates receives updates to the cache
- * @param contentMap if not `null`, receives a mapping from all generated inputs to
- * [QualifiedContent] they came from
- * @return the inputs
- */
-fun toIncrementalInput(
-    transformInput: TransformInput,
-    zipCache: FileCacheByPath,
-    cacheUpdates: MutableList<Runnable>,
-    contentMap: MutableMap<IncrementalFileMergerInput, QualifiedContent>?
-): ImmutableList<IncrementalFileMergerInput> {
-    val builder = ImmutableList.builder<IncrementalFileMergerInput>()
-
-    for (jarInput in transformInput.jarInputs) {
-        builder.add(toIncrementalInput(jarInput, zipCache, cacheUpdates, contentMap))
-    }
-
-    for (dirInput in transformInput.directoryInputs) {
-        builder.add(toIncrementalInput(dirInput, contentMap))
-    }
-
-    return builder.build()
-}
-
-/**
- * Creates a list of [IncrementalFileMergerInput] from a [TransformInput]. All files
- * in the input will be reported in the incremental input, including those inside zips. This
- * method assumes the input does not contain incremental information. All files will be reported
- * as new.
- *
- * @param transformInput the transform input
- * @param zipCache the zip cache; the cache will not be modified
- * @param cacheUpdates receives updates to the cache
- * @param contentMap if not `null`, receives a mapping from all generated inputs to
- * [QualifiedContent] they came from
- * @return the inputs
- */
-fun toNonIncrementalInput(
-    transformInput: TransformInput,
-    zipCache: FileCacheByPath,
-    cacheUpdates: MutableList<Runnable>,
-    contentMap: MutableMap<IncrementalFileMergerInput, QualifiedContent>?
-): ImmutableList<IncrementalFileMergerInput> {
-    val builder = ImmutableList.builder<IncrementalFileMergerInput>()
-
-    transformInput.jarInputs.forEach { jarInput ->
-        toNonIncrementalInput(jarInput, zipCache, cacheUpdates, contentMap)?.let {
-            builder.add(it)
-        }
-    }
-
-    transformInput.directoryInputs.forEach { dirInput ->
-        toNonIncrementalInput(dirInput, contentMap)?.let { builder.add(it) }
-    }
-
-    return builder.build()
-}
-
-/**
- * Creates a list of [IncrementalFileMergerInput] from a [TransformInvocation]. All
- * files in the input will be reported in the incremental input, including those inside zips.
- *
- * @param transformInvocation the transform invocation
- * @param zipCache the zip cache; the cache will not be modified
+ * @param inputMap map of files to their corresponding scopes
+ * @param changedInputs map of files to file status, passed from the incremental task, or null if
+ * the task is not incremental
+ * @param fileCache the zip cache; the cache will not be modified
  * @param cacheUpdates receives updates to the cache
  * @param full is this a full build? If not, then it is an incremental build; in full builds
  * the output is not cleaned, it is the responsibility of the caller to ensure the output
  * is properly set up; `full` cannot be `false` if the transform invocation is not
  * stating that the invocation is an incremental one
+ * @param contentType the ContentType of files being merged
  * @param contentMap if not `null`, receives a mapping from all generated inputs to
  * [QualifiedContent] they came from
  */
-fun toInput(
-    transformInvocation: TransformInvocation,
-    zipCache: FileCacheByPath,
+fun toInputs(
+    inputMap: MutableMap<File, in Scope>,
+    changedInputs: Map<File, FileStatus>?,
+    fileCache: FileCacheByPath,
     cacheUpdates: MutableList<Runnable>,
     full: Boolean,
+    contentType: ContentType,
     contentMap: MutableMap<IncrementalFileMergerInput, QualifiedContent>?
 ): ImmutableList<IncrementalFileMergerInput> {
     if (!full) {
-        Preconditions.checkArgument(transformInvocation.isIncremental)
+        changedInputs ?: throw RuntimeException(
+            "changedInputs must be specified for incremental merging."
+        )
+        // TODO remove removed inputs?
     }
 
     if (full) {
-        cacheUpdates.add(IOExceptionRunnable.asRunnable { zipCache.clear() })
+        cacheUpdates.add(IOExceptionRunnable.asRunnable { fileCache.clear() })
     }
 
     val builder = ImmutableList.builder<IncrementalFileMergerInput>()
-    for (input in transformInvocation.inputs) {
-        if (full) {
-            builder.addAll(toNonIncrementalInput(input, zipCache, cacheUpdates, contentMap))
+    for ((input, scope) in inputMap.entries) {
+        val qualifiedContent =
+            object: QualifiedContent {
+                override fun getName() = "file-merger-qualified-content"
+                override fun getFile() = input
+                override fun getContentTypes() = mutableSetOf(contentType)
+                override fun getScopes() = mutableSetOf(scope)
+            }
+        val fileMergerInput: IncrementalFileMergerInput? = if (full) {
+            toNonIncrementalInput(input, fileCache, cacheUpdates)
         } else {
-            builder.addAll(toIncrementalInput(input, zipCache, cacheUpdates, contentMap))
+            // TODO incremental case
+            null
+        }
+
+        fileMergerInput?.let {
+            builder.add(it)
+            // Add mapping of fileMergerInput to qualifiedContent if contentMap != null
+            contentMap?.let { contentMap -> contentMap[it] = qualifiedContent}
         }
     }
 

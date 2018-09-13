@@ -107,6 +107,12 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     boolean consumesFeatureJars();
 
+    /** Returns whether we need to create original java resource streams */
+    boolean getNeedsJavaResStreams();
+
+    /** Returns whether we need to create a stream from the merged java resources */
+    boolean getNeedsMergedJavaResStream();
+
     boolean getNeedsMainDexListForBundle();
 
     @Override

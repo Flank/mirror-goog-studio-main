@@ -170,13 +170,13 @@ public class ShrinkResourcesTransform extends Transform {
 
     @NonNull
     @Override
-    public Set<Scope> getScopes() {
+    public Set<? super Scope> getScopes() {
         return TransformManager.EMPTY_SCOPES;
     }
 
     @NonNull
     @Override
-    public Set<Scope> getReferencedScopes() {
+    public Set<? super Scope> getReferencedScopes() {
         return TransformManager.SCOPE_FULL_PROJECT;
     }
 

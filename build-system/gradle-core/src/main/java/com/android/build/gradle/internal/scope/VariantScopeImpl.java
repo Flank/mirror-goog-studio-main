@@ -386,6 +386,23 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     }
 
     @Override
+    public boolean getNeedsJavaResStreams() {
+        // We need to create original java resource stream only if we're in a library module with
+        // custom transforms.
+        return getType().isAar() && !getGlobalScope().getExtension().getTransforms().isEmpty();
+    }
+
+    @Override
+    public boolean getNeedsMergedJavaResStream() {
+        // We need to create a stream from the merged java resources if we're in a library module,
+        // or if we're in an app/feature module which uses the transform pipeline.
+        return getType().isAar()
+                || !getGlobalScope().getExtension().getTransforms().isEmpty()
+                || getCodeShrinker() != null
+                || getInstantRunBuildContext().isInInstantRunMode();
+    }
+
+    @Override
     public boolean getNeedsMainDexListForBundle() {
         return getType().isBaseModule()
                 && globalScope.hasDynamicFeatures()

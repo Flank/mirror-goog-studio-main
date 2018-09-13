@@ -72,7 +72,7 @@ public class TransformManager extends FilterableStreamCollection {
 
     private static final String FD_TRANSFORMS = "transforms";
 
-    public static final Set<Scope> EMPTY_SCOPES = ImmutableSet.of();
+    public static final Set<ScopeType> EMPTY_SCOPES = ImmutableSet.of();
 
     public static final Set<ContentType> CONTENT_CLASS = ImmutableSet.of(CLASSES);
     public static final Set<ContentType> CONTENT_JARS = ImmutableSet.of(CLASSES, RESOURCES);
@@ -83,11 +83,8 @@ public class TransformManager extends FilterableStreamCollection {
     public static final Set<ContentType> CONTENT_DEX_WITH_RESOURCES =
             ImmutableSet.of(ExtendedContentType.DEX, RESOURCES);
     public static final Set<ScopeType> PROJECT_ONLY = ImmutableSet.of(Scope.PROJECT);
-    public static final Set<Scope> SCOPE_FULL_PROJECT =
-            Sets.immutableEnumSet(
-                    Scope.PROJECT,
-                    Scope.SUB_PROJECTS,
-                    Scope.EXTERNAL_LIBRARIES);
+    public static final Set<ScopeType> SCOPE_FULL_PROJECT =
+            ImmutableSet.of(Scope.PROJECT, Scope.SUB_PROJECTS, Scope.EXTERNAL_LIBRARIES);
     public static final Set<ScopeType> SCOPE_FULL_WITH_IR_FOR_DEXING =
             new ImmutableSet.Builder<ScopeType>()
                     .addAll(SCOPE_FULL_PROJECT)
@@ -302,7 +299,7 @@ public class TransformManager extends FilterableStreamCollection {
     }
 
     /**
-     * Finds the stream the transform consumes, and return them.
+     * Finds the stream(s) the transform consumes, and return them.
      *
      * <p>This also removes them from the instance list. They will be replaced with the output
      * stream(s) from the transform.

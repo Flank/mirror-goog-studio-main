@@ -56,6 +56,7 @@ class PerModuleBundleTaskTest {
     @Mock private lateinit var assetsFiles: Directory
     @Mock private lateinit var resFiles: BuildableArtifact
     @Mock private lateinit var dexFiles: FileCollection
+    @Mock private lateinit var javaResBuildableArtifact: BuildableArtifact
     @Mock private lateinit var javaResFiles: FileCollection
     @Mock private lateinit var nativeLibsFiles: FileCollection
     @Mock private lateinit var variantScope: VariantScope
@@ -94,11 +95,14 @@ class PerModuleBundleTaskTest {
         Mockito.`when`(resFiles.iterator()).thenReturn(
             listOf(testFolder.newFile("res")).iterator())
 
+        Mockito.`when`(variantScope.needsMergedJavaResStream).thenReturn(false)
+        Mockito.`when`(artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_JAVA_RES))
+            .thenReturn(javaResBuildableArtifact)
+        Mockito.`when`(javaResBuildableArtifact.get()).thenReturn(javaResFiles)
+
         Mockito.`when`(variantScope.transformManager).thenReturn(transformManager)
         Mockito.`when`(transformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX))
             .thenReturn(dexFiles)
-        Mockito.`when`(transformManager.getPipelineOutputAsFileCollection(StreamFilter.RESOURCES))
-            .thenReturn(javaResFiles)
         Mockito.`when`(transformManager.getPipelineOutputAsFileCollection(StreamFilter.NATIVE_LIBS))
             .thenReturn(nativeLibsFiles)
 

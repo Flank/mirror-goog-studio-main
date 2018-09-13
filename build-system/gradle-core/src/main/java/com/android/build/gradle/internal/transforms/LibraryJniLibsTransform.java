@@ -86,7 +86,7 @@ public class LibraryJniLibsTransform extends Transform {
 
     @NonNull
     @Override
-    public Set<Scope> getScopes() {
+    public Set<? super Scope> getScopes() {
         return TransformManager.EMPTY_SCOPES;
     }
 

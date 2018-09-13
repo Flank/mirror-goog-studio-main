@@ -51,7 +51,7 @@ class MergeClassesTransform(
         return TransformManager.CONTENT_CLASS
     }
 
-    override fun getScopes(): MutableSet<QualifiedContent.Scope> {
+    override fun getScopes(): MutableSet<in QualifiedContent.Scope> {
         return TransformManager.EMPTY_SCOPES
     }
 

@@ -27,6 +27,7 @@ import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
+import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformInput;
 import com.google.common.base.Charsets;
@@ -40,6 +41,7 @@ import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -71,7 +73,7 @@ public class OriginalStream extends TransformStream {
         @NonNull private final Project project;
         @NonNull private final String name;
         private Set<ContentType> contentTypes = Sets.newHashSet();
-        private QualifiedContent.ScopeType scope;
+        private Set<ScopeType> scopes = Sets.newHashSet();
         private FileCollection fileCollection;
         private ArtifactCollection artifactCollection;
 
@@ -81,14 +83,14 @@ public class OriginalStream extends TransformStream {
         }
 
         public OriginalStream build() {
-            checkNotNull(scope);
+            checkState(!scopes.isEmpty());
             checkState(!contentTypes.isEmpty());
             checkNotNull(fileCollection);
 
             return new OriginalStream(
                     name,
                     ImmutableSet.copyOf(contentTypes),
-                    scope,
+                    scopes,
                     artifactCollection,
                     fileCollection);
         }
@@ -108,8 +110,13 @@ public class OriginalStream extends TransformStream {
             return this;
         }
 
-        public Builder addScope(@NonNull QualifiedContent.ScopeType scope) {
-            this.scope = scope;
+        public Builder addScopes(@NonNull Collection<ScopeType> scopes) {
+            this.scopes.addAll(scopes);
+            return this;
+        }
+
+        public Builder addScope(@NonNull ScopeType scope) {
+            this.scopes.add(scope);
             return this;
         }
 
@@ -129,10 +136,10 @@ public class OriginalStream extends TransformStream {
     private OriginalStream(
             @NonNull String name,
             @NonNull Set<ContentType> contentTypes,
-            @NonNull QualifiedContent.ScopeType scope,
+            @NonNull Set<? super Scope> scopes,
             @Nullable ArtifactCollection artifactCollection,
             @NonNull FileCollection files) {
-        super(name, contentTypes, ImmutableSet.of(scope), files);
+        super(name, contentTypes, scopes, files);
         this.artifactCollection = artifactCollection;
     }
 
@@ -338,15 +345,14 @@ public class OriginalStream extends TransformStream {
             @NonNull Set<ContentType> types,
             @NonNull Set<? super Scope> scopes) {
         if (!scopes.equals(getScopes())) {
-            // since the content itself (jars and folders) don't have they own notion of scopes
-            // we cannot do a restricted stream. However, since this stream is always created
-            // with a single stream, this shouldn't happen.
+            // since the content itself (jars and folders) don't have their own notion of scopes
+            // we cannot do a restricted stream.
             throw new UnsupportedOperationException("Cannot do a scope-restricted OriginalStream");
         }
         return new OriginalStream(
                 getName() + "-restricted-copy",
                 types,
-                (QualifiedContent.ScopeType) Iterables.getOnlyElement(scopes),
+                scopes,
                 artifactCollection,
                 getFileCollection());
     }

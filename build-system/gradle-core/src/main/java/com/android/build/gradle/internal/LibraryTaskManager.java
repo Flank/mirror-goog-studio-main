@@ -25,6 +25,7 @@ import com.android.annotations.NonNull;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
+import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
@@ -296,9 +297,8 @@ public class LibraryTaskManager extends TaskManager {
         // Now go back to fill the pipeline with transforms used when
         // publishing the AAR
 
-        // first merge the resources. This takes the PROJECT and LOCAL_DEPS
-        // and merges them together.
-        createMergeJavaResTransform(variantScope);
+        // first merge the java resources.
+        createMergeJavaResTask(variantScope);
 
         // ----- Minify next -----
         maybeCreateJavaCodeShrinkerTransform(variantScope);
@@ -563,7 +563,7 @@ public class LibraryTaskManager extends TaskManager {
 
     @NonNull
     @Override
-    protected Set<? super Scope> getResMergingScopes(@NonNull VariantScope variantScope) {
+    protected Set<ScopeType> getResMergingScopes(@NonNull VariantScope variantScope) {
         if (variantScope.getTestedVariantData() != null) {
             return TransformManager.SCOPE_FULL_PROJECT;
         }

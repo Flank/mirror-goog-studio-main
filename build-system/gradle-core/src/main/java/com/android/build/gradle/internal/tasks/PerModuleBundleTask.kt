@@ -217,8 +217,12 @@ open class PerModuleBundleTask : AndroidVariantTask() {
                     AndroidArtifacts.ArtifactType.FEATURE_DEX,
                     mapOf(MODULE_PATH to variantScope.globalScope.project.path)
                 )
-            task.javaResFiles = variantScope.transformManager.getPipelineOutputAsFileCollection(
-                StreamFilter.RESOURCES)
+            task.javaResFiles = if (variantScope.needsMergedJavaResStream) {
+                variantScope.transformManager
+                    .getPipelineOutputAsFileCollection(StreamFilter.RESOURCES)
+            } else {
+                artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_JAVA_RES).get()
+            }
             task.nativeLibsFiles = variantScope.transformManager.getPipelineOutputAsFileCollection(
                 StreamFilter.NATIVE_LIBS)
 

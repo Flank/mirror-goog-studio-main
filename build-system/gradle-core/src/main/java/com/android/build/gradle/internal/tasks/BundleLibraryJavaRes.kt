@@ -19,6 +19,8 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.SdkConstants.FN_INTERMEDIATE_RES_JAR
 import com.android.build.api.transform.QualifiedContent
+import com.android.build.gradle.internal.pipeline.StreamFilter
+import com.android.build.gradle.internal.pipeline.StreamFilter.PROJECT_RESOURCES
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -68,15 +70,12 @@ open class BundleLibraryJavaRes @Inject constructor(workerExecutor: WorkerExecut
     class CreationAction(scope: VariantScope) :
         VariantTaskCreationAction<BundleLibraryJavaRes>(scope) {
 
-        private val resources: FileCollection
-
-        init {
-            // Because ordering matters for TransformAPI, we need to fetch classes from the
-            // transform pipeline as soon as this creation action is instantiated.
-            resources = scope.transformManager.getPipelineOutputAsFileCollection { types, scopes ->
-                types.contains(QualifiedContent.DefaultContentType.RESOURCES)
-                        && scopes.size == 1 && scopes.contains(QualifiedContent.Scope.PROJECT)
-            }
+        private val projectJavaResFromStreams = if (variantScope.needsJavaResStreams) {
+            // Because ordering matters for TransformAPI, we need to fetch java res from the
+            // transform pipeline as soon as this creation action is instantiated, in needed.
+            variantScope.transformManager.getPipelineOutputAsFileCollection(PROJECT_RESOURCES)
+        } else {
+            null
         }
 
         private lateinit var output: Provider<RegularFile>
@@ -100,7 +99,7 @@ open class BundleLibraryJavaRes @Inject constructor(workerExecutor: WorkerExecut
             super.configure(task)
 
             task.output = output
-            task.resources = resources
+            task.resources = projectJavaResFromStreams ?: getProjectJavaRes(variantScope)
         }
     }
 }

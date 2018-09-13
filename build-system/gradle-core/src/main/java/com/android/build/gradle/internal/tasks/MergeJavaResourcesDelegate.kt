@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.packaging.PackagingFileAction
 import com.android.build.gradle.internal.packaging.ParsedPackagingOptions
 import com.android.build.gradle.internal.pipeline.ExtendedContentType
 import com.android.build.gradle.internal.pipeline.TransformManager
-import com.android.build.gradle.internal.transforms.MergeJavaResourcesTransform
+import com.android.build.gradle.internal.tasks.MergeJavaResourceTask
 import com.android.builder.merge.DelegateIncrementalFileMergerOutput
 import com.android.builder.merge.FilterIncrementalFileMergerInput
 import com.android.builder.merge.IncrementalFileMerger
@@ -56,7 +56,7 @@ private fun containsHighPriorityScope(scopes: MutableSet<in Scope>): Boolean {
 
 /**
  * A delegate which actually does the merging of java resources, for example for the
- * [MergeJavaResourcesTransform]
+ * [MergeJavaResourceTask]
  */
 class MergeJavaResourcesDelegate(
     inputs: List<IncrementalFileMergerInput>,

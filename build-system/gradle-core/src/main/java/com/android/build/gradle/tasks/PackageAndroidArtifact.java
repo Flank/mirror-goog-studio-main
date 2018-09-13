@@ -1221,9 +1221,15 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
         @NonNull
         public FileCollection getJavaResources() {
+            if (getVariantScope().getNeedsMergedJavaResStream()) {
+                return getVariantScope()
+                        .getTransformManager()
+                        .getPipelineOutputAsFileCollection(StreamFilter.RESOURCES);
+            }
             return getVariantScope()
-                    .getTransformManager()
-                    .getPipelineOutputAsFileCollection(StreamFilter.RESOURCES);
+                    .getArtifacts()
+                    .getFinalArtifactFiles(InternalArtifactType.MERGED_JAVA_RES)
+                    .get();
         }
 
         @NonNull

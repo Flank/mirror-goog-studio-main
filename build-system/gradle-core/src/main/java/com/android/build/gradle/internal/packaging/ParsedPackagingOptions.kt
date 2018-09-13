@@ -17,16 +17,9 @@
 package com.android.build.gradle.internal.packaging
 
 import com.android.build.gradle.internal.dsl.PackagingOptions
-import com.android.build.gradle.internal.matcher.FileExtensionWithPrefixPathMatcher
-import com.android.build.gradle.internal.matcher.FileNameWithSuffixPathMatcher
-import com.android.build.gradle.internal.matcher.FileNameWithPrefixPathMatcher
-import com.android.build.gradle.internal.matcher.FolderInHierarchyPathMatcher
 import com.android.build.gradle.internal.matcher.GlobPathMatcherFactory
-import com.android.build.gradle.internal.matcher.NoWildcardPathMatcher
-import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
 import java.io.File
-import java.nio.file.FileSystems
 import java.nio.file.PathMatcher
 import java.nio.file.Paths
 
@@ -42,7 +35,14 @@ class ParsedPackagingOptions
  * @param packagingOptions the DSL packaging options, if `null`, it is interpreted as
  * an empty packaging options
  */
-    (packagingOptions: PackagingOptions = PackagingOptions()) {
+    constructor(
+        packagingOptions: SerializablePackagingOptions =
+            SerializablePackagingOptions(PackagingOptions())
+    )
+{
+
+    constructor(packagingOptions: PackagingOptions) :
+            this(SerializablePackagingOptions(packagingOptions))
 
     /**
      * Paths excluded.

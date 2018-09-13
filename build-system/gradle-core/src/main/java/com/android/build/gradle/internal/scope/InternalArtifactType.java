@@ -60,6 +60,8 @@ public enum InternalArtifactType implements ArtifactType {
     // --- java res ---
     // java processing output
     JAVA_RES,
+    // merged java resources
+    MERGED_JAVA_RES,
     // packaged java res for aar intermediate publishing
     LIBRARY_JAVA_RES(Kind.FILE),
 
@@ -287,8 +289,6 @@ public enum InternalArtifactType implements ArtifactType {
     FEATURE_DEX,
     // The class files for a module and all of its runtime dependencies.
     MODULE_AND_RUNTIME_DEPS_CLASSES,
-    // The java resources for a feature and all of its runtime dependencies.
-    FEATURE_AND_RUNTIME_DEPS_JAVA_RES,
 
     // The signing configuration the feature module should be using, which is taken from the
     // application module. Also used for androidTest variants (bug 118611693). This has already

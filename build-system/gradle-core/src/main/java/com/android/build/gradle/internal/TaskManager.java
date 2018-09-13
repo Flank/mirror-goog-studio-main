@@ -43,6 +43,7 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTA
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_PUBLISH_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JNI_LIBS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
@@ -64,6 +65,7 @@ import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
+import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.FeatureExtension;
@@ -88,6 +90,7 @@ import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
+import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -120,6 +123,7 @@ import com.android.build.gradle.internal.tasks.InstallVariantTask;
 import com.android.build.gradle.internal.tasks.JacocoTask;
 import com.android.build.gradle.internal.tasks.LintCompile;
 import com.android.build.gradle.internal.tasks.MergeAaptProguardFilesCreationAction;
+import com.android.build.gradle.internal.tasks.MergeJavaResourceTask;
 import com.android.build.gradle.internal.tasks.PackageForUnitTest;
 import com.android.build.gradle.internal.tasks.PrepareLintJar;
 import com.android.build.gradle.internal.tasks.PrepareLintJarForPublish;
@@ -595,9 +599,8 @@ public abstract class TaskManager {
                         .build());
 
         transformManager.addStream(
-                OriginalStream.builder(project, "ext-libs-res-plus-native")
-                        .addContentTypes(
-                                DefaultContentType.RESOURCES, ExtendedContentType.NATIVE_LIBS)
+                OriginalStream.builder(project, "ext-libs-native")
+                        .addContentTypes(ExtendedContentType.NATIVE_LIBS)
                         .addScope(Scope.EXTERNAL_LIBRARIES)
                         .setArtifactCollection(
                                 variantScope.getArtifactCollection(
@@ -606,7 +609,7 @@ public abstract class TaskManager {
 
         // and the android AAR also have a specific jni folder
         transformManager.addStream(
-                OriginalStream.builder(project, "ext-libs-native")
+                OriginalStream.builder(project, "ext-libs-jni")
                         .addContentTypes(TransformManager.CONTENT_NATIVE_LIBS)
                         .addScope(Scope.EXTERNAL_LIBRARIES)
                         .setArtifactCollection(
@@ -626,9 +629,8 @@ public abstract class TaskManager {
 
         // same for the resources which can be java-res or jni
         transformManager.addStream(
-                OriginalStream.builder(project, "sub-projects-res-plus-native")
-                        .addContentTypes(
-                                DefaultContentType.RESOURCES, ExtendedContentType.NATIVE_LIBS)
+                OriginalStream.builder(project, "sub-projects-native")
+                        .addContentTypes(ExtendedContentType.NATIVE_LIBS)
                         .addScope(Scope.SUB_PROJECTS)
                         .setArtifactCollection(
                                 variantScope.getArtifactCollection(
@@ -637,15 +639,15 @@ public abstract class TaskManager {
 
         // and the android library sub-modules also have a specific jni folder
         transformManager.addStream(
-                OriginalStream.builder(project, "sub-projects-native")
+                OriginalStream.builder(project, "sub-projects-jni")
                         .addContentTypes(TransformManager.CONTENT_NATIVE_LIBS)
                         .addScope(Scope.SUB_PROJECTS)
                         .setArtifactCollection(
                                 variantScope.getArtifactCollection(RUNTIME_CLASSPATH, MODULE, JNI))
                         .build());
 
-        // if variantScope.consumesFeatureJars(), add streams of classes and java resources from
-        // features or dynamic-features.
+        // if variantScope.consumesFeatureJars(), add streams of classes from features or
+        // dynamic-features.
         // The main dex list calculation for the bundle also needs the feature classes for reference
         // only
         if (variantScope.consumesFeatureJars() || variantScope.getNeedsMainDexListForBundle()) {
@@ -656,16 +658,6 @@ public abstract class TaskManager {
                             .setArtifactCollection(
                                     variantScope.getArtifactCollection(
                                             METADATA_VALUES, MODULE, METADATA_CLASSES))
-                            .build());
-        }
-        if (variantScope.consumesFeatureJars()) {
-            transformManager.addStream(
-                    OriginalStream.builder(project, "metadata-java-res")
-                            .addContentTypes(TransformManager.CONTENT_RESOURCES)
-                            .addScope(InternalScope.FEATURES)
-                            .setArtifactCollection(
-                                    variantScope.getArtifactCollection(
-                                            METADATA_VALUES, MODULE, METADATA_JAVA_RES))
                             .build());
         }
 
@@ -1093,8 +1085,9 @@ public abstract class TaskManager {
                     .addStream(
                             OriginalStream.builder(project, "final-r-classes")
                                     .addContentTypes(
-                                            DefaultContentType.CLASSES,
-                                            DefaultContentType.RESOURCES)
+                                            scope.getNeedsJavaResStreams()
+                                                    ? TransformManager.CONTENT_JARS
+                                                    : ImmutableSet.of(DefaultContentType.CLASSES))
                                     .addScope(Scope.PROJECT)
                                     .setFileCollection(rFiles)
                                     .build());
@@ -1253,7 +1246,7 @@ public abstract class TaskManager {
      * @return the list of scopes for which to merge the java resources.
      */
     @NonNull
-    protected abstract Set<? super Scope> getResMergingScopes(@NonNull VariantScope variantScope);
+    protected abstract Set<ScopeType> getResMergingScopes(@NonNull VariantScope variantScope);
 
     /**
      * Creates the java resources processing tasks.
@@ -1264,13 +1257,13 @@ public abstract class TaskManager {
      *   <li>{@link Sync} task configured with {@link ProcessJavaResTask.CreationAction} will sync
      *       all source folders into a single folder identified by {@link
      *       VariantScope#getSourceFoldersJavaResDestinationDir()}
-     *   <li>{@link MergeJavaResourcesTransform} will take the output of this merge plus the
+     *   <li>{@link MergeJavaResourceTask} will take the output of this merge plus the
      *       dependencies and will create a single merge with the {@link PackagingOptions} settings
      *       applied.
      * </ul>
      *
-     * This sets up only the Sync part. The transform is setup via {@link
-     * #createMergeJavaResTransform(VariantScope)}
+     * This sets up only the Sync part. The java res merging is setup via {@link
+     * #createMergeJavaResTask(VariantScope)}
      *
      * @param variantScope the variant scope we are operating under.
      */
@@ -1286,66 +1279,61 @@ public abstract class TaskManager {
                         new ProcessJavaResTask.CreationAction(variantScope, destinationDir));
 
         // create the task outputs for others to consume
-        BuildableArtifact javaRes =
-                variantScope
-                        .getArtifacts()
-                        .appendArtifact(
-                                InternalArtifactType.JAVA_RES,
-                                ImmutableList.of(destinationDir),
-                                processJavaResourcesTask.getName());
-
-        // create the stream generated from this task
         variantScope
-                .getTransformManager()
-                .addStream(
-                        OriginalStream.builder(project, "processed-java-res")
-                                .addContentType(DefaultContentType.RESOURCES)
-                                .addScope(Scope.PROJECT)
-                                .setFileCollection(javaRes.get())
-                                .build());
+                .getArtifacts()
+                .appendArtifact(
+                        InternalArtifactType.JAVA_RES,
+                        ImmutableList.of(destinationDir),
+                        processJavaResourcesTask.getName());
+
+        // create the stream generated from this task, but only if a library with custom transforms,
+        // in which case the custom transforms must be applied before java res merging.
+        if (variantScope.getNeedsJavaResStreams()) {
+            variantScope
+                    .getTransformManager()
+                    .addStream(
+                            OriginalStream.builder(project, "processed-java-res")
+                                    .addContentType(DefaultContentType.RESOURCES)
+                                    .addScope(Scope.PROJECT)
+                                    .setFileCollection(
+                                            variantScope.getArtifacts()
+                                                    .getFinalArtifactFiles(
+                                                            InternalArtifactType.JAVA_RES)
+                                                    .get())
+                                    .build());
+        }
     }
 
     /**
-     * Sets up the Merge Java Res transform.
+     * Sets up the Merge Java Res task.
      *
      * @param variantScope the variant scope we are operating under.
      * @see #createProcessJavaResTask(VariantScope)
      */
-    public void createMergeJavaResTransform(@NonNull VariantScope variantScope) {
+    public void createMergeJavaResTask(@NonNull VariantScope variantScope) {
         TransformManager transformManager = variantScope.getTransformManager();
 
         // Compute the scopes that need to be merged.
-        Set<? super Scope> mergeScopes = getResMergingScopes(variantScope);
+        Set<ScopeType> mergeScopes = getResMergingScopes(variantScope);
 
-        // Create the merge transform.
-        MergeJavaResourcesTransform mergeTransform =
-                new MergeJavaResourcesTransform(
-                        variantScope.getGlobalScope().getExtension().getPackagingOptions(),
-                        mergeScopes,
-                        DefaultContentType.RESOURCES,
-                        "mergeJavaRes",
-                        variantScope);
-        transformManager.addTransform(
-                taskFactory,
-                variantScope,
-                mergeTransform,
-                taskName -> {
-                    File mergeJavaResOutput =
-                            FileUtils.join(
-                                    globalScope.getIntermediatesDir(),
-                                    "transforms",
-                                    "mergeJavaRes",
-                                    variantScope.getVariantConfiguration().getDirName(),
-                                    "0.jar");
-                    variantScope
-                            .getArtifacts()
-                            .appendArtifact(
-                                    InternalArtifactType.FEATURE_AND_RUNTIME_DEPS_JAVA_RES,
-                                    ImmutableList.of(mergeJavaResOutput),
-                                    taskName);
-                },
-                null,
-                null);
+        taskFactory.register(new MergeJavaResourceTask.CreationAction(mergeScopes, variantScope));
+
+        // also add a new merged java res stream if needed.
+        if (variantScope.getNeedsMergedJavaResStream()) {
+            // FIXME the file collection does not survive Artifact transform/append b/110709212
+            transformManager.addStream(
+                    OriginalStream.builder(project, "merged-java-res")
+                            .addContentTypes(TransformManager.CONTENT_RESOURCES)
+                            .addScopes(mergeScopes)
+                            .setFileCollection(
+                                    variantScope
+                                            .getArtifacts()
+                                            .getFinalArtifactFiles(MERGED_JAVA_RES)
+                                            .get())
+                            .build());
+        }
+
+
     }
 
     public TaskProvider<AidlCompile> createAidlTask(@NonNull VariantScope scope) {
@@ -1414,7 +1402,9 @@ public abstract class TaskManager {
                                 // Need both classes and resources because some annotation
                                 // processors generate resources
                                 .addContentTypes(
-                                        DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
+                                        scope.getNeedsJavaResStreams()
+                                                ? TransformManager.CONTENT_JARS
+                                                : ImmutableSet.of(DefaultContentType.CLASSES))
                                 .addScope(Scope.PROJECT)
                                 .setFileCollection(javaOutputs)
                                 .build());
@@ -1423,7 +1413,9 @@ public abstract class TaskManager {
                 .addStream(
                         OriginalStream.builder(project, "pre-javac-generated-bytecode")
                                 .addContentTypes(
-                                        DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
+                                        scope.getNeedsJavaResStreams()
+                                                ? TransformManager.CONTENT_JARS
+                                                : ImmutableSet.of(DefaultContentType.CLASSES))
                                 .addScope(Scope.PROJECT)
                                 .setFileCollection(
                                         scope.getVariantData().getAllPreJavacGeneratedBytecode())
@@ -1433,7 +1425,9 @@ public abstract class TaskManager {
                 .addStream(
                         OriginalStream.builder(project, "post-javac-generated-bytecode")
                                 .addContentTypes(
-                                        DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
+                                        scope.getNeedsJavaResStreams()
+                                                ? TransformManager.CONTENT_JARS
+                                                : ImmutableSet.of(DefaultContentType.CLASSES))
                                 .addScope(Scope.PROJECT)
                                 .setFileCollection(
                                         scope.getVariantData().getAllPostJavacGeneratedBytecode())
@@ -1737,7 +1731,7 @@ public abstract class TaskManager {
         // This should be done automatically by the classpath
         //        TaskFactoryUtils.dependsOn(javacTask, testedVariantScope.getTaskContainer().getJavacTask());
 
-        createMergeJavaResTransform(variantScope);
+        // TODO: use merged java res for unit tests (bug 118690729)
 
         createRunUnitTestTask(variantScope);
 
@@ -2117,7 +2111,7 @@ public abstract class TaskManager {
         AndroidConfig extension = variantScope.getGlobalScope().getExtension();
 
         // Merge Java Resources.
-        createMergeJavaResTransform(variantScope);
+        createMergeJavaResTask(variantScope);
 
         // ----- External Transforms -----
         // apply all the external transforms.

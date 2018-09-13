@@ -96,7 +96,7 @@ class CacheabilityTest {
                     ":app:mergeDexDebug" /* Bug 120413559 */,
                     ":app:transformNativeLibsWithMergeJniLibsForDebug" /* Bug 74595223 */,
                     ":app:transformNativeLibsWithStripDebugSymbolForDebug" /* Bug 120414535 */,
-                    ":app:transformResourcesWithMergeJavaResForDebug" /* Bug 74595224 */,
+                    ":app:mergeDebugJavaResource" /* Bug 74595224 */,
                     ":app:packageDebug" /* Bug 74595859 */
                 ),
                 SKIPPED to setOf(

@@ -36,7 +36,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING
 import com.android.build.gradle.internal.scope.InternalArtifactType.DEFINED_ONLY_SYMBOL_LIST
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_BASE_MODULE_DECLARATION
 import com.android.build.gradle.internal.scope.InternalArtifactType.MODULE_AND_RUNTIME_DEPS_CLASSES
-import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_AND_RUNTIME_DEPS_JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_SET_METADATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_RESOURCE_PKG
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_TRANSITIVE_DEPS
@@ -49,6 +48,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_JNI
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_MANIFEST
 import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_PUBLISH_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_METADATA
+import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_INSTALLED_BASE_DECLARATION
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_FEATURE_DECLARATION
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT
@@ -197,7 +197,7 @@ class PublishingSpecs {
                 metadata(METADATA_FEATURE_DECLARATION, ArtifactType.METADATA_FEATURE_DECLARATION)
                 metadata(METADATA_FEATURE_MANIFEST, ArtifactType.METADATA_FEATURE_MANIFEST)
                 metadata(MODULE_AND_RUNTIME_DEPS_CLASSES, ArtifactType.METADATA_CLASSES)
-                metadata(FEATURE_AND_RUNTIME_DEPS_JAVA_RES, ArtifactType.METADATA_JAVA_RES)
+                metadata(MERGED_JAVA_RES, ArtifactType.METADATA_JAVA_RES)
                 metadata(CONSUMER_PROGUARD_FILE, ArtifactType.CONSUMER_PROGUARD_RULES)
                 metadata(AAPT_PROGUARD_FILE, ArtifactType.AAPT_PROGUARD_RULES)
                 metadata(FEATURE_TRANSITIVE_DEPS, ArtifactType.FEATURE_TRANSITIVE_DEPS)
@@ -281,7 +281,7 @@ class PublishingSpecs {
                 metadata(METADATA_FEATURE_DECLARATION, ArtifactType.METADATA_FEATURE_DECLARATION)
                 metadata(METADATA_FEATURE_MANIFEST, ArtifactType.METADATA_FEATURE_MANIFEST)
                 metadata(MODULE_AND_RUNTIME_DEPS_CLASSES, ArtifactType.METADATA_CLASSES)
-                metadata(FEATURE_AND_RUNTIME_DEPS_JAVA_RES, ArtifactType.METADATA_JAVA_RES)
+                metadata(MERGED_JAVA_RES, ArtifactType.METADATA_JAVA_RES)
                 metadata(CONSUMER_PROGUARD_FILE, ArtifactType.CONSUMER_PROGUARD_RULES)
                 metadata(AAPT_PROGUARD_FILE, ArtifactType.AAPT_PROGUARD_RULES)
                 metadata(FEATURE_TRANSITIVE_DEPS, ArtifactType.FEATURE_TRANSITIVE_DEPS)

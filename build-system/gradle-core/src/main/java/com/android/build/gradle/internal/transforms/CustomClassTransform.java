@@ -118,7 +118,7 @@ public class CustomClassTransform extends Transform {
 
     @NonNull
     @Override
-    public Set<QualifiedContent.Scope> getScopes() {
+    public Set<? super QualifiedContent.Scope> getScopes() {
         return TransformManager.SCOPE_FULL_PROJECT;
     }
 

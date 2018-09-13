@@ -39,6 +39,12 @@ public interface StreamFilter {
                             && !scopes.contains(QualifiedContent.Scope.PROVIDED_ONLY)
                             && !scopes.contains(QualifiedContent.Scope.TESTED_CODE);
 
+    StreamFilter PROJECT_RESOURCES =
+            (types, scopes) ->
+                    types.contains(QualifiedContent.DefaultContentType.RESOURCES)
+                            && scopes.size() == 1
+                            && scopes.contains(QualifiedContent.Scope.PROJECT);
+
     StreamFilter NATIVE_LIBS =
             (types, scopes) ->
                     types.contains(ExtendedContentType.NATIVE_LIBS)

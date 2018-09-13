@@ -85,7 +85,7 @@ class LibraryCacheabilityTest {
                     ":lib:transformNativeLibsWithMergeJniLibsForRelease",
                     ":lib:transformNativeLibsWithStripDebugSymbolForRelease",
                     ":lib:transformNativeLibsWithSyncJniLibsForRelease",
-                    ":lib:transformResourcesWithMergeJavaResForRelease"
+                    ":lib:mergeReleaseJavaResource"
                 ),
                 SKIPPED to setOf(
                     ":lib:packageReleaseRenderscript",
@@ -114,7 +114,7 @@ class LibraryCacheabilityTest {
             ":lib:transformNativeLibsWithMergeJniLibsForRelease" /* Bug 74595223 */,
             ":lib:transformNativeLibsWithStripDebugSymbolForRelease" /* Bug 120414535 */,
             ":lib:transformNativeLibsWithSyncJniLibsForRelease" /* Bug 121275531 */,
-            ":lib:transformResourcesWithMergeJavaResForRelease"  /* Bug 74595224 */
+            ":lib:mergeReleaseJavaResource" /* Bug 74595224 */
         )
 
         /**
