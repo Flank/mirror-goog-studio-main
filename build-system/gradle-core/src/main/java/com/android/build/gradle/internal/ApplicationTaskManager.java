@@ -29,6 +29,7 @@ import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
+import com.android.build.gradle.internal.feature.BundleAllClasses;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.res.Aapt2MavenUtils;
@@ -53,7 +54,6 @@ import com.android.build.gradle.internal.tasks.PerModuleBundleTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureApplicationIdsTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureInfoTask;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadataWriterTask;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarationWriterTask;
@@ -82,7 +82,6 @@ import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.resources.TextResourceFactory;
 import org.gradle.api.tasks.TaskProvider;
-import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /**
@@ -365,43 +364,7 @@ public class ApplicationTaskManager extends TaskManager {
         final FileCollection postJavacGeneratedBytecode =
                 scope.getVariantData().getAllPostJavacGeneratedBytecode();
 
-        // Create the classes artifact for uses by external test modules.
-        taskFactory.register(
-                new TaskCreationAction<Jar>() {
-                    private File outputFile;
-
-                    @NonNull
-                    @Override
-                    public String getName() {
-                        return scope.getTaskName("packageAppClasses");
-                    }
-
-                    @NonNull
-                    @Override
-                    public Class<Jar> getType() {
-                        return Jar.class;
-                    }
-
-                    @Override
-                    public void preConfigure(@NonNull String taskName) {
-                        super.preConfigure(taskName);
-                        outputFile =
-                                scope.getArtifacts()
-                                        .appendArtifact(
-                                                InternalArtifactType.APP_CLASSES,
-                                                taskName,
-                                                "classes.jar");
-                    }
-
-                    @Override
-                    public void configure(@NonNull Jar task) {
-                        task.from(javacOutput);
-                        task.from(preJavacGeneratedBytecode);
-                        task.from(postJavacGeneratedBytecode);
-                        task.setDestinationDir(outputFile.getParentFile());
-                        task.setArchiveName(outputFile.getName());
-                    }
-                });
+        taskFactory.register(new BundleAllClasses.CreationAction(scope));
 
         // create a lighter weight version for usage inside the same module (unit tests basically)
         ConfigurableFileCollection files =

@@ -45,9 +45,6 @@ public enum InternalArtifactType implements ArtifactType {
     // the packaged classes published by APK modules.
     // This is for external usage. For usage inside a module use ALL_CLASSES
     APP_CLASSES,
-    // the packaged classes published by feature modules.
-    // This is for external usage. For usage inside a module use ALL_CLASSES
-    FEATURE_CLASSES,
 
     // --- java res ---
     // java processing output

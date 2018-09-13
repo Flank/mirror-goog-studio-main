@@ -84,7 +84,7 @@ class BundleAllClassesTest {
         task = project.tasks.create("test", BundleAllClasses::class.java)
 
         Mockito.`when`(globalScope.project).thenReturn(project)
-        Mockito.`when`(artifacts.appendArtifact(InternalArtifactType.FEATURE_CLASSES,
+        Mockito.`when`(artifacts.appendArtifact(InternalArtifactType.APP_CLASSES,
             task.name, "classes.jar")).thenReturn(testFolder.newFile("classes.jar"))
         Mockito.`when`(artifacts.getArtifactFiles(InternalArtifactType.JAVAC))
             .thenReturn(javacClasses)

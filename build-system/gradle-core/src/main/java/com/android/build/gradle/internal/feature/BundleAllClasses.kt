@@ -42,8 +42,12 @@ import java.io.File
 import javax.inject.Inject
 
 /**
- * Task to jar all classes bundled in a feature so that dependent features can compile against those
- * classes without bundling them.
+ * Task to jar all classes in a project. This includes pre/post java classes, and compiled
+ * namespaced R class (if it exists).
+ *
+ * It is used for e.g.:
+ * - dependent features to compile against these classes without bundling them.
+ * - unit tests to compile and run them against these classes.
  */
 open class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecutor) : AndroidVariantTask() {
 
@@ -117,7 +121,7 @@ open class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecutor) 
             super.preConfigure(taskName)
 
             outputJar = variantScope.artifacts.appendArtifact(
-                InternalArtifactType.FEATURE_CLASSES, taskName, "classes.jar")
+                InternalArtifactType.APP_CLASSES, taskName, "classes.jar")
         }
 
         override fun configure(task: BundleAllClasses) {

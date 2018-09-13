@@ -37,7 +37,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.DEFINED_ONLY
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_BASE_MODULE_DECLARATION
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_AND_RUNTIME_DEPS_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_AND_RUNTIME_DEPS_JAVA_RES
-import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_SET_METADATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_RESOURCE_PKG
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_TRANSITIVE_DEPS
@@ -125,11 +124,10 @@ class PublishingSpecs {
                 // the JarTransform will convert it back to CLASSES
                 // FIXME: stop using TYPE_JAR for APK_CLASSES
                 api(APP_CLASSES, ArtifactType.JAR)
+                api(APP_CLASSES, ArtifactType.CLASSES)
                 api(APK_MAPPING, ArtifactType.APK_MAPPING)
 
                 api(FEATURE_RESOURCE_PKG, ArtifactType.FEATURE_RESOURCE_PKG)
-                // FIXME de-duplicate with APP_CLASSES?
-                api(FEATURE_CLASSES, ArtifactType.CLASSES)
 
                 // FIXME: need data binding artifacts as well for Dynamic apps.
 
@@ -173,10 +171,10 @@ class PublishingSpecs {
                 // the JarTransform will convert it back to CLASSES
                 // FIXME: stop using TYPE_JAR for APK_CLASSES
                 api(APP_CLASSES, ArtifactType.JAR)
+                api(APP_CLASSES, ArtifactType.CLASSES)
                 api(APK_MAPPING, ArtifactType.APK_MAPPING)
 
                 api(FEATURE_RESOURCE_PKG, ArtifactType.FEATURE_RESOURCE_PKG)
-                api(FEATURE_CLASSES, ArtifactType.CLASSES)
 
                 // FIXME: need data binding artifacts as well for Dynamic apps.
 
@@ -256,7 +254,7 @@ class PublishingSpecs {
                         ArtifactType.FEATURE_APPLICATION_ID_DECLARATION)
 
                 api(FEATURE_RESOURCE_PKG, ArtifactType.FEATURE_RESOURCE_PKG)
-                api(FEATURE_CLASSES, ArtifactType.CLASSES)
+                api(APP_CLASSES, ArtifactType.CLASSES)
                 api(RES_STATIC_LIBRARY, ArtifactType.RES_STATIC_LIBRARY)
                 api(COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
                         ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
@@ -280,7 +278,7 @@ class PublishingSpecs {
                 metadata(MODULE_BUNDLE, ArtifactType.MODULE_BUNDLE)
 
                 api(FEATURE_RESOURCE_PKG, ArtifactType.FEATURE_RESOURCE_PKG)
-                api(FEATURE_CLASSES, ArtifactType.CLASSES)
+                api(APP_CLASSES, ArtifactType.CLASSES)
                 api(RES_STATIC_LIBRARY, ArtifactType.RES_STATIC_LIBRARY)
                 api(COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
                     ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
