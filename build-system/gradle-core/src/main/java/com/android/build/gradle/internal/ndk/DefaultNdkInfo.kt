@@ -41,57 +41,11 @@ open class DefaultNdkInfo(private val rootDirectory: File) : NdkInfo {
 
     private val defaultToolchainVersions = Maps.newHashMap<Abi, String>()
 
-    override fun findLatestPlatformVersion(targetPlatformString: String): String? {
-
-        val androidVersion = AndroidTargetHash.getVersionFromHash(targetPlatformString)
-        var targetVersion: Int
-        targetVersion = if (androidVersion == null) {
-            Logging.getLogger(this.javaClass).warn(
-                "Unable to parse NDK platform version.  Try to find the latest instead."
-            )
-            Integer.MAX_VALUE
-        } else {
-            androidVersion.featureLevel
-        }
-        targetVersion = findTargetPlatformVersionOrLower(targetVersion)
-        return if (targetVersion == 0) {
-            null
-        } else "android-$targetVersion"
-    }
-
     override fun findSuitablePlatformVersion(
         abi: String,
         androidVersion: AndroidVersion?
     ): Int {
         return platformConfigurator.findSuitablePlatformVersion(abi, androidVersion)
-    }
-
-    // Will return 0 if no platform found
-    private fun findTargetPlatformVersionOrLower(targetVersion: Int): Int {
-        val platformDir = File(rootDirectory, "/platforms")
-        if (File(platformDir, "android-$targetVersion").exists()) {
-            return targetVersion
-        } else {
-            val platformSubDirs = platformDir.listFiles(FileFilter { it.isDirectory })
-            var highestVersion = 0
-            assert(platformSubDirs != null)
-            for (platform in platformSubDirs!!) {
-                if (platform.name.startsWith("android-")) {
-                    try {
-                        val version = Integer.parseInt(
-                            platform.name.substring("android-".length)
-                        )
-                        if (version in (highestVersion + 1)..(targetVersion - 1)) {
-                            highestVersion = version
-                        }
-                    } catch (ignore: NumberFormatException) {
-                        // Ignore unrecognized directories.
-                    }
-
-                }
-            }
-            return highestVersion
-        }
     }
 
     private fun getToolchainPrefix(abi: Abi): String {

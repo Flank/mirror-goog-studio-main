@@ -89,6 +89,9 @@ public final class AndroidVersion implements Comparable<AndroidVersion> {
     /** First version to use ART by default. */
     public static final AndroidVersion ART_RUNTIME = new AndroidVersion(21, null);
 
+    /** First version to support 64-bit ABIs. */
+    public static final AndroidVersion SUPPORTS_64_BIT = new AndroidVersion(VersionCodes.LOLLIPOP, null);
+
     /** First version to feature binder's common interface "cmd" for sending shell commands to services. */
     public static final AndroidVersion BINDER_CMD_AVAILABLE = new AndroidVersion(24, null);
 

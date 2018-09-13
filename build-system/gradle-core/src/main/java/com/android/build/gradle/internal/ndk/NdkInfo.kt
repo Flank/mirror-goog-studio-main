@@ -32,13 +32,6 @@ interface NdkInfo {
     val supported32BitsAbis: Collection<Abi>
 
     val supportedAbis: Collection<Abi>
-    /**
-     * Retrieve the newest supported version if the specified version is not supported.
-     *
-     * An older NDK may not support the specified compiledSdkVersion.  In that case, determine what
-     * is the newest supported version return it.
-     */
-    fun findLatestPlatformVersion(targetPlatformString: String): String?
 
     fun findSuitablePlatformVersion(
         abi: String,

@@ -18,7 +18,11 @@ package com.android.build.gradle.internal.ndk
 
 import com.android.build.gradle.internal.core.Abi
 import com.android.repository.Revision
+import com.android.sdklib.AndroidTargetHash
+import com.android.sdklib.AndroidVersion
+import org.gradle.api.logging.Logging
 import java.io.File
+import java.lang.RuntimeException
 
 /**
  * Represents a particular NDK version (like r19) along with a compileSdkVersion.
@@ -41,19 +45,12 @@ data class NdkPlatform(
     /**
      * Whether or not the NDK + compileSdkVersion supports 64 bit ABIs.
      */
-    private val supports64Bits : Boolean by lazy {
-        val platformVersion = ndkInfo.findLatestPlatformVersion(compileSdkVersion)
-        if (platformVersion == null) {
-            false
-        } else {
-            val targetString = platformVersion.replace("android-", "")
-            try {
-                Integer.parseInt(targetString) >= 20
-            } catch (ignored: NumberFormatException) {
-                // "android-L" supports 64-bits.
-                true
-            }
-        }
+    private val supports64Bits: Boolean by lazy {
+        // TODO: Why does this API care about compileSdkVersion anyway? Should this just be a check
+        // against whether the given NDK has 64-bit support?
+        val androidVersion = AndroidTargetHash.getVersionFromHash(compileSdkVersion)
+            ?: throw RuntimeException("Unable to parse compileSdkVersion: $compileSdkVersion")
+        androidVersion >= AndroidVersion.SUPPORTS_64_BIT
     }
 
     /**
