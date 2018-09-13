@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
 import com.android.build.gradle.internal.dsl.AaptOptions
-import com.android.build.gradle.internal.feature.BundleFeatureClasses
+import com.android.build.gradle.internal.feature.BundleAllClasses
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -38,7 +38,7 @@ import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
 
-class BundleFeatureClassesTest {
+class BundleAllClassesTest {
 
     @Mock private lateinit var scope: VariantScope
     @Mock private lateinit var artifacts: BuildArtifactsHolder
@@ -55,7 +55,7 @@ class BundleFeatureClassesTest {
     @get:Rule
     val testFolder = TemporaryFolder()
 
-    lateinit var task: BundleFeatureClasses
+    lateinit var task: BundleAllClasses
 
     @Before
     fun setUp() {
@@ -81,7 +81,7 @@ class BundleFeatureClassesTest {
         Mockito.`when`(scope.taskContainer).thenReturn(taskContainer)
         Mockito.`when`(taskContainer.preBuildTask).thenReturn(preBuildTask)
 
-        task = project.tasks.create("test", BundleFeatureClasses::class.java)
+        task = project.tasks.create("test", BundleAllClasses::class.java)
 
         Mockito.`when`(globalScope.project).thenReturn(project)
         Mockito.`when`(artifacts.appendArtifact(InternalArtifactType.FEATURE_CLASSES,
@@ -89,7 +89,7 @@ class BundleFeatureClassesTest {
         Mockito.`when`(artifacts.getArtifactFiles(InternalArtifactType.JAVAC))
             .thenReturn(javacClasses)
 
-        val configAction = BundleFeatureClasses.CreationAction(scope)
+        val configAction = BundleAllClasses.CreationAction(scope)
         configAction.preConfigure(task.name)
         configAction.configure(task)
     }

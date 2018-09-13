@@ -20,7 +20,7 @@ package com.android.build.gradle.internal;
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.internal.feature.BundleFeatureClasses;
+import com.android.build.gradle.internal.feature.BundleAllClasses;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.VariantFactory;
@@ -128,6 +128,6 @@ public class FeatureTaskManager extends ApplicationTaskManager {
     @Override
     protected void postJavacCreation(@NonNull VariantScope scope) {
         // Create the classes artifact for use by dependent features.
-        taskFactory.register(new BundleFeatureClasses.CreationAction(scope));
+        taskFactory.register(new BundleAllClasses.CreationAction(scope));
     }
 }
