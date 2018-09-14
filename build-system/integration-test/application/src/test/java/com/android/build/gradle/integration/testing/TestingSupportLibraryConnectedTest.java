@@ -77,7 +77,7 @@ public class TestingSupportLibraryConnectedTest {
                                 + "    }\n"
                                 + "}\n"));
 
-        helloWorldApp.addFile(
+        helloWorldApp.replaceFile(
                 new TestSourceFile(
                         "src/main",
                         "AndroidManifest.xml",
