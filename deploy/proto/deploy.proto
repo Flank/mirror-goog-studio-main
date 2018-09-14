@@ -27,5 +27,19 @@ message ClassDef {
 
 // A response detailing the results of a swap request.
 message SwapResponse {
+  enum Status {
+    UNKNOWN = 0;
+    OK = 1; // The swap completed successfully.
+    ERROR = 2; // The swap did not succeed.
+    NEED_ACTIVITY_RESTART = 3; // The agent is waiting on an activity restart.
+  }
 
+  // The pid of the process this agent was attached to.
+  int32 pid = 1;
+
+  // The state of the swap that was requested.
+  Status status = 2;
+
+  // Human-readable details of any errors that occurred.
+  string error_details = 3;
 }

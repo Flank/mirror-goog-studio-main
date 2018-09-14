@@ -23,29 +23,21 @@
 
 namespace swapper {
 
-Config Config::instance_;
-
-bool Config::ParseFromFile(const std::string& file_location) {
+std::unique_ptr<proto::SwapRequest> ParseFromFile(
+    const std::string& file_location) {
   std::fstream stream(file_location, std::ios::in | std::ios::binary);
   std::string request_string((std::istreambuf_iterator<char>(stream)),
-                            std::istreambuf_iterator<char>());
+                             std::istreambuf_iterator<char>());
   return ParseFromString(request_string);
 }
 
-bool Config::ParseFromString(const std::string& request_string) {
-  proto::SwapRequest* request = new proto::SwapRequest();
-  if (request->ParseFromString(request_string)) {
-    instance_ = Config(request);
-    return true;
+std::unique_ptr<proto::SwapRequest> ParseFromString(
+    const std::string& request_string) {
+  auto request = std::unique_ptr<proto::SwapRequest>(new proto::SwapRequest());
+  if (!request->ParseFromString(request_string)) {
+    request.reset();
   }
-  delete request;
-  return false;
-}
-
-const Config& Config::GetInstance() { return instance_; }
-
-const proto::SwapRequest& Config::GetSwapRequest() const {
-  return *swap_request_;
+  return request;
 }
 
 }  // namespace swapper

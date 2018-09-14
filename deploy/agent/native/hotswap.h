@@ -17,9 +17,9 @@
 #ifndef HOTSWAP_H
 #define HOTSWAP_H
 
+#include "deploy.pb.h"
 #include "jni.h"
 #include "jvmti.h"
-#include "deploy.pb.h"
 
 #include <string>
 
@@ -30,11 +30,15 @@ class HotSwap {
   HotSwap(jvmtiEnv* jvmti, JNIEnv* jni) : jvmti_(jvmti), jni_(jni) {}
 
   // Invokes JVMTI RedefineClasses with class definitions in the message.
-  bool DoHotSwap(const proto::SwapRequest& message) const;
+  bool DoHotSwap(const proto::SwapRequest& message,
+                 std::string* error_msg) const;
 
  private:
   jvmtiEnv* jvmti_;
   JNIEnv* jni_;
+
+  // Finds a class definition in the VM.
+  jclass FindClass(const std::string& name) const;
 };
 
 }  // namespace swapper
