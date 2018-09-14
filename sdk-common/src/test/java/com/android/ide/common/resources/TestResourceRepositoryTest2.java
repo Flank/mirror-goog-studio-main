@@ -131,7 +131,7 @@ public class TestResourceRepositoryTest2 extends TestCase {
         resourceSet.loadFromFiles(mLogger = new RecordingLogger());
         mResourceMerger.addDataSet(resourceSet);
 
-        mRepository = new TestResourceRepository();
+        mRepository = new TestResourceRepository(RES_AUTO);
         mRepository.update(mResourceMerger);
     }
 

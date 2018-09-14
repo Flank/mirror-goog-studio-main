@@ -20,10 +20,10 @@ import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
+import static com.android.ide.common.rendering.api.ResourceNamespace.RES_AUTO;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.resources.MergingException;
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceItem;
@@ -1006,16 +1006,13 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                 return null;
             }
 
-            TestResourceRepository repository = new TestResourceRepository();
+            TestResourceRepository repository = new TestResourceRepository(RES_AUTO);
             ILogger logger = new StdLogger(StdLogger.Level.INFO);
             ResourceMerger merger = new ResourceMerger(0);
 
             ResourceSet resourceSet =
                     new ResourceSet(
-                            project.getName(),
-                            ResourceNamespace.RES_AUTO,
-                            getProjectResourceLibraryName(),
-                            true) {
+                            project.getName(), RES_AUTO, getProjectResourceLibraryName(), true) {
                         @Override
                         protected void checkItems() {
                             // No checking in ProjectResources; duplicates can happen, but
@@ -1043,7 +1040,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                 // to do that here.
                 // TODO: namespaces
                 Map<ResourceType, ListMultimap<String, ResourceItem>> items =
-                        repository.getFullTable().row(ResourceNamespace.RES_AUTO);
+                        repository.getFullTable().row(RES_AUTO);
                 ListMultimap<String, ResourceItem> layouts = items.get(ResourceType.LAYOUT);
                 if (layouts != null) {
                     for (ResourceItem item : layouts.values()) {
@@ -1071,11 +1068,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                                 for (String id : ids) {
                                     ResourceMergerItem idItem =
                                             new ResourceMergerItem(
-                                                    id,
-                                                    ResourceNamespace.RES_AUTO,
-                                                    ResourceType.ID,
-                                                    null,
-                                                    null);
+                                                    id, RES_AUTO, ResourceType.ID, null, null);
                                     String qualifiers = source.getParentFileName();
                                     if (qualifiers.startsWith("layout-")) {
                                         qualifiers = qualifiers.substring("layout-".length());

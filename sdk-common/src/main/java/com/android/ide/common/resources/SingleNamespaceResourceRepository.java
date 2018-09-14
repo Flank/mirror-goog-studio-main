@@ -21,6 +21,7 @@ import com.android.ide.common.rendering.api.ResourceNamespace;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A resource repository that contains resources from a single app or library. This means that all
@@ -38,12 +39,12 @@ public interface SingleNamespaceResourceRepository extends ResourceRepository {
     /**
      * The package name from the manifest corresponding to this repository.
      *
-     * <p>When the project is namespaced, this corresponds to the namespace returned by {@link
-     * #getNamespace()}. In non-namespaced projects, the namespace is {@link
-     * ResourceNamespace#RES_AUTO} but the value returned from this method can be used when
+     * <p>When the project is namespaced, this corresponds to the namespace returned by
+     * {@link #getNamespace()}. In a non-namespaced project, the namespace is
+     * {@link ResourceNamespace#RES_AUTO} but the value returned from this method can be used when
      * automatically migrating a project to use namespaces.
      *
-     * @return the package name, or null in the unlikely case it cannot be determined.
+     * @return the package name, or null in the unlikely case it cannot be determined
      */
     @Nullable
     String getPackageName();
@@ -55,8 +56,8 @@ public interface SingleNamespaceResourceRepository extends ResourceRepository {
     }
 
     @Override
-    default void getLeafResourceRepositories(
-            @NonNull Collection<SingleNamespaceResourceRepository> result) {
-        result.add(this);
+    @NotNull
+    default Collection<SingleNamespaceResourceRepository> getLeafResourceRepositories() {
+        return Collections.singletonList(this);
     }
 }

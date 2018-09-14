@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.resources;
 
 import com.android.annotations.NonNull;
@@ -22,21 +21,25 @@ import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.resources.ResourceType;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import java.util.Collection;
-import java.util.Set;
 
 /** Simple repository implementation that just stores what the {@link ResourceMerger} emits. */
-public final class TestResourceRepository extends AbstractResourceRepository {
+public final class TestResourceRepository extends AbstractResourceRepository
+        implements SingleNamespaceResourceRepository {
+    private final ResourceNamespace namespace;
     private final ResourceTable resourceTable = new ResourceTable();
 
-    @NonNull
+    public TestResourceRepository(@NonNull ResourceNamespace namespace) {
+        this.namespace = namespace;
+    }
+
     @Override
+    @NonNull
     public ResourceTable getFullTable() {
         return resourceTable;
     }
 
-    @Nullable
     @Override
+    @Nullable
     protected ListMultimap<String, ResourceItem> getMap(
             @NonNull ResourceNamespace namespace, @NonNull ResourceType type, boolean create) {
         ListMultimap<String, ResourceItem> multimap = resourceTable.get(namespace, type);
@@ -47,16 +50,16 @@ public final class TestResourceRepository extends AbstractResourceRepository {
         return multimap;
     }
 
-    @NonNull
     @Override
-    public Set<ResourceNamespace> getNamespaces() {
-        return resourceTable.rowKeySet();
+    @NonNull
+    public ResourceNamespace getNamespace() {
+        return namespace;
     }
 
     @Override
-    public void getLeafResourceRepositories(
-            @NonNull Collection<SingleNamespaceResourceRepository> result) {
-        throw new UnsupportedOperationException();
+    @Nullable
+    public String getPackageName() {
+        return namespace.getPackageName();
     }
 
     public void update(@NonNull ResourceMerger merger) {

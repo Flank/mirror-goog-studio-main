@@ -17,7 +17,11 @@ package com.android.ide.common.resources;
 
 import static com.android.ide.common.rendering.api.ResourceNamespace.ANDROID;
 import static com.android.ide.common.rendering.api.ResourceNamespace.RES_AUTO;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.android.ide.common.rendering.api.AttrResourceValue;
 import com.android.ide.common.rendering.api.ResourceValue;
@@ -256,7 +260,7 @@ public class TestResourceRepositoryTest extends BaseTestCase {
         assertEquals(2, sets.size());
 
         // write the content in a repo.
-        TestResourceRepository repo = new TestResourceRepository();
+        TestResourceRepository repo = new TestResourceRepository(RES_AUTO);
         repo.update(resourceMerger);
 
         // checks the initial state of the repo
@@ -346,7 +350,7 @@ public class TestResourceRepositoryTest extends BaseTestCase {
         assertEquals(2, sets.size());
 
         // write the content in a repo.
-        TestResourceRepository repo = new TestResourceRepository();
+        TestResourceRepository repo = new TestResourceRepository(RES_AUTO);
         repo.update(resourceMerger);
 
         // checks the initial state of the repo
@@ -426,7 +430,7 @@ public class TestResourceRepositoryTest extends BaseTestCase {
         assertEquals(2, sets.size());
 
         // write the content in a repo.
-        TestResourceRepository repo = new TestResourceRepository();
+        TestResourceRepository repo = new TestResourceRepository(RES_AUTO);
         repo.update(resourceMerger);
 
         // checks the initial state of the repo
@@ -482,7 +486,7 @@ public class TestResourceRepositoryTest extends BaseTestCase {
         assertEquals(1, sets.size());
 
         // write the content in a repo.
-        TestResourceRepository repo = new TestResourceRepository();
+        TestResourceRepository repo = new TestResourceRepository(RES_AUTO);
         repo.update(resourceMerger);
 
         // checks the initial state of the repo
@@ -579,7 +583,7 @@ public class TestResourceRepositoryTest extends BaseTestCase {
             throws MergingException, IOException {
         ResourceMerger merger = getBaseResourceMerger();
 
-        TestResourceRepository repo = new TestResourceRepository();
+        TestResourceRepository repo = new TestResourceRepository(RES_AUTO);
 
         repo.update(merger);
         return repo;

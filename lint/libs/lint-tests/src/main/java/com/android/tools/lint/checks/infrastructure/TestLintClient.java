@@ -20,6 +20,7 @@ import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.DOT_KT;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
+import static com.android.ide.common.rendering.api.ResourceNamespace.RES_AUTO;
 import static com.android.tools.lint.checks.infrastructure.KotlinClasspathKt.findKotlinStdlibPath;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -956,7 +957,7 @@ public class TestLintClient extends LintCliClient {
             return null;
         }
 
-        TestResourceRepository repository = new TestResourceRepository();
+        TestResourceRepository repository = new TestResourceRepository(RES_AUTO);
         ILogger logger = new StdLogger(StdLogger.Level.INFO);
         ResourceMerger merger = new ResourceMerger(0);
 

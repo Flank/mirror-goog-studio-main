@@ -325,13 +325,12 @@ public class ResourceItemResolver extends RenderResources {
 
     /**
      * Interface implemented by clients of the {@link ResourceItemResolver} which allows it to
-     * lazily look up the project resources, the framework resources and optionally to provide a
-     * fully configured resource resolver, if any.
+     * lazily look up the project resources, the framework resources and optionally to provide
+     * a fully configured resource resolver, if any.
      */
     public interface ResourceProvider {
         @Nullable ResourceResolver getResolver(boolean createIfNecessary);
-        @Nullable
-        ResourceRepository getFrameworkResources();
+        @Nullable ResourceRepository getFrameworkResources();
         @Nullable ResourceRepository getAppResources();
     }
 }

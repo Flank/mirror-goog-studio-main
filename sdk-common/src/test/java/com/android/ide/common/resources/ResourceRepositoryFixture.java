@@ -104,7 +104,7 @@ public class ResourceRepositoryFixture {
         }
         merger.addDataSet(resourceSet);
 
-        TestResourceRepository repository = new TestResourceRepository();
+        TestResourceRepository repository = new TestResourceRepository(namespace);
         repository.update(merger);
 
         return repository;
