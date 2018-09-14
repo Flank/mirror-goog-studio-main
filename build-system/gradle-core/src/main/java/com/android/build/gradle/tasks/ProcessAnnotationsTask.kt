@@ -122,8 +122,6 @@ open class ProcessAnnotationsTask : JavaCompile(), VariantAwareTask {
         }
 
         override fun configure(task: ProcessAnnotationsTask) {
-            super.configure(task)
-
             val globalScope = variantScope.globalScope
             val project = globalScope.project
             val compileOptions = globalScope.extension.compileOptions
@@ -131,15 +129,30 @@ open class ProcessAnnotationsTask : JavaCompile(), VariantAwareTask {
                 .projectOptions
                 .get(BooleanOption.ENABLE_SEPARATE_ANNOTATION_PROCESSING)
 
+            // Only configure and execute this task when it is needed.
+            // We will need to check for non-incremental annotation processors as well, but we will
+            // do that later at execution time (see ProcessAnnotationsTask.compile) as we don't want
+            // to resolve annotation processors at configuration time.
+            val taskShouldBeExecuted =
+                !project.pluginManager.hasPlugin(KOTLIN_KAPT_PLUGIN_ID)
+                        && compileOptions.incremental ?: DEFAULT_INCREMENTAL_COMPILATION
+                        && separateAnnotationProcessingFlag
+            task.onlyIf { taskShouldBeExecuted }
+            if (!taskShouldBeExecuted) {
+                return
+            }
+
+            super.configure(task)
+
             // Configure properties that are shared between AndroidJavaCompile and
             // ProcessAnnotationTask
-            configureJavaCompile(task, variantScope)
+            task.configureProperties(variantScope)
 
             // Configure properties that are specific to ProcessAnnotationTask
             task.processorListFile =
                     variantScope.artifacts.getFinalArtifactFiles(ANNOTATION_PROCESSOR_LIST)
 
-            configureJavaCompileForAnnotationProcessing(task, variantScope)
+            task.configurePropertiesForAnnotationProcessing(variantScope)
 
             // Since this task does not output compiled classes, destinationDir will not be used.
             // However, Gradle requires this property to be set, so let's just set it to the
@@ -147,16 +160,6 @@ open class ProcessAnnotationsTask : JavaCompile(), VariantAwareTask {
             task.destinationDir = variantScope.annotationProcessorOutputDir
 
             task.dependsOn(variantScope.taskContainer.sourceGenTask)
-
-            // Only execute this task when it is needed.
-            // We will need to check for non-incremental annotation processors as well, but we will
-            // do that at execution time (see ProcessAnnotationsTask.compile) as we don't want to
-            // resolve annotation processors at configuration time.
-            task.onlyIf {
-                !project.pluginManager.hasPlugin(KOTLIN_KAPT_PLUGIN_ID)
-                        && compileOptions.incremental ?: DEFAULT_INCREMENTAL_COMPILATION
-                        && separateAnnotationProcessingFlag
-            }
         }
     }
 }

@@ -58,9 +58,10 @@ class IncrementalJavaCompileWithAPsTest(
         @Parameterized.Parameters(name = "kotlin_{0}_incrementalAPs_{1}_separateAP_{2}")
         @JvmStatic
         fun parameters() = listOf(
-            // When Kotlin is used, ProcessAnnotationsTask is either not available or skipped,
-            // AndroidJavaCompile performs compilation only and is already incremental, so testing
-            // one scenario is good enough as we want to save test execution time.
+            // When Kotlin is used, ProcessAnnotationsTask is not executed and AndroidJavaCompile
+            // performs incremental compilation regardless of the values of the other two
+            // parameters. Therefore, testing one scenario is good enough (as we want to save test
+            // execution time).
             arrayOf(true, false, false),
 
             // When Kotlin is not used, test all four scenarios

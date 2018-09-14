@@ -59,34 +59,34 @@ const val DEFAULT_INCREMENTAL_COMPILATION = true
  * Configures a [JavaCompile] task with necessary properties to perform compilation and/or
  * annotation processing.
  *
- * @see [configureJavaCompileForAnnotationProcessing]
+ * @see [JavaCompile.configurePropertiesForAnnotationProcessing]
  */
-fun configureJavaCompile(javaCompile: JavaCompile, scope: VariantScope) {
+fun JavaCompile.configureProperties(scope: VariantScope) {
     val compileOptions = scope.globalScope.extension.compileOptions
 
     // We can't just pass the collection directly, as the instanceof check in the incremental
     // compile doesn't work recursively currently, so every ConfigurableFileTree needs to be
     // directly in the source array.
     for (fileTree in scope.variantData.javaSources) {
-        javaCompile.source(fileTree)
+        this.source(fileTree)
     }
 
-    javaCompile.options.bootstrapClasspath = scope.bootClasspath
-    javaCompile.classpath = scope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES)
+    this.options.bootstrapClasspath = scope.bootClasspath
+    this.classpath = scope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES)
 
-    javaCompile.sourceCompatibility = compileOptions.sourceCompatibility.toString()
-    javaCompile.targetCompatibility = compileOptions.targetCompatibility.toString()
-    javaCompile.options.encoding = compileOptions.encoding
+    this.sourceCompatibility = compileOptions.sourceCompatibility.toString()
+    this.targetCompatibility = compileOptions.targetCompatibility.toString()
+    this.options.encoding = compileOptions.encoding
 }
 
 /**
  * Configures a [JavaCompile] task with necessary properties to perform annotation processing.
  *
- * @see [configureJavaCompile]
+ * @see [JavaCompile.configureProperties]
  */
-fun configureJavaCompileForAnnotationProcessing(javaCompile: JavaCompile, scope: VariantScope) {
+fun JavaCompile.configurePropertiesForAnnotationProcessing(scope: VariantScope) {
     val processorOptions = scope.variantConfiguration.javaCompileOptions.annotationProcessorOptions
-    val compileOptions = javaCompile.options
+    val compileOptions = this.options
 
     var processorPath = scope.getArtifactFileCollection(ANNOTATION_PROCESSOR, ALL, PROCESSED_JAR)
     if (java.lang.Boolean.TRUE == processorOptions.includeCompileClasspath) {
