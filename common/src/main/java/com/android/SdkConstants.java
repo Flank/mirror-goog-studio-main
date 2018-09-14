@@ -1718,7 +1718,7 @@ public final class SdkConstants {
 
     // Material BottomAppBar Attributes
     public static final String ATTR_FAB_ALIGNMENT_MODE = "fabAlignmentMode";
-    public static final String ATTR_FAB_ATTACHED = "fabAttached";
+    public static final String ATTR_FAB_ANIMATION_MODE = "fabAnimationMode";
     public static final String ATTR_FAB_CRADLE_MARGIN = "fabCradleMargin";
     public static final String ATTR_FAB_CRADLE_ROUNDED_CORNER_RADIUS =
             "fabCradleRoundedCornerRadius";
@@ -1764,11 +1764,11 @@ public final class SdkConstants {
     // Material Chip (ChipDrawable) Attributes
     public static final String ATTR_CHIP_TEXT = "chipText";
     public static final String ATTR_CHIP_ICON = "chipIcon";
-    public static final String ATTR_CHIP_ICON_ENABLED = "chipIconEnabled";
+    public static final String ATTR_CHIP_ICON_VISIBLE = "chipIconVisible";
     public static final String ATTR_CHECKED_ICON = "checkedIcon";
-    public static final String ATTR_CHECKED_ICON_ENABLED = "checkedIconEnabled";
+    public static final String ATTR_CHECKED_ICON_VISIBLE = "checkedIconVisible";
     public static final String ATTR_CLOSE_ICON = "closeIcon";
-    public static final String ATTR_CLOSE_ICON_ENABLED = "closeIconEnabled";
+    public static final String ATTR_CLOSE_ICON_VISIBLE = "closeIconVisible";
 
     // Material TabLayout Attributes
     public static final String ATTR_TAB_INDICATOR_HEIGHT = "tabIndicatorHeight";
