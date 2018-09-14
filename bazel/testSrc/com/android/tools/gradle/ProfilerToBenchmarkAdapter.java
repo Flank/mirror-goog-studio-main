@@ -23,6 +23,8 @@ import com.android.tools.perflogger.Analyzer;
 import com.android.tools.perflogger.Benchmark;
 import com.android.tools.perflogger.MedianWindowDeviationAnalyzer;
 import com.android.tools.perflogger.Metric;
+import com.google.wireless.android.sdk.stats.GarbageCollectionStats;
+import com.google.wireless.android.sdk.stats.GradleBuildMemorySample;
 import com.google.wireless.android.sdk.stats.GradleBuildProfile;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
@@ -107,6 +109,7 @@ public class ProfilerToBenchmarkAdapter {
                 new ConsolidatedRunTimings(
                         iterationStartTime,
                         profile.getBuildTime(),
+                        getGcTime(profile),
                         consolidate(profile, isTask, (it) -> it.getTask().getType()),
                         consolidate(profile, isTransform, (it) -> it.getTransform().getType()),
                         consolidate(profile, isConfiguration, (it) -> it.getType().getNumber())));
@@ -124,6 +127,8 @@ public class ProfilerToBenchmarkAdapter {
                             benchmarkRun.removeLowerOutliers, benchmarkRun.removeUpperOutliers));
         }
         Metric totalBuildTime = new Metric("TOTAL_BUILD_TIME");
+        Metric totalGcTime = new Metric("TOTAL_GC_TIME");
+        Metric totalBuildTimeNoGc = new Metric("TOTAL_BUILD_TIME_NO_GC");
 
         consolidatedTimingsPerIterations
                 .stream()
@@ -140,7 +145,17 @@ public class ProfilerToBenchmarkAdapter {
                                     new Metric.MetricSample(
                                             consolidatedRunTimings.startTime,
                                             consolidatedRunTimings.buildTime));
-
+                            totalGcTime.addSamples(
+                                    benchmark,
+                                    new Metric.MetricSample(
+                                            consolidatedRunTimings.startTime,
+                                            consolidatedRunTimings.gcTime));
+                            totalBuildTimeNoGc.addSamples(
+                                    benchmark,
+                                    new Metric.MetricSample(
+                                            consolidatedRunTimings.startTime,
+                                            consolidatedRunTimings.buildTime
+                                                    - consolidatedRunTimings.gcTime));
                             consolidatedRunTimings.timingsForTasks.forEach(
                                     (type, timing) ->
                                             addMetricSample(
@@ -164,6 +179,8 @@ public class ProfilerToBenchmarkAdapter {
         metrics.values().forEach(it -> setAnalyzers(it, benchmark));
         metrics.values().forEach(Metric::commit);
         totalBuildTime.commit();
+        totalGcTime.commit();
+        totalBuildTimeNoGc.commit();
     }
 
     /**
@@ -191,6 +208,26 @@ public class ProfilerToBenchmarkAdapter {
         } else {
             metric.setAnalyzers(benchmark, Arrays.asList(DEFAULT_ANALYZER));
         }
+    }
+
+
+    /**
+     * Returns the total garbage collection time from a gradle build, in milliseconds.
+     *
+     * @param profile the profile information
+     * @return the total garbage collection time from a gradle build, in milliseconds.
+     */
+    private static long getGcTime(GradleBuildProfile profile) {
+        long gcTime = 0;
+        for (GradleBuildMemorySample memorySample : profile.getMemorySampleList()) {
+            for (GarbageCollectionStats gcStats :
+                    memorySample.getJavaProcessStats().getGarbageCollectionStatsList()) {
+                if (gcStats.getGcTime() > 0) {
+                    gcTime += gcStats.getGcTime();
+                }
+            }
+        }
+        return gcTime;
     }
 
 
@@ -240,6 +277,7 @@ public class ProfilerToBenchmarkAdapter {
     private static final class ConsolidatedRunTimings {
         final long startTime;
         final long buildTime;
+        final long gcTime;
         final Map<Integer, Long> timingsForTasks;
         final Map<Integer, Long> timingsForTransforms;
         final Map<Integer, Long> timingsForConfiguration;
@@ -247,11 +285,13 @@ public class ProfilerToBenchmarkAdapter {
         private ConsolidatedRunTimings(
                 long startTime,
                 long buildTime,
+                long gcTime,
                 Map<Integer, Long> timingsForTasks,
                 Map<Integer, Long> timingsForTransforms,
                 Map<Integer, Long> timingsForConfiguration) {
             this.startTime = startTime;
             this.buildTime = buildTime;
+            this.gcTime = gcTime;
             this.timingsForTasks = timingsForTasks;
             this.timingsForTransforms = timingsForTransforms;
             this.timingsForConfiguration = timingsForConfiguration;
