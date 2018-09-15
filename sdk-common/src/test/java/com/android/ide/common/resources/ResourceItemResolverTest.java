@@ -91,7 +91,7 @@ public class ResourceItemResolverTest extends TestCase {
 
         TestResourceRepository appResources =
                 resourceFixture.createTestResources(
-                        ResourceNamespace.TODO(),
+                        ResourceNamespace.RES_AUTO,
                         new Object[] {
                             "layout/layout1.xml",
                             "<!--contents doesn't matter-->",

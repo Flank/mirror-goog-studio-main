@@ -76,7 +76,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
 
         return ResourceResolver.create(
                 ImmutableMap.of(
-                        RES_AUTO, projectResources, ResourceNamespace.ANDROID, frameworkResources),
+                        RES_AUTO, projectResources, ANDROID, frameworkResources),
                 theme);
     }
 
@@ -96,7 +96,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
     public void testBasicFunctionality() throws Exception {
         TestResourceRepository frameworkRepository =
                 resourceFixture.createTestResources(
-                        ResourceNamespace.ANDROID,
+                        ANDROID,
                         new Object[] {
                             "values/strings.xml",
                                     ""
@@ -136,7 +136,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
 
         TestResourceRepository projectRepository =
                 resourceFixture.createTestResources(
-                        ResourceNamespace.TODO(),
+                        RES_AUTO,
                         new Object[] {
                             "layout/layout1.xml",
                             "<!--contents doesn't matter-->",
@@ -206,15 +206,15 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                         });
 
         assertEquals(
-                Collections.singleton(ResourceNamespace.TODO()), projectRepository.getNamespaces());
+                Collections.singleton(RES_AUTO), projectRepository.getNamespaces());
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-es-land");
         assertNotNull(config);
         Map<ResourceType, ResourceValueMap> projectResources =
                 ResourceRepositoryUtil.getConfiguredResources(projectRepository, config)
-                        .row(ResourceNamespace.TODO());
+                        .row(RES_AUTO);
         Map<ResourceType, ResourceValueMap> frameworkResources =
                 ResourceRepositoryUtil.getConfiguredResources(frameworkRepository, config)
-                        .row(ResourceNamespace.ANDROID);
+                        .row(ANDROID);
         assertNotNull(projectResources);
         ResourceResolver resolver =
                 nonNamespacedResolver(projectResources, frameworkResources, "MyTheme");
@@ -382,7 +382,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                 "#ffffffff",
                 resolver.resolveResValue(
                                 new ResourceValueImpl(
-                                        ResourceNamespace.ANDROID,
+                                        ANDROID,
                                         ResourceType.STRING,
                                         "bright_foreground_dark",
                                         "@android:color/background_light"))
@@ -456,7 +456,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
     public void testMissingMessage() throws Exception {
         TestResourceRepository projectRepository =
                 resourceFixture.createTestResources(
-                        ResourceNamespace.TODO(),
+                        RES_AUTO,
                         new Object[] {
                             "values/colors.xml",
                             ""
@@ -469,12 +469,12 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                         });
 
         assertEquals(
-                Collections.singleton(ResourceNamespace.TODO()), projectRepository.getNamespaces());
+                Collections.singleton(RES_AUTO), projectRepository.getNamespaces());
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-es-land");
         assertNotNull(config);
         Map<ResourceType, ResourceValueMap> projectResources =
                 ResourceRepositoryUtil.getConfiguredResources(projectRepository, config)
-                        .row(ResourceNamespace.TODO());
+                        .row(RES_AUTO);
         assertNotNull(projectResources);
         ResourceResolver resolver =
                 nonNamespacedResolver(projectResources, projectResources, "MyTheme");
@@ -500,7 +500,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
     public void testLoop() throws Exception {
         TestResourceRepository projectRepository =
                 resourceFixture.createTestResources(
-                        ResourceNamespace.TODO(),
+                        RES_AUTO,
                         new Object[] {
                             "values/colors.xml",
                             ""
@@ -513,12 +513,12 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                         });
 
         assertEquals(
-                Collections.singleton(ResourceNamespace.TODO()), projectRepository.getNamespaces());
+                Collections.singleton(RES_AUTO), projectRepository.getNamespaces());
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-es-land");
         assertNotNull(config);
         Map<ResourceType, ResourceValueMap> projectResources =
                 ResourceRepositoryUtil.getConfiguredResources(projectRepository, config)
-                        .row(ResourceNamespace.TODO());
+                        .row(RES_AUTO);
         assertNotNull(projectResources);
         ResourceResolver resolver =
                 nonNamespacedResolver(projectResources, projectResources, "MyTheme");
@@ -562,7 +562,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
     public void testParentCycle() throws Exception {
         TestResourceRepository projectRepository =
                 resourceFixture.createTestResources(
-                        ResourceNamespace.TODO(),
+                        RES_AUTO,
                         new Object[] {
                             "values/styles.xml",
                                     ""
@@ -590,12 +590,12 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                                             + "</RelativeLayout>\n",
                         });
         assertEquals(
-                Collections.singleton(ResourceNamespace.TODO()), projectRepository.getNamespaces());
+                Collections.singleton(RES_AUTO), projectRepository.getNamespaces());
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-es-land");
         assertNotNull(config);
         Map<ResourceType, ResourceValueMap> projectResources =
                 ResourceRepositoryUtil.getConfiguredResources(projectRepository, config)
-                        .row(ResourceNamespace.TODO());
+                        .row(RES_AUTO);
         assertNotNull(projectResources);
         ResourceResolver resolver =
                 nonNamespacedResolver(projectResources, projectResources, "ButtonStyle");
@@ -635,7 +635,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
     public void testSetDeviceDefaults() throws Exception {
         TestResourceRepository frameworkRepository =
                 resourceFixture.createTestResources(
-                        ResourceNamespace.ANDROID,
+                        ANDROID,
                         new Object[] {
                             "values/themes.xml",
                                     ""
@@ -678,7 +678,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
 
         TestResourceRepository projectRepository =
                 resourceFixture.createTestResources(
-                        ResourceNamespace.TODO(),
+                        RES_AUTO,
                         new Object[] {
                             "values/themes.xml",
                             ""
@@ -690,15 +690,15 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                         });
 
         assertEquals(
-                Collections.singleton(ResourceNamespace.TODO()), projectRepository.getNamespaces());
+                Collections.singleton(RES_AUTO), projectRepository.getNamespaces());
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-es-land");
         assertNotNull(config);
         Map<ResourceType, ResourceValueMap> projectResources =
                 ResourceRepositoryUtil.getConfiguredResources(projectRepository, config)
-                        .row(ResourceNamespace.TODO());
+                        .row(RES_AUTO);
         Map<ResourceType, ResourceValueMap> frameworkResources =
                 ResourceRepositoryUtil.getConfiguredResources(frameworkRepository, config)
-                        .row(ResourceNamespace.ANDROID);
+                        .row(ANDROID);
         assertNotNull(projectResources);
         ResourceResolver lightResolver =
                 nonNamespacedResolver(projectResources, frameworkResources, "AppTheme");
@@ -748,7 +748,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
     public void testCycle() throws Exception {
         TestResourceRepository frameworkRepository =
                 resourceFixture.createTestResources(
-                        ResourceNamespace.ANDROID,
+                        ANDROID,
                         new Object[] {
                             "values/themes.xml",
                             ""
@@ -760,7 +760,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
 
         TestResourceRepository projectRepository =
                 resourceFixture.createTestResources(
-                        ResourceNamespace.TODO(),
+                        RES_AUTO,
                         new Object[] {
                             "values/themes.xml",
                             ""
@@ -774,15 +774,15 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                         });
 
         assertEquals(
-                Collections.singleton(ResourceNamespace.TODO()), projectRepository.getNamespaces());
+                Collections.singleton(RES_AUTO), projectRepository.getNamespaces());
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values");
         assertNotNull(config);
         Map<ResourceType, ResourceValueMap> projectResources =
                 ResourceRepositoryUtil.getConfiguredResources(projectRepository, config)
-                        .row(ResourceNamespace.TODO());
+                        .row(RES_AUTO);
         Map<ResourceType, ResourceValueMap> frameworkResources =
                 ResourceRepositoryUtil.getConfiguredResources(frameworkRepository, config)
-                        .row(ResourceNamespace.ANDROID);
+                        .row(ANDROID);
         assertNotNull(projectResources);
         ResourceResolver resolver =
                 nonNamespacedResolver(projectResources, frameworkResources, "AppTheme");
@@ -813,7 +813,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
     public void testCopy() throws Exception {
         TestResourceRepository frameworkRepository =
                 resourceFixture.createTestResources(
-                        ResourceNamespace.ANDROID,
+                        ANDROID,
                         new Object[] {
                             "values/themes.xml",
                             ""
@@ -824,7 +824,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                         });
         TestResourceRepository projectRepository =
                 resourceFixture.createTestResources(
-                        ResourceNamespace.TODO(),
+                        RES_AUTO,
                         new Object[] {
                             "values/colors.xml",
                                     ""
@@ -847,12 +847,12 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
         assertNotNull(config);
         Map<ResourceType, ResourceValueMap> projectResources =
                 ResourceRepositoryUtil.getConfiguredResources(projectRepository, config)
-                        .row(ResourceNamespace.TODO());
+                        .row(RES_AUTO);
         assertNotNull(projectResources);
 
         Map<ResourceType, ResourceValueMap> frameworkResources =
                 ResourceRepositoryUtil.getConfiguredResources(frameworkRepository, config)
-                        .row(ResourceNamespace.ANDROID);
+                        .row(ANDROID);
         assertNotNull(frameworkResources);
 
         ResourceResolver resolver =
@@ -890,7 +890,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
     public void testResolverIds() throws Exception {
         TestResourceRepository projectRepository =
                 resourceFixture.createTestResources(
-                        ResourceNamespace.TODO(),
+                        RES_AUTO,
                         new Object[] {
                             "layout/layout1.xml",
                             "<!--contents doesn't matter-->",
@@ -916,12 +916,12 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                                     + "</RelativeLayout>\n",
                         });
         assertEquals(
-                Collections.singleton(ResourceNamespace.TODO()), projectRepository.getNamespaces());
+                Collections.singleton(RES_AUTO), projectRepository.getNamespaces());
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-es-land");
         assertNotNull(config);
         Map<ResourceType, ResourceValueMap> projectResources =
                 ResourceRepositoryUtil.getConfiguredResources(projectRepository, config)
-                        .row(ResourceNamespace.TODO());
+                        .row(RES_AUTO);
         assertNotNull(projectResources);
 
         ResourceResolver resolver =
