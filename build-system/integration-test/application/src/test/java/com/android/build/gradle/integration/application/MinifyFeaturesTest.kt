@@ -685,88 +685,91 @@ class MinifyFeaturesTest(
         assertThat(mergedAaptProguardFile)
             .contains("-keep class com.example.lib2.FooView")
 
-        val baseModuleApk =
-            project.getSubproject("baseModule")
-                .let {
-                    when (multiApkMode) {
-                        MultiApkMode.DYNAMIC_APP -> it.getApk(apkType)
-                        MultiApkMode.INSTANT_APP -> it.getFeatureApk(apkType)
-                    }
+        project.getSubproject("baseModule")
+            .let {
+                when (multiApkMode) {
+                    MultiApkMode.DYNAMIC_APP -> it.getApk(apkType)
+                    MultiApkMode.INSTANT_APP -> it.getFeatureApk(apkType)
                 }
-        assertThat(baseModuleApk.file.toFile()).exists()
-        assertThat(baseModuleApk).containsClass("Lcom/example/baseModule/Main;")
-        assertThat(baseModuleApk).containsClass("Lcom/example/baseModule/a;")
-        assertThat(baseModuleApk).containsClass("Lcom/example/baseModule/EmptyClassToKeep;")
-        assertThat(baseModuleApk).containsClass("Lcom/example/lib1/EmptyClassToKeep;")
-        assertThat(baseModuleApk).containsClass("Lcom/example/lib1/a;")
-        assertThat(baseModuleApk).containsJavaResource("base_java_res.txt")
-        assertThat(baseModuleApk).containsJavaResource("other_java_res_1.txt")
-        assertThat(baseModuleApk).containsJavaResource("other_java_res_2.txt")
-        assertThat(baseModuleApk).containsJavaResource("lib1_java_res.txt")
-        assertThat(baseModuleApk).containsJavaResource("lib2_java_res.txt")
-        assertThat(baseModuleApk).doesNotContainClass(
-            "Lcom/example/baseFeature/EmptyClassToRemove;")
-        assertThat(baseModuleApk).doesNotContainClass("Lcom/example/lib1/EmptyClassToRemove;")
-        assertThat(baseModuleApk).doesNotContainClass("Lcom/example/lib2/EmptyClassKeep;")
-        assertThat(baseModuleApk).doesNotContainClass("Lcom/example/lib2/Lib2Class;")
-        assertThat(baseModuleApk).doesNotContainClass("Lcom/example/lib2/a;")
-        assertThat(baseModuleApk).doesNotContainClass("Lcom/example/otherFeature1/Main;")
-        assertThat(baseModuleApk).doesNotContainClass("Lcom/example/otherFeature2/Main;")
+            }.use { apk ->
+                assertThat(apk.file.toFile()).exists()
+                assertThat(apk).containsClass("Lcom/example/baseModule/Main;")
+                assertThat(apk).containsClass("Lcom/example/baseModule/a;")
+                assertThat(apk).containsClass("Lcom/example/baseModule/EmptyClassToKeep;")
+                assertThat(apk).containsClass("Lcom/example/lib1/EmptyClassToKeep;")
+                assertThat(apk).containsClass("Lcom/example/lib1/a;")
+                assertThat(apk).containsJavaResource("base_java_res.txt")
+                assertThat(apk).containsJavaResource("other_java_res_1.txt")
+                assertThat(apk).containsJavaResource("other_java_res_2.txt")
+                assertThat(apk).containsJavaResource("lib1_java_res.txt")
+                assertThat(apk).containsJavaResource("lib2_java_res.txt")
+                assertThat(apk).doesNotContainClass("Lcom/example/baseFeature/EmptyClassToRemove;")
+                assertThat(apk).doesNotContainClass("Lcom/example/lib1/EmptyClassToRemove;")
+                assertThat(apk).doesNotContainClass("Lcom/example/lib2/EmptyClassKeep;")
+                assertThat(apk).doesNotContainClass("Lcom/example/lib2/Lib2Class;")
+                assertThat(apk).doesNotContainClass("Lcom/example/lib2/a;")
+                assertThat(apk).doesNotContainClass("Lcom/example/otherFeature1/Main;")
+                assertThat(apk).doesNotContainClass("Lcom/example/otherFeature2/Main;")
+            }
 
-        val otherFeature1Apk =
-            project.getSubproject(":foo:otherFeature1")
-                .let {
-                    when (multiApkMode) {
-                        MultiApkMode.DYNAMIC_APP -> it.getApk(apkType)
-                        MultiApkMode.INSTANT_APP -> it.getFeatureApk(apkType)
-                    }
+        project.getSubproject(":foo:otherFeature1")
+            .let {
+                when (multiApkMode) {
+                    MultiApkMode.DYNAMIC_APP -> it.getApk(apkType)
+                    MultiApkMode.INSTANT_APP -> it.getFeatureApk(apkType)
                 }
-        assertThat(otherFeature1Apk.file.toFile()).exists()
-        assertThat(otherFeature1Apk).containsClass("Lcom/example/otherFeature1/Main;")
-        assertThat(otherFeature1Apk).containsClass("Lcom/example/otherFeature1/EmptyClassToKeep;")
-        assertThat(otherFeature1Apk).containsClass("Lcom/example/lib2/EmptyClassToKeep;")
-        assertThat(otherFeature1Apk).containsClass("Lcom/example/lib2/FooView;")
-        assertThat(otherFeature1Apk).containsClass("Lcom/example/lib2/a;")
-        assertThat(otherFeature1Apk).doesNotContainJavaResource("other_java_res_1.txt")
-        assertThat(otherFeature1Apk).doesNotContainClass(
-            "Lcom/example/otherFeature1/EmptyClassToRemove;")
-        assertThat(otherFeature1Apk).doesNotContainClass("Lcom/example/lib2/EmptyClassToRemove;")
-        assertThat(otherFeature1Apk).doesNotContainClass("Lcom/example/lib1/EmptyClassToKeep;")
-        assertThat(otherFeature1Apk).doesNotContainClass("Lcom/example/lib1/Lib1Class;")
-        assertThat(otherFeature1Apk).doesNotContainClass("Lcom/example/lib1/a;")
-        assertThat(otherFeature1Apk).doesNotContainClass("Lcom/example/baseModule/Main;")
-        assertThat(otherFeature1Apk).doesNotContainClass("Lcom/example/otherFeature2/Main;")
+            }.use { apk ->
+                assertThat(apk.file.toFile()).exists()
+                assertThat(apk).containsClass("Lcom/example/otherFeature1/Main;")
+                assertThat(apk).containsClass(
+                    "Lcom/example/otherFeature1/EmptyClassToKeep;"
+                )
+                assertThat(apk).containsClass("Lcom/example/lib2/EmptyClassToKeep;")
+                assertThat(apk).containsClass("Lcom/example/lib2/FooView;")
+                assertThat(apk).containsClass("Lcom/example/lib2/a;")
+                assertThat(apk).doesNotContainJavaResource("other_java_res_1.txt")
+                assertThat(apk).doesNotContainClass(
+                    "Lcom/example/otherFeature1/EmptyClassToRemove;"
+                )
+                assertThat(apk).doesNotContainClass("Lcom/example/lib2/EmptyClassToRemove;")
+                assertThat(apk).doesNotContainClass("Lcom/example/lib1/EmptyClassToKeep;")
+                assertThat(apk).doesNotContainClass("Lcom/example/lib1/Lib1Class;")
+                assertThat(apk).doesNotContainClass("Lcom/example/lib1/a;")
+                assertThat(apk).doesNotContainClass("Lcom/example/baseModule/Main;")
+                assertThat(apk).doesNotContainClass("Lcom/example/otherFeature2/Main;")
+            }
 
-        val otherFeature2Apk =
-            project.getSubproject(otherFeature2GradlePath)
-                .let {
-                    when (multiApkMode) {
-                        MultiApkMode.DYNAMIC_APP -> it.getApk(apkType)
-                        MultiApkMode.INSTANT_APP -> it.getFeatureApk(apkType)
-                    }
+        project.getSubproject(otherFeature2GradlePath)
+            .let {
+                when (multiApkMode) {
+                    MultiApkMode.DYNAMIC_APP -> it.getApk(apkType)
+                    MultiApkMode.INSTANT_APP -> it.getFeatureApk(apkType)
                 }
-        assertThat(otherFeature2Apk.file.toFile()).exists()
-        assertThat(otherFeature2Apk).containsClass("Lcom/example/otherFeature2/Main;")
-        assertThat(otherFeature2Apk).doesNotContainJavaResource("other_java_res_2.txt")
-        assertThat(otherFeature2Apk).doesNotContainClass("Lcom/example/lib1/EmptyClassToKeep;")
-        assertThat(otherFeature2Apk).doesNotContainClass("Lcom/example/lib2/EmptyClassToKeep;")
-        assertThat(otherFeature2Apk).doesNotContainClass("Lcom/example/baseModule/Main;")
-        assertThat(otherFeature2Apk).doesNotContainClass("Lcom/example/otherFeature1/Main;")
+            }.use { apk ->
+                assertThat(apk.file.toFile()).exists()
+                assertThat(apk).containsClass("Lcom/example/otherFeature2/Main;")
+                assertThat(apk).doesNotContainJavaResource("other_java_res_2.txt")
+                assertThat(apk).doesNotContainClass("Lcom/example/lib1/EmptyClassToKeep;")
+                assertThat(apk).doesNotContainClass("Lcom/example/lib2/EmptyClassToKeep;")
+                assertThat(apk).doesNotContainClass("Lcom/example/baseModule/Main;")
+                assertThat(apk).doesNotContainClass("Lcom/example/otherFeature1/Main;")
+            }
 
         if (multiApkMode == MultiApkMode.INSTANT_APP) {
-            val appApk = project.getSubproject("app").getApk(apkType)
-            assertThat(appApk.file.toFile()).exists()
-            assertThat(appApk).containsClass("Lcom/example/baseModule/Main;")
-            assertThat(appApk).containsClass("Lcom/example/baseModule/EmptyClassToKeep;")
-            assertThat(appApk).containsClass("Lcom/example/lib1/EmptyClassToKeep;")
-            assertThat(appApk).containsClass("Lcom/example/otherFeature1/Main;")
-            assertThat(appApk).containsClass("Lcom/example/otherFeature1/EmptyClassToKeep;")
-            assertThat(appApk).containsClass("Lcom/example/lib2/EmptyClassToKeep;")
-            assertThat(appApk).containsClass("Lcom/example/lib2/FooView;")
-            assertThat(appApk).containsClass("Lcom/example/otherFeature2/Main;")
-            assertThat(appApk).doesNotContainClass("Lcom/example/baseModule/EmptyClassToRemove;")
-            assertThat(appApk).doesNotContainClass("Lcom/example/lib2/EmptyClassToRemove;")
-            assertThat(appApk).doesNotContainClass("Lcom/example/lib1/EmptyClassToRemove;")
+            project.getSubproject("app").getApk(apkType).use { apk ->
+                assertThat(apk.file.toFile()).exists()
+                assertThat(apk).containsClass("Lcom/example/baseModule/Main;")
+                assertThat(apk).containsClass("Lcom/example/baseModule/EmptyClassToKeep;")
+                assertThat(apk).containsClass("Lcom/example/lib1/EmptyClassToKeep;")
+                assertThat(apk).containsClass("Lcom/example/otherFeature1/Main;")
+                assertThat(apk).containsClass("Lcom/example/otherFeature1/EmptyClassToKeep;")
+                assertThat(apk).containsClass("Lcom/example/lib2/EmptyClassToKeep;")
+                assertThat(apk).containsClass("Lcom/example/lib2/FooView;")
+                assertThat(apk).containsClass("Lcom/example/otherFeature2/Main;")
+                assertThat(apk).doesNotContainClass("Lcom/example/baseModule/EmptyClassToRemove;")
+                assertThat(apk).doesNotContainClass("Lcom/example/lib2/EmptyClassToRemove;")
+                assertThat(apk).doesNotContainClass("Lcom/example/lib1/EmptyClassToRemove;")
+            }
         }
     }
 

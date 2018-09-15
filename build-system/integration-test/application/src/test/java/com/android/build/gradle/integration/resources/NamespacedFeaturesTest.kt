@@ -302,7 +302,6 @@ class NamespacedFeaturesTest {
                     .dependency(app, otherFeature2)
                     .dependency(app, notNamespacedFeature)
                     .dependency(otherFeature2, otherFeature1)
-                    // TODO: (b/73948401) get rid of direct dependency of otherFeature2 on baseFeature.
                     .dependency(otherFeature2, baseFeature)
                     .dependency(otherFeature2, lib3)
                     .dependency(notNamespacedFeature, otherFeature1)
@@ -343,54 +342,58 @@ class NamespacedFeaturesTest {
         val lib2DotDrawablePath = "res/drawable/com.example.lib2\$dot.xml"
         val lib3DotDrawablePath = "res/drawable/com.example.lib3\$dot.xml"
 
-        val otherFeature1Apk =
-                project.getSubproject(":otherFeature1")
-                        .getFeatureApk(GradleTestProject.ApkType.DEBUG)
-        assertThat(otherFeature1Apk).exists()
-        assertThat(otherFeature1Apk).doesNotContain(lib1DotDrawablePath)
-        assertThat(otherFeature1Apk).contains(lib2DotDrawablePath)
-        assertThat(otherFeature1Apk).containsClass("Lcom/example/otherFeature1/R;")
-        assertThat(otherFeature1Apk).containsClass("Lcom/example/otherFeature1/R\$string;")
-        assertThat(otherFeature1Apk.mainDexFile.get().getFields("Lcom/example/otherFeature1/R\$string;"))
-            .containsExactly(
-                "public static final I otherFeature1String",
-                "public static final I baseFeatureString",
-                "public static final I lib2String",
-                "public static final I lib1String")
-        assertThat(otherFeature1Apk).doesNotContainClass("Lcom/example/lib1/R;")
-        assertThat(otherFeature1Apk).doesNotContainClass("Lcom/example/lib1/R\$string;")
-        assertThat(otherFeature1Apk).doesNotContainClass("Lcom/example/baseFeature/R;")
-        assertThat(otherFeature1Apk).doesNotContainClass("Lcom/example/baseFeature/R\$string;")
-        assertThat(otherFeature1Apk).containsClass("Lcom/example/lib2/R;")
-        assertThat(otherFeature1Apk).containsClass("Lcom/example/lib2/R\$string;")
+        project.getSubproject(":otherFeature1")
+            .getFeatureApk(GradleTestProject.ApkType.DEBUG)
+            .use { apk ->
+                assertThat(apk).exists()
+                assertThat(apk).doesNotContain(lib1DotDrawablePath)
+                assertThat(apk).contains(lib2DotDrawablePath)
+                assertThat(apk).containsClass("Lcom/example/otherFeature1/R;")
+                assertThat(apk).containsClass("Lcom/example/otherFeature1/R\$string;")
+                assertThat(apk.mainDexFile.get().getFields("Lcom/example/otherFeature1/R\$string;"))
+                    .containsExactly(
+                        "public static final I otherFeature1String",
+                        "public static final I baseFeatureString",
+                        "public static final I lib2String",
+                        "public static final I lib1String"
+                    )
+                assertThat(apk).doesNotContainClass("Lcom/example/lib1/R;")
+                assertThat(apk).doesNotContainClass("Lcom/example/lib1/R\$string;")
+                assertThat(apk).doesNotContainClass("Lcom/example/baseFeature/R;")
+                assertThat(apk).doesNotContainClass("Lcom/example/baseFeature/R\$string;")
+                assertThat(apk).containsClass("Lcom/example/lib2/R;")
+                assertThat(apk).containsClass("Lcom/example/lib2/R\$string;")
+            }
 
-        val otherFeature2Apk =
-                project.getSubproject(":otherFeature2")
-                        .getFeatureApk(GradleTestProject.ApkType.DEBUG)
-        assertThat(otherFeature2Apk).exists()
-        assertThat(otherFeature2Apk).doesNotContain(lib1DotDrawablePath)
-        assertThat(otherFeature2Apk).doesNotContain(lib2DotDrawablePath)
-        assertThat(otherFeature2Apk).contains(lib3DotDrawablePath)
-        assertThat(otherFeature2Apk).containsClass("Lcom/example/otherFeature2/R;")
-        assertThat(otherFeature2Apk).containsClass("Lcom/example/otherFeature2/R\$string;")
-        assertThat(otherFeature2Apk.mainDexFile.get().getFields("Lcom/example/otherFeature2/R\$string;"))
-            .containsExactly(
-                "public static final I otherFeature2String",
-                "public static final I otherFeature1String",
-                "public static final I baseFeatureString",
-                "public static final I lib3String",
-                "public static final I lib2String",
-                "public static final I lib1String")
-        assertThat(otherFeature2Apk).doesNotContainClass("Lcom/example/lib1/R;")
-        assertThat(otherFeature2Apk).doesNotContainClass("Lcom/example/lib1/R\$string;")
-        assertThat(otherFeature2Apk).doesNotContainClass("Lcom/example/lib2/R;")
-        assertThat(otherFeature2Apk).doesNotContainClass("Lcom/example/lib2/R\$string;")
-        assertThat(otherFeature2Apk).doesNotContainClass("Lcom/example/baseFeature/R;")
-        assertThat(otherFeature2Apk).doesNotContainClass("Lcom/example/baseFeature/R\$string;")
-        assertThat(otherFeature2Apk).doesNotContainClass("Lcom/example/otherFeature1/R;")
-        assertThat(otherFeature2Apk).doesNotContainClass("Lcom/example/otherFeature1/R\$string;")
-        assertThat(otherFeature2Apk).containsClass("Lcom/example/lib3/R;")
-        assertThat(otherFeature2Apk).containsClass("Lcom/example/lib3/R\$string;")
+        project.getSubproject(":otherFeature2")
+            .getFeatureApk(GradleTestProject.ApkType.DEBUG)
+            .use { apk ->
+                assertThat(apk).exists()
+                assertThat(apk).doesNotContain(lib1DotDrawablePath)
+                assertThat(apk).doesNotContain(lib2DotDrawablePath)
+                assertThat(apk).contains(lib3DotDrawablePath)
+                assertThat(apk).containsClass("Lcom/example/otherFeature2/R;")
+                assertThat(apk).containsClass("Lcom/example/otherFeature2/R\$string;")
+                assertThat(apk.mainDexFile.get().getFields("Lcom/example/otherFeature2/R\$string;"))
+                    .containsExactly(
+                        "public static final I otherFeature2String",
+                        "public static final I otherFeature1String",
+                        "public static final I baseFeatureString",
+                        "public static final I lib3String",
+                        "public static final I lib2String",
+                        "public static final I lib1String"
+                    )
+                assertThat(apk).doesNotContainClass("Lcom/example/lib1/R;")
+                assertThat(apk).doesNotContainClass("Lcom/example/lib1/R\$string;")
+                assertThat(apk).doesNotContainClass("Lcom/example/lib2/R;")
+                assertThat(apk).doesNotContainClass("Lcom/example/lib2/R\$string;")
+                assertThat(apk).doesNotContainClass("Lcom/example/baseFeature/R;")
+                assertThat(apk).doesNotContainClass("Lcom/example/baseFeature/R\$string;")
+                assertThat(apk).doesNotContainClass("Lcom/example/otherFeature1/R;")
+                assertThat(apk).doesNotContainClass("Lcom/example/otherFeature1/R\$string;")
+                assertThat(apk).containsClass("Lcom/example/lib3/R;")
+                assertThat(apk).containsClass("Lcom/example/lib3/R\$string;")
+            }
 
 
         // check the base feature declared the list of features and their associated IDs.

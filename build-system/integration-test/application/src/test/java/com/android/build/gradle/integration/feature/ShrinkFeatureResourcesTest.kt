@@ -60,7 +60,10 @@ class ShrinkFeatureResourcesTest(val shrinker: CodeShrinker) {
         project.executor()
             .with(BooleanOption.ENABLE_R8, shrinker == CodeShrinker.R8)
             .run("clean", "assembleRelease")
-        val releaseApk = project.getSubproject(":feature").getFeatureApk(GradleTestProject.ApkType.RELEASE)
-        assertThat(releaseApk.file).isFile()
+        project.getSubproject(":feature")
+            .getFeatureApk(GradleTestProject.ApkType.RELEASE)
+            .use { apk ->
+                assertThat(apk.file).isFile()
+            }
     }
 }
