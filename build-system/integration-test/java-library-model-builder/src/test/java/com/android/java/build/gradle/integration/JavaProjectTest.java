@@ -24,9 +24,11 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleJavaLi
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.java.model.JavaLibrary;
 import com.android.java.model.JavaProject;
+import com.android.java.model.LibraryVersion;
 import com.android.java.model.SourceSet;
 import com.android.utils.FileUtils;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -120,28 +122,38 @@ public class JavaProjectTest {
         Collection<JavaLibrary> dependencies = sourceSetsByName.get("main")
                 .getCompileClasspathDependencies();
         Set<String> projectDependencies = new HashSet<>();
-        Set<String> jarDependencies = new HashSet<>();
+        Map<String, JavaLibrary> jarDependencies = new HashMap<>();
 
         for (JavaLibrary javaLibrary : dependencies) {
             if (javaLibrary.getProject() != null) {
                 projectDependencies.add(javaLibrary.getName());
             } else {
-                jarDependencies.add(javaLibrary.getName());
+                jarDependencies.put(javaLibrary.getName(), javaLibrary);
             }
         }
         // Check project dependency.
         assertThat(projectDependencies).contains(javaModule1.substring(1));
 
         // Check jar dependency from local directory.
-        assertThat(jarDependencies).contains("local jar - protobuf-java-3.0.0.jar");
+        assertThat(jarDependencies).containsKey("local jar - protobuf-java-3.0.0.jar");
 
         // Check unresolved jar dependency.
-        assertThat(jarDependencies).contains("unresolved dependency - unresolved no-exit 1.0");
+        assertThat(jarDependencies).containsKey("unresolved dependency - unresolved no-exit 1.0");
 
         // Check resolved direct jar dependency.
-        assertThat(jarDependencies).contains("guava");
+        assertThat(jarDependencies).containsKey("guava");
+        LibraryVersion version = jarDependencies.get("guava").getLibraryVersion();
+        assertThat(version).isNotNull();
+        assertThat(version.getGroup()).isEqualTo("com.google.guava");
+        assertThat(version.getName()).isEqualTo("guava");
+        assertThat(version.getVersion()).isEqualTo("19.0");
 
         // Check resolved transitive jar dependency.
-        assertThat(jarDependencies).contains("jsr305");
+        assertThat(jarDependencies).containsKey("jsr305");
+        version = jarDependencies.get("jsr305").getLibraryVersion();
+        assertThat(version).isNotNull();
+        assertThat(version.getGroup()).isEqualTo("com.google.code.findbugs");
+        assertThat(version.getName()).isEqualTo("jsr305");
+        assertThat(version.getVersion()).isEqualTo("1.3.9");
     }
 }

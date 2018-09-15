@@ -73,4 +73,12 @@ public interface JavaLibrary {
      */
     @Nullable
     File getJavadoc();
+
+    /**
+     * Returns the module version for external dependency.
+     *
+     * @return {@link LibraryVersion} for this dependency.
+     */
+    @Nullable
+    LibraryVersion getLibraryVersion();
 }

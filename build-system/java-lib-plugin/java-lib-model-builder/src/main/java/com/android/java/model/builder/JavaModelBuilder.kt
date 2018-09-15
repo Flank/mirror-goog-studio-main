@@ -22,6 +22,7 @@ import com.android.java.model.JavaProject
 import com.android.java.model.SourceSet
 import com.android.java.model.impl.JavaLibraryImpl
 import com.android.java.model.impl.JavaProjectImpl
+import com.android.java.model.impl.LibraryVersionImpl
 import com.android.java.model.impl.SourceSetImpl
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ProjectDependency
@@ -150,14 +151,18 @@ class JavaModelBuilder : ToolingModelBuilder {
       lenientConfiguration.getArtifacts(Specs.satisfyAll()).mapTo(javaLibraries) { artifact ->
         val projectPath = getProjectPath(project, artifact)
         val buildId = if (projectPath == null) null else getBuildId(project, artifact, buildMapping)
-        JavaLibraryImpl(projectPath, buildId, artifact.name.intern(), artifact.file)
+        val versionId = artifact.moduleVersion.id
+        val libraryVersion = LibraryVersionImpl(versionId.group, versionId.name, versionId.version)
+        JavaLibraryImpl(projectPath, buildId, artifact.name.intern(), artifact.file, libraryVersion)
       }
 
       // Add unresolved dependencies, mark by adding prefix UNRESOLVED_DEPENDENCY_PREFIX to name.
       // This follows idea plugin.
       lenientConfiguration.unresolvedModuleDependencies.mapTo(javaLibraries) { unresolvedDependency ->
-        val unresolvedName = UNRESOLVED_DEPENDENCY_PREFIX + unresolvedDependency.selector.toString().replace(":".toRegex(), " ")
-        JavaLibraryImpl(null, null, unresolvedName.intern(), File(unresolvedName))
+        val selector = unresolvedDependency.selector
+        val unresolvedName = UNRESOLVED_DEPENDENCY_PREFIX + selector.toString().replace(":".toRegex(), " ")
+        val libraryVersion = LibraryVersionImpl(selector.group, selector.name, selector.version ?: "unknown")
+        JavaLibraryImpl(null, null, unresolvedName.intern(), File(unresolvedName), libraryVersion)
       }
 
       // Collect jars from local directory
@@ -165,7 +170,7 @@ class JavaModelBuilder : ToolingModelBuilder {
         if (dependency is SelfResolvingDependency && dependency !is ProjectDependency) {
           for (file in dependency.resolve()) {
             val localJarName = LOCAL_JAR_DISPLAY_NAME + file.name
-            javaLibraries.add(JavaLibraryImpl(null, null, localJarName.intern(), file))
+            javaLibraries.add(JavaLibraryImpl(null, null, localJarName.intern(), file, null))
           }
         }
       }

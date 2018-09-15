@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,49 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.java.model.impl
 
-import com.android.java.model.JavaLibrary
 import com.android.java.model.LibraryVersion
-import java.io.File
 import java.io.Serializable
 
 /**
- * Implementation of the [JavaLibrary] interface.
+ * Implementation of the [LibraryVersion] interface.
  */
-data class JavaLibraryImpl(
-  private val myProject: String?,
-  private val myBuildId: String?,
+data class LibraryVersionImpl(
+  private val myGroup: String,
   private val myName: String,
-  private val myJarFile: File?,
-  private val myLibraryVersion: LibraryVersion?) : JavaLibrary, Serializable {
+  private val myVersion: String) : LibraryVersion, Serializable {
 
-  override fun getProject(): String? {
-    return myProject
-  }
-
-  override fun getBuildId(): String? {
-    return myBuildId
+  override fun getGroup(): String {
+    return myGroup
   }
 
   override fun getName(): String {
     return myName
   }
 
-  override fun getJarFile(): File? {
-    return myJarFile
-  }
-
-  override fun getSource(): File? {
-    return null
-  }
-
-  override fun getJavadoc(): File? {
-    return null
-  }
-
-  override fun getLibraryVersion(): LibraryVersion? {
-    return myLibraryVersion
+  override fun getVersion(): String {
+    return myVersion
   }
 }
