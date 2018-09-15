@@ -1039,6 +1039,8 @@ public final class SdkConstants {
     public static final String XLIFF_PREFIX = "xliff"; //$NON-NLS-1$
     /** Default prefix used for aapt attributes */
     public static final String AAPT_PREFIX = "aapt"; //$NON-NLS-1$
+    /** Default prefix used for distribution attributes */
+    public static final String DIST_PREFIX = "dist"; //$NON-NLS-1$
 
     public static final String R_CLASS = "R"; //$NON-NLS-1$
     public static final String ANDROID_PKG = "android"; //$NON-NLS-1$
