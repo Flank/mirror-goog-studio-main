@@ -88,7 +88,7 @@ fun runR8(
         && Files.exists(proguardConfig.proguardMapInput)
     ) {
         r8CommandBuilder.addProguardConfiguration(
-            listOf("-applymapping " + proguardConfig.proguardMapInput.toString()),
+            listOf("-applymapping \"${proguardConfig.proguardMapInput}\""),
             Origin.unknown()
         )
     }

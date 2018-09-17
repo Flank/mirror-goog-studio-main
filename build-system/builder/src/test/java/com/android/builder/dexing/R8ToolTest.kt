@@ -212,7 +212,7 @@ class R8ToolTest {
         val classes = tmp.newFolder().toPath().resolve("classes.jar")
         TestInputsGenerator.dirWithEmptyClasses(classes, listOf("test/A", "test/B"))
 
-        val proguardInputMapping = tmp.newFile().toPath()
+        val proguardInputMapping = tmp.newFile("space in name.txt").toPath()
         Files.write(proguardInputMapping, listOf("test.A -> a.Changed:"))
         val proguardConfig =
                 ProguardConfig(
