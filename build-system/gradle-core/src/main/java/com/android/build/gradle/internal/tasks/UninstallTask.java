@@ -138,6 +138,7 @@ public class UninstallTask extends AndroidBuilderTask {
             super.configure(task);
             VariantScope scope = getVariantScope();
 
+            task.setVariant(scope.getVariantData());
             task.setDescription("Uninstalls the " + scope.getVariantData().getDescription() + ".");
             task.setGroup(TaskManager.INSTALL_GROUP);
             task.setTimeOutInMs(
