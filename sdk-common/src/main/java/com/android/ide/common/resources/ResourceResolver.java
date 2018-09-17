@@ -15,6 +15,7 @@
  */
 package com.android.ide.common.resources;
 
+import static com.android.SdkConstants.AAPT_PREFIX;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.SdkConstants.PREFIX_THEME_REF;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -436,6 +437,9 @@ public class ResourceResolver extends RenderResources {
         if (reference.getResourceType() == ResourceType.SAMPLE_DATA) {
             return findSampleDataValue(reference);
         }
+        if (reference.getResourceType() == ResourceType.AAPT) {
+            return buildAaptResourceValue(reference);
+        }
         ResourceValueMap resourceValueMap =
                 getResourceValueMap(reference.getNamespace(), reference.getResourceType());
         if (resourceValueMap != null) {
@@ -474,8 +478,8 @@ public class ResourceResolver extends RenderResources {
             return findItemInTheme(reference);
         } else {
             if (reference.getResourceType() == ResourceType.AAPT) {
-                // Aapt resources are synthetic references that do not need to be resolved.
-                return null;
+                // Aapt resources are synthetic references that need to be handled specially.
+                return buildAaptResourceValue(reference);
             } else if (reference.getResourceType() == ResourceType.SAMPLE_DATA) {
                 // Sample data resources are only available within the tools namespace
                 return findSampleDataValue(reference);
@@ -653,6 +657,12 @@ public class ResourceResolver extends RenderResources {
                 mStyleInheritanceMap.entrySet()) {
             mReverseStyleInheritanceMap.put(entry.getValue(), entry.getKey());
         }
+    }
+
+    private static ResourceValue buildAaptResourceValue(@NonNull ResourceReference reference) {
+        assert reference.getResourceType() == ResourceType.AAPT;
+        return new ResourceValueImpl(
+                reference, reference.getName().substring(AAPT_PREFIX.length()));
     }
 
     @Override
