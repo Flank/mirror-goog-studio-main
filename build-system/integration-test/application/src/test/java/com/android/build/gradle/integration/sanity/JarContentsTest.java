@@ -380,7 +380,6 @@ public class JarContentsTest {
                 "com/android/tools/r8/origin/",
                 "com/android/tools/r8/position/",
                 "com/android/tools/r8/shaking/",
-                "com/android/tools/r8/shaking/protolite/",
                 "com/android/tools/r8/utils/",
                 "LICENSE",
                 "desugar_deploy.jar",
