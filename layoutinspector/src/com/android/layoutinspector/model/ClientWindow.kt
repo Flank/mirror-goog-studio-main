@@ -153,7 +153,7 @@ class ClientWindow(val title: String, private val client: Client, val clientView
             timeout: Long,
             timeUnit: TimeUnit): ByteArray? {
 
-            val handler = CaptureByteArrayHandler(HandleViewDebug.CHUNK_VURT)
+            val handler = CaptureByteArrayHandler(HandleViewDebug.CHUNK_VUOP)
             HandleViewDebug.captureView(client, title, node.toString(), handler)
             return try {
                 handler.getData(timeout, timeUnit)
