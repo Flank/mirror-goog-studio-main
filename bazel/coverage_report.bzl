@@ -1,11 +1,10 @@
 load("//tools/base/bazel:bazel.bzl", "fileset")
 
 def coverage_report(
-    name,
-    production_java_libraries,
-    exclude_patterns=[],
-    tags=[]):
-
+        name,
+        production_java_libraries,
+        exclude_patterns = [],
+        tags = []):
     # keep in sync with CoverageReportGenerator.java
     collection_binary_name = name + "_collection_binary"
 
@@ -18,8 +17,8 @@ def coverage_report(
             collection_binary_name + "_deploy-src.jar",
         ],
         mappings = {
-                        collection_binary_name + "_deploy.jar": "classes.jar",
-                                                collection_binary_name + "_deploy-src.jar": "sources.jar",
+            collection_binary_name + "_deploy.jar": "classes.jar",
+            collection_binary_name + "_deploy-src.jar": "sources.jar",
         },
     )
 
@@ -32,7 +31,7 @@ def coverage_report(
     native.java_binary(
         name = name,
         main_class = "com.android.tools.coverage.CoverageReportGenerator",
-        classpath_resources = [ production_source_and_classes, ],
+        classpath_resources = [production_source_and_classes],
         runtime_deps = ["//tools/base/bazel:coverage_report_generator"],
         tags = tags + ["agent_coverage_report"],
-   )
+    )

@@ -1,14 +1,13 @@
 load(":utils.bzl", "singlejar")
 
 def _merge_archives_impl(ctx):
-
-  ctx.action(
-      inputs = ctx.files.zips,
-      outputs = [ctx.outputs.output_file],
-      mnemonic = "mergezips",
-      arguments = [ctx.outputs.output_file.path] + [zip.path for zip in ctx.files.zips],
-      executable = ctx.executable._singlejar
-  )
+    ctx.action(
+        inputs = ctx.files.zips,
+        outputs = [ctx.outputs.output_file],
+        mnemonic = "mergezips",
+        arguments = [ctx.outputs.output_file.path] + [zip.path for zip in ctx.files.zips],
+        executable = ctx.executable._singlejar,
+    )
 
 merge_archives = rule(
     attrs = {
