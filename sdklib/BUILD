@@ -105,6 +105,7 @@ kotlin_test(
             "src/test/java/**/*.kt",
         ],
     ),
+    tags = ["no_test_windows"],  # b/115982503
     test_class = "com.android.testutils.JarTestSuite",
     runtime_deps = ["//tools/base/testutils:tools.testutils"],
     deps = [
