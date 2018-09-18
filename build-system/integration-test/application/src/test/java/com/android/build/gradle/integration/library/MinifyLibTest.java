@@ -36,6 +36,8 @@ import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -45,11 +47,19 @@ import org.junit.runners.Parameterized;
 @RunWith(FilterableParameterized.class)
 public class MinifyLibTest {
     @Parameterized.Parameters(name = "codeShrinker = {0}")
-    public static CodeShrinker[] data() {
-        return new CodeShrinker[] {CodeShrinker.PROGUARD, CodeShrinker.R8};
+    public static List<Object[]> data() {
+        return Arrays.asList(
+                new Object[][] {
+                    {CodeShrinker.PROGUARD, false},
+                    {CodeShrinker.PROGUARD, true},
+                    {CodeShrinker.R8, false},
+                    {CodeShrinker.R8, true},
+                });
     }
 
     @Parameterized.Parameter public CodeShrinker codeShrinker;
+    @Parameterized.Parameter(1)
+    public boolean separateRClass;
 
     @Rule
     public GradleTestProject project =
@@ -192,6 +202,8 @@ public class MinifyLibTest {
 
     @NonNull
     private GradleTaskExecutor getExecutor() {
-        return project.executor().with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8);
+        return project.executor()
+                .with(BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION, separateRClass)
+                .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8);
     }
 }

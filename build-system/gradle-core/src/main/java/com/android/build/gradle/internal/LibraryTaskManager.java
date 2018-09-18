@@ -69,6 +69,7 @@ import java.util.List;
 import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
@@ -155,6 +156,7 @@ public class LibraryTaskManager extends TaskManager {
                 && !variantScope.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
             createVerifyLibraryResTask(variantScope);
         }
+        registerRClassTransformStream(variantScope);
 
         // process java resources only, the merge is setup after
         // the task to generate intermediate jars for project to project publishing.
@@ -397,6 +399,32 @@ public class LibraryTaskManager extends TaskManager {
 
         createLintTasks(variantScope);
         createBundleTask(variantScope);
+    }
+
+    private void registerRClassTransformStream(@NonNull VariantScope variantScope) {
+        if (!projectOptions.get(BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION)) {
+            return;
+        }
+        // TODO(b/115974418): Can we stop adding the compilation-only R class as a local classes?
+
+        InternalArtifactType rClassJar;
+
+        if (globalScope.getExtension().getAaptOptions().getNamespaced()) {
+            rClassJar = InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR;
+        } else {
+            rClassJar = InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR;
+        }
+
+        FileCollection compileRClass =
+                variantScope.getArtifacts().getFinalArtifactFiles(rClassJar).get();
+        variantScope
+                .getTransformManager()
+                .addStream(
+                        OriginalStream.builder(project, "compile-only-r-class")
+                                .addContentTypes(TransformManager.CONTENT_CLASS)
+                                .addScope(Scope.PROJECT)
+                                .setFileCollection(compileRClass)
+                                .build());
     }
 
     private void createBundleTask(@NonNull VariantScope variantScope) {
