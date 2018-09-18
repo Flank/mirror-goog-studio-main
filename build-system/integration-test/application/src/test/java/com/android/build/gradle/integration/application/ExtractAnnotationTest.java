@@ -49,8 +49,6 @@ public class ExtractAnnotationTest {
     @Before
     public void setUp() throws Exception {
         project.execute("clean", "assembleDebug");
-        // Execute build once again, b/113867725
-        project.execute("assembleDebug");
     }
 
     @Test
