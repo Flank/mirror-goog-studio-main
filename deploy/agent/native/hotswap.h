@@ -37,9 +37,16 @@ class HotSwap {
   jvmtiEnv* jvmti_;
   JNIEnv* jni_;
 
-  // Finds a class definition in the VM.
+  // Finds a class definition.
   jclass FindClass(const std::string& name) const;
+
+  // Finds a class definition by searching the specified class loader.
+  jclass FindInClassLoader(jobject class_loader, const std::string& name) const;
+
+  // Finds a class definition by enumerating all loaded classes in the VM.
+  jclass FindInLoadedClasses(const std::string& name) const;
 };
 
 }  // namespace swapper
+
 #endif

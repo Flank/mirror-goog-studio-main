@@ -1,5 +1,6 @@
 #include <dirent.h>
 #include <stdio.h>
+#include <algorithm>
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -11,8 +12,6 @@
 #include "jvmti.h"
 #include "utils/log.h"
 
-using namespace std;
-
 namespace swapper {
 
 jobject GetThreadClassLoader(JNIEnv* env) {
@@ -23,28 +22,93 @@ jobject GetThreadClassLoader(JNIEnv* env) {
           {"getContextClassLoader", "()Ljava/lang/ClassLoader;"});
 }
 
-jclass HotSwap::FindClass(const std::string& name) const {
-  JniObject gClassLoader(jni_, GetThreadClassLoader(jni_));
-  jvalue java_name = {.l = jni_->NewStringUTF(name.c_str())};
-  jclass klass = static_cast<jclass>(gClassLoader.CallMethod<jobject>(
-      {"findClass", "(Ljava/lang/String;)Ljava/lang/Class;"}, &java_name));
-  jni_->DeleteLocalRef(java_name.l);
+jclass HotSwap::FindInClassLoader(jobject class_loader,
+                                  const std::string& name) const {
+  if (class_loader == nullptr) {
+    Log::E("Class loader was null.");
+    return nullptr;
+  }
 
+  jvalue java_name = {.l = jni_->NewStringUTF(name.c_str())};
+  jclass klass = static_cast<jclass>(
+      JniObject(jni_, class_loader)
+          .CallMethod<jobject>(
+              {"findClass", "(Ljava/lang/String;)Ljava/lang/Class;"},
+              &java_name));
+  jni_->DeleteLocalRef(java_name.l);
+  return klass;
+}
+
+jclass HotSwap::FindInLoadedClasses(const std::string& name) const {
+  jint class_count;
+  jclass* classes;
+  if (jvmti_->GetLoadedClasses(&class_count, &classes) != JVMTI_ERROR_NONE) {
+    Log::E("Could not enumerate loaded classes.");
+    return nullptr;
+  }
+
+  // Put the class name in the proper format.
+  std::string search_signature = "L" + name + ";";
+
+  jclass klass = nullptr;
+  for (int i = 0; i < class_count; ++i) {
+    char* signature_ptr;
+    jvmti_->GetClassSignature(classes[i], &signature_ptr,
+                              /* generic_ptr */ nullptr);
+
+    // Can't return early because we need to finish freeing the local
+    // references, so we use the time to check for erroneous duplicates.
+    if (search_signature != signature_ptr) {
+      jni_->DeleteLocalRef(classes[i]);
+    } else if (klass == nullptr) {
+      klass = classes[i];
+    } else {
+      jni_->DeleteLocalRef(classes[i]);
+      Log::E(
+          "The same class was found multiple times in the loaded classes list: "
+          "%s",
+          search_signature.c_str());
+    }
+
+    jvmti_->Deallocate((unsigned char*)signature_ptr);
+  }
+
+  jvmti_->Deallocate((unsigned char*)classes);
+  return klass;
+}
+
+jclass HotSwap::FindClass(const std::string& name) const {
+  // ART would do this for us, but we should do it here for consistency's sake
+  // and to avoid the logged warning. JVMTI requires class names with slashes.
+  std::string fixed_name(name);
+  std::replace(fixed_name.begin(), fixed_name.end(), '.', '/');
+
+  Log::V("Searching for class '%s' in the current thread context classloader.",
+         fixed_name.c_str());
+
+  jclass klass = FindInClassLoader(GetThreadClassLoader(jni_), fixed_name);
   if (klass != nullptr) {
     return klass;
   }
 
-  jthrowable e = jni_->ExceptionOccurred();
+  jni_->ExceptionDescribe();
   jni_->ExceptionClear();
-  jclass clazz = jni_->GetObjectClass(e);
-  jmethodID get_message =
-      jni_->GetMethodID(clazz, "getMessage", "()Ljava/lang/String;");
-  jstring message = (jstring)jni_->CallObjectMethod(e, get_message);
-  const char* mstr = jni_->GetStringUTFChars(message, nullptr);
-  Log::V("Exception calling find class on %s %s\n", name.c_str(), mstr);
 
-  // Fall back to the system classloader.
-  return jni_->FindClass(name.c_str());
+  Log::V("Searching for class '%s' in the system classloader.",
+         fixed_name.c_str());
+
+  klass = jni_->FindClass(fixed_name.c_str());
+  if (klass != nullptr) {
+    return klass;
+  }
+
+  jni_->ExceptionDescribe();
+  jni_->ExceptionClear();
+
+  Log::V("Searching for class '%s' in all loaded classes.", fixed_name.c_str());
+
+  klass = FindInLoadedClasses(fixed_name);
+  return klass;
 }
 
 bool HotSwap::DoHotSwap(const proto::SwapRequest& swap_request,
@@ -76,8 +140,6 @@ bool HotSwap::DoHotSwap(const proto::SwapRequest& swap_request,
   }
 
   delete[] def;
-
-  Log::V("Done HotSwapping!");
 
   // If there was no error, we're done.
   if (error_num == JVMTI_ERROR_NONE) {

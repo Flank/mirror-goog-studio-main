@@ -33,8 +33,11 @@ public class AgentBasedClassRedefinerSimpleTest extends AgentBasedClassRedefiner
                 createRequest(
                         "com.android.tools.deploy.swapper.testapp.Target",
                         "com/android/tools/deploy/swapper/testapp/Target.dex",
-                        true);
+                        false);
         redefiner.redefine(request);
+
+        Deploy.SwapResponse response = redefiner.getAgentResponse();
+        Assert.assertEquals(Deploy.SwapResponse.Status.OK, response.getStatus());
 
         android.triggerMethod(ACTIVITY_CLASS, "getStatus");
         Assert.assertTrue(android.waitForInput("JUST SWAPPED", RETURN_VALUE_TIMEOUT));
@@ -42,8 +45,6 @@ public class AgentBasedClassRedefinerSimpleTest extends AgentBasedClassRedefiner
 
     @Test
     public void testSimpleClassRedefinitionWithActivityRestart() throws Exception {
-        redefiner = new LocalTestAgentBasedClassRedefiner(android, dexLocation, true);
-
         android.loadDex(DEX_LOCATION);
         android.launchActivity(ACTIVITY_CLASS);
 
@@ -57,17 +58,26 @@ public class AgentBasedClassRedefinerSimpleTest extends AgentBasedClassRedefiner
                         true);
         redefiner.redefine(request);
 
-        android.triggerMethod(ACTIVITY_CLASS, "getStatus");
+        // Agent should request an activity restart.
+        Deploy.SwapResponse response = redefiner.getAgentResponse();
+        Assert.assertEquals(Deploy.SwapResponse.Status.NEED_ACTIVITY_RESTART, response.getStatus());
 
+        // Fake an app info changed event.
+        android.triggerMethod(ACTIVITY_CLASS, "updateAppInfo");
         Assert.assertTrue(
                 android.waitForInput("APPLICATION_INFO_CHANGED triggered", RETURN_VALUE_TIMEOUT));
+
+        response = redefiner.getAgentResponse();
+        Assert.assertEquals(Deploy.SwapResponse.Status.OK, response.getStatus());
+
+        android.triggerMethod(ACTIVITY_CLASS, "getStatus");
         Assert.assertTrue(android.waitForInput("JUST SWAPPED", RETURN_VALUE_TIMEOUT));
     }
 
     /**
-     * This method test a few things: 1. We can redefine a class before the class is loaded. 2.
+     * This method tests a few things: 1. We can redefine a class before the class is loaded. 2.
      * Class initializiers are not loaded when redefinition completes. 3. Class is succesfully
-     * redefined and initializers are invoke upon class loading and behave as expected.
+     * redefined and initializers are invoked upon class loading and behave as expected.
      */
     @Test
     public void testRedefiningNotLoaded() throws Exception {
@@ -78,8 +88,11 @@ public class AgentBasedClassRedefinerSimpleTest extends AgentBasedClassRedefiner
                 createRequest(
                         "com.android.tools.deploy.swapper.testapp.ClinitTarget",
                         "com/android/tools/deploy/swapper/testapp/ClinitTarget.dex",
-                        true);
+                        false);
         redefiner.redefine(request);
+
+        Deploy.SwapResponse response = redefiner.getAgentResponse();
+        Assert.assertEquals(Deploy.SwapResponse.Status.OK, response.getStatus());
 
         android.triggerMethod(ACTIVITY_CLASS, "printCounter");
         Assert.assertTrue(android.waitForInput("TestActivity.counter = 0", RETURN_VALUE_TIMEOUT));

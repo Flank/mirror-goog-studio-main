@@ -10,8 +10,6 @@ cc_binary(
     name = "libswap.so",
     srcs = [
         "agent.cc",
-        "android_wrapper.cc",
-        "android_wrapper.h",
         "capabilities.h",
         "config.cc",
         "config.h",

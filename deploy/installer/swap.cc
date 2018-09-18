@@ -21,6 +21,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include <fcntl.h>
@@ -62,11 +63,14 @@ void SwapCommand::ParseParameters(int argc, char** argv) {
   std::copy_n(std::istreambuf_iterator<char>(std::cin), size,
               std::back_inserter(data));
 
-  if (!request_.ParseFromString(data)) {
+  proto::SwapRequest request;
+  if (!request.ParseFromString(data)) {
     std::cerr << "Could not parse swap configuration proto." << std::endl;
     return;
   }
-  package_name_ = request_.package_name();
+
+  request_bytes_ = data;
+  package_name_ = request.package_name();
 
   // Set this value here so we can re-use it in other methods.
   target_dir_ = "/data/data/" + package_name_ + "/.studio/";
@@ -78,14 +82,6 @@ bool SwapCommand::Run(const Workspace& workspace) {
     return false;
   }
 
-  // Get the pid(s) of the running application using the package name.
-  std::string pidof_output;
-  if (!RunCmd("pidof", User::SHELL_USER, {package_name_}, &pidof_output)) {
-    std::cerr << "Could not get application pid for package : " + package_name_
-              << std::endl;
-    return false;
-  }
-
   // Start a swap server with fork/exec.
   int read_fd;
   int write_fd;
@@ -93,41 +89,63 @@ bool SwapCommand::Run(const Workspace& workspace) {
     return false;
   }
 
-  int pid;
-  std::istringstream pids(pidof_output);
-
-  // Attach the agent to the application process(es).
-  CmdCommand cmd;
-  while (pids >> pid) {
-    std::string output;
-    if (!cmd.AttachAgent(pid, target_dir_ + kAgentFilename, {}, &output)) {
-      std::cerr << "Could not attach agent to process: " << output << std::endl;
-      return false;
-    }
+  size_t agent_count = AttachAgents();
+  if (agent_count == 0) {
+    return false;
   }
 
-  std::string request_string;
-  request_.SerializeToString(&request_string);
-
+  // Both these wrappers will close the fds when they go out of scope.
   deploy::MessagePipeWrapper server_input(write_fd);
-  if (!server_input.Write(request_string)) {
+  deploy::MessagePipeWrapper server_output(read_fd);
+
+  if (!server_input.Write(request_bytes_)) {
     std::cerr << "Could not write to agent proxy server." << std::endl;
   }
 
-  // TODO(noahz): Debug code; remove when agent sends a real response.
-  std::string response_string;
-  deploy::MessagePipeWrapper server_output(read_fd);
-  while (server_output.Read(&response_string)) {
-    std::cout << response_string;
-    std::cout.flush();
-    response_string.clear();
+  std::unordered_map<int, proto::SwapResponse> agent_responses;
+  auto overall_status = proto::SwapResponse::UNKNOWN;
+
+  // TODO: This loop is at risk of hanging in a multi-agent scenario where
+  // activity restart is required - if one agent dies before sending an
+  // activity restart message, the server will never exit, as the still-alive
+  // agents are permanently stuck waiting on activity restart and will not close
+  // their sockets. Server should detect and send an agent death message to the
+  // installer.
+
+  std::string response_bytes;
+  while (server_output.Read(&response_bytes)) {
+    proto::SwapResponse response;
+    if (!response.ParseFromString(response_bytes)) {
+      std::cerr << "Received unparseable response from agent." << std::endl;
+      return false;
+    }
+
+    // Any mismatch in statuses means the overall status is error:
+    // - ERROR + <ANY> = ERROR, since all agents need to succeed.
+    // - RESTART + OK = ERROR , since agents should be in sync for restarts.
+    if (agent_responses.size() == 0) {
+      overall_status = response.status();
+    } else if (response.status() != overall_status) {
+      overall_status = proto::SwapResponse::ERROR;
+    }
+
+    agent_responses.emplace(response.pid(), response);
+
+    // Don't take actions until we've heard from every agent.
+    if (agent_responses.size() == agent_count) {
+      if (overall_status == proto::SwapResponse::NEED_ACTIVITY_RESTART) {
+        CmdCommand cmd;
+        cmd.UpdateAppInfo("all", package_name_, nullptr);
+      } else {
+        // TODO: Aggregate and send to deployer.
+        std::cout << overall_status << std::endl;
+      }
+
+      agent_responses.clear();
+    }
   }
 
-  // End debug code.
-
-  close(read_fd);
-  close(write_fd);
-  return true;
+  return overall_status == proto::SwapResponse::OK;
 }
 
 bool SwapCommand::Setup(const Workspace& workspace) noexcept {
@@ -167,8 +185,9 @@ bool SwapCommand::CopyBinaries(const std::string& src_path,
   }
 
   // Since we did both checks at once, we still need to individually check for
-  // each missing file. This adds one run-as invocation in the "update required"
-  // case, but allows for one fewer run-as in the more common "no update" case.
+  // each missing file. This adds one run-as invocation in the "update
+  // required" case, but allows for one fewer run-as in the more common "no
+  // update" case.
 
   std::vector<std::string> copy_args;
 
@@ -192,8 +211,8 @@ bool SwapCommand::CopyBinaries(const std::string& src_path,
     copy_args.push_back(server_src_path);
   }
 
-  // Add the destination path to the argument list. We don't use dst_path again,
-  // so it's safe to use emplace().
+  // Add the destination path to the argument list. We don't use dst_path
+  // again, so it's safe to use emplace().
   copy_args.push_back(dst_path);
 
   // Copy the binaries to the agent directory.
@@ -258,7 +277,7 @@ bool SwapCommand::StartServer(int* read_fd, int* write_fd) const {
     std::string command = target_dir_ + kServerFilename;
 
     execlp("run-as", command.c_str() /* argv[0] for run-as*/,
-           request_.package_name().c_str() /* package to execute as */,
+           package_name_.c_str() /* package to execute as */,
            command.c_str() /* command to start swap-server */,
            "1" /* number of agents (hardcoded for now) */,
            (char*)nullptr /* must end in null-terminator */);
@@ -274,6 +293,34 @@ bool SwapCommand::StartServer(int* read_fd, int* write_fd) const {
   *read_fd = read_pipe[0];
   *write_fd = write_pipe[1];
   return true;
+}
+
+size_t SwapCommand::AttachAgents() const {
+  size_t agent_count = 0;
+
+  // Get the pid(s) of the running application using the package name.
+  std::string pidof_output;
+  if (!RunCmd("pidof", User::SHELL_USER, {package_name_}, &pidof_output)) {
+    std::cerr << "Could not get application pid for package : " + package_name_
+              << std::endl;
+    return 0;
+  }
+
+  int pid;
+  std::istringstream pids(pidof_output);
+
+  // Attach the agent to the application process(es).
+  CmdCommand cmd;
+  while (pids >> pid) {
+    std::string output;
+    if (!cmd.AttachAgent(pid, target_dir_ + kAgentFilename, {}, &output)) {
+      std::cerr << "Could not attach agent to process: " << output << std::endl;
+      return 0;
+    }
+    agent_count++;
+  }
+
+  return agent_count;
 }
 
 bool SwapCommand::RunCmd(const std::string& shell_cmd, User run_as,

@@ -10,7 +10,7 @@ fake_android_test(
     srcs = glob(["java/com/android/tools/deploy/swapper/*.java"]),
     data = [
         ":test-app",
-        "//tools/base/deploy/agent/instrumentation",
+        "//tools/base/deploy/agent/native:agent_server",
         "//tools/base/deploy/agent/native:libswap.so",
         "//tools/base/deploy/test/apk1:apk",
         "//tools/base/deploy/test/apk2:apk",
@@ -25,20 +25,18 @@ fake_android_test(
         # JVMTI Agent for the host.
         "-Dswap.agent.location=$(location //tools/base/deploy/agent/native:libswap.so)",
 
+        # Agent server for communcation with the agent.
+        "-Dswap.server.location=$(location //tools/base/deploy/agent/native:agent_server)",
+
         # APKs for testing the DexArchiveComparator
         "-Dapk1.location=$(location //tools/base/deploy/test/apk1:apk)",
         "-Dapk2.location=$(location //tools/base/deploy/test/apk2:apk)",
-
-        # Instrumentation support jar location.
-        "-Dapp.instrumentation.location=$(location //tools/base/deploy/agent/instrumentation:instrumentation)",
     ],
     deps = [
         ":test-app",
         ":test-app-swap",
         "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.4.0:jar",
         "//tools/base/bazel:langtools",
-        "//tools/base/deploy/agent/instrumentation",
-        "//tools/base/deploy/agent/native:libswap.so",
         "//tools/base/deploy/deployer:tools.deployer",
         "//tools/base/deploy/proto:deploy_java_proto",
         "//tools/base/deploy/test/apk1:apk",

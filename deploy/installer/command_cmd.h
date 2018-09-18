@@ -32,6 +32,11 @@ class CmdCommand : public ShellCommandRunner {
 
   bool AttachAgent(int pid, const std::string& agent, const std::string& args,
                    std::string* error_string) const noexcept;
+
+  bool UpdateAppInfo(const std::string& user_id,
+                     const std::string& package_name,
+                     std::string* error_string) const noexcept;
+
   static void SetPath(const char* path);
 };
 

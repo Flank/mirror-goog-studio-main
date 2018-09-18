@@ -61,25 +61,28 @@ bool CmdCommand::AttachAgent(int pid, const std::string& agent,
                              const std::string& args,
                              std::string* error_string) const noexcept {
   Trace trace("CmdCommand::AttachAgent");
-
-  std::string cmd;
   std::stringstream parameters;
-  parameters << "activity"
-             << " ";
-  parameters << "attach-agent"
-             << " ";
+  parameters << "activity ";
+  parameters << "attach-agent ";
   parameters << pid << " ";
   parameters << agent << "=" << args;
 
-  bool success = Run(parameters.str(), error_string);
-  if (!success) {
-    return false;
-  }
+  return Run(parameters.str(), error_string);
+}
 
-  return true;
+bool CmdCommand::UpdateAppInfo(const std::string& user_id,
+                               const std::string& package_name,
+                               std::string* error_string) const noexcept {
+  Trace trace("CmdCommand::UpdateAppInfo");
+  std::stringstream parameters;
+  parameters << "activity ";
+  parameters << "update-appinfo ";
+  parameters << user_id << " ";
+  parameters << package_name << " ";
+
+  return Run(parameters.str(), error_string);
 }
-void CmdCommand::SetPath(const char* path) {
-  CMD_EXEC = path;
-}
+
+void CmdCommand::SetPath(const char* path) { CMD_EXEC = path; }
 
 }  // namespace deployer

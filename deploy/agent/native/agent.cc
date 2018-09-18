@@ -31,7 +31,6 @@
 #include <string>
 #include <vector>
 
-#include "android_wrapper.h"
 #include "capabilities.h"
 #include "config.h"
 #include "hotswap.h"
@@ -267,15 +266,21 @@ void DoHotSwapAndRestart(jvmtiEnv* jvmti, JNIEnv* jni,
 
   // Transfer ownership of these pointers to the callback wrapper, since it will
   // be the last entity to use them.
+
+  auto socket_raw = socket.release();
+
   jvalue args[2];
-  args[0].j = reinterpret_cast<jlong>(request.get());
-  args[1].j = reinterpret_cast<jlong>(socket.release());
+  args[0].j = reinterpret_cast<jlong>(request.release());
+  args[1].j = reinterpret_cast<jlong>(socket_raw);
   handlerWrapper.CallStaticMethod<void>({"prepareForHotSwap", "(JJ)V"}, args);
 
-  // Perform hot swap through the activity restart callback path.
-  AndroidWrapper wrapper(jni);
-  wrapper.RestartActivity(request->package_name().c_str());
-  request.release();
+  proto::SwapResponse response;
+  response.set_pid(getpid());
+  response.set_status(proto::SwapResponse::NEED_ACTIVITY_RESTART);
+
+  std::string response_bytes;
+  response.SerializeToString(&response_bytes);
+  socket_raw->Write(response_bytes);
 }
 
 // Event that fires when the agent hooks onto a running VM.

@@ -16,6 +16,7 @@
 package com.android.tools.deploy.swapper.testapp;
 
 import android.app.Activity;
+import android.app.ActivityThread;
 import pkg.KotlinCompanionTarget;
 import pkg.KotlinFailedTarget;
 import pkg.KotlinSimpleTarget;
@@ -30,6 +31,12 @@ public class TestActivity extends Activity {
 
     public static void incrementCounter() {
         counter++;
+    }
+
+    public static void updateAppInfo() {
+        ActivityThread.currentActivityThread()
+                .getApplicationThread()
+                .scheduleApplicationInfoChanged(null);
     }
 
     public static void printCounter() {

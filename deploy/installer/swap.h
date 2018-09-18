@@ -18,6 +18,7 @@
 #define INSTALLER_SWAP_COMMAND_H_
 
 #include <string>
+#include <unordered_map>
 
 #include "command.h"
 #include "deploy.pb.h"
@@ -33,8 +34,8 @@ class SwapCommand : public Command {
   bool Run(const Workspace& workspace) override;
 
  private:
+  std::string request_bytes_;
   std::string package_name_;
-  proto::SwapRequest request_;
   std::string target_dir_;
 
   enum class User { SHELL_USER, APP_PACKAGE };
@@ -49,9 +50,15 @@ class SwapCommand : public Command {
   // field with a descriptor to allow writing to the server.
   bool StartServer(int* read_fd, int* write_fd) const;
 
-  // Runs a command with the provided arguments. If run_as_package is true, the
-  // command is invoked with 'run-as'. If the command fails, prints the string
-  // specified in 'error' to standard error.
+  // Attaches the agents to the app processes, using pidof to obtain the pids of
+  // of all processes owned by the application. If all agents successfully
+  // attach, returns the number of agents; if any agent fails to attach, returns
+  // zero.
+  size_t AttachAgents() const;
+
+  // Runs a command with the provided arguments. If run_as_package is true,
+  // the command is invoked with 'run-as'. If the command fails, prints the
+  // string specified in 'error' to standard error.
   bool RunCmd(const std::string& shell_cmd, User run_as,
               const std::vector<std::string>& args, std::string* output) const;
 
@@ -64,6 +71,10 @@ class SwapCommand : public Command {
   // file to the path specified by dst_path.
   bool WriteArrayToDisk(const unsigned char* array, uint64_t array_len,
                         const std::string& dst_path) const noexcept;
+
+  void HandleAgentResponses(
+      const std::unordered_map<int, proto::SwapResponse>& agent_responses) const
+      noexcept;
 };
 
 }  // namespace deployer

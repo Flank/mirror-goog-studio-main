@@ -25,8 +25,6 @@ public class AgentBasedClassRedefinerFailureTest extends AgentBasedClassRedefine
 
     @Test
     public void testFailedClassRedefinitionWithActivityRestart() throws Exception {
-        redefiner = new LocalTestAgentBasedClassRedefiner(android, dexLocation, true);
-
         android.loadDex(DEX_LOCATION);
         android.launchActivity(ACTIVITY_CLASS);
 
@@ -38,8 +36,19 @@ public class AgentBasedClassRedefinerFailureTest extends AgentBasedClassRedefine
                         "com.android.tools.deploy.swapper.testapp.Target",
                         "com/android/tools/deploy/swapper/testapp/ClinitTarget.dex",
                         true);
-        // TODO: Change shouldSucceed to false when we can actually check the status of the swap.
-        redefiner.redefine(request, true /* Because we don't know the return status ATM */);
+        redefiner.redefine(request);
+
+        // Agent should request an activity restart.
+        Deploy.SwapResponse response = redefiner.getAgentResponse();
+        Assert.assertEquals(Deploy.SwapResponse.Status.NEED_ACTIVITY_RESTART, response.getStatus());
+
+        // Fake an app info changed event.
+        android.triggerMethod(ACTIVITY_CLASS, "updateAppInfo");
+        Assert.assertTrue(
+                android.waitForInput("APPLICATION_INFO_CHANGED aborted", RETURN_VALUE_TIMEOUT));
+
+        response = redefiner.getAgentResponse();
+        Assert.assertEquals(Deploy.SwapResponse.Status.ERROR, response.getStatus());
 
         android.triggerMethod(ACTIVITY_CLASS, "getStatus");
         Assert.assertTrue(android.waitForInput("NOT SWAPPED 1", RETURN_VALUE_TIMEOUT));
@@ -57,8 +66,11 @@ public class AgentBasedClassRedefinerFailureTest extends AgentBasedClassRedefine
                 createRequest(
                         "com.android.tools.deploy.swapper.testapp.FailedTarget",
                         "com/android/tools/deploy/swapper/testapp/FailedTarget.dex",
-                        true);
-        redefiner.redefine(request, false);
+                        false);
+        redefiner.redefine(request);
+
+        Deploy.SwapResponse response = redefiner.getAgentResponse();
+        Assert.assertEquals(Deploy.SwapResponse.Status.ERROR, response.getStatus());
 
         android.triggerMethod(ACTIVITY_CLASS, "getFailedTargetStatus");
         Assert.assertTrue(android.waitForInput("FailedTarget NOT SWAPPED 1", RETURN_VALUE_TIMEOUT));
@@ -98,7 +110,10 @@ public class AgentBasedClassRedefinerFailureTest extends AgentBasedClassRedefine
                         .setPackageName(PACKAGE)
                         .setRestartActivity(false)
                         .build();
-        redefiner.redefine(request, false);
+        redefiner.redefine(request);
+
+        Deploy.SwapResponse response = redefiner.getAgentResponse();
+        Assert.assertEquals(Deploy.SwapResponse.Status.ERROR, response.getStatus());
 
         android.triggerMethod(ACTIVITY_CLASS, "getFailedTargetStatus");
         Assert.assertTrue(android.waitForInput("FailedTarget NOT SWAPPED 1", RETURN_VALUE_TIMEOUT));

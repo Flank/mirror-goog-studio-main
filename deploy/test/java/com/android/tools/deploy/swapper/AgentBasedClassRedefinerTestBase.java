@@ -19,11 +19,12 @@ import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.fakeandroid.ProcessRunner;
 import com.google.protobuf.ByteString;
-import java.io.File;
-import java.io.FileOutputStream;
+import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
@@ -33,6 +34,11 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
 
     // Location of the initial test-app that has the ACTIVITY_CLASS
     protected static final String DEX_LOCATION = ProcessRunner.getProcessPath("app.dex.location");
+
+    protected static final String AGENT_LOCATION =
+            ProcessRunner.getProcessPath("swap.agent.location");
+    protected static final String SERVER_LOCATION =
+            ProcessRunner.getProcessPath("swap.server.location");
 
     protected static final String PACKAGE = "package.name.does.matter.in.this.test.";
 
@@ -53,7 +59,7 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
         android = new FakeAndroidDriver(LOCAL_HOST);
         android.start();
 
-        redefiner = new LocalTestAgentBasedClassRedefiner(android, dexLocation, false);
+        redefiner = new LocalTestAgentBasedClassRedefiner(android, dexLocation);
     }
 
     @After
@@ -80,35 +86,58 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
     protected static class LocalTestAgentBasedClassRedefiner extends ClassRedefiner {
         private final TemporaryFolder messageDir;
         private final FakeAndroidDriver android;
+        private Process server;
         private String messageLocation;
 
         protected LocalTestAgentBasedClassRedefiner(
-                FakeAndroidDriver android, TemporaryFolder messageDir, boolean shouldRestart) {
+                FakeAndroidDriver android, TemporaryFolder messageDir) {
             this.android = android;
             this.messageDir = messageDir;
         }
 
-        protected void redefine(Deploy.SwapRequest request, boolean shouldSucceed) {
+        protected void redefine(Deploy.SwapRequest request, boolean unused) {
             try {
-                File pb = Files.createTempFile("messageDir", "msg.pb").toFile();
-                FileOutputStream out = new FileOutputStream(pb);
-                request.writeTo(out);
+                // Start a new agent server that will connect to a single agent.
+                server = new ProcessBuilder(SERVER_LOCATION, "1").start();
 
-                android.attachAgent(
-                        ProcessRunner.getProcessPath("swap.agent.location")
-                                + "="
-                                + pb.getAbsolutePath(),
-                        shouldSucceed);
-                // TODO(acleung): We have no way to two way communicate with the Agent for now
-                // so we are just going wait for a log statement.
-                if (shouldSucceed) {
-                    android.waitForInput("Done HotSwapping!");
-                } else {
-                    android.waitForError("Hot swap failed.", RETURN_VALUE_TIMEOUT);
-                }
+                // Convert the request into bytes prepended by the request size.
+                byte[] message = request.toByteArray();
+                byte[] size =
+                        ByteBuffer.allocate(4)
+                                .order(ByteOrder.LITTLE_ENDIAN)
+                                .putInt(message.length)
+                                .array();
+
+                // Send the swap request to the server.
+                OutputStream stdin = server.getOutputStream();
+                stdin.write(size);
+                stdin.write(message);
+                stdin.flush();
+
+                android.attachAgent(AGENT_LOCATION);
             } catch (IOException e) {
-                throw new UncheckedIOException(e);
+                System.err.println(e);
             }
+        }
+
+        protected Deploy.SwapResponse getAgentResponse()
+                throws IOException, InvalidProtocolBufferException {
+            InputStream stdout = server.getInputStream();
+            byte[] sizeBytes = new byte[4];
+
+            int offset = 0;
+            while (offset < sizeBytes.length) {
+                offset += stdout.read(sizeBytes, offset, sizeBytes.length - offset);
+            }
+
+            int size = ByteBuffer.wrap(sizeBytes).order(ByteOrder.LITTLE_ENDIAN).getInt();
+            byte[] messageBytes = new byte[size];
+
+            offset = 0;
+            while (offset < messageBytes.length) {
+                offset += stdout.read(messageBytes, offset, messageBytes.length - offset);
+            }
+            return Deploy.SwapResponse.parseFrom(messageBytes);
         }
 
         @Override
