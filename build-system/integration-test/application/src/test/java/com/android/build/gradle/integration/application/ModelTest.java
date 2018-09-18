@@ -17,20 +17,22 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.VariantUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.truth.Truth;
+import java.io.File;
 import java.util.Collection;
 import org.junit.Rule;
 import org.junit.Test;
@@ -86,16 +88,21 @@ public class ModelTest {
         final Variant debugVariant = AndroidProjectUtils.getVariantByName(model, "debug");
         AndroidArtifact debugArtifact = debugVariant.getMainArtifact();
 
+        ImmutableList.Builder<File> expectedGeneratedSourceFolders = ImmutableList.builder();
+        expectedGeneratedSourceFolders.add(
+                project.file("build/generated/aidl_source_output_dir/debug/compileDebugAidl/out"),
+                project.file("build/generated/source/apt/debug"),
+                project.file("build/generated/source/buildConfig/debug"),
+                project.file(
+                        "build/generated/renderscript_source_output_dir/debug/compileDebugRenderscript/out"));
+        if (!BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION.getDefaultValue()) {
+            expectedGeneratedSourceFolders.add(
+                    project.file(
+                            "build/generated/not_namespaced_r_class_sources/debug/processDebugResources/r"));
+        }
+
         assertThat(debugArtifact.getGeneratedSourceFolders())
-                .containsExactly(
-                        project.file(
-                                "build/generated/aidl_source_output_dir/debug/compileDebugAidl/out"),
-                        project.file("build/generated/source/apt/debug"),
-                        project.file("build/generated/source/buildConfig/debug"),
-                        project.file(
-                                "build/generated/not_namespaced_r_class_sources/debug/processDebugResources/r"),
-                        project.file(
-                                "build/generated/renderscript_source_output_dir/debug/compileDebugRenderscript/out"));
+                .containsExactlyElementsIn(expectedGeneratedSourceFolders.build());
 
         assertThat(debugArtifact.getGeneratedResourceFolders())
                 .containsExactly(
@@ -104,16 +111,23 @@ public class ModelTest {
 
         AndroidArtifact androidTestArtifact = VariantUtils.getAndroidTestArtifact(debugVariant);
 
+        ImmutableList.Builder<File> expectedGeneratedTestSourceFolders = ImmutableList.builder();
+        expectedGeneratedTestSourceFolders.add(
+                project.file(
+                        "build/generated/aidl_source_output_dir/debugAndroidTest/compileDebugAndroidTestAidl/out"),
+                project.file("build/generated/source/apt/androidTest/debug"),
+                project.file("build/generated/source/buildConfig/androidTest/debug"),
+                project.file(
+                        "build/generated/renderscript_source_output_dir/debugAndroidTest/compileDebugAndroidTestRenderscript/out"));
+
+        if (!BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION.getDefaultValue()) {
+            expectedGeneratedTestSourceFolders.add(
+                    project.file(
+                            "build/generated/not_namespaced_r_class_sources/debugAndroidTest/processDebugAndroidTestResources/r"));
+        }
+
         assertThat(androidTestArtifact.getGeneratedSourceFolders())
-                .containsExactly(
-                        project.file(
-                                "build/generated/aidl_source_output_dir/debugAndroidTest/compileDebugAndroidTestAidl/out"),
-                        project.file("build/generated/source/apt/androidTest/debug"),
-                        project.file("build/generated/source/buildConfig/androidTest/debug"),
-                        project.file(
-                                "build/generated/not_namespaced_r_class_sources/debugAndroidTest/processDebugAndroidTestResources/r"),
-                        project.file(
-                                "build/generated/renderscript_source_output_dir/debugAndroidTest/compileDebugAndroidTestRenderscript/out"));
+                .containsExactlyElementsIn(expectedGeneratedTestSourceFolders.build());
 
         assertThat(androidTestArtifact.getGeneratedResourceFolders())
                 .containsExactly(
