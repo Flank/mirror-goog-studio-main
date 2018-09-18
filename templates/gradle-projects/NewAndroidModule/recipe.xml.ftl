@@ -160,10 +160,17 @@
 
     <dependency mavenUrl="android.arch.navigation:navigation-fragment:+" />
     <dependency mavenUrl="android.arch.navigation:navigation-ui:+" />
-
     <#if generateKotlin>
         <dependency mavenUrl="android.arch.navigation:navigation-fragment-ktx:+" />
         <dependency mavenUrl="android.arch.navigation:navigation-ui-ktx:+" />
+    </#if>
+    <!--
+    navigation-ui depends on the stable version of design library. This is to remove the
+    lint warning for the generated project may not use the same version of the support
+    library.
+    -->
+    <#if !useAndroidX >
+        <dependency mavenUrl="com.android.support:design:${buildApi}.+"/>
     </#if>
     <open file="${escapeXmlAttribute(resOut)}/navigation/mobile_navigation.xml" />
 </#if>
