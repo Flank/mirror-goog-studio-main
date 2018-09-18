@@ -68,27 +68,70 @@ public class FeatureTest {
 
     @Test
     public void testOreoAndAboveFeatureIdAllocation() throws Exception {
-        testFeatureIdAllocation(26, 0x80);
+        testFeatureIdAllocation(26, 26, 0x80);
     }
 
     @Test
     public void testBeforeOreoFeatureIdAllocation() throws Exception {
-        testFeatureIdAllocation(25, 0x7e);
+        testFeatureIdAllocation(25, 25, 0x7e);
     }
 
-    private void testFeatureIdAllocation(int minSdkVersion, int expectedFeatureId)
+    @Test
+    public void testDifferentMinSdkVersionForFeatureIdAllocation() throws Exception {
+        // base module sets the allocation policy.
+        testFeatureIdAllocation(25, 26, 0x7e);
+        testFeatureIdAllocation(26, 25, 0x80);
+    }
+
+    private void testFeatureIdAllocation(
+            int baseMinSdkVersion, int featureMinSdkVersion, int expectedFeatureId)
             throws Exception {
         GradleTestProject featureProject = project.getSubproject(":feature");
 
         TestFileUtils.appendToFile(
                 project.getSubproject(":app").getBuildFile(),
-                "android.defaultConfig.minSdkVersion " + minSdkVersion + "\n");
+                "android.defaultConfig.minSdkVersion " + baseMinSdkVersion + "\n");
         TestFileUtils.appendToFile(
                 featureProject.getBuildFile(),
-                "android.defaultConfig.minSdkVersion " + minSdkVersion + "\n");
+                "android.defaultConfig.minSdkVersion " + featureMinSdkVersion + "\n");
         TestFileUtils.appendToFile(
                 project.getSubproject(":baseFeature").getBuildFile(),
-                "android.defaultConfig.minSdkVersion " + minSdkVersion + "\n");
+                "android.defaultConfig.minSdkVersion " + baseMinSdkVersion + "\n");
+
+        if (featureMinSdkVersion > baseMinSdkVersion) {
+            FileUtils.writeToFile(
+                    FileUtils.join(
+                            project.getSubproject(":baseFeature").getTestDir(),
+                            "src",
+                            "main",
+                            SdkConstants.ANDROID_MANIFEST_XML),
+                    "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "      package=\"com.example.android.multiproject.base\"\n"
+                            + "      xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                            + "\n"
+                            + "      <uses-sdk tools:overrideLibrary=\"com.example.android.multiproject\"/>\n"
+                            + "\n"
+                            + "</manifest>");
+
+            FileUtils.writeToFile(
+                    FileUtils.join(
+                            project.getSubproject(":app").getTestDir(),
+                            "src",
+                            "main",
+                            SdkConstants.ANDROID_MANIFEST_XML),
+                    "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "      package=\"com.example.android.multiproject.app\"\n"
+                            + "      android:versionCode=\"1\"\n"
+                            + "      android:versionName=\"1.0\"\n"
+                            + "      xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                            + "\n"
+                            + "      <uses-sdk tools:overrideLibrary=\"com.example.android.multiproject.feature\"/>\n"
+                            + "\n"
+                            + "</manifest>");
+        }
+
 
         // Build all the things.
         project.executor().run("clean", "assemble");

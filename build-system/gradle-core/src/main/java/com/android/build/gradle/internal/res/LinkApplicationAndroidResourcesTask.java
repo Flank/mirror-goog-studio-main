@@ -71,7 +71,6 @@ import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.symbols.SymbolIo;
-import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -187,11 +186,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         return applicationId.get();
     }
 
-    @Input
-    public int getMinSdkVersion() {
-        return minSdkVersion;
-    }
-
     SplitList splitList;
 
     private OutputFactory outputFactory;
@@ -199,7 +193,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
     private Supplier<String> applicationId;
 
     private File supportDirectory;
-    private int minSdkVersion;
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
@@ -482,7 +475,9 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                 .setPreferredDensity(preferredDensity)
                                 .setPackageId(getResOffset())
                                 .setAllowReservedPackageId(
-                                        minSdkVersion < AndroidVersion.VersionCodes.O)
+                                        resOffsetSupplier != null
+                                                && resOffsetSupplier.get()
+                                                        < FeatureSetMetadata.BASE_ID)
                                 .setDependentFeatures(featurePackagesBuilder.build())
                                 .setImports(imports)
                                 .setIntermediateDir(getIncrementalFolder())
@@ -857,8 +852,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
             task.textSymbolOutputDir = symbolLocation;
             task.symbolsWithPackageNameOutputFile = symbolsWithPackageNameOutputFile;
-
-            task.minSdkVersion = getVariantScope().getMinSdkVersion().getApiLevel();
         }
     }
 
