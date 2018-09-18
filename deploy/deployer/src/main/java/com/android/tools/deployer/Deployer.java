@@ -122,10 +122,17 @@ public class Deployer {
         return dumps;
     }
 
+    public RunResponse codeSwap() throws IOException {
+        RunResponse response = new RunResponse();
+        Map<String, ApkDump> dumps = diffInstall(false, response);
+        swap(response, dumps, false /* Restart Activity */);
+        return response;
+    }
+
     public RunResponse fullSwap() throws IOException {
         RunResponse response = new RunResponse();
         Map<String, ApkDump> dumps = diffInstall(false, response);
-        swap(response, dumps);
+        swap(response, dumps, true /* Restart Activity */);
         return response;
     }
 
@@ -197,12 +204,13 @@ public class Deployer {
         }
     }
 
-    private void swap(RunResponse response, Map<String, ApkDump> dumps) throws DeployerException {
+    private void swap(RunResponse response, Map<String, ApkDump> dumps, boolean restart)
+            throws DeployerException {
         stopWatch.mark("Swap started.");
         ClassRedefiner redefiner = new InstallerBasedClassRedefiner(installer);
         Deploy.SwapRequest.Builder request = Deploy.SwapRequest.newBuilder();
         request.setPackageName(packageName);
-        request.setRestartActivity(true);
+        request.setRestartActivity(restart);
         for (ApkFull apk : apks) {
             HashMap<String, ApkDiffer.ApkEntryStatus> diffs =
                     response.result.get(apk.getPath()).diffs;
