@@ -186,7 +186,7 @@ public interface BaseVariant {
     /**
      * Returns the check manifest task.
      *
-     * @deprecated Use {@link #getPreBuildProvider()}
+     * @deprecated Use {@link #getCheckManifestProvider()}
      */
     @NonNull
     @Deprecated
@@ -256,7 +256,7 @@ public interface BaseVariant {
     /**
      * Returns the asset merging task.
      *
-     * @deprecated Use {@link #getMergeResourcesProvider()}
+     * @deprecated Use {@link #getMergeAssetsProvider()}
      */
     @Nullable
     @Deprecated
@@ -291,7 +291,7 @@ public interface BaseVariant {
     /**
      * Returns the Java Compilation task
      *
-     * @deprecated Use {@link #getGenerateBuildConfigProvider()}
+     * @deprecated Use {@link #getJavaCompileProvider()}
      */
     @NonNull
     @Deprecated
