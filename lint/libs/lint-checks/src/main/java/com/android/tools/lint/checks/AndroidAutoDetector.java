@@ -76,7 +76,7 @@ public class AndroidAutoDetector extends Detector implements XmlScanner, SourceC
                             "Invalid `name` attribute for `uses` element.",
                             "The <uses> element in `<automotiveApp>` should contain a "
                                     + "valid value for the `name` attribute.\n"
-                                    + "Valid values are `media` or `notification`.",
+                                    + "Valid values are `media`, `notification`, or `sms`.",
                             Category.CORRECTNESS,
                             6,
                             Severity.ERROR,
@@ -144,6 +144,7 @@ public class AndroidAutoDetector extends Detector implements XmlScanner, SourceC
             "com.google.android.gms.car.application";
     private static final String VAL_NAME_MEDIA = "media";
     private static final String VAL_NAME_NOTIFICATION = "notification";
+    private static final String VAL_NAME_SMS = "sms";
     private static final String TAG_AUTOMOTIVE_APP = "automotiveApp";
     private static final String ATTR_RESOURCE = "resource";
     private static final String TAG_USES = "uses";
@@ -270,8 +271,10 @@ public class AndroidAutoDetector extends Detector implements XmlScanner, SourceC
                             context.getLocation(node),
                             "Expecting one of `"
                                     + VAL_NAME_MEDIA
-                                    + "` or `"
+                                    + "`, `"
                                     + VAL_NAME_NOTIFICATION
+                                    + "`, or `"
+                                    + VAL_NAME_SMS
                                     + "` for the name "
                                     + "attribute in "
                                     + TAG_USES
@@ -410,6 +413,6 @@ public class AndroidAutoDetector extends Detector implements XmlScanner, SourceC
     @SuppressWarnings("unused")
     @NonNull
     public static String[] getAllowedAutomotiveAppTypes() {
-        return new String[] {VAL_NAME_MEDIA, VAL_NAME_NOTIFICATION};
+        return new String[] {VAL_NAME_MEDIA, VAL_NAME_NOTIFICATION, VAL_NAME_SMS};
     }
 }

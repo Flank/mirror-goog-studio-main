@@ -117,7 +117,7 @@ public class AndroidAutoDetectorTest extends AbstractCheckTest {
     public void testInvalidUsesTagInMetadataFile() {
         String expected =
                 ""
-                        + "res/xml/automotive_app_desc.xml:3: Error: Expecting one of media or notification for the name attribute in uses tag. [InvalidUsesTagAttribute]\n"
+                        + "res/xml/automotive_app_desc.xml:3: Error: Expecting one of media, notification, or sms for the name attribute in uses tag. [InvalidUsesTagAttribute]\n"
                         + "    <uses name=\"medias\"/>\n"
                         + "          ~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
