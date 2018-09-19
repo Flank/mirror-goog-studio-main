@@ -25,10 +25,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * Wrapper for the configurations of the benchmark that the logger will add data to. TODO add
- * regression analysis configurations.
- */
+/** Wrapper for the configurations of the benchmark that the logger will add data to. */
 public class Benchmark {
     private static final String DEFAULT_PROJECT_NAME = "Perfgate for Android Studio";
 

@@ -20,6 +20,15 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 
+/**
+ * Class which represents a specific perfgate analyzer. This class specifies a WindowDeviationInput
+ * proto with a single ToleranceCheck having a single MedianToleranceParams.
+ *
+ * <p>When this {@link Analyzer} is added to a {@link Metric}, this analyzer will compare the
+ * medians of a recent window and a historic window each time data is uploaded. The analyzer will
+ * flag a regression if (recent median) > (historic median) + threshold, where the threshold equals
+ * constTerm + medianCoeff*(historic median) + madCoeff*(historic MAD).
+ */
 public class MedianWindowDeviationAnalyzer implements Analyzer {
 
     @NonNull private final String type = "MedianWindowDeviationAnalyzer";
