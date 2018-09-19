@@ -133,6 +133,22 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
         }
     }
 
+    public void hasAnnotations() {
+        if (assertSubjectIsNonNull() && !checkHasAnnotations()) {
+            fail("has annotations");
+        }
+    }
+
+    public void doesNotHaveAnnotations() {
+        if (assertSubjectIsNonNull() && checkHasAnnotations()) {
+            fail(" does not have annotations");
+        }
+    }
+
+    private boolean checkHasAnnotations() {
+        return !actual().getAnnotations().isEmpty();
+    }
+
     /** Check if the class has method with the specified name. */
     private boolean checkHasMethod(@NonNull String name) {
         for (DexBackedMethod method : getSubject().getMethods()) {

@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager.CONTENT_DEX_W
 import com.android.build.gradle.internal.pipeline.TransformManager.CONTENT_JARS
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.transforms.TransformInputUtil.getAllFiles
+import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.VariantType
 import com.android.builder.dexing.MainDexListConfig
 import com.android.builder.dexing.ProguardConfig
@@ -64,7 +65,8 @@ class R8Transform(
     proguardConfigurationFiles: ConfigurableFileCollection,
     variantType: VariantType,
     includeFeaturesInScopes: Boolean,
-    private val messageReceiver: MessageReceiver
+    private val messageReceiver: MessageReceiver,
+    private val useFullR8: Boolean = false
 ) :
         ProguardConfigurable(proguardConfigurationFiles, variantType, includeFeaturesInScopes) {
 
@@ -95,7 +97,8 @@ class R8Transform(
                 scope.globalScope.project.files(),
                 scope.variantData.type,
                 scope.consumesFeatureJars(),
-                scope.globalScope.messageReceiver
+                scope.globalScope.messageReceiver,
+                scope.globalScope.projectOptions[BooleanOption.FULL_R8]
             )
 
     override fun getName(): String = "r8"
@@ -120,7 +123,8 @@ class R8Transform(
                 "disableTreeShaking" to disableTreeShaking,
                 "java8Support" to (java8Support == VariantScope.Java8LangSupport.R8),
                 "disableMinification" to disableMinification,
-                "proguardConfiguration" to proguardConfigurations
+                "proguardConfiguration" to proguardConfigurations,
+                "fullMode" to useFullR8
         )
 
     override fun getSecondaryFileOutputs(): MutableCollection<File> =
@@ -238,7 +242,8 @@ class R8Transform(
             toolConfig,
             proguardConfig,
             mainDexListConfig,
-            messageReceiver
+            messageReceiver,
+            useFullR8
         )
     }
 }

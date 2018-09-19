@@ -60,9 +60,10 @@ fun runR8(
     toolConfig: ToolConfig,
     proguardConfig: ProguardConfig,
     mainDexListConfig: MainDexListConfig,
-    messageReceiver: MessageReceiver
+    messageReceiver: MessageReceiver,
+    useFullR8: Boolean = false
 ) {
-    val r8CommandBuilder = CompatProguardCommandBuilder(true, D8DiagnosticsHandler(messageReceiver))
+    val r8CommandBuilder = CompatProguardCommandBuilder(!useFullR8, D8DiagnosticsHandler(messageReceiver))
 
     if (toolConfig.minSdkVersion < 21) {
         // specify main dex related options only when minSdkVersion is below 21

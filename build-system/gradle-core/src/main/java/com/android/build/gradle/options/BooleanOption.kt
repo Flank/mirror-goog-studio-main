@@ -73,6 +73,7 @@ enum class BooleanOption(
     ENABLE_DEXING_ARTIFACT_TRANSFORM("android.enableDexingArtifactTransform", false),
     DEPLOY_AS_INSTANT_APP(AndroidProject.PROPERTY_DEPLOY_AS_INSTANT_APP, false),
     ENABLE_SEPARATE_ANNOTATION_PROCESSING("android.enableSeparateAnnotationProcessing", false),
+    FULL_R8("android.enableR8.fullMode", false),
 
     // ---------------
     // Lifecycle flags: Stable stage, Enabled by default, can be disabled

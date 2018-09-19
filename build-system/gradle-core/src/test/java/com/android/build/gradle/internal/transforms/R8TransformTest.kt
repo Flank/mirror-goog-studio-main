@@ -327,9 +327,64 @@ class R8TransformTest {
         assertThat(dex).containsClass(Type.getDescriptor(CarbonForm::class.java))
         assertThat(dex).containsClass(Type.getDescriptor(Cat::class.java))
         assertThat(dex).containsClass(Type.getDescriptor(Toy::class.java))
+        // Check proguard compatibility mode
+        assertThat(dex).containsClass(Type.getDescriptor(Toy::class.java)).that().hasAnnotations()
         assertThat(dex.version).isEqualTo(35)
 
         val transform2 = getTransform(java8Support = VariantScope.Java8LangSupport.R8)
+        transform2.keep("class " + CarbonForm::class.java.name)
+
+        transform2.transform(invocation)
+
+        val dex2 = getDex()
+        assertThat(dex2).containsClass(Type.getDescriptor(CarbonForm::class.java))
+        assertThat(dex2).doesNotContainClasses(Type.getDescriptor(Animal::class.java))
+        assertThat(dex2).doesNotContainClasses(Type.getDescriptor(Cat::class.java))
+        assertThat(dex2).doesNotContainClasses(Type.getDescriptor(Toy::class.java))
+        assertThat(dex2.version).isEqualTo(35)
+    }
+
+    @Test
+    fun testProguardConfiguration_fullR8() {
+        val classes = tmp.root.toPath().resolve("classes.jar")
+        TestInputsGenerator.pathWithClasses(
+            classes,
+            listOf(Animal::class.java, CarbonForm::class.java, Cat::class.java, Toy::class.java)
+        )
+        val jarInput = TransformTestHelper.singleJarBuilder(classes.toFile()).build()
+
+        val invocation =
+            TransformTestHelper
+                .invocationBuilder()
+                .addInput(jarInput)
+                .setContext(this.context)
+                .setTransformOutputProvider(outputProvider)
+                .build()
+
+        val proguardConfiguration = tmp.newFile()
+        proguardConfiguration.printWriter().use {
+            it.println("-keep class " + Cat::class.java.name + " {*;}")
+        }
+        val proguardConfigurationFileCollection = FakeConfigurableFileCollection(setOf(proguardConfiguration))
+        val transform = getTransform(
+            java8Support = VariantScope.Java8LangSupport.R8,
+            proguardRulesFiles = proguardConfigurationFileCollection,
+            useFullR8 = true)
+
+        transform.transform(invocation)
+
+        val dex = getDex()
+        assertThat(dex).containsClass(Type.getDescriptor(Animal::class.java))
+        assertThat(dex).containsClass(Type.getDescriptor(CarbonForm::class.java))
+        assertThat(dex).containsClass(Type.getDescriptor(Cat::class.java))
+        assertThat(dex).containsClass(Type.getDescriptor(Toy::class.java))
+        // Check full R8 mode
+        assertThat(dex).containsClass(Type.getDescriptor(Toy::class.java)).that().doesNotHaveAnnotations()
+        assertThat(dex.version).isEqualTo(35)
+
+        val transform2 = getTransform(
+            java8Support = VariantScope.Java8LangSupport.R8,
+            useFullR8 = true)
         transform2.keep("class " + CarbonForm::class.java.name)
 
         transform2.transform(invocation)
@@ -454,7 +509,8 @@ class R8TransformTest {
         typesToOutput: MutableSet<QualifiedContent.ContentType> = TransformManager.CONTENT_DEX,
         outputProguardMapping: File = tmp.newFile(),
         disableMinification: Boolean = true,
-        minSdkVersion: Int = 21
+        minSdkVersion: Int = 21,
+        useFullR8: Boolean = false
     ): R8Transform {
         return R8Transform(
                 bootClasspath = lazy { listOf(TestUtils.getPlatformFile("android.jar")) },
@@ -471,7 +527,8 @@ class R8TransformTest {
                 proguardConfigurationFiles = proguardRulesFiles,
                 variantType = VariantTypeImpl.BASE_APK,
                 includeFeaturesInScopes = false,
-                messageReceiver = NoOpMessageReceiver()
+                messageReceiver = NoOpMessageReceiver(),
+                useFullR8 = useFullR8
         )
     }
 }
