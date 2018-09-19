@@ -21,9 +21,9 @@ iml_module(
         "//tools/base/apkparser:studio.android.sdktools.binary-resources[module]",
         "//tools/idea/.idea/libraries:Guava",
         "//tools/base/deploy/proto:deploy_java_proto",
-        "//tools/base/deploy/deployer:java_version",
         "//tools/idea/.idea/libraries:protobuf",
         "//prebuilts/r8:d8-master",
+        "//tools/base/deploy/deployer:java_version",
     ],
 )
 
@@ -41,9 +41,7 @@ genrule(
     outs = [
         "Version.java",
     ],
-    cmd = "$(location //tools/base/bazel:bin2c) -lang=java -embed=false -variable=com.android.tools.deployer.Version " +
-          " -output=$(location Version.java)" +
-          " $(locations //tools/base/deploy/installer:unversioned_installer)",
+    cmd = "$(location //tools/base/bazel:bin2c) -lang=java -embed=false -variable=com.android.tools.deployer.Version -output=$(location Version.java) $(locations //tools/base/deploy/installer:unversioned_installer)",
     tags = ["no_windows"],
     tools = [
         "//tools/base/bazel:bin2c",
