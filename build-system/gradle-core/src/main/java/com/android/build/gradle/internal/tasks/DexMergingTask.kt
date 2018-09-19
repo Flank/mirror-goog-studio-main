@@ -180,9 +180,9 @@ open class DexMergingTask : AndroidVariantTask() {
             val attributes = getAttributeMap(minSdk, isDebuggable)
 
             fun forAction(action: DexMergingAction): FileCollection {
-                return when (action) {
+                when (action) {
                     DexMergingAction.MERGE_EXTERNAL_LIBS -> {
-                        variantScope.getArtifactFileCollection(
+                        return variantScope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.EXTERNAL,
                             AndroidArtifacts.ArtifactType.DEX,
@@ -190,7 +190,7 @@ open class DexMergingTask : AndroidVariantTask() {
                         )
                     }
                     DexMergingAction.MERGE_LIBRARY_PROJECTS -> {
-                        variantScope.getArtifactFileCollection(
+                        return variantScope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.MODULE,
                             AndroidArtifacts.ArtifactType.DEX,
@@ -198,12 +198,27 @@ open class DexMergingTask : AndroidVariantTask() {
                         )
                     }
                     DexMergingAction.MERGE_PROJECT -> {
-                        val manager = variantScope.transformManager
-                        val streams = manager.getStreams(StreamFilter.DEX_ARCHIVE)
-                        variantScope.globalScope.project.files(*streams.stream().map { it.fileCollection }.toArray())
+                        val streams =
+                            variantScope.transformManager.getStreams(StreamFilter.DEX_ARCHIVE)
+                        val files =
+                            variantScope.globalScope.project.files(*streams.stream().map { it.fileCollection }.toArray())
+                        val variantType = variantScope.type
+                        if (variantType.isTestComponent && variantType.isApk) {
+                            val testedVariantData =
+                                checkNotNull(variantScope.testedVariantData) { "Test component without testedVariantData" }
+                            if (testedVariantData.type.isAar) {
+                                files.from(
+                                    testedVariantData.scope.artifacts.getFinalArtifactFiles(
+                                        InternalArtifactType.DEX
+                                    )
+                                )
+                            }
+                        }
+
+                        return files
                     }
                     DexMergingAction.MERGE_ALL -> {
-                        forAction(DexMergingAction.MERGE_PROJECT) +
+                        return forAction(DexMergingAction.MERGE_PROJECT) +
                                 forAction(DexMergingAction.MERGE_LIBRARY_PROJECTS) +
                                 variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.EXTERNAL_LIBS_DEX).get()
                     }

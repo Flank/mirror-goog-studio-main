@@ -193,6 +193,22 @@ class DexingArtifactTransformMultiModuleTest {
         }
     }
 
+    @Test
+    fun testLibraryAndroidTest() {
+        project.getSubproject("lib").mainSrcDir.resolve("lib/Data.java").let {
+            it.parentFile.mkdirs()
+            it.writeText(
+                """
+                package lib;
+                public class Data { }
+            """.trimIndent()
+            )
+        }
+        executor().run(":lib:assembleAndroidTest")
+        val apk = project.getSubproject("lib").getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG)
+        assertThatApk(apk).containsClass("Llib/Data;")
+    }
+
     private fun executor() =
         project.executor().with(
             BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM,
