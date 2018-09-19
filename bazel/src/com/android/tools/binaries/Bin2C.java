@@ -170,7 +170,8 @@ class Bin2C {
             writer.println();
             writer.println(String.format("public class %s {", variableBaseName));
             String hash = toHexHash(buffer);
-            writer.println(String.format("    public static final String hash = \"%s\";", hash));
+            writer.println(
+                    String.format("    public static String hash() { return \"%s\"; }", hash));
             writer.println("}");
         }
     }

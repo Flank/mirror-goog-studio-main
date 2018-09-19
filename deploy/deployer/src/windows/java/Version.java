@@ -17,5 +17,7 @@
 package com.android.tools.deployer;
 
 public class Version {
-    public static String hash = "deadbeef";
+    public static String hash() {
+        return "deadbeef";
+    }
 }

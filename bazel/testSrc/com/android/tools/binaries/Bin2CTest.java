@@ -77,7 +77,7 @@ public class Bin2CTest {
                     "package my.package;",
                     "",
                     "public class TestName {",
-                    "    public static final String hash = \"e7aebf57\";",
+                    "    public static String hash() { return \"e7aebf57\"; }",
                     "}",
                 },
                 strings);

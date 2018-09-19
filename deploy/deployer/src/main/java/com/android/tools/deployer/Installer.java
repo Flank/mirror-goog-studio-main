@@ -155,7 +155,7 @@ public class Installer {
     }
 
     private String[] buildCmd(String[] parameters) {
-        String[] base = {INSTALLER_PATH, "-version=" + Version.hash};
+        String[] base = {INSTALLER_PATH, "-version=" + Version.hash()};
         return ObjectArrays.concat(base, parameters, String.class);
     }
 }
