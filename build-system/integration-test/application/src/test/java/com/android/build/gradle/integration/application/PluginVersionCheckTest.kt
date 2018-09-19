@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.application
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.builder.model.AndroidProject
 import com.android.builder.model.SyncIssue
 import com.android.builder.model.SyncIssue.SEVERITY_ERROR
 import com.android.builder.model.SyncIssue.TYPE_THIRD_PARTY_GRADLE_PLUGIN_TOO_OLD
@@ -55,7 +54,8 @@ class PluginVersionCheckTest {
                 "-Duser.home=" + CrashlyticsTest.getCustomUserHomeForCrashlytics(project)
             )
                 .ignoreSyncIssues().fetchAndroidProjects()
-        val syncIssues = model.onlyModel.syncIssues.filter { it.type != SyncIssue.TYPE_DEPRECATED_DSL }
+        val syncIssues =
+            model.onlyModel.syncIssues.filter { it.type != SyncIssue.TYPE_DEPRECATED_DSL }
 
         assertThat(syncIssues).hasSize(1)
         val syncIssue = syncIssues.iterator().next()
@@ -64,7 +64,9 @@ class PluginVersionCheckTest {
         assertThat(syncIssue.severity).isEqualTo(SEVERITY_ERROR)
         assertThat(syncIssue.message).contains(
             "The Android Gradle plugin supports only Crashlytics Gradle plugin" +
-                    " version 1.25.4 and higher. Project 'project' is using version 1.22.1."
+                    " version 1.25.4 and higher.\n" +
+                    "The following dependencies do not satisfy the required version:\n" +
+                    "root project 'project' -> io.fabric.tools:gradle:1.22.1"
         )
     }
 }
