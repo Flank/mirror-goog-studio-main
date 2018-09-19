@@ -16,7 +16,7 @@ platform(
          """,
 )
 
-# This test is run explicitely on the foundry bot as will not pass on
+# This test is run explicitly on the foundry bot as will not pass on
 # a standard linux machine, because validates a very custom /dev/random condition.
 java_test(
     name = "test",
@@ -32,6 +32,9 @@ java_test(
         "no_windows",
     ],
     test_class = "FoundryTest",
+    deps = [
+        "//tools/base/third_party:junit_junit",
+    ],
 )
 
 # CPU, disk and memory benchmark baseline tests to measure go/adt-perfgate
@@ -47,5 +50,6 @@ java_test(
     test_class = "FoundryPerfgateMetrics",
     deps = [
         "//tools/base/perf-logger:studio.perf-logger_testlib",
+        "//tools/base/third_party:junit_junit",
     ],
 )

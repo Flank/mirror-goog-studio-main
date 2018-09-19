@@ -121,10 +121,6 @@ kotlin_test(
     ],
     # TODO: Remove the blacklist, once NDK is checked in.
     test_class = "com.android.build.gradle.internal.GradleCoreBazelSuite",
-    # Make sure we're running against JUnit 4.12. See https://github.com/bazelbuild/bazel/issues/2146.
-    runtime_deps = [
-        "//tools/base/third_party:junit_junit",
-    ],
     deps = [
         ":gradle-core",
         "//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-reflect",

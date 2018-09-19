@@ -396,6 +396,7 @@ java_test(
         ":bazel_generator",
         ":iml_to_build",
         ":utils",
+        "//tools/base/third_party:junit_junit",
     ],
 )
 
@@ -406,5 +407,6 @@ java_test(
     deps = [
         ":bin2c",
         "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:junit_junit",
     ],
 )

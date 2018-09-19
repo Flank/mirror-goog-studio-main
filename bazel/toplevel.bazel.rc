@@ -12,6 +12,9 @@ test --jvmopt='-Dfile.encoding=UTF-8'
 test --jvmopt='-Xmx4G'
 test --jvmopt='-XX:+UseConcMarkSweepGC'
 
+# Don't use JUnit from Bazel.
+test --explicit_java_test_deps
+
 # Tests depend on not having a real user name, but bazel now returns the
 # real one. This flag keeps the old behavior of not having a home directory.
 test --sandbox_fake_username
