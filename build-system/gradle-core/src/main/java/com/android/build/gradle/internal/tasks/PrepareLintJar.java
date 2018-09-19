@@ -31,7 +31,7 @@ import java.io.IOException;
 import java.util.Set;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 
@@ -48,7 +48,7 @@ public class PrepareLintJar extends DefaultTask {
     private FileCollection lintChecks;
     private File outputLintJar;
 
-    @InputFiles
+    @Classpath
     public FileCollection getLintChecks() {
         return lintChecks;
     }
