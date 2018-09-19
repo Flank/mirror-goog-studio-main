@@ -256,8 +256,8 @@ public enum InternalArtifactType implements ArtifactType {
     // The feature dex files output by the DexSplitter from the base. The base produces and
     // publishes these files when there's multi-apk code shrinking.
     FEATURE_DEX,
-    // The class files for a feature and all of its runtime dependencies.
-    FEATURE_AND_RUNTIME_DEPS_CLASSES,
+    // The class files for a module and all of its runtime dependencies.
+    MODULE_AND_RUNTIME_DEPS_CLASSES,
     // The java resources for a feature and all of its runtime dependencies.
     FEATURE_AND_RUNTIME_DEPS_JAVA_RES,
 

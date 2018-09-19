@@ -2156,9 +2156,10 @@ public abstract class TaskManager {
                     });
         }
 
-        // Add transform to create merged runtime classes if this is a feature or dynamic-feature.
-        // Merged runtime classes are needed if code minification is enabled in multi-apk project.
-        if (variantData.getType().isFeatureSplit()) {
+        // Add transform to create merged runtime classes if this is a feature, a dynamic-feature,
+        // or a base module consuming feature jars. Merged runtime classes are needed if code
+        // minification is enabled in a project with features or dynamic-features.
+        if (variantData.getType().isFeatureSplit() || variantScope.consumesFeatureJars()) {
             createMergeClassesTransform(variantScope);
         }
 
@@ -3556,6 +3557,11 @@ public abstract class TaskManager {
                         variantScope.getVariantConfiguration().getDirName());
         FileCollection featureJars =
                 variantScope.getArtifactFileCollection(METADATA_VALUES, MODULE, METADATA_CLASSES);
+        BuildableArtifact baseJars =
+                variantScope
+                        .getArtifacts()
+                        .getFinalArtifactFiles(
+                                InternalArtifactType.MODULE_AND_RUNTIME_DEPS_CLASSES);
         BuildableArtifact mappingFileSrc =
                 variantScope.getArtifacts().hasArtifact(InternalArtifactType.APK_MAPPING)
                         ? variantScope
@@ -3564,7 +3570,7 @@ public abstract class TaskManager {
                         : null;
 
         DexSplitterTransform transform =
-                new DexSplitterTransform(dexSplitterOutput, featureJars, mappingFileSrc);
+                new DexSplitterTransform(dexSplitterOutput, featureJars, baseJars, mappingFileSrc);
 
         Optional<TaskProvider<TransformTask>> transformTask =
                 variantScope
@@ -3645,14 +3651,7 @@ public abstract class TaskManager {
 
     private void createMergeClassesTransform(@NonNull VariantScope variantScope) {
 
-        String fileName =
-                getFeatureFileName(globalScope.getProject().getPath(), SdkConstants.DOT_JAR);
-        File outputJar =
-                FileUtils.join(
-                        globalScope.getIntermediatesDir(),
-                        "merged-classes",
-                        variantScope.getVariantConfiguration().getDirName(),
-                        fileName);
+        File outputJar = variantScope.getMergedClassesJarFile();
 
         MergeClassesTransform transform = new MergeClassesTransform(outputJar);
 
@@ -3668,7 +3667,7 @@ public abstract class TaskManager {
                                             .getArtifacts()
                                             .appendArtifact(
                                                     InternalArtifactType
-                                                            .FEATURE_AND_RUNTIME_DEPS_CLASSES,
+                                                            .MODULE_AND_RUNTIME_DEPS_CLASSES,
                                                     ImmutableList.of(outputJar),
                                                     taskName);
                                 },
@@ -3686,14 +3685,14 @@ public abstract class TaskManager {
     }
 
     /**
-     * Helper method to reliably generate matching feature file names when dex splitter is used.
+     * Method to reliably generate matching feature file names when dex splitter is used.
      *
      * @param modulePath the gradle module path for the feature
      * @param fileExtension the desired file extension (e.g., ".jar"), or null if no file extension
      *     (e.g., for a folder)
      * @return name of file
      */
-    private static String getFeatureFileName(
+    public static String getFeatureFileName(
             @NonNull String modulePath, @Nullable String fileExtension) {
         final String featureName = FeatureSplitUtils.getFeatureName(modulePath);
         final String sanitizedFeatureName = ":".equals(featureName) ? "" : featureName;

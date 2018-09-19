@@ -40,6 +40,7 @@ import java.util.jar.JarFile
 class DexSplitterTransform(
         private val outputDir: File,
         private val featureJars: FileCollection,
+        private val baseJars: BuildableArtifact,
         private val mappingFileSrc: BuildableArtifact?
 ) :
         Transform() {
@@ -58,6 +59,7 @@ class DexSplitterTransform(
     override fun getSecondaryFiles(): MutableCollection<SecondaryFile> {
         val secondaryFiles: MutableCollection<SecondaryFile> = mutableListOf()
         secondaryFiles.add(SecondaryFile.nonIncremental(featureJars))
+        secondaryFiles.add(SecondaryFile.nonIncremental(baseJars))
         mappingFileSrc?.let { secondaryFiles.add(SecondaryFile.nonIncremental(it)) }
         return secondaryFiles
     }
@@ -94,6 +96,8 @@ class DexSplitterTransform(
                 builder.addFeatureJar(file.toPath(), file.nameWithoutExtension)
                 Files.createDirectories(File(outputDir, file.nameWithoutExtension).toPath())
             }
+
+            baseJars.files.forEach { builder.addBaseJar(it.toPath()) }
 
             builder.build().run()
 

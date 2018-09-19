@@ -50,6 +50,7 @@ import com.android.build.gradle.internal.InstantRunTaskManager;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.SdkHandler;
+import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dependency.AndroidTestResourceArtifactCollection;
@@ -1405,6 +1406,25 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     private File getDefaultApkLocation() {
         return FileUtils.join(globalScope.getBuildDir(), FD_OUTPUTS, "apk");
+    }
+
+    /**
+     * Returns the location of the jar file containing the merged classes from the module and the
+     * runtime dependencies.
+     */
+    @NonNull
+    @Override
+    public File getMergedClassesJarFile() {
+        String fileName =
+                variantData.getType().isBaseModule()
+                        ? "base.jar"
+                        : TaskManager.getFeatureFileName(
+                                globalScope.getProject().getPath(), SdkConstants.DOT_JAR);
+        return FileUtils.join(
+                globalScope.getIntermediatesDir(),
+                "merged-classes",
+                getVariantConfiguration().getDirName(),
+                fileName);
     }
 
     @NonNull

@@ -41,6 +41,10 @@ class DexSplitterTool private constructor(private val options: Options) {
             options.addFeatureJar(path.toString(), name)
         }
 
+        fun addBaseJar(path: Path) {
+            options.addBaseJar(path.toString())
+        }
+
         fun build() = DexSplitterTool(options)
     }
 

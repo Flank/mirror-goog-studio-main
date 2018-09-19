@@ -64,6 +64,7 @@ class DexSplitterTransformTest {
     private lateinit var featureClasses: File
 
     @Mock private lateinit var mappingFileSrc: BuildableArtifact
+    @Mock private lateinit var baseJars: BuildableArtifact
 
     @Before
     fun setUp() {
@@ -77,9 +78,11 @@ class DexSplitterTransformTest {
         dexSplitterContext = Mockito.mock(Context::class.java)
         dexSplitterOutputDir = tmp.newFolder()
 
-        baseClasses = File(tmp.root, "base/classes.jar")
+        baseClasses = File(tmp.root, "base/base.jar")
         FileUtils.mkdirs(baseClasses.parentFile)
         TestInputsGenerator.jarWithEmptyClasses(baseClasses.toPath(), listOf("base/A", "base/B"))
+        Mockito.`when`(baseJars.iterator())
+            .thenReturn(listOf(baseClasses).iterator())
 
         featureClasses = File(tmp.root, "feature-foo.jar")
         FileUtils.mkdirs(featureClasses.parentFile)
@@ -96,7 +99,7 @@ class DexSplitterTransformTest {
         val r8Dex = getDex(r8OutputProviderDir.toPath())
         assertThat(r8Dex).containsClasses("Lbase/A;", "Lbase/B;", "Lfeature/A;", "Lfeature/B;")
 
-        runDexSplitter(File(r8OutputProviderDir, "main"), listOf(featureClasses))
+        runDexSplitter(File(r8OutputProviderDir, "main"), listOf(featureClasses), baseJars)
 
         checkDexSplitterOutputs()
     }
@@ -114,7 +117,11 @@ class DexSplitterTransformTest {
         val r8Dex = getDex(r8OutputProviderDir.toPath())
         assertThat(r8Dex).containsClasses("Lbase/A;", "Lbase/B;", "Lfeature/A;", "Lfeature/B;")
 
-        runDexSplitter(File(r8OutputProviderDir, "main"), listOf(featureClasses), mappingFileSrc)
+        runDexSplitter(
+            File(r8OutputProviderDir, "main"),
+            listOf(featureClasses),
+            baseJars,
+            mappingFileSrc)
 
         checkDexSplitterOutputs()
     }
@@ -122,6 +129,7 @@ class DexSplitterTransformTest {
     private fun runDexSplitter(
         dexDir: File,
         featureJars: List<File>,
+        baseJars: BuildableArtifact,
         mappingFileSrc: BuildableArtifact? = null
     ) {
         val dexSplitterInput = TransformTestHelper.directoryBuilder(dexDir).build()
@@ -137,6 +145,7 @@ class DexSplitterTransformTest {
                 DexSplitterTransform(
                         dexSplitterOutputDir,
                         FakeFileCollection(featureJars),
+                        baseJars,
                         mappingFileSrc = mappingFileSrc)
 
         dexSplitterTransform.transform(dexSplitterInvocation)
