@@ -26,13 +26,14 @@ import java.util.regex.Pattern;
  * <p>Use a combination of {@link #isSuccessfullyCompleted()} and {@link #getErrorMessage()} to
  * decide if the installation was successful and what was the error.
  */
-public final class InstallReceiver extends MultiLineReceiver {
+public class InstallReceiver extends MultiLineReceiver {
 
     private static final String SUCCESS_OUTPUT = "Success"; //$NON-NLS-1$
     private static final Pattern FAILURE_PATTERN =
             Pattern.compile("Failure\\s+\\[(.*)\\]"); //$NON-NLS-1$
 
     private String mErrorMessage = null;
+    private String mSuccessMessage = null;
     /**
      * Track whether the installation was actually successful, regardless of if we get an output
      * from the command or not.
@@ -48,12 +49,21 @@ public final class InstallReceiver extends MultiLineReceiver {
                 if (line.startsWith(SUCCESS_OUTPUT)) {
                     mSuccessfullyCompleted = true;
                     mErrorMessage = null;
+                    mSuccessMessage = line;
+                    break;
                 } else {
                     Matcher m = FAILURE_PATTERN.matcher(line);
                     if (m.matches()) {
                         mErrorMessage = m.group(1);
+                        mSuccessMessage = null;
+                        mSuccessfullyCompleted = false;
+                        break;
                     } else {
-                        mErrorMessage = "Unknown failure (" + line + ")";
+                        if (mErrorMessage == null) {
+                            mErrorMessage = "Unknown failure: " + line;
+                        } else {
+                            mErrorMessage = mErrorMessage + "\n" + line;
+                        }
                     }
                 }
             }
@@ -71,6 +81,11 @@ public final class InstallReceiver extends MultiLineReceiver {
      */
     public String getErrorMessage() {
         return mErrorMessage;
+    }
+
+    /** Returns the success message from the installation. Returns null if failure is seen. */
+    public String getSuccessMessage() {
+        return mSuccessMessage;
     }
 
     /**
