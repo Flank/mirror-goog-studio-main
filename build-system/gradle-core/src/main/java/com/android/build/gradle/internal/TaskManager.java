@@ -60,6 +60,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
 import com.android.build.api.artifact.BuildableArtifact;
+import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Transform;
@@ -2291,13 +2292,14 @@ public abstract class TaskManager {
                 return;
             }
 
+            QualifiedContent.ScopeType scopeType = Scope.EXTERNAL_LIBRARIES;
             if (variantScope.getVariantConfiguration().getType().isTestComponent()) {
                 BaseVariantData testedVariant =
                         Objects.requireNonNull(variantScope.getTestedVariantData());
                 if (!testedVariant.getType().isAar()) {
                     // test variants, except for library, should not package try-with-resources jar
-                    // as the tested variant already contains it
-                    return;
+                    // as the tested variant already contains it.
+                    scopeType = Scope.PROVIDED_ONLY;
                 }
             }
 
@@ -2313,7 +2315,7 @@ public abstract class TaskManager {
             transformManager.addStream(
                     OriginalStream.builder(project, "runtime-deps-try-with-resources")
                             .addContentTypes(TransformManager.CONTENT_CLASS)
-                            .addScope(Scope.EXTERNAL_LIBRARIES)
+                            .addScope(scopeType)
                             .setFileCollection(variantScope.getTryWithResourceRuntimeSupportJar())
                             .build());
         }

@@ -17,13 +17,13 @@
 package com.android.build.gradle.integration.desugar;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.builder.core.DesugarProcessArgs.MIN_SUPPORTED_API_TRY_WITH_RESOURCES;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.instant.InstantRunTestUtils;
@@ -234,6 +234,36 @@ public class DesugarAppWithDesugarToolTest {
                                 .run("assembleDebug")
                                 .getStdout())
                 .contains("--legacy_jacoco_fix");
+    }
+
+    @Test
+    public void testMinifiedWithProguard()
+            throws IOException, InterruptedException, ProcessException {
+        enableJava8();
+
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\nandroid {\n"
+                        + "  defaultConfig.minSdkVersion 18\n"
+                        + "  buildTypes {\n"
+                        + "    debug {\n"
+                        + "      minifyEnabled true\n"
+                        + "      testProguardFiles getDefaultProguardFile('proguard-android.txt')\n"
+                        + "    }\n"
+                        + "  }\n"
+                        + "}\n");
+
+        // add try with catch in test
+        TestFileUtils.addMethod(
+                project.file("src/androidTest/java/com/example/helloworld/HelloWorldTest.java"),
+                "void doSomething() throws java.io.IOException {\n"
+                        + "    try(java.io.StringWriter sw = new java.io.StringWriter(1)) {}\n"
+                        + "}\n");
+
+        getProjectExecutor().with(BooleanOption.ENABLE_R8, false).run("assembleDebugAndroidTest");
+
+        assertThatApk(project.getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG))
+                .containsClass("Lcom/example/helloworld/HelloWorldTest;");
     }
 
     private void enableJava8() throws IOException {
