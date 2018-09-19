@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PERFD_NETWORK_CONNECTION_SAMPLER_H
-#define PERFD_NETWORK_CONNECTION_SAMPLER_H
+#ifndef PERFD_NETWORK_CONNECTION_COUNT_SAMPLER_H
+#define PERFD_NETWORK_CONNECTION_COUNT_SAMPLER_H
 
 #include "perfd/network/network_sampler.h"
 #include "proto/network.pb.h"
@@ -25,12 +25,13 @@
 
 namespace profiler {
 
-// Data collector of open connection information. For example, it can
+// Data collector of number of open connection information. For example, it can
 // collect the number of both tcp and udp open connections.
-class ConnectionSampler final : public NetworkSampler {
+class ConnectionCountSampler final : public NetworkSampler {
  public:
-  ConnectionSampler(const std::vector<std::string> &files): files_(files) {}
-  // Reads open connections information for all apps using network.
+  ConnectionCountSampler(const std::vector<std::string> &files)
+      : files_(files) {}
+  // Reads count of open connections information for all apps using network.
   void Refresh() override;
   // Returns a specific app's open connections' number from the latest refresh.
   proto::NetworkProfilerData Sample(const uint32_t uid) override;
@@ -62,4 +63,4 @@ class ConnectionSampler final : public NetworkSampler {
 
 }  // namespace profiler
 
-#endif  // PERFD_NETWORK_CONNECTION_SAMPLER_H
+#endif  // PERFD_NETWORK_CONNECTION_COUNT_SAMPLER_H

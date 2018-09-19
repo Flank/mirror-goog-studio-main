@@ -5,7 +5,7 @@ package(default_visibility = ["//visibility:public"])
 cc_library(
     name = "profiler_network",
     srcs = [
-        "connection_sampler.cc",
+        "connection_count_sampler.cc",
         "connectivity_sampler.cc",
         "internal_network_service.cc",
         "io_network_type_provider.cc",
@@ -17,8 +17,8 @@ cc_library(
         "speed_sampler.cc",
     ],
     hdrs = [
+        "connection_count_sampler.h",
         "connection_details.h",
-        "connection_sampler.h",
         "connectivity_sampler.h",
         "fake_network_type_provider.h",
         "internal_network_service.h",
@@ -49,7 +49,7 @@ cc_library(
 cc_test(
     name = "perfd_network_tests",
     srcs = [
-        "connection_sampler_test.cc",
+        "connection_count_sampler_test.cc",
         "connectivity_sampler_test.cc",
         "net_stats_file_reader_test.cc",
         "speed_converter_test.cc",

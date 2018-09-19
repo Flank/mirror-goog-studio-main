@@ -18,7 +18,7 @@
 #include <unistd.h>
 #include <cstdint>
 
-#include "perfd/network/connection_sampler.h"
+#include "perfd/network/connection_count_sampler.h"
 #include "perfd/network/connectivity_sampler.h"
 #include "perfd/network/network_constants.h"
 #include "perfd/network/speed_sampler.h"
@@ -32,12 +32,11 @@ namespace profiler {
 
 NetworkCollector::NetworkCollector(Clock* clock, int sample_ms)
     : clock_(clock), sample_us_(sample_ms * 1000) {
-  samplers_.emplace_back(
-      new ConnectivitySampler());
+  samplers_.emplace_back(new ConnectivitySampler());
   samplers_.emplace_back(
       new SpeedSampler(clock, NetworkConstants::GetTrafficBytesFilePath()));
   samplers_.emplace_back(
-      new ConnectionSampler(NetworkConstants::GetConnectionFilePaths()));
+      new ConnectionCountSampler(NetworkConstants::GetConnectionFilePaths()));
 
   is_running_.exchange(true);
   profiler_thread_ = std::thread(&NetworkCollector::Collect, this);

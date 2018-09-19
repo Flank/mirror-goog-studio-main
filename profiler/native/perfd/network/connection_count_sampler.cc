@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "connection_sampler.h"
+#include "connection_count_sampler.h"
 
 #include <inttypes.h>
 
@@ -22,16 +22,16 @@ namespace {
 // Returns whether the given address is the ip address "127.0.0.1", coverted to
 // ipv4 or ipv6 byte string. In other words, this will match either
 // "0100007F" or "0000000000000000FFFF00000100007F".
-bool isLoopbackAddress(const char* address) {
+bool isLoopbackAddress(const char *address) {
   return strcmp("0100007F", address) == 0 ||
          strcmp("0000000000000000FFFF00000100007F", address) == 0;
 }
 
-} // namespace
+}  // namespace
 
 namespace profiler {
 
-void ConnectionSampler::Refresh() {
+void ConnectionCountSampler::Refresh() {
   char buffer[kLineBufferSize];
   char localAddress[kAddressStringSize];
   char remoteAddress[kAddressStringSize];
@@ -44,11 +44,12 @@ void ConnectionSampler::Refresh() {
       continue;
     }
 
-    while(fgets(buffer, kLineBufferSize * sizeof(char), fp) != NULL) {
+    while (fgets(buffer, kLineBufferSize * sizeof(char), fp) != NULL) {
       if (sscanf(buffer,
-          " %" SCNu32 ": %32[^:]:%x %32[^:]:%x %x %x:%x %x:%x %x %" SCNu32,
-          &idx, localAddress, &number, remoteAddress, &number, &number,
-          &number, &number, &number, &number, &number, &uid) == 12 &&
+                 " %" SCNu32
+                 ": %32[^:]:%x %32[^:]:%x %x %x:%x %x:%x %x %" SCNu32,
+                 &idx, localAddress, &number, remoteAddress, &number, &number,
+                 &number, &number, &number, &number, &number, &uid) == 12 &&
           !isLoopbackAddress(localAddress) &&
           !isLoopbackAddress(remoteAddress)) {
         connections_[uid]++;
@@ -58,7 +59,7 @@ void ConnectionSampler::Refresh() {
   }
 }
 
-proto::NetworkProfilerData ConnectionSampler::Sample(const uint32_t uid) {
+proto::NetworkProfilerData ConnectionCountSampler::Sample(const uint32_t uid) {
   proto::NetworkProfilerData data;
   if (connections_.find(uid) != connections_.end()) {
     data.mutable_connection_data()->set_connection_number(connections_[uid]);
