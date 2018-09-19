@@ -97,7 +97,6 @@ import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.repository.api.ProgressIndicator;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
-import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.LoggerProgressIndicatorWrapper;
@@ -1610,23 +1609,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public FileCollection getBootClasspath() {
-        if (bootClasspath != null) {
-            return bootClasspath;
-        }
-
-        File coreLambdaStubsJar =
-                new File(
-                        globalScope
-                                .getAndroidBuilder()
-                                .getBuildToolInfo()
-                                .getPath(BuildToolInfo.PathId.CORE_LAMBDA_STUBS));
-        bootClasspath =
-                getProject()
-                        .files(
-                                globalScope.getAndroidBuilder().getBootClasspath(false),
-                                coreLambdaStubsJar);
-
-        return bootClasspath;
+        return globalScope.getBootClasspath();
     }
 
     @NonNull

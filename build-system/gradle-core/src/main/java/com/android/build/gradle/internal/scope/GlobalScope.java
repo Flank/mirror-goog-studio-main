@@ -79,6 +79,8 @@ public class GlobalScope implements TransformGlobalScope {
 
     @NonNull private final BuildArtifactsHolder globalArtifacts;
 
+    @Nullable private ConfigurableFileCollection bootClasspath = null;
+
     public GlobalScope(
             @NonNull Project project,
             @NonNull FilesProvider filesProvider,
@@ -353,5 +355,14 @@ public class GlobalScope implements TransformGlobalScope {
             return !FeatureModelBuilder.getDynamicFeatures(this).isEmpty();
         }
         return false;
+    }
+
+    @NonNull
+    public FileCollection getBootClasspath() {
+        if (bootClasspath == null) {
+            bootClasspath = project.files(extension.getBootClasspath());
+        }
+
+        return bootClasspath;
     }
 }

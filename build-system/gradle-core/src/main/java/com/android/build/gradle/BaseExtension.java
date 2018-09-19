@@ -56,6 +56,7 @@ import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
 import com.android.repository.Revision;
 import com.android.resources.Density;
+import com.android.sdklib.BuildToolInfo;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -904,12 +905,27 @@ public abstract class BaseExtension implements AndroidConfig {
         return sdkHandler.getNdkFolder();
     }
 
+    @Override
     public List<File> getBootClasspath() {
         if (!ensureTargetSetup()) {
             // In sync mode where the SDK could not be installed.
             return ImmutableList.of();
         }
-        return globalScope.getAndroidBuilder().getBootClasspath(false);
+
+        boolean usingJava8 = compileOptions.getTargetCompatibility().isJava8Compatible();
+        List<File> bootClasspath = Lists.newArrayListWithExpectedSize(usingJava8 ? 2 : 1);
+        bootClasspath.addAll(globalScope.getAndroidBuilder().getBootClasspath(false));
+
+        if (usingJava8) {
+            bootClasspath.add(
+                    new File(
+                            globalScope
+                                    .getAndroidBuilder()
+                                    .getBuildToolInfo()
+                                    .getPath(BuildToolInfo.PathId.CORE_LAMBDA_STUBS)));
+        }
+
+        return bootClasspath;
     }
 
     /**
