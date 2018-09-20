@@ -1412,9 +1412,7 @@ public abstract class TaskManager {
     public TaskProvider<? extends JavaCompile> createJavacTask(@NonNull final VariantScope scope) {
         taskFactory.register(new JavaPreCompileTask.CreationAction(scope));
 
-        if (scope.getGlobalScope()
-                .getProjectOptions()
-                .get(BooleanOption.ENABLE_SEPARATE_ANNOTATION_PROCESSING)) {
+        if (ProcessAnnotationsTask.taskShouldBeCreated(scope)) {
             taskFactory.register(new ProcessAnnotationsTask.CreationAction(scope));
         }
 

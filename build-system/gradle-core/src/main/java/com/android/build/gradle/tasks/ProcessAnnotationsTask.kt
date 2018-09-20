@@ -36,10 +36,8 @@ import org.gradle.api.tasks.incremental.IncrementalTaskInputs
 /**
  * Task to perform annotation processing only, without compiling.
  *
- * This task is available when the [BooleanOption.ENABLE_SEPARATE_ANNOTATION_PROCESSING] flag is
- * enabled. However, it may be executed or skipped depending on whether a separate annotation
- * processing task for Java projects is required. See the documentation of [AndroidJavaCompile] for
- * more details.
+ * This task may or may not be created/executed depending on whether it is needed. See the
+ * documentation of [AndroidJavaCompile] for more details.
  */
 @CacheableTask
 open class ProcessAnnotationsTask : JavaCompile(), VariantAwareTask {
@@ -57,12 +55,8 @@ open class ProcessAnnotationsTask : JavaCompile(), VariantAwareTask {
             readAnnotationProcessorsFromJsonFile(processorListFile.singleFile())
         val allAPsAreIncremental = !annotationProcessors.containsValue(java.lang.Boolean.FALSE)
 
-        // This task is executed only when Kapt is not used, incremental compilation is requested,
-        // and the separateAnnotationProcessing flag is enabled (see
-        // ProcessAnnotationsTask.CreationAction.configure). Here, we further check whether all of
-        // the annotation processors are incremental. If so, we will skip this task; otherwise, we
-        // will continue to execute it. This decision can't be made at the task's configuration as
-        // we don't want to resolve annotation processors at configuration time.
+        // Skip this task if it is not needed (see the documentation of AndroidJavaCompile and
+        // ProcessAnnotationsTask.Companion.taskShouldBeCreated)
         if (!annotationProcessors.isEmpty() && allAPsAreIncremental) {
             logger.info(
                 "Skipped annotation-processing-only task because all annotation processors are" +
@@ -122,26 +116,6 @@ open class ProcessAnnotationsTask : JavaCompile(), VariantAwareTask {
         }
 
         override fun configure(task: ProcessAnnotationsTask) {
-            val globalScope = variantScope.globalScope
-            val project = globalScope.project
-            val compileOptions = globalScope.extension.compileOptions
-            val separateAnnotationProcessingFlag = globalScope
-                .projectOptions
-                .get(BooleanOption.ENABLE_SEPARATE_ANNOTATION_PROCESSING)
-
-            // Only configure and execute this task when it is needed.
-            // We will need to check for non-incremental annotation processors as well, but we will
-            // do that later at execution time (see ProcessAnnotationsTask.compile) as we don't want
-            // to resolve annotation processors at configuration time.
-            val taskShouldBeExecuted =
-                !project.pluginManager.hasPlugin(KOTLIN_KAPT_PLUGIN_ID)
-                        && compileOptions.incremental ?: DEFAULT_INCREMENTAL_COMPILATION
-                        && separateAnnotationProcessingFlag
-            task.onlyIf { taskShouldBeExecuted }
-            if (!taskShouldBeExecuted) {
-                return
-            }
-
             super.configure(task)
 
             // Configure properties that are shared between AndroidJavaCompile and
@@ -160,6 +134,39 @@ open class ProcessAnnotationsTask : JavaCompile(), VariantAwareTask {
             task.destinationDir = variantScope.annotationProcessorOutputDir
 
             task.dependsOn(variantScope.taskContainer.sourceGenTask)
+        }
+    }
+
+    companion object {
+
+        /**
+         * Determine whether [ProcessAnnotationsTask] should be created.
+         *
+         * As documented at [AndroidJavaCompile], the task is needed if all of the following
+         * conditions are met:
+         *   1. Kapt is not used
+         *   2. Incremental compilation is requested (either by the user through the DSL or by
+         *      default)
+         *   3. Not all of the annotation processors are incremental
+         *   4. The [BooleanOption.ENABLE_SEPARATE_ANNOTATION_PROCESSING] flag is enabled.
+         *
+         * However, we don't want to perform the check for non-incremental annotation processors
+         * (#3) here as it requires resolving annotation processors at configuration time. Instead,
+         * we move that check to execution time (see ProcessAnnotationsTask.compile) and determine
+         * whether the task is still needed then.
+         */
+        @JvmStatic
+        fun taskShouldBeCreated(variantScope: VariantScope): Boolean {
+            val globalScope = variantScope.globalScope
+            val project = globalScope.project
+            val compileOptions = globalScope.extension.compileOptions
+            val separateAnnotationProcessingFlag = globalScope
+                .projectOptions
+                .get(BooleanOption.ENABLE_SEPARATE_ANNOTATION_PROCESSING)
+
+            return !project.pluginManager.hasPlugin(KOTLIN_KAPT_PLUGIN_ID)
+                        && compileOptions.incremental ?: DEFAULT_INCREMENTAL_COMPILATION
+                        && separateAnnotationProcessingFlag
         }
     }
 }

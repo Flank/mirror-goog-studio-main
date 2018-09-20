@@ -47,24 +47,26 @@ import java.io.File
  * Task to perform compilation for Java source code, without or with annotation processing depending
  * on whether annotation processing is done by a separate task or not.
  *
- * For Kotlin projects:
- *   + [ProcessAnnotationsTask] is either not available or skipped.
+ * The separate annotation processing task can be either KaptTask or [ProcessAnnotationsTask].
+ *
+ * [ProcessAnnotationsTask] is needed if all of the following conditions are met:
+ *   1. Kapt is not used
+ *   2. Incremental compilation is requested (either by the user through the DSL or by default)
+ *   3. Not all of the annotation processors are incremental
+ *   4. The [BooleanOption.ENABLE_SEPARATE_ANNOTATION_PROCESSING] flag is enabled
+ *
+ * When Kapt is used (e.g., in most Kotlin-only or hybrid Kotlin-Java projects):
+ *   + [ProcessAnnotationsTask] is not created.
  *   + KaptTask performs annotation processing only, without compiling.
  *   + [AndroidJavaCompile] and KotlinCompile perform compilation only, without annotation
  *     processing.
- *
- * For Java projects:
- *   + If a separate annotation processing task is required, [ProcessAnnotationsTask] first performs
+
+ * When Kapt is not used, (e.g., in Java-only projects):
+ *   + If [ProcessAnnotationsTask] is needed (see above), [ProcessAnnotationsTask] first performs
  *     annotation processing only, without compiling, and [AndroidJavaCompile] then performs
  *     compilation only, without annotation processing.
- *   + If a separate annotation processing task is not required, [ProcessAnnotationsTask] is either
- *     not available or skipped, and [AndroidJavaCompile] performs both annotation processing and
- *     compilation.
- *
- * For Java projects, a separate annotation processing task is required if incremental compilation
- * is requested (either by the user through the DSL or by default), not all of the annotation
- * processors are incremental, and the [BooleanOption.ENABLE_SEPARATE_ANNOTATION_PROCESSING] flag
- * is enabled.
+ *   + Otherwise, [ProcessAnnotationsTask] is either not created or skipped, and
+ *     [AndroidJavaCompile] performs both annotation processing and compilation.
  */
 @CacheableTask
 open class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
@@ -137,8 +139,8 @@ open class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
                 )
         }
 
-        // This is the condition that the ProcessAnnotationsTask is executed (see
-        // ProcessAnnotationsTask)
+        // This is the condition that ProcessAnnotationsTask is executed (see the documentation of
+        // AndroidJavaCompile)
         val processAnnotationsTaskExecuted = !hasKapt
                 && incrementalFromDslOrByDefault
                 && !allAPsAreIncremental
@@ -325,7 +327,9 @@ open class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
             // ProcessAnnotationsTask.CreationAction.preConfigure). However, that is okay because in
             // that case, AndroidJavaCompile should perform annotation processing itself and does
             // not need to consume the annotation processing output.
-            if (separateAnnotationProcessingFlag) {
+            val processAnnotationsTaskCreated =
+                ProcessAnnotationsTask.taskShouldBeCreated(variantScope)
+            if (processAnnotationsTaskCreated) {
                 val generatedSourcesArtifact = variantScope.artifacts
                     .getFinalArtifactFiles(ANNOTATION_PROCESSOR_GENERATED_SOURCES_PRIVATE_USE)
                 task.source(
@@ -337,11 +341,11 @@ open class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
 
             task.destinationDir = destinationDir
 
-            // When the separateAnnotationProcessingFlag is enabled, the following task dependencies
-            // have already been set in ProcessAnnotationTasks, which AndroidJavaCompile depends on,
-            // so no need to set the dependencies again here (this makes the task dependencies
-            // simpler).
-            if (!separateAnnotationProcessingFlag) {
+            // When ProcessAnnotationsTask is created, it also depends on the following task
+            // dependencies, and because AndroidJavaCompile already depends on
+            // ProcessAnnotationsTask, we don't need to set the dependencies again here (this makes
+            // the task dependencies simpler).
+            if (!processAnnotationsTaskCreated) {
                 task.dependsOn(variantScope.taskContainer.sourceGenTask)
             }
         }
