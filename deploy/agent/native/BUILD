@@ -88,7 +88,7 @@ cc_binary(
     srcs = [
         "agent_server.cc",
     ],
-    copts = ANDROID_COPTS + ["-Itools/base/deploy/common"],
+    copts = ANDROID_COPTS,
     linkopts = ANDROID_LINKOPTS,
     tags = ["no_windows"],
     visibility = ["//visibility:public"],

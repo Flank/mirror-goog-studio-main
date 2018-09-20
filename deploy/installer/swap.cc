@@ -26,7 +26,7 @@
 #include <fcntl.h>
 
 #include "command_cmd.h"
-#include "message_pipe_wrapper.h"
+#include "tools/base/deploy/common/message_pipe_wrapper.h"
 #include "shell_command.h"
 
 #include "agent.so.cc"

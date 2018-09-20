@@ -3,8 +3,8 @@
 #include <string>
 #include <vector>
 
-#include "message_pipe_wrapper.h"
-#include "socket.h"
+#include "tools/base/deploy/common/message_pipe_wrapper.h"
+#include "tools/base/deploy/common/socket.h"
 
 // Server program that connects to instant run agents for a particular
 // application package. The server should be invoked with run-as, and expects an
