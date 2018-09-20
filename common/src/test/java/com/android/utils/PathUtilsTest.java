@@ -18,9 +18,12 @@ package com.android.utils;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.SdkConstants;
 import com.google.common.collect.ImmutableList;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -69,5 +72,37 @@ public class PathUtilsTest {
 
         PathUtils.deleteRecursivelyIfExists(root.resolve("t.txt"));
         assertThat(java.nio.file.Files.notExists(root.resolve("t.txt"))).isTrue();
+    }
+
+    @Test
+    public void testPathDeleteSymlinkToDir() throws IOException {
+        // Symbolic links don't work on Windows.
+        Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS);
+        File firstDir = temporaryFolder.newFolder("folders", "1", "2", "3");
+        temporaryFolder.newFolder("folders", "secondFolder");
+        // Test symlink to directory behavior.
+        File symbolicLinkFile = new File(temporaryFolder.getRoot(), "/folders/secondFolder/2");
+        java.nio.file.Files.createSymbolicLink(
+                symbolicLinkFile.toPath(), firstDir.getParentFile().toPath());
+        PathUtils.deleteRecursivelyIfExists(symbolicLinkFile.toPath());
+        assertThat(java.nio.file.Files.exists(symbolicLinkFile.toPath())).isFalse();
+        assertThat(java.nio.file.Files.exists(firstDir.toPath())).isTrue();
+    }
+
+    @Test
+    public void testPathDeleteSymlinkToFile() throws IOException {
+        // Symbolic links don't work on Windows.
+        Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS);
+        File firstDir = temporaryFolder.newFolder("folders", "1", "2");
+        Path linkedToPath =
+                java.nio.file.Files.write(
+                        firstDir.toPath().resolve("3.txt"), ImmutableList.of("content"));
+        temporaryFolder.newFolder("folders", "secondFolder");
+        // Test symlink to directory behavior.
+        File symbolicLinkFile = new File(temporaryFolder.getRoot(), "/folders/secondFolder/2");
+        java.nio.file.Files.createSymbolicLink(symbolicLinkFile.toPath(), linkedToPath);
+        PathUtils.deleteRecursivelyIfExists(symbolicLinkFile.toPath());
+        assertThat(java.nio.file.Files.exists(symbolicLinkFile.toPath())).isFalse();
+        assertThat(java.nio.file.Files.exists(linkedToPath)).isTrue();
     }
 }

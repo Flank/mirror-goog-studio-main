@@ -47,13 +47,14 @@ public final class PathUtils {
 
     /**
      * Deletes a file or a directory if it exists. If the directory is not empty, its contents will
-     * be deleted recursively.
+     * be deleted recursively. Symbolic links to files or directories will be removed, but the files
+     * or directories they link will not be altered. See https://issuetracker.google.com/71843178
      *
      * @param path the file or directory to delete. The file/directory may not exist; if the
      *     directory exists, it may be non-empty.
      */
     public static void deleteRecursivelyIfExists(@NonNull Path path) throws IOException {
-        if (Files.isDirectory(path)) {
+        if (Files.isDirectory(path) && !Files.isSymbolicLink(path)) {
             try (Stream<Path> pathsInDir = Files.list(path)) {
                 Iterator<Path> iterator = pathsInDir.iterator();
                 while (iterator.hasNext()) {
