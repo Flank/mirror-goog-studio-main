@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef ANDROID_FRAGMENT_TRANSFORM_H
-#define ANDROID_FRAGMENT_TRANSFORM_H
+#ifndef ANDROIDX_FRAGMENT_TRANSFORM_H
+#define ANDROIDX_FRAGMENT_TRANSFORM_H
 
 #include "slicer/dex_ir.h"
 #include "slicer/instrumentation.h"
@@ -23,9 +23,9 @@
 
 namespace profiler {
 
-class AndroidFragmentTransform : public Transform {
+class AndroidXFragmentTransform : public Transform {
  public:
-  AndroidFragmentTransform() : Transform("Landroid/support/v4/app/Fragment;") {}
+  AndroidXFragmentTransform() : Transform("Landroidx/fragment/app/Fragment;") {}
 
   virtual void Apply(std::shared_ptr<ir::DexFile> dex_ir) override {
     slicer::MethodInstrumenter mi(dex_ir);
@@ -37,7 +37,7 @@ class AndroidFragmentTransform : public Transform {
     if (!mi.InstrumentMethod(
             ir::MethodId(GetClassName(), "performResume", "()V"))) {
       Log::E(
-          "Error instrumenting android.support.v4.app.Fragment.performResume");
+          "Error instrumenting androidx.fragment.app.Fragment.performResume");
     }
 
     slicer::MethodInstrumenter mi_stop(dex_ir);
@@ -48,11 +48,11 @@ class AndroidFragmentTransform : public Transform {
         true);
     if (!mi_stop.InstrumentMethod(
             ir::MethodId(GetClassName(), "performPause", "()V"))) {
-      Log::E("Error instrumenting android.support.v4.app.Fragment.performPause");
+      Log::E("Error instrumenting androidx.fragment.app.Fragment.performPause");
     }
   }
 };
 
 }  // namespace profiler
 
-#endif  // ANDROID_FRAGMENT_TRANSFORM_H
+#endif  // ANDROIDX_FRAGMENT_TRANSFORM_H

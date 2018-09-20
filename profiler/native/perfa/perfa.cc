@@ -48,6 +48,7 @@
 #include "transform/android_pendingintent_transform.h"
 #include "transform/android_powermanager_transform.h"
 #include "transform/android_powermanager_wakelock_transform.h"
+#include "transform/androidx_fragment_transform.h"
 #include "transform/gms_fusedlocationproviderclient_transform.h"
 #include "transform/java_url_transform.h"
 #include "transform/okhttp3_okhttpclient_transform.h"
@@ -167,7 +168,10 @@ void RegisterTransforms(
   if (config.cpu_api_tracing_enabled()) {
     transforms->insert({"Landroid/os/Debug;", new AndroidDebugTransform()});
   }
-  transforms->insert({"Landroid/support/v4/app/Fragment;", new AndroidFragmentTransform()});
+  transforms->insert(
+      {"Landroid/support/v4/app/Fragment;", new AndroidFragmentTransform()});
+  transforms->insert(
+      {"Landroidx/fragment/app/Fragment;", new AndroidXFragmentTransform()});
 
   if (config.energy_profiler_enabled()) {
     transforms->insert({"Landroid/app/Instrumentation;",
