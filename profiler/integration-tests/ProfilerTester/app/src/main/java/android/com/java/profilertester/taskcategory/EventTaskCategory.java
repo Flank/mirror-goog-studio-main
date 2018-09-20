@@ -1,12 +1,10 @@
 package android.com.java.profilertester.taskcategory;
 
 import android.app.Activity;
-import android.com.java.profilertester.R;
+import android.com.java.profilertester.fragment.FragmentHostActivity;
 import android.content.Intent;
-import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.view.Menu;
 import android.view.View;
 import android.widget.EditText;
 import java.util.Arrays;
@@ -44,7 +42,7 @@ public class EventTaskCategory extends TaskCategory {
         @Nullable
         protected String execute() throws Exception {
             Activity activity = mActivitySupplier.call();
-            Intent intent = new Intent(activity, EmptyActivity.class);
+            Intent intent = new Intent(activity, FragmentHostActivity.class);
             activity.startActivity(intent);
             return null;
         }
@@ -96,20 +94,6 @@ public class EventTaskCategory extends TaskCategory {
                     mTextEditor.setVisibility(View.INVISIBLE);
                 }
             }
-        }
-    }
-
-    public static class EmptyActivity extends Activity {
-        @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            setContentView(R.layout.activity_empty);
-        }
-
-        @Override
-        public boolean onCreateOptionsMenu(Menu menu) {
-            getMenuInflater().inflate(R.menu.menu_main, menu);
-            return true;
         }
     }
 }

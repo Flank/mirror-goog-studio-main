@@ -2,4 +2,11 @@
     <string name="app_name">ProfilerTester</string>
     <string name="action_settings">Settings</string>
     <string name="follow_instructions">Please Follow the Instructions</string>
+
+    <string name="fragment_a_title">Fragment A</string>
+    <string name="nav_to_b">Go to Fragment B</string>
+
+    <string name="fragment_b_title">Fragment B</string>
+    <string name="nav_to_a">Go to Fragment A</string>
+
 </resources>
