@@ -178,13 +178,7 @@ public class Metric {
                         writer.name("analyzers").beginArray();
                         {
                             for (Analyzer analyzer : analyzers) {
-                                writer.beginObject();
-                                for (Map.Entry<String, String> analyzerEntry :
-                                        analyzer.getNameValueMap().entrySet()) {
-                                    writer.name(analyzerEntry.getKey());
-                                    writer.value(analyzerEntry.getValue());
-                                }
-                                writer.endObject();
+                                analyzer.outputJson(writer);
                             }
                         }
                         writer.endArray();

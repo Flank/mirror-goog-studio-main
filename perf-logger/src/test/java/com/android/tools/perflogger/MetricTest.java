@@ -93,19 +93,24 @@ public class MetricTest {
     }
 
     @Test
-    public void testMedianWindowDeviationAnalyzers() throws Exception {
+    public void testWindowDeviationAnalyzers() throws Exception {
         Metric metric = new Metric(myTestName.getMethodName());
         Benchmark benchmark = new Benchmark.Builder("AS Metric Test").build();
         List<Analyzer> analyzers =
                 ImmutableList.of(
-                        new MedianWindowDeviationAnalyzer.Builder().build(),
-                        new MedianWindowDeviationAnalyzer.Builder()
+                  new WindowDeviationAnalyzer.Builder()
+                                .addMeanTolerance(new WindowDeviationAnalyzer.MeanToleranceParams.Builder()
+                                        .setConstTerm(20.0)
+                                        .setMeanCoeff(0.1)
+                                        .setStddevCoeff(1.0)
+                                        .build()).
+                                build(),
+                  new WindowDeviationAnalyzer.Builder()
                                 .setMetricAggregate(Analyzer.MetricAggregate.MEAN)
                                 .setRunInfoQueryLimit(24)
                                 .setRecentWindowSize(5)
-                                .setConstTerm(25.0)
-                                .setMedianCoeff(0.10)
-                                .setMadCoeff(1.0)
+                                .addMeanTolerance(new WindowDeviationAnalyzer.MeanToleranceParams.Builder().build())
+                                .addMedianTolerance(new WindowDeviationAnalyzer.MedianToleranceParams.Builder().build())
                                 .build());
         metric.setAnalyzers(benchmark, analyzers);
         metric.addSamples(
@@ -136,22 +141,38 @@ public class MetricTest {
                         + "      },\n"
                         + "      \"analyzers\": [\n"
                         + "        {\n"
-                        + "          \"type\": \"MedianWindowDeviationAnalyzer\",\n"
+                        + "          \"type\": \"WindowDeviationAnalyzer\",\n"
                         + "          \"metricAggregate\": \"MEDIAN\",\n"
                         + "          \"runInfoQueryLimit\": \"50\",\n"
                         + "          \"recentWindowSize\": \"11\",\n"
-                        + "          \"constTerm\": \"0.0\",\n"
-                        + "          \"medianCoeff\": \"0.05\",\n"
-                        + "          \"madCoeff\": \"1.0\"\n"
+                        + "          \"toleranceParams\": [\n"
+                        + "            {\n"
+                        + "              \"type\": \"Mean\",\n"
+                        + "              \"constTerm\": \"20.0\",\n"
+                        + "              \"meanCoeff\": \"0.1\",\n"
+                        + "              \"stddevCoeff\": \"1.0\"\n"
+                        + "            }\n"
+                        + "          ]\n"
                         + "        },\n"
                         + "        {\n"
-                        + "          \"type\": \"MedianWindowDeviationAnalyzer\",\n"
+                        + "          \"type\": \"WindowDeviationAnalyzer\",\n"
                         + "          \"metricAggregate\": \"MEAN\",\n"
                         + "          \"runInfoQueryLimit\": \"24\",\n"
                         + "          \"recentWindowSize\": \"5\",\n"
-                        + "          \"constTerm\": \"25.0\",\n"
-                        + "          \"medianCoeff\": \"0.1\",\n"
-                        + "          \"madCoeff\": \"1.0\"\n"
+                        + "          \"toleranceParams\": [\n"
+                        + "            {\n"
+                        + "              \"type\": \"Mean\",\n"
+                        + "              \"constTerm\": \"0.0\",\n"
+                        + "              \"meanCoeff\": \"0.05\",\n"
+                        + "              \"stddevCoeff\": \"2.0\"\n"
+                        + "            },\n"
+                        + "            {\n"
+                        + "              \"type\": \"Median\",\n"
+                        + "              \"constTerm\": \"0.0\",\n"
+                        + "              \"medianCoeff\": \"0.05\",\n"
+                        + "              \"madCoeff\": \"1.0\"\n"
+                        + "            }\n"
+                        + "          ]\n"
                         + "        }\n"
                         + "      ]\n"
                         + "    }\n"

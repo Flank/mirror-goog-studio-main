@@ -18,7 +18,7 @@ package com.android.tools.profiler;
 
 import com.android.testutils.TestUtils;
 import com.android.tools.perflogger.Benchmark;
-import com.android.tools.perflogger.MedianWindowDeviationAnalyzer;
+import com.android.tools.perflogger.WindowDeviationAnalyzer;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.util.*;
@@ -57,11 +57,13 @@ public class NativeBinarySizeTest {
                     benchmark.log(String.format("%s_%s", file.getKey(), abi),
                             binary.length(),
                             /* we don't expect this to deviate so tighten parameters to detect slightest regression */
-                            new MedianWindowDeviationAnalyzer.Builder()
+                            new WindowDeviationAnalyzer.Builder()
                                     .setRunInfoQueryLimit(5)
                                     .setRecentWindowSize(1)
-                                    .setMedianCoeff(0.01)
-                                    .setMadCoeff(0.0)
+                                    .addMedianTolerance(new WindowDeviationAnalyzer.MedianToleranceParams.Builder()
+                                        .setMedianCoeff(0.01)
+                                        .setMadCoeff(0.0)
+                                        .build())
                                     .build());
                 }
                 catch (IllegalArgumentException ignored) {

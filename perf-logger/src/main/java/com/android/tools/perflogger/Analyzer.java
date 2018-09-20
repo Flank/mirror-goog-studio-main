@@ -16,13 +16,15 @@
 
 package com.android.tools.perflogger;
 
-import java.util.Map;
+import com.android.annotations.NonNull;
+import com.google.gson.stream.JsonWriter;
+import java.io.IOException;
 
 /** Interface to hold configuration parameters for a perfgate analyzer */
 public interface Analyzer {
 
-    /** returns a map of the analyzer's parameters' names and values as strings. */
-    Map<String, String> getNameValueMap();
+    /** writes the Analyzer's parameter in JSON format */
+    void outputJson(@NonNull JsonWriter writer) throws IOException ;
 
     /** specifies how metrics from the same run are aggregated for the analyzer. */
     enum MetricAggregate {

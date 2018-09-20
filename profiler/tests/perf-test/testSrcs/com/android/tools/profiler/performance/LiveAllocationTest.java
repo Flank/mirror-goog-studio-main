@@ -20,9 +20,9 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.perflogger.Benchmark;
-import com.android.tools.perflogger.MedianWindowDeviationAnalyzer;
 import com.android.tools.perflogger.Metric;
 import com.android.tools.perflogger.Metric.MetricSample;
+import com.android.tools.perflogger.WindowDeviationAnalyzer;
 import com.android.tools.profiler.MemoryPerfDriver;
 import com.android.tools.profiler.PerfDriver;
 import com.android.tools.profiler.memory.MemoryStubWrapper;
@@ -115,7 +115,9 @@ public class LiveAllocationTest {
             androidDriver.triggerMethod(ACTIVITY_CLASS, "free");
             assertThat(androidDriver.waitForInput("free_count=0")).isTrue();
         }
-        metric.setAnalyzers(benchmark, Collections.singleton(new MedianWindowDeviationAnalyzer.Builder().build()));
+        metric.setAnalyzers(benchmark, Collections.singleton(new WindowDeviationAnalyzer.Builder()
+                .addMeanTolerance(new WindowDeviationAnalyzer.MeanToleranceParams.Builder().build())
+                .build()));
         metric.commit();
     }
 }
