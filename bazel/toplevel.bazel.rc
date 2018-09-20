@@ -43,6 +43,7 @@ build:release --cxxopt=-fno-exceptions
 build:release --copt=-ffunction-sections
 build:release --cxxopt=-ffunction-sections
 build:release -c opt
+build:release --strip=always
 
 # Use prebuilt JDK when doing local bazel build/test
 build --host_javabase=//prebuilts/studio/jdk:jdk_runtime
