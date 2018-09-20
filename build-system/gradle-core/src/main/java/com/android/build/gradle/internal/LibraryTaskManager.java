@@ -22,6 +22,7 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
+import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Transform;
@@ -373,7 +374,7 @@ public class LibraryTaskManager extends TaskManager {
         if (!projectOptions.get(BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION)) {
             return;
         }
-        // TODO(b/115974418): Can we stop adding the compilation-only R class as a local classes?
+
 
         InternalArtifactType rClassJar;
 
@@ -381,6 +382,15 @@ public class LibraryTaskManager extends TaskManager {
             rClassJar = InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR;
         } else {
             rClassJar = InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR;
+        }
+        QualifiedContent.ScopeType scopeType;
+        if (variantScope.getCodeShrinker() != null) {
+            // Add the R class classes as production classes. They are then removed by the library
+            // jar transform.
+            // TODO(b/115974418): Can we stop adding the compilation-only R class as a local classes?
+            scopeType = Scope.PROJECT;
+        } else {
+            scopeType = Scope.PROVIDED_ONLY;
         }
 
         FileCollection compileRClass =
@@ -390,7 +400,7 @@ public class LibraryTaskManager extends TaskManager {
                 .addStream(
                         OriginalStream.builder(project, "compile-only-r-class")
                                 .addContentTypes(TransformManager.CONTENT_CLASS)
-                                .addScope(Scope.PROJECT)
+                                .addScope(scopeType)
                                 .setFileCollection(compileRClass)
                                 .build());
     }
