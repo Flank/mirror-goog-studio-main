@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.tasks.injection.JavaTasks
 import com.android.build.gradle.tasks.injection.KotlinTasks
+import com.android.build.gradle.tasks.injection.sub.SubPackageJavaTasks
 import com.android.testutils.MockitoKotlinUtils
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
@@ -85,6 +86,18 @@ class TaskArtifactsHolderTest {
         // since the input can be explicitly set during the task configuration.
         test(createConfigAction<KotlinTasks.NoIDOnInputProvidedTask>(variantScope), {})
         test(createConfigAction<JavaTasks.NoIDOnInputProvidedTask>(variantScope), {})
+    }
+
+
+    @Test
+    fun testSubclassing() {
+        val setupMock = { _: TaskProvider<*> ->
+            Mockito.`when`(artifacts.getFinalArtifactFiles(InternalArtifactType.APP_CLASSES))
+                .thenReturn(appClasses)
+            Unit
+        }
+        test(createConfigAction<JavaTasks.ValidInputSubTask>(variantScope), setupMock)
+        test(createConfigAction<SubPackageJavaTasks.ValidInputSubTask>(variantScope), setupMock)
     }
 
     @Test

@@ -41,7 +41,7 @@ public class JavaTasks {
             return appClasses;
         }
 
-        BuildableArtifact appClasses;
+        private BuildableArtifact appClasses;
 
         @InputFiles
         @InternalID(InternalArtifactType.APK_MAPPING)
@@ -50,12 +50,21 @@ public class JavaTasks {
             return apkMapping;
         }
 
-        BuildableArtifact apkMapping;
+        private BuildableArtifact apkMapping;
 
         @Override
         public void executeTask(@NonNull Object... parameters) {
             assertThat(appClasses).isNotNull();
             assertThat(apkMapping).isNull();
+        }
+    }
+
+    public static class ValidInputSubTask extends ValidInputTask {
+
+        @Override
+        public void executeTask(@NonNull Object... parameters) {
+            assertThat(getAppClasses()).isNotNull();
+            assertThat(getApkMapping()).isNull();
         }
     }
 

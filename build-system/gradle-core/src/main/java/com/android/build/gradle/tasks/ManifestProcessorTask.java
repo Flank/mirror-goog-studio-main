@@ -37,6 +37,7 @@ import org.gradle.api.tasks.OutputFile;
  */
 public abstract class ManifestProcessorTask extends IncrementalTask {
 
+    @SuppressWarnings("unused")
     private Provider<Directory> manifestOutputDirectory;
 
     private File aaptFriendlyManifestOutputDirectory;
@@ -52,10 +53,9 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
     private File reportFile;
 
     @SuppressWarnings("unused")
-    private BuildableArtifact checkManifestResult;
+    protected BuildableArtifact checkManifestResult;
 
     @InputFiles
-    @InternalID(InternalArtifactType.CHECK_MANIFEST_RESULT)
     @Optional
     public BuildableArtifact getCheckManifestResult() {
         return checkManifestResult;

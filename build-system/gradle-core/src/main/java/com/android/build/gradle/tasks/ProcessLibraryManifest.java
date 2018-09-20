@@ -291,6 +291,11 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
         public void configure(@NonNull ProcessLibraryManifest task) {
             super.configure(task);
 
+            task.checkManifestResult =
+                    getVariantScope()
+                            .getArtifacts()
+                            .getFinalArtifactFilesIfPresent(
+                                    InternalArtifactType.CHECK_MANIFEST_RESULT);
             VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> config =
                     getVariantScope().getVariantConfiguration();
 

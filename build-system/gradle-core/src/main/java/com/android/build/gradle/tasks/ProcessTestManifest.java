@@ -309,6 +309,11 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         public void configure(@NonNull final ProcessTestManifest task) {
             super.configure(task);
 
+            task.checkManifestResult =
+                    scope.getArtifacts()
+                            .getFinalArtifactFilesIfPresent(
+                                    InternalArtifactType.CHECK_MANIFEST_RESULT);
+
             final VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> config =
                     scope.getVariantConfiguration();
 

@@ -635,6 +635,12 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
         @Override
         public void configure(@NonNull ProcessApplicationManifest task) {
             super.configure(task);
+            task.checkManifestResult =
+                    variantScope
+                            .getArtifacts()
+                            .getFinalArtifactFilesIfPresent(
+                                    InternalArtifactType.CHECK_MANIFEST_RESULT);
+
             final BaseVariantData variantData = variantScope.getVariantData();
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
             GlobalScope globalScope = variantScope.getGlobalScope();
