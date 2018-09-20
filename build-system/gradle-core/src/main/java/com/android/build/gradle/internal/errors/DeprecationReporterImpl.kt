@@ -79,7 +79,8 @@ class DeprecationReporterImpl(
                 severity,
                 "API '$oldApiElement' is obsolete and has been replaced with '$newApiElement'.\n" +
                         "It will be removed ${deprecationTarget.removalTime}\n" +
-                        "For more information, see $url"
+                        "For more information, see $url\n\n" +
+                        "To determine what is calling $oldApiElement, use -P${BooleanOption.DEBUG_OBSOLETE_API.propertyName}=true on the command line to display a stack trace"
             )
         }
     }
