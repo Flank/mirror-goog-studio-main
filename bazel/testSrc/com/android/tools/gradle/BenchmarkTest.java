@@ -39,7 +39,8 @@ public class BenchmarkTest {
         File repo = null;
         String project = null;
         String benchmarkName = null;
-        String benchmarkCategory = null;
+        String benchmarkSize = null;
+        String benchmarkType = null;
         int warmUps = 0;
         int iterations = 0;
         int removeUpperOutliers = 0;
@@ -60,8 +61,10 @@ public class BenchmarkTest {
                 distribution = new File(it.next());
             } else if (arg.equals("--repo") && it.hasNext()) {
                 repo = new File(it.next());
-            } else if (arg.equals("--benchmark_category")) {
-                benchmarkCategory = it.next();
+            } else if (arg.equals("--benchmark_size")) {
+                benchmarkSize = it.next();
+            } else if (arg.equals("--benchmark_type")) {
+                benchmarkType = it.next();
             } else if (arg.equals("--warmups") && it.hasNext()) {
                 warmUps = Integer.valueOf(it.next());
             } else if (arg.equals("--iterations") && it.hasNext()) {
@@ -95,7 +98,8 @@ public class BenchmarkTest {
                         benchmarkName,
                         distribution,
                         repo,
-                        benchmarkCategory,
+                        benchmarkSize,
+                        benchmarkType,
                         new BenchmarkRun(
                                 warmUps, iterations, removeUpperOutliers, removeLowerOutliers),
                         mutations,
@@ -131,7 +135,8 @@ public class BenchmarkTest {
             String benchmarkName,
             File distribution,
             File repo,
-            String benchmarkCategory,
+            String benchmarkSize,
+            String benchmarkType,
             BenchmarkRun benchmarkRun,
             List<File> mutations,
             List<String> startups,
@@ -143,9 +148,17 @@ public class BenchmarkTest {
 
         Benchmark.Builder benchmarkBuilder =
                 new Benchmark.Builder(benchmarkName).setProject("Android Studio Gradle");
-        if (benchmarkCategory != null) {
-            benchmarkBuilder.setMetadata(ImmutableMap.of("benchmarkCategory", benchmarkCategory));
+        ImmutableMap.Builder<String, String> mapBuilder = ImmutableMap.builder();
+        if (benchmarkSize != null) {
+            // temporary put both for migrating from one to the other.
+            mapBuilder.put("benchmarkCategory", benchmarkSize);
+            mapBuilder.put("benchmarkSize", benchmarkSize);
         }
+        if (benchmarkType != null) {
+            mapBuilder.put("benchmarkType", benchmarkType);
+        }
+        benchmarkBuilder.setMetadata(mapBuilder.build());
+
         Benchmark benchmark = benchmarkBuilder.build();
 
         File data = new File(ROOT + "buildbenchmarks/" + project);
