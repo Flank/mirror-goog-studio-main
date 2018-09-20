@@ -6,15 +6,21 @@ cc_library(
         "message_pipe_wrapper.cc",
         "size_buffer.h",
         "socket.cc",
+        "utils.cc",
     ],
     hdrs = [
         "message_pipe_wrapper.h",
         "socket.h",
+        "utils.h",
     ],
     copts = ANDROID_COPTS,
     linkopts = ANDROID_LINKOPTS,
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
+    deps = [
+        "//tools/base/deploy/agent/native/utils:agent_utils",
+        "//tools/base/deploy/proto:cc_proto",
+    ],
 )
 
 cc_test(

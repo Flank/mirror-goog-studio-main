@@ -13,6 +13,7 @@
 #include "utils/log.h"
 
 #include "instrumentation.jar.cc"
+#include "tools/base/deploy/common/utils.h"
 
 namespace deploy {
 
@@ -21,8 +22,7 @@ const char* kBreadcrumbClass = "com/android/tools/deploy/instrument/Breadcrumb";
 const char* kHandlerWrapperClass =
     "com/android/tools/deploy/instrument/ActivityThreadHandlerWrapper";
 
-const std::string kInstrumentationJarName =
-    std::string("instruments-") + instrumentation_jar_hash + ".jar";
+const std::string kInstrumentationJarName = "instruments-"_s + instrumentation_jar_hash + ".jar";
 
 static unordered_map<string, Transform*> transforms;
 

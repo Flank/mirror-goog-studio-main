@@ -28,7 +28,7 @@ class DumpCommand : public Command {
   DumpCommand();
   virtual ~DumpCommand() {}
   virtual void ParseParameters(int argc, char** argv);
-  virtual bool Run(const Workspace& workspace);
+  virtual void Run(Workspace& workspace);
 
  private:
   std::string packageName_;

@@ -21,22 +21,24 @@
 #include <unordered_map>
 
 #include "command.h"
-#include "deploy.pb.h"
+#include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {
 
 class SwapCommand : public Command {
  public:
-  SwapCommand(){};
+  SwapCommand() : response_(nullptr){
+  };
   ~SwapCommand(){};
 
   void ParseParameters(int argc, char** argv) override;
-  bool Run(const Workspace& workspace) override;
+  void Run(Workspace& workspace) override;
 
  private:
   std::string request_bytes_;
   std::string package_name_;
   std::string target_dir_;
+  proto::SwapResponse* response_;
 
   enum class User { SHELL_USER, APP_PACKAGE };
 

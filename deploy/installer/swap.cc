@@ -28,7 +28,9 @@
 
 #include "command_cmd.h"
 #include "shell_command.h"
+#include "trace.h"
 #include "tools/base/deploy/common/message_pipe_wrapper.h"
+#include "tools/base/deploy/common/utils.h"
 
 #include "agent.so.h"
 #include "agent_server.h"
@@ -36,10 +38,8 @@
 namespace deploy {
 
 namespace {
-const std::string kAgentFilename =
-    "agent-" + std::string(agent_so_hash) + ".so";
-const std::string kServerFilename =
-    "server-" + std::string(agent_server_hash) + ".so";
+const std::string kAgentFilename = "agent-"_s + agent_so_hash + ".so";
+const std::string kServerFilename = "server-"_s + agent_server_hash + ".so";
 const int kRwFileMode =
     S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR | S_IWGRP | S_IWOTH;
 const int kRxFileMode =
@@ -51,21 +51,14 @@ const int kRxFileMode =
 // /data/data/<app> directory and needs to utilize run-as.
 
 void SwapCommand::ParseParameters(int argc, char** argv) {
-  int size = -1;
-  if (argc != 1) {
-    std::cerr << "Not enough arguments for swap command: swap <pb_size>"
-              << std::endl;
+  deploy::MessagePipeWrapper wrapper(STDIN_FILENO);
+  std::string data;
+  if (!wrapper.Read(&data)) {
     return;
   }
 
-  size = atoi(argv[0]);
-  static std::string data;
-  std::copy_n(std::istreambuf_iterator<char>(std::cin), size,
-              std::back_inserter(data));
-
   proto::SwapRequest request;
   if (!request.ParseFromString(data)) {
-    std::cerr << "Could not parse swap configuration proto." << std::endl;
     return;
   }
 
@@ -77,21 +70,33 @@ void SwapCommand::ParseParameters(int argc, char** argv) {
   ready_to_run_ = true;
 }
 
-bool SwapCommand::Run(const Workspace& workspace) {
+void SwapCommand::Run(Workspace& workspace) {
+  Trace traceDump("swap");
+
+  response_ = new proto::SwapResponse();
+  workspace.GetResponse().set_allocated_swap_response(response_);
+  LogEvent(response_->add_events(), "Got swap request for:" + package_name_);
+
   if (!Setup(workspace)) {
-    return false;
+    response_->set_status(proto::SwapResponse::ERROR);
+    ErrEvent(response_->add_events(), "Unable to setup workspace");
+    return;
   }
 
   // Start a swap server with fork/exec.
   int read_fd;
   int write_fd;
   if (!StartServer(&read_fd, &write_fd)) {
-    return false;
+    response_->set_status(proto::SwapResponse::ERROR);
+    ErrEvent(response_->add_events(), "Unable to start server");
+    return;
   }
 
   size_t agent_count = AttachAgents();
   if (agent_count == 0) {
-    return false;
+    response_->set_status(proto::SwapResponse::ERROR);
+    ErrEvent(response_->add_events(), "Zero agents connected");
+    return;
   }
 
   // Both these wrappers will close the fds when they go out of scope.
@@ -99,11 +104,12 @@ bool SwapCommand::Run(const Workspace& workspace) {
   MessagePipeWrapper server_output(read_fd);
 
   if (!server_input.Write(request_bytes_)) {
-    std::cerr << "Could not write to agent proxy server." << std::endl;
+    response_->set_status(proto::SwapResponse::ERROR);
+    ErrEvent(response_->add_events(), "Could not write to agent proxy server");
   }
 
-  std::unordered_map<int, proto::SwapResponse> agent_responses;
-  auto overall_status = proto::SwapResponse::UNKNOWN;
+  std::unordered_map<int, proto::AgentSwapResponse> agent_responses;
+  auto overall_status = proto::AgentSwapResponse::UNKNOWN;
 
   // TODO: This loop is at risk of hanging in a multi-agent scenario where
   // activity restart is required - if one agent dies before sending an
@@ -114,49 +120,57 @@ bool SwapCommand::Run(const Workspace& workspace) {
 
   std::string response_bytes;
   while (server_output.Read(&response_bytes)) {
-    proto::SwapResponse response;
-    if (!response.ParseFromString(response_bytes)) {
-      std::cerr << "Received unparseable response from agent." << std::endl;
-      return false;
+    proto::AgentSwapResponse agent_response;
+    if (!agent_response.ParseFromString(response_bytes)) {
+      response_->set_status(proto::SwapResponse::ERROR);
+      ErrEvent(response_->add_events(), "Received unparseable response from agent");
+      return;
     }
 
     // Any mismatch in statuses means the overall status is error:
     // - ERROR + <ANY> = ERROR, since all agents need to succeed.
     // - RESTART + OK = ERROR , since agents should be in sync for restarts.
     if (agent_responses.size() == 0) {
-      overall_status = response.status();
-    } else if (response.status() != overall_status) {
-      overall_status = proto::SwapResponse::ERROR;
+      overall_status = agent_response.status();
+    } else if (agent_response.status() != overall_status) {
+      overall_status = proto::AgentSwapResponse::ERROR;
     }
 
-    agent_responses.emplace(response.pid(), response);
+    agent_responses.emplace(agent_response.pid(), agent_response);
+
+    // Gather events from the agent.
+    response_->mutable_events()->MergeFrom(agent_response.events());
 
     // Don't take actions until we've heard from every agent.
     if (agent_responses.size() == agent_count) {
-      if (overall_status == proto::SwapResponse::NEED_ACTIVITY_RESTART) {
+      if (overall_status == proto::AgentSwapResponse::NEED_ACTIVITY_RESTART) {
+        LogEvent(response_->add_events(), "Requesting activity restart");
         CmdCommand cmd;
         cmd.UpdateAppInfo("all", package_name_, nullptr);
-      } else {
-        // TODO: Aggregate and send to deployer.
-        std::cout << overall_status << std::endl;
+        LogEvent(response_->add_events(), "Activity restart requested.");
       }
 
       agent_responses.clear();
     }
   }
-
-  return overall_status == proto::SwapResponse::OK;
+  if (overall_status == proto::AgentSwapResponse::OK) {
+    response_->set_status(proto::SwapResponse::OK);
+  } else {
+    response_->set_status(proto::SwapResponse::ERROR);
+  }
+  LogEvent(response_->add_events(), "Swapped");
 }
 
 bool SwapCommand::Setup(const Workspace& workspace) noexcept {
   // Make sure the target dir exists.
   std::string output;
   if (!RunCmd("mkdir", User::APP_PACKAGE, {"-p", target_dir_}, &output)) {
-    std::cerr << "Could not create .studio directory." << output << std::endl;
+    response_->add_events()->set_text("Could not create .studio directory");
     return false;
   }
 
   if (!CopyBinaries(workspace.GetTmpFolder(), target_dir_)) {
+    response_->add_events()->set_text("Could not copy binaries");
     return false;
   }
 
@@ -180,7 +194,7 @@ bool SwapCommand::CopyBinaries(const std::string& src_path,
   // at once to minimize the expected number of additional run-as invocations.
   if (RunCmd("stat", User::APP_PACKAGE, {agent_dst_path, server_dst_path},
              nullptr)) {
-    std::cout << "Binaries already in data folder, skipping copy." << std::endl;
+    LogEvent(response_->add_events(), "Binaries already in data folder, skipping copy.");
     return true;
   }
 
@@ -218,7 +232,7 @@ bool SwapCommand::CopyBinaries(const std::string& src_path,
   // Copy the binaries to the agent directory.
   std::string cp_output;
   if (!RunCmd("cp", User::APP_PACKAGE, copy_args, &cp_output)) {
-    std::cerr << "Could not copy agent binary: " << cp_output << std::endl;
+    response_->add_events()->set_text("Could not copy agent binary: "_s + cp_output);
     return false;
   }
 
@@ -230,21 +244,18 @@ bool SwapCommand::WriteArrayToDisk(const unsigned char* array,
                                    const std::string& dst_path) const noexcept {
   int fd = open(dst_path.c_str(), O_WRONLY | O_CREAT, kRwFileMode);
   if (fd == -1) {
-    std::cerr << "WriteArrayToDisk(). Unable to open(): "
-              << std::string(strerror(errno)) << std::endl;
+    response_->add_events()->set_text("WriteArrayToDisk, open: "_s + std::string(strerror(errno)));
     return false;
   }
   int written = write(fd, array, array_len);
   if (written == -1) {
-    std::cerr << "WriteArrayToDisk(). Unable to write(): "
-              << std::string(strerror(errno)) << std::endl;
+    response_->add_events()->set_text("WriteArrayToDisk, write: "_s + std::string(strerror(errno)));
     return false;
   }
 
   int close_result = close(fd);
   if (close_result == -1) {
-    std::cerr << "WriteArrayToDisk(). Unable to close(): "
-              << std::string(strerror(errno)) << std::endl;
+    response_->add_events()->set_text("WriteArrayToDisk, close: "_s + std::string(strerror(errno)));
     return false;
   }
 
@@ -283,7 +294,7 @@ bool SwapCommand::StartServer(int* read_fd, int* write_fd) const {
            (char*)nullptr /* must end in null-terminator */);
 
     // If we get here, the execlp failed, so we should return false.
-    std::cerr << "Could not exec swap_server: " << strerror(errno) << std::endl;
+    response_->add_events()->set_text("Could not exec swap_server: "_s + strerror(errno));
     return false;
   }
 
@@ -301,8 +312,7 @@ size_t SwapCommand::AttachAgents() const {
   // Get the pid(s) of the running application using the package name.
   std::string pidof_output;
   if (!RunCmd("pidof", User::SHELL_USER, {package_name_}, &pidof_output)) {
-    std::cerr << "Could not get application pid for package : " + package_name_
-              << std::endl;
+    response_->add_events()->set_text("Could not get app pid for package: "_s + package_name_);
     return 0;
   }
 
@@ -314,7 +324,7 @@ size_t SwapCommand::AttachAgents() const {
   while (pids >> pid) {
     std::string output;
     if (!cmd.AttachAgent(pid, target_dir_ + kAgentFilename, {}, &output)) {
-      std::cerr << "Could not attach agent to process: " << output << std::endl;
+      response_->add_events()->set_text("Could not attach agent to process: "_s + output);
       return 0;
     }
     agent_count++;

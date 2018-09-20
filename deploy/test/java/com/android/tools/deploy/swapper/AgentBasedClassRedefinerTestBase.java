@@ -121,7 +121,7 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
             }
         }
 
-        protected Deploy.SwapResponse getAgentResponse()
+        protected Deploy.AgentSwapResponse getAgentResponse()
                 throws IOException, InvalidProtocolBufferException {
             InputStream stdout = server.getInputStream();
             byte[] sizeBytes = new byte[4];
@@ -138,8 +138,7 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
             while (offset < messageBytes.length) {
                 offset += stdout.read(messageBytes, offset, messageBytes.length - offset);
             }
-
-            return Deploy.SwapResponse.parseFrom(messageBytes);
+            return Deploy.AgentSwapResponse.parseFrom(messageBytes);
         }
 
         protected void stopServer() {

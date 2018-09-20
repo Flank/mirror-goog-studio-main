@@ -14,35 +14,20 @@
  * limitations under the License.
  */
 
-#ifndef DEPLOY_SIZE_BUFFER_H
-#define DEPLOY_SIZE_BUFFER_H
+#include <stddef.h>
+#include <string>
 
-#include <array>
-#include <iostream>
+#include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {
 
-// Defines the buffer class used to prefix messages.
-using SizeBuffer = std::array<unsigned char, sizeof(int32_t)>;
-
-inline SizeBuffer SizeToBuffer(int32_t size) {
-  SizeBuffer buffer;
-  for (size_t i = 0; i < buffer.size(); ++i) {
-    buffer[i] = size & 0xFF;
-    size = size >> 8;
-  }
-  return buffer;
+// std::literals::string_literals::operator""s is only available in c++14. Until
+// we switch NDK to move up from c++11, this is our own syntax sugar via user
+// defined literal.
+inline const std::string operator"" _s(const char* c, std::size_t size) {
+  return std::string(c, size);
 }
 
-inline uint32_t BufferToSize(const SizeBuffer& buffer) {
-  uint32_t size = 0;
-  for (size_t i = 0; i < buffer.size(); ++i) {
-    uint32_t shift = 8 * i;
-    size += buffer[i] << shift;
-  }
-  return size;
-}
-
-}  // namespace deploy
-
-#endif
+void LogEvent(proto::Event* event, const std::string& message);
+void ErrEvent(proto::Event* event, const std::string& message);
+}  // namespace deployer

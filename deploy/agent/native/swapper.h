@@ -25,7 +25,7 @@
 
 namespace proto {
 class SwapRequest;
-class SwapResponse;
+class AgentSwapResponse;
 }  // namespace proto
 
 namespace deploy {
@@ -66,7 +66,7 @@ class Swapper {
   Swapper(const Swapper&) = delete;
   Swapper& operator=(const Swapper&) = delete;
 
-  void SendResponse(const proto::SwapResponse& response);
+  void SendResponse(const proto::AgentSwapResponse& response);
   void RequestRestart(JNIEnv* jni);
 
   // Frees the memory associated with the socket and request objects, and closes

@@ -26,7 +26,7 @@ message ClassDef {
 }
 
 // A response detailing the results of a swap request.
-message SwapResponse {
+message AgentSwapResponse {
   enum Status {
     UNKNOWN = 0;
     OK = 1; // The swap completed successfully.
@@ -34,12 +34,71 @@ message SwapResponse {
     NEED_ACTIVITY_RESTART = 3; // The agent is waiting on an activity restart.
   }
 
-  // The pid of the process this agent was attached to.
-  int32 pid = 1;
-
   // The state of the swap that was requested.
-  Status status = 2;
+  Status status = 1;
 
-  // Human-readable details of any errors that occurred.
-  string error_details = 3;
+  // The pid of the process this agent was attached to.
+  int32 pid = 2;
+
+  repeated Event events = 3;
+}
+
+// Message returned when installer receives a SwapRequest.
+message SwapResponse {
+  enum Status {
+    UNKNOWN = 0;
+    OK = 1; // The swap completed successfully.
+    ERROR = 2; // The swap did not succeed.
+  }
+
+  Status status = 1;
+  repeated Event events = 2;
+}
+
+// Message returned by the Android native IRR installer. There are two layers :
+// - Installer layer which is unaware of commands specifics.
+// - Command layer whici is unaware of installe specifics.
+// This layering is visible with the events messages which can be in both 
+// 'events' fields but also 'extra' field.
+message InstallerResponse {
+  enum Status {
+    UNINITIALIZED = 0;
+    OK = 1;
+    ERROR_WRONG_VERSION = 2;
+    ERROR_PARAMETER = 3;
+    ERROR_CMD = 4;
+  }
+  Status status = 1;
+  repeated Event events = 2;
+  oneof extra {
+    SwapResponse swap_response = 3;
+    DumpResponse dump_response = 4;
+  }
+}
+
+message Event {
+  enum Type {
+    UNINITIALIZED = 0;
+    TRC_BEG = 1; // Used for tracing. Mark beginning of a section.
+    TRC_END = 2; // Used for tracing. Mark end of a section.
+    LOG_OUT = 3;
+    LOG_ERR = 4;
+  }
+  Type type = 1;
+  int64 pid = 2;
+  int64 tid = 3;
+  string text = 4;
+  int64 timestamp_ns = 5;
+}
+
+message DumpResponse {
+  enum Status {
+    UNKNOWN = 0;
+    OK = 1; // The dump completed successfully.
+    ERROR = 2; // The dump did not succeed.
+  }
+
+  Status status = 1;
+  repeated Event events = 2;
+  // TODO: Add dumps content and filename here instead of using the device and host filesystem.
 }

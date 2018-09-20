@@ -22,6 +22,7 @@
 #include "hotswap.h"
 #include "instrumenter.h"
 #include "socket.h"
+#include "tools/base/deploy/common/utils.h"
 #include "utils/log.h"
 
 namespace deploy {
@@ -68,9 +69,9 @@ void Swapper::StartSwap(JNIEnv* jni) {
       return;
     }
 
-    proto::SwapResponse response;
+    proto::AgentSwapResponse response;
     response.set_pid(getpid());
-    response.set_status(proto::SwapResponse::NEED_ACTIVITY_RESTART);
+    response.set_status(proto::AgentSwapResponse::NEED_ACTIVITY_RESTART);
     SendResponse(response);
     return;
   }
@@ -81,19 +82,22 @@ void Swapper::StartSwap(JNIEnv* jni) {
 bool Swapper::FinishSwap(JNIEnv* jni) {
   HotSwap code_swap(jvmti_, jni);
 
-  proto::SwapResponse response;
+  proto::AgentSwapResponse response;
   response.set_pid(getpid());
 
-  if (!code_swap.DoHotSwap(*request_, response.mutable_error_details())) {
-    response.set_status(proto::SwapResponse::ERROR);
+  std::string error_message;
+  if (!code_swap.DoHotSwap(*request_, &error_message)) {
+    response.set_status(proto::AgentSwapResponse::ERROR);
+    ErrEvent(response.add_events(), error_message);
   } else {
-    response.set_status(proto::SwapResponse::OK);
+    LogEvent(response.add_events(), "Swap was successful");
+    response.set_status(proto::AgentSwapResponse::OK);
   }
 
   SendResponse(response);
   Reset();
 
-  return response.status() == proto::SwapResponse::OK;
+  return response.status() == proto::AgentSwapResponse::OK;
 }
 
 void Swapper::Reset() {
@@ -105,7 +109,7 @@ void Swapper::Reset() {
   jvmti_ = nullptr;
 }
 
-void Swapper::SendResponse(const proto::SwapResponse& response) {
+void Swapper::SendResponse(const proto::AgentSwapResponse& response) {
   std::string response_bytes;
   response.SerializeToString(&response_bytes);
   socket_->Write(response_bytes);

@@ -18,10 +18,10 @@ package com.android.tools.deployer;
 
 import com.android.annotations.NonNull;
 import com.android.ddmlib.*;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -34,20 +34,12 @@ public class AdbClient {
         this.device = device;
     }
 
-    public void shell(String[] parameters) throws DeployerException {
-        try {
-            device.executeShellCommand(String.join(" ", parameters), new NullOutputReceiver());
-        } catch (Exception e) {
-            throw new DeployerException("Unable to run shell command.", e);
-        }
-    }
-
     /**
      * Executes the given command and sends {@code input} to stdin and returns stdout as a byte[]
      */
-    public byte[] shell(String[] parameters, byte[] input) throws DeployerException {
+    public byte[] shell(String[] parameters, InputStream input) throws DeployerException {
         System.out.println("SHELL:" + Arrays.toString(parameters));
-        ByteArrayOutputReceiver receiver = null;
+        ByteArrayOutputReceiver receiver;
         try {
             receiver = new ByteArrayOutputReceiver();
             device.executeShellCommand(
@@ -55,20 +47,13 @@ public class AdbClient {
                     receiver,
                     DdmPreferences.getTimeOut(),
                     TimeUnit.MILLISECONDS,
-                    input == null ? null : new ByteArrayInputStream(input));
+                    input);
             return receiver.toByteArray();
         } catch (AdbCommandRejectedException
                 | ShellCommandUnresponsiveException
                 | IOException
                 | TimeoutException e) {
             throw new DeployerException("Unable to run shell command", e);
-        } finally {
-            // TODO: Delete this once we gather all stdout and stderr in a proto.
-            // For now this is mandatory to properly troubleshot.
-            System.out.println("OUTPUT_START:");
-            System.out.println(new String(receiver.toByteArray()));
-            System.out.println("OUTPUT_END:");
-
         }
     }
 
@@ -140,6 +125,7 @@ public class AdbClient {
         }
     }
 
+    // TODO: Replace this to void copying the full byte[] incurred when calling stream.toByteArray()
     private class ByteArrayOutputReceiver implements IShellOutputReceiver {
 
         ByteArrayOutputStream stream = new ByteArrayOutputStream();

@@ -12,5 +12,5 @@ cc_library(
         "log.h",
     ],
     tags = ["no_windows"],
-    deps = [],
+    visibility = ["//tools/base/deploy:__subpackages__"],
 )
