@@ -1,7 +1,7 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <androidx.emoji>
-  <emoji versions="1.0.0-alpha1"/>
-  <emoji-appcompat versions="1.0.0-alpha1"/>
-  <emoji-bundled versions="1.0.0-alpha1"/>
+  <emoji versions="1.0.0-rc02"/>
+  <emoji-appcompat versions="1.0.0-rc02"/>
+  <emoji-bundled versions="1.0.0-rc02"/>
 </androidx.emoji>
 
