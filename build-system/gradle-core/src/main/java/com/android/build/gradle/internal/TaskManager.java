@@ -1182,7 +1182,9 @@ public abstract class TaskManager {
                 InternalArtifactType.SYMBOL_LIST, ImmutableList.of(symbolFile), task.getName());
 
         // Needed for the IDE
-        TaskFactoryUtils.dependsOn(scope.getTaskContainer().getSourceGenTask(), task);
+        if (!projectOptions.get(BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION)) {
+            TaskFactoryUtils.dependsOn(scope.getTaskContainer().getSourceGenTask(), task);
+        }
 
         // Synthetic output for AARs (see SymbolTableWithPackageNameTransform), and created in
         // process resources for local subprojects.
