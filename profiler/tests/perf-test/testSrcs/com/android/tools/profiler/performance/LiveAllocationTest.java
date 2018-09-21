@@ -41,14 +41,19 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(Parameterized.class)
 public class LiveAllocationTest {
 
-    /** Parameters: {AllocationCount, AllocationSize, IsTracking} */
+    /**
+     * Parameters: {AllocationCount, AllocationSize, IsTracking, SamplingRate}.
+     *
+     * <p>When IsTracking is false, SamplingRate is ignored.
+     */
     @Parameters
     public static Collection<Object[]> data() {
         return Arrays.asList(
                 new Object[][] {
-                    {1000000, 10, false}, {1000000, 10, true},
-                    {10000, 1000, false}, {10000, 1000, true},
-                    {100, 100000, false}, {100, 100000, true},
+                    {1000000, 10, false, 0}, {1000000, 10, true, 1},
+                    {1000000, 10, true, 0}, {1000000, 10, true, 10},
+                    {10000, 1000, false, 0}, {10000, 1000, true, 1},
+                    {100, 100000, false, 0}, {100, 100000, true, 1},
                 });
     }
 
@@ -66,11 +71,15 @@ public class LiveAllocationTest {
     private long myAllocationCount;
     private long myAllocationSize;
     private boolean myIsTracking;
+    private int mySamplingRate;
 
-    public LiveAllocationTest(long allocationCount, long allocationSize, boolean isTracking) {
+    public LiveAllocationTest(
+            long allocationCount, long allocationSize, boolean isTracking, int samplingRate) {
         myAllocationCount = allocationCount;
         myAllocationSize = allocationSize;
         myIsTracking = isTracking;
+        mySamplingRate = samplingRate;
+        myPerfDriver.setLiveAllocSamplingRate(samplingRate);
     }
 
     @Test
@@ -94,7 +103,11 @@ public class LiveAllocationTest {
                 new Metric(
                         String.format(
                                 "allocation-count_%d-size_%d-tracking_%s",
-                                myAllocationCount, myAllocationSize, myIsTracking ? "on" : "off"));
+                                myAllocationCount,
+                                myAllocationSize,
+                                myIsTracking
+                                        ? "on" + samplingRateToString(mySamplingRate)
+                                        : "off"));
 
         androidDriver.setProperty("allocation.count", String.valueOf(myAllocationCount));
         androidDriver.setProperty("allocation.size", String.valueOf(myAllocationSize));
@@ -119,5 +132,19 @@ public class LiveAllocationTest {
                 .addMeanTolerance(new WindowDeviationAnalyzer.MeanToleranceParams.Builder().build())
                 .build()));
         metric.commit();
+    }
+
+    private static String samplingRateToString(int samplingRate) {
+        if (samplingRate == 0) {
+            return "-sample_none";
+        }
+        if (samplingRate == 1) {
+            // Full tracking mode, keep existing Perfgate metric names.
+            return "";
+        }
+        if (samplingRate > 1) {
+            return "-sample_every_" + samplingRate;
+        }
+        return "-invalid_sampling_rate";
     }
 }

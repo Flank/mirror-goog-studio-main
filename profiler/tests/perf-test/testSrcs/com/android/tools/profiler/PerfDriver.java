@@ -58,6 +58,7 @@ public class PerfDriver implements TestRule {
     private DeviceProperties myPropertiesFile;
     private int mySdkLevel;
     private Session mySession;
+    private int myLiveAllocSamplingRate = 1;
 
     public PerfDriver(String activityClass, int sdkLevel) {
         myActivityClass = activityClass;
@@ -154,6 +155,10 @@ public class PerfDriver implements TestRule {
         return mySession;
     }
 
+    public void setLiveAllocSamplingRate(int samplingRate) {
+        myLiveAllocSamplingRate = samplingRate;
+    }
+
     /**
      * Function that launches the FakeAndroid framework, as well as perfd. This function will wait
      * until the framework has been loaded. Load the proper dex into the android framework and
@@ -245,7 +250,7 @@ public class PerfDriver implements TestRule {
                             .setMaxStackDepth(50)
                             .setSamplingRate(
                                     AllocationSamplingRate.newBuilder()
-                                            .setSamplingNumInterval(1)
+                                            .setSamplingNumInterval(myLiveAllocSamplingRate)
                                             .build())
                             .build();
 
