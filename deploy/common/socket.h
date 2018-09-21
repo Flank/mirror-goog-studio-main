@@ -33,10 +33,6 @@ class Socket : public MessagePipeWrapper {
 
   Socket(Socket&& other) : MessagePipeWrapper(std::move(other)) {}
 
-  Socket& operator=(Socket&& other) {
-    return Socket::operator=(std::move(other));
-  }
-
   // Creates a new UNIX stream socket and obtains its file descriptor.
   bool Open();
 
