@@ -296,8 +296,9 @@ internal class UElementVisitor constructor(
                 context.setJavaFile(null)
                 context.uastFile = null
             }
-        } catch (ignore: ProcessCanceledException) {
+        } catch (e: ProcessCanceledException) {
             // Cancelling inspections in the IDE
+            throw e
         } catch (e: Throwable) {
             // Don't allow lint bugs to take down the whole build. TRY to log this as a
             // lint error instead!
