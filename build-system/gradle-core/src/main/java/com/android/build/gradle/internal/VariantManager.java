@@ -83,7 +83,6 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SigningOptions;
 import com.android.build.gradle.options.StringOption;
-import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.DefaultProductFlavor;
@@ -146,7 +145,6 @@ public class VariantManager implements VariantModel {
 
     @NonNull private final Project project;
     @NonNull private final ProjectOptions projectOptions;
-    @NonNull private final AndroidBuilder androidBuilder;
     @NonNull private final AndroidConfig extension;
     @NonNull private final VariantFactory variantFactory;
     @NonNull private final TaskManager taskManager;
@@ -169,7 +167,6 @@ public class VariantManager implements VariantModel {
             @NonNull GlobalScope globalScope,
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
-            @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig extension,
             @NonNull VariantFactory variantFactory,
             @NonNull TaskManager taskManager,
@@ -177,7 +174,6 @@ public class VariantManager implements VariantModel {
             @NonNull Recorder recorder) {
         this.globalScope = globalScope;
         this.extension = extension;
-        this.androidBuilder = androidBuilder;
         this.project = project;
         this.projectOptions = projectOptions;
         this.variantFactory = variantFactory;
@@ -460,10 +456,14 @@ public class VariantManager implements VariantModel {
                         .add(
                                 variantDep.getCompileClasspath().getName(),
                                 project.files(
-                                        androidBuilder.getRenderScriptSupportJar(
-                                                globalScope
-                                                        .getProjectOptions()
-                                                        .get(BooleanOption.USE_ANDROID_X))));
+                                        globalScope
+                                                .getAndroidBuilder()
+                                                .getRenderScriptSupportJar(
+                                                        globalScope
+                                                                .getProjectOptions()
+                                                                .get(
+                                                                        BooleanOption
+                                                                                .USE_ANDROID_X))));
             }
 
             if (variantType.isApk()) { // ANDROID_TEST
@@ -945,7 +945,8 @@ public class VariantManager implements VariantModel {
         } else {
             // ensure that there is always a dimension
             if (flavorDimensionList == null || flavorDimensionList.isEmpty()) {
-                androidBuilder
+                globalScope
+                        .getAndroidBuilder()
                         .getIssueReporter()
                         .reportError(
                                 EvalIssueReporter.Type.UNNAMED_FLAVOR_DIMENSION,
@@ -1108,8 +1109,12 @@ public class VariantManager implements VariantModel {
 
         if (variantConfig.getRenderscriptSupportModeEnabled()) {
             File renderScriptSupportJar =
-                    androidBuilder.getRenderScriptSupportJar(
-                            globalScope.getProjectOptions().get(BooleanOption.USE_ANDROID_X));
+                    globalScope
+                            .getAndroidBuilder()
+                            .getRenderScriptSupportJar(
+                                    globalScope
+                                            .getProjectOptions()
+                                            .get(BooleanOption.USE_ANDROID_X));
 
             final ConfigurableFileCollection fileCollection = project.files(renderScriptSupportJar);
             project.getDependencies()
@@ -1449,7 +1454,9 @@ public class VariantManager implements VariantModel {
                 file,
                 f ->
                         new DefaultManifestParser(
-                                f, this::canParseManifest, androidBuilder.getIssueReporter()));
+                                f,
+                                this::canParseManifest,
+                                globalScope.getAndroidBuilder().getIssueReporter()));
     }
 
     private boolean canParseManifest() {

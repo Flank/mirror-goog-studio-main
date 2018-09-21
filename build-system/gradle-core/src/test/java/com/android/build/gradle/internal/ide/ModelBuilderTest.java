@@ -111,12 +111,10 @@ public class ModelBuilderTest {
         modelBuilder =
                 new ModelBuilder(
                         globalScope,
-                        androidBuilder,
                         variantManager,
                         taskManager,
                         androidConfig,
                         extraModelInfo,
-                        ndkHandler,
                         nativeLibraryFactory,
                         AndroidProject.PROJECT_TYPE_APP,
                         AndroidProject.GENERATION_ORIGINAL);

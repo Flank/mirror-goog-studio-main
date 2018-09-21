@@ -52,13 +52,11 @@ public class AppPlugin extends AbstractAppPlugin {
         registry.register(
                 new AppModelBuilder(
                         globalScope,
-                        androidBuilder,
                         variantManager,
                         taskManager,
                         (BaseAppModuleExtension) config,
                         extraModelInfo,
-                        ndkHandler,
-                        new NativeLibraryFactoryImpl(ndkHandler),
+                        new NativeLibraryFactoryImpl(globalScope.getNdkHandler()),
                         getProjectType(),
                         AndroidProject.GENERATION_ORIGINAL));
     }

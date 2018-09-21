@@ -21,6 +21,7 @@ import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.SdkHandler
 import com.android.build.gradle.internal.dependency.SourceSetManager
+import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.AndroidBuilder
 import org.gradle.api.Action
@@ -31,7 +32,7 @@ import org.gradle.api.Project
 open class BaseAppModuleExtension(
     project: Project,
     projectOptions: ProjectOptions,
-    androidBuilder: AndroidBuilder,
+    globalScope: GlobalScope,
     sdkHandler: SdkHandler,
     buildTypes: NamedDomainObjectContainer<BuildType>,
     productFlavors: NamedDomainObjectContainer<ProductFlavor>,
@@ -43,7 +44,7 @@ open class BaseAppModuleExtension(
 ) : AppExtension(
     project,
     projectOptions,
-    androidBuilder,
+    globalScope,
     sdkHandler,
     buildTypes,
     productFlavors,

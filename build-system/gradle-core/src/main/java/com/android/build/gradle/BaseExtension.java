@@ -42,6 +42,7 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.dsl.TestOptions;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
@@ -113,7 +114,7 @@ public abstract class BaseExtension implements AndroidConfig {
     /** Secondary dependencies for the custom transform. */
     private final List<List<Object>> transformDependencies = Lists.newArrayList();
 
-    private final AndroidBuilder androidBuilder;
+    private final GlobalScope globalScope;
 
     private final SdkHandler sdkHandler;
 
@@ -188,7 +189,7 @@ public abstract class BaseExtension implements AndroidConfig {
     BaseExtension(
             @NonNull final Project project,
             @NonNull final ProjectOptions projectOptions,
-            @NonNull AndroidBuilder androidBuilder,
+            @NonNull GlobalScope globalScope,
             @NonNull SdkHandler sdkHandler,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavors,
@@ -197,7 +198,7 @@ public abstract class BaseExtension implements AndroidConfig {
             @NonNull SourceSetManager sourceSetManager,
             @NonNull ExtraModelInfo extraModelInfo,
             boolean isBaseModule) {
-        this.androidBuilder = androidBuilder;
+        this.globalScope = globalScope;
         this.sdkHandler = sdkHandler;
         this.buildTypes = buildTypes;
         //noinspection unchecked
@@ -908,7 +909,7 @@ public abstract class BaseExtension implements AndroidConfig {
             // In sync mode where the SDK could not be installed.
             return ImmutableList.of();
         }
-        return androidBuilder.getBootClasspath(false);
+        return globalScope.getAndroidBuilder().getBootClasspath(false);
     }
 
     /**
@@ -1015,13 +1016,13 @@ public abstract class BaseExtension implements AndroidConfig {
 
     private boolean ensureTargetSetup() {
         // check if the target has been set.
-        TargetInfo targetInfo = androidBuilder.getTargetInfo();
+        TargetInfo targetInfo = globalScope.getAndroidBuilder().getTargetInfo();
         if (targetInfo == null) {
             return sdkHandler.initTarget(
                     getCompileSdkVersion(),
                     buildToolsRevision,
                     libraryRequests,
-                    androidBuilder,
+                    globalScope.getAndroidBuilder(),
                     SdkHandler.useCachedSdk(projectOptions));
         }
         return true;

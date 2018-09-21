@@ -28,14 +28,12 @@ import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.plugin.AppPluginDelegate;
 import com.android.build.gradle.internal.plugin.TypedPluginDelegate;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.ProjectOptions;
-import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
@@ -64,7 +62,7 @@ public abstract class AbstractAppPlugin extends BasePlugin<AppExtensionImpl> {
     protected BaseExtension createExtension(
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
-            @NonNull AndroidBuilder androidBuilder,
+            @NonNull GlobalScope globalScope,
             @NonNull SdkHandler sdkHandler,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavorContainer,
@@ -78,7 +76,7 @@ public abstract class AbstractAppPlugin extends BasePlugin<AppExtensionImpl> {
                         getExtensionClass(),
                         project,
                         projectOptions,
-                        androidBuilder,
+                        globalScope,
                         sdkHandler,
                         buildTypeContainer,
                         productFlavorContainer,
@@ -104,11 +102,9 @@ public abstract class AbstractAppPlugin extends BasePlugin<AppExtensionImpl> {
             @NonNull GlobalScope globalScope,
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
-            @NonNull AndroidBuilder androidBuilder,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig androidConfig,
             @NonNull SdkHandler sdkHandler,
-            @NonNull NdkHandler ndkHandler,
             @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
@@ -116,7 +112,6 @@ public abstract class AbstractAppPlugin extends BasePlugin<AppExtensionImpl> {
                 globalScope,
                 project,
                 projectOptions,
-                androidBuilder,
                 dataBindingBuilder,
                 androidConfig,
                 sdkHandler,
@@ -129,9 +124,8 @@ public abstract class AbstractAppPlugin extends BasePlugin<AppExtensionImpl> {
     @Override
     protected ApplicationVariantFactory createVariantFactory(
             @NonNull GlobalScope globalScope,
-            @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig androidConfig) {
-        return new ApplicationVariantFactory(globalScope, androidBuilder, androidConfig);
+        return new ApplicationVariantFactory(globalScope, androidConfig);
     }
 
     @Override

@@ -148,12 +148,10 @@ public class ModelBuilder<Extension extends AndroidConfig>
         implements ParameterizedToolingModelBuilder<ModelBuilderParameter> {
 
     @NonNull protected final GlobalScope globalScope;
-    @NonNull private final AndroidBuilder androidBuilder;
     @NonNull protected final Extension extension;
     @NonNull private final ExtraModelInfo extraModelInfo;
     @NonNull private final VariantManager variantManager;
     @NonNull private final TaskManager taskManager;
-    @NonNull private final NdkHandler ndkHandler;
     @NonNull private Map<Abi, NativeToolchain> toolchains;
     @NonNull private NativeLibraryFactory nativeLibFactory;
     private final int projectType;
@@ -171,22 +169,18 @@ public class ModelBuilder<Extension extends AndroidConfig>
 
     public ModelBuilder(
             @NonNull GlobalScope globalScope,
-            @NonNull AndroidBuilder androidBuilder,
             @NonNull VariantManager variantManager,
             @NonNull TaskManager taskManager,
             @NonNull Extension extension,
             @NonNull ExtraModelInfo extraModelInfo,
-            @NonNull NdkHandler ndkHandler,
             @NonNull NativeLibraryFactory nativeLibraryFactory,
             int projectType,
             int generation) {
         this.globalScope = globalScope;
-        this.androidBuilder = androidBuilder;
         this.extension = extension;
         this.extraModelInfo = extraModelInfo;
         this.variantManager = variantManager;
         this.taskManager = taskManager;
-        this.ndkHandler = ndkHandler;
         this.nativeLibFactory = nativeLibraryFactory;
         this.projectType = projectType;
         this.generation = generation;
@@ -340,6 +334,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
 
         // Get the boot classpath. This will ensure the target is configured.
         List<String> bootClasspath;
+        final AndroidBuilder androidBuilder = globalScope.getAndroidBuilder();
         if (androidBuilder.getTargetInfo() != null) {
             bootClasspath = androidBuilder.getBootClasspathAsStrings(false);
         } else {
@@ -372,7 +367,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
                         ? extension.getFlavorDimensionList()
                         : Lists.newArrayList();
 
-        toolchains = createNativeToolchainModelMap(ndkHandler);
+        toolchains = createNativeToolchainModelMap(globalScope.getNdkHandler());
 
         ProductFlavorContainer defaultConfig = ProductFlavorContainerImpl
                 .createProductFlavorContainer(
@@ -860,6 +855,8 @@ public class ModelBuilder<Extension extends AndroidConfig>
 
         CoreNdkOptions ndkConfig = variantData.getVariantConfiguration().getNdkConfig();
         Collection<NativeLibrary> nativeLibraries = ImmutableList.of();
+
+        NdkHandler ndkHandler = globalScope.getNdkHandler();
         if (ndkHandler.isConfigured()) {
             if (extension.getSplits().getAbi().isEnable()) {
                 nativeLibraries =

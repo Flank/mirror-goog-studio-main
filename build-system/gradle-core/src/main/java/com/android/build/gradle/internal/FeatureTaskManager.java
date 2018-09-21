@@ -26,7 +26,6 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
-import com.android.builder.core.AndroidBuilder;
 import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.profile.Recorder;
@@ -42,7 +41,6 @@ public class FeatureTaskManager extends ApplicationTaskManager {
             @NonNull GlobalScope globalScope,
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
-            @NonNull AndroidBuilder androidBuilder,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
             @NonNull SdkHandler sdkHandler,
@@ -53,7 +51,6 @@ public class FeatureTaskManager extends ApplicationTaskManager {
                 globalScope,
                 project,
                 projectOptions,
-                androidBuilder,
                 dataBindingBuilder,
                 extension,
                 sdkHandler,
@@ -75,7 +72,8 @@ public class FeatureTaskManager extends ApplicationTaskManager {
             if (androidVersion != null) {
                 message += " compileSdkVersion is set to " + androidVersion.getApiString();
             }
-            androidBuilder
+            globalScope
+                    .getAndroidBuilder()
                     .getIssueReporter()
                     .reportError(Type.GENERIC, new EvalIssueException(message));
         }
@@ -87,7 +85,8 @@ public class FeatureTaskManager extends ApplicationTaskManager {
                     BooleanOption.ENABLE_EXPERIMENTAL_FEATURE_DATABINDING.getPropertyName();
             if (projectOptions.get(BooleanOption.ENABLE_EXPERIMENTAL_FEATURE_DATABINDING)) {
                 if (projectOptions.get(BooleanOption.ENABLE_DATA_BINDING_V2)) {
-                    androidBuilder
+                    globalScope
+                            .getAndroidBuilder()
                             .getIssueReporter()
                             .reportWarning(
                                     Type.GENERIC,
@@ -95,7 +94,8 @@ public class FeatureTaskManager extends ApplicationTaskManager {
                                             + "and is not supported.");
                 } else {
 
-                    androidBuilder
+                    globalScope
+                            .getAndroidBuilder()
                             .getIssueReporter()
                             .reportError(
                                     Type.GENERIC,
@@ -107,7 +107,8 @@ public class FeatureTaskManager extends ApplicationTaskManager {
                 }
 
             } else {
-                androidBuilder
+                globalScope
+                        .getAndroidBuilder()
                         .getIssueReporter()
                         .reportError(
                                 Type.GENERIC,

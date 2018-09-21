@@ -11,8 +11,8 @@ import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.options.ProjectOptions;
-import com.android.builder.core.AndroidBuilder;
 import com.google.common.collect.Lists;
 import java.util.Collection;
 import java.util.Collections;
@@ -39,7 +39,7 @@ public class LibraryExtension extends TestedExtension {
     public LibraryExtension(
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
-            @NonNull AndroidBuilder androidBuilder,
+            @NonNull GlobalScope globalScope,
             @NonNull SdkHandler sdkHandler,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavors,
@@ -50,7 +50,7 @@ public class LibraryExtension extends TestedExtension {
         super(
                 project,
                 projectOptions,
-                androidBuilder,
+                globalScope,
                 sdkHandler,
                 buildTypes,
                 productFlavors,

@@ -131,7 +131,6 @@ public enum InternalArtifactType implements ArtifactType {
 
     LIBRARY_ASSETS,
     MERGED_ASSETS,
-    MOCKABLE_JAR,
 
     // AIDL headers "packaged" by libraries for consumers.
     AIDL_PARCELABLE,

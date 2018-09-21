@@ -58,7 +58,6 @@ import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.VerifyLibraryResourcesTask;
 import com.android.build.gradle.tasks.ZipMergingTask;
-import com.android.builder.core.AndroidBuilder;
 import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.profile.Recorder;
@@ -82,7 +81,6 @@ public class LibraryTaskManager extends TaskManager {
             @NonNull GlobalScope globalScope,
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
-            @NonNull AndroidBuilder androidBuilder,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
             @NonNull SdkHandler sdkHandler,
@@ -93,7 +91,6 @@ public class LibraryTaskManager extends TaskManager {
                 globalScope,
                 project,
                 projectOptions,
-                androidBuilder,
                 dataBindingBuilder,
                 extension,
                 sdkHandler,
@@ -222,7 +219,8 @@ public class LibraryTaskManager extends TaskManager {
                     Sets.difference(transform.getScopes(), TransformManager.PROJECT_ONLY);
             if (!difference.isEmpty()) {
                 String scopes = difference.toString();
-                androidBuilder
+                globalScope
+                        .getAndroidBuilder()
                         .getIssueReporter()
                         .reportError(
                                 Type.GENERIC,
