@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
   std::string message;
   if (!installer_output.Read(&message)) {
     perror("Failed to read from installer");
-    return false;
+    return EXIT_FAILURE;
   }
 
   // Accept socket connections from the agents.
