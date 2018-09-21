@@ -52,7 +52,6 @@ import com.android.build.gradle.internal.dsl.SigningConfigFactory;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.ide.ModelBuilder;
 import com.android.build.gradle.internal.ide.NativeModelBuilder;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.plugin.PluginDelegate;
@@ -161,11 +160,9 @@ public abstract class BasePlugin<E extends BaseExtension2>
 
     protected ProjectOptions projectOptions;
 
+    private GlobalScope globalScope;
+
     private SdkHandler sdkHandler;
-
-    protected NdkHandler ndkHandler;
-
-    protected AndroidBuilder androidBuilder;
 
     private DataBindingBuilder dataBindingBuilder;
 
@@ -198,7 +195,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
     protected abstract BaseExtension createExtension(
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
-            @NonNull AndroidBuilder androidBuilder,
+            @NonNull GlobalScope globalScope,
             @NonNull SdkHandler sdkHandler,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavorContainer,
@@ -213,7 +210,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
     @NonNull
     protected abstract VariantFactory createVariantFactory(
             @NonNull GlobalScope globalScope,
-            @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig androidConfig);
 
     @NonNull
@@ -221,11 +217,9 @@ public abstract class BasePlugin<E extends BaseExtension2>
             @NonNull GlobalScope globalScope,
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
-            @NonNull AndroidBuilder androidBuilder,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig androidConfig,
             @NonNull SdkHandler sdkHandler,
-            @NonNull NdkHandler ndkHandler,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder threadRecorder);
 
@@ -242,7 +236,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
 
     @VisibleForTesting
     AndroidBuilder getAndroidBuilder() {
-        return androidBuilder;
+        return globalScope.getAndroidBuilder();
     }
 
     private ILogger getLogger() {
@@ -349,6 +343,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
 
     private void configureProject() {
         final Gradle gradle = project.getGradle();
+        ObjectFactory objectFactory = project.getObjects();
 
         extraModelInfo = new ExtraModelInfo(project.getPath(), projectOptions, project.getLogger());
 
@@ -359,7 +354,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
             sdkHandler.setSdkLibData(sdkLibData);
         }
 
-        androidBuilder =
+        AndroidBuilder androidBuilder =
                 new AndroidBuilder(
                         project == project.getRootProject() ? project.getName() : project.getPath(),
                         creator,
@@ -397,6 +392,26 @@ public abstract class BasePlugin<E extends BaseExtension2>
 
         // Apply the Java plugin
         project.getPlugins().apply(JavaBasePlugin.class);
+
+        DslScopeImpl dslScope =
+                new DslScopeImpl(
+                        extraModelInfo.getSyncIssueHandler(),
+                        extraModelInfo.getDeprecationReporter(),
+                        objectFactory);
+
+        @Nullable
+        FileCache buildCache = BuildCacheUtils.createBuildCacheIfEnabled(project, projectOptions);
+
+        globalScope =
+                new GlobalScope(
+                        project,
+                        new ProjectWrapper(project),
+                        projectOptions,
+                        dslScope,
+                        androidBuilder,
+                        sdkHandler,
+                        registry,
+                        buildCache);
 
         project.getTasks()
                 .getByName("assemble")
@@ -515,13 +530,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
         final NamedDomainObjectContainer<BaseVariantOutput> buildOutputs =
                 project.container(BaseVariantOutput.class);
 
-        DslScopeImpl dslScope =
-                new DslScopeImpl(
-                        extraModelInfo.getSyncIssueHandler(),
-                        extraModelInfo.getDeprecationReporter(),
-                        objectFactory);
-
-
         project.getExtensions().add("buildOutputs", buildOutputs);
 
         sourceSetManager = createSourceSetManager();
@@ -530,7 +538,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                 createExtension(
                         project,
                         projectOptions,
-                        androidBuilder,
+                        globalScope,
                         sdkHandler,
                         buildTypeContainer,
                         productFlavorContainer,
@@ -539,43 +547,18 @@ public abstract class BasePlugin<E extends BaseExtension2>
                         sourceSetManager,
                         extraModelInfo);
 
-        ndkHandler =
-                new NdkHandler(
-                        project.getRootDir(),
-                        null, /* compileSkdVersion, this will be set in afterEvaluate */
-                        "gcc",
-                        "" /*toolchainVersion*/,
-                        false /* useUnifiedHeaders */);
+        globalScope.setExtension(extension);
 
-
-        @Nullable
-        FileCache buildCache = BuildCacheUtils.createBuildCacheIfEnabled(project, projectOptions);
-
-        GlobalScope globalScope =
-                new GlobalScope(
-                        project,
-                        new ProjectWrapper(project),
-                        projectOptions,
-                        dslScope,
-                        androidBuilder,
-                        extension,
-                        sdkHandler,
-                        ndkHandler,
-                        registry,
-                        buildCache);
-
-        variantFactory = createVariantFactory(globalScope, androidBuilder, extension);
+        variantFactory = createVariantFactory(globalScope, extension);
 
         taskManager =
                 createTaskManager(
                         globalScope,
                         project,
                         projectOptions,
-                        androidBuilder,
                         dataBindingBuilder,
                         extension,
                         sdkHandler,
-                        ndkHandler,
                         registry,
                         threadRecorder);
 
@@ -584,7 +567,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
                         globalScope,
                         project,
                         projectOptions,
-                        androidBuilder,
                         extension,
                         variantFactory,
                         taskManager,
@@ -647,13 +629,11 @@ public abstract class BasePlugin<E extends BaseExtension2>
         registry.register(
                 new ModelBuilder<>(
                         globalScope,
-                        androidBuilder,
                         variantManager,
                         taskManager,
                         config,
                         extraModelInfo,
-                        ndkHandler,
-                        new NativeLibraryFactoryImpl(ndkHandler),
+                        new NativeLibraryFactoryImpl(globalScope.getNdkHandler()),
                         getProjectType(),
                         AndroidProject.GENERATION_ORIGINAL));
     }
@@ -727,7 +707,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                 "buildToolsVersion is not specified.");
         checkState(extension.getCompileSdkVersion() != null, "compileSdkVersion is not specified.");
 
-        ndkHandler.setCompileSdkVersion(extension.getCompileSdkVersion());
+        globalScope.getNdkHandler().setCompileSdkVersion(extension.getCompileSdkVersion());
 
         // get current plugins and look for the default Java plugin.
         if (project.getPlugins().hasPlugin(JavaPlugin.class)) {
@@ -800,7 +780,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                     variantManager.createAndroidTasks();
                     ApiObjectFactory apiObjectFactory =
                             new ApiObjectFactory(
-                                    androidBuilder,
+                                    globalScope.getAndroidBuilder(),
                                     extension,
                                     variantFactory,
                                     project.getObjects());
@@ -968,7 +948,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
 
     private boolean ensureTargetSetup() {
         // check if the target has been set.
-        TargetInfo targetInfo = androidBuilder.getTargetInfo();
+        TargetInfo targetInfo = globalScope.getAndroidBuilder().getTargetInfo();
         // noinspection VariableNotUsedInsideIf Directly checking if initialized.
         if (targetInfo != null) {
             return true;
@@ -981,7 +961,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                 extension.getCompileSdkVersion(),
                 extension.getBuildToolsRevision(),
                 extension.getLibraryRequests(),
-                androidBuilder,
+                globalScope.getAndroidBuilder(),
                 SdkHandler.useCachedSdk(projectOptions));
     }
 

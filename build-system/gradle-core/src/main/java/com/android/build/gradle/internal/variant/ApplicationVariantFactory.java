@@ -36,7 +36,6 @@ import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
-import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.errors.EvalIssueException;
@@ -67,9 +66,8 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
 
     public ApplicationVariantFactory(
             @NonNull GlobalScope globalScope,
-            @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig extension) {
-        super(globalScope, androidBuilder, extension);
+        super(globalScope, extension);
     }
 
     @Override
@@ -260,8 +258,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
             return;
         }
 
-        EvalIssueReporter issueReporter = androidBuilder.getIssueReporter();
-
+        EvalIssueReporter issueReporter = globalScope.getAndroidBuilder().getIssueReporter();
         for (BuildTypeData buildType : model.getBuildTypes().values()) {
             if (buildType.getBuildType().isMinifyEnabled()) {
                 issueReporter.reportError(

@@ -32,23 +32,19 @@ import org.gradle.api.artifacts.ProjectDependency
  */
 class FeatureModelBuilder(
     globalScope: GlobalScope,
-    androidBuilder: AndroidBuilder,
     variantManager: VariantManager,
     taskManager: TaskManager,
     config: FeatureExtension,
     extraModelInfo: ExtraModelInfo,
-    ndkHandler: NdkHandler,
     nativeLibraryFactory: NativeLibraryFactory,
     projectType: Int,
     generation: Int
 ) : ModelBuilder<FeatureExtension>(
     globalScope,
-    androidBuilder,
     variantManager,
     taskManager,
     config,
     extraModelInfo,
-    ndkHandler,
     nativeLibraryFactory,
     projectType,
     generation

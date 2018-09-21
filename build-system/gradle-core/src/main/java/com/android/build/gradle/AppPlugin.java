@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.AppModelBuilder;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.NativeLibraryFactoryImpl;
 import com.android.build.gradle.internal.VariantManager;
-import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -29,7 +28,6 @@ import com.android.builder.model.AndroidProject;
 import javax.inject.Inject;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -58,13 +56,11 @@ public class AppPlugin extends AbstractAppPlugin {
         registry.register(
                 new AppModelBuilder(
                         globalScope,
-                        androidBuilder,
                         variantManager,
                         taskManager,
                         (BaseAppModuleExtension) config,
                         extraModelInfo,
-                        ndkHandler,
-                        new NativeLibraryFactoryImpl(ndkHandler),
+                        new NativeLibraryFactoryImpl(globalScope.getNdkHandler()),
                         getProjectType(),
                         AndroidProject.GENERATION_ORIGINAL));
     }
