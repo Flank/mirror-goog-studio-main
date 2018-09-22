@@ -130,7 +130,7 @@ class MemoryTrackingEnv : public GlobalRefListener {
   inline int32_t GetNextClassTag() { return current_class_tag_++; }
   inline int32_t GetNextObjectTag() { return current_object_tag_++; }
   inline bool ShouldSelectSample(int32_t sampling_num) {
-    return sampling_num_interval_ != 0 &&
+    return sampling_num_interval_ > 0 &&
            sampling_num % sampling_num_interval_ == 0;
   }
 
