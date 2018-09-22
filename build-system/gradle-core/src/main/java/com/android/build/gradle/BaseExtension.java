@@ -114,7 +114,7 @@ public abstract class BaseExtension implements AndroidConfig {
     /** Secondary dependencies for the custom transform. */
     private final List<List<Object>> transformDependencies = Lists.newArrayList();
 
-    private final GlobalScope globalScope;
+    protected final GlobalScope globalScope;
 
     private final SdkHandler sdkHandler;
 

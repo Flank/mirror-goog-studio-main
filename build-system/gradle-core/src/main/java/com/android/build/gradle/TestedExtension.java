@@ -16,6 +16,7 @@ import com.android.builder.core.VariantType;
 import org.gradle.api.DomainObjectSet;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.internal.DefaultDomainObjectSet;
 
 /**
@@ -167,5 +168,10 @@ public abstract class TestedExtension extends BaseExtension implements TestedAnd
 
     public void setTestBuildType(String testBuildType) {
         this.testBuildType = testBuildType;
+    }
+
+    @NonNull
+    public FileCollection getMockableAndroidJar() {
+        return globalScope.getMockableJarArtifact();
     }
 }
