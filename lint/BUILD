@@ -20,8 +20,7 @@ iml_module(
         "//tools/base/build-system:studio.android.sdktools.manifest-merger",
         "//tools/idea/uast/uast-common:intellij.platform.uast",
         "//tools/idea/uast/uast-java:intellij.java.uast",
-        "//prebuilts/tools/common/kotlin-plugin:Kotlin/lib/kotlin-plugin",
-        "//prebuilts/tools/common/kotlin-plugin:Kotlin/lib/android-lint",
+        "//tools/idea/.idea/libraries:kotlin-plugin",
     ],
     # do not sort: must match IML order
     deps = [
@@ -39,8 +38,7 @@ iml_module(
         "//tools/idea/.idea/libraries:KotlinJavaRuntime",
         "//tools/idea/uast/uast-common:intellij.platform.uast[module]",
         "//tools/idea/uast/uast-java:intellij.java.uast[module]",
-        "//prebuilts/tools/common/kotlin-plugin:Kotlin/lib/kotlin-plugin",
-        "//prebuilts/tools/common/kotlin-plugin:Kotlin/lib/android-lint",
+        "//tools/idea/.idea/libraries:kotlin-plugin",
     ],
 )
 
