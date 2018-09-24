@@ -132,7 +132,6 @@ public class ProfilerToBenchmarkAdapter {
         }
         Metric totalBuildTime = new Metric("TOTAL_BUILD_TIME");
         Metric totalGcTime = new Metric("TOTAL_GC_TIME");
-        Metric totalBuildTimeNoGc = new Metric("TOTAL_BUILD_TIME_NO_GC");
 
         consolidatedTimingsPerIterations
                 .stream()
@@ -154,12 +153,6 @@ public class ProfilerToBenchmarkAdapter {
                                     new Metric.MetricSample(
                                             consolidatedRunTimings.startTime,
                                             consolidatedRunTimings.gcTime));
-                            totalBuildTimeNoGc.addSamples(
-                                    benchmark,
-                                    new Metric.MetricSample(
-                                            consolidatedRunTimings.startTime,
-                                            consolidatedRunTimings.buildTime
-                                                    - consolidatedRunTimings.gcTime));
                             consolidatedRunTimings.timingsForTasks.forEach(
                                     (type, timing) ->
                                             addMetricSample(
@@ -180,11 +173,15 @@ public class ProfilerToBenchmarkAdapter {
                                                     consolidatedRunTimings.startTime,
                                                     timing));
                         });
+
+        // set analyzers
         metrics.values().forEach(it -> setAnalyzers(it, benchmark));
+        setAnalyzers(totalBuildTime, benchmark);
+
+        // commit all metrics
         metrics.values().forEach(Metric::commit);
         totalBuildTime.commit();
         totalGcTime.commit();
-        totalBuildTimeNoGc.commit();
     }
 
     /**
