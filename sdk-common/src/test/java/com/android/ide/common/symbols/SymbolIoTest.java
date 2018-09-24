@@ -18,6 +18,7 @@ package com.android.ide.common.symbols;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -30,6 +31,7 @@ import com.android.testutils.truth.PathSubject;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
@@ -1038,5 +1040,50 @@ public class SymbolIoTest {
             assertThat(e).hasMessageThat().contains("Invalid symbol file");
             assertThat(e).hasMessageThat().contains("R_DEF");
         }
+    }
+
+    @Test
+    public void readCorruptedIdAarRTxt() throws Exception {
+        File corrupted = new File(mTemporaryFolder.newFolder(), "other R.txt");
+        Files.asCharSink(corrupted, Charsets.UTF_8)
+                .write(
+                        "int styleable myStyleable_rogue 0\n" // rogue child
+                                + "int[] styleable myStyleable {732, 733}\n" // missing child ID
+                                + "int styleable myStyleable_one 1\n"
+                                + "int styleable myStyleable_two 2\n"
+                                + "int styleable myStyleable_three 3\n" // more children than IDs
+                                + "int string text invalid_id\n" // non-integer ID
+                                + "int xml file \n"); // missing ID
+        SymbolTable table = SymbolIo.readFromAaptNoValues(corrupted, null);
+        assertThat(table.getSymbols()).hasSize(3);
+
+        // First check the styleable with missing IDs and the styleable children.
+        assertThat(table.getSymbolByResourceType(ResourceType.STYLEABLE)).hasSize(1);
+        Symbol.StyleableSymbol myStyleable =
+                (Symbol.StyleableSymbol)
+                        Iterables.getOnlyElement(
+                                table.getSymbolByResourceType(ResourceType.STYLEABLE));
+        // Check that all children were found.
+        assertThat(myStyleable.getChildren()).hasSize(3);
+        // Check that no values were kept.
+        assertThat(myStyleable.getValue()).contains("{  }");
+        assertThat(myStyleable.getChildren()).containsExactly("one", "two", "three");
+        // And finally make sure the rogue child was ignored.
+        assertFalse(table.containsSymbol(ResourceType.STYLEABLE, "myStyleable_rogue"));
+        assertFalse(table.containsSymbol(ResourceType.STYLEABLE, "rogue"));
+        assertTrue(table.containsSymbol(ResourceType.STYLEABLE, "myStyleable_one"));
+
+        // Now check that an incorrect ID was ignored.
+        assertThat(table.getSymbolByResourceType(ResourceType.STRING)).hasSize(1);
+        Symbol myString =
+                Iterables.getOnlyElement(table.getSymbolByResourceType(ResourceType.STRING));
+        assertThat(myString.getCanonicalName()).isEqualTo("text");
+        assertThat(myString.getIntValue()).isEqualTo(0);
+
+        // And finally check the XML resource with completely missing ID.
+        assertThat(table.getSymbolByResourceType(ResourceType.XML)).hasSize(1);
+        Symbol xml = Iterables.getOnlyElement(table.getSymbolByResourceType(ResourceType.XML));
+        assertThat(xml.getCanonicalName()).isEqualTo("file");
+        assertThat(xml.getIntValue()).isEqualTo(0);
     }
 }

@@ -111,6 +111,21 @@ public final class SymbolIo {
     }
 
     /**
+     * Loads a symbol table from a symbol file created by aapt, but ignores all the resource values.
+     * It will also ignore any styleable children that are not under their parents.
+     *
+     * @param file the symbol file
+     * @param tablePackage the package name associated with the table
+     * @return the table read
+     * @throws IOException failed to read the table
+     */
+    @NonNull
+    public static SymbolTable readFromAaptNoValues(
+            @NonNull File file, @Nullable String tablePackage) throws IOException {
+        return read(file, tablePackage, ReadConfiguration.AAPT_NO_VALUES);
+    }
+
+    /**
      * Loads a symbol table from a partial symbol file created by aapt during compilation.
      *
      * @param file the partial symbol file
@@ -278,8 +293,17 @@ public final class SymbolIo {
                     if (data.resourceType == ResourceType.STYLEABLE) {
                         switch (data.javaType) {
                             case INT:
-                                throw new IOException(
-                                        "Unexpected styleable child " + currentLineContent);
+                                if (readConfiguration.ignoreRogueChildren) {
+                                    // If we're ignoring rogue children (styleable children that are
+                                    // not under their parent), we can just read the next line and
+                                    // continue.
+                                    readNextLine();
+                                    break;
+                                } else {
+                                    // If we're not ignoring rogue children, we need to error out.
+                                    throw new IOException(
+                                            "Unexpected styleable child " + currentLineContent);
+                                }
                             case INT_LIST:
                                 readNextLine();
                                 handleStyleable(table, data);
@@ -619,6 +643,13 @@ public final class SymbolIo {
                 return readAaptLine(line);
             }
         },
+        AAPT_NO_VALUES(false, false, false, true, null) {
+            @NonNull
+            @Override
+            public SymbolData parseLine(@NonNull String line) throws IOException {
+                return readAaptLine(line);
+            }
+        },
         SYMBOL_LIST_WITH_PACKAGE(false, true) {
             @NonNull
             @Override
@@ -626,7 +657,7 @@ public final class SymbolIo {
                 return readSymbolListWithPackageLine(line);
             }
         },
-        R_DEF(false, true, true, "R_DEF: Internal format may change without notice") {
+        R_DEF(false, true, true, false, "R_DEF: Internal format may change without notice") {
             @NonNull
             @Override
             public SymbolData parseLine(@NonNull String line) throws IOException {
@@ -649,23 +680,26 @@ public final class SymbolIo {
         };
 
         ReadConfiguration(boolean readValues, boolean singleLineStyleable) {
-            this(readValues, singleLineStyleable, false, null);
+            this(readValues, singleLineStyleable, false, false, null);
         }
 
         ReadConfiguration(
                 boolean readValues,
                 boolean singleLineStyleable,
                 boolean rawSymbolNames,
+                boolean ignoreRogueChildren,
                 @Nullable String fileTypeHeader) {
             this.readValues = readValues;
             this.singleLineStyleable = singleLineStyleable;
             this.fileTypeHeader = fileTypeHeader;
             this.rawSymbolNames = rawSymbolNames;
+            this.ignoreRogueChildren = ignoreRogueChildren;
         }
 
         final boolean readValues;
         final boolean singleLineStyleable;
         final boolean rawSymbolNames;
+        final boolean ignoreRogueChildren;
         @Nullable final String fileTypeHeader;
 
         @NonNull
