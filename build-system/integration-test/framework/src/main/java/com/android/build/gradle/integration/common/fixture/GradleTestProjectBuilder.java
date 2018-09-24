@@ -179,6 +179,11 @@ public final class GradleTestProjectBuilder {
         return this;
     }
 
+    public GradleTestProjectBuilder setTargetGradleVersion(@Nullable String targetGradleVersion) {
+        this.targetGradleVersion = targetGradleVersion;
+        return this;
+    }
+
     public GradleTestProjectBuilder withKotlinVersion(String kotlinVersion) {
         this.kotlinVersion = kotlinVersion;
         return this;

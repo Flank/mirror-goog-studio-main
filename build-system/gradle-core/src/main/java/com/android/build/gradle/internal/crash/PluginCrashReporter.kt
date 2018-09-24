@@ -22,7 +22,6 @@ import com.android.builder.model.Version
 import com.android.tools.analytics.AnalyticsSettings
 import com.android.tools.analytics.crash.CrashReporter
 import com.android.tools.analytics.crash.GoogleCrashReporter
-import com.google.common.base.Throwables
 
 /** This cannot be changed without updating the go/crash configuration. */
 internal const val PRODUCT_ID = "AndroidGradlePlugin"
@@ -50,6 +49,7 @@ object PluginCrashReporter {
     }
 
     private fun getCrashReporter(forTest: Boolean = false): CrashReporter? {
+        AnalyticsSettings.initialize(LoggerWrapper.getLogger(PluginCrashReporter::class.java))
         return if (AnalyticsSettings.optedIn) {
             val isDebugBuild = Version.ANDROID_GRADLE_PLUGIN_VERSION.endsWith("-dev")
             GoogleCrashReporter(false, isDebugBuild || forTest)

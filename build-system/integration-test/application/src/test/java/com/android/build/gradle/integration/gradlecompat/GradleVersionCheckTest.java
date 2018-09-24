@@ -21,11 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.testutils.TestUtils;
 import com.google.common.base.Throwables;
-import java.net.URI;
-import org.gradle.tooling.GradleConnector;
-import org.gradle.tooling.ProjectConnection;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -39,23 +35,15 @@ public class GradleVersionCheckTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
+                    .setTargetGradleVersion(OLD_GRADLE_VERSION)
                     .create();
 
     @Test
     public void testGradleVersionCheck() {
-        // Use an old version of Gradle, the build should fail early with a message asking users to
-        // update Gradle (regression test for https://issuetracker.google.com/73383831)
-        URI oldDistributionURI =
-                TestUtils.getWorkspaceFile(
-                                "tools/external/gradle/gradle-" + OLD_GRADLE_VERSION + "-bin.zip")
-                        .toURI();
-        ProjectConnection connection =
-                GradleConnector.newConnector()
-                        .useDistribution(oldDistributionURI)
-                        .forProjectDirectory(project.getTestDir())
-                        .connect();
+
+
         try {
-            connection.newBuild().forTasks("help").run();
+            project.executor().run("help");
         } catch (Exception e) {
             assertThat(Throwables.getRootCause(e).getMessage())
                     .contains(
@@ -63,8 +51,6 @@ public class GradleVersionCheckTest {
                                     "Minimum supported Gradle version is %s."
                                             + " Current version is %s.",
                                     SdkConstants.GRADLE_MINIMUM_VERSION, OLD_GRADLE_VERSION));
-        } finally {
-            connection.close();
         }
     }
 }

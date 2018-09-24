@@ -20,8 +20,6 @@ import com.android.tools.analytics.AnalyticsSettings
 import com.android.tools.analytics.AnalyticsSettingsData
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
-import org.mockito.Mockito.`when`
-import org.mockito.Mockito.mock
 import com.android.build.gradle.internal.crash.PluginCrashReporter.maybeReportExceptionForTest as reportForTest
 
 class PluginCrashReporterTest {
@@ -64,5 +62,11 @@ class PluginCrashReporterTest {
         settings.optedIn = true
 
         assertThat(reportForTest(ExternalApiUsageException(RuntimeException()))).isFalse()
+    }
+
+    @Test
+    fun testReportingInitializesAnalyticsSettings() {
+        assertThat(reportForTest(NullPointerException())).isTrue()
+        assertThat(AnalyticsSettings.initialized).isTrue()
     }
 }
