@@ -28,7 +28,7 @@ java_binary(
 
 filegroup(
     name = "build-tools/latest",
-    srcs = [":build-tools/28.0.2"],
+    srcs = [":build-tools/28.0.3"],
     visibility = ["//visibility:public"],
 )
 
@@ -39,9 +39,9 @@ filegroup(
 )
 
 filegroup(
-    name = "build-tools/28.0.2",
+    name = "build-tools/28.0.3",
     srcs = glob(
-        include = ["*/build-tools/28.0.2/**"],
+        include = ["*/build-tools/28.0.3/**"],
     ),
     visibility = ["//visibility:public"],
 )
