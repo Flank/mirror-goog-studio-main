@@ -89,6 +89,8 @@ import org.gradle.api.tasks.Input;
  *         <li><code>/META-INF/&#042;.RSA</code> (all RSA signature files)
  *         <li><code>/META-INF/maven/&#042;&#042;</code> (all files in the {@code maven} meta inf
  *             directory)
+ *         <li><code>/META-INF/proguard/&#042;</code> (all files in the {@code proguard} meta inf
+ *             directory)
  *         <li><code>&#042;&#042;/.svn/&#042;&#042;</code> (all {@code .svn} directory contents)
  *         <li><code>&#042;&#042;/CVS/&#042;&#042;</code> (all {@code CVS} directory contents)
  *         <li><code>&#042;&#042;/SCCS/&#042;&#042;</code> (all {@code SCCS} directory contents)
@@ -150,6 +152,7 @@ public class PackagingOptions implements com.android.builder.model.PackagingOpti
         exclude("/META-INF/*.SF");
         exclude("/META-INF/*.RSA");
         exclude("/META-INF/maven/**");
+        exclude("/META-INF/proguard/*");
         exclude("/NOTICE");
         exclude("/NOTICE.txt");
         exclude("/LICENSE.txt");

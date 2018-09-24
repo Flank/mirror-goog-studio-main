@@ -48,6 +48,7 @@ public class PackagingOptionsTest {
     static {
         jarProject1.addFile(new TestSourceFile("build.gradle", "apply plugin: 'java'"));
         jarProject1.addFile(new TestSourceFile("src/main/resources", "conflict.txt", "foo"));
+        jarProject1.addFile(new TestSourceFile("META-INF/proguard", "rules.pro", "# none"));
     }
 
     private static AndroidTestModule jarProject2 = new EmptyAndroidTestApp();
@@ -97,6 +98,13 @@ public class PackagingOptionsTest {
                         + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
                         + "\"\n"
                         + "}\n");
+    }
+
+    @Test
+    public void metaInfProguardExcludedByDefault() throws IOException, InterruptedException {
+        project.execute("clean", "assembleDebug");
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG))
+                .doesNotContain("META-INF/proguard/rules.pro");
     }
 
     @Test
