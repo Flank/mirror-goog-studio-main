@@ -17,7 +17,7 @@
 package com.android.projectmodel
 
 /**
- * A config table holds the set of [Config] instances for an [AndroidProject] and describes how they
+ * A config table holds the set of [Config] instances for an [AndroidSubmodule] and describes how they
  * are shared among build types, [Artifact] instances, and [Variant] instances.
  *
  * New properties may be added in the future; clients that invoke the constructor are encouraged to

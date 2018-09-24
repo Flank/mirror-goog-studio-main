@@ -34,33 +34,33 @@ class AndroidModelTest {
     }
 
     @Test
-    fun testSingleProjectToString() {
+    fun testSingleSubmoduleToString() {
         assertThat(
             AndroidModel(
-                projects = listOf(
-                    AndroidProject(
+              submodules = listOf(
+                AndroidSubmodule(
                         name = "project",
                         type = ProjectType.APP
                     )
                 )
             ).toString()
         )
-            .isEqualTo("AndroidModel(projects=[AndroidProject(name=project,type=APP)])")
+            .isEqualTo("AndroidModel(submodules=[AndroidSubmodule(name=project,type=APP)])")
     }
 
     /**
-     * Tests the [AndroidModel.getProject] method.
+     * Tests the [AndroidModel.getSubmodule] method.
      */
     @Test
-    fun testGetProject() {
-        val p1 = AndroidProject(name="p1", type=ProjectType.APP)
-        val p2 = AndroidProject(name="p2", type=ProjectType.APP)
-        val p3 = AndroidProject(name="p3", type=ProjectType.APP)
+    fun testGetSubmodule() {
+        val p1 = AndroidSubmodule(name="p1", type=ProjectType.APP)
+        val p2 = AndroidSubmodule(name="p2", type=ProjectType.APP)
+        val p3 = AndroidSubmodule(name="p3", type=ProjectType.APP)
         val model = AndroidModel(listOf(p1, p2, p3))
 
-        assertThat(model.getProject("p1")).isEqualTo(p1)
-        assertThat(model.getProject("p2")).isEqualTo(p2)
-        assertThat(model.getProject("p3")).isEqualTo(p3)
-        assertThat(model.getProject("missing key")).isNull()
+        assertThat(model.getSubmodule("p1")).isEqualTo(p1)
+        assertThat(model.getSubmodule("p2")).isEqualTo(p2)
+        assertThat(model.getSubmodule("p3")).isEqualTo(p3)
+        assertThat(model.getSubmodule("missing key")).isNull()
     }
 }

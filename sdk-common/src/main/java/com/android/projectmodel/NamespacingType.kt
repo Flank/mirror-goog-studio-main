@@ -17,7 +17,7 @@
 package com.android.projectmodel
 
 /**
- * Reflects the namespacing strategy used within an [AndroidProject].
+ * Reflects the namespacing strategy used within an [AndroidSubmodule].
  */
 enum class NamespacingType {
     /**
@@ -31,7 +31,7 @@ enum class NamespacingType {
      *
      * Each library is compiled in to an AAPT2 static library with its own namespace.
      *
-     * Projects using this *cannot* consume non-namespaced dependencies.
+     * [AndroidSubmodule] instances using this *cannot* consume non-namespaced dependencies.
      */
     REQUIRED,
     // TODO: add more modes as implemented.

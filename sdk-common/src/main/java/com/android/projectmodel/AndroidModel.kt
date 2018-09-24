@@ -23,19 +23,19 @@ package com.android.projectmodel
  */
 data class AndroidModel (
     /**
-     * List of [AndroidProject] that are present in this module.
+     * List of [AndroidSubmodule] that are present in this module.
      */
-    val projects: Collection<AndroidProject> = emptyList()
+    val submodules: Collection<AndroidSubmodule> = emptyList()
 ) {
     /**
-     * Map of project names onto [AndroidProject].
+     * Map of project names onto [AndroidSubmodule].
      */
-    val projectsByName: Map<String, AndroidProject> = projects.associateBy { it.name }
+    val submodulesByName: Map<String, AndroidSubmodule> = submodules.associateBy { it.name }
 
     override fun toString(): String = printProperties(this, AndroidModel())
 
     /**
-     * Returns the project with the given name or null if none.
+     * Returns the submodule with the given name or null if none.
      */
-    fun getProject(name: String): AndroidProject? = projectsByName[name]
+    fun getSubmodule(name: String): AndroidSubmodule? = submodulesByName[name]
 }

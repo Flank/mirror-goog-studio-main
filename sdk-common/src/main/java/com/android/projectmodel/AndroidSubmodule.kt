@@ -13,48 +13,49 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:JvmName("AndroidProjectUtil")
+@file:JvmName("AndroidSubmoduleUtil")
 
 package com.android.projectmodel
 
 import com.android.ide.common.util.PathString
 
 /**
- * Represents a single Android project. This is the collection of sources and metadata needed to construct a single android artifact (an
- * application, library, etc.). An android project contains one or more [Variant]s, which are alternative ways of constructing the project.
+ * Represents a single Android submodule. This maps quite closely to what Gradle refers to as an Android Project. This is the collection of
+ * sources and metadata needed to construct a set of related android artifacts that share the same set of variants. An android submodule
+ * contains one or more [Variant]s, which are alternative ways of constructing the artifacts in the submodule.
  *
  * New properties may be added in the future; clients that invoke the constructor are encouraged to
  * use Kotlin named arguments to stay source compatible.
  */
-data class AndroidProject(
+data class AndroidSubmodule(
     /**
-     * Unique identifier of the project, provided by the build system. This is used for cross-referencing the project when it appears
-     * as a dependency for other projects. Should remain invariant across syncs, but does not need to remain invariant across
-     * machines. This will be displayed to the user as the project's identifier, so it should be something the user would be familiar
-     * with (such as the project's build target or root folder). For example, in Gradle this will be the project path, e.g.
+     * Unique identifier of the submodule, provided by the build system. This is used for cross-referencing the submodule when it appears
+     * as a dependency for other submodules. Should remain invariant across syncs, but does not need to remain invariant across
+     * machines. This will be displayed to the user as the submodule's identifier, so it should be something the user would be familiar
+     * with (such as the submodule's build target or root folder). For example, in Gradle this will be the submodule path, e.g.
      * :util:widgets.
      */
     val name: String,
     /**
-     * Indicates the type of project (the type of the project's main artifact).
+     * Indicates the type of submodule.
      */
     val type: ProjectType,
     /**
-     * List of variants for the project.
+     * List of variants for the submodule.
      */
     val variants: List<Variant> = emptyList(),
     /**
-     * Config table for this project.
+     * Config table for this submodule.
      */
     val configTable: ConfigTable = ConfigTable(),
     /**
-     * List of locations where this project will write generated files and folders. The list
+     * List of locations where this submodule will write generated files and folders. The list
      * may contains a mixture of files and folders. Any file located at or below these paths should
      * be considered derived.
      */
     val generatedPaths: List<PathString> = emptyList(),
     /**
-     * Namespacing strategy for this project
+     * Namespacing strategy for this submodule
      */
     val namespacing: NamespacingType = NamespacingType.DISABLED
 ) {
@@ -65,10 +66,10 @@ data class AndroidProject(
     )
 
     override fun toString(): String =
-        printProperties(this, AndroidProject(name = "", type = ProjectType.APP))
+        printProperties(this, AndroidSubmodule(name = "", type = ProjectType.APP))
 
     /**
-     * Returns a copy of the receiver with the given project type. Intended to simplify construction
+     * Returns a copy of the receiver with the given submodule type. Intended to simplify construction
      * from Java.
      */
     fun withType(type: ProjectType) = copy(type = type)

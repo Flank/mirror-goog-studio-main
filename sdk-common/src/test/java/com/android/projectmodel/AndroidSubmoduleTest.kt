@@ -21,15 +21,15 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 /**
- * Test cases for [AndroidProject]
+ * Test cases for [AndroidSubmodule]
  */
-class AndroidProjectTest {
+class AndroidSubmoduleTest {
 
-    val project = AndroidProject(name="foo", type=ProjectType.APP)
+    val project = AndroidSubmodule(name="foo", type=ProjectType.APP)
 
     @Test
     fun testToString() {
-        assertThat(project.toString()).isEqualTo("AndroidProject(name=foo,type=APP)")
+        assertThat(project.toString()).isEqualTo("AndroidSubmodule(name=foo,type=APP)")
     }
 
     @Test

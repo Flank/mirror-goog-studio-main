@@ -151,12 +151,12 @@ data class ExternalLibrary(
 }
 
 /**
- * Represents a dependency on another [AndroidProject].
+ * Represents a dependency on another [AndroidSubmodule].
  */
 data class ProjectLibrary(
     override val address: String,
     /**
-     * Name of the project (matches the project's [AndroidProject.name] attribute).
+     * Name of the project (matches the project's [AndroidSubmodule.name] attribute).
      */
     val projectName: String,
     /**

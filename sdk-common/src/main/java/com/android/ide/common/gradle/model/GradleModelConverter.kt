@@ -34,7 +34,7 @@ import com.android.ide.common.util.toPathString
 import com.android.ide.common.util.toPathStrings
 import com.android.projectmodel.ARTIFACT_NAME_MAIN
 import com.android.projectmodel.AndroidPathType
-import com.android.projectmodel.AndroidProject
+import com.android.projectmodel.AndroidSubmodule
 import com.android.projectmodel.Artifact
 import com.android.projectmodel.Config
 import com.android.projectmodel.ConfigAssociation
@@ -74,12 +74,12 @@ fun getProjectType(typeId: Int): ProjectType {
 }
 
 /**
- * Converts this [IdeAndroidProject] to an [AndroidProject]. The given [cache] determines the scope for de-duping.
+ * Converts this [IdeAndroidProject] to an [AndroidSubmodule]. The given [cache] determines the scope for de-duping.
  * If the same [ModelCache] is used for multiple conversions, duplicate objects will be merged into the same instance
  * across those conversions. In most situations there will be many duplicate objects within the same project and
  * few duplicate objects between projects, so using the default value will be sufficient.
  */
-fun IdeAndroidProject.toProjectModel(cache: ModelCache = ModelCache()): AndroidProject =
+fun IdeAndroidProject.toSubmodule(cache: ModelCache = ModelCache()): AndroidSubmodule =
     GradleModelConverter(this, cache).convert()
 
 /** Name assigned to the dimension that contains all flavors that aren't explicitly associated with a dimension. */
@@ -97,14 +97,14 @@ class GradleModelConverter(
 ) {
     private val schema = getConfigTableSchema(project)
 
-    fun convert(): AndroidProject =
+    fun convert(): AndroidSubmodule =
         compute(ProjectAttribute.PROJECT, project) {
             val variants = ArrayList<Variant>()
             forEachVariant {
                 variants.add(convert(it))
             }
 
-            AndroidProject(
+            AndroidSubmodule(
                 name = name,
                 type = getProjectType(projectType),
                 variants = variants,
