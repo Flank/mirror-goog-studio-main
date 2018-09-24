@@ -46,7 +46,7 @@ ssize_t sendfile(int out_fd, int in_fd, off_t* offset, size_t count) {
 }
 #endif
 
-namespace deployer {
+namespace deploy {
 
 #define FILE_MODE (S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR | S_IWGRP | S_IWOTH)
 
@@ -220,4 +220,4 @@ bool ApkArchive::ExtractMetadata(const std::string& packageName,
   return true;
 }
 
-}  // namespace deployer
+}  // namespace deploy

@@ -23,7 +23,7 @@
 #include "command.h"
 #include "deploy.pb.h"
 
-namespace deployer {
+namespace deploy {
 
 class SwapCommand : public Command {
  public:
@@ -77,6 +77,6 @@ class SwapCommand : public Command {
       noexcept;
 };
 
-}  // namespace deployer
+}  // namespace deploy
 
 #endif  // INSTALLER_SWAP_COMMAND_H_

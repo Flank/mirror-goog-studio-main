@@ -23,7 +23,7 @@
 
 #include <string>
 
-namespace swapper {
+namespace deploy {
 
 class HotSwap {
  public:
@@ -47,6 +47,6 @@ class HotSwap {
   jclass FindInLoadedClasses(const std::string& name) const;
 };
 
-}  // namespace swapper
+}  // namespace deploy
 
 #endif

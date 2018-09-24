@@ -4,7 +4,7 @@
 
 #include "trace.h"
 
-namespace deployer {
+namespace deploy {
 
 namespace {
 const char* PM_EXEC = "/system/bin/pm";
@@ -12,8 +12,8 @@ const char* PM_EXEC = "/system/bin/pm";
 
 PackageManager::PackageManager() : ShellCommandRunner(PM_EXEC) {}
 
-bool PackageManager::GetApks(const std::string &package_name, Apks *apks,
-                             std::string *error_string) const {
+bool PackageManager::GetApks(const std::string& package_name, Apks* apks,
+                             std::string* error_string) const {
   Trace trace("PackageManager::GetAppBaseFolder");
   std::string parameters;
   parameters.append("path ");
@@ -42,8 +42,6 @@ bool PackageManager::GetApks(const std::string &package_name, Apks *apks,
 
   return true;
 }
-void PackageManager::SetPath(const char* path) {
-  PM_EXEC = path;
-}
+void PackageManager::SetPath(const char* path) { PM_EXEC = path; }
 
-}  // namespace deployer
+}  // namespace deploy

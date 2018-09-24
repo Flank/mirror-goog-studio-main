@@ -26,7 +26,7 @@
 #include "socket.h"
 #include "utils/log.h"
 
-namespace swapper {
+namespace deploy {
 
 bool RegisterNatives(JNIEnv* jni, const vector<NativeBinding>& bindings) {
   for (auto& binding : bindings) {
@@ -70,7 +70,7 @@ bool Native_TryRedefineClasses(JNIEnv* jni, jobject object, jlong request_ptr,
   }
 
   auto request = reinterpret_cast<proto::SwapRequest*>(request_ptr);
-  auto socket = reinterpret_cast<deploy::Socket*>(socket_ptr);
+  auto socket = reinterpret_cast<Socket*>(socket_ptr);
 
   proto::SwapResponse response;
   response.set_pid(getpid());
@@ -94,4 +94,4 @@ bool Native_TryRedefineClasses(JNIEnv* jni, jobject object, jlong request_ptr,
   return response.status() == proto::SwapResponse::OK;
 }
 
-}  // namespace swapper
+}  // namespace deploy

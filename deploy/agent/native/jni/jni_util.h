@@ -25,7 +25,7 @@
 
 using std::string;
 
-namespace swapper {
+namespace deploy {
 
 // Sets the parameter jni to point to the current jni function table.
 bool GetJni(JavaVM* vm, JNIEnv*& jni);
@@ -36,6 +36,6 @@ bool GetJvmti(JavaVM* vm, jvmtiEnv*& jvmti);
 // Gets an std::string from a jstring. Does not delete the jni local jstring.
 string JStringToString(JNIEnv* jni, jstring str);
 
-}  // namespace swapper
+}  // namespace deploy
 
 #endif

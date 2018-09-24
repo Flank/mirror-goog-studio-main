@@ -20,7 +20,7 @@
 #include <sstream>
 #include "trace.h"
 
-namespace deployer {
+namespace deploy {
 
 namespace {
 const char* CMD_EXEC = "/system/bin/cmd";
@@ -85,4 +85,4 @@ bool CmdCommand::UpdateAppInfo(const std::string& user_id,
 
 void CmdCommand::SetPath(const char* path) { CMD_EXEC = path; }
 
-}  // namespace deployer
+}  // namespace deploy

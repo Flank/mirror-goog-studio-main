@@ -21,7 +21,7 @@
 
 #include "apk_retriever.h"
 
-namespace deployer {
+namespace deploy {
 
 // Wrapper around Android executable "service client".
 class CmdCommand : public ShellCommandRunner {
@@ -40,5 +40,5 @@ class CmdCommand : public ShellCommandRunner {
   static void SetPath(const char* path);
 };
 
-}  // namespace deployer
+}  // namespace deploy
 #endif  // COMMANDCMD_H

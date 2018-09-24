@@ -17,7 +17,7 @@
 
 #include "jni_class.h"
 
-namespace swapper {
+namespace deploy {
 
 // Get static int fields.
 template <>
@@ -50,4 +50,4 @@ JniObject JniClass::JniCallStaticMethod(jmethodID method, jvalue* args) {
   return JniObject(jni_, obj);
 }
 
-}  // namespace swapper
+}  // namespace deploy

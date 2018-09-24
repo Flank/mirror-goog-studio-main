@@ -20,19 +20,19 @@
 #include <unistd.h>
 #include <string>
 
-namespace deployer {
+namespace deploy {
 
 class Trace {
  public:
-  explicit Trace(const char *name);
-  explicit Trace(const std::string &name);
-  Trace(const Trace &) = delete;
-  Trace(Trace &&) = delete;
+  explicit Trace(const char* name);
+  explicit Trace(const std::string& name);
+  Trace(const Trace&) = delete;
+  Trace(Trace&&) = delete;
   ~Trace();
   static void Init();
 
 #if defined(__ANDROID__)
-  inline void Begin(const char *name) const noexcept {
+  inline void Begin(const char* name) const noexcept {
     char buf[kTraceMessageLen];
     int len = snprintf(buf, kTraceMessageLen, "B|%d|%s", getpid(), name);
     write(trace_marker_fd, buf, len);
@@ -43,7 +43,7 @@ class Trace {
     write(trace_marker_fd, &c, 1);
   }
 #else
-  void Begin(const char *name) const noexcept {}
+  void Begin(const char* name) const noexcept {}
   void End() const noexcept {}
 #endif
 
@@ -52,5 +52,5 @@ class Trace {
   static const size_t kTraceMessageLen = 256;
 };
 
-}  // namespace deployer
+}  // namespace deploy
 #endif  // UTILS_TRACE_H

@@ -47,7 +47,7 @@ using std::string;
 using std::unique_ptr;
 using std::vector;
 
-namespace swapper {
+namespace deploy {
 
 const char* kBreadcrumbClass = "com/android/tools/deploy/instrument/Breadcrumb";
 const char* kHandlerWrapperClass =
@@ -151,7 +151,7 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar) {
 // This method takes ownership of both the request and socket pointers.
 void DoHotSwap(jvmtiEnv* jvmti, JNIEnv* jni,
                std::unique_ptr<proto::SwapRequest> request,
-               std::unique_ptr<deploy::Socket> socket) {
+               std::unique_ptr<Socket> socket) {
   HotSwap code_swap(jvmti, jni);
 
   proto::SwapResponse response;
@@ -221,7 +221,7 @@ std::string GetInstrumentJarPath(const std::string& package_name) {
 // This method takes ownership of both the request and socket pointers.
 void DoHotSwapAndRestart(jvmtiEnv* jvmti, JNIEnv* jni,
                          std::unique_ptr<proto::SwapRequest> request,
-                         std::unique_ptr<deploy::Socket> socket) {
+                         std::unique_ptr<Socket> socket) {
   jvmtiEventCallbacks callbacks;
   callbacks.ClassFileLoadHook = Agent_ClassFileLoadHook;
 
@@ -292,7 +292,7 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* input,
   Log::V("Prior agent invocations in this VM: %d", run_counter++);
 
   // Hold ownership of these until we call a DoHotSwap() method.
-  std::unique_ptr<deploy::Socket> socket(new deploy::Socket());
+  std::unique_ptr<Socket> socket(new Socket());
   std::unique_ptr<proto::SwapRequest> request;
 
   std::string request_bytes(input);
@@ -302,7 +302,7 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* input,
       return JNI_OK;
     }
 
-    if (!socket->Connect(deploy::Socket::kDefaultAddress, 1000)) {
+    if (!socket->Connect(Socket::kDefaultAddress, 1000)) {
       Log::E("Could not connect to socket");
       return JNI_OK;
     }
@@ -348,4 +348,4 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* input,
   return JNI_OK;
 }
 
-}  // namespace swapper
+}  // namespace deploy

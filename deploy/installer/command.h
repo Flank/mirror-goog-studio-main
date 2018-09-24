@@ -21,7 +21,7 @@
 
 #include "workspace.h"
 
-namespace deployer {
+namespace deploy {
 
 // Base class which all Command object (dump, and future patch, version, agent)
 // should extend.
@@ -43,6 +43,6 @@ class Command {
 // Search dispatch table for a Command object matching the command name.
 std::unique_ptr<Command> GetCommand(const char* command_name);
 
-}  // namespace deployer
+}  // namespace deploy
 
 #endif

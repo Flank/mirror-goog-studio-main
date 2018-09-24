@@ -21,7 +21,7 @@
 #include "command_cmd.h"
 #include "package_manager.h"
 
-namespace deployer {
+namespace deploy {
 
 ApkRetriever::ApkRetriever(const std::string& packageName)
     : packageName_(packageName) {
@@ -49,4 +49,4 @@ void ApkRetriever::retrieve() noexcept {
 
 Apks& ApkRetriever::get() { return apks_; }
 
-}  // namespace deployer
+}  // namespace deploy

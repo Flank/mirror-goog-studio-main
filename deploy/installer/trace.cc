@@ -23,7 +23,7 @@
 #include <unistd.h>
 #include <iostream>
 
-namespace deployer {
+namespace deploy {
 
 int Trace::trace_marker_fd;
 
@@ -46,4 +46,4 @@ void Trace::Init() {
 void Trace::Init() {}
 #endif
 
-}  // namespace deployer
+}  // namespace deploy

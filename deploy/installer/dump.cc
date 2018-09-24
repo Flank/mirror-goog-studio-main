@@ -28,7 +28,7 @@
 #include "apk_retriever.h"
 #include "trace.h"
 
-namespace deployer {
+namespace deploy {
 
 DumpCommand::DumpCommand() {}
 
@@ -65,4 +65,4 @@ bool DumpCommand::Run(const Workspace& workspace) {
   return success;
 }
 
-}  // namespace deployer
+}  // namespace deploy

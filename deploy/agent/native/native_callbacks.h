@@ -8,7 +8,7 @@
 
 using std::vector;
 
-namespace swapper {
+namespace deploy {
 
 struct NativeBinding {
   const char* class_name;
@@ -29,6 +29,6 @@ int Native_GetAppInfoChanged(JNIEnv* jni, jobject object);
 bool Native_TryRedefineClasses(JNIEnv* jni, jobject object, jlong request_ptr,
                                jlong socket_ptr);
 
-}  // namespace swapper
+}  // namespace deploy
 
 #endif

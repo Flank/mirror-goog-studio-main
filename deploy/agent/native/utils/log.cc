@@ -17,47 +17,47 @@
 #include "log.h"
 #include <cstdio>
 
-namespace swapper {
+namespace deploy {
 
-void Log::V(const char *fmt, ...) {
+void Log::V(const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   Handle('V', fmt, args);
   va_end(args);
 }
 
-void Log::D(const char *fmt, ...) {
+void Log::D(const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   Handle('D', fmt, args);
   va_end(args);
 }
 
-void Log::I(const char *fmt, ...) {
+void Log::I(const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   Handle('I', fmt, args);
   va_end(args);
 }
 
-void Log::W(const char *fmt, ...) {
+void Log::W(const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   Handle('W', fmt, args);
   va_end(args);
 }
 
-void Log::E(const char *fmt, ...) {
+void Log::E(const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   Handle('E', fmt, args);
   va_end(args);
 }
 
-void Log::Handle(const char level, const char *fmt, va_list args) {
+void Log::Handle(const char level, const char* fmt, va_list args) {
   printf("%s[%c]: ", kTag, level);
   vprintf(fmt, args);
   printf("\n");
 }
 
-}  // namespace swapper
+}  // namespace deploy

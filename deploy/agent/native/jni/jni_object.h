@@ -27,7 +27,7 @@
 
 using std::string;
 
-namespace swapper {
+namespace deploy {
 
 class JniObject {
  public:
@@ -108,6 +108,6 @@ jint JniObject::JniGetField(jfieldID);
 template <>
 void JniObject::JniSetField(jfieldID, jint);
 
-}  // namespace swapper
+}  // namespace deploy
 
 #endif

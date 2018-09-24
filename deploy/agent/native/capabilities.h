@@ -20,7 +20,7 @@
 
 #include "jvmti.h"
 
-namespace swapper {
+namespace deploy {
 
 const jvmtiCapabilities REQUIRED_CAPABILITIES = {
     .can_tag_objects = 0,
@@ -66,6 +66,6 @@ const jvmtiCapabilities REQUIRED_CAPABILITIES = {
     .can_generate_resource_exhaustion_threads_events = 0,
 };
 
-}  // namespace swapper
+}  // namespace deploy
 
 #endif

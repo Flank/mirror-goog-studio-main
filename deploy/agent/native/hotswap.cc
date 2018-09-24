@@ -12,7 +12,7 @@
 #include "jvmti.h"
 #include "utils/log.h"
 
-namespace swapper {
+namespace deploy {
 
 jobject GetThreadClassLoader(JNIEnv* env) {
   JniClass thread(env, "java/lang/Thread");
@@ -154,4 +154,4 @@ bool HotSwap::DoHotSwap(const proto::SwapRequest& swap_request,
   return false;
 }
 
-}  // namespace swapper
+}  // namespace deploy

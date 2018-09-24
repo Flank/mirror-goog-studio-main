@@ -27,13 +27,13 @@
 #include <fcntl.h>
 
 #include "command_cmd.h"
-#include "tools/base/deploy/common/message_pipe_wrapper.h"
 #include "shell_command.h"
+#include "tools/base/deploy/common/message_pipe_wrapper.h"
 
 #include "agent.so.cc"
 #include "agent_server.cc"
 
-namespace deployer {
+namespace deploy {
 
 namespace {
 const std::string kAgentFilename =
@@ -95,8 +95,8 @@ bool SwapCommand::Run(const Workspace& workspace) {
   }
 
   // Both these wrappers will close the fds when they go out of scope.
-  deploy::MessagePipeWrapper server_input(write_fd);
-  deploy::MessagePipeWrapper server_output(read_fd);
+  MessagePipeWrapper server_input(write_fd);
+  MessagePipeWrapper server_output(read_fd);
 
   if (!server_input.Write(request_bytes_)) {
     std::cerr << "Could not write to agent proxy server." << std::endl;
@@ -343,4 +343,4 @@ bool SwapCommand::RunCmd(const std::string& shell_cmd, User run_as,
   return true;
 }
 
-}  // namespace deployer
+}  // namespace deploy

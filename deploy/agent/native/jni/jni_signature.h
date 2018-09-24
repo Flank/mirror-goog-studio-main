@@ -18,7 +18,7 @@
 #ifndef JNI_SIGNATURE_H
 #define JNI_SIGNATURE_H
 
-namespace swapper {
+namespace deploy {
 
 struct JniSignature {
   const char* name = nullptr;
@@ -27,6 +27,6 @@ struct JniSignature {
   JniSignature(const char* n, const char* s) : name(n), signature(s) {}
 };
 
-}  // namespace swapper
+}  // namespace deploy
 
 #endif

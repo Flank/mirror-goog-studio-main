@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-namespace deployer {
+namespace deploy {
 
 using Apks = std::vector<std::string>;
 
@@ -37,6 +37,6 @@ class ApkRetriever {
   std::string packageName_;
 };
 
-}  // namespace deployer
+}  // namespace deploy
 
 #endif  // INSTALLER_APKRETRIEVER_H

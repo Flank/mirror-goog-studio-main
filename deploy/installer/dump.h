@@ -21,7 +21,7 @@
 
 #include <string>
 
-namespace deployer {
+namespace deploy {
 
 class DumpCommand : public Command {
  public:
@@ -34,6 +34,6 @@ class DumpCommand : public Command {
   std::string packageName_;
 };
 
-}  // namespace deployer
+}  // namespace deploy
 
 #endif  // INSTALLER_APK_TOOLKIT_H_

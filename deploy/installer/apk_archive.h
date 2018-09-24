@@ -19,7 +19,7 @@
 
 #include <string>
 
-namespace deployer {
+namespace deploy {
 
 class ApkArchiveTester;
 
@@ -69,6 +69,6 @@ class ApkArchive {
   int fd_;
 };
 
-}  // namespace deployer
+}  // namespace deploy
 
 #endif  // INSTALLER_APKARCHIVE_H

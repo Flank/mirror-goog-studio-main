@@ -35,7 +35,7 @@ using std::shared_ptr;
 using std::string;
 using std::unordered_map;
 
-namespace swapper {
+namespace deploy {
 
 // Probably should be in a utility header, but also only used here.
 class JvmtiAllocator : public dex::Writer::Allocator {
@@ -97,6 +97,6 @@ void TransformClass(jvmtiEnv* jvmti, const char* class_name, int class_data_len,
                     const unsigned char* class_data, int*& new_class_data_len,
                     unsigned char**& new_class_data);
 
-}  // namespace swapper
+}  // namespace deploy
 
 #endif

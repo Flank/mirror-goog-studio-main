@@ -19,7 +19,7 @@
 
 #include <string>
 
-namespace deployer {
+namespace deploy {
 
 // Run bash commands.
 class ShellCommandRunner {
@@ -40,5 +40,5 @@ class ShellCommandRunner {
                                 std::string* output) const;
 };
 
-}  // namespace deployer
+}  // namespace deploy
 #endif  // BASH_COMMAND_RUNNER_H

@@ -18,41 +18,41 @@
 
 #include <android/log.h>
 
-namespace swapper {
+namespace deploy {
 
-void Log::V(const char *fmt, ...) {
+void Log::V(const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   __android_log_vprint(ANDROID_LOG_VERBOSE, kTag, fmt, args);
   va_end(args);
 }
 
-void Log::D(const char *fmt, ...) {
+void Log::D(const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   __android_log_vprint(ANDROID_LOG_DEBUG, kTag, fmt, args);
   va_end(args);
 }
 
-void Log::I(const char *fmt, ...) {
+void Log::I(const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   __android_log_vprint(ANDROID_LOG_INFO, kTag, fmt, args);
   va_end(args);
 }
 
-void Log::W(const char *fmt, ...) {
+void Log::W(const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   __android_log_vprint(ANDROID_LOG_WARN, kTag, fmt, args);
   va_end(args);
 }
 
-void Log::E(const char *fmt, ...) {
+void Log::E(const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   __android_log_vprint(ANDROID_LOG_ERROR, kTag, fmt, args);
   va_end(args);
 }
 
-}  // namespace swapper
+}  // namespace deploy

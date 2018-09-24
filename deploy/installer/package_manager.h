@@ -20,17 +20,17 @@
 #include "apk_retriever.h"
 #include "shell_command.h"
 
-namespace deployer {
+namespace deploy {
 
 // Wrapper around Android executable "pm" (Android Package Manager).
 class PackageManager : public ShellCommandRunner {
  public:
   PackageManager();
-  bool GetApks(const std::string &package_name, Apks *apks,
-               std::string *error_string) const;
+  bool GetApks(const std::string& package_name, Apks* apks,
+               std::string* error_string) const;
   static void SetPath(const char* path);
 };
 
-}  // namespace deployer
+}  // namespace deploy
 
 #endif  // PACKAGEMANAGER_H

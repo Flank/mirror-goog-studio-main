@@ -24,7 +24,7 @@
 #include "jni_object.h"
 #include "jni_signature.h"
 
-namespace swapper {
+namespace deploy {
 
 class JniClass {
  public:
@@ -90,6 +90,6 @@ jboolean JniClass::JniCallStaticMethod(jmethodID, jvalue*);
 template <>
 JniObject JniClass::JniCallStaticMethod(jmethodID, jvalue*);
 
-}  // namespace swapper
+}  // namespace deploy
 
 #endif

@@ -17,7 +17,7 @@
 
 #include "jni_util.h"
 
-namespace swapper {
+namespace deploy {
 
 // Sets the pointer jni to the current JNI instance.
 bool GetJni(JavaVM* vm, JNIEnv*& jni) {
@@ -42,4 +42,4 @@ string JStringToString(JNIEnv* jni, jstring str) {
   return copy;
 }
 
-}  // namespace swapper
+}  // namespace deploy

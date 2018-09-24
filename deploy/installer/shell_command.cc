@@ -21,7 +21,7 @@
 #include "trace.h"
 
 using std::string;
-namespace deployer {
+namespace deploy {
 
 const string kRunAsExecutable = "/system/bin/run-as";
 
@@ -79,4 +79,4 @@ bool ShellCommandRunner::RunAndReadOutput(const string& cmd,
   return WEXITSTATUS(ret) == 0;
 }
 
-}  // namespace deployer
+}  // namespace deploy

@@ -26,40 +26,28 @@
 #include <iostream>
 #include <string>
 
-namespace deployer {
+namespace deploy {
 
 class Workspace {
  public:
   Workspace(const std::string& executable_path);
 
-  bool Valid() const {
-    return base_ != "";
-  }
+  bool Valid() const { return base_ != ""; }
 
-  std::string GetBase() const noexcept {
-    return base_;
-  }
-  
-  const std::string GetDumpsFolder() const noexcept {
-    return dumps_;
-  }
+  std::string GetBase() const noexcept { return base_; }
 
-  const std::string GetAppsFolder() const noexcept {
-    return apps_;
-  }
+  const std::string GetDumpsFolder() const noexcept { return dumps_; }
 
-  const std::string GetBinFolder() const noexcept {
-      return base_ + "/bin";
-  }
+  const std::string GetAppsFolder() const noexcept { return apps_; }
 
-    const std::string GetTmpFolder() const noexcept {
-      return tmp_;
-  }
-  
+  const std::string GetBinFolder() const noexcept { return base_ + "/bin"; }
+
+  const std::string GetTmpFolder() const noexcept { return tmp_; }
+
   void ClearDirectory(const char* dirname) const noexcept;
 
  private:
-  std::string RetrieveBase() const noexcept ;
+  std::string RetrieveBase() const noexcept;
   static constexpr auto kBasename = ".studio";
   std::string executable_path_;
   std::string base_;
@@ -68,6 +56,6 @@ class Workspace {
   std::string tmp_;
 };
 
-}  // namespace deployer
+}  // namespace deploy
 
 #endif

@@ -16,7 +16,7 @@
 
 #include "workspace.h"
 
-namespace deployer {
+namespace deploy {
 
 namespace {
 constexpr int kDirectoryMode = (S_IRWXG | S_IRWXU | S_IRWXO);
@@ -72,4 +72,4 @@ std::string Workspace::RetrieveBase() const noexcept {
   return "";
 }
 
-}  // namespace deployer
+}  // namespace deploy

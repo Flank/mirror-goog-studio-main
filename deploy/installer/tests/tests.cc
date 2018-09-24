@@ -17,10 +17,10 @@
 #include <gtest/gtest.h>
 #include "apk_archive.h"
 
-using namespace deployer;
+using namespace deploy;
 
 // Friend test to get around private scope of ApkArchive private functions.
-class deployer::ApkArchiveTester {
+class deploy::ApkArchiveTester {
  public:
   ApkArchiveTester(const ApkArchive& archive) : archive_(archive) {}
 
@@ -40,7 +40,8 @@ class deployer::ApkArchiveTester {
 class InstallerTest : public ::testing::Test {};
 
 TEST_F(InstallerTest, TestArchiveParser) {
-  ApkArchive archive("tools/base/deploy/installer/tests/data/app/my.fake.app/sample.apk");
+  ApkArchive archive(
+      "tools/base/deploy/installer/tests/data/app/my.fake.app/sample.apk");
 
   ApkArchiveTester archiveTester(archive);
   EXPECT_TRUE(archiveTester.Prepare());

@@ -22,7 +22,7 @@
 #include "dump.h"
 #include "swap.h"
 
-namespace deployer {
+namespace deploy {
 
 // Search dispatch table for a Command object matching the command name.
 std::unique_ptr<Command> GetCommand(const char* command_name) {
@@ -43,4 +43,4 @@ std::unique_ptr<Command> GetCommand(const char* command_name) {
   return ptr;
 }
 
-}  // namespace deployer
+}  // namespace deploy

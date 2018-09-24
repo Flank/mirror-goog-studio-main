@@ -2,19 +2,17 @@
 
 #include "utils/log.h"
 
-namespace swapper {
+namespace deploy {
 
 namespace {
 static unordered_map<string, Transform*> transforms;
 }
 
-void AddTransform(const string& class_name, Transform* transform){
+void AddTransform(const string& class_name, Transform* transform) {
   transforms[class_name] = transform;
 }
 
-const unordered_map<string, Transform*>& GetTransforms() {
-  return transforms;
-}
+const unordered_map<string, Transform*>& GetTransforms() { return transforms; }
 
 // The agent never truly "exits", so we need to take extra care to free memory.
 void DeleteTransforms() {
@@ -56,4 +54,4 @@ void TransformClass(jvmtiEnv* jvmti, const char* class_name, int class_data_len,
   *new_class_data = new_image;
 }
 
-}  // namespace swapper
+}  // namespace deploy

@@ -33,7 +33,7 @@
 #include "trace.h"
 #include "workspace.h"
 
-using namespace deployer;
+using namespace deploy;
 
 extern const char* kVersion_hash;
 

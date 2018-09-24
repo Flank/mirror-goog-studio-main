@@ -22,7 +22,7 @@
 
 using std::string;
 
-namespace swapper {
+namespace deploy {
 
 string JniObject::ToString() {
   jstring value =
@@ -67,4 +67,4 @@ void JniObject::JniSetField(jfieldID field, jint value) {
   jni_->SetIntField(object_, field, value);
 }
 
-}  // namespace swapper
+}  // namespace deploy
