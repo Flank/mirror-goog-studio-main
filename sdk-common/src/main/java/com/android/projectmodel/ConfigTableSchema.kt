@@ -115,7 +115,7 @@ data class ConfigTableSchema(
         }
     }
 
-    override fun toString(): String
+    override fun toString()
         = "ConfigTableSchema(${dimensions.joinToString(",") {"${it.dimensionName}[${it.values.joinToString(",")}]"}})"
 
 
