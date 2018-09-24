@@ -23,8 +23,6 @@
 #include "deploy.pb.h"
 
 namespace deploy {
-std::unique_ptr<proto::SwapRequest> ParseFromFile(
-    const std::string& file_location);
 
 std::unique_ptr<proto::SwapRequest> ParseFromString(
     const std::string& request_string);

@@ -16,20 +16,7 @@
 
 #include "config.h"
 
-#include <unistd.h>
-#include <fstream>
-
-#include "utils/log.h"
-
 namespace deploy {
-
-std::unique_ptr<proto::SwapRequest> ParseFromFile(
-    const std::string& file_location) {
-  std::fstream stream(file_location, std::ios::in | std::ios::binary);
-  std::string request_string((std::istreambuf_iterator<char>(stream)),
-                             std::istreambuf_iterator<char>());
-  return ParseFromString(request_string);
-}
 
 std::unique_ptr<proto::SwapRequest> ParseFromString(
     const std::string& request_string) {

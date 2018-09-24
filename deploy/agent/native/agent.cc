@@ -295,28 +295,23 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* input,
   std::unique_ptr<Socket> socket(new Socket());
   std::unique_ptr<proto::SwapRequest> request;
 
-  std::string request_bytes(input);
-  if (request_bytes.empty()) {
-    if (!socket->Open()) {
-      Log::E("Could not open new socket");
-      return JNI_OK;
-    }
-
-    if (!socket->Connect(Socket::kDefaultAddress, 1000)) {
-      Log::E("Could not connect to socket");
-      return JNI_OK;
-    }
-
-    if (!socket->Read(&request_bytes)) {
-      Log::E("Could not read from socket");
-      return JNI_OK;
-    }
-
-    request = ParseFromString(request_bytes);
-  } else {
-    request = ParseFromFile(request_bytes);
+  if (!socket->Open()) {
+    Log::E("Could not open new socket");
+    return JNI_OK;
   }
 
+  if (!socket->Connect(Socket::kDefaultAddress, 1000)) {
+    Log::E("Could not connect to socket");
+    return JNI_OK;
+  }
+
+  std::string request_bytes;
+  if (!socket->Read(&request_bytes)) {
+    Log::E("Could not read from socket");
+    return JNI_OK;
+  }
+
+  request = ParseFromString(request_bytes);
   if (request == nullptr) {
     Log::E("Could not parse swap request");
     return JNI_OK;
