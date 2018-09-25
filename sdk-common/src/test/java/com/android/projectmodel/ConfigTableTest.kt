@@ -130,6 +130,11 @@ class ConfigTableTest {
                 release,
                 app,
                 tests))
+
+        // Ensure that the SubmodulePath
+        assertThat(table.configsIntersecting(
+            submodulePathForString("full/hires/release/${ARTIFACT_NAME_MAIN}")))
+            .isEqualTo(table.configsIntersecting(fullHiresReleaseAppPath))
     }
 
     @Test

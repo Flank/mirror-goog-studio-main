@@ -24,7 +24,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Tests that verify the hashcode and equals behavior for [PathString]
+ * Tests for [ConfigPath].
  */
 class ConfigPathTest {
 
@@ -63,6 +63,28 @@ class ConfigPathTest {
         for (next in expected) {
             Truth.assertThat(next.first.simpleName).isEqualTo(next.second)
         }
+    }
+
+    @Test
+    fun testToConfigPath() {
+        val expected = listOf(
+            emptySubmodulePath to matchAllArtifacts(),
+            submodulePathOf("foo") to matchArtifactsWith("foo"),
+            submodulePathForString("foo/bar/baz") to matchArtifactsWith("foo/bar/baz")
+        )
+
+        for ((submodulePath, configPath) in expected) {
+            Truth.assertThat(submodulePath.toConfigPath()).isEqualTo(configPath)
+        }
+    }
+
+    @Test
+    fun testContainsSubmodulePath() {
+        Truth.assertThat(anyBarBaz.contains(submodulePathForString("bing/bar/baz"))).isTrue()
+        Truth.assertThat(anyBarBaz.contains(submodulePathForString("bing/bar/baz/bong"))).isTrue()
+        Truth.assertThat(anyBarBaz.contains(submodulePathForString("bing/bar"))).isFalse()
+        Truth.assertThat(anyBarBaz.contains(submodulePathForString("bing/bong"))).isFalse()
+        Truth.assertThat(anyBarBaz.contains(submodulePathForString(""))).isFalse()
     }
 
     @Test

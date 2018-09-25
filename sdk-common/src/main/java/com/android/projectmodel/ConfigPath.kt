@@ -13,13 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+@file:JvmName("ConfigPathUtil")
 package com.android.projectmodel
 
 /**
- * Can be used to filter build artifacts based on their path within a [ConfigTable]. [ConfigTable]
- * paths are a lot like variant names in Gradle. A path consists of a list of strings, where the
- * Nth string corresponds to a value in the Nth dimension of the matrix.
+ * [ConfigPath] is a lot like [SubmodulePath] except that any of its segments can be a wildcard.
+ * It is a pattern that can match one or more build artifacts or variants. [ConfigPath]
+ * instances are also the main identifier for [Config] instances within a [ConfigTable].
+ * [ConfigPath] instances are a lot like variant names in Gradle. A path consists of a list of
+ * strings, where the Nth string corresponds to a value in the Nth dimension of the [ConfigTable].
  *
  * For example, the path to the lowdpiProductionRelease variant's test artifact would be ("lowdpi",
  * "production", "release", "test"). The (null, null, "test") filter would match the test artifact
@@ -87,6 +89,11 @@ data class ConfigPath internal constructor(
     }
 
     /**
+     * Returns true if this [ConfigPath] contains the artifact or variant identified by the given [SubmodulePath].
+     */
+    fun contains(other: SubmodulePath): Boolean = contains(other.toConfigPath())
+
+    /**
      * Returns true if this path completely contains the region of the [ConfigTable] matched
      * by [other].
      */
@@ -144,20 +151,15 @@ data class ConfigPath internal constructor(
     val matchesAnything: Boolean = segments != null
 
     /**
-     * Returns a string using the same naming convention used for Android variants. Null segments
-     * are omitted, and the remaining segments are concatenated in camelCase with the leading
-     * segment lowercase. If the path matches everything, it is called "main".
+     * Returns a string using the same naming convention used for Android variants and source
+     * providers. Null segments are omitted, and the remaining segments are concatenated in
+     * camelCase with the leading segment lowercase. If the path matches everything, it is called
+     * "main".
      */
     val simpleName: String get() {
         segments ?: return ""
-        return if (matchesEverything) {
-            "main"
-        }
-        else toCamelCase(segments.filterNotNull())
+        return toSimpleName(segments.filterNotNull())
     }
-
-    private fun toCamelCase(input: List<String>)
-        = input.mapIndexed { index, s -> if (index == 0) s.toLowerCase() else s.toLowerCase().capitalize() }.joinToString("")
 
     override fun toString(): String {
         segments ?: return ""
@@ -175,6 +177,11 @@ fun matchNoArtifacts(): ConfigPath = matchNoneFilter
  * Returns the [ConfigPath] that matches everything.
  */
 fun matchAllArtifacts(): ConfigPath = matchAllFilter
+
+/**
+ * Returns a [ConfigPath] that matches the given [SubmodulePath] and its subpaths.
+ */
+fun SubmodulePath.toConfigPath() = ConfigPath(segments)
 
 /**
  * Returns a [ConfigPath] that matches artifact paths with the given segments. Nulls are treated

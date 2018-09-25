@@ -45,19 +45,36 @@ data class ConfigTable(
      * Returns the list of [Config] instances that have any intersection with the table region
      * described by the given path.
      *
-     * For example, if [Variant.configPath] is passed to this method, it will return all [Config]
-     * instances that have any possibility of being used by an [Artifact] in that [Variant]. It
-     * will include [Config] instances that only apply to specific [Artifact] instances, but will
-     * exclude [Config] instances that don't apply to the [Variant] at all.
+     * For example, if given the path to a [Variant], it will return all [Config] instances that
+     * have any possibility of being used by an [Artifact] in that [Variant]. It will include
+     * [Config] instances that only apply to specific [Artifact] instances, but will exclude
+     * [Config] instances that don't apply to the [Variant] at all.
+     *
+     * If given the path to an [Artifact], it will return all the [Config] instances for that
+     * [Artifact].
      */
     fun configsIntersecting(searchCriteria: ConfigPath): List<Config> =
             filterIntersecting(searchCriteria).configs
 
     /**
+     * Returns the list of [Config] instances that have any intersection with the given path.
+     *
+     * For example, if given the path to a [Variant], it will return all [Config] instances that
+     * have any possibility of being used by an [Artifact] in that [Variant]. It will include
+     * [Config] instances that only apply to specific [Artifact] instances, but will exclude
+     * [Config] instances that don't apply to the [Variant] at all.
+     *
+     * If given the path to an [Artifact], it will return all the [Config] instances for that
+     * [Artifact].
+     */
+    fun configsIntersecting(searchCriteria: SubmodulePath): List<Config> =
+        filterIntersecting(searchCriteria.toConfigPath()).configs
+
+    /**
      * Returns the list of [Config] instances that do not apply to any [Artifact] within the table
      * region described by the given [ConfigPath].
      *
-     * For example, if given a [Variant.configPath], it will return all [Config] instances
+     * For example, if given the path to a [Variant], it will return all [Config] instances
      * that are not used by any [Artifact] with that [Variant].
      */
     fun configsNotIntersecting(searchCriteria: ConfigPath): List<Config> =
