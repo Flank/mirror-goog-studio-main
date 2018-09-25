@@ -431,7 +431,9 @@ public class NativeBuildOutputTest {
 
         // Check for expected sync issues
         assertThat(androidProject.getSyncIssues()).hasSize(expectedSyncIssueCount);
-        if (!androidProject.getSyncIssues().isEmpty()) {
+        if (androidProject.getSyncIssues().isEmpty()) {
+            assertThat(expectedSyncIssueCount).isEqualTo(0);
+        } else {
             if (!expectInSyncIssues.isEmpty()) {
                 SyncIssue issue =
                         assertThat(androidProject)

@@ -24,26 +24,15 @@ import java.util.Collection;
  * Value type to be used with Gson.
  */
 public class NativeLibraryValue {
-    @Nullable
-    public String buildCommand;
-    @Nullable
-    public String buildType;
-    @Nullable
-    public String toolchain;
-    @Nullable
-    public String groupName;
-    @Nullable
-    public String abi;
-    @Nullable
-    public String artifactName;
-    @Nullable
-    public Collection<NativeSourceFolderValue> folders;
-    @Nullable
-    public Collection<NativeSourceFileValue> files;
-    @Nullable
-    public Collection<File> exportedHeaders;
-    @Nullable
-    public File output;
-    @Nullable
-    public Collection<File> runtimeFiles;
+    @Nullable public String buildCommand;
+    @Nullable public String buildType;
+    @Nullable public String toolchain;
+    @Nullable public String groupName;
+    @Nullable public String abi;
+    @Nullable public String artifactName;
+    @Nullable public Collection<NativeSourceFolderValue> folders;
+    @Nullable public Collection<NativeSourceFileValue> files;
+    @Nullable public Collection<NativeHeaderFileValue> headers;
+    @Nullable public File output;
+    @Nullable public Collection<File> runtimeFiles;
 }

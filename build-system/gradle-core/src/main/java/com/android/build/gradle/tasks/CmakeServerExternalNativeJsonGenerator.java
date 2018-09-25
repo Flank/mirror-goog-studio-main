@@ -17,6 +17,7 @@
 package com.android.build.gradle.tasks;
 
 import static com.android.build.gradle.external.cmake.CmakeUtils.getObjectToString;
+import static com.android.build.gradle.internal.cxx.configure.CmakeSourceFileNamingKt.hasCmakeHeaderFileExtensions;
 import static com.android.build.gradle.internal.cxx.json.CompilationDatabaseIndexingVisitorKt.indexCompilationDatabase;
 import static com.android.build.gradle.internal.cxx.json.CompilationDatabaseToolchainVisitorKt.populateCompilationDatabaseToolchains;
 import static com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils.getOutputFolder;
@@ -50,6 +51,7 @@ import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConf
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons;
 import com.android.build.gradle.internal.cxx.json.CompilationDatabaseToolchain;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue;
+import com.android.build.gradle.internal.cxx.json.NativeHeaderFileValue;
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValue;
 import com.android.build.gradle.internal.cxx.json.NativeSourceFileValue;
 import com.android.build.gradle.internal.cxx.json.NativeToolchainValue;
@@ -510,36 +512,45 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         }
 
         nativeLibraryValue.files = new ArrayList<>();
+        nativeLibraryValue.headers = new ArrayList<>();
         Map<String, Integer> compilationDatabaseFlags = Maps.newHashMap();
 
         for (FileGroup fileGroup : target.fileGroups) {
+            int workingDirectoryOrdinal = strings.intern(target.buildDirectory);
             for (String source : fileGroup.sources) {
-                NativeSourceFileValue nativeSourceFileValue = new NativeSourceFileValue();
-                nativeSourceFileValue.workingDirectoryOrdinal =
-                        strings.intern(target.buildDirectory);
                 File sourceFile = new File(target.sourceDirectory, source);
-                nativeSourceFileValue.src = sourceFile;
-                String compileFlags = compileFlagsFromFileGroup(fileGroup);
-
-                if (Strings.isNullOrEmpty(compileFlags)) {
-                    // If flags weren't available in the CMake server model then fall back to using
-                    // compilation_database.json.
-                    // This is related to http://b/72065334 in which the compilation database did
-                    // not have flags for a particular file. Unclear why. I think the correct flags
-                    // to use is fileGroup.compileFlags and that compilation database should be
-                    // a fall-back case.
-                    if (compilationDatabaseFlags.isEmpty()) {
-                        compilationDatabaseFlags =
-                                indexCompilationDatabase(getCompileCommandsJson(abi), strings);
-                    }
-                    if (compilationDatabaseFlags.containsKey(sourceFile.toString())) {
-                        nativeSourceFileValue.flagsOrdinal =
-                                compilationDatabaseFlags.get(sourceFile.toString());
-                    }
+                if (hasCmakeHeaderFileExtensions(sourceFile)) {
+                    diagnostic("Choosing header file path for %s", sourceFile);
+                    nativeLibraryValue.headers.add(
+                            new NativeHeaderFileValue(sourceFile, workingDirectoryOrdinal));
                 } else {
-                    nativeSourceFileValue.flagsOrdinal = strings.intern(compileFlags);
+                    String compileFlags = compileFlagsFromFileGroup(fileGroup);
+                    Integer flagsOrdinal = null;
+                    if (Strings.isNullOrEmpty(compileFlags)) {
+                        // If flags weren't available in the CMake server model then fall back to
+                        // using compilation_database.json.
+                        // This is related to http://b/72065334 in which the compilation database
+                        // did not have flags for a particular file. Unclear why. I think the
+                        // correct flags to use is fileGroup.compileFlags and that compilation
+                        // database should be a fall-back case.
+                        if (compilationDatabaseFlags.isEmpty()) {
+                            compilationDatabaseFlags =
+                                    indexCompilationDatabase(getCompileCommandsJson(abi), strings);
+                        }
+                        if (compilationDatabaseFlags.containsKey(sourceFile.toString())) {
+                            flagsOrdinal = compilationDatabaseFlags.get(sourceFile.toString());
+                        }
+                    } else {
+                        flagsOrdinal = strings.intern(compileFlags);
+                    }
+
+                    NativeSourceFileValue nativeSourceFileValue = new NativeSourceFileValue();
+                    nativeSourceFileValue.src = sourceFile;
+                    nativeSourceFileValue.workingDirectoryOrdinal = workingDirectoryOrdinal;
+                    nativeSourceFileValue.flagsOrdinal = flagsOrdinal;
+
+                    nativeLibraryValue.files.add(nativeSourceFileValue);
                 }
-                nativeLibraryValue.files.add(nativeSourceFileValue);
             }
         }
 
