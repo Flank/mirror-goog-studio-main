@@ -119,13 +119,13 @@ data class ConfigTable(
      * combination of schema dimensions.
      */
     fun generateArtifacts(): Map<ConfigPath, Artifact> =
-        schema.allPaths().associate { it to Artifact(
+        schema.allArtifactPaths().associate { it.toConfigPath() to Artifact(
             // We can rely on segments being non-null since allPaths returns the paths to artifacts,
             // and null segments indicates a path that never matches any artifact. We can rely on
             // there being at least one segment because there needs to be at least one dimension
-            // in order for allPaths() to return a non-empty sequence and the number of segments
+            // in order for allArtifactPaths() to return a non-empty sequence and the number of segments
             // equals the number of dimensions.
-            name = it.segments!!.last()!!,
+            name = it.lastSegment,
             resolved = configsIntersecting(it).merged()
         )}
 
