@@ -66,7 +66,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     /**
      * Describes how code postProcessing is configured. We don't allow mixing the old and new DSLs.
      */
-    public enum PostprocessingConfiguration {
+    public enum PostProcessingConfiguration {
         POSTPROCESSING_BLOCK,
         OLD_DSL,
     }
@@ -79,10 +79,10 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     @NonNull private final ShaderOptions shaderOptions;
     @NonNull private final EvalIssueReporter issueReporter;
     @NonNull private final DeprecationReporter deprecationReporter;
-    @NonNull private final PostprocessingOptions postprocessingOptions;
+    @NonNull private final PostProcessingBlock postProcessingBlock;
 
-    @Nullable private PostprocessingConfiguration postprocessingConfiguration;
-    @Nullable private String postprocessingDslMethodUsed;
+    @Nullable private PostProcessingConfiguration postProcessingConfiguration;
+    @Nullable private String postProcessingDslMethodUsed;
 
     private boolean shrinkResources = false;
     private Boolean useProguard;
@@ -109,7 +109,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         ndkConfig = objectFactory.newInstance(NdkOptions.class);
         externalNativeBuildOptions =
                 objectFactory.newInstance(ExternalNativeBuildOptions.class, objectFactory);
-        postprocessingOptions = objectFactory.newInstance(PostprocessingOptions.class, project);
+        postProcessingBlock = objectFactory.newInstance(PostProcessingBlock.class, project);
     }
 
     @VisibleForTesting
@@ -127,7 +127,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         shaderOptions = new ShaderOptions();
         ndkConfig = new NdkOptions();
         externalNativeBuildOptions = new ExternalNativeBuildOptions();
-        postprocessingOptions = new PostprocessingOptions(project);
+        postProcessingBlock = new PostProcessingBlock(project);
     }
 
     private ImmutableList<String> matchingFallbacks;
@@ -258,7 +258,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         shaderOptions._initWith(thatBuildType.getShaders());
         externalNativeBuildOptions._initWith(thatBuildType.getExternalNativeBuildOptions());
         useProguard = thatBuildType.isUseProguard();
-        postprocessingOptions.initWith(((BuildType) that).getPostprocessing());
+        postProcessingBlock.initWith(((BuildType) that).getPostprocessing());
         crunchPngs = thatBuildType.isCrunchPngs();
         //noinspection deprecation Must still be copied.
         isCrunchPngsDefault = thatBuildType.isCrunchPngsDefault();
@@ -347,7 +347,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
      */
     @NonNull
     public BuildType proguardFile(@NonNull Object proguardFile) {
-        checkPostprocessingConfiguration(PostprocessingConfiguration.OLD_DSL, "proguardFile");
+        checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "proguardFile");
         getProguardFiles().add(project.file(proguardFile));
         return this;
     }
@@ -365,7 +365,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
      */
     @NonNull
     public BuildType proguardFiles(@NonNull Object... files) {
-        checkPostprocessingConfiguration(PostprocessingConfiguration.OLD_DSL, "proguardFiles");
+        checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "proguardFiles");
         for (Object file : files) {
             proguardFile(file);
         }
@@ -385,7 +385,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
      */
     @NonNull
     public BuildType setProguardFiles(@NonNull Iterable<?> proguardFileIterable) {
-        checkPostprocessingConfiguration(PostprocessingConfiguration.OLD_DSL, "setProguardFiles");
+        checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "setProguardFiles");
         getProguardFiles().clear();
         proguardFiles(Iterables.toArray(proguardFileIterable, Object.class));
         return this;
@@ -398,7 +398,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
      */
     @NonNull
     public BuildType testProguardFile(@NonNull Object proguardFile) {
-        checkPostprocessingConfiguration(PostprocessingConfiguration.OLD_DSL, "testProguardFile");
+        checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "testProguardFile");
         getTestProguardFiles().add(project.file(proguardFile));
         return this;
     }
@@ -410,7 +410,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
      */
     @NonNull
     public BuildType testProguardFiles(@NonNull Object... proguardFiles) {
-        checkPostprocessingConfiguration(PostprocessingConfiguration.OLD_DSL, "testProguardFiles");
+        checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "testProguardFiles");
         for (Object proguardFile : proguardFiles) {
             testProguardFile(proguardFile);
         }
@@ -424,8 +424,8 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
      */
     @NonNull
     public BuildType setTestProguardFiles(@NonNull Iterable<?> files) {
-        checkPostprocessingConfiguration(
-                PostprocessingConfiguration.OLD_DSL, "setTestProguardFiles");
+        checkPostProcessingConfiguration(
+                PostProcessingConfiguration.OLD_DSL, "setTestProguardFiles");
         getTestProguardFiles().clear();
         testProguardFiles(Iterables.toArray(files, Object.class));
         return this;
@@ -443,8 +443,8 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
      */
     @NonNull
     public BuildType consumerProguardFile(@NonNull Object proguardFile) {
-        checkPostprocessingConfiguration(
-                PostprocessingConfiguration.OLD_DSL, "consumerProguardFile");
+        checkPostProcessingConfiguration(
+                PostProcessingConfiguration.OLD_DSL, "consumerProguardFile");
         getConsumerProguardFiles().add(project.file(proguardFile));
         return this;
     }
@@ -461,8 +461,8 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
      */
     @NonNull
     public BuildType consumerProguardFiles(@NonNull Object... proguardFiles) {
-        checkPostprocessingConfiguration(
-                PostprocessingConfiguration.OLD_DSL, "consumerProguardFiles");
+        checkPostProcessingConfiguration(
+                PostProcessingConfiguration.OLD_DSL, "consumerProguardFiles");
         for (Object proguardFile : proguardFiles) {
             consumerProguardFile(proguardFile);
         }
@@ -482,8 +482,8 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
      */
     @NonNull
     public BuildType setConsumerProguardFiles(@NonNull Iterable<?> proguardFileIterable) {
-        checkPostprocessingConfiguration(
-                PostprocessingConfiguration.OLD_DSL, "setConsumerProguardFiles");
+        checkPostProcessingConfiguration(
+                PostProcessingConfiguration.OLD_DSL, "setConsumerProguardFiles");
         getConsumerProguardFiles().clear();
         consumerProguardFiles(Iterables.toArray(proguardFileIterable, Object.class));
         return this;
@@ -512,7 +512,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     @NonNull
     @Override
     public com.android.builder.model.BuildType setMinifyEnabled(boolean enabled) {
-        checkPostprocessingConfiguration(PostprocessingConfiguration.OLD_DSL, "setMinifyEnabled");
+        checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "setMinifyEnabled");
         return super.setMinifyEnabled(enabled);
     }
 
@@ -524,12 +524,12 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     @Override
     public boolean isMinifyEnabled() {
         // Try to return a sensible value for the model and third party plugins inspecting the DSL.
-        if (postprocessingConfiguration != PostprocessingConfiguration.POSTPROCESSING_BLOCK) {
+        if (postProcessingConfiguration != PostProcessingConfiguration.POSTPROCESSING_BLOCK) {
             return super.isMinifyEnabled();
         } else {
-            return postprocessingOptions.isRemoveUnusedCode()
-                    || postprocessingOptions.isObfuscate()
-                    || postprocessingOptions.isOptimizeCode();
+            return postProcessingBlock.isRemoveUnusedCode()
+                    || postProcessingBlock.isObfuscate()
+                    || postProcessingBlock.isOptimizeCode();
         }
     }
 
@@ -541,15 +541,15 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     @Override
     public boolean isShrinkResources() {
         // Try to return a sensible value for the model and third party plugins inspecting the DSL.
-        if (postprocessingConfiguration != PostprocessingConfiguration.POSTPROCESSING_BLOCK) {
+        if (postProcessingConfiguration != PostProcessingConfiguration.POSTPROCESSING_BLOCK) {
             return shrinkResources;
         } else {
-            return postprocessingOptions.isRemoveUnusedResources();
+            return postProcessingBlock.isRemoveUnusedResources();
         }
     }
 
     public void setShrinkResources(boolean shrinkResources) {
-        checkPostprocessingConfiguration(PostprocessingConfiguration.OLD_DSL, "setShrinkResources");
+        checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "setShrinkResources");
         this.shrinkResources = shrinkResources;
     }
 
@@ -568,15 +568,15 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     @Override
     public Boolean isUseProguard() {
         // Try to return a sensible value for the model and third party plugins inspecting the DSL.
-        if (postprocessingConfiguration != PostprocessingConfiguration.POSTPROCESSING_BLOCK) {
+        if (postProcessingConfiguration != PostProcessingConfiguration.POSTPROCESSING_BLOCK) {
             return useProguard;
         } else {
-            return postprocessingOptions.getCodeShrinkerEnum() == CodeShrinker.PROGUARD;
+            return postProcessingBlock.getCodeShrinkerEnum() == CodeShrinker.PROGUARD;
         }
     }
 
     public void setUseProguard(boolean useProguard) {
-        checkPostprocessingConfiguration(PostprocessingConfiguration.OLD_DSL, "setUseProguard");
+        checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "setUseProguard");
         this.useProguard = useProguard;
     }
 
@@ -605,45 +605,45 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     @Incubating
     @Internal
     @NonNull
-    public PostprocessingOptions getPostprocessing() {
-        checkPostprocessingConfiguration(
-                PostprocessingConfiguration.POSTPROCESSING_BLOCK, "getPostProcessing");
-        return postprocessingOptions;
+    public PostProcessingBlock getPostprocessing() {
+        checkPostProcessingConfiguration(
+                PostProcessingConfiguration.POSTPROCESSING_BLOCK, "getPostProcessing");
+        return postProcessingBlock;
     }
 
     /** This DSL is incubating and subject to change. */
     @Incubating
     @Internal
-    public void postprocessing(@NonNull Action<PostprocessingOptions> action) {
-        checkPostprocessingConfiguration(
-                PostprocessingConfiguration.POSTPROCESSING_BLOCK, "postProcessing");
-        action.execute(postprocessingOptions);
+    public void postprocessing(@NonNull Action<PostProcessingBlock> action) {
+        checkPostProcessingConfiguration(
+                PostProcessingConfiguration.POSTPROCESSING_BLOCK, "postProcessing");
+        action.execute(postProcessingBlock);
     }
 
     /** Describes how postProcessing was configured. Not to be used from the DSL. */
     @NonNull
-    public PostprocessingConfiguration getPostprocessingConfiguration() {
+    public PostProcessingConfiguration getPostProcessingConfiguration() {
         // If the user didn't configure anything, stick to the old DSL.
-        return postprocessingConfiguration != null
-                ? postprocessingConfiguration
-                : PostprocessingConfiguration.OLD_DSL;
+        return postProcessingConfiguration != null
+                ? postProcessingConfiguration
+                : PostProcessingConfiguration.OLD_DSL;
     }
 
     /**
      * Checks that the user is consistently using either the new or old DSL for configuring bytecode
      * postProcessing.
      */
-    private void checkPostprocessingConfiguration(
-            @NonNull PostprocessingConfiguration used, @NonNull String methodName) {
+    private void checkPostProcessingConfiguration(
+            @NonNull PostProcessingConfiguration used, @NonNull String methodName) {
         if (!dslChecksEnabled.get()) {
             return;
         }
 
-        if (this.postprocessingConfiguration == null) {
-            this.postprocessingConfiguration = used;
-            this.postprocessingDslMethodUsed = methodName;
-        } else if (this.postprocessingConfiguration != used) {
-            assert postprocessingDslMethodUsed != null;
+        if (this.postProcessingConfiguration == null) {
+            this.postProcessingConfiguration = used;
+            this.postProcessingDslMethodUsed = methodName;
+        } else if (this.postProcessingConfiguration != used) {
+            assert postProcessingDslMethodUsed != null;
             String message;
             switch (used) {
                 case POSTPROCESSING_BLOCK:
@@ -651,7 +651,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
                     message =
                             String.format(
                                     "The `postProcessing` block cannot be used with together with the `%s` method.",
-                                    postprocessingDslMethodUsed);
+                                    postProcessingDslMethodUsed);
                     break;
                 case OLD_DSL:
                     // TODO: URL with more details.

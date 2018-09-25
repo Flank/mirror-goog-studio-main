@@ -16,22 +16,29 @@
 
 package com.android.build.gradle.internal.dsl;
 
+import static com.android.build.gradle.internal.ProguardFileType.CONSUMER;
+import static com.android.build.gradle.internal.ProguardFileType.EXPLICIT;
+import static com.android.build.gradle.internal.ProguardFileType.TEST;
 import static com.google.common.base.Verify.verifyNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.ProguardFiles;
+import com.android.build.gradle.internal.ProguardFileType;
+import com.android.build.gradle.internal.ProguardFilesProvider;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.utils.HelpfulEnumConverter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import javax.inject.Inject;
 import org.gradle.api.Incubating;
 import org.gradle.api.Project;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * DSL object for configuring postProcessing: removing dead code, obfuscating etc.
@@ -45,7 +52,7 @@ import org.gradle.api.Project;
  * Resources</a>.
  */
 @Incubating
-public class PostprocessingOptions {
+public class PostProcessingBlock implements ProguardFilesProvider {
     private static final String AUTO = "auto";
     private static final HelpfulEnumConverter<CodeShrinker> SHRINKER_CONVERTER =
             new HelpfulEnumConverter<>(CodeShrinker.class);
@@ -64,7 +71,7 @@ public class PostprocessingOptions {
     @Nullable private CodeShrinker codeShrinker;
 
     @Inject
-    public PostprocessingOptions(@NonNull Project project) {
+    public PostProcessingBlock(@NonNull Project project) {
         this(
                 project,
                 ImmutableList.of(
@@ -73,21 +80,21 @@ public class PostprocessingOptions {
     }
 
     @VisibleForTesting
-    PostprocessingOptions(@NonNull Project project, List<File> proguardFiles) {
+    PostProcessingBlock(@NonNull Project project, List<File> proguardFiles) {
         this.project = project;
         this.proguardFiles = Lists.newArrayList(proguardFiles);
         this.testProguardFiles = new ArrayList<>();
         this.consumerProguardFiles = new ArrayList<>();
     }
 
-    public void initWith(PostprocessingOptions that) {
+    public void initWith(PostProcessingBlock that) {
         this.removeUnusedCode = that.isRemoveUnusedCode();
         this.removeUnusedResources = that.isRemoveUnusedResources();
         this.obfuscate = that.isObfuscate();
         this.optimizeCode = that.isOptimizeCode();
-        this.proguardFiles = Lists.newArrayList(that.getProguardFiles());
-        this.testProguardFiles = Lists.newArrayList(that.getTestProguardFiles());
-        this.consumerProguardFiles = Lists.newArrayList(that.getConsumerProguardFiles());
+        this.proguardFiles = Lists.newArrayList(that.getProguardFiles(EXPLICIT));
+        this.testProguardFiles = Lists.newArrayList(that.getProguardFiles(TEST));
+        this.consumerProguardFiles = Lists.newArrayList(that.getProguardFiles(CONSUMER));
         this.codeShrinker = that.getCodeShrinkerEnum();
     }
 
@@ -123,10 +130,6 @@ public class PostprocessingOptions {
         this.optimizeCode = optimizeCode;
     }
 
-    public List<File> getProguardFiles() {
-        return proguardFiles;
-    }
-
     public void setProguardFiles(List<Object> proguardFiles) {
         this.proguardFiles = new ArrayList<>();
         for (Object file : proguardFiles) {
@@ -144,10 +147,6 @@ public class PostprocessingOptions {
         }
     }
 
-    public List<File> getTestProguardFiles() {
-        return testProguardFiles;
-    }
-
     public void setTestProguardFiles(List<Object> testProguardFiles) {
         this.testProguardFiles = new ArrayList<>();
         for (Object file : testProguardFiles) {
@@ -163,10 +162,6 @@ public class PostprocessingOptions {
         for (Object file : files) {
             testProguardFile(file);
         }
-    }
-
-    public List<File> getConsumerProguardFiles() {
-        return consumerProguardFiles;
     }
 
     public void setConsumerProguardFiles(List<Object> consumerProguardFiles) {
@@ -207,5 +202,20 @@ public class PostprocessingOptions {
     @Nullable
     public CodeShrinker getCodeShrinkerEnum() {
         return codeShrinker;
+    }
+
+    @NotNull
+    @Override
+    public Collection<File> getProguardFiles(@NotNull ProguardFileType type) {
+        switch (type) {
+            case EXPLICIT:
+                return proguardFiles;
+            case TEST:
+                return testProguardFiles;
+            case CONSUMER:
+                return consumerProguardFiles;
+            default:
+                throw new AssertionError("Invalid ProguardFileType: " + type);
+        }
     }
 }

@@ -21,7 +21,7 @@ import static com.android.SdkConstants.FD_MERGED;
 import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.FN_CLASSES_JAR;
-import static com.android.build.gradle.internal.dsl.BuildType.PostprocessingConfiguration.POSTPROCESSING_BLOCK;
+import static com.android.build.gradle.internal.dsl.BuildType.PostProcessingConfiguration.POSTPROCESSING_BLOCK;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
@@ -31,7 +31,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.android.build.gradle.internal.scope.ArtifactPublishingUtil.publishArtifactToConfiguration;
-import static com.android.build.gradle.internal.scope.CodeShrinker.PROGUARD;
 import static com.android.build.gradle.internal.scope.CodeShrinker.R8;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_D8;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_D8_DESUGARING;
@@ -45,14 +44,18 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.FeaturePlugin;
-import com.android.build.gradle.ProguardFiles;
+import com.android.build.gradle.internal.BaseConfigAdapter;
 import com.android.build.gradle.internal.InstantRunTaskManager;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.PostprocessingFeatures;
+import com.android.build.gradle.internal.ProguardFileType;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.core.OldPostProcessingOptions;
+import com.android.build.gradle.internal.core.PostProcessingBlockOptions;
+import com.android.build.gradle.internal.core.PostProcessingOptions;
 import com.android.build.gradle.internal.dependency.AndroidTestResourceArtifactCollection;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact;
 import com.android.build.gradle.internal.dependency.FilteredArtifactCollection;
@@ -61,7 +64,6 @@ import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
-import com.android.build.gradle.internal.dsl.PostprocessingOptions;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -91,7 +93,6 @@ import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
 import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter.Type;
-import com.android.builder.model.BaseConfig;
 import com.android.repository.api.ProgressIndicator;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
@@ -119,7 +120,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.gradle.api.Action;
@@ -165,6 +165,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     private FileCollection bootClasspath;
 
+    @NonNull private final PostProcessingOptions postProcessingOptions;
+
     public VariantScopeImpl(
             @NonNull GlobalScope globalScope,
             @NonNull TransformManager transformManager,
@@ -198,6 +200,21 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                                                         "runtime-deps",
                                                         getVariantConfiguration().getDirName(),
                                                         "desugar_try_with_resources.jar")));
+        this.postProcessingOptions = createPostProcessingOptions();
+    }
+
+    private PostProcessingOptions createPostProcessingOptions() {
+        // This may not be the case with the experimental plugin.
+        CoreBuildType buildType = variantData.getVariantConfiguration().getBuildType();
+        if (buildType instanceof BuildType) {
+            BuildType dslBuildType = (BuildType) buildType;
+            if (dslBuildType.getPostProcessingConfiguration() == POSTPROCESSING_BLOCK) {
+                return new PostProcessingBlockOptions(
+                        dslBuildType.getPostprocessing(), getType().isTestComponent());
+            }
+        }
+
+        return new OldPostProcessingOptions(buildType, globalScope.getProject());
     }
 
     protected Project getProject() {
@@ -272,44 +289,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return getVariantConfiguration().getFullName();
     }
 
-    /** Returns the {@link PostprocessingOptions} if they should be used, null otherwise. */
-    @Nullable
-    private PostprocessingOptions getPostprocessingOptionsIfUsed() {
-        CoreBuildType coreBuildType = getCoreBuildType();
-
-        // This may not be the case with the experimental plugin.
-        if (coreBuildType instanceof BuildType) {
-            BuildType dslBuildType = (BuildType) coreBuildType;
-            if (dslBuildType.getPostprocessingConfiguration() == POSTPROCESSING_BLOCK) {
-                return dslBuildType.getPostprocessing();
-            }
-        }
-
-        return null;
-    }
-
-    @NonNull
-    private CoreBuildType getCoreBuildType() {
-        return getVariantConfiguration().getBuildType();
-    }
-
     @Override
     public boolean useResourceShrinker() {
-        if (getType().isForTesting() || instantRunBuildContext.isInInstantRunMode()) {
-            return false;
-        }
-
-        PostprocessingOptions postprocessingOptions = getPostprocessingOptionsIfUsed();
-
-        boolean userEnabledShrinkResources;
-        if (postprocessingOptions != null) {
-            userEnabledShrinkResources = postprocessingOptions.isRemoveUnusedResources();
-        } else {
-            //noinspection deprecation - this needs to use the old DSL methods.
-            userEnabledShrinkResources = getCoreBuildType().isShrinkResources();
-        }
-
-        if (!userEnabledShrinkResources) {
+        if (getType().isForTesting()
+                || instantRunBuildContext.isInInstantRunMode()
+                || !postProcessingOptions.resourcesShrinkingEnabled()) {
             return false;
         }
 
@@ -396,65 +380,13 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             return null;
         }
 
-        PostprocessingOptions postprocessingOptions = getPostprocessingOptionsIfUsed();
+        CodeShrinker codeShrinker = postProcessingOptions.getCodeShrinker();
 
-        if (postprocessingOptions == null) { // Old DSL used:
-            CoreBuildType coreBuildType = getCoreBuildType();
-            //noinspection deprecation - this needs to use the old DSL methods.
-            if (!coreBuildType.isMinifyEnabled()) {
-                return null;
-            }
-
-            CodeShrinker shrinkerForBuildType;
-
-            //noinspection deprecation - this needs to use the old DSL methods.
-            Boolean useProguard = coreBuildType.isUseProguard();
-            if (globalScope.getProjectOptions().get(ENABLE_R8)) {
-                shrinkerForBuildType = R8;
-            } else if (useProguard == null) {
-                shrinkerForBuildType = getDefaultCodeShrinker();
-            } else {
-                shrinkerForBuildType = useProguard ? PROGUARD : R8;
-            }
-
-            if (!isTestComponent) {
-                return shrinkerForBuildType;
-            } else {
-                if (shrinkerForBuildType == PROGUARD || shrinkerForBuildType == R8) {
-                    // ProGuard or R8 is used for main app code and we don't know if it gets
-                    // obfuscated, so we need to run the same tool on test code just in case.
-                    return shrinkerForBuildType;
-                } else {
-                    return null;
-                }
-            }
-        } else { // New DSL used:
-            CodeShrinker chosenShrinker = postprocessingOptions.getCodeShrinkerEnum();
-            if (globalScope.getProjectOptions().get(ENABLE_R8)) {
-                chosenShrinker = R8;
-            }
-            if (chosenShrinker == null) {
-                chosenShrinker = getDefaultCodeShrinker();
-            }
-
-            switch (chosenShrinker) {
-                case R8:
-                    // fall through
-                case PROGUARD:
-                    if (!isTestComponent) {
-                        boolean somethingToDo =
-                                postprocessingOptions.isRemoveUnusedCode()
-                                        || postprocessingOptions.isObfuscate()
-                                        || postprocessingOptions.isOptimizeCode();
-                        return somethingToDo ? chosenShrinker : null;
-                    } else {
-                        // For testing code, we only run ProGuard/R8 if main code is obfuscated.
-                        return postprocessingOptions.isObfuscate() ? chosenShrinker : null;
-                    }
-                default:
-                    throw new AssertionError("Unknown value " + chosenShrinker);
-            }
+        if (codeShrinker != null && globalScope.getProjectOptions().get(ENABLE_R8)) {
+            return CodeShrinker.R8;
         }
+
+        return codeShrinker;
     }
 
     @NonNull
@@ -462,14 +394,10 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     public List<File> getProguardFiles() {
         List<File> result = getExplicitProguardFiles();
 
-        if (getPostprocessingOptionsIfUsed() == null) {
-            // For backwards compatibility, we keep the old behavior: if there are no files
-            // specified, use a default one.
-            if (result.isEmpty()) {
-                result.add(
-                        ProguardFiles.getDefaultProguardFile(
-                                ProguardFiles.ProguardFile.DONT_OPTIMIZE.fileName, getProject()));
-            }
+        // For backwards compatibility, we keep the old behavior: if there are no files
+        // specified, use a default one.
+        if (result.isEmpty()) {
+            return postProcessingOptions.getDefaultProguardFiles();
         }
 
         return result;
@@ -478,23 +406,19 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public List<File> getExplicitProguardFiles() {
-        return gatherProguardFiles(
-                PostprocessingOptions::getProguardFiles, BaseConfig::getProguardFiles);
+        return gatherProguardFiles(ProguardFileType.EXPLICIT);
     }
 
     @NonNull
     @Override
     public List<File> getTestProguardFiles() {
-        return gatherProguardFiles(
-                PostprocessingOptions::getTestProguardFiles, BaseConfig::getTestProguardFiles);
+        return gatherProguardFiles(ProguardFileType.TEST);
     }
 
     @NonNull
     @Override
     public List<File> getConsumerProguardFiles() {
-        return gatherProguardFiles(
-                PostprocessingOptions::getConsumerProguardFiles,
-                BaseConfig::getConsumerProguardFiles);
+        return gatherProguardFiles(ProguardFileType.CONSUMER);
     }
 
     @NonNull
@@ -514,23 +438,18 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     }
 
     @NonNull
-    private List<File> gatherProguardFiles(
-            @NonNull Function<PostprocessingOptions, List<File>> postprocessingGetter,
-            @NonNull Function<BaseConfig, Collection<File>> baseConfigGetter) {
+    private List<File> gatherProguardFiles(ProguardFileType type) {
         GradleVariantConfiguration variantConfiguration = getVariantConfiguration();
 
         List<File> result =
-                new ArrayList<>(baseConfigGetter.apply(variantConfiguration.getDefaultConfig()));
+                new ArrayList<>(
+                        BaseConfigAdapter.getProguardFiles(
+                                variantConfiguration.getDefaultConfig(), type));
 
-        PostprocessingOptions postprocessingOptions = getPostprocessingOptionsIfUsed();
-        if (postprocessingOptions == null) {
-            result.addAll(baseConfigGetter.apply(variantConfiguration.getBuildType()));
-        } else {
-            result.addAll(postprocessingGetter.apply(postprocessingOptions));
-        }
+        result.addAll(postProcessingOptions.getProguardFiles(type));
 
         for (CoreProductFlavor flavor : variantConfiguration.getProductFlavors()) {
-            result.addAll(baseConfigGetter.apply(flavor));
+            result.addAll(BaseConfigAdapter.getProguardFiles(flavor, type));
         }
 
         return result;
@@ -539,21 +458,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     @Nullable
     public PostprocessingFeatures getPostprocessingFeatures() {
-        // If the new DSL block is not used, all these flags need to be in the config files.
-        PostprocessingOptions postprocessingOptions = getPostprocessingOptionsIfUsed();
-        if (postprocessingOptions != null) {
-            return new PostprocessingFeatures(
-                    postprocessingOptions.isRemoveUnusedCode(),
-                    postprocessingOptions.isObfuscate(),
-                    postprocessingOptions.isOptimizeCode());
-        } else {
-            return null;
-        }
-    }
-
-    @NonNull
-    private CodeShrinker getDefaultCodeShrinker() {
-        return CodeShrinker.PROGUARD;
+        return postProcessingOptions.getPostprocessingFeatures();
     }
 
     /**
