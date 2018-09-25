@@ -8,6 +8,7 @@ iml_module(
     name = "studio.android.sdktools.sdklib",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.sdklib.iml"],
+    tags = ["no_test_windows"],  # b/116613514
     test_data = ["//prebuilts/studio/sdk:platforms/latest"],
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],

@@ -26,6 +26,7 @@ iml_module(
 iml_module(
     name = "studio.testutils-tests",
     iml_files = ["testutils-tests.iml"],
+    tags = ["no_test_windows"],  # b/116613514
     test_data = ["//prebuilts/studio/sdk:platforms/latest"] + glob(["src/test/data/**"]),
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
