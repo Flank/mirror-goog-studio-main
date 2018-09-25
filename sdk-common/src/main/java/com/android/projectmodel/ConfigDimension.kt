@@ -34,6 +34,11 @@ data class ConfigDimension(
          */
         val values: List<String>
 ) {
+    /**
+     * Returns true iff this [ConfigDimension] contains the given value.
+     */
+    fun containsValue(value: String) = values.contains(value)
+
     class Builder(
             private val dimensionName: String
     ) {

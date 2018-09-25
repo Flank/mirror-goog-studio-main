@@ -54,6 +54,26 @@ data class ConfigTableSchema(
     }
 
     /**
+     * Returns true iff the given [SubmodulePath] is valid in this schema.
+     */
+    fun isValid(toTest: SubmodulePath) = isValid(toTest.toConfigPath())
+
+    /**
+     * Returns true iff the given [ConfigPath] is valid in this schema.
+     */
+    fun isValid(toTest: ConfigPath): Boolean {
+        val segments = toTest.segments ?: return false
+        for (index in 0 until (Math.min(segments.size, dimensions.size))) {
+            val dim = dimensions[index]
+            val nextSeg = segments[index]
+            if (nextSeg != null && !dim.containsValue(nextSeg)) {
+                return false
+            }
+        }
+        return true
+    }
+
+    /**
      * Returns a [ConfigPath] that matches an artifact name, which is always stored as the last
      * segment of the path.
      */
@@ -72,7 +92,7 @@ data class ConfigTableSchema(
      */
     fun allPathsOfLength(desiredPathLength: Int): Sequence<ConfigPath> =
         if (desiredPathLength > dimensions.size)
-            throw IllegalArgumentException("desiredPathLength ${desiredPathLength} must not be larger than the number of dimensions (${dimensions.size})")
+            throw IllegalArgumentException("desiredPathLength $desiredPathLength must not be larger than the number of dimensions (${dimensions.size})")
         else allPathsOfLength(desiredPathLength, emptyList())
 
     private fun allPathsOfLength(
@@ -96,7 +116,7 @@ data class ConfigTableSchema(
     }
 
     override fun toString(): String
-        = "ConfigTableSchema(${dimensions.map {"${it.dimensionName}[${it.values.joinToString(",")}]"}.joinToString(",")})"
+        = "ConfigTableSchema(${dimensions.joinToString(",") {"${it.dimensionName}[${it.values.joinToString(",")}]"}})"
 
 
     class Builder {
@@ -104,11 +124,11 @@ data class ConfigTableSchema(
         private val nameToDimension = HashMap<String, ConfigDimension.Builder>()
 
         fun getOrPutDimension(name: String): ConfigDimension.Builder {
-            return nameToDimension.getOrPut(name, {
+            return nameToDimension.getOrPut(name) {
                 val builder = ConfigDimension.Builder(name)
                 dimensions.add(builder)
                 builder
-            })
+            }
         }
 
         fun build(): ConfigTableSchema = ConfigTableSchema(dimensions.map { it.build() })
@@ -118,7 +138,7 @@ data class ConfigTableSchema(
 /**
  * Name of the dimension that identifies the artifact.
  */
-val ARTIFACT_DIMENSION_NAME = "artifact"
+const val ARTIFACT_DIMENSION_NAME = "artifact"
 
 /**
  * Default last dimension for a config table. It contains the default three artifacts for each

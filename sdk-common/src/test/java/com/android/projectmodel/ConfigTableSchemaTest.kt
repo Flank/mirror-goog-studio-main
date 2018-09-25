@@ -16,6 +16,7 @@
 
 package com.android.projectmodel
 
+import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
@@ -47,6 +48,44 @@ class ConfigTableSchemaTest {
         assertThat(schema.pathFor("release")).isEqualTo(matchArtifactsWith("*/*/release"))
         assertThat(schema.pathFor(ARTIFACT_NAME_MAIN)).isEqualTo(matchArtifactsWith("*/*/*/${ARTIFACT_NAME_MAIN}"))
         assertThat(schema.pathFor("")).isEqualTo(matchNoArtifacts())
+    }
+
+    @Test
+    fun testContainsPath() {
+        val testSubmodulePaths = listOf(
+            submodulePathForString("") to true,
+            submodulePathForString("paid") to true,
+            submodulePathForString("hires") to false,
+            submodulePathForString("blorg") to false,
+            submodulePathForString("paid/hires/debug") to true,
+            submodulePathForString("paid/hires/debug/boom") to false,
+            submodulePathForString("free/hires/release") to true,
+            submodulePathForString("free/lowres") to true
+        )
+
+        for (next in testSubmodulePaths) {
+            Truth.assertWithMessage("Testing schema.isValid(${next.first})")
+                .that(schema.isValid(next.first)).isEqualTo(next.second)
+            Truth.assertWithMessage("Testing schema.isValid(${next.first.toConfigPath()})")
+                .that(schema.isValid(next.first.toConfigPath())).isEqualTo(next.second)
+        }
+    }
+
+    @Test
+    fun testContainsPathWithWildcard() {
+        val testConfigPaths = listOf(
+            matchAllArtifacts() to true,
+            matchNoArtifacts() to false,
+            matchArtifactsWith("*") to true,
+            matchArtifactsWith("paid/*/debug") to true,
+            matchArtifactsWith("paid/*/debug/*") to true,
+            matchArtifactsWith("paid/*/debug/boom") to false,
+            matchArtifactsWith("*/*/release") to true
+        )
+
+        for (next in testConfigPaths) {
+            Truth.assertThat(schema.isValid(next.first)).isEqualTo(next.second)
+        }
     }
 
     @Test
