@@ -304,7 +304,10 @@ public class SdkAutoDownloadTest {
         Files.write(project.file("CMakeLists.txt").toPath(),
                 cmakeLists.getBytes(StandardCharsets.UTF_8));
 
-        getExecutor().run("assembleDebug");
+        // TODO: This should be changed to assembleDebug once b/116539441 is fixed.
+        // Currently assembleDebug causes ninja to its path component limit.
+        // See https://github.com/ninja-build/ninja/issues/1161
+        getExecutor().run("clean");
 
         File cmakeDirectory = FileUtils.join(mSdkHome, SdkConstants.FD_CMAKE);
         assertThat(cmakeDirectory).isDirectory();
@@ -364,7 +367,10 @@ public class SdkAutoDownloadTest {
                 project.file("CMakeLists.txt").toPath(),
                 cmakeLists.getBytes(StandardCharsets.UTF_8));
 
-        getExecutor().run("assembleDebug");
+        // TODO: This should be changed to assembleDebug once b/116539441 is fixed.
+        // Currently assembleDebug causes ninja to its path component limit.
+        // See https://github.com/ninja-build/ninja/issues/1161
+        getExecutor().run("clean");
 
         File ndkDirectory = FileUtils.join(mSdkHome, SdkConstants.FD_NDK);
         assertThat(ndkDirectory).isDirectory();
