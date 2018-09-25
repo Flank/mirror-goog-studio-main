@@ -419,7 +419,11 @@ open class GradleDetector : Detector(), GradleScanner {
                             report(context, valueCookie, PLUS, message, fix)
                         }
 
-                        checkDependency(context, gc, isResolved, valueCookie, statementCookie)
+                        // Check dependencies without the PSI read lock, because we
+                        // may need to make network requests to retrieve version info.
+                        context.driver.runLaterOutsideReadAction(Runnable {
+                            checkDependency(context, gc, isResolved, valueCookie, statementCookie)
+                        })
                     }
                 }
             }
@@ -522,6 +526,8 @@ open class GradleDetector : Detector(), GradleScanner {
         }
     }
 
+    // Important: This is called without the PSI read lock, since it may make network requests.
+    // Any interaction with PSI or issue reporting should be wrapped in a read action.
     private fun checkDependency(
         context: GradleContext,
         dependency: GradleCoordinate,
@@ -638,16 +644,17 @@ open class GradleDetector : Detector(), GradleScanner {
                     val parsed = GradleVersion.tryParse(revision)
                     if (parsed != null && parsed < "1.21.6") {
                         val fix = getUpdateDependencyFix(revision, "1.22.1")
-                        report(
-                            context,
-                            cookie,
-                            DEPENDENCY,
-                            "Use Fabric Gradle plugin version 1.21.6 or " +
-                                    "later to improve Instant Run performance (was " +
-                                    revision +
-                                    ")",
-                            fix
-                        )
+                        // checkDependency is called outside a read action.
+                        context.client.runReadAction(Runnable {
+                            report(
+                                context,
+                                cookie,
+                                DEPENDENCY,
+                                "Use Fabric Gradle plugin version 1.21.6 or later to " +
+                                  "improve Instant Run performance (was $revision)",
+                                fix
+                            )
+                        })
                     } else {
                         // From https://s3.amazonaws.com/fabric-artifacts/public/io/fabric/tools/gradle/maven-metadata.xml
                         newerVersion = getNewerVersion(version, GradleVersion(1, 25, 1))
@@ -658,16 +665,17 @@ open class GradleDetector : Detector(), GradleScanner {
                 if ("bugsnag-android-gradle-plugin" == artifactId) {
                     if (!version.isAtLeast(2, 1, 2)) {
                         val fix = getUpdateDependencyFix(revision, "2.4.1")
-                        report(
-                            context,
-                            cookie,
-                            DEPENDENCY,
-                            "Use BugSnag Gradle plugin version 2.1.2 or " +
-                                    "later to improve Instant Run performance (was " +
-                                    revision +
-                                    ")",
-                            fix
-                        )
+                        // checkDependency is called outside a read action.
+                        context.client.runReadAction(Runnable {
+                            report(
+                                context,
+                                cookie,
+                                DEPENDENCY,
+                                "Use BugSnag Gradle plugin version 2.1.2 or later to " +
+                                  "improve Instant Run performance (was $revision)",
+                                fix
+                            )
+                        })
                     } else {
                         // From http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22com.bugsnag%22%20AND
                         // %20a%3A%22bugsnag-android-gradle-plugin%22
@@ -684,7 +692,10 @@ open class GradleDetector : Detector(), GradleScanner {
                 val message = getBlacklistedDependencyMessage(context, path)
                 if (message != null) {
                     val fix = fix().name("Delete dependency").replace().all().build()
-                    report(context, statementCookie, DUPLICATE_CLASSES, message, fix)
+                    // checkDependency is called outside a read action.
+                    context.client.runReadAction(Runnable {
+                        report(context, statementCookie, DUPLICATE_CLASSES, message, fix)
+                    })
                 }
             }
         }
@@ -720,7 +731,10 @@ open class GradleDetector : Detector(), GradleScanner {
                     ""
 
             val message = "$prefix Details: ${deprecated.message}$separatorDot$suffix"
-            report(context, statementCookie, issue, message, fix)
+            // checkDependency is called outside a read action.
+            context.client.runReadAction(Runnable {
+                report(context, statementCookie, issue, message, fix)
+            })
         } else {
             val recommended = sdkRegistry.getRecommendedVersion(dependency)
             if (recommended != null && (newerVersion == null || recommended > newerVersion)) {
@@ -762,7 +776,10 @@ open class GradleDetector : Detector(), GradleScanner {
             val versionString = newerVersion.toString()
             val message = getNewerVersionAvailableMessage(dependency, versionString)
             val fix = if (!isResolved) getUpdateDependencyFix(revision, versionString) else null
-            report(context, cookie, issue, message, fix)
+            // checkDependency is called outside a read action.
+            context.client.runReadAction(Runnable {
+                report(context, cookie, issue, message, fix)
+            })
         }
     }
 
@@ -837,6 +854,8 @@ open class GradleDetector : Detector(), GradleScanner {
         }
     }
 
+    // Important: This is called without the PSI read lock, since it may make network requests.
+    // Any interaction with PSI or issue reporting should be wrapped in a read action.
     private fun checkGradlePluginDependency(
         context: GradleContext,
         dependency: GradleCoordinate,
@@ -855,7 +874,10 @@ open class GradleDetector : Detector(), GradleScanner {
                     GRADLE_PLUGIN_MINIMUM_VERSION +
                     " and the recommended version is " +
                     recommended
-            report(context, cookie, GRADLE_PLUGIN_COMPATIBILITY, message)
+            // checkGradlePluginDependency is called outside a read action.
+            context.client.runReadAction(Runnable {
+                report(context, cookie, GRADLE_PLUGIN_COMPATIBILITY, message)
+            })
             return true
         }
         return false
@@ -2366,9 +2388,6 @@ open class GradleDetector : Detector(), GradleScanner {
             return latestBuildTools
         }
 
-        private var googleMavenRepository: GoogleMavenRepository? = null
-        private var deprecatedSdkRegistry: DeprecatedSdkRegistry? = null
-
         @VisibleForTesting
         @Suppress("unused")
         @TestOnly
@@ -2377,6 +2396,9 @@ open class GradleDetector : Detector(), GradleScanner {
             googleMavenRepository = null
             deprecatedSdkRegistry = null
         }
+
+        private var googleMavenRepository: GoogleMavenRepository? = null
+        private var deprecatedSdkRegistry: DeprecatedSdkRegistry? = null
 
         private fun getGoogleMavenRepoVersion(
             context: GradleContext,
@@ -2392,20 +2414,12 @@ open class GradleDetector : Detector(), GradleScanner {
                 googleMavenRepository ?: run {
                     val cacheDir = client.getCacheDir(MAVEN_GOOGLE_CACHE_DIR_KEY, true)
                     val repository = object : GoogleMavenRepository(cacheDir) {
-                        public override fun readUrlData(url: String, timeout: Int): ByteArray? {
-                            try {
-                                return readUrlData(client, url, timeout)
-                            } catch (e: IOException) {
-                                throw RuntimeException(e)
-                            }
-                        }
 
-                        public override fun error(
-                            throwable: Throwable,
-                            message: String?
-                        ) {
+                        public override fun readUrlData(url: String, timeout: Int): ByteArray? =
+                            readUrlData(client, url, timeout)
+
+                        public override fun error(throwable: Throwable, message: String?) =
                             client.log(throwable, message)
-                        }
                     }
 
                     googleMavenRepository = repository
@@ -2419,20 +2433,12 @@ open class GradleDetector : Detector(), GradleScanner {
                 deprecatedSdkRegistry ?: run {
                     val cacheDir = client.getCacheDir(DEPRECATED_SDK_CACHE_DIR_KEY, true)
                     val repository = object : DeprecatedSdkRegistry(cacheDir) {
-                        public override fun readUrlData(url: String, timeout: Int): ByteArray? {
-                            try {
-                                return readUrlData(client, url, timeout)
-                            } catch (e: IOException) {
-                                throw RuntimeException(e)
-                            }
-                        }
 
-                        public override fun error(
-                            throwable: Throwable,
-                            message: String?
-                        ) {
+                        public override fun readUrlData(url: String, timeout: Int) =
+                            readUrlData(client, url, timeout)
+
+                        public override fun error(throwable: Throwable, message: String?) =
                             client.log(throwable, message)
-                        }
                     }
 
                     deprecatedSdkRegistry = repository
