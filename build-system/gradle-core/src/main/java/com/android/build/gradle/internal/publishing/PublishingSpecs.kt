@@ -43,7 +43,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_TRAN
 import com.android.build.gradle.internal.scope.InternalArtifactType.FULL_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_ASSETS
-import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_CLASSES
+import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_LIBRARY_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_JNI
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_MANIFEST
@@ -61,6 +61,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.SYMBOL_LIST
 import com.android.build.gradle.internal.scope.InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME
 import com.android.build.gradle.internal.scope.AnchorOutputType.ALL_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_LIBRARY_CLASSES
 import com.android.build.gradle.internal.utils.toImmutableMap
 import com.android.build.gradle.internal.utils.toImmutableSet
 import com.android.builder.core.VariantType
@@ -220,6 +221,7 @@ class PublishingSpecs {
                         ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
                 api(AIDL_PARCELABLE, ArtifactType.AIDL)
                 api(RENDERSCRIPT_HEADERS, ArtifactType.RENDERSCRIPT)
+                api(COMPILE_LIBRARY_CLASSES, ArtifactType.CLASSES)
 
                 // manifest is published to both to compare and detect provided-only library
                 // dependencies.
@@ -228,9 +230,9 @@ class PublishingSpecs {
                 output(DATA_BINDING_ARTIFACT, ArtifactType.DATA_BINDING_ARTIFACT)
                 output(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
                         ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
-                output(LIBRARY_CLASSES, ArtifactType.CLASSES)
                 output(FULL_JAR, ArtifactType.JAR)
 
+                runtime(RUNTIME_LIBRARY_CLASSES, ArtifactType.CLASSES)
                 runtime(LIBRARY_ASSETS, ArtifactType.ASSETS)
                 runtime(PACKAGED_RES, ArtifactType.ANDROID_RES)
                 runtime(PUBLIC_RES, ArtifactType.PUBLIC_RES)
@@ -243,7 +245,7 @@ class PublishingSpecs {
                 runtime(LINT_PUBLISH_JAR, ArtifactType.LINT)
 
                 testSpec(VariantTypeImpl.UNIT_TEST) {
-                    // unit test need ALL_CLASSES instead of LIBRARY_CLASSES to get
+                    // unit test need ALL_CLASSES instead of RUNTIME_LIBRARY_CLASSES to get
                     // access to the R class. Also scope should be API+Runtime.
                     output(ALL_CLASSES, ArtifactType.CLASSES)
                 }

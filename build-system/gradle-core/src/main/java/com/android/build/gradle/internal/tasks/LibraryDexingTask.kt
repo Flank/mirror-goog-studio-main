@@ -103,7 +103,7 @@ open class LibraryDexingTask @Inject constructor(
         override fun configure(task: LibraryDexingTask) {
             super.configure(task)
             task.classes =
-                    scope.artifacts.getFinalArtifactFiles(InternalArtifactType.LIBRARY_CLASSES)
+                    scope.artifacts.getFinalArtifactFiles(InternalArtifactType.RUNTIME_LIBRARY_CLASSES)
             task.minSdkVersion = scope.minSdkVersion.featureLevel
             task.output = output
             task.messageReceiver = scope.globalScope.messageReceiver
