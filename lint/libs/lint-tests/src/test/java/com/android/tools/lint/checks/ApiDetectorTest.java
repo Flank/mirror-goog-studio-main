@@ -6473,6 +6473,29 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "3 errors, 0 warnings");
     }
 
+    public void testKotlinStdlibPlatformDependent() {
+        // Regression test for https://issuetracker.google.com/77187996
+        lint().files(
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "fun test1(map: MutableMap<String, String>) {\n"
+                                        + "    map.getOrDefault(\"a\", \"b\")\n"
+                                        + "    map.remove(\"a\", \"b\")\n"
+                                        + "}"))
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/test.kt:4: Error: Call requires API level 24 (current min is 1): java.util.Map#getOrDefault [NewApi]\n"
+                                + "    map.getOrDefault(\"a\", \"b\")\n"
+                                + "        ~~~~~~~~~~~~\n"
+                                + "src/test/pkg/test.kt:5: Error: Call requires API level 24 (current min is 1): java.util.Map#remove [NewApi]\n"
+                                + "    map.remove(\"a\", \"b\")\n"
+                                + "        ~~~~~~\n"
+                                + "2 errors, 0 warnings");
+    }
+
     @Override
     protected boolean ignoreSystemErrors() {
         //noinspection SimplifiableIfStatement
