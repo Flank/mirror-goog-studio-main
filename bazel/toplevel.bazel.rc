@@ -31,6 +31,8 @@ test --sandbox_fake_username
 
 test --sandbox_tmpfs_path=/tmp
 
+test:ignored --jvmopt=-Dignored.tests.only=true
+
 # When running bazel coverage, make sure to set this user-defined setting.
 # This is useful, for instance, to mark our version of jacocoant.jar as neverlink
 # when running coverage, otherwise it will conflict at runtime with the version
