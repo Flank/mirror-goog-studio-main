@@ -18,8 +18,10 @@ package com.android.projectmodel
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KVisibility
-import kotlin.reflect.full.memberProperties
+import kotlin.reflect.full.IllegalCallableAccessException
 import kotlin.reflect.full.primaryConstructor
+import kotlin.reflect.full.memberProperties
+import kotlin.reflect.jvm.isAccessible
 
 internal fun <T: Any> getConstructor(clazz: KClass<T>): KFunction<T>? {
     val primaryConstructor = clazz.primaryConstructor
@@ -42,6 +44,9 @@ internal fun <T : Any> printProperties(toPrint: T, defaultValues: T): String {
     val parameterNames = parameters.map { it.name }.toSet()
     val propertyDescriptions = ArrayList<String>()
     for (prop in clazz.memberProperties) {
+        if (prop.visibility != KVisibility.PUBLIC) {
+            continue
+        }
         val actualValue = prop.get(toPrint)
         if (parameterNames.contains(prop.name)
             && (!optionalParameters.contains(prop.name) || (prop.get(defaultValues) != actualValue))) {
