@@ -26,13 +26,6 @@ import com.android.ide.common.util.PathString
  */
 data class Artifact(
         /**
-         * Name of the artifact, unique within a given [Variant]. Should remain stable across syncs. Identifies the
-         * artifact in the [ConfigTable] by matching the last segment of the [ConfigPath]. The names [ARTIFACT_NAME_MAIN],
-         * [ARTIFACT_NAME_ANDROID_TEST], and [ARTIFACT_NAME_UNIT_TEST] have special meanings - they must always be used to
-         * refer to an [Artifact] attached to a variant's mainArtifact, androidTestArtifact, and unitTestArtifact attributes.
-         */
-        val name: String,
-        /**
          * Contains the merged project [Config] for this [Artifact]. Note that this contains the resolved information
          * used by the build system to produce the artifact. This will be similar to what would be produced by merging
          * the matching [Config] instances from the [ConfigTable], but it is not guaranteed to be exactly the same.
@@ -68,5 +61,5 @@ data class Artifact(
      */
     val packageName: String? get() = resolved.packageName
 
-    override fun toString(): String = printProperties(this, Artifact(name = ""))
+    override fun toString(): String = printProperties(this, Artifact())
 }

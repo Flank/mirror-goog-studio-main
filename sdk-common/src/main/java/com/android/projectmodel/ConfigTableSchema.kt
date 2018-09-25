@@ -85,6 +85,7 @@ data class ConfigTableSchema(
      * Returns a sequence containing every [SubmodulePath] for an [Artifact] in this schema that
      * passes the given filter.
      */
+    @JvmOverloads
     fun allArtifactPaths(filter: ConfigPath = matchAllArtifacts()) =
         allPathsOfLength(dimensions.size, filter)
 
@@ -92,6 +93,7 @@ data class ConfigTableSchema(
      * Returns a sequence containing every [SubmodulePath] for a [Variant] in this schema that
      * passes the given filter.
      */
+    @JvmOverloads
     fun allVariantPaths(filter: ConfigPath = matchAllArtifacts()) =
         allPathsOfLength(dimensions.size - 1, filter)
 
@@ -114,7 +116,7 @@ data class ConfigTableSchema(
         return when {
             prefix.size == desiredPathLength ->
                 sequenceOf(
-                    SubmodulePath(
+                    submodulePathOf(
                         prefix
                     )
                 )

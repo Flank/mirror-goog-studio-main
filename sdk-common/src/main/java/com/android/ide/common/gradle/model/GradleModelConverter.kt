@@ -32,10 +32,13 @@ import com.android.builder.model.level2.Library
 import com.android.ide.common.util.PathString
 import com.android.ide.common.util.toPathString
 import com.android.ide.common.util.toPathStrings
+import com.android.projectmodel.ARTIFACT_NAME_ANDROID_TEST
 import com.android.projectmodel.ARTIFACT_NAME_MAIN
+import com.android.projectmodel.ARTIFACT_NAME_UNIT_TEST
 import com.android.projectmodel.AndroidPathType
 import com.android.projectmodel.AndroidSubmodule
 import com.android.projectmodel.Artifact
+import com.android.projectmodel.SubmodulePath
 import com.android.projectmodel.Config
 import com.android.projectmodel.ConfigAssociation
 import com.android.projectmodel.ConfigPath
@@ -50,6 +53,8 @@ import com.android.projectmodel.Variant
 import com.android.projectmodel.matchAllArtifacts
 import com.android.projectmodel.matchArtifactsWith
 import com.android.projectmodel.matchDimension
+import com.android.projectmodel.submodulePathOf
+import com.android.projectmodel.toConfigPath
 import com.android.resources.ResourceType
 import com.android.sdklib.AndroidVersion
 import com.google.common.collect.ImmutableMap
@@ -89,7 +94,7 @@ const val DIM_BUILD_TYPE = "buildType"
 /** Name assigned to the dimension that contains artifacts. */
 const val DIM_ARTIFACTS = "artifact"
 
-internal enum class ProjectAttribute { CONFIG_TABLE, PROJECT }
+internal enum class ProjectAttribute { CONFIG_TABLE, PROJECT, VARIANT_METADATA, VARIANT_ARTIFACTS }
 
 class GradleModelConverter(
     val project: IdeAndroidProject,
@@ -99,15 +104,19 @@ class GradleModelConverter(
 
     fun convert(): AndroidSubmodule =
         compute(ProjectAttribute.PROJECT, project) {
-            val variants = ArrayList<Variant>()
+            val variants = HashMap<SubmodulePath, Variant>()
+            val artifacts = HashMap<SubmodulePath, Artifact>()
             forEachVariant {
-                variants.add(convert(it))
+                variants[artifactPathForVariant(it)] = convertMetadata(it)
+                artifacts.putAll(
+                    convertArtifacts(it))
             }
 
             AndroidSubmodule(
                 name = name,
                 type = getProjectType(projectType),
-                variants = variants,
+                overriddenVariants = variants,
+                artifacts = artifacts,
                 configTable = getConfigTable(project)
             )
         }
@@ -190,7 +199,7 @@ class GradleModelConverter(
 
             // Add the per-variant configs
             forEachVariant {
-                val variantPath = matchArtifactsForVariant(it)
+                val variantPath = artifactPathForVariant(it).toConfigPath()
                 forEachArtifact(it) { path, artifact ->
                     val sourceProvider = artifact.variantSourceProvider
                     if (sourceProvider != null) {
@@ -216,25 +225,34 @@ class GradleModelConverter(
             toSourceSet()
         }
 
-    fun convert(variant: IdeVariant): Variant =
-        compute(project, variant) {
-            val androidTestArtifact = androidTestArtifact
+    fun convertMetadata(variant: IdeVariant): Variant =
+        compute(project to ProjectAttribute.VARIANT_METADATA, variant) {
             Variant(
                 name = name,
-                displayName = displayName,
-                mainArtifact = convert(this, mainArtifact),
-                androidTestArtifact = androidTestArtifact?.let { convert(this, it) },
-                unitTestArtifact = unitTestArtifact?.let { convert(this, it) },
-                extraArtifacts = extraAndroidArtifacts
-                    .filter { it != mainArtifact && it != androidTestArtifact }
-                    .mapNotNull { it as? IdeBaseArtifact }
-                    .map { convert(this, it) },
-                extraJavaArtifacts = extraJavaArtifacts
-                    .filter { it != unitTestArtifact }
-                    .mapNotNull { it as? IdeBaseArtifact }
-                    .map { convert(this, it) },
-                configPath = matchArtifactsForVariant(this)
-            )
+                displayName = displayName
+                )
+        }
+
+    fun convertArtifacts(variant: IdeVariant): Map<SubmodulePath, Artifact> =
+        compute(project to ProjectAttribute.VARIANT_ARTIFACTS, variant) {
+            val result = HashMap<SubmodulePath, Artifact>()
+            val variantPath = artifactPathForVariant(this)
+
+            val mainArtifact = mainArtifact
+            result[variantPath + ARTIFACT_NAME_MAIN] = convert(this, mainArtifact)
+            val unitTestArtifact = unitTestArtifact
+            if (unitTestArtifact != null) {
+                result[variantPath + ARTIFACT_NAME_UNIT_TEST] = convert(this, unitTestArtifact)
+            }
+            val androidTestArtifact = androidTestArtifact
+            if (androidTestArtifact != null) {
+                result[variantPath + ARTIFACT_NAME_ANDROID_TEST] =
+                        convert(this, androidTestArtifact)
+            }
+            result + (extraAndroidArtifacts + extraJavaArtifacts)
+                .mapNotNull { it as? IdeBaseArtifact }
+                .filter { it != mainArtifact && it != unitTestArtifact && it != androidTestArtifact }
+                .map { variantPath + it.name to convert(this, it) }
         }
 
     /**
@@ -244,8 +262,7 @@ class GradleModelConverter(
         compute(project to variant, artifact) {
             val artifactName = if (this == variant.mainArtifact) ARTIFACT_NAME_MAIN else name
             val configTable = getConfigTable(project)
-            val variantPath = matchArtifactsForVariant(variant)
-            val artifactPath = variantPath.intersect(configTable.schema.matchArtifact(artifactName))
+            val artifactPath = (artifactPathForVariant(variant) + artifactName).toConfigPath()
 
             // Compute the resolved configuration for this artifact. There's two ways to compute the resolved configuration:
             // 1. Iterate over the constituent configs in the config table and merge them all.
@@ -312,7 +329,6 @@ class GradleModelConverter(
             }
 
             Artifact(
-                name = artifactName,
                 classFolders = listOf(PathString(classesFolder)) + additionalClassesFolders.toPathStrings(),
                 resolved = mergedConfig
             )
@@ -351,8 +367,8 @@ class GradleModelConverter(
     private fun matchBuildType(buildType: String) =
         matchDimension(schema.dimensions.size - 2, buildType)
 
-    private fun matchArtifactsForVariant(variant: IdeVariant): ConfigPath =
-        matchArtifactsWith(variant.productFlavors + variant.buildType)
+    private fun artifactPathForVariant(variant: IdeVariant): SubmodulePath =
+        submodulePathOf(variant.productFlavors + variant.buildType)
 
     /**
      * Returns the list of [ConfigAssociation] for a [ProductFlavorContainer], given an [artifactFilter] that identifies

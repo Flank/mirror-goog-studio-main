@@ -41,13 +41,13 @@ data class AndroidSubmodule(
      */
     val type: ProjectType,
     /**
-     * List of variants for the submodule.
-     */
-    val variants: List<Variant> = emptyList(),
-    /**
      * Config table for this submodule.
      */
     val configTable: ConfigTable = ConfigTable(),
+    /**
+     * Map of [SubmodulePath] instances onto the [Artifact] instances they identify.
+     */
+    val artifacts: Map<SubmodulePath, Artifact> = emptyMap(),
     /**
      * List of locations where this submodule will write generated files and folders. The list
      * may contains a mixture of files and folders. Any file located at or below these paths should
@@ -57,16 +57,64 @@ data class AndroidSubmodule(
     /**
      * Namespacing strategy for this submodule
      */
-    val namespacing: NamespacingType = NamespacingType.DISABLED
+    val namespacing: NamespacingType = NamespacingType.DISABLED,
+    /**
+     * Map of [SubmodulePath] onto [Variant] for all [Variant] instances that use non-default values.
+     * Variants that use the default values may optionally be omitted from this map.
+     */
+    val overriddenVariants: Map<SubmodulePath, Variant> = emptyMap()
 ) {
+    private val mapVariantIdsOntoVariantPaths = HashMap(configTable.schema.allVariantPaths()
+        .associate { getVariantByPath(it)!!.name to it })
+
+    init {
+        for (next in artifacts.keys) {
+            if (!configTable.schema.isValid(next)) {
+                throw IllegalArgumentException("Artifact has path $next that does not conform to schema ${configTable.schema}")
+            }
+        }
+    }
+
     constructor(name: String, type: ProjectType) : this(
         name = name,
         type = type,
-        variants = emptyList()
+        configTable = ConfigTable()
     )
 
     override fun toString(): String =
         printProperties(this, AndroidSubmodule(name = "", type = ProjectType.APP))
+
+    /**
+     * Returns the [Variant] with the given path. If there is an override for the given variant,
+     * the override is returned. If there are no overrides, a [Variant] with default values is
+     * returned. Returns null if the given [ConfigPath] is not a valid path in this
+     * [AndroidSubmodule].
+     */
+    fun getVariantByPath(path: SubmodulePath): Variant? {
+        if (path.segments.size != configTable.schema.dimensions.size - 1 || !configTable.schema.isValid(path)) {
+            return null
+        }
+        return overriddenVariants[path] ?: Variant(path)
+    }
+
+    /**
+     * Returns the artifact path of the variant with the given name. Returns null if no such variant
+     * exists.
+     */
+    fun getVariantPathByName(variantName: String): SubmodulePath? =
+        mapVariantIdsOntoVariantPaths[variantName]
+
+    /**
+     * Returns the [Artifact] with the given [SubmodulePath] in this [AndroidSubmodule].
+     */
+    fun getArtifact(path: SubmodulePath): Artifact? = artifacts[path]
+
+    /**
+     * Returns the set of [Artifact] from this [AndroidSubmodule] that matches the given
+     * [ConfigPath].
+     */
+    fun findArtifacts(searchCriteria: ConfigPath): Map<SubmodulePath, Artifact> =
+        artifacts.filter { searchCriteria.contains(it.key) }
 
     /**
      * Returns a copy of the receiver with the given submodule type. Intended to simplify construction
@@ -87,10 +135,10 @@ data class AndroidSubmodule(
      */
     fun withVariantsGeneratedBy(
         configTable: ConfigTable,
-        artifacts: Map<ConfigPath, Artifact>
+        artifacts: Map<SubmodulePath, Artifact>
     ) = copy(
         configTable = configTable,
-        variants = configTable.generateVariantsFor(artifacts)
+        artifacts = artifacts
     )
 
     /**

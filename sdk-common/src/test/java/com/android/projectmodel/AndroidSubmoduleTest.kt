@@ -53,13 +53,12 @@ class AndroidSubmoduleTest {
         val configTable = ConfigTable()
         assertThat(
             project.withVariantsGeneratedBy(
-                configTable,
-                configTable.generateArtifacts()
+                configTable
             )
         ).isEqualTo(
             project.copy(
                 configTable = configTable,
-                variants = configTable.generateVariants()
+                artifacts = configTable.generateArtifacts()
             )
         )
     }
