@@ -11,14 +11,14 @@ cc_binary(
     srcs = [
         "agent.cc",
         "capabilities.h",
-        "config.cc",
-        "config.h",
         "hotswap.cc",
         "hotswap.h",
         "instrumenter.cc",
         "instrumenter.h",
         "native_callbacks.cc",
         "native_callbacks.h",
+        "swapper.cc",
+        "swapper.h",
     ],
     copts = ANDROID_COPTS + [
         "-I$(GENDIR)/tools/base/deploy/proto",
