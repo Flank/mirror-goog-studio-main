@@ -40,6 +40,7 @@ class Bin2C {
 
     private Language language = Language.CXX;
     private String output = null;
+    private String header = null;
     private String variableBaseName = null;
     private String namespace = null;
     private String input = null;
@@ -67,6 +68,7 @@ class Bin2C {
         optionDispatcher = new Hashtable<>();
         optionDispatcher.put("lang", v -> language = lookupLanguage(v));
         optionDispatcher.put("output", v -> output = v);
+        optionDispatcher.put("header", v -> header = v);
         optionDispatcher.put("variable", v -> parseVariable(v));
         optionDispatcher.put("embed", v -> embed = Boolean.parseBoolean(v));
         parseOptions(args);
@@ -118,7 +120,8 @@ class Bin2C {
         System.err.println("Usage bin2c [parameters] inputs_files");
         System.err.println("List of parameters:");
         System.err.println("    -lang=X        : language [java, cxx]. Default is 'cxx'.");
-        System.err.println("    -output=X      : output");
+        System.err.println("    -output=X      : The generated cc file");
+        System.err.println("    -header=X      : An optional header file, only used in CC");
         System.err.println("    -hash_only=true: Only hash the input, do not embed content");
         System.err.println("    -variable=X    : Details how to generate source code");
         System.err.println("                     Formats: | my::name::space::variable_name");
@@ -133,16 +136,24 @@ class Bin2C {
         }
 
         File outputFile = new File(output);
-        byte[] buffer = Files.readAllBytes(Paths.get(input));
         outputFile.getParentFile().mkdirs();
+
+        File headerFile = null;
+        if (header != null) {
+            headerFile = new File(header);
+            headerFile.getParentFile().mkdirs();
+        }
+        ;
+
+        byte[] buffer = Files.readAllBytes(Paths.get(input));
         if (language == Language.CXX) {
-            generateCXX(outputFile, buffer);
+            generateCXX(outputFile, headerFile, buffer);
         } else {
             generateJava(outputFile, buffer);
         }
     }
 
-    void generateCXX(File outputFile, byte[] buffer) throws IOException {
+    void generateCXX(File outputFile, File headerFile, byte[] buffer) throws IOException {
         try (PrintWriter writer = new PrintWriter(outputFile)) {
             String hash = toHexHash(buffer);
             writer.println(String.format("const char* %s_hash = \"%s\";", variableBaseName, hash));
@@ -161,6 +172,17 @@ class Bin2C {
 
             writer.println(
                     String.format("long long %s_len = %d;", variableBaseName, buffer.length));
+        }
+
+        if (headerFile != null) {
+            try (PrintWriter writer = new PrintWriter(headerFile)) {
+                writer.println(String.format("extern const char* %s_hash;", variableBaseName));
+                if (!embed) {
+                    return;
+                }
+                writer.println("extern unsigned char " + variableBaseName + "[];");
+                writer.println(String.format("extern long long %s_len;", variableBaseName));
+            }
         }
     }
 

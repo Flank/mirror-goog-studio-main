@@ -30,8 +30,8 @@
 #include "shell_command.h"
 #include "tools/base/deploy/common/message_pipe_wrapper.h"
 
-#include "agent.so.cc"
-#include "agent_server.cc"
+#include "agent.so.h"
+#include "agent_server.h"
 
 namespace deploy {
 

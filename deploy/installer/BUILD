@@ -130,9 +130,13 @@ android_cc_binary(
 
 cc_library(
     name = "agent_header",
-    hdrs = [
+    srcs = [
         ":agent.so.cc",
         ":agent_server.cc",
+    ],
+    hdrs = [
+        ":agent.so.h",
+        ":agent_server.h",
     ],
     tags = ["no_windows"],
 )
@@ -145,9 +149,11 @@ genrule(
     ],
     outs = [
         "agent.so.cc",
+        "agent.so.h",
     ],
     cmd = "$(location //tools/base/bazel:bin2c) -lang=cxx -variable=agent_so" +
           " -output=$(location agent.so.cc)" +
+          " -header=$(location agent.so.h)" +
           " $(location //tools/base/deploy/agent/native:libswap.so)",
     tags = ["no_windows"],
     tools = [
@@ -164,9 +170,11 @@ genrule(
     ],
     outs = [
         "agent_server.cc",
+        "agent_server.h",
     ],
     cmd = "$(location //tools/base/bazel:bin2c) -lang=cxx -variable=agent_server" +
           " -output=$(location agent_server.cc)" +
+          " -header=$(location agent_server.h)" +
           " $(location //tools/base/deploy/agent/native:agent_server)",
     tags = ["no_windows"],
     tools = [

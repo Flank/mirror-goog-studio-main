@@ -55,6 +55,41 @@ public class Bin2CTest {
     }
 
     @Test
+    public void convertToCWithH() throws IOException {
+        byte[] buffer = {1, 2, 3, 4};
+        Path in = Files.createTempFile("input", ".bin");
+        Files.write(in, buffer);
+        Path out = Files.createTempFile("output", ".cc");
+        Path h = Files.createTempFile("output", ".h");
+        Bin2C.main(
+                new String[] {
+                    "-lang=cxx",
+                    "-embed=true",
+                    "-output=" + out.toString(),
+                    "-header=" + h.toString(),
+                    "-variable=test_name",
+                    in.toString()
+                });
+        String[] strings = Files.readAllLines(out).toArray(new String[] {});
+        assertArrayEquals(
+                new String[] {
+                    "const char* test_name_hash = \"9f64a747\";",
+                    "unsigned char test_name[] = {",
+                    "0x01, 0x02, 0x03, 0x04, };",
+                    "long long test_name_len = 4;",
+                },
+                strings);
+        String[] externs = Files.readAllLines(h).toArray(new String[] {});
+        assertArrayEquals(
+                new String[] {
+                    "extern const char* test_name_hash;",
+                    "extern unsigned char test_name[];",
+                    "extern long long test_name_len;",
+                },
+                externs);
+    }
+
+    @Test
     public void converToJava() throws IOException {
         byte[] buffer = new byte[20];
         for (byte i = 0; i < buffer.length; i++) {
