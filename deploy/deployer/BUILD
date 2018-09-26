@@ -89,6 +89,7 @@ java_test(
     srcs = glob(["src/test/java/**/*.java"]),
     data = glob(["src/test/resource/**"]),
     jvm_flags = ["-Dtest.suite.jar=deployer.tests.jar"],
+    tags = ["no_test_windows"],  # b/116693861
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":tools.deployer",
