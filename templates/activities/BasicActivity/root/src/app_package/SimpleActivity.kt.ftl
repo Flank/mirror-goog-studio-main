@@ -30,12 +30,14 @@ import kotlinx.android.synthetic.main.${fragmentLayoutName}.*
 import kotlinx.android.synthetic.main.${simpleLayoutName}.*
 </#if>
 </#if>
-<#--  <#if navigationType == "Navigation Drawer" || navigationType == "Bottom Navigation">  -->
 <#if navComponentUsed>
 import androidx.navigation.Navigation
 import androidx.navigation.ui.NavigationUI
 </#if>
 import ${packageName}.databinding.${underscoreToCamelCase(layoutName)}Binding
+<#if navigationType == "Tabs">
+import ${packageName}.ui.main.SectionsPagerAdapter
+</#if>
 
 class ${activityClass} : ${superClass}() {
 
@@ -50,7 +52,7 @@ class ${activityClass} : ${superClass}() {
         val toggle = ActionBarDrawerToggle(
             this, binding.drawerLayout, toolbar, R.string.navigation_drawer_open,
                 R.string.navigation_drawer_close
-        ) 
+        )
         binding.drawerLayout.addDrawerListener(toggle)
         toggle.syncState()
         NavigationUI.setupWithNavController(
@@ -61,13 +63,18 @@ class ${activityClass} : ${superClass}() {
         NavigationUI.setupWithNavController(
             binding.contentMain.navView, Navigation.findNavController(this, R.id.nav_host_fragment)
         )
+<#elseif navigationType == "Tabs">
+        val sectionsPagerAdapter = SectionsPagerAdapter(this, supportFragmentManager)
+        binding.viewPager.adapter = sectionsPagerAdapter
+        binding.tabs.setupWithViewPager(binding.viewPager)
+        val fab = binding.fab
 <#else>
         val toolbar = binding.toolbar
         val fab = binding.fab
 </#if>
 
 <#if hasAppBar>
-<#if navigationType != "Navigation Drawer">
+<#if navigationType != "Navigation Drawer" && navigationType != "Tabs" >
         setSupportActionBar(toolbar)
 </#if>
 

@@ -6,7 +6,7 @@ import ${getMaterialComponentName('android.arch.lifecycle', useAndroidX)}.ViewMo
 
 public class ${navViewModelClass} extends ViewModel {
 
-    private MutableLiveData<String> mText;
+    private final MutableLiveData<String> mText;
 
     ${navViewModelClass}() {
         mText = new MutableLiveData<>();

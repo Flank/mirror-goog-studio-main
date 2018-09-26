@@ -28,6 +28,9 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.NavigationUI;
 </#if>
 import ${packageName}.databinding.${underscoreToCamelCase(layoutName)}Binding;
+<#if navigationType == "Tabs">
+import ${packageName}.ui.main.SectionsPagerAdapter;
+</#if>
 
 public class ${activityClass} extends ${superClass} {
 
@@ -55,12 +58,18 @@ public class ${activityClass} extends ${superClass} {
         NavigationUI.setupWithNavController(
             binding.contentMain.navView, Navigation.findNavController(this, R.id.nav_host_fragment)
         );
+<#elseif navigationType == "Tabs">
+        SectionsPagerAdapter sectionsPagerAdapter = 
+                new SectionsPagerAdapter(this, getSupportFragmentManager());
+        binding.viewPager.setAdapter(sectionsPagerAdapter);
+        binding.tabs.setupWithViewPager(binding.viewPager);
+        View fab = binding.fab;
 <#else>
         Toolbar toolbar = binding.toolbar;
         View fab = binding.fab;
 </#if>
 <#if hasAppBar>
-<#if navigationType != "Navigation Drawer">
+<#if navigationType != "Navigation Drawer" && navigationType != "Tabs">
         setSupportActionBar(toolbar);
 </#if>
 <#if navigationType != "Bottom Navigation" >
