@@ -106,7 +106,7 @@ public class MetricTest {
                                         .build()).
                                 build(),
                   new WindowDeviationAnalyzer.Builder()
-                                .setMetricAggregate(Analyzer.MetricAggregate.MEAN)
+                                .setMetricAggregate(Analyzer.MetricAggregate.MEDIAN)
                                 .setRunInfoQueryLimit(24)
                                 .setRecentWindowSize(5)
                                 .addMeanTolerance(new WindowDeviationAnalyzer.MeanToleranceParams.Builder().build())
@@ -142,7 +142,7 @@ public class MetricTest {
                         + "      \"analyzers\": [\n"
                         + "        {\n"
                         + "          \"type\": \"WindowDeviationAnalyzer\",\n"
-                        + "          \"metricAggregate\": \"MEDIAN\",\n"
+                        + "          \"metricAggregate\": \"MEAN\",\n"
                         + "          \"runInfoQueryLimit\": \"50\",\n"
                         + "          \"recentWindowSize\": \"11\",\n"
                         + "          \"toleranceParams\": [\n"
@@ -156,7 +156,7 @@ public class MetricTest {
                         + "        },\n"
                         + "        {\n"
                         + "          \"type\": \"WindowDeviationAnalyzer\",\n"
-                        + "          \"metricAggregate\": \"MEAN\",\n"
+                        + "          \"metricAggregate\": \"MEDIAN\",\n"
                         + "          \"runInfoQueryLimit\": \"24\",\n"
                         + "          \"recentWindowSize\": \"5\",\n"
                         + "          \"toleranceParams\": [\n"

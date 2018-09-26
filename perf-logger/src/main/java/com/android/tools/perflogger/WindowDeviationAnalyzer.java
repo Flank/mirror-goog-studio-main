@@ -51,7 +51,7 @@ public class WindowDeviationAnalyzer implements Analyzer {
     }
 
     public static class Builder {
-        @NonNull private MetricAggregate metricAggregate = MetricAggregate.MEDIAN;
+        @NonNull private MetricAggregate metricAggregate = MetricAggregate.MEAN;
         private int runInfoQueryLimit = 50;
         private int recentWindowSize = 11;
         private final List<MeanToleranceParams> meanTolerances = new ArrayList<>();
