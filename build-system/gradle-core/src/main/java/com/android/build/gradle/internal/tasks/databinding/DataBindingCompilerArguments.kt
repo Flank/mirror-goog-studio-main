@@ -42,6 +42,10 @@ import java.io.File
  */
 @Suppress("MemberVisibilityCanBePrivate")
 class DataBindingCompilerArguments constructor(
+
+    @get:Input
+    val incremental: Boolean,
+
     @get:Input
     val artifactType: CompilerArguments.Type,
 
@@ -116,6 +120,7 @@ class DataBindingCompilerArguments constructor(
 
     override fun asArguments(): Iterable<String> {
         val arguments = CompilerArguments(
+            incremental = incremental,
             artifactType = artifactType,
             modulePackage = getModulePackage(),
             minApi = minApi,
@@ -153,6 +158,17 @@ class DataBindingCompilerArguments constructor(
             val variantConfig = variantScope.variantConfiguration
             val artifacts = variantScope.artifacts
 
+            var incremental =
+                globalScope.projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DATA_BINDING)
+            val enableV2 = globalScope.projectOptions.get(BooleanOption.ENABLE_DATA_BINDING_V2)
+
+            // Check incremental annotation processing
+            if (incremental && !enableV2) {
+                globalScope.project.logger
+                    .warn("Incremental annotation processing is not supported by data binding V1")
+                incremental = false
+            }
+
             // Get artifactType
             val artifactVariantData = if (variantData.type.isTestComponent) {
                 variantScope.testedVariantData!!
@@ -177,6 +193,7 @@ class DataBindingCompilerArguments constructor(
             }
 
             return DataBindingCompilerArguments(
+                incremental = incremental,
                 artifactType = artifactType,
                 modulePackageProvider = { variantConfig.originalApplicationId },
                 minApi = variantConfig.minSdkVersion.apiLevel,
@@ -197,7 +214,7 @@ class DataBindingCompilerArguments constructor(
                 printEncodedErrorLogs = printEncodedErrorLogs,
                 isTestVariant = variantData.type.isTestComponent,
                 isEnabledForTests = globalScope.extension.dataBinding.isEnabledForTests,
-                isEnableV2 = globalScope.projectOptions.get(BooleanOption.ENABLE_DATA_BINDING_V2)
+                isEnableV2 = enableV2
             )
         }
     }

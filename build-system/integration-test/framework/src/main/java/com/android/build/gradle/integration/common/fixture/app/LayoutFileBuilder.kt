@@ -20,8 +20,18 @@ package com.android.build.gradle.integration.common.fixture.app
 class LayoutFileBuilder {
 
     var useAndroidX: Boolean = false
+    var withDataBinding: Boolean = false
 
+    private val variables = StringBuilder()
     private val widgets = StringBuilder()
+
+    fun addVariable(name: String, type: String) {
+        variables.append("\n")
+        variables.append("""
+            <variable name="$name" type="$type"/>
+            """.trimIndent()
+        )
+    }
 
     fun addTextView(id: String, text: String = "", customProperties: List<String> = listOf()) {
         widgets.append("\n")
@@ -52,19 +62,43 @@ class LayoutFileBuilder {
     fun build(): String {
         val contents = StringBuilder()
 
-        val constraintLayoutClass = if (useAndroidX)
+        val constraintLayoutClass = if (useAndroidX) {
             "androidx.constraintlayout.widget.ConstraintLayout"
-        else "android.support.constraint.ConstraintLayout"
+        } else {
+            "android.support.constraint.ConstraintLayout"
+        }
 
-        contents.append(
-            """
-            <?xml version="1.0" encoding="utf-8"?>
-            <$constraintLayoutClass xmlns:android="http://schemas.android.com/apk/res/android"
-                xmlns:app="http://schemas.android.com/apk/res-auto"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-            """.trimIndent()
-        )
+        if (withDataBinding) {
+            contents.append(
+                """
+                <?xml version="1.0" encoding="utf-8"?>
+                <layout xmlns:android="http://schemas.android.com/apk/res/android">
+                """.trimIndent()
+            )
+            if (variables.isNotEmpty()) {
+                contents.append("\n\n<data>")
+                contents.append(variables.toString().prependIndent("\t"))
+                contents.append("\n</data>")
+            }
+            contents.append("\n\n")
+            contents.append("""
+                <$constraintLayoutClass
+                    xmlns:app="http://schemas.android.com/apk/res-auto"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+                """.trimIndent()
+            )
+        } else {
+            contents.append(
+                """
+                <?xml version="1.0" encoding="utf-8"?>
+                <$constraintLayoutClass xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:app="http://schemas.android.com/apk/res-auto"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+                """.trimIndent()
+            )
+        }
 
         if (widgets.isNotEmpty()) {
             contents.append("\n")
@@ -72,6 +106,9 @@ class LayoutFileBuilder {
         }
 
         contents.append("\n\n</$constraintLayoutClass>")
+        if (withDataBinding) {
+            contents.append("\n\n</layout>")
+        }
 
         return contents.toString()
     }

@@ -98,11 +98,14 @@ public class DataBindingIncrementalTest {
         }
         String v2Prop = BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName() + "=" + enableV2;
         String androidXProp = BooleanOption.USE_ANDROID_X.getPropertyName() + "=" + useAndroidX;
+        String incrementalProp =
+                BooleanOption.ENABLE_INCREMENTAL_DATA_BINDING.getPropertyName() + "=true";
         project =
                 GradleTestProject.builder()
                         .fromTestProject("databindingIncremental")
                         .addGradleProperties(v2Prop)
                         .addGradleProperties(androidXProp)
+                        .addGradleProperties(incrementalProp)
                         .withKotlinGradlePlugin(withKotlin)
                         .create();
     }

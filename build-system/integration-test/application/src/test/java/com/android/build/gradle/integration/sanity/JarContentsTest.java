@@ -1117,7 +1117,9 @@ public class JarContentsTest {
                 "NOTICE.txt",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
+                "META-INF/gradle/",
                 "META-INF/services/",
+                "META-INF/gradle/incremental.annotation.processors",
                 "META-INF/services/javax.annotation.processing.Processor");
         expected.putAll( // kept for pre-android-x compatibility
                 "com/android/databinding/baseLibrary",

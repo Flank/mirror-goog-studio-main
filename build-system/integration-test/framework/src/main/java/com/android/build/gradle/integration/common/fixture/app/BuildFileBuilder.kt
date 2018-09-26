@@ -24,6 +24,8 @@ class BuildFileBuilder {
     var compileSdkVersion: String? = null
     var minSdkVersion: String? = null
 
+    var dataBindingEnabled: Boolean = false
+
     private val dependencies: StringBuilder = StringBuilder()
 
     fun addDependency(configuration: String = "implementation", dependency: String) {
@@ -32,6 +34,7 @@ class BuildFileBuilder {
 
     fun build(): String {
         val contents = StringBuilder()
+
         if (plugin != null) {
             contents.append("apply plugin: '$plugin'")
         }
@@ -45,11 +48,17 @@ class BuildFileBuilder {
         if (minSdkVersion != null) {
             contents.append("\n\nandroid.defaultConfig.minSdkVersion = $minSdkVersion")
         }
+
+        if (dataBindingEnabled) {
+            contents.append("\n\nandroid.dataBinding.enabled = true")
+        }
+
         if (!dependencies.isEmpty()) {
             contents.append("\n\ndependencies{")
             contents.append("$dependencies")
             contents.append("\n}")
         }
+
         return contents.toString()
     }
 }
