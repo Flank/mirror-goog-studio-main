@@ -513,28 +513,28 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
 
         for (FileGroup fileGroup : target.fileGroups) {
             for (String source : fileGroup.sources) {
+                File sourceFile = new File(target.sourceDirectory, source);
                 NativeSourceFileValue nativeSourceFileValue = new NativeSourceFileValue();
                 nativeSourceFileValue.workingDirectoryOrdinal =
                         strings.intern(target.buildDirectory);
-                File sourceFile = new File(target.sourceDirectory, source);
                 nativeSourceFileValue.src = sourceFile;
-                if (Strings.isNullOrEmpty(fileGroup.compileFlags)) {
-                    // If flags weren't available in the CMake server model then fall back to using
-                    // compilation_database.json.
-                    // This is related to http://b/72065334 in which the compilation database did
-                    // not have flags for a particular file. Unclear why. I think the correct flags
-                    // to use is fileGroup.compileFlags and that compilation database should be
-                    // a fall-back case.
-                    if (compilationDatabaseFlags.isEmpty()) {
-                        compilationDatabaseFlags =
-                                indexCompilationDatabase(getCompileCommandsJson(abi), strings);
-                    }
-                    if (compilationDatabaseFlags.containsKey(sourceFile.toString())) {
-                        nativeSourceFileValue.flagsOrdinal =
-                                compilationDatabaseFlags.get(sourceFile.toString());
-                    }
+
+                // We use flags from compile_commands.json if present. Otherwise, fall back
+                // to server model compile flags (which is known to not always return a
+                // complete set).
+                // Reference b/116237485
+                if (compilationDatabaseFlags.isEmpty()) {
+                    compilationDatabaseFlags =
+                            indexCompilationDatabase(getCompileCommandsJson(abi), strings);
+                }
+                if (compilationDatabaseFlags.containsKey(sourceFile.toString())) {
+                    nativeSourceFileValue.flagsOrdinal =
+                            compilationDatabaseFlags.get(sourceFile.toString());
                 } else {
-                    nativeSourceFileValue.flagsOrdinal = strings.intern(fileGroup.compileFlags);
+                    String compileFlags = fileGroup.compileFlags;
+                    if (!Strings.isNullOrEmpty(compileFlags)) {
+                        nativeSourceFileValue.flagsOrdinal = strings.intern(compileFlags);
+                    }
                 }
                 nativeLibraryValue.files.add(nativeSourceFileValue);
             }
