@@ -41,83 +41,19 @@ import java.util.stream.Collectors
  */
 class FilteredArtifactCollection(
         project: Project,
-        mainArtifact: ArtifactCollection,
-        excludeDirectoryFiles: FileCollection) : ArtifactCollection {
+        private val filteringSpec: FilteringSpec) : ArtifactCollection {
 
-    private val fileCollection: FileCollection
-    private val filterResolver: FilterResolver
 
-    init {
-        filterResolver = FilterResolver(mainArtifact, excludeDirectoryFiles, project)
-
-        // create a dynamic file collection, using a callable that will compute the
-        // content when queried the first time, but not during configuration.
-        // Include the original build dependencies.
-        // and the dependency to generate the excludeDirectoryFiles.
-        fileCollection = project.files(filterResolver)
-                .builtBy(mainArtifact.artifactFiles.buildDependencies)
-                .builtBy(excludeDirectoryFiles.buildDependencies)
-    }
+    // create a dynamic file collection, using the passed filter to filter unwanted artifacts.
+    // Include the original build dependencies.
+    // and the dependency to generate the excludeDirectoryFiles.
+    private val fileCollection: FileCollection = filteringSpec.getFilteredFileCollection(project)
 
     override fun getArtifactFiles() = fileCollection
+    override fun getArtifacts() = filteringSpec.getArtifactFiles()
 
-    override fun getArtifacts() = filterResolver.getArtifactResults()
-
-    override fun getFailures(): Collection<Throwable> {
-        val builder = ImmutableList.builder<Throwable>()
-        builder.addAll(filterResolver.mainArtifacts.failures)
-        return builder.build()
-    }
-
+    override fun getFailures(): Collection<Throwable> = filteringSpec.artifacts.failures
     override fun iterator() = artifacts.iterator() as MutableIterator<ResolvedArtifactResult>
     override fun spliterator() = artifacts.spliterator()
-
-    override fun forEach(action: Consumer<in ResolvedArtifactResult>) {
-        artifacts.forEach(action)
-    }
-
-    /**
-     * We need to pass a Callable<Provider<Collection<File>>>, otherwise Gradle does not compute
-     * this file collection correctly. Previously we passed Callable<Collection<File>>, but that
-     * caused issues such as b/79660649.
-     */
-    private class FilterResolver(
-        val mainArtifacts: ArtifactCollection,
-        private val excludeDirectoryFiles: FileCollection,
-        private val project: Project
-    ) : Callable<Provider<Collection<File>>> {
-
-        fun getArtifactResults(): Set<ResolvedArtifactResult> {
-            val filteredArtifacts = computeFilteredArtifacts()
-
-            if (filteredArtifacts.isEmpty()) {
-                return mainArtifacts.artifacts
-            }
-
-            return mainArtifacts.artifacts.asSequence()
-                .filter { !filteredArtifacts.contains(compIdToString(it)) }.toSet()
-        }
-
-        override fun call(): Provider<Collection<File>> {
-            val excludedArtifacts = computeFilteredArtifacts()
-
-            if (excludedArtifacts.isEmpty()) {
-                return project.providers.provider({mainArtifacts.artifactFiles.files})
-            }
-
-            return project.providers.provider({mainArtifacts.artifacts.asSequence()
-                .filter { !excludedArtifacts.contains(compIdToString(it)) }.map { it.file }.toSet()})
-        }
-
-        private fun computeFilteredArtifacts(): Set<String>
-                = excludeDirectoryFiles
-                .files
-                .stream()
-                .map { file: File ->
-                    if (file.isFile) Files.readLines(file,
-                            Charsets.UTF_8) else listOf()
-                }
-                .flatMap { list: List<String> -> list.stream() }
-                .collect(Collectors.toSet<String>())
-    }
+    override fun forEach(action: Consumer<in ResolvedArtifactResult>) = artifacts.forEach(action)
 }

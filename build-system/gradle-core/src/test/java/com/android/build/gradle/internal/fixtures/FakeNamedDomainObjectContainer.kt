@@ -36,9 +36,29 @@ import java.util.SortedSet
  * implementation of [NamedDomainObjectFactory] over a simple [Map] for tests.
  */
 open class FakeNamedDomainObjectContainer<T>(
-        private val itemFactory: NamedDomainObjectFactory<T>,
+        private val itemFactory: NamedDomainObjectFactory<out T>,
         private val nameSupplier: (T) -> String) // this is because Configuration does not extend Named
     : NamedDomainObjectContainer<T> {
+
+    override fun named(p0: String, p1: Action<in T>): NamedDomainObjectProvider<T> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun <S : T> named(p0: String, p1: Class<S>): NamedDomainObjectProvider<S> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun <S : T> named(
+        p0: String,
+        p1: Class<S>,
+        p2: Action<in S>
+    ): NamedDomainObjectProvider<S> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun addAllLater(p0: Provider<out MutableIterable<T>>) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 
     private val items: MutableMap<String, T> = mutableMapOf()
     private val whenAddedActions: MutableList<Action<in T>> = mutableListOf()

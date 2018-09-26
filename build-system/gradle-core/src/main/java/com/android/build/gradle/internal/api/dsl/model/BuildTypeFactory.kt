@@ -16,14 +16,15 @@
 
 package com.android.build.gradle.internal.api.dsl.model
 
+import com.android.build.api.dsl.model.BuildType
 import com.android.build.gradle.internal.api.dsl.DslScope
 import org.gradle.api.NamedDomainObjectFactory
 
 class BuildTypeFactory(
             private val dslScope: DslScope)
-        : NamedDomainObjectFactory<BuildTypeImpl> {
+        : NamedDomainObjectFactory<BuildType> {
 
-    override fun create(name: String): BuildTypeImpl {
+    override fun create(name: String): BuildType {
         val buildTypeOrVariant = BuildTypeOrVariantImpl("BuildType", dslScope)
 
         return dslScope.objectFactory.newInstance(BuildTypeImpl::class.java,

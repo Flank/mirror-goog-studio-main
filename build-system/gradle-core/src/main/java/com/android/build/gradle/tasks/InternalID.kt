@@ -23,6 +23,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
  *
  * IDs are [InternalArtifactType] enum values.
  */
-@Target(AnnotationTarget.PROPERTY_GETTER, AnnotationTarget.FIELD)
+@Target(AnnotationTarget.PROPERTY_GETTER, AnnotationTarget.FIELD, AnnotationTarget.FUNCTION)
 @IDProvider(fieldName="value")
 annotation class InternalID(val value: InternalArtifactType)

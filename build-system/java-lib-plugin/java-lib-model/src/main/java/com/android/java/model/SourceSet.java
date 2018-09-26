@@ -17,7 +17,7 @@
 package com.android.java.model;
 
 import com.android.annotations.NonNull;
-
+import com.android.annotations.Nullable;
 import java.io.File;
 import java.util.Collection;
 
@@ -57,14 +57,14 @@ public interface SourceSet {
      * @return the classes compiler output folder.
      */
     @NonNull
-    File getClassesOutputDirectory();
+    Collection<File> getClassesOutputDirectories();
 
     /**
      * Returns the resources compiler output folder.
      *
      * @return resources output folder.
      */
-    @NonNull
+    @Nullable
     File getResourcesOutputDirectory();
 
     /**

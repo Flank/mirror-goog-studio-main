@@ -148,13 +148,7 @@ public class PluginDslTest {
                 "\n"
                         + "project.android {\n"
                         + "\n"
-                        + "    sourceSets {\n"
-                        + "        main {\n"
-                        + "            res {\n"
-                        + "                srcDirs 'src/main/res1', 'src/main/res2'\n"
-                        + "            }\n"
-                        + "        }\n"
-                        + "    }\n"
+                        + "    sourceSets.main.res.srcDirs 'src/main/res1', 'src/main/res2'\n"
                         + "}\n");
 
         // nothing to be done here. If the DSL fails, it'll throw an exception

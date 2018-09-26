@@ -38,13 +38,14 @@ import org.gradle.api.tasks.TaskAction
  */
 open class SigningConfigWriterTask : AndroidVariantTask() {
 
+    @Suppress("PropertyName")
     @VisibleForTesting
     internal val PERSISTED_FILE_NAME = "signing-config.json"
 
     @get:OutputDirectory
     @get:InternalID(InternalArtifactType.METADATA_SIGNING_CONFIG)
     @get:Initial(out="")
-    lateinit var outputDirectory: Provider<Directory>
+    var outputDirectory: Provider<Directory>? = null
         internal set
 
     @get:Input
@@ -54,7 +55,9 @@ open class SigningConfigWriterTask : AndroidVariantTask() {
     @TaskAction
     @Throws(IOException::class)
     fun fullTaskAction() {
-        val outputFile = File(outputDirectory.get().asFile, PERSISTED_FILE_NAME)
+        val out = outputDirectory
+            ?: throw RuntimeException("OutputDirectory not set.")
+        val outputFile = File(out.get()?.asFile, PERSISTED_FILE_NAME)
         val gsonBuilder = GsonBuilder()
         val gson = gsonBuilder.create()
         FileUtils.write(outputFile, gson.toJson(signingConfig))

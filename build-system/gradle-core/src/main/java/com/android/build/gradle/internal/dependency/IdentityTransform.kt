@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableList
 import java.io.File
 import javax.inject.Inject
 import org.gradle.api.artifacts.transform.ArtifactTransform
+import java.io.FileNotFoundException
 
 /**
  * Transform to go from one artifact type to one or multiple other artifact types without changing
@@ -28,6 +29,9 @@ import org.gradle.api.artifacts.transform.ArtifactTransform
 class IdentityTransform @Inject constructor() : ArtifactTransform() {
 
     override fun transform(file: File): List<File> {
+        if (!file.exists()) {
+            throw FileNotFoundException(file.absolutePath)
+        }
         return ImmutableList.of(file)
     }
 }

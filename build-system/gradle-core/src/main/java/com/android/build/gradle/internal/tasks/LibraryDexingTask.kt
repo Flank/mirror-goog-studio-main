@@ -29,6 +29,7 @@ import com.android.ide.common.blame.MessageReceiver
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.common.util.concurrent.MoreExecutors
 import org.gradle.api.file.Directory
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -38,6 +39,7 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
@@ -48,7 +50,9 @@ import javax.inject.Inject
  * android test variant for library projects. Once http://b/115334911 is fixed, this can be removed.
  */
 @CacheableTask
-open class LibraryDexingTask @Inject constructor(executor: WorkerExecutor) : AndroidVariantTask() {
+open class LibraryDexingTask @Inject constructor(
+    objectFactory: ObjectFactory,
+    executor: WorkerExecutor) : AndroidVariantTask() {
 
     private val workers: WorkerExecutorFacade =
         getWorker(executor, MoreExecutors.newDirectExecutorService())
@@ -59,7 +63,7 @@ open class LibraryDexingTask @Inject constructor(executor: WorkerExecutor) : And
         private set
 
     @get:OutputDirectory
-    lateinit var output: Provider<Directory>
+    var output: Provider<Directory> = objectFactory.directoryProperty()
         private set
 
     @get:Input

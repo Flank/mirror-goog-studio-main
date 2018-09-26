@@ -32,7 +32,7 @@ class BuildPropertiesImpl(
 
     override val sourceSets = dslModelData.sourceSets
 
-    override fun sourceSets(action: Action<NamedDomainObjectContainer<AndroidSourceSet>>) {
+    override fun sourceSets(action: Action<NamedDomainObjectContainer<out AndroidSourceSet>>) {
         action.execute(sourceSets)
     }
 

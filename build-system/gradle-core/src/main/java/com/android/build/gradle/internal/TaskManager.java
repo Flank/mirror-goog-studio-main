@@ -2779,6 +2779,9 @@ public abstract class TaskManager {
                     }
                 };
 
+        TaskProvider<? extends Task> validateSigningTask =
+                signingConfig != null ? getValidateSigningTask(variantScope) : null;
+
         TaskProvider<PackageApplication> packageApp =
                 taskFactory.register(
                         new PackageApplication.StandardCreationAction(
@@ -2795,8 +2798,8 @@ public abstract class TaskManager {
                         null,
                         task -> {
                             //noinspection VariableNotUsedInsideIf - we use the whole packaging scope below.
-                            if (signingConfig != null) {
-                                task.dependsOn(getValidateSigningTask(variantScope));
+                            if (validateSigningTask != null) {
+                                task.dependsOn(validateSigningTask);
                             }
 
                             task.dependsOn(taskContainer.getJavacTask());
@@ -2824,8 +2827,7 @@ public abstract class TaskManager {
                     taskFactory.register(
                             new InstantRunResourcesApkBuilder.CreationAction(
                                     resourceFilesInputType, variantScope));
-            TaskFactoryUtils.dependsOn(
-                    packageInstantRunResources, getValidateSigningTask(variantScope));
+            TaskFactoryUtils.dependsOn(packageInstantRunResources, validateSigningTask);
 
             // make sure the task run even if none of the files we consume are available,
             // this is necessary so we can clean up output.

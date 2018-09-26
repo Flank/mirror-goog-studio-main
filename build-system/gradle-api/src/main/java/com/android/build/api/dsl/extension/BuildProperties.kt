@@ -89,10 +89,10 @@ interface BuildProperties {
      *
      * Note that the Android plugin uses its own implementation of source sets, [ ].
      */
-    fun sourceSets(action: Action<NamedDomainObjectContainer<AndroidSourceSet>>)
+    fun sourceSets(action: Action<NamedDomainObjectContainer<out AndroidSourceSet>>)
 
     /** Source sets for all variants.  */
-    val sourceSets: NamedDomainObjectContainer<AndroidSourceSet>
+    val sourceSets: NamedDomainObjectContainer<out AndroidSourceSet>
 
     /**
      * Request the use a of Library. The library is then added to the classpath.

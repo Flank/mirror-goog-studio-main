@@ -16,7 +16,9 @@
 
 package com.android.build.gradle.internal.variant2
 
+import com.android.build.api.dsl.model.BuildType
 import com.android.build.api.dsl.model.BuildTypeOrProductFlavor
+import com.android.build.api.dsl.model.BuildTypeOrVariant
 import com.android.build.api.dsl.model.ProductFlavor
 import com.android.build.api.dsl.model.ProductFlavorOrVariant
 import com.android.build.api.dsl.model.VariantProperties
@@ -100,12 +102,12 @@ class VariantBuilder<in E: BaseExtension2>(
         // call to the variant factory to create variant data.
         // Also need to merge the different items
         if (flavorCombinations.isEmpty()) {
-            for (buildType in dslModelData._buildTypes) {
+            for (buildType in dslModelData.buildTypes) {
                 createVariant(buildType, null)
             }
 
         } else {
-            for (buildType in dslModelData._buildTypes) {
+            for (buildType in dslModelData.buildTypes) {
                 for (flavorCombo in flavorCombinations) {
                     createVariant(buildType, flavorCombo)
                 }
@@ -126,7 +128,7 @@ class VariantBuilder<in E: BaseExtension2>(
     private fun computeFlavorCombo(): List<FlavorCombination> {
         val flavorDimensions = extension.flavorDimensions
 
-        if (dslModelData._productFlavors.isEmpty()) {
+        if (dslModelData.productFlavors.isEmpty()) {
             // FIXME
             //configureDependencies()
 
@@ -146,9 +148,9 @@ class VariantBuilder<in E: BaseExtension2>(
         } else if (flavorDimensions.size == 1) {
             // if there's only one dimension, auto-assign the dimension to all the flavors.
             val dimensionName = flavorDimensions[0]
-            for (productFlavor in dslModelData._productFlavors) {
+            for (productFlavor in dslModelData.productFlavors) {
                 // need to use the internal backing properties to bypass the seal
-                productFlavor._dimension = dimensionName
+                productFlavor.dimension = dimensionName
             }
         }
 
@@ -167,7 +169,7 @@ class VariantBuilder<in E: BaseExtension2>(
      *
      * For each generated variant, a shim is generated as well.
      */
-    private fun createVariant(buildType: BuildTypeImpl, flavorCombo: FlavorCombination?) {
+    private fun createVariant(buildType: BuildType, flavorCombo: FlavorCombination?) {
         // check if we have to run this at all via the externally-provided filters
         val filterObject = VariantFilterImpl(
                 buildType.name,
@@ -384,8 +386,8 @@ class VariantBuilder<in E: BaseExtension2>(
         return clone
     }
 
-    private fun cloneBuildTypeOrVariant(that: BuildTypeImpl): BuildTypeOrVariantImpl =
-            cloneBuildTypeOrVariant(that.buildTypeOrVariant)
+    private fun cloneBuildTypeOrVariant(that: BuildType): BuildTypeOrVariantImpl =
+            cloneBuildTypeOrVariant((that as BuildTypeImpl).buildTypeOrVariant)
 
     private fun cloneBuildTypeOrVariant(that: BuildTypeOrVariantImpl): BuildTypeOrVariantImpl {
         // values here don't matter, we're going to run initWith
@@ -406,7 +408,7 @@ class VariantBuilder<in E: BaseExtension2>(
             variantType: VariantType,
             variantName: String,
             flavorCombo: FlavorCombination?,
-            buildType: BuildTypeImpl): CommonVariantPropertiesImpl {
+            buildType: BuildType): CommonVariantPropertiesImpl {
 
         val flavors: ImmutableList<ProductFlavor> = flavorCombo?.flavors ?: ImmutableList.of()
 
@@ -429,7 +431,7 @@ class VariantBuilder<in E: BaseExtension2>(
         var multiFlavorSourceSet: DefaultAndroidSourceSet? = null
         flavorCombo?.name?.let {
             // use the internal container to bypass the seal
-            multiFlavorSourceSet = dslModelData._sourceSets.maybeCreate(it)
+            multiFlavorSourceSet = dslModelData.sourceSets.maybeCreate(it)
         }
 
         multiFlavorSourceSet?.let {
@@ -445,7 +447,7 @@ class VariantBuilder<in E: BaseExtension2>(
         // use the internal container to bypass the seal
         var variantSourceSet: DefaultAndroidSourceSet? = null
         if (!flavors.isEmpty()) {
-            variantSourceSet = dslModelData._sourceSets.maybeCreate(variantName)
+            variantSourceSet = dslModelData.sourceSets.maybeCreate(variantName)
             sourceSets.add(variantSourceSet)
         }
 

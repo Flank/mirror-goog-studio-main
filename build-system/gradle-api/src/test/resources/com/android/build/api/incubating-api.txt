@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-85d4fa4b424544218cb9a11773f2e554d53ff5ec151d9e1adc9e943104c7bded
+1430c052c2977764eb9b503c8ea43680735cbda95ec28b27c93ab08c19746edb
 -------------------------------------------------------------------------
 com.android.build.api.artifact.ArtifactConfigurationException
 com.android.build.api.artifact.ArtifactConfigurationException.<init>: com.android.build.api.artifact.ArtifactConfigurationException (java.lang.String)
@@ -55,7 +55,7 @@ com.android.build.api.dsl.extension.BuildProperties
 com.android.build.api.dsl.extension.BuildProperties.getBuildToolsVersion: java.lang.String ()
 com.android.build.api.dsl.extension.BuildProperties.getCompileSdkVersion: java.lang.String ()
 com.android.build.api.dsl.extension.BuildProperties.getResourcePrefix: java.lang.String ()
-com.android.build.api.dsl.extension.BuildProperties.getSourceSets: org.gradle.api.NamedDomainObjectContainer<com.android.build.api.sourcesets.AndroidSourceSet> ()
+com.android.build.api.dsl.extension.BuildProperties.getSourceSets: org.gradle.api.NamedDomainObjectContainer<? extends com.android.build.api.sourcesets.AndroidSourceSet> ()
 com.android.build.api.dsl.extension.BuildProperties.getTransforms: java.util.List<com.android.build.api.transform.Transform> ()
 com.android.build.api.dsl.extension.BuildProperties.getTransformsDependencies: java.util.List<java.util.List<java.lang.Object>> ()
 com.android.build.api.dsl.extension.BuildProperties.registerTransform: void (com.android.build.api.transform.Transform)
@@ -64,7 +64,7 @@ com.android.build.api.dsl.extension.BuildProperties.setBuildToolsVersion: void (
 com.android.build.api.dsl.extension.BuildProperties.setCompileSdkVersion: void (int)
 com.android.build.api.dsl.extension.BuildProperties.setCompileSdkVersion: void (java.lang.String)
 com.android.build.api.dsl.extension.BuildProperties.setResourcePrefix: void (java.lang.String)
-com.android.build.api.dsl.extension.BuildProperties.sourceSets: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<com.android.build.api.sourcesets.AndroidSourceSet>>)
+com.android.build.api.dsl.extension.BuildProperties.sourceSets: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<? extends com.android.build.api.sourcesets.AndroidSourceSet>>)
 com.android.build.api.dsl.extension.BuildProperties.useLibrary: void (java.lang.String)
 com.android.build.api.dsl.extension.BuildProperties.useLibrary: void (java.lang.String, boolean)
 com.android.build.api.dsl.extension.EmbeddedTestProperties

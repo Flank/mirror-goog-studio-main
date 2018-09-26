@@ -29,6 +29,7 @@ import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
@@ -37,7 +38,11 @@ import java.io.File
 import javax.inject.Inject
 
 open class DataBindingMergeBaseClassLogTask @Inject
-constructor(workerExecutor: WorkerExecutor): IncrementalTask() {
+constructor(workerExecutor: WorkerExecutor, objectFactory: ObjectFactory): IncrementalTask() {
+
+    @get:OutputDirectory
+    var outFolder: Provider<Directory> = objectFactory.directoryProperty()
+        private set
 
     @get:InputFiles
     lateinit var moduleClassLog: FileCollection
@@ -47,9 +52,7 @@ constructor(workerExecutor: WorkerExecutor): IncrementalTask() {
     lateinit var externalClassLog: FileCollection
         private set
 
-    @get:OutputDirectory
-    lateinit var outFolder: Provider<Directory>
-        private set
+
 
     private val workers: WorkerExecutorFacade = Workers.getWorker(workerExecutor)
 

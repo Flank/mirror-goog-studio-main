@@ -20,6 +20,11 @@ import org.gradle.api.Transformer
 import org.gradle.api.provider.Provider
 
 class FakeGradleProvider<T>(private val v: T?): Provider<T> {
+
+    override fun <S : Any?> flatMap(p0: Transformer<out Provider<out S>, in T>): Provider<S> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
     override fun isPresent() = v != null
 
     override fun getOrElse(p0: T) = if (isPresent) v else p0

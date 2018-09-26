@@ -154,15 +154,7 @@ class FakeConfiguration(private val name: String): Configuration {
         TODO("not implemented")
     }
 
-    override fun asType(p0: Class<*>?): Any {
-        TODO("not implemented")
-    }
-
     override fun isEmpty(): Boolean {
-        TODO("not implemented")
-    }
-
-    override fun stopExecutionIfEmpty(): FileCollection {
         TODO("not implemented")
     }
 
@@ -227,10 +219,6 @@ class FakeConfiguration(private val name: String): Configuration {
     }
 
     override fun getExcludeRules(): MutableSet<ExcludeRule> {
-        TODO("not implemented")
-    }
-
-    override fun add(p0: FileCollection?): FileCollection {
         TODO("not implemented")
     }
 

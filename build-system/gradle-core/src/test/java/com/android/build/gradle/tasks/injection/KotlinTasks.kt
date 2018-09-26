@@ -23,11 +23,14 @@ import com.android.build.gradle.tasks.Replace
 import com.android.build.gradle.tasks.TaskArtifactsHolderTest
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
+import javax.inject.Inject
 
 class KotlinTasks {
 
@@ -52,7 +55,8 @@ class KotlinTasks {
         @get:OutputDirectory
         @get:InternalID(InternalArtifactType.APP_CLASSES)
         @get:Replace
-        lateinit var classes: Provider<Directory>
+        var classes: Provider<Directory>? = null
+            private set
 
         override fun executeTask(vararg parameters: Any) {
             assertThat(classes).isEqualTo(parameters[0])

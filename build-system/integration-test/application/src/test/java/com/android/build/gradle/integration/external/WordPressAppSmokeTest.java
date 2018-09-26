@@ -27,9 +27,12 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import java.io.IOException;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
+// b/117786329
+@Ignore
 public class WordPressAppSmokeTest {
 
     @Rule

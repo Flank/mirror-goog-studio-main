@@ -30,6 +30,7 @@ import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Assume
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -45,7 +46,9 @@ class Aapt2FromMavenTest {
     val temporaryFolder = TemporaryFolder()
 
     /** Verify that the the artifact provided by the [getAapt2FromMaven] method is usable. */
+    // Turned off until Gradle supports released version of Groovy : bug 117293097
     @Test
+    @Ignore
     fun sanityTest() {
         // https://issuetracker.google.com/77321151
         Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS)

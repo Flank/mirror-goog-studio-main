@@ -129,7 +129,7 @@ class JavaModelBuilder : ToolingModelBuilder {
         sourceSet.name,
         sourceSet.allJava.srcDirs,
         sourceSet.resources.srcDirs,
-        sourceSet.output.classesDir,
+        sourceSet.output.classesDirs.files,
         sourceSet.output.resourcesDir,
         getLibrariesForConfiguration(project, compileConfigurationName, buildMapping))
     }

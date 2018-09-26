@@ -59,6 +59,7 @@ import com.android.build.gradle.internal.core.PostProcessingOptions;
 import com.android.build.gradle.internal.dependency.AndroidTestResourceArtifactCollection;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact;
 import com.android.build.gradle.internal.dependency.FilteredArtifactCollection;
+import com.android.build.gradle.internal.dependency.FilteringSpec;
 import com.android.build.gradle.internal.dependency.SubtractingArtifactCollection;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
@@ -787,17 +788,19 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         if (configType == RUNTIME_CLASSPATH
                 && getType().isFeatureSplit()
                 && artifactType != ArtifactType.FEATURE_TRANSITIVE_DEPS) {
-            fileCollection =
-                    new FilteredArtifactCollection(
-                                    getProject(),
-                                    artifacts,
-                                    computeArtifactCollection(
-                                                    RUNTIME_CLASSPATH,
-                                                    MODULE,
-                                                    ArtifactType.FEATURE_TRANSITIVE_DEPS,
-                                                    attributeMap)
-                                            .getArtifactFiles())
+
+            FileCollection excludedDirectories =
+                    computeArtifactCollection(
+                                    RUNTIME_CLASSPATH,
+                                    MODULE,
+                                    ArtifactType.FEATURE_TRANSITIVE_DEPS,
+                                    attributeMap)
                             .getArtifactFiles();
+
+            fileCollection =
+                    new FilteringSpec(artifacts, excludedDirectories)
+                            .getFilteredFileCollection(getProject());
+
         } else {
             fileCollection = artifacts.getArtifactFiles();
         }
@@ -833,15 +836,14 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         if (configType == RUNTIME_CLASSPATH
                 && getType().isFeatureSplit()
                 && artifactType != ArtifactType.FEATURE_TRANSITIVE_DEPS) {
+
+            FileCollection excludedDirectories =
+                    computeArtifactCollection(
+                                    RUNTIME_CLASSPATH, MODULE, ArtifactType.FEATURE_TRANSITIVE_DEPS)
+                            .getArtifactFiles();
             artifacts =
                     new FilteredArtifactCollection(
-                            getProject(),
-                            artifacts,
-                            computeArtifactCollection(
-                                            RUNTIME_CLASSPATH,
-                                            MODULE,
-                                            ArtifactType.FEATURE_TRANSITIVE_DEPS)
-                                    .getArtifactFiles());
+                            getProject(), new FilteringSpec(artifacts, excludedDirectories));
         }
 
         if (configType.needsTestedComponents()) {

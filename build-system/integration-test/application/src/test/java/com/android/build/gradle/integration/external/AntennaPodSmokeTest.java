@@ -30,11 +30,14 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+// b/117786329
+@Ignore // Disable until discussed at gradle-team meeting.
 @RunWith(FilterableParameterized.class)
 public class AntennaPodSmokeTest {
 
