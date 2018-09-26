@@ -105,6 +105,7 @@ import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -119,6 +120,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.gradle.api.Action;
 import org.gradle.api.JavaVersion;
@@ -159,7 +161,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     private InstantRunTaskManager instantRunTaskManager;
 
-    private ConfigurableFileCollection desugarTryWithResourcesRuntimeJar;
+    private final Supplier<ConfigurableFileCollection> desugarTryWithResourcesRuntimeJar;
 
     private FileCollection bootClasspath;
 
@@ -185,6 +187,17 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         getFullVariantName(),
                         globalScope.getBuildDir(),
                         globalScope.getDslScope());
+        this.desugarTryWithResourcesRuntimeJar =
+                Suppliers.memoize(
+                        () ->
+                                getProject()
+                                        .files(
+                                                FileUtils.join(
+                                                        globalScope.getIntermediatesDir(),
+                                                        "processing-tools",
+                                                        "runtime-deps",
+                                                        getVariantConfiguration().getDirName(),
+                                                        "desugar_try_with_resources.jar")));
     }
 
     protected Project getProject() {
@@ -1677,18 +1690,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public ConfigurableFileCollection getTryWithResourceRuntimeSupportJar() {
-        if (desugarTryWithResourcesRuntimeJar == null) {
-            desugarTryWithResourcesRuntimeJar =
-                    getProject()
-                            .files(
-                                    FileUtils.join(
-                                            globalScope.getIntermediatesDir(),
-                                            "processing-tools",
-                                            "runtime-deps",
-                                            getDirName(),
-                                            "desugar_try_with_resources.jar"));
-        }
-        return desugarTryWithResourcesRuntimeJar;
+        return desugarTryWithResourcesRuntimeJar.get();
     }
 
     @Override
