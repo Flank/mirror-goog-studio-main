@@ -121,23 +121,23 @@ public class SQLiteDexArchiveDatabase extends DexArchiveDatabase {
     }
 
     private void executeStatements(String... statements) throws SQLException {
-        Statement s = connection.createStatement();
-        if (statements.length == 1) {
-            s.execute(statements[0]);
-        } else {
-            for (String statement : statements) {
-                s.addBatch(statement);
+        try (Statement s = connection.createStatement()) {
+            if (statements.length == 1) {
+                s.execute(statements[0]);
+            } else {
+                for (String statement : statements) {
+                    s.addBatch(statement);
+                }
+                s.executeBatch();
             }
-            s.executeBatch();
         }
-        s.close();
     }
 
     private int executeUpdate(String query) throws SQLException {
-        Statement s = connection.createStatement();
-        int updated = s.executeUpdate(query);
-        s.close();
-        return updated;
+        try (Statement s = connection.createStatement()) {
+            int updated = s.executeUpdate(query);
+            return updated;
+        }
     }
 
     @Override
