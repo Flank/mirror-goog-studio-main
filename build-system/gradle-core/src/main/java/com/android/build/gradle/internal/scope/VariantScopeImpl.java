@@ -170,7 +170,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         this.globalScope = globalScope;
         this.transformManager = transformManager;
         this.variantData = variantData;
-        this.variantPublishingSpec = PublishingSpecs.getVariantSpec(variantData.getType());
+        this.variantPublishingSpec = PublishingSpecs.getVariantSpec(getType());
         ProjectOptions projectOptions = globalScope.getProjectOptions();
         this.instantRunBuildContext =
                 new InstantRunBuildContext(
@@ -223,7 +223,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         Preconditions.checkState(!configTypes.isEmpty());
 
         // FIXME this needs to be parameterized based on the variant's publishing type.
-        final VariantDependencies variantDependency = getVariantData().getVariantDependency();
+        final VariantDependencies variantDependency = getVariantDependencies();
 
         for (PublishedConfigType configType : PublishedConfigType.values()) {
             if (configTypes.contains(configType)) {
@@ -282,8 +282,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     public boolean useResourceShrinker() {
-        if (variantData.getType().isForTesting()
-                || getInstantRunBuildContext().isInInstantRunMode()) {
+        if (getType().isForTesting() || instantRunBuildContext.isInInstantRunMode()) {
             return false;
         }
 
@@ -302,7 +301,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         }
 
         // TODO: support resource shrinking for multi-apk applications http://b/78119690
-        if (variantData.getType().isFeatureSplit() || globalScope.hasDynamicFeatures()) {
+        if (getType().isFeatureSplit() || globalScope.hasDynamicFeatures()) {
             globalScope
                     .getErrorHandler()
                     .reportError(
@@ -312,7 +311,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             return false;
         }
 
-        if (variantData.getType().isAar()) {
+        if (getType().isAar()) {
             if (!getProject().getPlugins().hasPlugin("com.android.feature")) {
                 globalScope
                         .getErrorHandler()
@@ -360,14 +359,14 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     public boolean consumesFeatureJars() {
-        return getVariantData().getType().isBaseModule()
+        return getType().isBaseModule()
                 && getVariantConfiguration().getBuildType().isMinifyEnabled()
                 && globalScope.hasDynamicFeatures();
     }
 
     @Override
     public boolean getNeedsMainDexListForBundle() {
-        return getVariantData().getType().isBaseModule()
+        return getType().isBaseModule()
                 && globalScope.hasDynamicFeatures()
                 && getVariantConfiguration().getDexingType().getNeedsMainDexList();
     }
@@ -375,7 +374,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Nullable
     @Override
     public CodeShrinker getCodeShrinker() {
-        boolean isTestComponent = getVariantConfiguration().getType().isTestComponent();
+        boolean isTestComponent = getType().isTestComponent();
 
         //noinspection ConstantConditions - getType() will not return null for a testing variant.
         if (isTestComponent && getTestedVariantData().getType().isAar()) {
@@ -488,8 +487,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public List<File> getConsumerProguardFilesForFeatures() {
-        final boolean hasFeaturePlugin =
-                getGlobalScope().getProject().getPlugins().hasPlugin(FeaturePlugin.class);
+        final boolean hasFeaturePlugin = getProject().getPlugins().hasPlugin(FeaturePlugin.class);
         // We include proguardFiles if we're in a dynamic-feature or feature module. For feature
         // modules, we check for the presence of the FeaturePlugin, because we want to include
         // proguardFiles even when we're in the library variant.
@@ -578,13 +576,13 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public VariantType getType() {
-        return variantData.getVariantConfiguration().getType();
+        return variantData.getType();
     }
 
     @NonNull
     @Override
     public DexingType getDexingType() {
-        if (getInstantRunBuildContext().isInInstantRunMode()) {
+        if (instantRunBuildContext.isInInstantRunMode()) {
             return DexingType.NATIVE_MULTIDEX;
         } else {
             return variantData.getVariantConfiguration().getDexingType();
@@ -605,13 +603,13 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public String getDirName() {
-        return variantData.getVariantConfiguration().getDirName();
+        return getVariantConfiguration().getDirName();
     }
 
     @NonNull
     @Override
     public Collection<String> getDirectorySegments() {
-        return variantData.getVariantConfiguration().getDirectorySegments();
+        return getVariantConfiguration().getDirectorySegments();
     }
 
     @NonNull
@@ -668,25 +666,25 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public File getBuildInfoOutputFolder() {
-        return new File(globalScope.getIntermediatesDir(), "/build-info/" + getVariantConfiguration().getDirName());
+        return new File(globalScope.getIntermediatesDir(), "/build-info/" + getDirName());
     }
 
     @Override
     @NonNull
     public File getReloadDexOutputFolder() {
-        return new File(globalScope.getIntermediatesDir(), "/reload-dex/" + getVariantConfiguration().getDirName());
+        return new File(globalScope.getIntermediatesDir(), "/reload-dex/" + getDirName());
     }
 
     @Override
     @NonNull
     public File getRestartDexOutputFolder() {
-        return new File(globalScope.getIntermediatesDir(), "/restart-dex/" + getVariantConfiguration().getDirName());
+        return new File(globalScope.getIntermediatesDir(), "/restart-dex/" + getDirName());
     }
 
     @NonNull
     @Override
     public File getInstantRunSplitApkOutputFolder() {
-        return new File(globalScope.getIntermediatesDir(), "/split-apk/" + getVariantConfiguration().getDirName());
+        return new File(globalScope.getIntermediatesDir(), "/split-apk/" + getDirName());
     }
 
     @NonNull
@@ -698,7 +696,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public File getInstantRunPastIterationsFolder() {
-        return new File(globalScope.getIntermediatesDir(), "/builds/" + getVariantConfiguration().getDirName());
+        return new File(globalScope.getIntermediatesDir(), "/builds/" + getDirName());
     }
 
     // Precomputed file paths.
@@ -719,7 +717,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         FileCollection mainCollection = getArtifactFileCollection(configType, ALL, classesType);
 
         mainCollection =
-                mainCollection.plus(getVariantData().getGeneratedBytecode(generatedBytecodeKey));
+                mainCollection.plus(variantData.getGeneratedBytecode(generatedBytecodeKey));
 
         if (globalScope.getExtension().getAaptOptions().getNamespaced()) {
             mainCollection =
@@ -802,7 +800,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
         return ArtifactCollectionWithExtraArtifact.makeExtraCollection(
                 mainCollection,
-                getVariantData().getGeneratedBytecode(generatedBytecodeKey),
+                variantData.getGeneratedBytecode(generatedBytecodeKey),
                 getProject().getPath());
     }
 
@@ -827,16 +825,15 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public File getManifestCheckerDir() {
-        return new File(
-                globalScope.getIntermediatesDir(),
-                "/manifest-checker/" + variantData.getVariantConfiguration().getDirName());
+        return new File(globalScope.getIntermediatesDir(), "/manifest-checker/" + getDirName());
     }
 
     @NonNull
     @Override
     public File getIncrementalRuntimeSupportJar() {
-        return new File(globalScope.getIntermediatesDir(), "/incremental-runtime-classes/" +
-                variantData.getVariantConfiguration().getDirName() + "/instant-run.jar");
+        return new File(
+                globalScope.getIntermediatesDir(),
+                "/incremental-runtime-classes/" + getDirName() + "/instant-run.jar");
     }
 
     @NonNull
@@ -845,14 +842,13 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return FileUtils.join(
                 globalScope.getIntermediatesDir(),
                 "instant-run-resources",
-                "resources-" + variantData.getVariantConfiguration().getDirName() + ".ir.ap_");
+                "resources-" + getDirName() + ".ir.ap_");
     }
 
     @Override
     @NonNull
     public File getIncrementalVerifierDir() {
-        return new File(globalScope.getIntermediatesDir(), "/incremental-verifier/" +
-                variantData.getVariantConfiguration().getDirName());
+        return new File(globalScope.getIntermediatesDir(), "/incremental-verifier/" + getDirName());
     }
 
     @NonNull
@@ -882,13 +878,12 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
         FileCollection fileCollection;
 
-        final VariantType type = getVariantConfiguration().getType();
         if (configType == RUNTIME_CLASSPATH
-                && type.isFeatureSplit()
+                && getType().isFeatureSplit()
                 && artifactType != ArtifactType.FEATURE_TRANSITIVE_DEPS) {
             fileCollection =
                     new FilteredArtifactCollection(
-                                    globalScope.getProject(),
+                                    getProject(),
                                     artifacts,
                                     computeArtifactCollection(
                                                     RUNTIME_CLASSPATH,
@@ -929,13 +924,12 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             @NonNull ArtifactType artifactType) {
         ArtifactCollection artifacts = computeArtifactCollection(configType, scope, artifactType);
 
-        final VariantType type = getVariantConfiguration().getType();
         if (configType == RUNTIME_CLASSPATH
-                && type.isFeatureSplit()
+                && getType().isFeatureSplit()
                 && artifactType != ArtifactType.FEATURE_TRANSITIVE_DEPS) {
             artifacts =
                     new FilteredArtifactCollection(
-                            globalScope.getProject(),
+                            getProject(),
                             artifacts,
                             computeArtifactCollection(
                                             RUNTIME_CLASSPATH,
@@ -961,13 +955,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                     (testArtifact, testedArtifact) ->
                             new AndroidTestResourceArtifactCollection(
                                     testArtifact,
-                                    getVariantData()
-                                            .getVariantDependency()
-                                            .getIncomingRuntimeDependencies(),
-                                    getVariantData()
-                                            .getVariantDependency()
-                                            .getRuntimeClasspath()
-                                            .getIncoming()));
+                                    getVariantDependencies().getIncomingRuntimeDependencies(),
+                                    getVariantDependencies().getRuntimeClasspath().getIncoming()));
         }
 
         return artifacts;
@@ -987,16 +976,14 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     private Configuration getConfiguration(@NonNull ConsumedConfigType configType) {
         switch (configType) {
             case COMPILE_CLASSPATH:
-                return getVariantData().getVariantDependency().getCompileClasspath();
+                return getVariantDependencies().getCompileClasspath();
             case RUNTIME_CLASSPATH:
-                return getVariantData().getVariantDependency().getRuntimeClasspath();
+                return getVariantDependencies().getRuntimeClasspath();
             case ANNOTATION_PROCESSOR:
-                return getVariantData()
-                        .getVariantDependency()
-                        .getAnnotationProcessorConfiguration();
+                return getVariantDependencies().getAnnotationProcessorConfiguration();
             case METADATA_VALUES:
                 return Preconditions.checkNotNull(
-                        getVariantData().getVariantDependency().getMetadataValuesConfiguration());
+                        getVariantDependencies().getMetadataValuesConfiguration());
             default:
                 throw new RuntimeException("unknown ConfigType value " + configType);
         }
@@ -1074,7 +1061,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public FileCollection getLocalPackagedJars() {
-        Configuration configuration = getVariantData().getVariantDependency().getRuntimeClasspath();
+        Configuration configuration = getVariantDependencies().getRuntimeClasspath();
 
         // Get a list of local Jars dependencies.
         Callable<Collection<SelfResolvingDependency>> dependencies =
@@ -1088,8 +1075,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                                 .collect(ImmutableList.toImmutableList());
 
         // Create a file collection builtBy the dependencies.  The files are resolved later.
-        return getGlobalScope()
-                .getProject()
+        return getProject()
                 .files(
                         (Callable<Collection<File>>)
                                 () ->
@@ -1116,10 +1102,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
      */
     @NonNull
     private File intermediate(@NonNull String directoryName) {
-        return FileUtils.join(
-                globalScope.getIntermediatesDir(),
-                directoryName,
-                getVariantConfiguration().getDirName());
+        return FileUtils.join(globalScope.getIntermediatesDir(), directoryName, getDirName());
     }
 
     /**
@@ -1130,44 +1113,31 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     private File intermediate(@NonNull String directoryName, @NonNull String fileName) {
         return FileUtils.join(
-                globalScope.getIntermediatesDir(),
-                directoryName,
-                getVariantConfiguration().getDirName(),
-                fileName);
+                globalScope.getIntermediatesDir(), directoryName, getDirName(), fileName);
     }
 
     @Override
     @NonNull
     public File getIntermediateJarOutputFolder() {
-        return new File(globalScope.getIntermediatesDir(), "/intermediate-jars/" +
-                variantData.getVariantConfiguration().getDirName());
+        return new File(globalScope.getIntermediatesDir(), "/intermediate-jars/" + getDirName());
     }
 
     @Override
     @NonNull
     public File getRenderscriptLibOutputDir() {
-        return new File(globalScope.getIntermediatesDir(),
-                "rs/" + variantData.getVariantConfiguration().getDirName() + "/lib");
+        return new File(globalScope.getIntermediatesDir(), "rs/" + getDirName() + "/lib");
     }
 
     @Override
     @NonNull
     public File getDefaultMergeResourcesOutputDir() {
-        return FileUtils.join(
-                getGlobalScope().getIntermediatesDir(),
-                FD_RES,
-                FD_MERGED,
-                getVariantConfiguration().getDirName());
+        return FileUtils.join(globalScope.getIntermediatesDir(), FD_RES, FD_MERGED, getDirName());
     }
 
     @Override
     @NonNull
     public File getCompiledResourcesOutputDir() {
-        return FileUtils.join(
-                getGlobalScope().getIntermediatesDir(),
-                FD_RES,
-                FD_COMPILED,
-                getVariantConfiguration().getDirName());
+        return FileUtils.join(globalScope.getIntermediatesDir(), FD_RES, FD_COMPILED, getDirName());
     }
 
     @NonNull
@@ -1182,22 +1152,24 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public File getMergeNativeLibsOutputDir() {
-        return FileUtils.join(globalScope.getIntermediatesDir(),
-                "/jniLibs/" + getVariantConfiguration().getDirName());
+        return FileUtils.join(globalScope.getIntermediatesDir(), "/jniLibs/" + getDirName());
     }
 
     @NonNull
     @Override
     public File getMergeShadersOutputDir() {
-        return FileUtils.join(globalScope.getIntermediatesDir(),
-                "/shaders/" + getVariantConfiguration().getDirName());
+        return FileUtils.join(globalScope.getIntermediatesDir(), "/shaders/" + getDirName());
     }
 
     @Override
     @NonNull
     public File getBuildConfigSourceOutputDir() {
-        return new File(globalScope.getBuildDir() + "/"  + FD_GENERATED + "/source/buildConfig/"
-                + variantData.getVariantConfiguration().getDirName());
+        return new File(
+                globalScope.getBuildDir()
+                        + "/"
+                        + FD_GENERATED
+                        + "/source/buildConfig/"
+                        + getDirName());
     }
 
     @NonNull
@@ -1242,8 +1214,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     @NonNull
     public File getSourceFoldersJavaResDestinationDir() {
-        return new File(globalScope.getIntermediatesDir(),
-                "sourceFolderJavaResources/" + getVariantConfiguration().getDirName());
+        return new File(
+                globalScope.getIntermediatesDir(), "sourceFolderJavaResources/" + getDirName());
     }
 
     @Override
@@ -1277,8 +1249,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     public File getClassOutputForDataBinding() {
         return new File(
-                globalScope.getGeneratedDir(),
-                "source/dataBinding/trigger/" + getVariantConfiguration().getDirName());
+                globalScope.getGeneratedDir(), "source/dataBinding/trigger/" + getDirName());
     }
 
     @Override
@@ -1303,7 +1274,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return FileUtils.join(
                 globalScope.getIntermediatesDir(),
                 "proguard-rules",
-                getVariantConfiguration().getDirName(),
+                getDirName(),
                 SdkConstants.FN_AAPT_RULES);
     }
 
@@ -1312,18 +1283,14 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     public File getFullApkPackagesOutputDirectory() {
         return new File(
                 globalScope.getBuildDir(),
-                FileUtils.join(
-                        FD_OUTPUTS, "splits", "full", getVariantConfiguration().getDirName()));
+                FileUtils.join(FD_OUTPUTS, "splits", "full", getDirName()));
     }
 
     @NonNull
     @Override
     public File getInstantRunResourceApkFolder() {
         return FileUtils.join(
-                globalScope.getIntermediatesDir(),
-                "resources",
-                "instant-run",
-                getVariantConfiguration().getDirName());
+                globalScope.getIntermediatesDir(), "resources", "instant-run", getDirName());
     }
 
     @NonNull
@@ -1339,38 +1306,28 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 globalScope.getGeneratedDir(),
                 "manifests",
                 "microapk",
-                getVariantConfiguration().getDirName(),
+                getDirName(),
                 FN_ANDROID_MANIFEST_XML);
     }
 
     @NonNull
     @Override
     public File getMicroApkResDirectory() {
-        return FileUtils.join(
-                globalScope.getGeneratedDir(),
-                "res",
-                "microapk",
-                getVariantConfiguration().getDirName());
+        return FileUtils.join(globalScope.getGeneratedDir(), "res", "microapk", getDirName());
     }
 
     @NonNull
     @Override
     public File getManifestOutputDirectory() {
-        final VariantType variantType = getVariantConfiguration().getType();
+        final VariantType variantType = getType();
 
         if (variantType.isTestComponent()) {
             if (variantType.isApk()) { // ANDROID_TEST
-                return FileUtils.join(
-                        getGlobalScope().getIntermediatesDir(),
-                        "manifest",
-                        getVariantConfiguration().getDirName());
+                return FileUtils.join(globalScope.getIntermediatesDir(), "manifest", getDirName());
             }
         } else {
             return FileUtils.join(
-                    getGlobalScope().getIntermediatesDir(),
-                    "manifests",
-                    "full",
-                    getVariantConfiguration().getDirName());
+                    globalScope.getIntermediatesDir(), "manifests", "full", getDirName());
         }
 
         throw new RuntimeException("getManifestOutputDirectory called for an unexpected variant.");
@@ -1386,16 +1343,16 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     public File getApkLocation() {
         String override = globalScope.getProjectOptions().get(StringOption.IDE_APK_LOCATION);
         File defaultLocation =
-                getInstantRunBuildContext().isInInstantRunMode()
+                instantRunBuildContext.isInInstantRunMode()
                         ? getDefaultInstantRunApkLocation()
                         : getDefaultApkLocation();
 
         File baseDirectory =
-                override != null && !variantData.getType().isHybrid()
-                        ? globalScope.getProject().file(override)
+                override != null && !getType().isHybrid()
+                        ? getProject().file(override)
                         : defaultLocation;
 
-        return new File(baseDirectory, getVariantConfiguration().getDirName());
+        return new File(baseDirectory, getDirName());
     }
 
     /**
@@ -1416,15 +1373,12 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     public File getMergedClassesJarFile() {
         String fileName =
-                variantData.getType().isBaseModule()
+                getType().isBaseModule()
                         ? "base.jar"
                         : TaskManager.getFeatureFileName(
-                                globalScope.getProject().getPath(), SdkConstants.DOT_JAR);
+                                getProject().getPath(), SdkConstants.DOT_JAR);
         return FileUtils.join(
-                globalScope.getIntermediatesDir(),
-                "merged-classes",
-                getVariantConfiguration().getDirName(),
-                fileName);
+                globalScope.getIntermediatesDir(), "merged-classes", getDirName(), fileName);
     }
 
     @NonNull
@@ -1436,11 +1390,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public File getAnnotationProcessorOutputDir() {
-        return FileUtils.join(
-                globalScope.getGeneratedDir(),
-                "source",
-                "apt",
-                getVariantConfiguration().getDirName());
+        return FileUtils.join(globalScope.getGeneratedDir(), "source", "apt", getDirName());
     }
 
     @NonNull private final InstantRunBuildContext instantRunBuildContext;
@@ -1454,15 +1404,14 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public ImmutableList<File> getInstantRunBootClasspath() {
-        SdkHandler sdkHandler = getGlobalScope().getSdkHandler();
+        SdkHandler sdkHandler = globalScope.getSdkHandler();
         AndroidBuilder androidBuilder = globalScope.getAndroidBuilder();
         IAndroidTarget androidBuilderTarget = androidBuilder.getTarget();
 
         File annotationsJar = sdkHandler.getSdkLoader().getSdkInfo(LOGGER).getAnnotationsJar();
 
         AndroidVersion targetDeviceVersion =
-                DeploymentDevice.getDeploymentDeviceAndroidVersion(
-                        getGlobalScope().getProjectOptions());
+                DeploymentDevice.getDeploymentDeviceAndroidVersion(globalScope.getProjectOptions());
 
         if (targetDeviceVersion.equals(androidBuilderTarget.getVersion())) {
             // Compile SDK and the target device match, re-use the target that we have already
@@ -1564,7 +1513,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             @NonNull final BiFunction<T, ArtifactCollection, T> minusFunction,
             @NonNull final BiFunction<T, ArtifactCollection, T> resourceMinusFunction) {
         // this only handles Android Test, not unit tests.
-        VariantType variantType = getVariantConfiguration().getType();
+        VariantType variantType = getType();
         if (!variantType.isTestComponent()) {
             return collection;
         }
@@ -1648,7 +1597,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     public Java8LangSupport getJava8LangSupportType() {
         // in order of precedence
-        if (!getGlobalScope()
+        if (!globalScope
                 .getExtension()
                 .getCompileOptions()
                 .getTargetCompatibility()
@@ -1656,7 +1605,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             return Java8LangSupport.UNUSED;
         }
 
-        if (globalScope.getProject().getPlugins().hasPlugin("me.tatarka.retrolambda")) {
+        if (getProject().getPlugins().hasPlugin("me.tatarka.retrolambda")) {
             return Java8LangSupport.RETROLAMBDA;
         }
 
@@ -1736,7 +1685,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                                             globalScope.getIntermediatesDir(),
                                             "processing-tools",
                                             "runtime-deps",
-                                            variantData.getVariantConfiguration().getDirName(),
+                                            getDirName(),
                                             "desugar_try_with_resources.jar"));
         }
         return desugarTryWithResourcesRuntimeJar;
@@ -1806,7 +1755,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     public InternalArtifactType getManifestArtifactType() {
         return globalScope.getProjectOptions().get(BooleanOption.DEPLOY_AS_INSTANT_APP)
                 ? InternalArtifactType.INSTANT_APP_MANIFEST
-                : getInstantRunBuildContext().isInInstantRunMode()
+                : instantRunBuildContext.isInInstantRunMode()
                         ? InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS
                         : InternalArtifactType.MERGED_MANIFESTS;
     }
