@@ -27,6 +27,4 @@ org.gradle.jvmargs=-Xmx1536m
 android.useAndroidX=true
 # Automatically convert third-party libraries to use AndroidX
 android.enableJetifier=true
-<#else>
-android.databinding.enableV2=true
 </#if>
