@@ -221,6 +221,13 @@ public class Deployer {
                                 + apk.getPath()
                                 + "'.");
 
+                String preSwapCheckError = PreswapCheck.verify(diffs);
+
+                if (preSwapCheckError != null) {
+                    System.out.println("Unable to swap: " + preSwapCheckError);
+                    return;
+                }
+
                 // TODO: Only pass in a list of changed files instead of doing a full APK comparision.
                 ApkDump apkDump = dumps.get(apk.retrieveOnDeviceName());
                 DexArchive prevApk = DexArchive.buildFromDatabase(db, apkDump.getDigest());
