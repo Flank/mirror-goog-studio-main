@@ -182,7 +182,8 @@ internal fun computeFeatureNames(features: List<FeatureSplitDeclaration>): Map<S
         throw RuntimeException(
             invalidNames.joinTo(
                 StringBuilder(
-                    "The following module names contain invalid characters. Names can only contain letters, digits and underscores."
+                    "The following feature module names contain invalid characters. Feature " +
+                            "module names can only contain letters, digits and underscores."
                 ), separator = "\n\t-> ", prefix = "\n\t-> "
             ).toString()
         )

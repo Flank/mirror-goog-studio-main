@@ -55,9 +55,14 @@ class ComputeFeatureNamesTest {
                 FeatureSplitDeclaration(":foo:B-C", "id"),
                 FeatureSplitDeclaration(":C", "id"))
 
-        exception.expect(RTEMatcher("The following module names contain invalid characters. Names can only contain letters, digits and underscores.\n" +
-                "\t-> A\$\n" +
-                "\t-> B-C"))
+        exception.expect(
+            RTEMatcher(
+                "The following feature module names contain invalid characters. Feature module " +
+                        "names can only contain letters, digits and underscores.\n" +
+                        "\t-> A\$\n" +
+                        "\t-> B-C"
+            )
+        )
         computeFeatureNames(features)
     }
 
