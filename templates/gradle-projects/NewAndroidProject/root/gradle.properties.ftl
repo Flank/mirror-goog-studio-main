@@ -28,3 +28,8 @@ android.useAndroidX=true
 # Automatically convert third-party libraries to use AndroidX
 android.enableJetifier=true
 </#if>
+
+<#if generateKotlin>
+# Kotlin code style for this project: "official" or "obsolete":
+kotlin.code.style=official
+</#if>
