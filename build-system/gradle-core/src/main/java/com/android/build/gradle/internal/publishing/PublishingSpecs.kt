@@ -101,7 +101,7 @@ class PublishingSpecs {
 
         fun getTestingSpec(variantType: VariantType): VariantSpec
 
-        fun getSpec(artifactType: ArtifactType): OutputSpec?
+        fun getSpec(artifactType: ArtifactType, publishConfigType: PublishedConfigType?): OutputSpec?
     }
 
     /**
@@ -368,13 +368,13 @@ private class VariantPublishingSpecImpl(
 ) : PublishingSpecs.VariantSpec {
 
     override val testingSpecs: Map<VariantType, PublishingSpecs.VariantSpec>
-    private var _artifactMap: Map<ArtifactType, PublishingSpecs.OutputSpec>? = null
+    private var _artifactMap: Map<ArtifactType, List<PublishingSpecs.OutputSpec>>? = null
 
-    private val artifactMap: Map<ArtifactType, PublishingSpecs.OutputSpec>
+    private val artifactMap: Map<ArtifactType, List<PublishingSpecs.OutputSpec>>
         get() {
             val map = _artifactMap
             return if (map == null) {
-                val map2 = outputs.associate { it.artifactType to it }
+                val map2 = outputs.groupBy { it.artifactType }
                 _artifactMap = map2
                 map2
             } else {
@@ -393,9 +393,26 @@ private class VariantPublishingSpecImpl(
         return testingSpec ?: this
     }
 
-    override fun getSpec(artifactType: ArtifactType): PublishingSpecs.OutputSpec? {
-        val spec = artifactMap[artifactType]
-        return spec ?: parentSpec?.getSpec(artifactType)
+    override fun getSpec(
+        artifactType: ArtifactType,
+        publishConfigType: PublishedConfigType?
+    ): PublishingSpecs.OutputSpec? {
+        return artifactMap[artifactType]?.let {specs ->
+            if (specs.size <= 1) {
+                specs.singleOrNull()
+            } else {
+                val matchingSpecs = if (publishConfigType != null) {
+                    specs.filter { it.publishedConfigTypes.contains(publishConfigType) }
+                } else {
+                    specs
+                }
+                if (matchingSpecs.size > 1) {
+                    throw IllegalStateException("Multiple output specs found for $artifactType and $publishConfigType")
+                } else {
+                    matchingSpecs.singleOrNull()
+                }
+            }
+        } ?: parentSpec?.getSpec(artifactType, publishConfigType)
     }
 }
 
