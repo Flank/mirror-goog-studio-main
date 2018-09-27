@@ -29,7 +29,7 @@ android.useAndroidX=true
 android.enableJetifier=true
 </#if>
 
-# Kotlin code style for this project: "official" or "obsolete":
 <#if generateKotlin>
+# Kotlin code style for this project: "official" or "obsolete":
 kotlin.code.style=official
 </#if>
