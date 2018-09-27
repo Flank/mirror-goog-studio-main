@@ -1717,6 +1717,7 @@ public final class SdkConstants {
     public static final String ATTR_COMPLETION_HINT = "completionHint"; //$NON-NLS-1$
     public static final String ATTR_LAYOUT_MANAGER = "layoutManager"; //$NON-NLS-1$
     public static final String ATTR_SPAN_COUNT = "spanCount";
+    public static final String ATTR_NAVIGATION_ICON = "navigationIcon";
 
     // Material BottomAppBar Attributes
     public static final String ATTR_FAB_ALIGNMENT_MODE = "fabAlignmentMode";
