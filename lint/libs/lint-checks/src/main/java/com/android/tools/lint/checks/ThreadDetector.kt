@@ -133,11 +133,7 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 return
             }
 
-            var targetThreads = getThreads(context, method)
-            if (targetThreads == null) {
-                targetThreads = listOf(signature)
-            }
-
+            val targetThreads = getThreads(context, method) ?: return
             if (targetThreads.containsAll(threadContext)) {
                 return
             }
@@ -239,6 +235,16 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             }
         }
 
+        // Mismatched androidx: ignore package, just match on class name
+        val callerNameIndex = caller.lastIndexOf('.')
+        val calleeNameIndex = callee.lastIndexOf('.')
+        if (callerNameIndex != -1 && calleeNameIndex != -1) {
+            return caller.regionMatches(
+                callerNameIndex, callee, calleeNameIndex,
+                caller.length - callerNameIndex, false
+            )
+        }
+
         return false
     }
 
@@ -255,11 +261,13 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     private fun getThreads(context: JavaContext, originalMethod: PsiMethod?): List<String>? {
         var method = originalMethod
         if (method != null) {
+            val evaluator = context.evaluator
             var result: MutableList<String>? = null
             var cls = method.containingClass
 
             while (method != null) {
-                for (annotation in method.modifierList.annotations) {
+                val annotations = evaluator.getAllAnnotations(method, false)
+                for (annotation in annotations) {
                     result = addThreadAnnotations(annotation, result)
                 }
                 if (result != null) {
@@ -267,21 +275,25 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     // of its super methods.
                     return result
                 }
-                method = context.evaluator.getSuperMethod(method)
+
+                if (evaluator.isStatic(method)) {
+                    // For static methods, don't look at surrounding class or "inherited" methods
+                    return null
+                }
+
+                method = evaluator.getSuperMethod(method)
             }
 
             // See if we're extending a class with a known threading context
             while (cls != null) {
-                val modifierList = cls.modifierList
-                if (modifierList != null) {
-                    for (annotation in modifierList.annotations) {
-                        result = addThreadAnnotations(annotation, result)
-                    }
-                    if (result != null) {
-                        // We don't accumulate up the chain: one class replaces the requirements
-                        // of its super classes.
-                        return result
-                    }
+                val annotations = evaluator.getAllAnnotations(cls, false)
+                for (annotation in annotations) {
+                    result = addThreadAnnotations(annotation, result)
+                }
+                if (result != null) {
+                    // We don't accumulate up the chain: one class replaces the requirements
+                    // of its super classes.
+                    return result
                 }
                 cls = cls.superClass
             }

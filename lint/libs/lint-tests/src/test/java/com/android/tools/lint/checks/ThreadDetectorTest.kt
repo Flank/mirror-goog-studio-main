@@ -312,12 +312,12 @@ class ThreadDetectorTest : AbstractCheckTest() {
         // threading annotation on the target, but if multiple threads are
         // found in the context, all of them must be valid for all targets
         val expected = ("" +
-                "src/test/pkg/MultiThreadTest.java:21: Error: Method calleee must be called from the UI or worker thread, currently inferred thread is binder and worker thread [WrongThread]\n" +
-                "        calleee(); // Not ok: thread could be binder thread, not supported by target\n" +
-                "        ~~~~~~~~~\n" +
-                "src/test/pkg/MultiThreadTest.java:28: Error: Method calleee must be called from the UI or worker thread, currently inferred thread is worker and binder thread [WrongThread]\n" +
-                "        calleee(); // Not ok: thread could be binder thread, not supported by target\n" +
-                "        ~~~~~~~~~\n" +
+                "src/test/pkg/MultiThreadTest.java:21: Error: Method callee must be called from the UI or worker thread, currently inferred thread is binder and worker thread [WrongThread]\n" +
+                "        callee(); // Not ok: thread could be binder thread, not supported by target\n" +
+                "        ~~~~~~~~\n" +
+                "src/test/pkg/MultiThreadTest.java:28: Error: Method callee must be called from the UI or worker thread, currently inferred thread is worker and binder thread [WrongThread]\n" +
+                "        callee(); // Not ok: thread could be binder thread, not supported by target\n" +
+                "        ~~~~~~~~\n" +
                 "2 errors, 0 warnings\n")
         lint().files(
             java(
@@ -331,25 +331,25 @@ class ThreadDetectorTest : AbstractCheckTest() {
                         "class MultiThreadTest {\n" +
                         "    @UiThread\n" +
                         "    @WorkerThread\n" +
-                        "    private static void calleee() {\n" +
+                        "    private static void callee() {\n" +
                         "    }\n" +
                         "\n" +
                         "    @WorkerThread\n" +
                         "    private static void call1() {\n" +
-                        "        calleee(); // OK - context is included in target\n" +
+                        "        callee(); // OK - context is included in target\n" +
                         "    }\n" +
                         "\n" +
                         "    @BinderThread\n" +
                         "    @WorkerThread\n" +
                         "    private static void call2() {\n" +
-                        "        calleee(); // Not ok: thread could be binder thread, not supported by target\n" +
+                        "        callee(); // Not ok: thread could be binder thread, not supported by target\n" +
                         "    }\n" +
                         "\n" +
                         "    // Same case as call2 but different order to make sure we don't just test the first one:\n" +
                         "    @WorkerThread\n" +
                         "    @BinderThread\n" +
                         "    private static void call3() {\n" +
-                        "        calleee(); // Not ok: thread could be binder thread, not supported by target\n" +
+                        "        callee(); // Not ok: thread could be binder thread, not supported by target\n" +
                         "    }\n" +
                         "}\n"
             ),
@@ -379,7 +379,7 @@ class ThreadDetectorTest : AbstractCheckTest() {
                         "    class MyAsyncTask extends AsyncTask<Long, Void, Boolean> {\n" +
                         "        @Override\n" +
                         "        protected Boolean doInBackground(Long... sizes) {\n" +
-                        "            return workedThreadMethod();\n" +
+                        "            return workerThreadMethod();\n" +
                         "        }\n" +
                         "\n" +
                         "        @Override\n" +
@@ -387,7 +387,9 @@ class ThreadDetectorTest : AbstractCheckTest() {
                         "        }\n" +
                         "    }\n" +
                         "\n" +
-                        "    public static boolean workedThreadMethod() {\n" +
+                        "    // Static utility method which happens to be in a custom view,\n" +
+                        "    // but doesn't require UI thread.\n" +
+                        "    public static boolean workerThreadMethod() {\n" +
                         "        return true;\n" +
                         "    }\n" +
                         "}"
@@ -611,30 +613,30 @@ class ThreadDetectorTest : AbstractCheckTest() {
                         "    @UiThread\n" +
                         "    static class AnyThreadTest {\n" +
                         "        //    @AnyThread\n" +
-                        "        static void threadSafe() {\n" +
+                        "        void threadSafe() {\n" +
                         "            /*Method worker must be called from the worker thread, currently inferred thread is UI thread*/worker()/**/; // ERROR\n" +
                         "        }\n" +
                         "\n" +
                         "        @WorkerThread\n" +
-                        "        static void worker() {\n" +
+                        "        void worker() {\n" +
                         "            /*Method threadSafe must be called from the UI thread, currently inferred thread is worker thread*/threadSafe()/**/; // OK\n" +
                         "        }\n" +
                         "\n" +
                         "        // Multi thread test\n" +
                         "        @UiThread\n" +
                         "        @WorkerThread\n" +
-                        "        private static void calleee() {\n" +
+                        "        private void callee() {\n" +
                         "        }\n" +
                         "\n" +
                         "        @WorkerThread\n" +
-                        "        private static void call1() {\n" +
-                        "            calleee(); // OK - context is included in target\n" +
+                        "        private void call1() {\n" +
+                        "            callee(); // OK - context is included in target\n" +
                         "        }\n" +
                         "\n" +
                         "        @BinderThread\n" +
                         "        @WorkerThread\n" +
-                        "        private static void call2() {\n" +
-                        "            /*Method calleee must be called from the UI or worker thread, currently inferred thread is binder and worker thread*/calleee()/**/; // Not ok: thread could be binder thread, not supported by target\n" +
+                        "        private void call2() {\n" +
+                        "            /*Method callee must be called from the UI or worker thread, currently inferred thread is binder and worker thread*/callee()/**/; // Not ok: thread could be binder thread, not supported by target\n" +
                         "        }\n" +
                         "    }\n" +
                         "\n" +
@@ -710,11 +712,9 @@ class ThreadDetectorTest : AbstractCheckTest() {
                 """
                     package test.pkg;
 
-                    import android.support.annotation.WorkerThread;
-
                     @SuppressWarnings("ClassNameDiffersFromFileName")
                     public class X {
-                        @WorkerThread
+                        @android.support.annotation.WorkerThread
                         static class MyWorkerThreadCode {
                             static void method() {
                                 MyOtherWorkerThreadCode.method();
@@ -723,6 +723,18 @@ class ThreadDetectorTest : AbstractCheckTest() {
 
                         @androidx.annotation.WorkerThread
                         public static class MyOtherWorkerThreadCode {
+                            static void method() { }
+                        }
+
+                        @androidx.annotation.WorkerThread
+                        static class MyWorkerThreadCode2 {
+                            static void method() {
+                                MyOtherWorkerThreadCode2.method();
+                            }
+                        }
+
+                        @android.support.annotation.WorkerThread
+                        public static class MyOtherWorkerThreadCode2 {
                             static void method() { }
                         }
                     }

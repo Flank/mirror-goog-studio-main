@@ -287,7 +287,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
         val containingClass = when {
             member != null -> member.containingClass
-            node is UCallExpression -> node.classReference?.resolve() as PsiClass
+            node is UCallExpression -> node.classReference?.resolve() as PsiClass?
             else -> null
         }
 
