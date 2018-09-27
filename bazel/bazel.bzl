@@ -326,6 +326,10 @@ _iml_module_ = rule(
             cfg = "host",
             executable = True,
         ),
+        "_bootclasspath": attr.label(
+            default = Label("//prebuilts/studio/jdk:bootclasspath"),
+            cfg = "host",
+        ),
         "_kotlin": attr.label(
             default = Label("//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib"),
             allow_files = True,
