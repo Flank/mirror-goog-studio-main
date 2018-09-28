@@ -299,7 +299,11 @@ public class Deployer {
         DexArchive newApk =
                 DexArchive.buildFromHostFileSystem(
                         new ZipInputStream(new FileInputStream(apk.getPath())), apk.getDigest());
-        newApk.cache(db);
+        db.enqueueUpdate(
+                delegate -> {
+                    newApk.cache(delegate);
+                    return null;
+                });
         return newApk;
     }
 }

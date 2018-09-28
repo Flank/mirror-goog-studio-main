@@ -19,6 +19,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * A database to hold the dex content information of a {@link OnHostDexFile}. They can be retrieved
@@ -87,4 +88,23 @@ public abstract class DexArchiveDatabase {
      * not require an index since archives are not shared, just dex files.
      */
     public abstract void fillDexFileList(String archiveChecksum, List<Integer> dexFilesIndex);
+
+    /**
+     * Enqueues a lambda function that will perform some operations on the database asynchronously.
+     *
+     * <p>All future requests enqueued will not be performed until this request lambda returns.
+     * Also, other operations available in the {@link DexArchiveDatabase} will block until this
+     * lambda return.
+     *
+     * <p>Ideally request should be a function perform some expensive operations to compute
+     * checksum. DO NOT use references to the {@link WorkQueueDexArchiveDatabase} to perform queries
+     * as it will deadlock for obvious reasons. Instead, the provided database (db) is available for
+     * direct update operations.
+     *
+     * @param request
+     */
+    public synchronized void enqueueUpdate(Function<DexArchiveDatabase, Void> request) {
+        // By default, this is a blocking call. Implementation should provide this functionality.
+        request.apply(this);
+    }
 }
