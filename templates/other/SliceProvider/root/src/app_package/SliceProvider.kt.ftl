@@ -32,7 +32,7 @@ class ${className} : SliceProvider() {
         }
         val context = context
         if (context != null) {
-            uriBuilder = uriBuilder.authority(context.packageName))
+            uriBuilder = uriBuilder.authority(context.packageName)
         }
         return uriBuilder.build()
     }
