@@ -74,7 +74,7 @@ class ${className} : SliceProvider() {
         Instead of returning null, you should create a SliceAction. Here is an example:
         return SliceAction.create(
             PendingIntent.getActivity(
-                context, 0, Intent(context, ${activityClass}::class.java), 0
+                context, 0, Intent(context, MyActivityClass::class.java), 0
             ),
             IconCompat.createWithResource(context, R.drawable.ic_launcher_foreground),
             ListBuilder.ICON_IMAGE,
