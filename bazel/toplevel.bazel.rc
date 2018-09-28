@@ -11,6 +11,36 @@ test --jvmopt='-Dsun.jnu.encoding=UTF-8'
 test --jvmopt='-Dfile.encoding=UTF-8'
 test --jvmopt='-Xmx4G'
 test --jvmopt='-XX:+UseConcMarkSweepGC'
+test --test_output=errors
+test --verbose_failures
+
+# Local runs require longer timeouts.
+build:local --test_timeout=120,600,1800,7200
+
+# Postsubmit bots don't cache results and use keep_going to find all
+# failures. Config should be inherited by postsubmit configs.
+build:postsubmit --keep_going
+build:postsubmit --cache_test_results=no
+
+# All postsubmit bots, regardless of platform should inherit this config.
+build:local_postsubmit --config=local
+build:local_postsubmit --config=postsubmit
+
+# Mac post-submit uses mac-experimental to use distributed cache.
+build:local_mac_postsubmit --config=local_postsubmit
+build:local_mac_postsubmit --config=mac-experimental
+
+# Mac presubmit also used distributed cache.
+build:local_mac_presubmit --config=local
+build:local_mac_presubmit --config=mac-experimental
+
+# Linux uses different distributed cache config.
+build:local_linux_postsubmit --config=local_postsubmit
+build:local_linux_postsubmit --config=linux-experimental
+
+# Linux uses different distributed cache config.
+build:local_linux_presubmit --config=local
+build:local_linux_presubmit --config=linux-experimental
 
 # Don't use JUnit from Bazel.
 test --explicit_java_test_deps
@@ -39,6 +69,26 @@ build --copt=-fvisibility=hidden
 # finds make in the ndk-build script (see b/72179674).
 build --test_env=SHELL
 
+build:upsalite_results --bes_backend=buildeventservice.googleapis.com
+build:upsalite_results --bes_timeout=60s
+build:upsalite_results --auth_scope=https://www.googleapis.com/auth/cloud-source-tools
+build:upsalite_results --project_id=908081808034
+
+build:remote_common --config=upsalite_results
+
+# Enable the remote cache so all remote action results can be shared
+build:remote_common --remote_cache=remotebuildexecution.googleapis.com
+build:remote_common --tls_enabled=true # Enable encryption
+build:remote_common --experimental_strict_action_env=true
+build:remote_common --remote_timeout=3600
+
+# Enable authentication. This will pick up application default credentials by
+# default. You can use --auth_credentials=some_file.json to use a service
+# account credential instead.
+build:remote_common --auth_enabled=true
+
+build:remote_common --remote_instance_name=projects/google.com:android-studio-alphasource/instances/default_instance
+
 build:release --copt=-fdata-sections
 build:release --cxxopt=-fdata-sections
 build:release --copt=-fno-exceptions
@@ -47,6 +97,9 @@ build:release --copt=-ffunction-sections
 build:release --cxxopt=-ffunction-sections
 build:release -c opt
 build:release --strip=always
+
+# Mimics the release config to report accurate performance numbers in tests.
+build:remote_common --config=release
 
 # Use prebuilt JDK when doing local bazel build/test
 build --host_javabase=//prebuilts/studio/jdk:jdk_runtime
@@ -63,19 +116,12 @@ build --stripopt=--strip-unneeded
 # default android native abis
 build --fat_apk_cpu=x86,x86_64,armeabi-v7a,armeabi,arm64-v8a
 
-# Remote execution configuration
-build:remote --remote_instance_name=projects/google.com:android-studio-alphasource/instances/default_instance
+# Remote execution configuration. Enable remote_common args which include
+# Upsalite test reporting.
+build:remote --config=remote_common
+build:remote --nobuild_runfile_links
 build:remote --strategy=CppCompile=remote
 build:remote --strategy=CppLink=remote
-
-# Mimics the release config to report accurate performance numbers in tests
-build:remote --copt=-fdata-sections
-build:remote --cxxopt=-fdata-sections
-build:remote --copt=-fno-exceptions
-build:remote --cxxopt=-fno-exceptions
-build:remote --copt=-ffunction-sections
-build:remote --cxxopt=-ffunction-sections
-build:remote -c opt
 
 # Depending on how many machines are in the remote execution instance, setting
 # this higher can make builds faster by allowing more jobs to run in parallel.
@@ -112,53 +158,21 @@ build:remote --define=EXECUTOR=remote
 # leads to better performance with RBE. See b/77543953.
 build:remote --experimental_multi_threaded_digest=true
 
-# Enable the remote cache so action results can be shared across machines,
-# developers, and workspaces.
-build:remote --remote_cache=remotebuildexecution.googleapis.com
-
 # Enable remote execution so actions are performed on the remote systems.
 build:remote --remote_executor=remotebuildexecution.googleapis.com
-
-# Enable encryption.
-build:remote --tls_enabled=true
 
 # Enforce stricter environment rules, which eliminates some non-hermetic
 # behavior and therefore improves both the remote cache hit rate and the
 # correctness and repeatability of the build.
 build:remote --experimental_strict_action_env=true
 
-# Set a higher timeout value, just in case.
-build:remote --remote_timeout=3600
-
-# Enable authentication. This will pick up application default credentials by
-# default. You can use --auth_credentials=some_file.json to use a service
-# account credential instead.
-build:remote --auth_enabled=true
-
-# Enable Upsalite test reporting.
-build:remote --bes_backend=buildeventservice.googleapis.com
-build:remote --auth_scope=https://www.googleapis.com/auth/cloud-source-tools
-build:remote --project_id=908081808034
-
-# Enable the remote cache so action results can be shared across machines,
-# developers, and workspaces.
-build:remote-cache --remote_cache=remotebuildexecution.googleapis.com
-
-# Enable encryption.
-build:remote-cache --tls_enabled=true
+# Set flags for remote_common which includes Upsalite uploading
+build:remote-cache --config=remote_common
 
 # Enforce stricter environment rules, which eliminates some non-hermetic
 # behavior and therefore improves both the remote cache hit rate and the
 # correctness and repeatability of the build.
 build:remote-cache --experimental_strict_action_env=true
-
-# Set a higher timeout value, just in case.
-build:remote-cache --remote_timeout=3600
-
-# Enable authentication. This will pick up application default credentials by
-# default. You can use --auth_credentials=some_file.json to use a service
-# account credential instead.
-build:remote-cache --auth_enabled=true
 
 # Set various strategies so that all action results can be looked up from and
 # uploaded to the remote cache. You can use --experimental_remote_spawn_cache
@@ -169,22 +183,8 @@ build:remote-cache --strategy=Javac=sandboxed
 build:remote-cache --strategy=Closure=sandboxed
 build:remote-cache --genrule_strategy=sandboxed
 
-# Set flags for uploading to BES in order to view results in the Bazel Build
-# Results UI.
-build:remote-cache --bes_backend="buildeventservice.googleapis.com"
-build:remote-cache --bes_timeout=60s
-
-# Cloud project info
-build:remote-cache --remote_instance_name=projects/google.com:android-studio-alphasource/instances/default_instance
-build:remote-cache --project_id=908081808034
-
-# If the upload to BES fails, the build will fail.
-build:remote-cache --bes_best_effort=false
-
 # Set flags for uploading to BES without Remote Cache.
-build:results-local --bes_backend="buildeventservice.googleapis.com"
-build:results-local --bes_timeout=10s
-build:results-local --bes_best_effort=false
+build:results-local --config=upsalite_results
 build:results-local --tls_enabled=true
 build:results-local --auth_enabled=true
 build:results-local --spawn_strategy=local
@@ -192,7 +192,6 @@ build:results-local --experimental_remote_spawn_cache
 build:results-local --remote_cache=remotebuildexecution.googleapis.com
 build:results-local --remote_timeout=3600
 build:results-local --remote_instance_name=projects/google.com:android-studio-alphasource/instances/default_instance
-build:results-local --project_id=908081808034
 
 # Top level config group for remote cache local execution on Mac.
 build:mac-experimental --config=remote-cache
