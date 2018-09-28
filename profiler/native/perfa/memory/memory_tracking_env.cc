@@ -144,13 +144,6 @@ MemoryTrackingEnv::MemoryTrackingEnv(
       memory_map_(procfs_, getpid()),
       app_dir_(mem_config.app_dir().empty() ? "/data/app/"
                                             : mem_config.app_dir()) {
-  // Preallocate space for ClassTagMap to avoid rehashing.
-  // Rationale: our logic in VMObjectAlloc depends on the map's iterator not
-  // getting invalidated, which can happen if a ClassPrepare from a different
-  // thread causes the map to rehash. We don't want more synchronization
-  // in allocation callback, so here we just make sure we have enough space.
-  class_tag_map_.reserve((1 << 16) - 1);
-
   // Locate heap extension functions
   jvmtiError error;
   jvmtiExtensionFunctionInfo* func_info;
@@ -678,13 +671,19 @@ void MemoryTrackingEnv::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
                                stopwatch_settag.GetElapsed());
     CheckJvmtiError(jvmti, error);
 
-    auto itr = g_env->class_tag_map_.find(klass_info);
-    assert(itr != g_env->class_tag_map_.end());
+    int32_t class_tag = -1;
+    {
+        std::lock_guard<std::mutex> lock(g_env->class_data_mutex_);
+        auto itr = g_env->class_tag_map_.find(klass_info);
+        assert(itr != g_env->class_tag_map_.end());
+        class_tag = itr->second;
+    }
+
     AllocationEvent event;
     AllocationEvent::Allocation* alloc_data = event.mutable_alloc_data();
     alloc_data->set_tag(tag);
     alloc_data->set_size(size);
-    alloc_data->set_class_tag(itr->second);
+    alloc_data->set_class_tag(class_tag);
     alloc_data->set_heap_id(kAppHeapId);
     FillAllocEventThreadData(g_env, jvmti, jni, thread, alloc_data);
     event.set_timestamp(g_env->clock_.GetCurrentTime());
