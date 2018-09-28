@@ -94,7 +94,7 @@ public class ProfilerToBenchmarkAdapter {
 
     @NonNull
     private static final List<String> MIN_ANALYZER_METRICS =
-            Arrays.asList("DEX_MERGER", "EXTERNAL_LIBS_MERGER");
+            Arrays.asList("DEX_MERGER", "DEX_MERGING", "EXTERNAL_LIBS_MERGER");
 
     @NonNull
     private final List<ConsolidatedRunTimings> consolidatedTimingsPerIterations = new ArrayList<>();
