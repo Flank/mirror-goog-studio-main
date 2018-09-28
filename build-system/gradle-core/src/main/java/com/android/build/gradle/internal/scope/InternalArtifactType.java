@@ -265,6 +265,9 @@ public enum InternalArtifactType implements ArtifactType {
     // The feature dex files output by the DexSplitter from the base. The base produces and
     // publishes these files when there's multi-apk code shrinking.
     FEATURE_DEX,
+    // The signing configuration the feature module should be using, which is taken from the
+    // application module.
+    FEATURE_SIGNING_CONFIG,
     // The class files for a module and all of its runtime dependencies.
     MODULE_AND_RUNTIME_DEPS_CLASSES,
     // The java resources for a feature and all of its runtime dependencies.
@@ -274,7 +277,6 @@ public enum InternalArtifactType implements ArtifactType {
     METADATA_FEATURE_DECLARATION,
     METADATA_FEATURE_MANIFEST,
     METADATA_INSTALLED_BASE_DECLARATION,
-    METADATA_SIGNING_CONFIG,
 
     INSTANT_RUN_APP_INFO_OUTPUT_FILE;
 

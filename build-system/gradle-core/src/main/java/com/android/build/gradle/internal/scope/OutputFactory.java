@@ -55,8 +55,13 @@ public class OutputFactory {
     }
 
     private String getOutputFileName(String baseName) {
+        // we only know if it is signed during configuration, if its the base module.
+        // Otherwise, don't differentiate between signed and unsigned.
         String suffix =
-                variantConfiguration.isSigningReady() ? DOT_ANDROID_PACKAGE : "-unsigned.apk";
+                (variantConfiguration.isSigningReady()
+                                || !variantConfiguration.getType().isBaseModule())
+                        ? DOT_ANDROID_PACKAGE
+                        : "-unsigned.apk";
         return projectBaseName + "-" + baseName + suffix;
     }
 

@@ -35,46 +35,37 @@ import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
 import java.io.FileReader
 
-/** Tests for the [SigningConfigWriterTask]  */
-class SigningConfigWriterTaskTest {
+/** Tests for the [SigningConfigMetadataWriterTest]  */
+class SigningConfigMetadataWriterTest {
     @Rule
     @JvmField
     var temporaryFolder = TemporaryFolder()
 
-    internal lateinit var project: Project
-    internal lateinit var task: SigningConfigWriterTask
-    @Mock
-    lateinit var outputDirectoryProvider : Provider<Directory>
-    @Mock lateinit var outputDirectoryMock : Directory
     lateinit var outputDirectory : File
+    lateinit var storeFile : File
 
     @Before
     @Throws(IOException::class)
     fun setUp() {
-        MockitoAnnotations.initMocks(this)
-        val testDir = temporaryFolder.newFolder()
         outputDirectory = temporaryFolder.newFolder()
-        project = ProjectBuilder.builder().withProjectDir(testDir).build()
-
-        Mockito.`when`(outputDirectoryProvider.get()).thenReturn(outputDirectoryMock)
-        Mockito.`when`(outputDirectoryMock.asFile).thenReturn(outputDirectory)
-        task = project.tasks.create("test", SigningConfigWriterTask::class.java)
-        task.outputDirectory = outputDirectoryProvider
+        storeFile = temporaryFolder.newFile()
     }
 
     @Test
     @Throws(IOException::class)
-    fun testTask() {
+    fun testSaveAndLoad() {
         val signingConfig = SigningConfig("signingConfig_name")
         signingConfig.storePassword = "foobar"
-        signingConfig.isV1SigningEnabled = true
-        task.signingConfig = signingConfig
+        signingConfig.keyPassword = "baz"
+        signingConfig.storeFile = storeFile
+        signingConfig.isV2SigningEnabled = true
+        signingConfig.isV1SigningEnabled = false
+        SigningConfigMetadata.save(outputDirectory, signingConfig)
 
-        task.fullTaskAction()
         val files = outputDirectory.listFiles()
         assertThat(files).hasLength(1)
 
         val config = SigningConfigMetadata.load(files[0])
-        assertThat(config).isEqualTo(task.signingConfig)
+        assertThat(config).isEqualTo(signingConfig)
     }
 }

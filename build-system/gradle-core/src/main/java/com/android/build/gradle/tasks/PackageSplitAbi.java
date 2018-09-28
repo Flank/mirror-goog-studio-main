@@ -28,11 +28,11 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
+import com.android.build.gradle.internal.tasks.SigningConfigMetadata;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.internal.packaging.IncrementalPackager;
-import com.android.builder.model.SigningConfig;
 import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.resources.FileStatus;
 import com.android.sdklib.AndroidVersion;
@@ -47,8 +47,6 @@ import java.util.Set;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.Nested;
-import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
@@ -63,7 +61,7 @@ public class PackageSplitAbi extends AndroidBuilderTask {
 
     private boolean jniDebuggable;
 
-    private SigningConfig signingConfig;
+    private FileCollection signingConfig;
 
     private FileCollection jniFolders;
 
@@ -95,9 +93,8 @@ public class PackageSplitAbi extends AndroidBuilderTask {
         return jniDebuggable;
     }
 
-    @Nested
-    @Optional
-    public SigningConfig getSigningConfig() {
+    @InputFiles
+    public FileCollection getSigningConfig() {
         return signingConfig;
     }
 
@@ -132,7 +129,9 @@ public class PackageSplitAbi extends AndroidBuilderTask {
                                     new IncrementalPackagerBuilder(
                                                     IncrementalPackagerBuilder.ApkFormat.FILE)
                                             .withOutputFile(outFile)
-                                            .withSigning(signingConfig)
+                                            .withSigning(
+                                                    SigningConfigMetadata.Companion.load(
+                                                            signingConfig))
                                             .withCreatedBy(getBuilder().getCreatedBy())
                                             .withMinSdk(getMinSdkVersion())
                                             // .withManifest(manifest)
@@ -216,7 +215,7 @@ public class PackageSplitAbi extends AndroidBuilderTask {
             task.processedAbiResources =
                     scope.getArtifacts()
                             .getFinalArtifactFiles(InternalArtifactType.ABI_PROCESSED_SPLIT_RES);
-            task.signingConfig = config.getSigningConfig();
+            task.signingConfig = scope.getSigningConfigFileCollection();
             task.outputDirectory = outputDirectory;
             task.minSdkVersion = config.getMinSdkVersion();
             task.incrementalDir = scope.getIncrementalDir(task.getName());

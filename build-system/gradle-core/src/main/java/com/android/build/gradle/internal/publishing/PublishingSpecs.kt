@@ -52,6 +52,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_MET
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_INSTALLED_BASE_DECLARATION
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_FEATURE_DECLARATION
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_FEATURE_MANIFEST
+import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_SIGNING_CONFIG
 import com.android.build.gradle.internal.scope.InternalArtifactType.MODULE_BUNDLE
 import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.PUBLIC_RES
@@ -147,6 +148,8 @@ class PublishingSpecs {
                 api(FEATURE_SET_METADATA, ArtifactType.FEATURE_SET_METADATA)
                 api(METADATA_BASE_MODULE_DECLARATION,
                     ArtifactType.FEATURE_APPLICATION_ID_DECLARATION)
+                api(FEATURE_SIGNING_CONFIG, ArtifactType.FEATURE_SIGNING_CONFIG)
+
 
                 // ----
 
@@ -267,6 +270,7 @@ class PublishingSpecs {
                 api(DATA_BINDING_ARTIFACT, ArtifactType.DATA_BINDING_ARTIFACT)
                 api(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
                         ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
+                api(FEATURE_SIGNING_CONFIG, ArtifactType.FEATURE_SIGNING_CONFIG)
             }
 
             variantSpec(VariantTypeImpl.FEATURE) {
