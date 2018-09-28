@@ -28,9 +28,9 @@
 
 #include "command_cmd.h"
 #include "shell_command.h"
-#include "trace.h"
 #include "tools/base/deploy/common/message_pipe_wrapper.h"
 #include "tools/base/deploy/common/utils.h"
+#include "trace.h"
 
 #include "agent.so.h"
 #include "agent_server.h"
@@ -83,14 +83,18 @@ void SwapCommand::Run(Workspace& workspace) {
     return;
   }
 
-  // Start a swap server with fork/exec.
-  int read_fd;
-  int write_fd;
-  if (!StartServer(&read_fd, &write_fd)) {
+  std::string command = target_dir_ + kServerFilename;
+  ShellCommandRunner runner(command);
+
+  std::vector<std::string> parameters;
+  parameters.push_back("1");
+  int read_fd, write_fd, err_fd;
+  if (!runner.RunAs(package_name_, parameters, &write_fd, &read_fd, &err_fd)) {
     response_->set_status(proto::SwapResponse::ERROR);
     ErrEvent(response_->add_events(), "Unable to start server");
     return;
   }
+  close(err_fd);
 
   size_t agent_count = AttachAgents();
   if (agent_count == 0) {
@@ -123,7 +127,8 @@ void SwapCommand::Run(Workspace& workspace) {
     proto::AgentSwapResponse agent_response;
     if (!agent_response.ParseFromString(response_bytes)) {
       response_->set_status(proto::SwapResponse::ERROR);
-      ErrEvent(response_->add_events(), "Received unparseable response from agent");
+      ErrEvent(response_->add_events(),
+               "Received unparseable response from agent");
       return;
     }
 
@@ -194,7 +199,8 @@ bool SwapCommand::CopyBinaries(const std::string& src_path,
   // at once to minimize the expected number of additional run-as invocations.
   if (RunCmd("stat", User::APP_PACKAGE, {agent_dst_path, server_dst_path},
              nullptr)) {
-    LogEvent(response_->add_events(), "Binaries already in data folder, skipping copy.");
+    LogEvent(response_->add_events(),
+             "Binaries already in data folder, skipping copy.");
     return true;
   }
 
@@ -232,7 +238,8 @@ bool SwapCommand::CopyBinaries(const std::string& src_path,
   // Copy the binaries to the agent directory.
   std::string cp_output;
   if (!RunCmd("cp", User::APP_PACKAGE, copy_args, &cp_output)) {
-    response_->add_events()->set_text("Could not copy agent binary: "_s + cp_output);
+    response_->add_events()->set_text("Could not copy agent binary: "_s +
+                                      cp_output);
     return false;
   }
 
@@ -244,65 +251,25 @@ bool SwapCommand::WriteArrayToDisk(const unsigned char* array,
                                    const std::string& dst_path) const noexcept {
   int fd = open(dst_path.c_str(), O_WRONLY | O_CREAT, kRwFileMode);
   if (fd == -1) {
-    response_->add_events()->set_text("WriteArrayToDisk, open: "_s + std::string(strerror(errno)));
+    response_->add_events()->set_text("WriteArrayToDisk, open: "_s +
+                                      std::string(strerror(errno)));
     return false;
   }
   int written = write(fd, array, array_len);
   if (written == -1) {
-    response_->add_events()->set_text("WriteArrayToDisk, write: "_s + std::string(strerror(errno)));
+    response_->add_events()->set_text("WriteArrayToDisk, write: "_s +
+                                      std::string(strerror(errno)));
     return false;
   }
 
   int close_result = close(fd);
   if (close_result == -1) {
-    response_->add_events()->set_text("WriteArrayToDisk, close: "_s + std::string(strerror(errno)));
+    response_->add_events()->set_text("WriteArrayToDisk, close: "_s +
+                                      std::string(strerror(errno)));
     return false;
   }
 
   chmod(dst_path.c_str(), kRxFileMode);
-  return true;
-}
-
-bool SwapCommand::StartServer(int* read_fd, int* write_fd) const {
-  int read_pipe[2];
-  int write_pipe[2];
-
-  if (pipe(write_pipe) < 0 || pipe(read_pipe) < 0) {
-    return false;
-  }
-
-  int fork_pid = fork();
-  if (fork_pid == 0) {
-    close(write_pipe[1]);
-    close(read_pipe[0]);
-
-    // Map the output of the parent-write pipe to stdin and the input of the
-    // parent-read pipe to stdout. This lets us communicate between the
-    // swap_server and the installer.
-    dup2(write_pipe[0], STDIN_FILENO);
-    dup2(read_pipe[1], STDOUT_FILENO);
-
-    close(write_pipe[0]);
-    close(read_pipe[1]);
-
-    std::string command = target_dir_ + kServerFilename;
-
-    execlp("run-as", command.c_str() /* argv[0] for run-as*/,
-           package_name_.c_str() /* package to execute as */,
-           command.c_str() /* command to start swap-server */,
-           "1" /* number of agents (hardcoded for now) */,
-           (char*)nullptr /* must end in null-terminator */);
-
-    // If we get here, the execlp failed, so we should return false.
-    response_->add_events()->set_text("Could not exec swap_server: "_s + strerror(errno));
-    return false;
-  }
-
-  close(write_pipe[0]);
-  close(read_pipe[1]);
-
-  *read_fd = read_pipe[0];
-  *write_fd = write_pipe[1];
   return true;
 }
 
@@ -312,7 +279,8 @@ size_t SwapCommand::AttachAgents() const {
   // Get the pid(s) of the running application using the package name.
   std::string pidof_output;
   if (!RunCmd("pidof", User::SHELL_USER, {package_name_}, &pidof_output)) {
-    response_->add_events()->set_text("Could not get app pid for package: "_s + package_name_);
+    response_->add_events()->set_text("Could not get app pid for package: "_s +
+                                      package_name_);
     return 0;
   }
 
@@ -324,7 +292,8 @@ size_t SwapCommand::AttachAgents() const {
   while (pids >> pid) {
     std::string output;
     if (!cmd.AttachAgent(pid, target_dir_ + kAgentFilename, {}, &output)) {
-      response_->add_events()->set_text("Could not attach agent to process: "_s + output);
+      response_->add_events()->set_text(
+          "Could not attach agent to process: "_s + output);
       return 0;
     }
     agent_count++;
@@ -345,7 +314,7 @@ bool SwapCommand::RunCmd(const std::string& shell_cmd, User run_as,
   }
 
   if (run_as == User::APP_PACKAGE) {
-    return cmd.RunAs(params, package_name_, output);
+    return cmd.RunAs(package_name_, params, output);
   } else {
     return cmd.Run(params, output);
   }

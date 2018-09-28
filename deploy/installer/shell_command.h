@@ -18,6 +18,7 @@
 #define BASH_COMMAND_RUNNER_H
 
 #include <string>
+#include <vector>
 
 namespace deploy {
 
@@ -31,13 +32,26 @@ class ShellCommandRunner {
   // If |output| is not null, it is populated with stdin and stderr from
   // running command.
   virtual bool Run(const std::string& parameters, std::string* output) const;
-  bool RunAs(const std::string& parameters, const std::string& package_name,
+  // Runs the command with the given parameters and passes the file pointed
+  // by the path |input_file| through stdin. |output| and |error|, if not null,
+  // collect the stdout and stderr respectivelly.
+  bool Run(const std::vector<std::string>& parameters,
+           const std::string& input_file, std::string* output,
+           std::string* error) const;
+  bool RunAs(const std::string& package_name, const std::string& parameters,
              std::string* output) const;
+
+  bool RunAs(const std::string& package_name,
+             const std::vector<std::string>& parameters, int* child_stdin_fd,
+             int* child_stdout_fd, int* child_stderr_fd) const noexcept;
 
  private:
   const std::string executable_path_;
   virtual bool RunAndReadOutput(const std::string& cmd,
                                 std::string* output) const;
+  bool ForkAndExec(const std::string& executable,
+                   const std::vector<std::string> args, int* child_stdin_fd,
+                   int* child_stdout_fd, int* child_stderr_fd) const;
 };
 
 }  // namespace deploy
