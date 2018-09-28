@@ -41,6 +41,7 @@ public class BenchmarkTest {
         String benchmarkName = null;
         String benchmarkSize = null;
         String benchmarkType = null;
+        String setupDiff = "setup.diff";
         int warmUps = 0;
         int iterations = 0;
         int removeUpperOutliers = 0;
@@ -81,6 +82,8 @@ public class BenchmarkTest {
                 cleanups.add(it.next());
             } else if (arg.equals("--benchmark") && it.hasNext()) {
                 benchmarkName = it.next();
+            } else if (arg.equals("--setup-diff") && it.hasNext()) {
+                setupDiff = it.next();
             } else if (arg.equals("--mutation") && it.hasNext()) {
                 mutations.add(new File(it.next()));
             } else if (arg.equals("--build_property") && it.hasNext()) {
@@ -102,6 +105,7 @@ public class BenchmarkTest {
                         benchmarkType,
                         new BenchmarkRun(
                                 warmUps, iterations, removeUpperOutliers, removeLowerOutliers),
+                        setupDiff,
                         mutations,
                         startups,
                         cleanups,
@@ -138,6 +142,7 @@ public class BenchmarkTest {
             String benchmarkSize,
             String benchmarkType,
             BenchmarkRun benchmarkRun,
+            String setupDiff,
             List<File> mutations,
             List<String> startups,
             List<String> cleanups,
@@ -168,7 +173,7 @@ public class BenchmarkTest {
         home.mkdirs();
 
         Gradle.unzip(new File(data, "src.zip"), src);
-        UnifiedDiff diff = new UnifiedDiff(new File(data, "setup.diff"));
+        UnifiedDiff diff = new UnifiedDiff(new File(data, setupDiff));
         diff.apply(src, 3);
 
         UnifiedDiff[] diffs = new UnifiedDiff[mutations.size()];
