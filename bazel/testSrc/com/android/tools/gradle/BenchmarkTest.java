@@ -39,6 +39,9 @@ public class BenchmarkTest {
         File repo = null;
         String project = null;
         String benchmarkName = null;
+        String benchmarkBaseName = null;
+        String benchmarkCodeType = null;
+        String benchmarkFlag = null;
         String benchmarkSize = null;
         String benchmarkType = null;
         String setupDiff = "setup.diff";
@@ -62,6 +65,12 @@ public class BenchmarkTest {
                 distribution = new File(it.next());
             } else if (arg.equals("--repo") && it.hasNext()) {
                 repo = new File(it.next());
+            } else if (arg.equals("--benchmark_base_name")) {
+                benchmarkBaseName = it.next();
+            } else if (arg.equals("--benchmark_code_type")) {
+                benchmarkCodeType = it.next();
+            } else if (arg.equals("--benchmark_flag")) {
+                benchmarkFlag = it.next();
             } else if (arg.equals("--benchmark_size")) {
                 benchmarkSize = it.next();
             } else if (arg.equals("--benchmark_type")) {
@@ -101,6 +110,9 @@ public class BenchmarkTest {
                         benchmarkName,
                         distribution,
                         repo,
+                        benchmarkBaseName,
+                        benchmarkCodeType,
+                        benchmarkFlag,
                         benchmarkSize,
                         benchmarkType,
                         new BenchmarkRun(
@@ -139,6 +151,9 @@ public class BenchmarkTest {
             String benchmarkName,
             File distribution,
             File repo,
+            String benchmarkBaseName,
+            String benchmarkCodeType,
+            String benchmarkFlag,
             String benchmarkSize,
             String benchmarkType,
             BenchmarkRun benchmarkRun,
@@ -154,6 +169,13 @@ public class BenchmarkTest {
         Benchmark.Builder benchmarkBuilder =
                 new Benchmark.Builder(benchmarkName).setProject("Android Studio Gradle");
         ImmutableMap.Builder<String, String> mapBuilder = ImmutableMap.builder();
+        mapBuilder.put("benchmarkBaseName", benchmarkBaseName);
+        if (benchmarkCodeType != null) {
+            mapBuilder.put("benchmarkCodeType", benchmarkCodeType);
+        }
+        if (benchmarkFlag != null) {
+            mapBuilder.put("benchmarkFlag", benchmarkFlag);
+        }
         if (benchmarkSize != null) {
             // temporary put both for migrating from one to the other.
             mapBuilder.put("benchmarkCategory", benchmarkSize);
