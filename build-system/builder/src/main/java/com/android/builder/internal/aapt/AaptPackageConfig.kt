@@ -53,7 +53,8 @@ data class AaptPackageConfig(
         val listResourceFiles: Boolean = false,
         val staticLibrary: Boolean = false,
         val staticLibraryDependencies: ImmutableList<File> = ImmutableList.of(),
-        val intermediateDir: File? = null
+        val intermediateDir: File? = null,
+        val useConditionalKeepRules: Boolean = false
 ) : Serializable {
 
     fun isStaticLibrary() = staticLibrary
@@ -88,6 +89,7 @@ data class AaptPackageConfig(
         private var staticLibrary: Boolean = false
         private var staticLibraryDependencies: ImmutableList<File> = ImmutableList.of()
         private var intermediateDir: File? = null
+        private var useConditionalKeepRules: Boolean = false
 
         /**
          * Creates a new [AaptPackageConfig] from the data already placed in the builder.
@@ -121,7 +123,8 @@ data class AaptPackageConfig(
                     listResourceFiles = listResourceFiles,
                     staticLibrary = staticLibrary,
                     staticLibraryDependencies = staticLibraryDependencies,
-                    intermediateDir = intermediateDir
+                    intermediateDir = intermediateDir,
+                    useConditionalKeepRules = useConditionalKeepRules
             )
         }
 
@@ -262,6 +265,11 @@ data class AaptPackageConfig(
          */
         fun setAllowReservedPackageId(value: Boolean): Builder {
             this.allowReservedPackageId = value
+            return this
+        }
+
+        fun setUseConditionalKeepRules(value: Boolean): Builder {
+            this.useConditionalKeepRules = value
             return this
         }
     }

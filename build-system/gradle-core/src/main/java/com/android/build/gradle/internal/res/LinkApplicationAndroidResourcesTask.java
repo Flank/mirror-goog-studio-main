@@ -143,6 +143,8 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
     private String buildTargetDensity;
 
+    private boolean useConditionalKeepRules;
+
     private File resPackageOutputFolder;
 
     private String projectBaseName;
@@ -150,6 +152,11 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
     private InternalArtifactType taskInputType;
 
     private boolean isNamespaced = false;
+
+    @Input
+    public boolean getUseConditionalKeepRules() {
+        return useConditionalKeepRules;
+    }
 
     @Input
     public InternalArtifactType getTaskInputType() {
@@ -451,7 +458,8 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                 .setDependentFeatures(featurePackagesBuilder.build())
                                 .setImports(imports)
                                 .setIntermediateDir(getIncrementalFolder())
-                                .setAndroidTarget(getBuilder().getTarget());
+                                .setAndroidTarget(getBuilder().getTarget())
+                                .setUseConditionalKeepRules(useConditionalKeepRules);
 
                 if (isNamespaced) {
                     ImmutableList.Builder<File> packagedDependencies = ImmutableList.builder();
@@ -726,6 +734,8 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             task.setAaptOptions(variantScope.getGlobalScope().getExtension().getAaptOptions());
 
             task.buildTargetDensity = projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY);
+
+            task.useConditionalKeepRules = projectOptions.get(BooleanOption.CONDITIONAL_KEEP_RULES);
 
             task.setMergeBlameLogFolder(variantScope.getResourceBlameLogDir());
 
