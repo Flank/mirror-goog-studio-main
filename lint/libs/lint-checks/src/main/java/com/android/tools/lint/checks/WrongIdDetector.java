@@ -17,6 +17,7 @@ package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.ATTR_LAYOUT;
 import static com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_TYPE;
@@ -29,6 +30,8 @@ import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.SdkConstants.RELATIVE_LAYOUT;
 import static com.android.SdkConstants.TAG_ITEM;
 import static com.android.SdkConstants.VALUE_ID;
+import static com.android.SdkConstants.VIEW_INCLUDE;
+import static com.android.SdkConstants.VIEW_MERGE;
 import static com.android.tools.lint.checks.RequiredAttributeDetector.PERCENT_RELATIVE_LAYOUT;
 import static com.android.tools.lint.detector.api.Lint.editDistance;
 import static com.android.tools.lint.detector.api.Lint.isSameResourceFile;
@@ -51,10 +54,10 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Location.Handle;
+import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
-import com.android.utils.Pair;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
@@ -63,16 +66,22 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
 
 /** Checks for duplicate ids within a layout and within an included layout */
 public class WrongIdDetector extends LayoutDetector {
@@ -92,7 +101,13 @@ public class WrongIdDetector extends LayoutDetector {
      * Location handles for the various id references that were not found as defined in the same
      * layout, to be checked after the whole project has been scanned
      */
-    private List<Pair<String, Location.Handle>> mHandles;
+    private Map<String, Handle> mHandles;
+
+    /**
+     * Issues to be reported for id references unless we determine that the id was undefined after
+     * checking the whole project
+     */
+    private Map<String, String> mPendingNotSibling;
 
     /**
      * List of RelativeLayout elements in the current layout (and percent layouts, and constraint
@@ -222,6 +237,15 @@ public class WrongIdDetector extends LayoutDetector {
             String id = child.getAttributeNS(ANDROID_URI, ATTR_ID);
             if (id != null && !id.isEmpty()) {
                 ids.add(id);
+            } else if (VIEW_INCLUDE.equals(child.getTagName())) {
+                String included = child.getAttribute(ATTR_LAYOUT);
+                if (!addIncludedIds(context, ids, included)) {
+                    // There's an include tag and something went wrong looking
+                    // up the corresponding layout: don't attempt to enforce
+                    // sibling lookup here.
+                    mHandles = null;
+                    return;
+                }
             }
         }
 
@@ -255,10 +279,78 @@ public class WrongIdDetector extends LayoutDetector {
         }
     }
 
+    private static boolean addIncludedIds(
+            @NonNull Context context, @NonNull Set<String> ids, @NonNull String included) {
+        if (included.isEmpty()) {
+            return true;
+        }
+
+        LintClient client = context.getClient();
+        if (!client.supportsProjectResources()) {
+            return false;
+        }
+
+        Project project = context.getMainProject();
+        ResourceRepository resources = client.getResourceRepository(project, true, false);
+        if (resources == null) {
+            return false;
+        }
+
+        List<ResourceItem> layouts =
+                resources.getResources(ResourceNamespace.TODO(), ResourceType.LAYOUT, included);
+        if (layouts.isEmpty()) {
+            return false;
+        }
+        ResourceItem layout = layouts.get(0);
+        PathString source = layout.getSource();
+        if (source == null) {
+            return false;
+        }
+        try {
+            XmlPullParser parser = client.createXmlPullParser(source);
+            if (parser != null) {
+                addIncludedIds(parser, ids);
+            }
+        } catch (XmlPullParserException | IOException e) {
+            // Users might be editing these files in the IDE; don't flag
+        }
+        return true;
+    }
+
+    private static void addIncludedIds(@NonNull XmlPullParser parser, @NonNull Set<String> ids)
+            throws XmlPullParserException, IOException {
+        int depth = -1;
+        while (true) {
+            int event = parser.next();
+            if (event == XmlPullParser.START_TAG) {
+                depth++;
+                if (depth == 0 && !VIEW_MERGE.equals(parser.getName())) {
+                    // Not a <merge>: just add the id on the root attribute; that will
+                    // be the element inserted at the <include> side
+                    String id = parser.getAttributeValue(ANDROID_URI, ATTR_ID);
+                    if (!id.isEmpty()) {
+                        ids.add(id);
+                    }
+                    return;
+                } // else: <merge>: add all children at depth 1
+                if (depth == 1) {
+                    String id = parser.getAttributeValue(ANDROID_URI, ATTR_ID);
+                    if (!id.isEmpty()) {
+                        ids.add(id);
+                    }
+                }
+            } else if (event == XmlPullParser.END_TAG) {
+                depth--;
+            } else if (event == XmlPullParser.END_DOCUMENT) {
+                return;
+            }
+        }
+    }
+
     private void checkIdReference(
             @NonNull Context context,
             Element layout,
-            Set<String> ids,
+            Set<String> siblingIds,
             boolean isConstraintLayout,
             String selfId,
             Attr attr,
@@ -273,55 +365,50 @@ public class WrongIdDetector extends LayoutDetector {
             handle.setClientData(attr);
 
             if (mHandles == null) {
-                mHandles = new ArrayList<>();
+                mHandles = new LinkedHashMap<>();
+                mPendingNotSibling = new HashMap<>();
             }
-            mHandles.add(Pair.of(id, handle));
-        } else {
-            // Check siblings. TODO: Look for cycles!
-            if (ids.contains(id)) {
-                // Make sure it's not pointing to self
-                if (!ATTR_ID.equals(attr.getLocalName())
-                        && !selfId.isEmpty()
-                        && id.endsWith(selfId)
-                        && stripIdPrefix(id).equals(selfId)) {
-                    XmlContext xmlContext = (XmlContext) context;
-                    String message =
-                            String.format(
-                                    "Cannot be relative to self: id=%1$s, %2$s=%3$s",
-                                    selfId, attr.getLocalName(), selfId);
-                    Location location = xmlContext.getLocation(attr);
-                    xmlContext.report(NOT_SIBLING, attr, location, message);
-                }
-
-                return;
-            }
-            if (id.startsWith(NEW_ID_PREFIX)) {
-                if (ids.contains(ID_PREFIX + stripIdPrefix(id))) {
-                    return;
-                }
-            } else if (id.startsWith(ID_PREFIX)) {
-                if (ids.contains(NEW_ID_PREFIX + stripIdPrefix(id))) {
-                    return;
-                }
-            } else if (ids.contains(NEW_ID_PREFIX + id)) {
-                return;
-            }
-            if (isConstraintLayout) {
-                // A reference to the ConstraintLayout from a child is valid
-                String parentId = stripIdPrefix(layout.getAttributeNS(ANDROID_URI, ATTR_ID));
-                if (parentId.equals(stripIdPrefix(id))) {
-                    return;
-                }
-            }
-            if (context.isEnabled(NOT_SIBLING)) {
-                XmlContext xmlContext = (XmlContext) context;
+            mHandles.put(id, handle);
+        }
+        // Check siblings. TODO: Look for cycles!
+        if (siblingIds.contains(id)) {
+            // Make sure it's not pointing to self
+            if (!ATTR_ID.equals(attr.getLocalName())
+                    && !selfId.isEmpty()
+                    && id.endsWith(selfId)
+                    && stripIdPrefix(id).equals(selfId)) {
                 String message =
                         String.format(
-                                "`%1$s` is not a sibling in the same `%2$s`",
-                                id, isConstraintLayout ? "ConstraintLayout" : "RelativeLayout");
-                Location location = xmlContext.getLocation(attr);
-                xmlContext.report(NOT_SIBLING, attr, location, message);
+                                "Cannot be relative to self: id=%1$s, %2$s=%3$s",
+                                selfId, attr.getLocalName(), selfId);
+                reportNotSiblingIfKnownId(context, id, attr, message);
             }
+            return;
+        }
+        if (id.startsWith(NEW_ID_PREFIX)) {
+            if (siblingIds.contains(ID_PREFIX + stripIdPrefix(id))) {
+                return;
+            }
+        } else if (id.startsWith(ID_PREFIX)) {
+            if (siblingIds.contains(NEW_ID_PREFIX + stripIdPrefix(id))) {
+                return;
+            }
+        } else if (siblingIds.contains(NEW_ID_PREFIX + id) || siblingIds.contains(ID_PREFIX + id)) {
+            return;
+        }
+        if (isConstraintLayout) {
+            // A reference to the ConstraintLayout from a child is valid
+            String parentId = stripIdPrefix(layout.getAttributeNS(ANDROID_URI, ATTR_ID));
+            if (parentId.equals(stripIdPrefix(id))) {
+                return;
+            }
+        }
+        if (context.isEnabled(NOT_SIBLING)) {
+            String message =
+                    String.format(
+                            "`%1$s` is not a sibling in the same `%2$s`",
+                            id, isConstraintLayout ? "ConstraintLayout" : "RelativeLayout");
+            reportNotSiblingIfKnownId(context, id, attr, message);
         }
     }
 
@@ -332,13 +419,30 @@ public class WrongIdDetector extends LayoutDetector {
         }
     }
 
+    private void reportNotSiblingIfKnownId(
+            @NonNull Context context,
+            @NonNull String id,
+            @NonNull Node attr,
+            @NonNull String message) {
+        if (mHandles != null && mHandles.containsKey(id)) {
+            // Potentially unknown ID, store the issue for later
+            mPendingNotSibling.put(id, message);
+        } else {
+            // ID is known, just report the problem
+            XmlContext xmlContext = (XmlContext) context;
+            Location location = xmlContext.getLocation(attr);
+            xmlContext.report(NOT_SIBLING, attr, location, message);
+        }
+    }
+
     private void checkHandles(@NonNull Context context) {
         if (mHandles != null) {
             boolean checkSameLayout = context.isEnabled(UNKNOWN_ID_LAYOUT);
             boolean checkExists = context.isEnabled(UNKNOWN_ID);
             boolean projectScope = context.getScope().contains(Scope.ALL_RESOURCE_FILES);
-            for (Pair<String, Handle> pair : mHandles) {
-                String id = pair.getFirst();
+            for (Map.Entry<String, Handle> pair : mHandles.entrySet()) {
+                String id = pair.getKey();
+                Handle handle = pair.getValue();
                 boolean isBound =
                         projectScope
                                 ? idDefined(mGlobalIds, id)
@@ -347,11 +451,10 @@ public class WrongIdDetector extends LayoutDetector {
                 if (!isBound
                         && checkExists
                         && (projectScope || client.supportsProjectResources())) {
-                    Handle handle = pair.getSecond();
                     boolean isDeclared = idDefined(mDeclaredIds, id);
                     id = stripIdPrefix(id);
                     String suggestionMessage;
-                    Set<String> spellingDictionary = mGlobalIds;
+                    Set<String> spellingDictionary = createSpellingDictionary();
                     if (!projectScope && client.supportsProjectResources()) {
                         ResourceRepository resources =
                                 client.getResourceRepository(context.getProject(), true, false);
@@ -397,7 +500,6 @@ public class WrongIdDetector extends LayoutDetector {
                     // The id was defined, but in a different layout. Usually not intentional
                     // (might be referring to a random other view that happens to have the same
                     // name.)
-                    Handle handle = pair.getSecond();
                     report(
                             context,
                             UNKNOWN_ID_LAYOUT,
@@ -405,9 +507,24 @@ public class WrongIdDetector extends LayoutDetector {
                             String.format(
                                     "The id \"`%1$s`\" is not referring to any views in this layout",
                                     stripIdPrefix(id)));
+                } else if (mPendingNotSibling.containsKey(id)) {
+                    String message = mPendingNotSibling.get(id);
+                    context.report(NOT_SIBLING, handle.resolve(), message);
                 }
             }
         }
+    }
+
+    private Set<String> createSpellingDictionary() {
+        Set<String> dictionary = new HashSet<>();
+        mGlobalIds
+                .stream()
+                .filter(id -> id.startsWith(NEW_ID_PREFIX))
+                .forEach(id -> dictionary.add(stripIdPrefix(id)));
+        if (mDeclaredIds != null) {
+            mDeclaredIds.forEach(id -> dictionary.add(stripIdPrefix(id)));
+        }
+        return dictionary;
     }
 
     private static void report(Context context, Issue issue, Handle handle, String message) {
@@ -433,7 +550,8 @@ public class WrongIdDetector extends LayoutDetector {
                     if (mDeclaredIds == null) {
                         mDeclaredIds = Sets.newHashSet();
                     }
-                    mDeclaredIds.add(ID_PREFIX + name);
+                    mDeclaredIds.add(NEW_ID_PREFIX + name);
+                    mGlobalIds.add(NEW_ID_PREFIX + name);
                 }
             }
         } else {
@@ -454,7 +572,7 @@ public class WrongIdDetector extends LayoutDetector {
         mFileIds.add(id);
         mGlobalIds.add(id);
 
-        if (id.equals(NEW_ID_PREFIX) || id.equals(ID_PREFIX) || "@+id".equals(ID_PREFIX)) {
+        if (id.equals(NEW_ID_PREFIX) || id.equals(ID_PREFIX)) {
             String message = "Invalid id: missing value";
             context.report(INVALID, attribute, context.getLocation(attribute), message);
         } else if (id.startsWith("@+")
@@ -482,7 +600,7 @@ public class WrongIdDetector extends LayoutDetector {
             } else if (id.startsWith(ID_PREFIX)) {
                 return ids.contains(NEW_ID_PREFIX + id.substring(ID_PREFIX.length()));
             } else {
-                return ids.contains(NEW_ID_PREFIX + id) || ids.contains(ID_PREFIX + id);
+                return ids.contains(NEW_ID_PREFIX + id);
             }
         }
 
