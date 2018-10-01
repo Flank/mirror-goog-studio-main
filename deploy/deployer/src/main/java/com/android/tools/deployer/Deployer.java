@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -162,7 +163,7 @@ public class Deployer {
         for (ApkFull apk : apks) {
             RunResponse.Analysis analysis = findOrCreateAnalysis(response, apk.getPath());
             analysis.localApkHash = apk.getDigest();
-            String name = apk.retrieveOnDeviceName();
+            String name = apk.getApkDetails().fileName();
             ApkDump dump = dumps.get(name);
             if (dump != null) {
                 analysis.remoteApkHash = dump.getDigest();
@@ -174,7 +175,7 @@ public class Deployer {
             List<ApkFull> apks, Map<String, ApkDump> dumps, RunResponse response) {
         for (ApkFull apk : apks) {
             try {
-                ApkDump dump = dumps.get(apk.retrieveOnDeviceName());
+                ApkDump dump = dumps.get(apk.getApkDetails().fileName());
                 if (dump == null) {
                     response.status = RunResponse.Status.ERROR;
                     response.errorMessage = "Cannot find dump for local apk: " + apk.getPath();
@@ -211,9 +212,13 @@ public class Deployer {
         Deploy.SwapRequest.Builder request = Deploy.SwapRequest.newBuilder();
         request.setPackageName(packageName);
         request.setRestartActivity(restart);
+
+        HashSet<String> processNames = new HashSet<>();
         for (ApkFull apk : apks) {
             HashMap<String, ApkDiffer.ApkEntryStatus> diffs =
                     response.result.get(apk.getPath()).diffs;
+
+            processNames.addAll(apk.getApkDetails().processNames());
 
             try {
                 DexArchive newApk = cache(apk);
@@ -237,7 +242,7 @@ public class Deployer {
                 }
 
                 // TODO: Only pass in a list of changed files instead of doing a full APK comparision.
-                ApkDump apkDump = dumps.get(apk.retrieveOnDeviceName());
+                ApkDump apkDump = dumps.get(apk.getApkDetails().fileName());
                 DexArchive prevApk = DexArchive.buildFromDatabase(db, apkDump.getDigest());
                 if (prevApk == null) {
                     System.out.println(
@@ -265,6 +270,8 @@ public class Deployer {
                 throw new DeployerException(e);
             }
         }
+
+        request.addAllProcessNames(processNames);
 
         stopWatch.mark("Piping request...");
         Deploy.SwapResponse swapResponse = redefiner.redefine(request.build());

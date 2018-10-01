@@ -16,7 +16,7 @@
 package com.android.tools.deployer;
 
 import com.android.utils.ILogger;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 import com.google.devrel.gmscore.tools.apk.arsc.*;
 import java.io.File;
 import java.io.IOException;
@@ -38,9 +38,15 @@ public class ApkFull {
     private static final int CD_SIGNATURE = 0x02014b50;
     private static final byte[] SIGNATURE_BLOCK_MAGIC = "APK Sig Block 42".getBytes();
 
+    // Manifest elements that may have an android:process attribute.
+    private static final HashSet<String> MANIFEST_PROCESS_ELEMENTS =
+            new HashSet<>(
+                    Arrays.asList("activity", "application", "provider", "receiver", "service"));
+
     private final String path;
     private HashMap<String, Long> crcs = null;
     private String digest = null;
+    private ApkDetails apkDetails = null;
 
     public class ApkArchiveMap {
         public static final long UNINITIALIZED = -1;
@@ -52,6 +58,24 @@ public class ApkFull {
 
         long eocdOffset = UNINITIALIZED;
         long eocdSize = UNINITIALIZED;
+    }
+
+    public class ApkDetails {
+        final String fileName;
+        private final Collection<String> processNames;
+
+        private ApkDetails(String fileName, Collection<String> processNames) {
+            this.fileName = fileName;
+            this.processNames = processNames;
+        }
+
+        public String fileName() {
+            return fileName;
+        }
+
+        public Collection<String> processNames() {
+            return processNames;
+        }
     }
 
     private final ApkArchiveMap map;
@@ -197,31 +221,27 @@ public class ApkFull {
         return ZipUtils.digest(buffer);
     }
 
-    // Package Manager renames apk files according to the content of AndroidManifest.xml.
-    // If found, value of node "manifest", attribute "split" is used.
-    // Otherwise, "base.apk" is used.
-    public String retrieveOnDeviceName() {
-        try {
-            ZipFile zipFile = new ZipFile(path);
+    public ApkDetails getApkDetails() {
+        if (apkDetails != null) {
+            return apkDetails;
+        }
+
+        try (ZipFile zipFile = new ZipFile(path)) {
             ZipEntry manifestEntry = zipFile.getEntry("AndroidManifest.xml");
             InputStream stream = zipFile.getInputStream(manifestEntry);
-            String splitValue = getSplitValue(stream);
-            if (splitValue == null) {
-                splitValue = "base";
-            } else {
-                splitValue = "split_" + splitValue;
-            }
-            return splitValue + ".apk";
+            apkDetails = parseManifest(stream);
         } catch (IOException e) {
-            throw new DeployerException("Unable to retrieve on device name for " + path, e);
+            throw new DeployerException("Unable to retrieve apk details for " + path, e);
         }
+
+        return apkDetails;
     }
 
-    private String getSplitValue(InputStream decompressedManifest) throws IOException {
+    private ApkDetails parseManifest(InputStream decompressedManifest) throws IOException {
         BinaryResourceFile file = BinaryResourceFile.fromInputStream(decompressedManifest);
         List<Chunk> chunks = file.getChunks();
 
-        if (chunks.size() == 0) {
+        if (chunks.isEmpty()) {
             throw new DeployerException("Invalid APK, empty manifest");
         }
 
@@ -229,33 +249,59 @@ public class ApkFull {
             throw new DeployerException("APK manifest chunk[0] != XmlChunk");
         }
 
-        XmlChunk xmlChunk = (XmlChunk) chunks.get(0);
-        List<Chunk> contentChunks = sortByOffset(xmlChunk.getChunks());
+        String packageName = null;
+        String splitName = null;
+        HashSet<String> processNames = new HashSet<String>();
 
-        for (Chunk chunk : contentChunks) {
-            if (chunk instanceof XmlStartElementChunk) {
-                XmlStartElementChunk startChunk = (XmlStartElementChunk) chunk;
-                if (startChunk.getName().equals("manifest")) {
-                    for (XmlAttribute attribute : startChunk.getAttributes()) {
-                        if (attribute.name().equals("split")) {
-                            return attribute.rawValue();
-                        }
+        XmlChunk xmlChunk = (XmlChunk) chunks.get(0);
+        for (Chunk chunk : xmlChunk.getChunks().values()) {
+            if (!(chunk instanceof XmlStartElementChunk)) {
+                continue;
+            }
+
+            XmlStartElementChunk startChunk = (XmlStartElementChunk) chunk;
+            if (startChunk.getName().equals("manifest")) {
+                for (XmlAttribute attribute : startChunk.getAttributes()) {
+                    if (attribute.name().equals("split")) {
+                        splitName = attribute.rawValue();
                     }
-                    return null;
+
+                    if (attribute.name().equals("package")) {
+                        packageName = attribute.rawValue();
+                    }
+                }
+            }
+
+            if (MANIFEST_PROCESS_ELEMENTS.contains(startChunk.getName())) {
+                for (XmlAttribute attribute : startChunk.getAttributes()) {
+                    if (attribute.name().equals("process")) {
+                        processNames.add(attribute.rawValue());
+                    }
                 }
             }
         }
-        return null;
-    }
 
-    private List<Chunk> sortByOffset(Map<Integer, Chunk> contentChunks) {
-        List<Integer> offsets = Lists.newArrayList(contentChunks.keySet());
-        Collections.sort(offsets);
-        List<Chunk> chunks = new ArrayList<>(offsets.size());
-        for (Integer offset : offsets) {
-            chunks.add(contentChunks.get(offset));
+        if (packageName == null) {
+            throw new DeployerException("Package name was not found in manifest");
         }
-        return chunks;
+
+        String apkFileName = splitName == null ? "base.apk" : "split_" + splitName + ".apk";
+
+        ImmutableList.Builder<String> builder = ImmutableList.builder();
+        for (String processName : processNames) {
+            if (processName.charAt(0) == ':') {
+                // Private processes are prefixed with the package name, and are indicated in the
+                // manifest with a leading ':'.
+                builder.add(packageName + processName);
+            } else {
+                // Global processes are as-written in the manifest, and do not have a leading ':'.
+                builder.add(processName);
+            }
+        }
+
+        // Default process name is the name of the package.
+        builder.add(packageName);
+        return new ApkDetails(apkFileName, builder.build());
     }
 
     ApkArchiveMap getMap() {

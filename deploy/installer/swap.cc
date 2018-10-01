@@ -64,6 +64,8 @@ void SwapCommand::ParseParameters(int argc, char** argv) {
 
   request_bytes_ = data;
   package_name_ = request.package_name();
+  process_names_ = std::vector<std::string>(request.process_names().begin(),
+                                            request.process_names().end());
 
   // Set this value here so we can re-use it in other methods.
   target_dir_ = "/data/data/" + package_name_ + "/.studio/";
@@ -83,11 +85,20 @@ void SwapCommand::Run(Workspace& workspace) {
     return;
   }
 
+  // Get the list of processes we need to attach to.
+  std::vector<int> process_ids = GetApplicationPids();
+
+  // TODO: Use std::to_string. NDK doesn't currently support it.
+  std::ostringstream os;
+  os << process_ids.size();
+  std::string agent_count = os.str();
+
   std::string command = target_dir_ + kServerFilename;
   ShellCommandRunner runner(command);
 
   std::vector<std::string> parameters;
-  parameters.push_back("1");
+  parameters.push_back(agent_count);
+
   int read_fd, write_fd, err_fd;
   if (!runner.RunAs(package_name_, parameters, &write_fd, &read_fd, &err_fd)) {
     response_->set_status(proto::SwapResponse::ERROR);
@@ -96,10 +107,9 @@ void SwapCommand::Run(Workspace& workspace) {
   }
   close(err_fd);
 
-  size_t agent_count = AttachAgents();
-  if (agent_count == 0) {
+  if (!AttachAgents(process_ids)) {
     response_->set_status(proto::SwapResponse::ERROR);
-    ErrEvent(response_->add_events(), "Zero agents connected");
+    ErrEvent(response_->add_events(), "One or more agents failed to attach");
     return;
   }
 
@@ -147,7 +157,7 @@ void SwapCommand::Run(Workspace& workspace) {
     response_->mutable_events()->MergeFrom(agent_response.events());
 
     // Don't take actions until we've heard from every agent.
-    if (agent_responses.size() == agent_count) {
+    if (agent_responses.size() == process_ids.size()) {
       if (overall_status == proto::AgentSwapResponse::NEED_ACTIVITY_RESTART) {
         LogEvent(response_->add_events(), "Requesting activity restart");
         CmdCommand cmd;
@@ -273,33 +283,36 @@ bool SwapCommand::WriteArrayToDisk(const unsigned char* array,
   return true;
 }
 
-size_t SwapCommand::AttachAgents() const {
-  size_t agent_count = 0;
-
-  // Get the pid(s) of the running application using the package name.
+std::vector<int> SwapCommand::GetApplicationPids() const {
+  std::vector<int> process_ids;
   std::string pidof_output;
-  if (!RunCmd("pidof", User::SHELL_USER, {package_name_}, &pidof_output)) {
+  if (!RunCmd("pidof", User::SHELL_USER, {process_names_}, &pidof_output)) {
     response_->add_events()->set_text("Could not get app pid for package: "_s +
                                       package_name_);
-    return 0;
+    return process_ids;
   }
 
   int pid;
   std::istringstream pids(pidof_output);
-
-  // Attach the agent to the application process(es).
-  CmdCommand cmd;
   while (pids >> pid) {
+    process_ids.push_back(pid);
+  }
+
+  return process_ids;
+}
+
+bool SwapCommand::AttachAgents(const std::vector<int>& process_ids) const {
+  CmdCommand cmd;
+  for (int pid : process_ids) {
     std::string output;
     if (!cmd.AttachAgent(pid, target_dir_ + kAgentFilename, {}, &output)) {
       response_->add_events()->set_text(
           "Could not attach agent to process: "_s + output);
-      return 0;
+      return false;
     }
-    agent_count++;
   }
 
-  return agent_count;
+  return true;
 }
 
 bool SwapCommand::RunCmd(const std::string& shell_cmd, User run_as,

@@ -13,8 +13,11 @@ message SwapRequest {
   // If true, restarts the current activity after a successful hot-swap.
   bool restart_activity = 2;
 
+  // The processes that the JVMTI agents should attach to.
+  repeated string process_names = 3;
+
   // The classes to be hot-swapped.
-  repeated ClassDef classes = 3;
+  repeated ClassDef classes = 4;
 }
 
 message ClassDef {
