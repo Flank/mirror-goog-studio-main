@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.annotations.VisibleForTesting
+import com.android.builder.symbols.exportToCompiledJava
 import com.android.ide.common.symbols.Symbol
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
@@ -563,6 +564,73 @@ class NamespaceRewriter(
 
         // Rewrite the reference using the package and the un-canonicalized name.
         return "$prefixChar$pckg:$type/$name"
+    }
+
+    /**
+     * Writes the bytecode of the R class to the specified output JAR file, making sure all
+     * resources are properly namespaced.
+     */
+    fun writeRClass(rClassPath: Path) {
+        val currentTable = symbolTables[0]
+        // We keep the old package name for the correct package of the R class.
+        val fixedTable =
+            SymbolTable
+                .builder()
+                .tablePackage(currentTable.tablePackage)
+
+        for (type in ResourceType.values()) {
+            if (type != ResourceType.STYLEABLE) {
+                // Only children under declare-styleables may need rewriting. If we're not dealing
+                // with a styleable type, just add everything as-is.
+                fixedTable.addAll(currentTable.getSymbolByResourceType(type))
+            } else {
+                // Need to fix children for declare styleables.
+                namespaceStyleables(
+                    currentTable.getSymbolByResourceType(ResourceType.STYLEABLE),
+                    fixedTable)
+            }
+        }
+
+        exportToCompiledJava(ImmutableList.of(fixedTable.build()), rClassPath)
+    }
+
+    /**
+     * Namespaces all of the given styleables and places them into the given symbol table builder.
+     */
+    @VisibleForTesting
+    fun namespaceStyleables(styleables: List<Symbol>, fixedTable: SymbolTable.Builder) {
+        val currentTable = symbolTables[0]
+        styleables.forEach { symbol ->
+            if (symbol.children.isEmpty()) {
+                // If there were no children, just add the styleable as-is.
+                fixedTable.add(symbol)
+            } else {
+                val newChildren = ImmutableList.builder<String>()
+                symbol.children.forEach {
+                    if (it.contains(":")) {
+                        // If the attribute is already namespaced we don't need to do anything, e.g.
+                        // "android:color".
+                        newChildren.add(it)
+                    } else {
+                        // The attribute doesn't have a package specified, find where it belongs.
+                        val foundPackage = findPackageForAttr(it)
+                        if (foundPackage != currentTable.tablePackage) {
+                            // If it's not a local attribute, write the package.
+                            newChildren.add("$foundPackage:$it")
+                        } else {
+                            // Local attribute, no need to include the package.
+                            newChildren.add(it)
+                        }
+                    }
+                }
+                // Now add a styleable with the new children keeping the old values.
+                symbol as Symbol.StyleableSymbol
+                val newStyleable =
+                    Symbol.createAndValidateStyleableSymbol(
+                        symbol.name, symbol.values, newChildren.build())
+                fixedTable.add(newStyleable)
+            }
+        }
     }
 
     /**

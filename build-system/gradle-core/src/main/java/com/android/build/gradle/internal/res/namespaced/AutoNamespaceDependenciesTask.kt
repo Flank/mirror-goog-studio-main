@@ -321,8 +321,7 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
             logger.info("Finished rewriting $dependency")
 
             // Also generate fake R classes for compilation.
-            exportToCompiledJava(
-                    ImmutableList.of(symbolTables[0]),
+            rewriter.writeRClass(
                     File(
                             outputRClassesDirectory,
                             "namespaced-${dependency.sanitizedName}-R.jar"

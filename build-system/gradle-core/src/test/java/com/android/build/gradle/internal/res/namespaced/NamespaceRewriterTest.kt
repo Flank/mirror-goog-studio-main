@@ -16,10 +16,12 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
+import com.android.ide.common.symbols.Symbol
 import com.android.ide.common.symbols.SymbolTable
 import com.android.ide.common.xml.XmlFormatPreferences
 import com.android.ide.common.xml.XmlFormatStyle
 import com.android.ide.common.xml.XmlPrettyPrinter
+import com.android.resources.ResourceType
 import com.android.testutils.TestResources
 import com.android.testutils.truth.PathSubject
 import com.android.testutils.truth.PathSubject.assertThat
@@ -988,6 +990,82 @@ class NamespaceRewriterTest {
 
         val namespaceRewriter = NamespaceRewriter(ImmutableList.of(local, depOne, depTwo, depThree))
         checkAarRewrite(namespaceRewriter, "layout/layout.xml", from, to)
+    }
+
+    @Test
+    fun namespaceStyleablesTest() {
+        // We need to check different scenarios:
+        // - styleables that have no children
+        // - children that already have a namespace
+        // - children that are local and don't need a package
+        // - children that are remote and need to be rewritten to contain a package
+        val oldTable = SymbolTable.builder()
+            .tablePackage("com.local")
+            .add(Symbol.StyleableSymbol(
+                "styleable_no_children",
+                ImmutableList.of(), ImmutableList.of()))
+            .add(Symbol.StyleableSymbol(
+                "styleable_unchanged_remote_children",
+                ImmutableList.of(), ImmutableList.of("android:color", "android:font")))
+            .add(Symbol.StyleableSymbol(
+                "styleable_unchanged_local_children",
+                ImmutableList.of(), ImmutableList.of("local_real_attr", "local_maybe_attr")))
+            .add(Symbol.StyleableSymbol(
+                "styleable_changed_remote_children",
+                ImmutableList.of(), ImmutableList.of("remote_real_attr")))
+            .add(Symbol.StyleableSymbol(
+                "styleable_mixed",
+                ImmutableList.of(),
+                ImmutableList.of("android:color", "local_maybe_attr", "remote_real_attr")))
+            .add(symbol("attr", "local_real_attr"))
+            .add(symbol("attr", "local_maybe_attr", true))
+            .build()
+
+        val remoteTable = SymbolTable.builder()
+            .tablePackage("com.remote")
+            .add(symbol("attr", "remote_real_attr"))
+            .build()
+
+        val namespaceRewriter = NamespaceRewriter(ImmutableList.of(oldTable, remoteTable))
+        val fixedTableBuilder = SymbolTable.builder().tablePackage("com.local")
+        namespaceRewriter
+            .namespaceStyleables(
+                oldTable.getSymbolByResourceType(ResourceType.STYLEABLE), fixedTableBuilder)
+
+        // Check all styleables were kept.
+        val fixedTable = fixedTableBuilder.build()
+        assertThat(fixedTable.getSymbolByResourceType(ResourceType.STYLEABLE)).hasSize(5)
+
+        // Check no extra children were added.
+        val noChildren =
+            fixedTable.symbols.get(ResourceType.STYLEABLE, "styleable_no_children")
+        assertThat(noChildren.children).isEmpty()
+
+        // Check children with namespaces aren't modified.
+        val unchangedRemoteChildren =
+            fixedTable.symbols.get(ResourceType.STYLEABLE, "styleable_unchanged_remote_children")
+        assertThat(unchangedRemoteChildren.children).hasSize(2)
+        assertThat(unchangedRemoteChildren.children)
+            .containsExactly("android:color", "android:font")
+
+        // Check local children (defined as attrs or only under styleables) are not modified.
+        val unchangedLocalChildren =
+            fixedTable.symbols.get(ResourceType.STYLEABLE, "styleable_unchanged_local_children")
+        assertThat(unchangedLocalChildren.children).hasSize(2)
+        assertThat(unchangedLocalChildren.children)
+            .containsExactly("local_real_attr", "local_maybe_attr")
+
+        // Check that remote child now has a package.
+        val changedRemoteChildren =
+            fixedTable.symbols.get(ResourceType.STYLEABLE, "styleable_changed_remote_children")
+        assertThat(changedRemoteChildren.children).hasSize(1)
+        assertThat(changedRemoteChildren.children).containsExactly("com.remote:remote_real_attr")
+
+        // And finally check mixed case.
+        val mixed = fixedTable.symbols.get(ResourceType.STYLEABLE, "styleable_mixed")
+        assertThat(mixed.children).hasSize(3)
+        assertThat(mixed.children)
+            .containsExactly("android:color", "local_maybe_attr", "com.remote:remote_real_attr")
     }
 
     private fun checkAarRewrite(
