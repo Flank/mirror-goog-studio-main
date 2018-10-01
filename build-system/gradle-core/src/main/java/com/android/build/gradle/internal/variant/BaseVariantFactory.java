@@ -31,14 +31,11 @@ public abstract class BaseVariantFactory implements VariantFactory {
 
     @NonNull protected final GlobalScope globalScope;
     @NonNull protected final AndroidConfig extension;
-    @NonNull protected final AndroidBuilder androidBuilder;
 
     public BaseVariantFactory(
             @NonNull GlobalScope globalScope,
-            @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig extension) {
         this.globalScope = globalScope;
-        this.androidBuilder = androidBuilder;
         this.extension = extension;
     }
 

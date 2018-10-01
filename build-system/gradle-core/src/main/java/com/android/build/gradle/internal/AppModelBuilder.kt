@@ -40,23 +40,19 @@ import org.gradle.api.artifacts.ProjectDependency
  */
 class AppModelBuilder(
     globalScope: GlobalScope,
-    androidBuilder: AndroidBuilder,
     private val variantManager: VariantManager,
     taskManager: TaskManager,
     config: BaseAppModuleExtension,
     extraModelInfo: ExtraModelInfo,
-    ndkHandler: NdkHandler,
     nativeLibraryFactory: NativeLibraryFactory,
     projectType: Int,
     generation: Int
 ) : ModelBuilder<BaseAppModuleExtension>(
     globalScope,
-    androidBuilder,
     variantManager,
     taskManager,
     config,
     extraModelInfo,
-    ndkHandler,
     nativeLibraryFactory,
     projectType,
     generation

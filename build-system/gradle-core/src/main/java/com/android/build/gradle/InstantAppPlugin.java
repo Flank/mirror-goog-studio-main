@@ -31,12 +31,10 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.ide.InstantAppModelBuilder;
 import com.android.build.gradle.internal.ide.ModelBuilder;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.plugin.TypedPluginDelegate;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.variant.InstantAppVariantFactory;
 import com.android.build.gradle.options.ProjectOptions;
-import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
@@ -62,7 +60,7 @@ public class InstantAppPlugin extends BasePlugin<BaseExtension2> {
     protected BaseExtension createExtension(
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
-            @NonNull AndroidBuilder androidBuilder,
+            @NonNull GlobalScope globalScope,
             @NonNull SdkHandler sdkHandler,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavorContainer,
@@ -76,7 +74,7 @@ public class InstantAppPlugin extends BasePlugin<BaseExtension2> {
                         InstantAppExtension.class,
                         project,
                         projectOptions,
-                        androidBuilder,
+                        globalScope,
                         sdkHandler,
                         buildTypeContainer,
                         productFlavorContainer,
@@ -98,18 +96,15 @@ public class InstantAppPlugin extends BasePlugin<BaseExtension2> {
             @NonNull GlobalScope globalScope,
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
-            @NonNull AndroidBuilder androidBuilder,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig androidConfig,
             @NonNull SdkHandler sdkHandler,
-            @NonNull NdkHandler ndkHandler,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         return new InstantAppTaskManager(
                 globalScope,
                 project,
                 projectOptions,
-                androidBuilder,
                 dataBindingBuilder,
                 androidConfig,
                 sdkHandler,
@@ -143,9 +138,8 @@ public class InstantAppPlugin extends BasePlugin<BaseExtension2> {
     @Override
     protected InstantAppVariantFactory createVariantFactory(
             @NonNull GlobalScope globalScope,
-            @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig androidConfig) {
-        return new InstantAppVariantFactory(globalScope, androidBuilder, androidConfig);
+        return new InstantAppVariantFactory(globalScope, androidConfig);
     }
 
     @Override

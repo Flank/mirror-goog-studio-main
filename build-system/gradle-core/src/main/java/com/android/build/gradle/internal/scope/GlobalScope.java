@@ -41,6 +41,7 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.blame.MessageReceiver;
+import com.google.common.base.Preconditions;
 import java.io.File;
 import java.util.Set;
 import org.gradle.api.Action;
@@ -57,9 +58,9 @@ public class GlobalScope implements TransformGlobalScope {
     @NonNull private final Project project;
     @NonNull private final FilesProvider filesProvider;
     @NonNull private final AndroidBuilder androidBuilder;
-    @NonNull private final AndroidConfig extension;
+    @NonNull private AndroidConfig extension;
     @NonNull private final SdkHandler sdkHandler;
-    @NonNull private final NdkHandler ndkHandler;
+    @NonNull private NdkHandler ndkHandler;
     @NonNull private final ToolingModelBuilderRegistry toolingRegistry;
     @NonNull private final Set<OptionalCompilationStep> optionalCompilationSteps;
     @NonNull private final ProjectOptions projectOptions;
@@ -69,7 +70,7 @@ public class GlobalScope implements TransformGlobalScope {
 
     @NonNull private Configuration lintChecks;
 
-    @NonNull private Configuration androidJarConfig;
+    private Configuration androidJarConfig;
 
     @Nullable private ConfigurableFileCollection java8LangSupportJar = null;
 
@@ -81,9 +82,7 @@ public class GlobalScope implements TransformGlobalScope {
             @NonNull ProjectOptions projectOptions,
             @NonNull DslScope dslScope,
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull AndroidConfig extension,
             @NonNull SdkHandler sdkHandler,
-            @NonNull NdkHandler ndkHandler,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @Nullable FileCache buildCache) {
         // Attention: remember that this code runs early in the build lifecycle, project may not
@@ -92,9 +91,7 @@ public class GlobalScope implements TransformGlobalScope {
         this.dslScope = checkNotNull(dslScope);
         this.filesProvider = filesProvider;
         this.androidBuilder = checkNotNull(androidBuilder);
-        this.extension = checkNotNull(extension);
         this.sdkHandler = checkNotNull(sdkHandler);
-        this.ndkHandler = checkNotNull(ndkHandler);
         this.toolingRegistry = checkNotNull(toolingRegistry);
         this.optionalCompilationSteps = checkNotNull(projectOptions.getOptionalCompilationSteps());
         this.projectOptions = checkNotNull(projectOptions);
@@ -103,7 +100,17 @@ public class GlobalScope implements TransformGlobalScope {
 
         // Create empty configurations before these have been set.
         this.lintChecks = project.getConfigurations().detachedConfiguration();
-        this.androidJarConfig = project.getConfigurations().detachedConfiguration();
+    }
+
+    public void setExtension(@NonNull AndroidConfig extension) {
+        this.extension = checkNotNull(extension);
+        ndkHandler =
+                new NdkHandler(
+                        project.getRootDir(),
+                        null, /* compileSkdVersion, this will be set in afterEvaluate */
+                        "gcc",
+                        "" /*toolchainVersion*/,
+                        false /* useUnifiedHeaders */);
     }
 
     @NonNull
@@ -234,6 +241,7 @@ public class GlobalScope implements TransformGlobalScope {
 
     @NonNull
     public FileCollection getMockableJarArtifact(boolean returnDefaultValues) {
+        Preconditions.checkNotNull(androidJarConfig);
         Action<AttributeContainer> attributes =
                 container ->
                         container
@@ -249,6 +257,7 @@ public class GlobalScope implements TransformGlobalScope {
 
     @NonNull
     public FileCollection getPlatformAttrs() {
+        Preconditions.checkNotNull(androidJarConfig);
         Action<AttributeContainer> attributes =
                 container ->
                         container.attribute(ARTIFACT_TYPE, AndroidArtifacts.TYPE_PLATFORM_ATTR);

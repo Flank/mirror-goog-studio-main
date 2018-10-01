@@ -27,8 +27,8 @@ import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.options.ProjectOptions;
-import com.android.builder.core.AndroidBuilder;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 
@@ -37,7 +37,7 @@ class InstantAppExtension extends BaseExtension {
     public InstantAppExtension(
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
-            @NonNull AndroidBuilder androidBuilder,
+            @NonNull GlobalScope globalScope,
             @NonNull SdkHandler sdkHandler,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavors,
@@ -48,7 +48,7 @@ class InstantAppExtension extends BaseExtension {
         super(
                 project,
                 projectOptions,
-                androidBuilder,
+                globalScope,
                 sdkHandler,
                 buildTypes,
                 productFlavors,
