@@ -36,8 +36,7 @@ class SwapCommand : public Command {
 
  private:
   std::string request_bytes_;
-  std::string package_name_;
-  std::vector<std::string> process_names_;
+  proto::SwapRequest request_;
   std::string target_dir_;
   proto::SwapResponse* response_;
 

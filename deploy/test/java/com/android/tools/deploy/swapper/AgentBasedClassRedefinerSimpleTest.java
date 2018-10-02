@@ -18,6 +18,7 @@ package com.android.tools.deploy.swapper;
 import com.android.tools.deploy.proto.Deploy;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.Ignore;
 
 /** Test very simple cases on class redefinitions. */
 public class AgentBasedClassRedefinerSimpleTest extends AgentBasedClassRedefinerTestBase {
@@ -43,6 +44,7 @@ public class AgentBasedClassRedefinerSimpleTest extends AgentBasedClassRedefiner
         Assert.assertTrue(android.waitForInput("JUST SWAPPED", RETURN_VALUE_TIMEOUT));
     }
 
+    @Ignore("b/117240186")
     @Test
     public void testSimpleClassRedefinitionWithActivityRestart() throws Exception {
         android.loadDex(DEX_LOCATION);

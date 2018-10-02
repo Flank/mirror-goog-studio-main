@@ -57,18 +57,14 @@ void SwapCommand::ParseParameters(int argc, char** argv) {
     return;
   }
 
-  proto::SwapRequest request;
-  if (!request.ParseFromString(data)) {
+  if (!request_.ParseFromString(data)) {
     return;
   }
 
   request_bytes_ = data;
-  package_name_ = request.package_name();
-  process_names_ = std::vector<std::string>(request.process_names().begin(),
-                                            request.process_names().end());
 
   // Set this value here so we can re-use it in other methods.
-  target_dir_ = "/data/data/" + package_name_ + "/.studio/";
+  target_dir_ = "/data/data/" + request_.package_name() + "/.studio/";
   ready_to_run_ = true;
 }
 
@@ -77,7 +73,8 @@ void SwapCommand::Run(Workspace& workspace) {
 
   response_ = new proto::SwapResponse();
   workspace.GetResponse().set_allocated_swap_response(response_);
-  LogEvent(response_->add_events(), "Got swap request for:" + package_name_);
+  LogEvent(response_->add_events(),
+           "Got swap request for:" + request_.package_name());
 
   if (!Setup(workspace)) {
     response_->set_status(proto::SwapResponse::ERROR);
@@ -100,7 +97,8 @@ void SwapCommand::Run(Workspace& workspace) {
   parameters.push_back(agent_count);
 
   int read_fd, write_fd, err_fd;
-  if (!runner.RunAs(package_name_, parameters, &write_fd, &read_fd, &err_fd)) {
+  if (!runner.RunAs(request_.package_name(), parameters, &write_fd, &read_fd,
+                    &err_fd)) {
     response_->set_status(proto::SwapResponse::ERROR);
     ErrEvent(response_->add_events(), "Unable to start server");
     return;
@@ -122,18 +120,26 @@ void SwapCommand::Run(Workspace& workspace) {
     ErrEvent(response_->add_events(), "Could not write to agent proxy server");
   }
 
-  std::unordered_map<int, proto::AgentSwapResponse> agent_responses;
-  auto overall_status = proto::AgentSwapResponse::UNKNOWN;
+  CmdCommand cmd;
+  std::vector<std::string> apks;
+  for (auto apk : request_.apks()) {
+    apks.emplace_back(apk);
+  }
+  std::string output;
+  int install_session = cmd.PreInstall(apks, &output);
 
   // TODO: This loop is at risk of hanging in a multi-agent scenario where
   // activity restart is required - if one agent dies before sending an
   // activity restart message, the server will never exit, as the still-alive
-  // agents are permanently stuck waiting on activity restart and will not close
-  // their sockets. Server should detect and send an agent death message to the
-  // installer.
+  // agents are permanently stuck waiting on activity restart and will not
+  // close their sockets. Server should detect and send an agent death message
+  // to the installer.
 
   std::string response_bytes;
-  while (server_output.Read(&response_bytes)) {
+  std::unordered_map<int, proto::AgentSwapResponse> agent_responses;
+  auto overall_status = proto::AgentSwapResponse::UNKNOWN;
+  while (agent_responses.size() < process_ids.size() &&
+         server_output.Read(&response_bytes)) {
     proto::AgentSwapResponse agent_response;
     if (!agent_response.ParseFromString(response_bytes)) {
       response_->set_status(proto::SwapResponse::ERROR);
@@ -142,9 +148,6 @@ void SwapCommand::Run(Workspace& workspace) {
       return;
     }
 
-    // Any mismatch in statuses means the overall status is error:
-    // - ERROR + <ANY> = ERROR, since all agents need to succeed.
-    // - RESTART + OK = ERROR , since agents should be in sync for restarts.
     if (agent_responses.size() == 0) {
       overall_status = agent_response.status();
     } else if (agent_response.status() != overall_status) {
@@ -152,28 +155,42 @@ void SwapCommand::Run(Workspace& workspace) {
     }
 
     agent_responses.emplace(agent_response.pid(), agent_response);
-
     // Gather events from the agent.
     response_->mutable_events()->MergeFrom(agent_response.events());
-
-    // Don't take actions until we've heard from every agent.
-    if (agent_responses.size() == process_ids.size()) {
-      if (overall_status == proto::AgentSwapResponse::NEED_ACTIVITY_RESTART) {
-        LogEvent(response_->add_events(), "Requesting activity restart");
-        CmdCommand cmd;
-        cmd.UpdateAppInfo("all", package_name_, nullptr);
-        LogEvent(response_->add_events(), "Activity restart requested.");
-      }
-
-      agent_responses.clear();
-    }
   }
-  if (overall_status == proto::AgentSwapResponse::OK) {
-    response_->set_status(proto::SwapResponse::OK);
-  } else {
+  if (agent_responses.size() < process_ids.size()) {
+    overall_status = proto::AgentSwapResponse::ERROR;
+  }
+
+  if (overall_status != proto::AgentSwapResponse::OK) {
+    cmd.AbortInstall(install_session, &output);
     response_->set_status(proto::SwapResponse::ERROR);
+    return;
   }
-  LogEvent(response_->add_events(), "Swapped");
+
+  cmd.CommitInstall(install_session, &output);
+
+  // Because we need to restart the activity, the app is now blocked
+  // on read waitng for the ResumeRequest to be sent. We first
+  // ask to update the app info, and then we resume the app.
+  if (request_.restart_activity()) {
+    agent_responses.clear();
+    LogEvent(response_->add_events(), "Requesting activity restart");
+    CmdCommand cmd;
+    cmd.UpdateAppInfo("all", request_.package_name(), nullptr);
+    LogEvent(response_->add_events(), "Activity restart requested.");
+
+    proto::ResumeRequest resume;
+    std::string resume_bytes;
+    resume.SerializeToString(&resume_bytes);
+    if (!server_input.Write(resume_bytes)) {
+      response_->set_status(proto::SwapResponse::ERROR);
+      ErrEvent(response_->add_events(),
+               "Could not write to agent proxy server");
+    }
+    response_->set_status(proto::SwapResponse::OK);
+    LogEvent(response_->add_events(), "Swapped");
+  }
 }
 
 bool SwapCommand::Setup(const Workspace& workspace) noexcept {
@@ -286,9 +303,12 @@ bool SwapCommand::WriteArrayToDisk(const unsigned char* array,
 std::vector<int> SwapCommand::GetApplicationPids() const {
   std::vector<int> process_ids;
   std::string pidof_output;
-  if (!RunCmd("pidof", User::SHELL_USER, {process_names_}, &pidof_output)) {
+  std::vector<std::string> process_names(request_.process_names().begin(),
+                                         request_.process_names().end());
+
+  if (!RunCmd("pidof", User::SHELL_USER, {process_names}, &pidof_output)) {
     response_->add_events()->set_text("Could not get app pid for package: "_s +
-                                      package_name_);
+                                      request_.package_name());
     return process_ids;
   }
 
@@ -325,9 +345,8 @@ bool SwapCommand::RunCmd(const std::string& shell_cmd, User run_as,
     params.append(arg);
     params.append(" ");
   }
-
   if (run_as == User::APP_PACKAGE) {
-    return cmd.RunAs(package_name_, params, output);
+    return cmd.RunAs(request_.package_name(), params, output);
   } else {
     return cmd.Run(params, output);
   }

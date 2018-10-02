@@ -37,6 +37,16 @@ class CmdCommand : public ShellCommandRunner {
                      const std::string& package_name,
                      std::string* error_string) const noexcept;
 
+  // Prepares an installation and returns an id that can be used
+  // to finish the installation by calling |CommitInstall| or it
+  // can be aborted by calling |AbortInstall|
+  int PreInstall(const std::vector<std::string>& apks,
+                 std::string* output) const noexcept;
+
+  bool CommitInstall(int session, std::string* output) const noexcept;
+
+  bool AbortInstall(int session, std::string* output) const noexcept;
+
   static void SetPath(const char* path);
 };
 

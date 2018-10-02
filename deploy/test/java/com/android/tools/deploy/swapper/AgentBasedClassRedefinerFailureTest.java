@@ -19,10 +19,12 @@ import com.android.tools.deploy.proto.Deploy;
 import com.google.protobuf.ByteString;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.Ignore;
 
 /** Test cases where the agent fail to redefine classes for various reasons. */
 public class AgentBasedClassRedefinerFailureTest extends AgentBasedClassRedefinerTestBase {
 
+    @Ignore("b/117240186")
     @Test
     public void testFailedClassRedefinitionWithActivityRestart() throws Exception {
         android.loadDex(DEX_LOCATION);

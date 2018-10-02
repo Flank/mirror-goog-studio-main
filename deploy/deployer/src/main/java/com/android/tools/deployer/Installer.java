@@ -40,8 +40,8 @@ import java.util.Map;
 public class Installer {
 
     public static final String INSTALLER_BINARY_NAME = "installer";
-    public static final String INSTALLER_DIRECTORY = "/data/local/tmp/.studio/bin";
-    public static final String INSTALLER_PATH = INSTALLER_DIRECTORY + "/" + INSTALLER_BINARY_NAME;
+    public static final String INSTALLER_PATH =
+            Deployer.INSTALLER_DIRECTORY + "/" + INSTALLER_BINARY_NAME;
     public static final String ANDROID_EXECUTABLE_PATH = "/tools/base/deploy/installer/android";
     private final AdbClient adb;
     private final String installersFolder;
@@ -93,7 +93,7 @@ public class Installer {
         printEvents(response.getEventsList());
 
         // Pull entire directory of dumps from remote device.
-        String remoteDirectory = "/data/local/tmp/.studio/dumps/" + packageName;
+        String remoteDirectory = Deployer.DUMPS_DIRECTORY + "/" + packageName;
         File directory = Files.createTempDirectory(".dumps").toFile();
         adb.pull(remoteDirectory, directory.toString());
         File packageDumps = new File(directory, packageName);
@@ -202,7 +202,7 @@ public class Installer {
                     "Cannot find suitable installer for abis: " + Arrays.toString(abis.toArray()));
         }
 
-        adb.shell(new String[] {"mkdir", "-p", INSTALLER_DIRECTORY}, null);
+        adb.shell(new String[] {"mkdir", "-p", Deployer.INSTALLER_DIRECTORY}, null);
         adb.push(installerFile.getAbsolutePath(), INSTALLER_PATH);
         adb.shell(new String[] {"chmod", "+x", INSTALLER_PATH}, null);
     }

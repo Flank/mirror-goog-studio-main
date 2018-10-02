@@ -15,6 +15,8 @@
  */
 
 #include "command_cmd.h"
+#include <sys/stat.h>
+#include <cstdlib>
 #include <cstring>
 #include <iostream>
 #include <sstream>
@@ -81,6 +83,59 @@ bool CmdCommand::UpdateAppInfo(const std::string& user_id,
   parameters << package_name << " ";
 
   return Run(parameters.str(), error_string);
+}
+
+int get_file_size(std::string path) {
+  struct stat statbuf;
+  stat(path.c_str(), &statbuf);
+  return statbuf.st_size;
+}
+
+int CmdCommand::PreInstall(const std::vector<std::string>& apks,
+                           std::string* output) const noexcept {
+  output->clear();
+  Trace trace("CmdCommand::Install");
+  std::stringstream parameters;
+  parameters << "package ";
+  parameters << "install-create ";
+  parameters << "-t -r --dont-kill ";
+  Run(parameters.str(), output);
+  std::string match = "Success: created install session [";
+  if (output->find(match, 0) != 0) {
+    return -1;
+  }
+  std::string session =
+      output->substr(match.size(), output->size() - match.size() - 2);
+
+  for (auto& apk : apks) {
+    std::string output;
+    std::string error;
+    std::vector<std::string> parameters;
+    parameters.push_back("package");
+    parameters.push_back("install-write");
+    std::stringstream size;
+    size << "-S" << get_file_size(apk);
+    parameters.push_back(size.str());
+    parameters.push_back(session);
+    parameters.push_back(apk.substr(apk.rfind("/") + 1));
+    Run(parameters, apk, &output, &error);
+  }
+  return atoi(session.c_str());
+}  // namespace deploy
+
+bool CmdCommand::CommitInstall(int session, std::string* output) const
+    noexcept {
+  output->clear();
+  std::stringstream parameters;
+  parameters << "package install-commit " << session;
+  return Run(parameters.str(), output);
+}
+
+bool CmdCommand::AbortInstall(int session, std::string* output) const noexcept {
+  std::stringstream parameters;
+  parameters << "package install-abandon " << session;
+  output->clear();
+  return Run(parameters.str(), output);
 }
 
 void CmdCommand::SetPath(const char* path) { CMD_EXEC = path; }

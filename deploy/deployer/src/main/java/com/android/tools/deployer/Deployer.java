@@ -24,6 +24,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +33,11 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipInputStream;
 
 public class Deployer {
+
+    public static final String BASE_DIRECTORY = "/data/local/tmp/.studio";
+    public static final String APK_DIRECTORY = BASE_DIRECTORY + "/apks";
+    public static final String DUMPS_DIRECTORY = BASE_DIRECTORY + "/dumps";
+    public static final String INSTALLER_DIRECTORY = BASE_DIRECTORY + "/bin";
 
     private static final ILogger LOGGER = Logger.getLogger(Deployer.class);
     private final String packageName;
@@ -94,45 +100,47 @@ public class Deployer {
             cache(apk);
         }
         RunResponse response = new RunResponse();
-        diffInstall(true, response);
+        diff(response);
+        try {
+            adb.installMultiple(apks, true);
+            stopWatch.mark("Install succeeded");
+        } catch (DeployerException e) {
+            stopWatch.mark("Install failed");
+            LOGGER.error(e, null);
+        }
         return response;
     }
 
-    private Map<String, ApkDump> diffInstall(boolean kill, RunResponse response)
-            throws IOException {
+    private Map<String, ApkDump> diff(RunResponse response) throws IOException {
         stopWatch.start();
         Map<String, ApkDump> dumps = installer.dump(packageName);
         stopWatch.mark("Dumps retrieved");
 
-        try {
-            chechDumps(apks, dumps, response);
-            if (response.status == RunResponse.Status.ERROR) {
-                return dumps;
-            }
-
-            generateHashs(apks, dumps, response);
-            if (response.status == RunResponse.Status.NOT_INSTALLED) {
-                return dumps;
-            }
-
-            generateDiffs(apks, dumps, response);
-        } finally {
-            doInstall(kill);
+        chechDumps(apks, dumps, response);
+        if (response.status == RunResponse.Status.ERROR) {
+            return dumps;
         }
+
+        generateHashs(apks, dumps, response);
+        if (response.status == RunResponse.Status.NOT_INSTALLED) {
+            return dumps;
+        }
+
+        generateDiffs(apks, dumps, response);
 
         return dumps;
     }
 
     public RunResponse codeSwap() throws IOException {
         RunResponse response = new RunResponse();
-        Map<String, ApkDump> dumps = diffInstall(false, response);
+        Map<String, ApkDump> dumps = diff(response);
         swap(response, dumps, false /* Restart Activity */);
         return response;
     }
 
     public RunResponse fullSwap() throws IOException {
         RunResponse response = new RunResponse();
-        Map<String, ApkDump> dumps = diffInstall(false, response);
+        Map<String, ApkDump> dumps = diff(response);
         swap(response, dumps, true /* Restart Activity */);
         return response;
     }
@@ -195,16 +203,6 @@ public class Deployer {
         }
     }
 
-    private void doInstall(boolean kill) {
-        try {
-            adb.installMultiple(apks, kill);
-            stopWatch.mark("Install succeeded");
-        } catch (DeployerException e) {
-            stopWatch.mark("Install failed");
-            LOGGER.error(e, null);
-        }
-    }
-
     private void swap(RunResponse response, Map<String, ApkDump> dumps, boolean restart)
             throws DeployerException {
         stopWatch.mark("Swap started.");
@@ -215,6 +213,10 @@ public class Deployer {
 
         HashSet<String> processNames = new HashSet<>();
         for (ApkFull apk : apks) {
+            // TODO: Empty this directory
+            String target = APK_DIRECTORY + "/" + Paths.get(apk.getPath()).getFileName();
+            adb.push(apk.getPath(), target);
+            request.addApks(target);
             HashMap<String, ApkDiffer.ApkEntryStatus> diffs =
                     response.result.get(apk.getPath()).diffs;
 

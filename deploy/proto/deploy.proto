@@ -18,6 +18,12 @@ message SwapRequest {
 
   // The classes to be hot-swapped.
   repeated ClassDef classes = 4;
+
+  // The path to the full apks to be installed
+  repeated string apks = 5;
+}
+
+message ResumeRequest {
 }
 
 message ClassDef {
