@@ -47,6 +47,7 @@ coverage --define coverage=true
 
 build --sandbox_tmpfs_path=/tmp
 build --javacopt="-g:source,lines,vars"  # Keep debug info
+build --javacopt=-Xep:DoNotCall:OFF  # github.com/google/error-prone/issues/1131
 build --javacopt=-Xep:FallThrough:OFF  # enforcing Google style, essentially
 build --javacopt=-Xep:StreamResourceLeak:WARN # has been downgraded on Error Prone HEAD
 build --cxxopt=-std=c++11
