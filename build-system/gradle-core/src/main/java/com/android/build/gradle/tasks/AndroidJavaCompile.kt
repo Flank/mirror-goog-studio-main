@@ -32,12 +32,14 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.sdklib.AndroidTargetHash
 import com.google.common.base.Joiner
 import org.gradle.api.JavaVersion
+import org.gradle.api.file.FileTree
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
@@ -91,6 +93,17 @@ open class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
     var separateAnnotationProcessingFlag: Boolean =
         BooleanOption.ENABLE_SEPARATE_ANNOTATION_PROCESSING.defaultValue
         private set
+
+    @get:Internal
+    lateinit var sourceFileTrees: () -> List<FileTree>
+        private set
+
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    @SkipWhenEmpty
+    fun getSourceFileTree(): FileTree {
+        return this.project.files(this.sourceFileTrees()).asFileTree
+    }
 
     @get:Input
     lateinit var compileSdkVersion: String
@@ -158,6 +171,12 @@ open class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
         }
 
         this.options.isIncremental = incrementalFromDslOrByDefault
+
+        // Add individual sources instead of adding all at once due to a Gradle bug that happened
+        // late 2015 (see commit 830450), not sure if it has been fixed or not
+        for (source in sourceFileTrees()) {
+            this.source(source)
+        }
 
         /*
          * HACK: The following are workarounds for known issues.
@@ -313,6 +332,7 @@ open class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
             task.processorListFile =
                     variantScope.artifacts.getFinalArtifactFiles(ANNOTATION_PROCESSOR_LIST)
             task.separateAnnotationProcessingFlag = separateAnnotationProcessingFlag
+            task.sourceFileTrees = { variantScope.variantData.javaSources }
             task.compileSdkVersion = globalScope.extension.compileSdkVersion
             task.instantRunBuildContext = variantScope.instantRunBuildContext
 

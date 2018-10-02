@@ -26,10 +26,12 @@ import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.tasks.CacheableTask
 import com.android.build.gradle.options.BooleanOption
+import org.gradle.api.file.FileTree
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
 
@@ -49,6 +51,17 @@ open class ProcessAnnotationsTask : JavaCompile(), VariantAwareTask {
     @get:PathSensitive(PathSensitivity.NONE)
     lateinit var processorListFile: BuildableArtifact
         private set
+
+    @get:Internal
+    lateinit var sourceFileTrees: () -> List<FileTree>
+        private set
+
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    @SkipWhenEmpty
+    fun getSourceFileTree(): FileTree {
+        return this.project.files(this.sourceFileTrees()).asFileTree
+    }
 
     override fun compile(inputs: IncrementalTaskInputs) {
         val annotationProcessors =
@@ -73,6 +86,12 @@ open class ProcessAnnotationsTask : JavaCompile(), VariantAwareTask {
         // incremental mode when -proc:only is used. We will revisit this issue later and
         // investigate what it means for an annotation-processing-only task to be incremental.
         this.options.isIncremental = false
+
+        // Add individual sources instead of adding all at once due to a Gradle bug that happened
+        // late 2015 (see commit 830450), not sure if it has been fixed or not
+        for (source in sourceFileTrees()) {
+            this.source(source)
+        }
 
         // If no annotation processors are present, the Java compiler will proceed to compile the
         // source files even when the -proc:only option is specified (see
@@ -125,6 +144,7 @@ open class ProcessAnnotationsTask : JavaCompile(), VariantAwareTask {
             // Configure properties that are specific to ProcessAnnotationTask
             task.processorListFile =
                     variantScope.artifacts.getFinalArtifactFiles(ANNOTATION_PROCESSOR_LIST)
+            task.sourceFileTrees = { variantScope.variantData.javaSources }
 
             task.configurePropertiesForAnnotationProcessing(variantScope)
 

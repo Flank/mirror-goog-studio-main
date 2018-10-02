@@ -49,7 +49,6 @@ import com.android.ide.common.blame.MergingLog;
 import com.android.ide.common.blame.SourceFile;
 import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -75,8 +74,6 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.resources.TextResource;
 import org.gradle.api.tasks.Sync;
-import org.gradle.api.tasks.TaskProvider;
-import org.gradle.api.tasks.compile.JavaCompile;
 
 /** Base data about a variant. */
 public abstract class BaseVariantData {
@@ -95,6 +92,7 @@ public abstract class BaseVariantData {
 
     private List<File> extraGeneratedSourceFolders = Lists.newArrayList();
     private List<ConfigurableFileTree> extraGeneratedSourceFileTrees;
+    private List<ConfigurableFileTree> externalAptJavaOutputFileTrees;
     private final ConfigurableFileCollection extraGeneratedResFolders;
     private Map<Object, FileCollection> preJavacGeneratedBytecodeMap;
     private FileCollection preJavacGeneratedBytecodeLatest;
@@ -319,31 +317,28 @@ public abstract class BaseVariantData {
     }
 
     public void registerJavaGeneratingTask(@NonNull Task task, @NonNull Collection<File> generatedSourceFolders) {
-        TaskProvider<? extends JavaCompile> javacTask = taskContainer.getJavacTask();
-        Preconditions.checkNotNull(javacTask);
-
         TaskFactoryUtils.dependsOn(taskContainer.getSourceGenTask(), task);
 
-        final Project project = scope.getGlobalScope().getProject();
         if (extraGeneratedSourceFileTrees == null) {
             extraGeneratedSourceFileTrees = new ArrayList<>();
         }
 
+        final Project project = scope.getGlobalScope().getProject();
         for (File f : generatedSourceFolders) {
             ConfigurableFileTree fileTree = project.fileTree(f).builtBy(task);
             extraGeneratedSourceFileTrees.add(fileTree);
-            // FIXME we need to revise this API as it force-configure the tasks
-            javacTask.get().source(fileTree);
         }
 
         addJavaSourceFoldersToModel(generatedSourceFolders);
     }
 
     public void registerExternalAptJavaOutput(@NonNull ConfigurableFileTree folder) {
-        Preconditions.checkNotNull(taskContainer.getJavacTask());
+        if (externalAptJavaOutputFileTrees == null) {
+            externalAptJavaOutputFileTrees = new ArrayList<>();
+        }
 
-        // FIXME we need to revise this API as it force-configure the tasks
-        taskContainer.getJavacTask().get().source(folder);
+        externalAptJavaOutputFileTrees.add(folder);
+
         addJavaSourceFoldersToModel(folder.getDir());
     }
 
@@ -529,7 +524,8 @@ public abstract class BaseVariantData {
      */
     @NonNull
     public List<ConfigurableFileTree> getJavaSources() {
-        if (extraGeneratedSourceFileTrees == null || extraGeneratedSourceFileTrees.isEmpty()) {
+        // Shortcut for the common cases, otherwise we build the full list below.
+        if (extraGeneratedSourceFileTrees == null && externalAptJavaOutputFileTrees == null) {
             return getDefaultJavaSources();
         }
 
@@ -540,7 +536,12 @@ public abstract class BaseVariantData {
         sourceSets.addAll(getDefaultJavaSources());
 
         // then the third party ones
-        sourceSets.addAll(extraGeneratedSourceFileTrees);
+        if (extraGeneratedSourceFileTrees != null) {
+            sourceSets.addAll(extraGeneratedSourceFileTrees);
+        }
+        if (externalAptJavaOutputFileTrees != null) {
+            sourceSets.addAll(externalAptJavaOutputFileTrees);
+        }
 
         return sourceSets.build();
     }

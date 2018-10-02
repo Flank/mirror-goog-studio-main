@@ -64,13 +64,6 @@ const val DEFAULT_INCREMENTAL_COMPILATION = true
 fun JavaCompile.configureProperties(scope: VariantScope) {
     val compileOptions = scope.globalScope.extension.compileOptions
 
-    // We can't just pass the collection directly, as the instanceof check in the incremental
-    // compile doesn't work recursively currently, so every ConfigurableFileTree needs to be
-    // directly in the source array.
-    for (fileTree in scope.variantData.javaSources) {
-        this.source(fileTree)
-    }
-
     this.options.bootstrapClasspath = scope.bootClasspath
     this.classpath = scope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES)
 
