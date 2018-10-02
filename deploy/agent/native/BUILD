@@ -36,8 +36,8 @@ cc_binary(
         "//external:slicer",
         "//prebuilts/studio/jdk:jni_headers",
         "//tools/base/deploy/agent/native/jni:agent_jni",
-        "//tools/base/deploy/agent/native/utils:agent_utils",
         "//tools/base/deploy/common:common_lib",
+        "//tools/base/deploy/common:log",
         "//tools/base/deploy/proto:cc_proto",
     ],
 )

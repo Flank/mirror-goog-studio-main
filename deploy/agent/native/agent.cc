@@ -24,7 +24,7 @@
 #include "jni/jni_util.h"
 #include "socket.h"
 #include "swapper.h"
-#include "utils/log.h"
+#include "tools/base/deploy/common/log.h"
 
 namespace deploy {
 

@@ -5,7 +5,7 @@
 
 #include <sys/syscall.h>
 
-#include "tools/base/deploy/agent/native/utils/log.h"
+#include "log.h"
 
 namespace {
 inline uint64_t GetTime() noexcept {

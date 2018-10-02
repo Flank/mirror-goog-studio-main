@@ -1,4 +1,4 @@
-load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS")
+load("//tools/base/bazel:android.bzl", "select_android", "ANDROID_COPTS", "ANDROID_LINKOPTS")
 
 cc_library(
     name = "common_lib",
@@ -18,9 +18,22 @@ cc_library(
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/deploy/agent/native/utils:agent_utils",
+        ":log",
         "//tools/base/deploy/proto:cc_proto",
     ],
+)
+
+cc_library(
+    name = "log",
+    srcs = select_android(
+        ["log.android.cc"],
+        ["log.cc"],
+    ),
+    hdrs = [
+        "log.h",
+    ],
+    tags = ["no_windows"],
+    visibility = ["//tools/base/deploy:__subpackages__"],
 )
 
 cc_test(

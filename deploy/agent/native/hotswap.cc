@@ -10,7 +10,7 @@
 #include "jni/jni_class.h"
 #include "jni/jni_object.h"
 #include "jvmti.h"
-#include "utils/log.h"
+#include "tools/base/deploy/common/log.h"
 
 namespace deploy {
 

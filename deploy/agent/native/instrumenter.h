@@ -23,7 +23,7 @@
 #include "slicer/reader.h"
 #include "slicer/writer.h"
 
-#include "utils/log.h"
+#include "tools/base/deploy/common/log.h"
 
 #include <memory>
 #include <unordered_map>

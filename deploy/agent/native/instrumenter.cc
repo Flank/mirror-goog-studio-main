@@ -10,7 +10,7 @@
 
 #include "jni/jni_class.h"
 #include "native_callbacks.h"
-#include "utils/log.h"
+#include "tools/base/deploy/common/log.h"
 
 #include "instrumentation.jar.cc"
 #include "tools/base/deploy/common/utils.h"
