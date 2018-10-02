@@ -135,14 +135,15 @@ public class ManifestMerger2 {
         SelectorResolver selectors = new SelectorResolver();
 
         // load the main manifest file to do some checking along the way.
-        LoadedManifestInfo loadedMainManifestInfo = load(
-                new ManifestInfo(
-                        mManifestFile.getName(),
-                        mManifestFile,
-                        mDocumentType,
-                        Optional.<String>absent() /* mainManifestPackageName */),
-                selectors,
-                mergingReportBuilder);
+        LoadedManifestInfo loadedMainManifestInfo =
+                load(
+                        new ManifestInfo(
+                                mManifestFile.getName(),
+                                mManifestFile,
+                                mDocumentType,
+                                Optional.absent() /* mainManifestPackageName */),
+                        selectors,
+                        mergingReportBuilder);
 
         // first do we have a package declaration in the main manifest ?
         Optional<XmlAttribute> mainPackageAttribute =
@@ -447,7 +448,7 @@ public class ManifestMerger2 {
                     MergingReport.MergedManifestKind.MERGED, prettyPrint(document));
         }
 
-        // This features should occur at the end of all optional features, as they are based off of
+        // These features should occur at the end of all optional features, as they are based off of
         // the final merged manifest. This is true for all instant app manifests, bundletool manifests,
         // and feature manifests.
         if (mOptionalFeatures.contains(Invoker.Feature.ADD_INSTANT_APP_MANIFEST)) {
@@ -460,9 +461,10 @@ public class ManifestMerger2 {
 
     private void addInstantAppManifest(
             @NonNull Document document, @NonNull MergingReport.Builder mergingReport) {
+        String previousTargetSandboxVersion = null;
         // If we haven't already added target sandbox version or split info, add them.
         if (!mOptionalFeatures.contains(Invoker.Feature.TARGET_SANDBOX_VERSION)) {
-            addTargetSandboxVersionAttribute(document);
+            previousTargetSandboxVersion = addTargetSandboxVersionAttribute(document);
         }
         if (!mOptionalFeatures.contains(Invoker.Feature.ADD_INSTANT_APP_FEATURE_SPLIT_INFO)
                 && !mFeatureName.isEmpty()) {
@@ -474,7 +476,11 @@ public class ManifestMerger2 {
 
         // undo any changes we have made to the document.
         if (!mOptionalFeatures.contains(Invoker.Feature.TARGET_SANDBOX_VERSION)) {
-            removeTargetSandboxVersionAttribute(document);
+            if (previousTargetSandboxVersion != null) {
+                setTargetSandboxVersionAttribute(document, previousTargetSandboxVersion);
+            } else {
+                removeTargetSandboxVersionAttribute(document);
+            }
         }
         if (!mOptionalFeatures.contains(Invoker.Feature.ADD_INSTANT_APP_FEATURE_SPLIT_INFO)
                 && !mFeatureName.isEmpty()) {
@@ -657,13 +663,47 @@ public class ManifestMerger2 {
      * Set "android:targetSandboxVersion" attribute to 2 for the manifest element.
      *
      * @param document the document whose attributes are changes
+     * @return the previous value of the targetSandboxVersion attribute or null if
+     *     targetSandboxVersion was not set.
      */
-    private static void addTargetSandboxVersionAttribute(@NonNull Document document) {
+    private static String addTargetSandboxVersionAttribute(@NonNull Document document) {
+        return setTargetSandboxVersionAttribute(document, "2");
+    }
+
+    /**
+     * Set "android:targetSandboxVersion" attribute for the manifest element.
+     *
+     * @param document the document whose attributes will be modified
+     * @param value the new value of targetSandboxVersion
+     * @return the previous value of the targetSandboxVersion attribute or null if
+     *     targetSandboxVersion was not set.
+     */
+    private static String setTargetSandboxVersionAttribute(
+            @NonNull Document document, @NonNull String value) {
+        return setManifestAndroidAttribute(
+                document, SdkConstants.ATTR_TARGET_SANDBOX_VERSION, value);
+    }
+
+    /**
+     * Set an android namespaced attribute for the manifest element.
+     *
+     * @param document the document whose attributes will be modified
+     * @param attribute the new attribute to be set
+     * @param value the new value of the attribute
+     * @return the previous value of the attribute or null if the attribute was not set.
+     */
+    private static String setManifestAndroidAttribute(
+            @NonNull Document document, @NonNull String attribute, @NonNull String value) {
         Element manifest = document.getDocumentElement();
         if (manifest == null) {
-            return;
+            return null;
         }
-        setAndroidAttribute(manifest, SdkConstants.ATTR_TARGET_SANDBOX_VERSION, "2");
+        String previousValue =
+                manifest.hasAttributeNS(SdkConstants.ANDROID_URI, attribute)
+                        ? manifest.getAttributeNS(SdkConstants.ANDROID_URI, attribute)
+                        : null;
+        setAndroidAttribute(manifest, attribute, value);
+        return previousValue;
     }
 
     /**
@@ -1083,13 +1123,15 @@ public class ManifestMerger2 {
             XmlDocument libraryDocument;
             try {
                 InputStream inputStream = mFileStreamProvider.getInputStream(xmlFile);
-                libraryDocument = XmlLoader.load(selectors,
-                        mSystemPropertyResolver,
-                        manifestInfo.mName,
-                        xmlFile,
-                        inputStream,
-                        XmlDocument.Type.LIBRARY,
-                        Optional.<String>absent()  /* mainManifestPackageName */);
+                libraryDocument =
+                        XmlLoader.load(
+                                selectors,
+                                mSystemPropertyResolver,
+                                manifestInfo.mName,
+                                xmlFile,
+                                inputStream,
+                                XmlDocument.Type.LIBRARY,
+                                Optional.absent() /* mainManifestPackageName */);
             } catch (Exception e) {
                 throw new MergeFailureException(e);
             }
