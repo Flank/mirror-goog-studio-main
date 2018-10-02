@@ -122,6 +122,7 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.internal.tasks.AndroidVariantTask::setVariantName",
                 "com.android.build.gradle.internal.tasks.CheckManifest::setManifest",
                 "com.android.build.gradle.internal.tasks.CheckManifest::setOptional",
+                "com.android.build.gradle.internal.tasks.CopyNavigationFilesTask::setVariantName",
                 "com.android.build.gradle.internal.tasks.DependencyReportTask::setVariants",
                 "com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask::setCoverageDir",
                 "com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask::setDeviceProvider",

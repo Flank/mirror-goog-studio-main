@@ -37,6 +37,7 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.CopyNavigationFilesTask;
 import com.android.build.gradle.internal.tasks.LibraryDexingTask;
 import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesTask;
 import com.android.build.gradle.internal.tasks.PackageRenderscriptTask;
@@ -182,6 +183,8 @@ public class LibraryTaskManager extends TaskManager {
         createStripNativeLibraryTask(taskFactory, variantScope);
 
         taskFactory.register(new PackageRenderscriptTask.CreationAction(variantScope));
+
+        taskFactory.register(new CopyNavigationFilesTask.CreationAction(variantScope));
 
         // merge consumer proguard files from different build types and flavors
         taskFactory.register(new MergeConsumerProguardFilesTask.CreationAction(variantScope));

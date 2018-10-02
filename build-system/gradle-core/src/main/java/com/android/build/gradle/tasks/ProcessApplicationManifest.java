@@ -21,6 +21,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_BASE_MODULE_DECLARATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_FEATURE_MANIFEST;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.NAVIGATION_FILES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
@@ -108,6 +109,7 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
     private BuildableArtifact apkList;
     private Supplier<EnumSet<Feature>> optionalFeatures;
     private OutputScope outputScope;
+    private FileCollection libraryNavigationFiles;
 
     // supplier to read the file above to get the feature name for the current project.
     @Nullable private Supplier<String> featureNameSupplier = null;
@@ -500,10 +502,35 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
         return manifests.getArtifactFiles();
     }
 
+    @NonNull
+    private List<File> getNavigationFiles() {
+        ImmutableList.Builder<File> navigationFiles = ImmutableList.builder();
+        navigationFiles.addAll(getLocalNavigationFiles());
+        for (File navigationDir : getLibraryNavigationFiles().getFiles()) {
+            if (navigationDir.isDirectory()) {
+                File[] children = navigationDir.listFiles();
+                if (children != null) {
+                    for (File child : children) {
+                        if (child.isFile()) {
+                            navigationFiles.add(child);
+                        }
+                    }
+                }
+            }
+        }
+        return navigationFiles.build();
+    }
+
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
-    public List<File> getNavigationFiles() {
+    public List<File> getLocalNavigationFiles() {
         return variantConfiguration.getNavigationFiles();
+    }
+
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    public FileCollection getLibraryNavigationFiles() {
+        return libraryNavigationFiles;
     }
 
     @InputFiles
@@ -729,6 +756,10 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
                         variantScope.getArtifactFileCollection(
                                 COMPILE_CLASSPATH, MODULE, FEATURE_APPLICATION_ID_DECLARATION);
             }
+
+            task.libraryNavigationFiles =
+                    variantScope.getArtifactFileCollection(
+                            COMPILE_CLASSPATH, MODULE, NAVIGATION_FILES);
         }
 
         /**
