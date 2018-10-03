@@ -22,16 +22,25 @@ import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import com.android.build.gradle.integration.common.utils.getOutputByName
 import com.android.build.gradle.internal.scope.CodeShrinker
 import com.android.build.gradle.options.BooleanOption
+import com.android.builder.model.AppBundleProjectBuildOutput
+import com.android.builder.model.AppBundleVariantBuildOutput
 import com.android.builder.model.SyncIssue
+import com.android.testutils.apk.Dex
+import com.android.testutils.apk.Zip
+import com.android.testutils.truth.DexSubject.assertThat
+import com.android.testutils.truth.FileSubject
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
+import com.google.common.truth.Truth
 import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
+import kotlin.test.fail
 
 /**
  * Tests using Proguard/R8 to shrink and obfuscate code in a project with features.
@@ -75,8 +84,7 @@ class MinifyFeaturesTest(
             )
     }
 
-    // We use ":base" as otherFeature2GradlePath as regression test for http://b/80079844
-    private val otherFeature2GradlePath = ":base"
+    private val otherFeature2GradlePath = ":otherFeature2"
 
     private val lib1 =
         MinimalSubProject.lib("com.example.lib1")
@@ -276,6 +284,14 @@ class MinifyFeaturesTest(
                                     android:id="@+id/extraText" />
                         </LinearLayout>"""
                 )
+                .withFile(
+                    "src/main/res/values/string.xml",
+                    """<?xml version="1.0" encoding="utf-8"?>
+                        <resources>
+                            <string name="otherFeature1">otherFeature1</string>
+                            <string name="otherFeature2">otherFeature2</string>
+                        </resources>"""
+                )
                 .withFile("src/main/resources/base_java_res.txt", "base")
                 .withFile(
                     "src/main/java/com/example/baseModule/Main.java",
@@ -382,7 +398,14 @@ class MinifyFeaturesTest(
                     "src/main/AndroidManifest.xml",
                     """<?xml version="1.0" encoding="utf-8"?>
                         <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                              package="com.example.otherFeature1">
+                            xmlns:dist="http://schemas.android.com/apk/distribution"
+                            package="com.example.otherFeature1">
+
+                            <dist:module dist:onDemand="true"
+                                         dist:title="@string/otherFeature1">
+                                <dist:fusing dist:include="true"/>
+                            </dist:module>
+
                             <application android:label="app_name">
                                 <activity android:name=".Main"
                                           android:label="app_name">
@@ -395,7 +418,7 @@ class MinifyFeaturesTest(
                         </manifest>"""
                 )
                 .withFile(
-                    "src/main/res/layout/other_main.xml",
+                    "src/main/res/layout/other_main_1.xml",
                     """<?xml version="1.0" encoding="utf-8"?>
                         <LinearLayout
                                 xmlns:android="http://schemas.android.com/apk/res/android"
@@ -441,7 +464,7 @@ class MinifyFeaturesTest(
                             @Override
                             public void onCreate(Bundle savedInstanceState) {
                                 super.onCreate(savedInstanceState);
-                                setContentView(R.layout.other_main);
+                                setContentView(R.layout.other_main_1);
 
                                 TextView tv = (TextView) findViewById(R.id.extraText);
                                 tv.setText(
@@ -500,7 +523,14 @@ class MinifyFeaturesTest(
                     "src/main/AndroidManifest.xml",
                     """<?xml version="1.0" encoding="utf-8"?>
                         <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                              package="com.example.otherFeature2">
+                            xmlns:dist="http://schemas.android.com/apk/distribution"
+                            package="com.example.otherFeature2">
+
+                            <dist:module dist:onDemand="true"
+                                         dist:title="@string/otherFeature2">
+                                <dist:fusing dist:include="true"/>
+                            </dist:module>
+
                             <application android:label="app_name">
                                 <activity android:name=".Main"
                                           android:label="app_name">
@@ -513,7 +543,7 @@ class MinifyFeaturesTest(
                         </manifest>"""
                 )
                 .withFile(
-                    "src/main/res/layout/other_main.xml",
+                    "src/main/res/layout/other_main_2.xml",
                     """<?xml version="1.0" encoding="utf-8"?>
                         <LinearLayout
                                 xmlns:android="http://schemas.android.com/apk/res/android"
@@ -556,7 +586,7 @@ class MinifyFeaturesTest(
                             @Override
                             public void onCreate(Bundle savedInstanceState) {
                                 super.onCreate(savedInstanceState);
-                                setContentView(R.layout.other_main);
+                                setContentView(R.layout.other_main_2);
 
                                 TextView tv = (TextView) findViewById(R.id.extraText);
                                 tv.setText(getStringProvider().getString(foo));
@@ -633,10 +663,7 @@ class MinifyFeaturesTest(
             .build()
 
     @get:Rule
-    val project =
-        GradleTestProject.builder()
-            .fromTestApp(testApp)
-            .create()
+    val project = GradleTestProject.builder().fromTestApp(testApp).create()
 
     @Test
     fun testApksAreMinified() {
@@ -774,6 +801,76 @@ class MinifyFeaturesTest(
     }
 
     @Test
+    fun testBundleIsMinified() {
+        Assume.assumeTrue(multiApkMode == MultiApkMode.DYNAMIC_APP)
+        val executor = project.executor()
+            .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+        executor.run("bundleMinified")
+
+        val bundleFile = getApkFolderOutput("minified", ":baseModule").bundleFile
+        FileSubject.assertThat(bundleFile).exists()
+
+        Zip(bundleFile).use {
+            // check that java resources are packaged as expected
+            val expectedJavaRes = listOf(
+                "/base/root/base_java_res.txt",
+                "/base/root/lib1_java_res.txt",
+                "/base/root/lib2_java_res.txt",
+                "/base/root/other_java_res_1.txt",
+                "/base/root/other_java_res_2.txt"
+            )
+            Truth.assertThat(it.entries.map { it.toString() }).containsAllIn(expectedJavaRes)
+            // check base dex
+            val baseDex = Dex(it.getEntry("base/dex/classes.dex")!!)
+            assertThat(baseDex).containsClasses(
+                "Lcom/example/baseModule/Main;",
+                "Lcom/example/baseModule/a;",
+                "Lcom/example/baseModule/EmptyClassToKeep;",
+                "Lcom/example/lib1/EmptyClassToKeep;",
+                "Lcom/example/lib1/a;"
+            )
+            assertThat(baseDex).doesNotContainClasses(
+                "Lcom/example/baseFeature/EmptyClassToRemove;",
+                "Lcom/example/lib1/EmptyClassToRemove;",
+                "Lcom/example/lib2/EmptyClassKeep;",
+                "Lcom/example/lib2/Lib2Class;",
+                "Lcom/example/lib2/a;",
+                "Lcom/example/otherFeature1/Main;",
+                "Lcom/example/otherFeature2/Main;"
+            )
+            // check otherFeature1 dex
+            val otherFeature1Dex = Dex(it.getEntry("otherFeature1/dex/classes.dex")!!)
+            assertThat(otherFeature1Dex).containsClasses(
+                "Lcom/example/otherFeature1/Main;",
+                "Lcom/example/otherFeature1/EmptyClassToKeep;",
+                "Lcom/example/lib2/EmptyClassToKeep;",
+                "Lcom/example/lib2/FooView;",
+                "Lcom/example/lib2/a;"
+            )
+            assertThat(otherFeature1Dex).doesNotContainClasses(
+                "Lcom/example/otherFeature1/EmptyClassToRemove;",
+                "Lcom/example/lib2/EmptyClassToRemove;",
+                "Lcom/example/lib1/EmptyClassToKeep;",
+                "Lcom/example/lib1/Lib1Class;",
+                "Lcom/example/lib1/a;",
+                "Lcom/example/baseModule/Main;",
+                "Lcom/example/otherFeature2/Main;"
+            )
+            // check otherFeature2 dex
+            val otherFeature2Dex = Dex(it.getEntry("otherFeature2/dex/classes.dex")!!)
+            assertThat(otherFeature2Dex).containsClasses(
+                "Lcom/example/otherFeature2/Main;"
+            )
+            assertThat(otherFeature2Dex).doesNotContainClasses(
+                "Lcom/example/lib1/EmptyClassToKeep;",
+                "Lcom/example/lib2/EmptyClassToKeep;",
+                "Lcom/example/baseModule/Main;",
+                "Lcom/example/otherFeature1/Main;"
+            )
+        }
+    }
+
+    @Test
     fun testMinifyEnabledSyncError() {
         Assume.assumeTrue(codeShrinker == CodeShrinker.R8)
         project.getSubproject(":foo:otherFeature1")
@@ -808,5 +905,19 @@ class MinifyFeaturesTest(
             .that()
             .hasMessageThatContains("should not be specified in this module.")
     }
+
+    private fun getApkFolderOutput(
+        variantName: String,
+        baseGradlePath: String
+    ): AppBundleVariantBuildOutput {
+        val outputModels = project.model().fetchContainer(AppBundleProjectBuildOutput::class.java)
+
+        val outputAppModel =
+            outputModels.rootBuildModelMap[baseGradlePath]
+                ?: fail("Failed to get output model for $baseGradlePath module")
+
+        return outputAppModel.getOutputByName(variantName)
+    }
+
 }
 
