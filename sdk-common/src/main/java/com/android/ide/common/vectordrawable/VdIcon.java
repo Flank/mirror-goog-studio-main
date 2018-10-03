@@ -22,6 +22,7 @@ import static java.awt.RenderingHints.VALUE_ANTIALIAS_ON;
 import static java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.util.AssetUtil;
 import java.awt.Color;
 import java.awt.Component;
@@ -40,7 +41,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Map;
 import javax.swing.Icon;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * VdIcon wraps every vector drawable from Material Library into an icon. All of them are shown in
