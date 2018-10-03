@@ -96,15 +96,20 @@ public class Deployer {
      * the size of the patch.
      */
     public RunResponse install() throws IOException {
+        stopWatch.start();
         for (ApkFull apk : apks) {
             cache(apk);
         }
+        stopWatch.mark("Apk cached");
         RunResponse response = new RunResponse();
-        diff(response);
         try {
             adb.installMultiple(apks, true);
             stopWatch.mark("Install succeeded");
+            response.status = RunResponse.Status.OK;
+            response.errorMessage = "Install succeeded";
         } catch (DeployerException e) {
+            response.status = RunResponse.Status.ERROR;
+            response.errorMessage = "Install failed";
             stopWatch.mark("Install failed");
             LOGGER.error(e, null);
         }
