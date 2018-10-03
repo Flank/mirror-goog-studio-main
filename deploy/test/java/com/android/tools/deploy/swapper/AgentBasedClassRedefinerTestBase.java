@@ -84,7 +84,7 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
         return request;
     }
 
-    protected static class LocalTestAgentBasedClassRedefiner extends ClassRedefiner {
+    protected static class LocalTestAgentBasedClassRedefiner {
         private final TemporaryFolder messageDir;
         private final FakeAndroidDriver android;
         private Process server;
@@ -150,7 +150,6 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
             }
         }
 
-        @Override
         public void redefine(Deploy.SwapRequest request) {
             redefine(request, true);
         }

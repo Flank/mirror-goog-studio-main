@@ -265,9 +265,18 @@ public class Deployer {
                 throw new DeployerException(e);
             }
         }
+
         stopWatch.mark("Piping request...");
-        redefiner.redefine(request.build());
+        Deploy.SwapResponse swapResponse = redefiner.redefine(request.build());
         stopWatch.mark("Swap finished.");
+
+        // TODO: This is overwriting any existing errors in the object. Is that a problem?
+        if (swapResponse.getStatus() == Deploy.SwapResponse.Status.OK) {
+            response.status = RunResponse.Status.OK;
+        } else {
+            response.status = RunResponse.Status.ERROR;
+            response.errorMessage = "Swap failed.";
+        }
     }
 
     private DexArchive cache(ApkFull apk) throws IOException {
