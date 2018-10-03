@@ -45,6 +45,10 @@ class PreswapCheck {
         if (name.endsWith(".so")) {
             return "Modifying .so requires application restart";
         }
+
+        if (name.equals("AndroidManifest.xml")) {
+            return "Modifying AndroidManifest.xml files not supported.";
+        }
         return null;
     }
 }

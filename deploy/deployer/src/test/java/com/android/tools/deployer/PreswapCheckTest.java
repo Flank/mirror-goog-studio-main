@@ -72,4 +72,26 @@ public class PreswapCheckTest {
         String error = PreswapCheck.verify(diff);
         Assert.assertNull(error);
     }
+
+    @Test
+    public void testChangedManifest() {
+        HashMap<String, ApkDiffer.ApkEntryStatus> diff = new HashMap<>();
+        diff.put("META-INF/CERT.SF ", MODIFIED);
+        diff.put("META-INF/CERT.RSA", MODIFIED);
+        diff.put("META-INF/MANIFEST.MF", MODIFIED);
+        diff.put("AndroidManifest.xml", MODIFIED);
+        String error = PreswapCheck.verify(diff);
+        Assert.assertNotNull(error);
+    }
+
+    @Test
+    public void testChangedUnrelatedManifest() {
+        HashMap<String, ApkDiffer.ApkEntryStatus> diff = new HashMap<>();
+        diff.put("META-INF/CERT.SF ", MODIFIED);
+        diff.put("META-INF/CERT.RSA", MODIFIED);
+        diff.put("META-INF/MANIFEST.MF", MODIFIED);
+        diff.put("Not-The-Real-AndroidManifest.xml", MODIFIED);
+        String error = PreswapCheck.verify(diff);
+        Assert.assertNull(error);
+    }
 }

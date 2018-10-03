@@ -237,7 +237,8 @@ public class Deployer {
                 String preSwapCheckError = PreswapCheck.verify(diffs);
 
                 if (preSwapCheckError != null) {
-                    System.out.println("Unable to swap: " + preSwapCheckError);
+                    response.status = RunResponse.Status.ERROR;
+                    response.errorMessage = preSwapCheckError;
                     return;
                 }
 
@@ -249,7 +250,8 @@ public class Deployer {
                             "Unable to retrieve apk in DB ''"
                                     + apkDump.getDigest()
                                     + "', skipping this apk.");
-                    // TODO: propagate this error condition up
+                    response.status = RunResponse.Status.ERROR;
+                    response.errorMessage = "Unrecognized APK on device.";
                     return;
                 }
 
