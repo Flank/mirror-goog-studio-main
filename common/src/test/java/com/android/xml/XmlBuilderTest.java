@@ -41,6 +41,10 @@ public final class XmlBuilderTest {
                         + "            android:layout_width=\"match_parent\"\n"
                         + "            android:layout_height=\"wrap_content\" />\n"
                         + "\n"
+                        + "        <TextView\n"
+                        + "            android:layout_width=\"wrap_content\"\n"
+                        + "            android:layout_height=\"wrap_content\" />\n"
+                        + "\n"
                         + "        <FrameLayout\n"
                         + "            android:id=\"@android:id/tab_content\"\n"
                         + "            android:layout_width=\"match_parent\"\n"
@@ -76,27 +80,28 @@ public final class XmlBuilderTest {
         XmlBuilder builder =
                 new XmlBuilder()
                         .startTag("TabHost")
-                        .androidAttribute(ATTR_LAYOUT_WIDTH, "200dip")
-                        .androidAttribute(ATTR_LAYOUT_HEIGHT, "300dip")
-                          .startTag("LinearLayout")
-                          .androidAttribute(ATTR_LAYOUT_WIDTH, VALUE_MATCH_PARENT)
-                          .androidAttribute(ATTR_LAYOUT_HEIGHT, VALUE_MATCH_PARENT)
-                          .androidAttribute("orientation", "vertical")
-                            .startTag("TabWidget")
-                            .androidAttribute("id", "@android:id/tabs")
-                            .androidAttribute(ATTR_LAYOUT_WIDTH, VALUE_MATCH_PARENT)
-                            .androidAttribute(ATTR_LAYOUT_HEIGHT, SdkConstants.VALUE_WRAP_CONTENT)
-                            .endTag("TabWidget")
-                            .startTag("FrameLayout")
-                            .androidAttribute("id", "@android:id/tab_content")
-                            .androidAttribute(ATTR_LAYOUT_WIDTH, VALUE_MATCH_PARENT)
-                            .androidAttribute(ATTR_LAYOUT_HEIGHT, VALUE_MATCH_PARENT);
+                        .withSize("200dip", "300dip")
+                        .startTag("LinearLayout")
+                        .androidAttribute(ATTR_LAYOUT_WIDTH, VALUE_MATCH_PARENT)
+                        .androidAttribute(ATTR_LAYOUT_HEIGHT, VALUE_MATCH_PARENT)
+                        .androidAttribute("orientation", "vertical")
+                        .startTag("TabWidget")
+                        .androidAttribute("id", "@android:id/tabs")
+                        .androidAttribute(ATTR_LAYOUT_WIDTH, VALUE_MATCH_PARENT)
+                        .androidAttribute(ATTR_LAYOUT_HEIGHT, SdkConstants.VALUE_WRAP_CONTENT)
+                        .endTag("TabWidget")
+                        .startTag("TextView")
+                        .wrapContent()
+                        .endTag("TextView")
+                        .startTag("FrameLayout")
+                        .androidAttribute("id", "@android:id/tab_content")
+                        .androidAttribute(ATTR_LAYOUT_WIDTH, VALUE_MATCH_PARENT)
+                        .androidAttribute(ATTR_LAYOUT_HEIGHT, VALUE_MATCH_PARENT);
 
         for (int i = 0; i < 3; i++) {
             builder.startTag("LinearLayout")
                     .androidAttribute("id", "@+id/tab_" + (i + 1))
-                    .androidAttribute(ATTR_LAYOUT_WIDTH, VALUE_MATCH_PARENT)
-                    .androidAttribute(ATTR_LAYOUT_HEIGHT, VALUE_MATCH_PARENT)
+                    .matchParent()
                     .androidAttribute("orientation", "vertical")
                     .endTag("LinearLayout");
         }
