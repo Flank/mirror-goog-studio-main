@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.android.testutils.TestUtils;
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -86,8 +87,8 @@ public class ApkTest {
         ApkDump remote =
                 new ApkDump(
                         "base.apk",
-                        Files.readAllBytes(cd.toPath()),
-                        Files.readAllBytes(sig.toPath()));
+                        ByteBuffer.wrap(Files.readAllBytes(cd.toPath())),
+                        ByteBuffer.wrap(Files.readAllBytes(sig.toPath())));
 
         assertEquals(local.getCrcs().keySet().size(), remote.getCrcs().keySet().size());
         assertTrue(
@@ -108,8 +109,8 @@ public class ApkTest {
         ApkDump remote =
                 new ApkDump(
                         "base.apk",
-                        Files.readAllBytes(cd.toPath()),
-                        Files.readAllBytes(sig.toPath()));
+                        ByteBuffer.wrap(Files.readAllBytes(cd.toPath())),
+                        ByteBuffer.wrap(Files.readAllBytes(sig.toPath())));
         assertEquals(local.getDigest(), remote.getDigest());
     }
 
@@ -119,7 +120,8 @@ public class ApkTest {
         File file = TestUtils.getWorkspaceFile(app1Base + "base.apk");
         File cd = new File(file.getParent(), "base.apk.remotecd");
         ApkFull local = new ApkFull(file.getPath());
-        ApkDump remote = new ApkDump("base.apk", Files.readAllBytes(cd.toPath()), null);
+        ApkDump remote =
+                new ApkDump("base.apk", ByteBuffer.wrap(Files.readAllBytes(cd.toPath())), null);
         assertEquals(local.getDigest(), remote.getDigest());
     }
 

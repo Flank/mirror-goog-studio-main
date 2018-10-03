@@ -21,8 +21,8 @@ import java.util.*;
 
 public class ApkDump {
 
-    private final byte[] contentDirectory;
-    private final byte[] signature;
+    private final ByteBuffer contentDirectory;
+    private final ByteBuffer signature;
     private final String name;
 
     // Cached lazy-initialized values
@@ -38,7 +38,7 @@ public class ApkDump {
      * <p>Block dump files contain the V2/V3 Signature Block located between the APK payload and the
      * APK CD record.
      */
-    public ApkDump(String name, byte[] contentDirectory, byte[] signature) {
+    public ApkDump(String name, ByteBuffer contentDirectory, ByteBuffer signature) {
         this.name = name;
         this.contentDirectory = contentDirectory;
         this.signature = signature;
@@ -62,13 +62,12 @@ public class ApkDump {
 
     // Generates a hash for a given APK. If there is a signature block, hash it. Otherwise, hash the Central Directory record.
     private String generateDigest() {
-        byte[] data = signature != null ? signature : contentDirectory;
-        ByteBuffer buffer = ByteBuffer.wrap(data);
+        ByteBuffer buffer =
+                (signature != null && signature.remaining() != 0) ? signature : contentDirectory;
         return ZipUtils.digest(buffer);
     }
 
     private HashMap<String, Long> readCrcs() {
-        ByteBuffer buffer = ByteBuffer.wrap(contentDirectory);
-        return ZipUtils.readCrcs(buffer);
+        return ZipUtils.readCrcs(contentDirectory);
     }
 }

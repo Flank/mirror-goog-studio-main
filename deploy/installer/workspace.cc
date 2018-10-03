@@ -29,10 +29,6 @@ Workspace::Workspace(const std::string& executable_path)
   base_ = RetrieveBase() + "/";
 
   // Create all directory that may be used.
-  // Create the dump folder.
-  dumps_ = base_ + "/dumps/";
-  mkdir(dumps_.c_str(), kDirectoryMode);
-
   tmp_ = base_ + "/tmp/";
   mkdir(tmp_.c_str(), kDirectoryMode);
 
@@ -42,27 +38,6 @@ Workspace::Workspace(const std::string& executable_path)
   close(STDOUT_FILENO);
   open("/dev/null", 0);
   open("/dev/null", 0);
-}
-
-void Workspace::ClearDirectory(const char* dirname) const noexcept {
-  DIR* dir;
-  struct dirent* entry;
-  char path[PATH_MAX];
-  dir = opendir(dirname);
-  if (dir == nullptr) {
-    return;
-  }
-
-  while ((entry = readdir(dir)) != NULL) {
-    if (strcmp(entry->d_name, ".") && strcmp(entry->d_name, "..")) {
-      snprintf(path, (size_t)PATH_MAX, "%s/%s", dirname, entry->d_name);
-      if (entry->d_type == DT_DIR) {
-        ClearDirectory(path);
-      }
-      unlink(path);
-    }
-  }
-  closedir(dir);
 }
 
 std::string Workspace::RetrieveBase() const noexcept {

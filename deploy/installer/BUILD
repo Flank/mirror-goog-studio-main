@@ -236,6 +236,8 @@ sh_test(
     ],
     data = [
         ":versioned_installer",
+        "//prebuilts/tools/common/m2/repository/com/google/protobuf/protoc/3.0.0:exe",
+        "//tools/base/deploy/proto:protobuffer_src",
     ] + glob(["tests/**/*"]),
     tags = [
         "no_windows",
@@ -250,6 +252,8 @@ sh_test(
     ],
     data = [
         "versioned_installer",
+        "//prebuilts/tools/common/m2/repository/com/google/protobuf/protoc/3.0.0:exe",
+        "//tools/base/deploy/proto:protobuffer_src",
     ] + glob(["tests/**/*"]),
     tags = [
         "no_windows",
@@ -264,6 +268,8 @@ sh_test(
     ],
     data = [
         ":versioned_installer",
+        "//prebuilts/tools/common/m2/repository/com/google/protobuf/protoc/3.0.0:exe",
+        "//tools/base/deploy/proto:protobuffer_src",
     ] + glob(["tests/**/*"]),
     tags = [
         "no_windows",

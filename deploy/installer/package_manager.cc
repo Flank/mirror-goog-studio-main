@@ -1,5 +1,6 @@
 #include "package_manager.h"
 #include <cstring>
+#include <iostream>
 #include <sstream>
 
 #include "trace.h"
@@ -12,7 +13,8 @@ const char* PM_EXEC = "/system/bin/pm";
 
 PackageManager::PackageManager() : ShellCommandRunner(PM_EXEC) {}
 
-bool PackageManager::GetApks(const std::string& package_name, Apks* apks,
+bool PackageManager::GetApks(const std::string& package_name,
+                             std::vector<std::string>* apks,
                              std::string* error_string) const {
   Trace trace("PackageManager::GetAppBaseFolder");
   std::string parameters;
@@ -22,7 +24,6 @@ bool PackageManager::GetApks(const std::string& package_name, Apks* apks,
   bool success = Run(parameters, &output);
   if (!success) {
     *error_string = output;
-    // TODO Improve error logging.
     return false;
   }
   // pm returns the path to the apk. We need to parse the response:

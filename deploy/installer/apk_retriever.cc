@@ -23,30 +23,19 @@
 
 namespace deploy {
 
-ApkRetriever::ApkRetriever(const std::string& packageName)
-    : packageName_(packageName) {
-  retrieve();
-}
-
-void ApkRetriever::retrieve() noexcept {
+std::vector<std::string> ApkRetriever::retrieve(
+    const std::string& package_name) const noexcept {
+  std::vector<std::string> apks;
   // First try with cmd. It may fail since path capability was added to "cmd" in
   // Android P.
   CmdCommand cmd;
   std::string errorOutput;
-  cmd.GetAppApks(packageName_, &apks_, &errorOutput);
-  if (apks_.size() == 0) {
-    std::cerr << "Unable to retrieve apks with 'cmd'." << std::endl;
-    std::cerr << errorOutput << std::endl;
-    // "cmd" likely failed. Try with PackageManager
+  cmd.GetAppApks(package_name, &apks, &errorOutput);
+  if (apks.size() == 0) {
+    // "cmd" likely failed. Try with PackageManager (pm)
     PackageManager pm;
-    pm.GetApks(packageName_, &apks_, &errorOutput);
-    if (apks_.size() == 0) {
-      std::cerr << "Unable to retrieve apks with 'pm'." << std::endl;
-      std::cerr << errorOutput << std::endl;
-    }
+    pm.GetApks(package_name, &apks, &errorOutput);
   }
+  return apks;
 }
-
-Apks& ApkRetriever::get() { return apks_; }
-
 }  // namespace deploy

@@ -30,7 +30,8 @@ const char* CMD_EXEC = "/system/bin/cmd";
 
 CmdCommand::CmdCommand() : ShellCommandRunner(CMD_EXEC) {}
 
-bool CmdCommand::GetAppApks(const std::string& package_name, Apks* apks,
+bool CmdCommand::GetAppApks(const std::string& package_name,
+                            std::vector<std::string>* apks,
                             std::string* error_string) const noexcept {
   Trace trace("CmdCommand::GetAppApks");
   std::string parameters;

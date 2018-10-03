@@ -25,3 +25,11 @@ cc_binary(
     tags = ["no_windows"],
     deps = ["//tools/base/deploy/proto:cc_proto"],
 )
+
+filegroup(
+    name = "protobuffer_src",
+    srcs = [
+        "deploy.proto",
+    ],
+    visibility = ["//visibility:public"],
+)

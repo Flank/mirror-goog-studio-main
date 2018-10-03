@@ -19,7 +19,8 @@
 
 #include "shell_command.h"
 
-#include "apk_retriever.h"
+#include <string>
+#include <vector>
 
 namespace deploy {
 
@@ -27,7 +28,8 @@ namespace deploy {
 class CmdCommand : public ShellCommandRunner {
  public:
   CmdCommand();
-  bool GetAppApks(const std::string& package_name, Apks* apks,
+  bool GetAppApks(const std::string& package_name,
+                  std::vector<std::string>* apks,
                   std::string* error_string) const noexcept;
 
   bool AttachAgent(int pid, const std::string& agent, const std::string& args,

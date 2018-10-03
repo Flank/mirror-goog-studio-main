@@ -92,31 +92,19 @@ public class Installer {
         System.out.println("Dump response:" + response.getStatus().toString());
         printEvents(response.getEventsList());
 
-        // Pull entire directory of dumps from remote device.
-        String remoteDirectory = Deployer.DUMPS_DIRECTORY + "/" + packageName;
-        File directory = Files.createTempDirectory(".dumps").toFile();
-        adb.pull(remoteDirectory, directory.toString());
-        File packageDumps = new File(directory, packageName);
-
-        Map<String, ApkDump> dumps = new HashMap<>();
-        File[] files = packageDumps.listFiles();
-        if (files == null) {
-            throw new IOException("Cannot list files on " + packageDumps.toString());
+        if (response.getStatus() == Deploy.DumpResponse.Status.ERROR_PACKAGE_NOT_FOUND) {
+            throw new IOException(
+                    "Cannot list apks for package " + packageName + ". Is the app installed?");
         }
 
-        for (File file : files) {
-            if (file.isFile()) {
-                if (file.isFile() && file.getName().endsWith(".remotecd")) {
-                    String name = file.getName().replaceFirst("\\.remotecd$", "");
-                    File signatureFile = new File(file.getParent(), name + ".remoteblock");
-                    byte[] contentDirectory = Files.readAllBytes(file.toPath());
-                    byte[] signature =
-                            signatureFile.exists()
-                                    ? Files.readAllBytes(signatureFile.toPath())
-                                    : null;
-                    dumps.put(name, new ApkDump(name, contentDirectory, signature));
-                }
-            }
+        Map<String, ApkDump> dumps = new HashMap<>();
+        for (Deploy.ApkDump dump : response.getDumpsList()) {
+            dumps.put(
+                    dump.getName(),
+                    new ApkDump(
+                            dump.getName(),
+                            dump.getCd().asReadOnlyByteBuffer(),
+                            dump.getSignature().asReadOnlyByteBuffer()));
         }
         return dumps;
     }

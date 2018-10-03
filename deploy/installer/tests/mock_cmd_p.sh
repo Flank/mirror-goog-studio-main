@@ -15,4 +15,5 @@ if [ -z $3 ]; then
   exit 1
 fi
 
-find tools/base/deploy/installer/tests/data/app/$3 -exec echo package:{} \;
+# Since bazel create symbolic links, we MUST use -L if we use -type f
+find -L tools/base/deploy/installer/tests/data/app/$3 -type f -exec echo package:{} \;

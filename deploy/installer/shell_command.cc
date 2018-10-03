@@ -78,7 +78,7 @@ bool ShellCommandRunner::RunAndReadOutput(const string& cmd,
   int ret = pclose(pipe);
   if (WEXITSTATUS(ret) != 0 && output != nullptr) {
     *output = std::string() + "Command: '" + cmd + "' failed with output: '" +
-              *output + "'";
+              *output + "'\n";
   }
   return WEXITSTATUS(ret) == 0;
 }

@@ -100,14 +100,20 @@ message Event {
   int64 timestamp_ns = 5;
 }
 
+message ApkDump{
+  string name = 1;
+  bytes cd = 2;
+  bytes signature = 3;
+}
+
 message DumpResponse {
   enum Status {
     UNKNOWN = 0;
     OK = 1; // The dump completed successfully.
-    ERROR = 2; // The dump did not succeed.
+    ERROR_PACKAGE_NOT_FOUND = 2;
   }
 
   Status status = 1;
   repeated Event events = 2;
-  // TODO: Add dumps content and filename here instead of using the device and host filesystem.
+  repeated ApkDump dumps = 3;
 }

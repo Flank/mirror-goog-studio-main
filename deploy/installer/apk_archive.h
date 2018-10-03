@@ -17,9 +17,16 @@
 #ifndef INSTALLER_APKARCHIVE_H
 #define INSTALLER_APKARCHIVE_H
 
+#include <memory>
 #include <string>
+#include <vector>
 
 namespace deploy {
+
+struct Dump {
+  std::unique_ptr<std::string> cd = nullptr;
+  std::unique_ptr<std::string> signature = nullptr;
+};
 
 class ApkArchiveTester;
 
@@ -32,25 +39,24 @@ class ApkArchive {
   // A convenience struct to store the result of search operation when locating
   // the EoCDr, CDr, and Signature Block.
   struct Location {
-    uint8_t* start = nullptr;
+    size_t offset = 0;
     size_t size = 0;
-    bool valid;
+    bool valid = false;
   };
 
   ApkArchive(const std::string& path);
   ~ApkArchive();
-  bool ExtractMetadata(const std::string& pkg,
-                       const std::string& dumpDst) noexcept;
+  Dump ExtractMetadata() noexcept;
 
  private:
-  bool WriteMetadata(const std::string& path, Location loc) const noexcept;
+  std::unique_ptr<std::string> ReadMetadata(Location loc) const noexcept;
 
   // Retrieve the location of the Central Directory Record.
   Location GetCDLocation() noexcept;
 
   // Retrieve the location of the signature block starting from Central
   // Directory Record
-  Location GetSignatureLocation(uint8_t* cdRecord) noexcept;
+  Location GetSignatureLocation(size_t offset_to_cdrecord) noexcept;
   size_t GetArchiveSize() const noexcept;
 
   // Find the End of Central Directory Record, starting from the end of the
