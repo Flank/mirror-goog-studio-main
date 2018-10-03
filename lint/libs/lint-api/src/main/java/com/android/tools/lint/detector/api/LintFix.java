@@ -779,7 +779,6 @@ public class LintFix {
         /** Removes the given attribute */
         public SetAttributeBuilder remove(@NonNull String attribute) {
             assert this.attribute == null;
-            assert attribute.indexOf(':') == -1 : attribute;
             this.attribute = attribute;
             this.value = null;
             return this;

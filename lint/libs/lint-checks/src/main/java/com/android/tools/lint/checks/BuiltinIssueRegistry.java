@@ -31,7 +31,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    public static final int INITIAL_CAPACITY = 344;
+    public static final int INITIAL_CAPACITY = 360;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -235,6 +235,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(MissingIdDetector.ISSUE);
         issues.add(NamespaceDetector.CUSTOM_VIEW);
         issues.add(NamespaceDetector.RES_AUTO);
+        issues.add(NamespaceDetector.REDUNDANT);
         issues.add(NamespaceDetector.TYPO);
         issues.add(NamespaceDetector.UNUSED);
         issues.add(NegativeMarginDetector.ISSUE);
