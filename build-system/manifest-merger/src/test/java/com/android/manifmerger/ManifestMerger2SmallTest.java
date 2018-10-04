@@ -661,7 +661,7 @@ public class ManifestMerger2SmallTest {
     }
 
     @Test
-    public void testOverlayMerge() throws Exception {
+    public void testOverlayOnMainMerge() throws Exception {
         String xmlInput = ""
                      + "<manifest\n"
                      + "    package=\"com.foo.example\""
@@ -679,8 +679,8 @@ public class ManifestMerger2SmallTest {
                      + "    </application>\n"
                      + "</manifest>";
 
-        File inputFile = TestUtils.inputAsFile("testOverlayMerge", xmlInput);
-        File overlayFile = TestUtils.inputAsFile("testOverlayMerge", xmlToMerge);
+        File inputFile = TestUtils.inputAsFile("testOverlayOnMainMerge1", xmlInput);
+        File overlayFile = TestUtils.inputAsFile("testOverlayOnMainMerge2", xmlToMerge);
 
         MockLog mockLog = new MockLog();
         MergingReport mergingReport =
@@ -695,6 +695,51 @@ public class ManifestMerger2SmallTest {
         Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
         assertEquals("com.foo.example", xmlDocument.getElementsByTagName("manifest")
           .item(0).getAttributes().getNamedItem("package").getNodeValue());
+
+        NodeList activityList = xmlDocument.getElementsByTagName("activity");
+        assertEquals(
+                ".activityOne",
+                activityList.item(0).getAttributes().getNamedItem("t:name").getNodeValue());
+        assertEquals(
+                ".activityTwo",
+                activityList.item(1).getAttributes().getNamedItem("t:name").getNodeValue());
+    }
+
+    @Test
+    public void testOverlayOnOverlayMerge() throws Exception {
+        String xmlInput =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
+                        + "    <activity t:name=\"activityOne\"/>\n"
+                        + "    <application t:name=\".applicationOne\" "
+                        + "         t:backupAgent=\"com.foo.example.myBackupAgent\"/>\n"
+                        + "</manifest>";
+
+        String xmlToMerge =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
+                        + "    <application>\n"
+                        + "        <activity t:name=\"activityTwo\"/>\n"
+                        + "    </application>\n"
+                        + "</manifest>";
+
+        File inputFile = TestUtils.inputAsFile("testOverlayOnOverlayMerge1", xmlInput);
+        File overlayFile = TestUtils.inputAsFile("testOverlayOnOverlayMerge2", xmlToMerge);
+
+        MockLog mockLog = new MockLog();
+        MergingReport mergingReport =
+                ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                        .withFeatures(
+                                ManifestMerger2.Invoker.Feature.EXTRACT_FQCNS,
+                                ManifestMerger2.Invoker.Feature.NO_PLACEHOLDER_REPLACEMENT)
+                        .addFlavorAndBuildTypeManifest(overlayFile)
+                        .asType(XmlDocument.Type.OVERLAY)
+                        .merge();
+
+        assertTrue(mergingReport.getResult().isSuccess());
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
 
         NodeList activityList = xmlDocument.getElementsByTagName("activity");
         assertEquals(".activityOne", activityList.item(0).getAttributes().getNamedItem("t:name").getNodeValue());
