@@ -93,7 +93,8 @@ data class ConfigTable(
      * the table region described by [searchCriteria].
      */
     fun filterIntersecting(searchCriteria: ConfigPath): ConfigTable {
-        return ConfigTable(schema, associations.filter {
+        return ConfigTable(schema, if (searchCriteria.matchesEverything) associations
+        else associations.filter {
             it.path.intersects(searchCriteria)
         })
     }
