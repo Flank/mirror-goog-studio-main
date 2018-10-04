@@ -115,6 +115,12 @@ private const val FORK_CMAKE_SDK_VERSION = "3.6.4111459"
 private val forkCmakeSdkVersionRevision = Revision.parseRevision(FORK_CMAKE_SDK_VERSION)
 
 /**
+ * List of as-yet unshipped canaries that may appear in prebuilts. The purpose of this is to
+ * allow testing of SDK cmake code paths without actually publishing that CMake to the SDK.
+ */
+private val canarySdkPaths = listOf("3.10.4819442")
+
+/**
  *  This is the base version that forked CMake (which has SDK version 3.6.4111459) reports
  *  when cmake --version is called. For backward compatibility we locate 3.6.4111459
  *  when this version is requested.
@@ -172,16 +178,14 @@ private class CmakeSearchContext(
     /**
      * @return true if left is equal to right, ignoring the preview component.
      */
-    private fun versionEquals(left: Revision, right: Revision): Boolean {
-        return left.compareTo(right, Revision.PreviewComparison.IGNORE) == 0
-    }
+    private fun versionEquals(left: Revision, right: Revision) =
+        left.compareTo(right, Revision.PreviewComparison.IGNORE) == 0
 
     /**
      * @return true if left is greater than right, ignoring the preview component.
      */
-    private fun versionGreaterThan(left: Revision, right: Revision): Boolean {
-        return left.compareTo(right, Revision.PreviewComparison.IGNORE) > 0;
-    }
+    private fun versionGreaterThan(left: Revision, right: Revision) =
+        left.compareTo(right, Revision.PreviewComparison.IGNORE) > 0
 
     fun tryAcceptFoundCmake(
         candidateCmakeInstallFolder: File,
@@ -396,12 +400,13 @@ private class CmakeSearchContext(
      */
     internal fun tryFindInPath(
         cmakeVersionGetter: (File) -> Revision?,
-        environmentPaths: () -> List<File>
+        environmentPaths: () -> List<File>,
+        tag : String
     ): CmakeSearchContext {
         if (resultCmakeInstallFolder != null) {
             return this
         }
-        info("Trying to locate CMake in PATH.")
+        info("Trying to locate CMake $tag.")
         var found = false
         for (cmakeFolder in environmentPaths()) {
             try {
@@ -410,12 +415,12 @@ private class CmakeSearchContext(
                     // Found a cmake.exe later in the path. Irrespective of whether it is a better match, or a total mismatch,
                     // we ignore it but issue a message.
                     info(
-                        "- CMake $version was found in PATH at $cmakeFolder after" +
+                        "- CMake $version was found $tag at $cmakeFolder after" +
                                 " another version. Ignoring it."
                     )
                 } else {
                     val cmakeInstallPath = cmakeFolder.parentFile
-                    tryAcceptFoundCmake(cmakeInstallPath, version, "in PATH")
+                    tryAcceptFoundCmake(cmakeInstallPath, version, tag)
 
                     // At this point, we found a cmake.exe on the PATH. We only look the first one.
                     // Any cmake.exe further down the path is ignored.
@@ -450,12 +455,12 @@ private class CmakeSearchContext(
 
         if (dslVersionHasPlus()) {
             throw RuntimeException(
-                "CMake '${requestedCmakeVersion.toString()}' or higher was not found in " +
+                "CMake '$requestedCmakeVersion' or higher was not found in " +
                         "PATH or by cmake.dir property.$unsuitableCMakes"
             )
         } else {
             throw RuntimeException(
-                "CMake '${requestedCmakeVersion.toString()}' was not found in " +
+                "CMake '$requestedCmakeVersion' was not found in " +
                         "PATH or by cmake.dir property.$unsuitableCMakes"
             )
         }
@@ -464,7 +469,7 @@ private class CmakeSearchContext(
 }
 
 /**
- * @return array of folders (as Files) retrieved from PATH environment variable and from Sdk
+ * @return list of folders (as Files) retrieved from PATH environment variable and from Sdk
  * cmake folder.
  */
 private fun getEnvironmentPaths(): List<File> {
@@ -472,8 +477,23 @@ private fun getEnvironmentPaths(): List<File> {
     val pathSeparator = System.getProperty("path.separator").toRegex()
     return envPath
         .split(pathSeparator)
+        .asSequence()
         .filter { it.isNotEmpty() }
         .map { File(it) }
+        .toList()
+}
+
+/**
+ * @return list of folders (as Files) based on the specific known canary versions of CMake.
+ */
+private fun getCanarySdkPaths(sdkRoot : File?) : List<File> {
+    if (sdkRoot == null) {
+        return listOf()
+    }
+    return canarySdkPaths
+        .asSequence()
+        .map { version -> File(File(File(sdkRoot, "cmake"), version), "bin") }
+        .toList()
 }
 
 private fun getSdkCmakePackages(
@@ -533,6 +553,7 @@ fun findCmakePathLogic(
     info: (String) -> Unit,
     downloader: (String) -> Unit,
     environmentPaths: () -> List<File>,
+    canarySdkPaths: () -> List<File>,
     cmakeVersion: (File) -> Revision?,
     repositoryPackages: () -> List<LocalPackage>
 ): File? {
@@ -545,7 +566,8 @@ fun findCmakePathLogic(
         .checkForCmakeVersionAdequatePrecision()
         .tryPathFromLocalProperties(cmakeVersion, cmakePathFromLocalProperties)
         .tryLocalRepositoryPackages(downloader, repositoryPackages)
-        .tryFindInPath(cmakeVersion, environmentPaths)
+        .tryFindInPath(cmakeVersion, environmentPaths, "in PATH")
+        .tryFindInPath(cmakeVersion, canarySdkPaths, "in SDK canaries")
         .issueVersionNotFoundError()
 }
 
@@ -570,6 +592,7 @@ fun findCmakePath(
         { message -> logger.info(message) },
         { version -> sdkHandler.installCMake(version) },
         { getEnvironmentPaths() },
+        { getCanarySdkPaths(sdkHandler.sdkFolder) },
         { folder -> getCmakeRevisionFromExecutable(folder) },
         { getSdkCmakePackages(sdkHandler, logger) })
 }

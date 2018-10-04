@@ -65,6 +65,7 @@ class CmakeLocatorTest {
                 encounter.environmentPathsRetrieved = true
                 environmentPaths()
             },
+            canarySdkPaths = { listOf() },
             cmakeVersion = cmakeVersion,
             repositoryPackages = {
                 encounter.sdkPackagesRetrieved = true
@@ -434,7 +435,7 @@ class CmakeLocatorTest {
      */
     private fun sdkCmakeAutoInstallFailsTestCase(cmakeVersion: String?) {
         val localCmake = fakeLocalPackageOf("cmake;3.10.4111459", "3.10.2")
-        val cmakeVersionOrDefault = cmakeVersion ?: "3.6.0";
+        val cmakeVersionOrDefault = cmakeVersion ?: "3.6.0"
         expectException(
             "CMake '$cmakeVersionOrDefault' was not found in PATH or by cmake.dir property.$newline" +
                     "- CMake '3.10.2' found in SDK did not match requested version '$cmakeVersionOrDefault'."
