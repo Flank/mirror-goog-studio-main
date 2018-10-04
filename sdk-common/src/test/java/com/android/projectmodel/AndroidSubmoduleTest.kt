@@ -39,6 +39,11 @@ class AndroidSubmoduleTest {
     }
 
     @Test
+    fun testWithPackageName() {
+        assertThat(project.withPackageName("foo.bar")).isEqualTo(project.copy(packageName = "foo.bar"))
+    }
+
+    @Test
     fun testWithNamespacing() {
         assertThat(project.withNamespacing(NamespacingType.REQUIRED)).isEqualTo(project.copy(namespacing = NamespacingType.REQUIRED))
     }

@@ -69,12 +69,6 @@ class ConfigTest {
     }
 
     @Test
-    fun testWithPackageName() {
-        assertThat(Config(applicationIdSuffix = "foo").withPackageName("package"))
-            .isEqualTo(Config(applicationIdSuffix = "foo", packageName = "package"))
-    }
-
-    @Test
     fun testWithManifestValues() {
         val manifestAttributes = ManifestAttributes(applicationId = "foo")
         assertThat(Config().withManifestValues(manifestAttributes)).isEqualTo(Config(manifestValues = manifestAttributes))

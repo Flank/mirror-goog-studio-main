@@ -62,7 +62,13 @@ data class AndroidSubmodule(
      * Map of [SubmodulePath] onto [Variant] for all [Variant] instances that use non-default values.
      * Variants that use the default values may optionally be omitted from this map.
      */
-    val overriddenVariants: Map<SubmodulePath, Variant> = emptyMap()
+    val overriddenVariants: Map<SubmodulePath, Variant> = emptyMap(),
+    /**
+     * The package name of the R file. Application projects may also use this as the default
+     * value for the application ID. It is defined here:
+     * https://developer.android.com/studio/build/application-id.html.
+     */
+    val packageName: String? = null
 ) {
     private val mapVariantIdsOntoVariantPaths = HashMap(configTable.schema.allVariantPaths()
         .associate { getVariantByPath(it)!!.name to it })
@@ -83,6 +89,12 @@ data class AndroidSubmodule(
 
     override fun toString(): String =
         printProperties(this, AndroidSubmodule(name = "", type = ProjectType.APP))
+
+    /**
+     * Returns a copy of the receiver with the given package name. Intended to simplify construction
+     * from Java.
+     */
+    fun withPackageName(packageName: String?) = copy(packageName = packageName)
 
     /**
      * Returns the [Variant] with the given path. If there is an override for the given variant,
