@@ -41,7 +41,7 @@ data class SourceSet(private val paths: Map<AndroidPathType, List<PathString>> =
         }
         val resultPaths = HashMap<AndroidPathType, List<PathString>>()
         for ((pathType, locations) in paths.entries) {
-            resultPaths.put(pathType, fastAppend(locations, other[pathType]))
+            resultPaths[pathType] = fastAppend(locations, other[pathType])
         }
 
         for ((pathType, locations) in other.paths.entries) {
@@ -101,7 +101,7 @@ data class SourceSet(private val paths: Map<AndroidPathType, List<PathString>> =
      * Builder for [SourceSet] instances. Intended primarily for constructing [SourceSet] instances
      * from Java. For Kotlin, it is normally simpler to use the constructor directly.
      */
-    class Builder() {
+    class Builder {
         private val contents = ArrayListMultimap.create<AndroidPathType, PathString>()
 
         /**
@@ -118,9 +118,9 @@ data class SourceSet(private val paths: Map<AndroidPathType, List<PathString>> =
         }
 
         /**
-         * Adds the given list of [paths]. Returns this.
+         * Adds the given collection of [paths]. Returns this.
          */
-        fun add(type: AndroidPathType, paths: List<PathString>): Builder {
+        fun add(type: AndroidPathType, paths: Collection<PathString>): Builder {
             contents.putAll(type, paths); return this
         }
 
