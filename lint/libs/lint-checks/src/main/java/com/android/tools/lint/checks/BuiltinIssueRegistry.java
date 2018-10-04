@@ -352,6 +352,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(UnsafeBroadcastReceiverDetector.BROADCAST_SMS);
         issues.add(UnsafeNativeCodeDetector.LOAD);
         issues.add(UnsafeNativeCodeDetector.UNSAFE_NATIVE_CODE_LOCATION);
+        issues.add(UnusedNavigationDetector.ISSUE);
         issues.add(UnusedResourceDetector.ISSUE);
         issues.add(UnusedResourceDetector.ISSUE_IDS);
         issues.add(UseCompoundDrawableDetector.ISSUE);

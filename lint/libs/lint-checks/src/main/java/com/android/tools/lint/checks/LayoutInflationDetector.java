@@ -234,7 +234,7 @@ public class LayoutInflationDetector extends LayoutDetector implements SourceCod
                 }
 
                 return false;
-            } else if (event == XmlPullParser.END_DOCUMENT) {
+            } else if (event == XmlPullParser.END_DOCUMENT || event == XmlPullParser.END_TAG) {
                 return false;
             }
         }
