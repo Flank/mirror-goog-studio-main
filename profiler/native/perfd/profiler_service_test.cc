@@ -24,6 +24,7 @@
 #include "utils/fake_clock.h"
 #include "utils/file_cache.h"
 #include "utils/fs/memory_file_system.h"
+#include "utils/log.h"
 
 using std::unique_ptr;
 
@@ -48,6 +49,8 @@ class ProfilerServiceTest : public ::testing::Test {
         grpc::CreateChannel(std::string("0.0.0.0:") + std::to_string(port),
                             grpc::InsecureChannelCredentials());
     stub_ = proto::ProfilerService::NewStub(channel);
+    // Create a new thread to read events on.
+    events_thread_ = std::thread(&ProfilerServiceTest::GetEvents, this);
   }
 
   proto::Session BeginSession(int32_t device_id, int32_t pid) {
@@ -80,17 +83,43 @@ class ProfilerServiceTest : public ::testing::Test {
     return sessions;
   }
 
-  grpc::Status GetEvents(const proto::GetEventsRequest& request,
-                         proto::GetEventsResponse* response) {
-    grpc::ClientContext context;
-    return stub_->GetEvents(&context, request, response);
+  void GetEvents() {
+    proto::GetEventsRequest request;
+    events_reader_ = stub_->GetEvents(&events_context_, request);
+    proto::Event event;
+    // Read is a blocking call.
+    while (events_reader_->Read(&event)) {
+      std::unique_lock<std::mutex> lock(events_mutex_);
+      events_.push(event);
+      events_cv_.notify_all();
+    }
+  }
+
+  std::unique_ptr<proto::Event> PopEvent() {
+    std::unique_lock<std::mutex> lock(events_mutex_);
+    // Check events list for elements, if no elements found block until
+    // we timeout (returning null) or we have an event.
+    if (events_cv_.wait_for(lock, std::chrono::milliseconds(500),
+                            [this] { return !events_.empty(); })) {
+      proto::Event& event = events_.front();
+      events_.pop();
+      return std::unique_ptr<proto::Event>(new proto::Event(event));
+    }
+    return nullptr;
   }
 
   bool IsSessionActive(const proto::Session& session) {
     return session.end_timestamp() == LLONG_MAX;
   }
 
-  void TearDown() override { server_->Shutdown(); }
+  void TearDown() override {
+    // Stop client and server listeners.
+    daemon_.InterruptWriteEvents();
+    events_context_.TryCancel();
+    events_reader_->Finish();
+    events_thread_.join();
+    server_->Shutdown();
+  }
 
   FakeClock clock_;
   FileCache file_cache_;
@@ -99,9 +128,15 @@ class ProfilerServiceTest : public ::testing::Test {
   EventBuffer buffer_;
   Daemon daemon_;
   ProfilerServiceImpl service_;
+  std::mutex events_mutex_;
+  std::condition_variable events_cv_;
+  std::queue<proto::Event> events_;
+  std::thread events_thread_;
+  grpc::ClientContext events_context_;
 
   std::unique_ptr<::grpc::Server> server_;
   std::unique_ptr<proto::ProfilerService::Stub> stub_;
+  std::unique_ptr<grpc::ClientReader<proto::Event>> events_reader_;
 };
 
 TEST_F(ProfilerServiceTest, TestBeginSessionCommand) {
@@ -116,29 +151,23 @@ TEST_F(ProfilerServiceTest, TestBeginSessionCommand) {
   clock_.SetCurrentTime(2);
   grpc::ClientContext context;
   stub_->Execute(&context, req, &res);
-  clock_.SetCurrentTime(4);
+  // Validate command created session started event.
+  std::unique_ptr<proto::Event> event = PopEvent();
+  EXPECT_EQ(2, event->timestamp());
+  EXPECT_EQ(proto::Event::SESSION_STARTED, event->type());
 
+  clock_.SetCurrentTime(4);
   grpc::ClientContext context2;
   command->set_stream_id(100);
   begin->set_pid(1001);
   stub_->Execute(&context2, req, &res);
-
-  proto::GetEventsRequest request;
-  request.set_from_timestamp(1);
-  request.set_to_timestamp(3);
-  proto::GetEventsResponse events;
-  GetEvents(request, &events);
-  ASSERT_EQ(1, events.events_size());
-
-  request.set_from_timestamp(1);
-  request.set_to_timestamp(5);
-  GetEvents(request, &events);
-  ASSERT_EQ(3, events.events_size());
-
-  request.set_from_timestamp(3);
-  request.set_to_timestamp(5);
-  GetEvents(request, &events);
-  ASSERT_EQ(2, events.events_size());
+  // Validate when a new session is started a previous session is ended.
+  event = PopEvent();
+  EXPECT_EQ(4, event->timestamp());
+  EXPECT_EQ(proto::Event::SESSION_ENDED, event->type());
+  event = PopEvent();
+  EXPECT_EQ(4, event->timestamp());
+  EXPECT_EQ(proto::Event::SESSION_STARTED, event->type());
 
   // Test legacy api:
   // Because lagacy APIs use device ID but new APIs don't, we have to call

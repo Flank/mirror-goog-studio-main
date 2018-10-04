@@ -101,7 +101,7 @@ service ProfilerService {
   // |end_timestamp| (in ns).
   // This API is most useful for getting all profiling data regardless of any
   // filtering, for example, from a device.
-  rpc GetEvents(GetEventsRequest) returns (GetEventsResponse) {
+  rpc GetEvents(GetEventsRequest) returns (stream Event) {
   }
 
   // Gets all the event groups (events that share the same event_id) that
@@ -279,12 +279,6 @@ message ExecuteResponse {
 }
 
 message GetEventsRequest {
-  int64 from_timestamp = 1;  // inclusive (ns)
-  int64 to_timestamp = 2;    // inclusive (ns)
-}
-
-message GetEventsResponse {
-  repeated Event events = 1;
 }
 
 // Every field in this message serves the purpose of filtering if it is set.

@@ -15,11 +15,16 @@
  */
 #include "perfd/event_buffer.h"
 
+#include "utils/log.h"
+
 namespace profiler {
 
 void EventBuffer::Add(proto::Event& event) {
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::unique_lock<std::mutex> lock(mutex_);
+  events_added_++;
   events_.Add(event);
+  lock.unlock();
+  events_cv_.notify_all();
   // TODO(b/73538507): optimize this:
   proto::EventGroup* group = nullptr;
   for (size_t i = 0; i < groups_.size(); i++) {
@@ -37,16 +42,37 @@ void EventBuffer::Add(proto::Event& event) {
   group->add_events()->CopyFrom(event);
 }
 
-std::vector<proto::Event> EventBuffer::Get(int64_t from, int64_t to) {
-  std::lock_guard<std::mutex> lock(mutex_);
-  std::vector<proto::Event> result;
-  for (size_t i = 0; i < events_.size(); i++) {
-    const auto& value = events_.Get(i);
-    if (value.timestamp() >= from && value.timestamp() <= to) {
-      result.push_back(value);
+void EventBuffer::WriteEventsTo(grpc::ServerWriter<proto::Event>* response) {
+  while (!interrupt_write_) {
+    // Write any events that may have queued before our event listener has
+    // connected.
+    std::unique_lock<std::mutex> lock(mutex_);
+    // Check if we are slower sending events than we are adding new events.
+    // If so we log a warning and clamp the events to the size of our ring
+    // buffer.
+    if (events_added_ > events_.size()) {
+      Log::W("Writing events thread missed sending %d events.",
+             (int)(events_added_ - events_.size()));
+      events_added_ = events_.size();
     }
+    while (events_added_ > 0) {
+      bool success =
+          response->Write(events_.Get(events_.size() - events_added_));
+      events_added_--;
+      // If we fail to send data to a client.
+      if (!success) {
+        return;
+      }
+    }
+    events_cv_.wait_for(lock, std::chrono::milliseconds(500), [this] {
+      return interrupt_write_ || events_added_ > 0;
+    });
   }
-  return result;
+}
+
+void EventBuffer::InterruptWriteEvents() {
+  interrupt_write_ = true;
+  events_cv_.notify_all();
 }
 
 std::vector<proto::EventGroup> EventBuffer::Get(int64_t session_id,
@@ -55,17 +81,20 @@ std::vector<proto::EventGroup> EventBuffer::Get(int64_t session_id,
                                                 int64_t from, int64_t to) {
   std::lock_guard<std::mutex> lock(mutex_);
   std::set<int64_t> event_ids;
-  for (size_t i = 0; i < events_.size(); i++) {
-    const auto& event = events_.Get(i);
-    if (event.kind() == kind) {
-      if (event.timestamp() < from) {
-        if (event.type() == end) {
-          event_ids.erase(event.event_id());
-        } else {
+  for (size_t i = 0; i < groups_.size(); i++) {
+    const auto& g = groups_.Get(i);
+    for (int j = 0; j < g.events_size(); j++) {
+      const auto& event = g.events(j);
+      if (event.kind() == kind) {
+        if (event.timestamp() < from) {
+          if (event.type() == end) {
+            event_ids.erase(event.event_id());
+          } else {
+            event_ids.insert(event.event_id());
+          }
+        } else if (event.timestamp() <= to) {
           event_ids.insert(event.event_id());
         }
-      } else if (event.timestamp() <= to) {
-        event_ids.insert(event.event_id());
       }
     }
   }
