@@ -244,7 +244,7 @@ open class DefaultUastParser(
         } else {
             val psiElement = element.psi
             if (psiElement != null) {
-                return getLocation(context, psiElement)
+                return getLocation(context, psiElement).withSource(element)
             }
             val parent = element.uastParent
             if (parent != null) {
@@ -317,7 +317,7 @@ open class DefaultUastParser(
         } else {
             val psiElement = element.psi
             if (psiElement != null) {
-                return createLocation(psiElement)
+                return createLocation(psiElement).withSource(element)
             }
             val parent = element.uastParent
             if (parent != null) {

@@ -28,6 +28,7 @@ import com.android.utils.CharSequences
 import com.android.utils.CharSequences.indexOf
 import com.google.common.annotations.Beta
 import com.intellij.psi.PsiElement
+import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UElement
 import org.w3c.dom.Node
 import java.io.File
@@ -188,11 +189,15 @@ open class Context(
             if (element != null && this is JavaContext) {
                 val javaContext = this
                 if (element.containingFile == javaContext.psiFile) {
-                    javaContext.report(issue, element, location, message, quickfixData)
+                    javaContext.report(issue, source, location, message, quickfixData)
                     return
                 }
             }
-            if (driver.isSuppressed(null, issue, element)) {
+            if (element is UAnnotated) {
+                if (driver.isSuppressed(null, issue, element as UAnnotated)) {
+                    return
+                }
+            } else if (driver.isSuppressed(null, issue, element)) {
                 return
             }
         }
