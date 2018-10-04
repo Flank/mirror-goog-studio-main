@@ -1234,16 +1234,19 @@ public final class SdkConstants {
     public static final String CONSTRAINT_REFERENCED_IDS = "constraint_referenced_ids";
 
     // Tags: Drawables
-    public static final String TAG_PATH = "path";
+    public static final String TAG_ANIMATED_SELECTOR = "animated-selector";
+    public static final String TAG_ANIMATED_VECTOR = "animated-vector"; //$NON-NLS-1$
+    public static final String TAG_BITMAP = "bitmap"; //$NON-NLS-1$
     public static final String TAG_CLIP_PATH = "clip-path";
     public static final String TAG_GRADIENT = "gradient";
-    public static final String TAG_BITMAP = "bitmap"; //$NON-NLS-1$
-    public static final String TAG_VECTOR = "vector"; //$NON-NLS-1$
-    public static final String TAG_ANIMATED_VECTOR = "animated-vector"; //$NON-NLS-1$
-    public static final String TAG_SHAPE = "shape";
+    public static final String TAG_INSET = "inset"; //$NON-NLS-1$
+    public static final String TAG_LAYER_LIST = "layer-list"; //$NON-NLS-1$
+    public static final String TAG_PATH = "path";
     public static final String TAG_RIPPLE = "ripple";
-    public static final String TAG_ANIMATED_SELECTOR = "animated-selector";
+    public static final String TAG_SHAPE = "shape";
     public static final String TAG_SELECTOR = "selector"; //$NON-NLS-1$
+    public static final String TAG_TRANSITION = "transition"; //$NON-NLS-1$
+    public static final String TAG_VECTOR = "vector"; //$NON-NLS-1$
 
     // Tags: Data-Binding
     public static final String TAG_LAYOUT = "layout"; //$NON-NLS-1$
