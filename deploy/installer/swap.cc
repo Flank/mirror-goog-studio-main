@@ -158,10 +158,13 @@ void SwapCommand::Run(Workspace& workspace) {
     // Gather events from the agent.
     response_->mutable_events()->MergeFrom(agent_response.events());
   }
+
+  // Ensure all of the agents have responded.
   if (agent_responses.size() < process_ids.size()) {
     overall_status = proto::AgentSwapResponse::ERROR;
   }
 
+  // If the swap failed, revert the installation.
   if (overall_status != proto::AgentSwapResponse::OK) {
     cmd.AbortInstall(install_session, &output);
     response_->set_status(proto::SwapResponse::ERROR);
@@ -174,7 +177,6 @@ void SwapCommand::Run(Workspace& workspace) {
   // on read waitng for the ResumeRequest to be sent. We first
   // ask to update the app info, and then we resume the app.
   if (request_.restart_activity()) {
-    agent_responses.clear();
     LogEvent(response_->add_events(), "Requesting activity restart");
     CmdCommand cmd;
     cmd.UpdateAppInfo("all", request_.package_name(), nullptr);
@@ -183,14 +185,18 @@ void SwapCommand::Run(Workspace& workspace) {
     proto::ResumeRequest resume;
     std::string resume_bytes;
     resume.SerializeToString(&resume_bytes);
+
+    // Tell all agents to resume; if that fails, assume the swap failed.
     if (!server_input.Write(resume_bytes)) {
       response_->set_status(proto::SwapResponse::ERROR);
       ErrEvent(response_->add_events(),
                "Could not write to agent proxy server");
+      return;
     }
-    response_->set_status(proto::SwapResponse::OK);
-    LogEvent(response_->add_events(), "Swapped");
   }
+
+  response_->set_status(proto::SwapResponse::OK);
+  LogEvent(response_->add_events(), "Swapped");
 }
 
 bool SwapCommand::Setup(const Workspace& workspace) noexcept {
