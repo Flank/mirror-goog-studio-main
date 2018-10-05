@@ -45,5 +45,6 @@
     <orderEntry type="library" scope="TEST" name="equalsverifier" level="project" />
     <orderEntry type="library" name="aia-manifest-proto-1.0-jarjar" level="project" />
     <orderEntry type="library" name="javax-inject" level="project" />
+    <orderEntry type="library" name="jetbrains-annotations-java5" level="project" />
   </component>
 </module>
