@@ -651,7 +651,7 @@ open class GradleDetector : Detector(), GradleScanner {
                                 cookie,
                                 DEPENDENCY,
                                 "Use Fabric Gradle plugin version 1.21.6 or later to " +
-                                  "improve Instant Run performance (was $revision)",
+                                    "improve Instant Run performance (was $revision)",
                                 fix
                             )
                         })
@@ -672,7 +672,7 @@ open class GradleDetector : Detector(), GradleScanner {
                                 cookie,
                                 DEPENDENCY,
                                 "Use BugSnag Gradle plugin version 2.1.2 or later to " +
-                                  "improve Instant Run performance (was $revision)",
+                                    "improve Instant Run performance (was $revision)",
                                 fix
                             )
                         })
