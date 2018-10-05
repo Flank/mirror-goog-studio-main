@@ -28,6 +28,7 @@ import com.android.builder.packaging.PackagingUtils;
 import com.android.ide.common.signing.CertificateInfo;
 import com.android.ide.common.signing.KeystoreHelper;
 import com.android.ide.common.signing.KeytoolException;
+import com.android.tools.build.apkzlib.sign.SigningOptions;
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory;
 import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode;
 import com.google.common.base.Preconditions;
@@ -421,16 +422,14 @@ public class IncrementalPackagerBuilder {
             }
         }
 
+        SigningOptions signingOptions =
+                new SigningOptions(key, certificate, v1SigningEnabled, v2SigningEnabled, minSdk);
         ApkCreatorFactory.CreationData creationData =
                 new ApkCreatorFactory.CreationData(
                         outputFile,
-                        key,
-                        certificate,
-                        v1SigningEnabled,
-                        v2SigningEnabled,
+                        signingOptions,
                         null,
                         createdBy,
-                        minSdk,
                         nativeLibrariesPackagingMode,
                         noCompressPredicate::test);
 
