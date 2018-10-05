@@ -17,7 +17,6 @@ package com.android.tools.deploy.swapper;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -48,16 +47,7 @@ public class WorkQueueDexArchiveDatabase extends DexArchiveDatabase {
 
     @Override
     public synchronized void enqueueUpdate(Function<DexArchiveDatabase, Void> request) {
-        FutureTask<DexArchiveDatabase> future =
-                new FutureTask<DexArchiveDatabase>(
-                        new Callable<DexArchiveDatabase>() {
-                            @Override
-                            public DexArchiveDatabase call() throws Exception {
-                                request.apply(delegate);
-                                return delegate;
-                            }
-                        });
-        executor.execute(future);
+        executor.execute(() -> request.apply(delegate));
     }
 
     private <R> R blockingRequest(Function<DexArchiveDatabase, R> request) {
@@ -112,6 +102,7 @@ public class WorkQueueDexArchiveDatabase extends DexArchiveDatabase {
     public void close() {
         this.<Void>blockingRequest(
                 db -> {
+                    executor.shutdown();
                     db.close();
                     return null;
                 });
