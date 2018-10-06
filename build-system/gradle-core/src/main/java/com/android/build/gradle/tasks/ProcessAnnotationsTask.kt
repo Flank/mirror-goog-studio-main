@@ -59,7 +59,7 @@ open class ProcessAnnotationsTask : JavaCompile(), VariantAwareTask {
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
     @SkipWhenEmpty
-    fun getSourceFileTree(): FileTree {
+    fun getSources(): FileTree {
         return this.project.files(this.sourceFileTrees()).asFileTree
     }
 
@@ -119,13 +119,8 @@ open class ProcessAnnotationsTask : JavaCompile(), VariantAwareTask {
             super.preConfigure(taskName)
 
             // Register annotation processing output.
-            // Note that the decision to actually execute ProcessAnnotationsTask can't be made at
-            // the task's configuration as the full information is available only at execution time
-            // (see ProcessAnnotationsTask.compile()). Therefore, the annotation processing output
-            // may be not be available when the consuming task (AndroidJavaCompile) requests it.
-            // However, that is okay because in that case, AndroidJavaCompile should perform
-            // annotation processing itself and does not need to consume the annotation processing
-            // output.
+            // Note that the annotation processing output from ProcessAnnotationsTask may be empty
+            // if the task is skipped (see ProcessAnnotationsTask.compile).
             variantScope.artifacts.createBuildableArtifact(
                 ANNOTATION_PROCESSOR_GENERATED_SOURCES_PRIVATE_USE,
                 APPEND,
@@ -144,9 +139,11 @@ open class ProcessAnnotationsTask : JavaCompile(), VariantAwareTask {
             // Configure properties that are specific to ProcessAnnotationTask
             task.processorListFile =
                     variantScope.artifacts.getFinalArtifactFiles(ANNOTATION_PROCESSOR_LIST)
-            task.sourceFileTrees = { variantScope.variantData.javaSources }
 
             task.configurePropertiesForAnnotationProcessing(variantScope)
+
+            // Collect the list of source files to process
+            task.sourceFileTrees = { variantScope.variantData.javaSources }
 
             // Since this task does not output compiled classes, destinationDir will not be used.
             // However, Gradle requires this property to be set, so let's just set it to the
