@@ -22,26 +22,6 @@ build:local --test_timeout=120,600,1800,7200
 build:postsubmit --keep_going
 build:postsubmit --cache_test_results=no
 
-# All postsubmit bots, regardless of platform should inherit this config.
-build:local_postsubmit --config=local
-build:local_postsubmit --config=postsubmit
-
-# Mac post-submit uses mac-experimental to use distributed cache.
-build:local_mac_postsubmit --config=local_postsubmit
-build:local_mac_postsubmit --config=mac-experimental
-
-# Mac presubmit also used distributed cache.
-build:local_mac_presubmit --config=local
-build:local_mac_presubmit --config=mac-experimental
-
-# Linux uses different distributed cache config.
-build:local_linux_postsubmit --config=local_postsubmit
-build:local_linux_postsubmit --config=linux-experimental
-
-# Linux uses different distributed cache config.
-build:local_linux_presubmit --config=local
-build:local_linux_presubmit --config=linux-experimental
-
 # Don't use JUnit from Bazel.
 test --explicit_java_test_deps
 
