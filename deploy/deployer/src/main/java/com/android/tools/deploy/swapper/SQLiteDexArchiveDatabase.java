@@ -33,16 +33,18 @@ public class SQLiteDexArchiveDatabase extends DexArchiveDatabase {
 
     // Purely a value-based check. No plans to make the cache database forward / backward compatible.
     //  IE: All tables will be dropped if version number on the file does not match this number.
-    private static final String CURRENT_SCHEMA_VERSION_NUMBER = "0.1";
+    private static final String CURRENT_SCHEMA_VERSION_NUMBER = "0.2";
     private final String schemaVersion;
+    private final int maxDexFilesEntries;
     private Connection connection;
 
     public SQLiteDexArchiveDatabase(File file) {
-        this(file, CURRENT_SCHEMA_VERSION_NUMBER);
+        this(file, CURRENT_SCHEMA_VERSION_NUMBER, MAX_DEXFILES_ENTRY);
     }
 
-    public SQLiteDexArchiveDatabase(File file, String schemaVersionNumber) {
+    public SQLiteDexArchiveDatabase(File file, String schemaVersionNumber, int maxDexFileEntries) {
         this.schemaVersion = schemaVersionNumber;
+        this.maxDexFilesEntries = maxDexFileEntries;
         try {
             // For older versions of the JDBC we need to force load the sqlite.JDBC driver to trigger static initializer's and register
             // the JDBC driver with the Java DriverManager.
@@ -116,7 +118,7 @@ public class SQLiteDexArchiveDatabase extends DexArchiveDatabase {
     private void flushOldCache() throws SQLException {
         executeUpdate(
                 "DELETE FROM dexfiles WHERE id < (SELECT * FROM (SELECT id from dexfiles ORDER BY id DESC LIMIT "
-                        + MAX_DEXFILES_ENTRY
+                        + maxDexFilesEntries
                         + ") ORDER BY id LIMIT 1);");
     }
 
@@ -169,7 +171,7 @@ public class SQLiteDexArchiveDatabase extends DexArchiveDatabase {
                                 "SELECT archives.dexfileId as id, dexfiles.name as name, dexfiles.checksum as checksum FROM "
                                         + " archives INNER JOIN dexfiles on archives.dexfileId = dexfiles.id where archives.checksum = \""
                                         + archiveChecksum
-                                        + "\" ")) {
+                                        + "\" ORDER BY id DESC")) {
             List<DexFileEntry> returnValue = new LinkedList<>();
             while (result.next()) {
                 int id = result.getInt("id");
@@ -190,7 +192,7 @@ public class SQLiteDexArchiveDatabase extends DexArchiveDatabase {
                         s.executeQuery(
                                 "SELECT id from dexfiles WHERE checksum ="
                                         + dexFileChecksum
-                                        + ";")) {
+                                        + " ORDER BY id DESC;")) {
             int index = -1;
             if (result.next()) {
                 index = result.getInt("id");
@@ -222,6 +224,9 @@ public class SQLiteDexArchiveDatabase extends DexArchiveDatabase {
 
     @Override
     public void fillEntriesChecksum(int dexFileIndex, Map<String, Long> classesChecksums) {
+        if (classesChecksums.isEmpty()) {
+            return;
+        }
         String values =
                 classesChecksums
                         .entrySet()
@@ -247,6 +252,16 @@ public class SQLiteDexArchiveDatabase extends DexArchiveDatabase {
 
     @Override
     public void fillDexFileList(String archiveChecksum, List<Integer> dexFilesIndex) {
+        if (dexFilesIndex.isEmpty()) {
+            return;
+        }
+
+        // Check for previous entries.
+        List<DexFileEntry> dexfiles = getDexFiles(archiveChecksum);
+        if (dexfiles != null && !dexfiles.isEmpty()) {
+            return;
+        }
+
         String values =
                 dexFilesIndex
                         .stream()

@@ -46,6 +46,10 @@ public abstract class DexFile {
      * @return An index of the dex file within the table of all dex files.
      */
     int cache(DexArchiveDatabase db) {
+        int prevIndex = db.getDexFileIndex(this.checksum);
+        if (prevIndex != -1) {
+            return prevIndex;
+        }
         int index = db.addDexFile(this.checksum, name);
         db.fillEntriesChecksum(index, getClasssesChecksum());
         return index;

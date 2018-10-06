@@ -39,6 +39,10 @@ public abstract class DexArchiveDatabase {
             return null;
         }
         for (DexFileEntry entry : dexFileEntries) {
+            if (dexFiles.containsKey(entry.name)) {
+                throw new DexArchiveDatabaseException(
+                        "Inconsistent Database: Duplicated file entry in archive.");
+            }
             dexFiles.put(
                     entry.name,
                     new OnCacheDexFile(

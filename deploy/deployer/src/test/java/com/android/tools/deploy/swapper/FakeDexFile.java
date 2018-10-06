@@ -15,13 +15,29 @@
  */
 package com.android.tools.deploy.swapper;
 
-/** Represents errors encountered while accessing the dex cache database. */
-public class DexArchiveDatabaseException extends RuntimeException {
-    public DexArchiveDatabaseException(Exception e) {
-        super(e);
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+public class FakeDexFile extends DexFile {
+    private final Map<String, Long> classesChecksum = new LinkedHashMap<>();
+    private final byte[] code;
+
+    public FakeDexFile(String name, String fakeCode) {
+        super(fakeCode.hashCode(), name);
+        code = fakeCode.getBytes();
     }
 
-    public DexArchiveDatabaseException(String msg) {
-        super(msg);
+    @Override
+    public Map<String, Long> getClasssesChecksum() {
+        return classesChecksum;
+    }
+
+    @Override
+    public byte[] getCode() {
+        return code;
+    }
+
+    public void addClass(String name, long checksum) {
+        classesChecksum.put(name, checksum);
     }
 }

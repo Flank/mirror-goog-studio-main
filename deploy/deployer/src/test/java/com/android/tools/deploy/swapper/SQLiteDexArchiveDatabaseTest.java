@@ -86,7 +86,7 @@ public class SQLiteDexArchiveDatabaseTest {
         TemporaryFolder tmdir = new TemporaryFolder();
         tmdir.create();
         File file = tmdir.newFile("test.db");
-        SQLiteDexArchiveDatabase db = new SQLiteDexArchiveDatabase(file, "OUTDATED");
+        SQLiteDexArchiveDatabase db = new SQLiteDexArchiveDatabase(file, "OUTDATED", 100);
 
         int id = 0;
         ArrayList<Integer> fileList = new ArrayList<>();
@@ -103,7 +103,7 @@ public class SQLiteDexArchiveDatabaseTest {
         Assert.assertEquals("classes01.dex", dexFiles.get(0).name);
         db.close();
 
-        db = new SQLiteDexArchiveDatabase(file, "CURRENT");
+        db = new SQLiteDexArchiveDatabase(file, "CURRENT", 100);
         dexFiles = db.getDexFiles(apkCheckSum);
 
         // All the tables are dropped version mismatched.
@@ -123,7 +123,11 @@ public class SQLiteDexArchiveDatabaseTest {
 
     @Test
     public void testFlushOldCache() throws Exception {
-        SQLiteDexArchiveDatabase db = createTestDb();
+        TemporaryFolder tmdir = new TemporaryFolder();
+        tmdir.create();
+        File file = tmdir.newFile("test.db");
+        SQLiteDexArchiveDatabase db = new SQLiteDexArchiveDatabase(file, "CURRENT", 5);
+
         int firstChecksum = 1;
         int first = db.addDexFile(firstChecksum, "dexfile_1");
         Assert.assertEquals(1, first);
@@ -142,7 +146,7 @@ public class SQLiteDexArchiveDatabaseTest {
         classes = db.getClassesChecksum(first);
         Assert.assertFalse(classes.isEmpty());
 
-        for (int i = 0; i < SQLiteDexArchiveDatabase.MAX_DEXFILES_ENTRY; i++) {
+        for (int i = 0; i < 5; i++) {
             db.addDexFile(i + 2, "dexfile_" + (i + 2));
         }
 
