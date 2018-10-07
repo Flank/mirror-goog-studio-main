@@ -41,7 +41,9 @@ import static com.android.SdkConstants.BUTTON;
 import static com.android.SdkConstants.CHECK_BOX;
 import static com.android.SdkConstants.CONSTRUCTOR_NAME;
 import static com.android.SdkConstants.DOT_JAVA;
+import static com.android.SdkConstants.FQCN_FRAME_LAYOUT;
 import static com.android.SdkConstants.FQCN_TARGET_API;
+import static com.android.SdkConstants.FRAME_LAYOUT;
 import static com.android.SdkConstants.PREFIX_ANDROID;
 import static com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX;
 import static com.android.SdkConstants.SWITCH;
@@ -83,7 +85,9 @@ import com.android.sdklib.SdkVersionInfo;
 import com.android.support.AndroidxName;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.client.api.LintDriver;
+import com.android.tools.lint.client.api.SdkInfo;
 import com.android.tools.lint.client.api.UElementHandler;
+import com.android.tools.lint.client.api.UastParser;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.Context;
@@ -488,8 +492,9 @@ public class ApiDetector extends ResourceXmlDetector
             }
 
             if (name.equals(ATTR_FOREGROUND)
-                    && context.getResourceFolderType() == ResourceFolderType.LAYOUT) {
-                // Requires API 23
+                    && context.getResourceFolderType() == ResourceFolderType.LAYOUT
+                    && !isFrameLayout(context, attribute.getOwnerElement().getTagName(), true)) {
+                // Requires API 23, unless it's a FrameLayout
                 int minSdk = getMinSdk(context);
                 if (Math.max(minSdk, context.getFolderVersion()) < 23) {
                     Location location = context.getLocation(attribute);
@@ -617,6 +622,27 @@ public class ApiDetector extends ResourceXmlDetector
                 context.report(UNSUPPORTED, attribute, location, message, apiLevelFix(api));
             }
         }
+    }
+
+    private static boolean isFrameLayout(
+            XmlContext context,
+            String tagName,
+            @SuppressWarnings("SameParameterValue") boolean defaultValue) {
+        if (tagName.indexOf('.') == -1) {
+            // There are a bunch of built in tags that extend FrameLayout:
+            // ScrollView, ViewAnimator, etc.
+            SdkInfo sdkInfo = context.getClient().getSdkInfo(context.getProject());
+            return sdkInfo.isSubViewOf(FRAME_LAYOUT, tagName);
+        }
+
+        // Custom views: we're not sure
+        UastParser parser = context.getClient().getUastParser(context.getProject());
+        JavaEvaluator evaluator = parser.getEvaluator();
+        PsiClass psiClass = evaluator.findClass(tagName);
+        if (psiClass == null) {
+            return defaultValue;
+        }
+        return evaluator.extendsClass(psiClass, FQCN_FRAME_LAYOUT, false);
     }
 
     private static boolean isSupportedByAppcompat(String name, XmlContext context) {
