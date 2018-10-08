@@ -39,11 +39,9 @@ class NetworkCollector final {
   ~NetworkCollector();
 
   // Allocates the given app's buffer and add it for all samplers to start.
-  // If this is the first app, starts the collector's thread.
   void Start(int32_t pid, NetworkProfilerBuffer* buffer);
 
   // Remove the given app from all samplers and deallocate buffer to stop.
-  // If this is the last app, stops the collector's thread.
   void Stop(int32_t pid);
 
  private:
