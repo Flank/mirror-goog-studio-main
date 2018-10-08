@@ -20,5 +20,4 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto" >
     <deepLink app:uri="www.example.com/main/nav1" />
-    <include app:graph="@navigation/lib_nav2" />
 </navigation>

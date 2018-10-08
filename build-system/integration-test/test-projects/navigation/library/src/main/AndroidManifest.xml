@@ -21,7 +21,7 @@
         <activity
             android:name=".LibraryActivity"
             android:label="@string/library_activity_label" >
-            <nav-graph android:value="@navigation/lib_nav1" />
+            <nav-graph android:value="@navigation/nav1" />
         </activity>
     </application>
 </manifest>

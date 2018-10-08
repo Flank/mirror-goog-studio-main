@@ -80,7 +80,6 @@ public class AndroidArtifacts {
             "android-databinding-class-log";
     private static final String TYPE_EXPLODED_AAR = "android-exploded-aar";
     private static final String TYPE_MODULE_BUNDLE = "android-module-bundle";
-    private static final String TYPE_NAVIGATION_FILES = "android-navigation-files";
 
     // types for additional artifacts to go with APK
     private static final String TYPE_MAPPING = "android-mapping";
@@ -190,7 +189,6 @@ public class AndroidArtifacts {
         DATA_BINDING_ARTIFACT(TYPE_DATA_BINDING_ARTIFACT),
         DATA_BINDING_BASE_CLASS_LOG_ARTIFACT(TYPE_DATA_BINDING_BASE_CLASS_LOG_ARTIFACT),
         COMPILE_ONLY_NAMESPACED_R_CLASS_JAR(TYPE_ANDROID_NAMESPACED_R_CLASS_JAR),
-        NAVIGATION_FILES(TYPE_NAVIGATION_FILES),
 
         // runtime and/or bundle elements
         JAVA_RES(TYPE_JAVA_RES),

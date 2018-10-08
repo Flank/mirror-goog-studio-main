@@ -141,8 +141,6 @@ public enum InternalArtifactType implements ArtifactType {
     RENDERSCRIPT_HEADERS,
     // source output for rs
     RENDERSCRIPT_SOURCE_OUTPUT_DIR(Category.GENERATED),
-    // navigation files from libraries for consumers.
-    NAVIGATION_FILES,
 
     // An output of AndroidManifest.xml check
     CHECK_MANIFEST_RESULT,

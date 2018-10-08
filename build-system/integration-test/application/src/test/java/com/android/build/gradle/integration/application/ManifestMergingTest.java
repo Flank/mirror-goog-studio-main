@@ -188,10 +188,7 @@ public class ManifestMergingTest {
 
     /**
      * Check that navigation files added to the app's source sets override each other as expected
-     * and generate the expected <intent-filter> elements in the app's merged manifest.
-     *
-     * <p>Also check that final merged manifest contains info from lib_nav1 (via merging) and
-     * lib_nav2 (via inclusion in nav1's nav graph).
+     * and generate the expected <intent-filter> elements in the app's merged manifest
      */
     @Test
     public void checkManifestMergingWithNavigationFiles() throws Exception {
@@ -199,8 +196,7 @@ public class ManifestMergingTest {
         File manifestFile =
                 navigation.file(
                         "app/build/intermediates/merged_manifests/f1Debug/AndroidManifest.xml");
-        assertThat(manifestFile).contains("/library/lib_nav1");
-        assertThat(manifestFile).contains("/library/lib_nav2");
+        assertThat(manifestFile).contains("/library/nav1");
         assertThat(manifestFile).contains("/main/nav1");
         assertThat(manifestFile).contains("/f1/nav2");
         assertThat(manifestFile).contains("/debug/nav3");

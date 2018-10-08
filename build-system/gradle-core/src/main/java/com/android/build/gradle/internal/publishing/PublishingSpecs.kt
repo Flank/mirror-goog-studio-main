@@ -53,7 +53,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_INS
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_FEATURE_DECLARATION
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_FEATURE_MANIFEST
 import com.android.build.gradle.internal.scope.InternalArtifactType.MODULE_BUNDLE
-import com.android.build.gradle.internal.scope.InternalArtifactType.NAVIGATION_FILES
 import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.PUBLIC_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_HEADERS
@@ -221,7 +220,6 @@ class PublishingSpecs {
                         ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
                 api(AIDL_PARCELABLE, ArtifactType.AIDL)
                 api(RENDERSCRIPT_HEADERS, ArtifactType.RENDERSCRIPT)
-                api(NAVIGATION_FILES, ArtifactType.NAVIGATION_FILES)
 
                 // manifest is published to both to compare and detect provided-only library
                 // dependencies.
