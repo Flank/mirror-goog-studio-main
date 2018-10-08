@@ -60,7 +60,6 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
     @NonNull private final String sourceGenTaskName;
     @NonNull private final List<File> generatedResourceFolders;
     @NonNull private final List<File> additionalRuntimeApks;
-    @NonNull private final Collection<NativeLibrary> nativeLibraries;
     @NonNull private final Map<String, ClassField> buildConfigFields;
     @NonNull private final Map<String, ClassField> resValues;
     @NonNull private final InstantRun instantRun;
@@ -95,7 +94,6 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
             @Nullable SourceProvider variantSourceProvider,
             @Nullable SourceProvider multiFlavorSourceProviders,
             @Nullable Set<String> abiFilters,
-            @NonNull Collection<NativeLibrary> nativeLibraries,
             @NonNull Map<String, ClassField> buildConfigFields,
             @NonNull Map<String, ClassField> resValues,
             @NonNull InstantRun instantRun,
@@ -126,7 +124,6 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
         this.generatedResourceFolders = generatedResourceFolders;
         this.additionalRuntimeApks = additionalRuntimeApks;
         this.abiFilters = abiFilters;
-        this.nativeLibraries = nativeLibraries;
         this.buildConfigFields = buildConfigFields;
         this.resValues = resValues;
         this.instantRun = instantRun;
@@ -300,7 +297,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
     @NonNull
     @Override
     public Collection<NativeLibrary> getNativeLibraries() {
-        return nativeLibraries;
+        return ImmutableList.of();
     }
 
     @NonNull
@@ -345,7 +342,6 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 && Objects.equals(sourceGenTaskName, that.sourceGenTaskName)
                 && Objects.equals(generatedResourceFolders, that.generatedResourceFolders)
                 && Objects.equals(abiFilters, that.abiFilters)
-                && Objects.equals(nativeLibraries, that.nativeLibraries)
                 && Objects.equals(buildConfigFields, that.buildConfigFields)
                 && Objects.equals(resValues, that.resValues)
                 && Objects.equals(manifestSupplier, that.manifestSupplier)
@@ -371,7 +367,6 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 sourceGenTaskName,
                 generatedResourceFolders,
                 abiFilters,
-                nativeLibraries,
                 buildConfigFields,
                 resValues,
                 instantRun,
@@ -394,7 +389,6 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 .add("sourceGenTaskName", sourceGenTaskName)
                 .add("generatedResourceFolders", generatedResourceFolders)
                 .add("abiFilters", abiFilters)
-                .add("nativeLibraries", nativeLibraries)
                 .add("buildConfigFields", buildConfigFields)
                 .add("resValues", resValues)
                 .add("instantRun", instantRun)

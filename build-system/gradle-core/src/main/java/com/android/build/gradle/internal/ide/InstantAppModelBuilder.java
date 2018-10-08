@@ -332,7 +332,6 @@ public class InstantAppModelBuilder
                         null,
                         null,
                         null,
-                        Collections.emptyList(),
                         variantConfiguration.getMergedBuildConfigFields(),
                         variantConfiguration.getMergedResValues(),
                         new InstantRunImpl(

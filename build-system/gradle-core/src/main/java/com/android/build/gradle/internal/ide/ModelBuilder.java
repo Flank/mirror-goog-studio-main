@@ -40,9 +40,7 @@ import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
-import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
 import com.android.build.gradle.internal.ide.dependencies.DependencyGraphBuilder;
@@ -52,8 +50,6 @@ import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesUtils;
 import com.android.build.gradle.internal.ide.level2.EmptyDependencyGraphs;
 import com.android.build.gradle.internal.ide.level2.GlobalLibraryMapImpl;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
-import com.android.build.gradle.internal.model.NativeLibraryFactory;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
@@ -87,14 +83,11 @@ import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.LintOptions;
 import com.android.builder.model.ModelBuilderParameter;
-import com.android.builder.model.NativeLibrary;
-import com.android.builder.model.NativeToolchain;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProvider;
-import com.android.builder.model.SourceProviderContainer;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.TestVariantBuildOutput;
 import com.android.builder.model.TestedTargetVariant;
@@ -110,7 +103,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import java.io.File;
@@ -121,9 +113,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -152,8 +142,6 @@ public class ModelBuilder<Extension extends AndroidConfig>
     @NonNull private final ExtraModelInfo extraModelInfo;
     @NonNull private final VariantManager variantManager;
     @NonNull private final TaskManager taskManager;
-    @NonNull private Map<Abi, NativeToolchain> toolchains;
-    @NonNull private NativeLibraryFactory nativeLibFactory;
     private final int projectType;
     private final int generation;
     private int modelLevel = AndroidProject.MODEL_LEVEL_0_ORIGINAL;
@@ -173,7 +161,6 @@ public class ModelBuilder<Extension extends AndroidConfig>
             @NonNull TaskManager taskManager,
             @NonNull Extension extension,
             @NonNull ExtraModelInfo extraModelInfo,
-            @NonNull NativeLibraryFactory nativeLibraryFactory,
             int projectType,
             int generation) {
         this.globalScope = globalScope;
@@ -181,7 +168,6 @@ public class ModelBuilder<Extension extends AndroidConfig>
         this.extraModelInfo = extraModelInfo;
         this.variantManager = variantManager;
         this.taskManager = taskManager;
-        this.nativeLibFactory = nativeLibraryFactory;
         this.projectType = projectType;
         this.generation = generation;
     }
@@ -367,8 +353,6 @@ public class ModelBuilder<Extension extends AndroidConfig>
                         ? extension.getFlavorDimensionList()
                         : Lists.newArrayList();
 
-        toolchains = createNativeToolchainModelMap(globalScope.getNdkHandler());
-
         ProductFlavorContainer defaultConfig = ProductFlavorContainerImpl
                 .createProductFlavorContainer(
                         variantManager.getDefaultConfig(),
@@ -421,7 +405,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
                 lintOptions,
                 project.getBuildDir(),
                 extension.getResourcePrefix(),
-                ImmutableList.copyOf(toolchains.values()),
+                ImmutableList.of(),
                 extension.getBuildToolsVersion(),
                 projectType,
                 Version.BUILDER_MODEL_API_VERSION,
@@ -439,9 +423,8 @@ public class ModelBuilder<Extension extends AndroidConfig>
             return false;
         }
 
-        List<File> manifests = new ArrayList<>();
         GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
-        manifests.addAll(variantConfiguration.getManifestOverlays());
+        List<File> manifests = new ArrayList<>(variantConfiguration.getManifestOverlays());
         if (variantConfiguration.getMainManifest() != null) {
             manifests.add(variantConfiguration.getMainManifest());
         }
@@ -490,28 +473,6 @@ public class ModelBuilder<Extension extends AndroidConfig>
     @NonNull
     protected Collection<String> getDynamicFeatures() {
         return ImmutableList.of();
-    }
-
-    /**
-     * Create a map of ABI to NativeToolchain
-     */
-    public static Map<Abi, NativeToolchain> createNativeToolchainModelMap(
-            @NonNull NdkHandler ndkHandler) {
-        if (!ndkHandler.isConfigured()) {
-            return ImmutableMap.of();
-        }
-
-        Map<Abi, NativeToolchain> toolchains = Maps.newHashMap();
-
-        for (Abi abi : ndkHandler.getSupportedAbis()) {
-            toolchains.put(
-                    abi,
-                    new NativeToolchainImpl(
-                            ndkHandler.getToolchain().getName() + "-" + abi.getName(),
-                            ndkHandler.getCCompiler(abi),
-                            ndkHandler.getCppCompiler(abi)));
-        }
-        return toolchains;
     }
 
     @NonNull
@@ -814,26 +775,6 @@ public class ModelBuilder<Extension extends AndroidConfig>
         return result;
     }
 
-    /**
-     * Create a NativeLibrary for each ABI.
-     */
-    private Collection<NativeLibrary> createNativeLibraries(
-            @NonNull Collection<Abi> abis,
-            @NonNull VariantScope scope) {
-        Collection<NativeLibrary> nativeLibraries = Lists.newArrayListWithCapacity(abis.size());
-        for (Abi abi : abis) {
-            NativeToolchain toolchain = toolchains.get(abi);
-            if (toolchain == null) {
-                continue;
-            }
-            Optional<NativeLibrary> lib = nativeLibFactory.create(scope, toolchain.getName(), abi);
-            if (lib.isPresent()) {
-                nativeLibraries.add(lib.get());
-            }
-        }
-        return nativeLibraries;
-    }
-
     private AndroidArtifact createAndroidArtifact(
             @NonNull String name, @NonNull BaseVariantData variantData) {
         VariantScope scope = variantData.getScope();
@@ -853,30 +794,6 @@ public class ModelBuilder<Extension extends AndroidConfig>
         BuildOutputSupplier<Collection<EarlySyncBuildOutput>> manifestsProxy =
                 getManifestsSupplier(variantData);
 
-        CoreNdkOptions ndkConfig = variantData.getVariantConfiguration().getNdkConfig();
-        Collection<NativeLibrary> nativeLibraries = ImmutableList.of();
-
-        NdkHandler ndkHandler = globalScope.getNdkHandler();
-        if (ndkHandler.isConfigured()) {
-            if (extension.getSplits().getAbi().isEnable()) {
-                nativeLibraries =
-                        createNativeLibraries(
-                                extension.getSplits().getAbi().isUniversalApk()
-                                        ? ndkHandler.getSupportedAbis()
-                                        : createAbiList(extension.getSplits().getAbiFilters()),
-                                scope);
-            } else {
-                if (ndkConfig.getAbiFilters() == null || ndkConfig.getAbiFilters().isEmpty()) {
-                    nativeLibraries = createNativeLibraries(
-                            ndkHandler.getSupportedAbis(),
-                            scope);
-                } else {
-                    nativeLibraries = createNativeLibraries(
-                            createAbiList(ndkConfig.getAbiFilters()),
-                            scope);
-                }
-            }
-        }
 
         InstantRunImpl instantRun =
                 new InstantRunImpl(
@@ -964,7 +881,6 @@ public class ModelBuilder<Extension extends AndroidConfig>
                 sourceProviders.variantSourceProvider,
                 sourceProviders.multiFlavorSourceProvider,
                 variantConfiguration.getSupportedAbis(),
-                nativeLibraries,
                 variantConfiguration.getMergedBuildConfigFields(),
                 variantConfiguration.getMergedResValues(),
                 instantRun,
@@ -1124,17 +1040,6 @@ public class ModelBuilder<Extension extends AndroidConfig>
         }
     }
 
-    private static Collection<Abi> createAbiList(Collection<String> abiNames) {
-        ImmutableList.Builder<Abi> builder = ImmutableList.builder();
-        for (String abiName : abiNames) {
-            Abi abi = Abi.getByName(abiName);
-            if (abi != null) {
-                builder.add(abi);
-            }
-        }
-        return builder.build();
-    }
-
     private static SourceProviders determineSourceProviders(@NonNull BaseVariantData variantData) {
         SourceProvider variantSourceProvider =
                 variantData.getVariantConfiguration().getVariantSourceProvider();
@@ -1259,19 +1164,6 @@ public class ModelBuilder<Extension extends AndroidConfig>
                 .map((Function<SigningConfig, SigningConfig>)
                         SigningConfigImpl::createSigningConfig)
                 .collect(Collectors.toList());
-    }
-
-    @Nullable
-    private static SourceProviderContainer getSourceProviderContainer(
-            @NonNull Collection<SourceProviderContainer> items,
-            @NonNull String name) {
-        for (SourceProviderContainer item : items) {
-            if (name.equals(item.getArtifactName())) {
-                return item;
-            }
-        }
-
-        return null;
     }
 
     private static class SourceProviders {

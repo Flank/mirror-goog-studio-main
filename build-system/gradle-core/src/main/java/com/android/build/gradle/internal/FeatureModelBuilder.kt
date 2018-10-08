@@ -20,10 +20,7 @@ import com.android.build.gradle.FeatureExtension
 import com.android.build.gradle.FeaturePlugin
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.ide.ModelBuilder
-import com.android.build.gradle.internal.model.NativeLibraryFactory
-import com.android.build.gradle.internal.ndk.NdkHandler
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.builder.core.AndroidBuilder
 import org.gradle.api.artifacts.ProjectDependency
 
 /**
@@ -36,7 +33,6 @@ class FeatureModelBuilder(
     taskManager: TaskManager,
     config: FeatureExtension,
     extraModelInfo: ExtraModelInfo,
-    nativeLibraryFactory: NativeLibraryFactory,
     projectType: Int,
     generation: Int
 ) : ModelBuilder<FeatureExtension>(
@@ -45,7 +41,6 @@ class FeatureModelBuilder(
     taskManager,
     config,
     extraModelInfo,
-    nativeLibraryFactory,
     projectType,
     generation
 ) {

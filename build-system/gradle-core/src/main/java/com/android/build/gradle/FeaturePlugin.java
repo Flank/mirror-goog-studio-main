@@ -21,7 +21,6 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.FeatureModelBuilder;
 import com.android.build.gradle.internal.MultiTypeTaskManager;
-import com.android.build.gradle.internal.NativeLibraryFactoryImpl;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
@@ -112,7 +111,6 @@ public class FeaturePlugin extends LibraryPlugin {
                 recorder);
     }
 
-    @NonNull
     @Override
     protected void registerModelBuilder(
             @NonNull ToolingModelBuilderRegistry registry,
@@ -127,7 +125,6 @@ public class FeaturePlugin extends LibraryPlugin {
                         taskManager,
                         (FeatureExtension) config,
                         extraModelInfo,
-                        new NativeLibraryFactoryImpl(globalScope.getNdkHandler()),
                         getProjectType(),
                         AndroidProject.GENERATION_ORIGINAL));
     }
