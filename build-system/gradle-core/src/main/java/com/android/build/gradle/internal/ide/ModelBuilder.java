@@ -794,7 +794,6 @@ public class ModelBuilder<Extension extends AndroidConfig>
         BuildOutputSupplier<Collection<EarlySyncBuildOutput>> manifestsProxy =
                 getManifestsSupplier(variantData);
 
-
         InstantRunImpl instantRun =
                 new InstantRunImpl(
                         BuildInfoWriterTask.CreationAction.getBuildInfoFile(scope),

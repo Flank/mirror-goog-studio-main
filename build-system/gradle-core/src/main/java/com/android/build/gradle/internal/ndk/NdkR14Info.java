@@ -18,8 +18,6 @@ package com.android.build.gradle.internal.ndk;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.core.Abi;
-import com.android.build.gradle.internal.core.Toolchain;
-import com.google.common.base.MoreObjects;
 import java.io.File;
 
 /**
@@ -38,20 +36,5 @@ public class NdkR14Info extends DefaultNdkInfo {
             return Abi.MIPS64;
         }
         return abi;
-    }
-
-    @Override
-    @NonNull
-    public StlNativeToolSpecification getStlNativeToolSpecification(
-            @NonNull Stl stl,
-            @NonNull String stlVersion,
-            @NonNull Abi abi) {
-        StlSpecification spec = new NdkR14StlSpecificationFactory().create(
-                stl,
-                MoreObjects.firstNonNull(
-                        stlVersion,
-                        getDefaultToolchainVersion(Toolchain.GCC, abi)),
-                abi);
-        return new DefaultStlNativeToolSpecification(this, spec, stl);
     }
 }

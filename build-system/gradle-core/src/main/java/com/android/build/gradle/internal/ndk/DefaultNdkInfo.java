@@ -21,15 +21,12 @@ import static com.android.build.gradle.internal.cxx.configure.NdkAbiFileKt.ndkMe
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.Abi;
-import com.android.build.gradle.internal.core.Toolchain;
 import com.android.build.gradle.internal.cxx.configure.NdkAbiFile;
 import com.android.build.gradle.internal.cxx.configure.PlatformConfigurator;
 import com.android.repository.Revision;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
-import com.android.utils.Pair;
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.Collection;
@@ -40,9 +37,7 @@ import java.util.stream.Collectors;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.logging.Logging;
 
-/**
- * Default NdkInfo.  Used for r10 and r11.
- */
+/** Default NdkInfo. Used for r13 and earlier. */
 public class DefaultNdkInfo implements NdkInfo {
 
     private final File root;
@@ -51,7 +46,7 @@ public class DefaultNdkInfo implements NdkInfo {
 
     private final List<AbiInfo> abiInfoList;
 
-    private final Map<Pair<Toolchain, Abi>, String> defaultToolchainVersions = Maps.newHashMap();
+    private final Map<Abi, String> defaultToolchainVersions = Maps.newHashMap();
 
     public DefaultNdkInfo(@NonNull File root) {
         this.root = root;
@@ -59,34 +54,9 @@ public class DefaultNdkInfo implements NdkInfo {
         this.abiInfoList = new NdkAbiFile(ndkMetaAbisFile(root)).getAbiInfoList();
     }
 
-    @Override
     @NonNull
-    public File getRootDirectory() {
+    private File getRootDirectory() {
         return root;
-    }
-
-    /**
-     * Returns the sysroot path for compilation.
-     *
-     * <p>If unified headers is enabled, this will be different from getLinkerSysrootPath. They will
-     * be the same otherwise.
-     */
-    @Override
-    @NonNull
-    public String getCompilerSysrootPath(
-            @NonNull Abi abi, @NonNull String platformVersion, boolean useUnifiedHeaders) {
-        if (useUnifiedHeaders) {
-            return FileUtils.join(root.getPath(), "sysroot");
-        } else {
-            return getLinkerSysrootPath(abi, platformVersion);
-        }
-    }
-
-    @Override
-    @NonNull
-    public String getLinkerSysrootPath(@NonNull Abi abi, @NonNull String platformVersion) {
-        return FileUtils.join(
-                root.getPath(), "platforms", platformVersion, "arch-" + abi.getArchitecture());
     }
 
     /**
@@ -133,6 +103,7 @@ public class DefaultNdkInfo implements NdkInfo {
         } else {
             File[] platformSubDirs = platformDir.listFiles(File::isDirectory);
             int highestVersion = 0;
+            assert platformSubDirs != null;
             for (File platform : platformSubDirs) {
                 if (platform.getName().startsWith("android-")) {
                     try {
@@ -150,35 +121,26 @@ public class DefaultNdkInfo implements NdkInfo {
         }
     }
 
-    private static String getToolchainPrefix(Toolchain toolchain, Abi abi) {
-        if (toolchain == Toolchain.GCC) {
-            return abi.getGccToolchainPrefix();
-        } else {
-            return "llvm";
-        }
+    private static String getToolchainPrefix(Abi abi) {
+        return abi.getGccToolchainPrefix();
     }
 
     /**
      * Return the directory containing the toolchain.
      *
-     * @param toolchain toolchain to use.
-     * @param toolchainVersion toolchain version to use.
-     * @param abi target ABI of the toolchaina
+     * @param abi target ABI of the toolchains
      * @return a directory that contains the executables.
      */
-    @Override
     @NonNull
-    public File getToolchainPath(
-            @NonNull Toolchain toolchain, @NonNull String toolchainVersion, @NonNull Abi abi) {
+    private File getToolchainPath(@NonNull Abi abi) {
         abi = getToolchainAbi(abi);
-        String version = toolchainVersion.isEmpty()
-                ? getDefaultToolchainVersion(toolchain, abi)
-                : toolchainVersion;
+        String version = getDefaultToolchainVersion(abi);
         version = version.isEmpty() ? "" : "-" + version;  // prepend '-' if non-empty.
 
-        File prebuiltFolder = new File(
-                getRootDirectory(),
-                "toolchains/" + getToolchainPrefix(toolchain, abi) + version + "/prebuilt");
+        File prebuiltFolder =
+                new File(
+                        getRootDirectory(),
+                        "toolchains/" + getToolchainPrefix(abi) + version + "/prebuilt");
 
         String osName = System.getProperty("os.name").toLowerCase(Locale.ENGLISH);
         String hostOs;
@@ -223,111 +185,31 @@ public class DefaultNdkInfo implements NdkInfo {
         return abi;
     }
 
-    /**
-     * Return the executable for compiling C code.
-     */
+    /** Return the executable for removing debug symbols from a shared object. */
     @Override
     @NonNull
-    public File getCCompiler(
-            @NonNull Toolchain toolchain,
-            @NonNull String toolchainVersion,
-            @NonNull Abi abi) {
-        abi = getToolchainAbi(abi);
-        String compiler =
-                toolchain == Toolchain.CLANG ? "clang" : abi.getGccExecutablePrefix() + "-gcc";
-        return new File(getToolchainPath(toolchain, toolchainVersion, abi), "bin/" + compiler);
-    }
-
-    /**
-     * Return the executable for compiling C++ code.
-     */
-    @Override
-    @NonNull
-    public File getCppCompiler(
-            @NonNull Toolchain toolchain,
-            @NonNull String toolchainVersion,
-            @NonNull Abi abi) {
-        abi = getToolchainAbi(abi);
-        String compiler =
-                toolchain == Toolchain.CLANG ? "clang++" : abi.getGccExecutablePrefix() + "-g++";
-        return new File(getToolchainPath(toolchain, toolchainVersion, abi), "bin/" + compiler);
-    }
-
-    /**
-     * Return the linker.
-     */
-    @Override
-    @NonNull
-    public File getLinker(
-            @NonNull Toolchain toolchain,
-            @NonNull String toolchainVersion,
-            @NonNull Abi abi) {
-        return getCppCompiler(toolchain, toolchainVersion, abi);
-    }
-
-    /**
-     * Return the assembler.
-     */
-    @Override
-    @NonNull
-    public File getAssembler(
-            @NonNull Toolchain toolchain,
-            @NonNull String toolchainVersion,
-            @NonNull Abi abi) {
-        return getCCompiler(toolchain, toolchainVersion, abi);
-    }
-
-    @Override
-    @NonNull
-    public File getAr(
-            @NonNull Toolchain toolchain,
-            @NonNull String toolchainVersion,
-            @NonNull Abi abi) {
-        abi = getToolchainAbi(abi);
-        // For clang, we use the ar from the GCC toolchain.
-        String ar = abi.getGccExecutablePrefix()
-                + (toolchain == Toolchain.CLANG ? "-ar" : "-gcc-ar");
-        return new File(
-                getToolchainPath(
-                        Toolchain.GCC, getDefaultToolchainVersion(Toolchain.GCC, abi), abi),
-                "bin/" + ar);
-    }
-
-    /**
-     * Return the executable for removing debug symbols from a shared object.
-     */
-    @Override
-    @NonNull
-    public File getStripExecutable(Toolchain toolchain, String toolchainVersion, Abi abi) {
+    public File getStripExecutable(Abi abi) {
         abi = getToolchainAbi(abi);
         return FileUtils.join(
-                getToolchainPath(
-                        Toolchain.GCC,
-                        toolchain == Toolchain.GCC
-                                ? toolchainVersion
-                                : getDefaultToolchainVersion(Toolchain.GCC, abi),
-                        abi),
-                "bin",
-                abi.getGccExecutablePrefix() + "-strip");
+                getToolchainPath(abi), "bin", abi.getGccExecutablePrefix() + "-strip");
     }
 
 
     /**
      * Return the default version of the specified toolchain for a target abi.
      *
-     * The default version is the highest version found in the NDK for the specified toolchain and
-     * ABI.  The result is cached for performance.
+     * <p>The default version is the highest version found in the NDK for the specified toolchain
+     * and ABI. The result is cached for performance.
      */
-    @Override
     @NonNull
-    public String getDefaultToolchainVersion(@NonNull Toolchain toolchain, @NonNull Abi abi) {
+    private String getDefaultToolchainVersion(@NonNull Abi abi) {
         abi = getToolchainAbi(abi);
-        String defaultVersion = defaultToolchainVersions.get(Pair.of(toolchain, abi));
+        String defaultVersion = defaultToolchainVersions.get(abi);
         if (defaultVersion != null) {
             return defaultVersion;
         }
 
-        final String toolchainPrefix = getToolchainPrefix(toolchain, abi);
+        final String toolchainPrefix = getToolchainPrefix(abi);
         File toolchains = new File(getRootDirectory(), "toolchains");
         File[] toolchainsForAbi = toolchains.listFiles(
                 (dir, filename) -> filename.startsWith(toolchainPrefix));
@@ -358,25 +240,8 @@ public class DefaultNdkInfo implements NdkInfo {
                 bestVersionString = versionString;
             }
         }
-        defaultToolchainVersions.put(Pair.of(toolchain, abi), bestVersionString);
-        if (bestRevision == null) {
-            throw new RuntimeException("Unable to find a valid toolchain in " + toolchains);
-        }
+        defaultToolchainVersions.put(abi, bestVersionString);
         return bestVersionString;
-    }
-
-    @Override
-    @NonNull
-    public StlNativeToolSpecification getStlNativeToolSpecification(
-            @NonNull Stl stl, @Nullable String stlVersion, @NonNull Abi abi) {
-        StlSpecification spec =
-                new DefaultStlSpecificationFactory()
-                        .create(
-                                stl,
-                                MoreObjects.firstNonNull(
-                                        stlVersion, getDefaultToolchainVersion(Toolchain.GCC, abi)),
-                                abi);
-        return new DefaultStlNativeToolSpecification(this, spec, stl);
     }
 
     @NonNull
