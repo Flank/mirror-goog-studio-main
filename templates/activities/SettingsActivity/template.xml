@@ -3,9 +3,10 @@
         format="5"
         revision="5"
         name="Settings Activity"
-        description="Creates a new application settings activity that presents alternative layouts on handset and tablet-size screens."
-        minApi="11"
-        minBuildApi="11"
+        description="Creates a new activity that allows a user to configure application settings"
+        minApi="14"
+        minBuildApi="14"
+        requireAndroidX="true"
         category="Activity">
 
     <dependency name="android-support-v4" revision="8"/>
@@ -27,19 +28,26 @@
             type="string"
             constraints="nonempty"
             default="Settings"
-            help="The name of the activity."/>
+            help="The title of the activity."/>
 
     <parameter
-            id="parentActivityClass"
-            name="Hierarchical Parent"
-            type="string"
-            constraints="activity|exists|empty"
-            default=""
-            help="The hierarchical parent activity, used to provide a default implementation for the 'Up' button"/>
+            id="multipleScreens"
+            name="Split settings hierarchy into separate sub-screens"
+            type="boolean"
+            default="false"
+            help="If true, this activity will have a main settings screen that links to separate settings screens." />
+
+    <parameter
+        id="parentActivityClass"
+        name="Parent Activity"
+        type="string"
+        constraints="activity|exists|empty"
+        default=""
+        help="The hierarchical parent activity, used to provide a default implementation for the 'Up' button"/>
 
     <parameter
             id="packageName"
-            name="Package name"
+            name="Package Name"
             type="string"
             constraints="package"
             default="com.mycompany.myapp"/>
@@ -83,8 +91,6 @@
             visibility="isInstantApp!false"
             enabled="includeInstantAppUrl"
             help="The route to use in the Instant App route for this activity"/>
-
-
 
     <!-- 128x128 thumbnails relative to template.xml -->
     <thumbs>
