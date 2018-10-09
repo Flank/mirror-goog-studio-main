@@ -62,13 +62,13 @@ class LintFixTest : TestCase() {
         assertThat(foundInteger).isTrue()
         assertThat(foundBigDecimal).isTrue()
 
-        TestCase.assertNotNull(LintFix.getData(quickfixData, BigDecimal::class.java))
+        assertNotNull(LintFix.getData(quickfixData, BigDecimal::class.java))
 
         // Check key conversion to general interface
-        TestCase.assertNull(LintFix.getData(quickfixData, ArrayList::class.java))
-        TestCase.assertNotNull(LintFix.getData(quickfixData, List::class.java))
-        TestCase.assertNull(LintFix.getData(quickfixData, HashMap::class.java))
-        TestCase.assertNotNull(LintFix.getData(quickfixData, Map::class.java))
+        assertNull(LintFix.getData(quickfixData, ArrayList::class.java))
+        assertNotNull(LintFix.getData(quickfixData, List::class.java))
+        assertNull(LintFix.getData(quickfixData, HashMap::class.java))
+        assertNotNull(LintFix.getData(quickfixData, Map::class.java))
     }
 
     fun testClassInheritance() {
@@ -111,11 +111,11 @@ class LintFixTest : TestCase() {
     fun testGroupMatching() {
         val fix = LintFix.create().replace().pattern("abc\\((\\d+)\\)def")
             .with("Number was \\k<1>! I said \\k<1>!").build() as ReplaceString
-        TestCase.assertTrue(fix.oldPattern != null)
+        assertTrue(fix.oldPattern != null)
         val matcher = Pattern.compile(fix.oldPattern).matcher("abc(42)def")
-        TestCase.assertTrue(matcher.matches())
+        assertTrue(matcher.matches())
         val expanded = fix.expandBackReferences(matcher)
-        TestCase.assertEquals("Number was 42! I said 42!", expanded)
+        assertEquals("Number was 42! I said 42!", expanded)
     }
 
     fun testMatching() {

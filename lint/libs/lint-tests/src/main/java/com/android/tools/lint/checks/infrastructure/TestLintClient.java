@@ -791,13 +791,16 @@ public class TestLintClient extends LintCliClient {
             if (oldString != null) {
                 int startIndex = contents.indexOf(oldString, start.getOffset());
                 if (startIndex == -1 || startIndex > end.getOffset()) {
-                    fail(
-                            "Did not find \""
-                                    + oldString
-                                    + "\" in \""
-                                    + locationRange
-                                    + "\" as suggested in the quickfix for issue "
-                                    + issue);
+                    if (!(oldString.equals(LintFix.ReplaceString.INSERT_BEGINNING)
+                            || oldString.equals(LintFix.ReplaceString.INSERT_END))) {
+                        fail(
+                                "Did not find \""
+                                        + oldString
+                                        + "\" in \""
+                                        + locationRange
+                                        + "\" as suggested in the quickfix for issue "
+                                        + issue);
+                    }
                 }
             } else if (oldPattern != null) {
                 Pattern pattern = Pattern.compile(oldPattern);

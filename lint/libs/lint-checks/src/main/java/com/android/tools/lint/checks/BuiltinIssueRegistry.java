@@ -169,6 +169,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(IconDetector.NOTIFICATION_ICON_COMPATIBILITY);
         issues.add(IconDetector.WEBP_ELIGIBLE);
         issues.add(IconDetector.WEBP_UNSUPPORTED);
+        issues.add(IgnoreWithoutReasonDetector.ISSUE);
         issues.add(IncludeDetector.ISSUE);
         issues.add(InefficientWeightDetector.BASELINE_WEIGHTS);
         issues.add(InefficientWeightDetector.INEFFICIENT_WEIGHT);
