@@ -5405,6 +5405,27 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testKotlinClassLiteral() {
+        // Regression test for 117517492: ApiDetector does not work for class literals in Kotlin.
+        lint().files(
+                        manifest().minSdk(1),
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "import org.w3c.dom.DOMErrorHandler\n"
+                                        + "\n"
+                                        + "fun test() {\n"
+                                        + "    val clz = DOMErrorHandler::class // API 8\n"
+                                        + "}\n"))
+                .run()
+                .expect(
+                        "src/test/pkg/}.kt:6: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMErrorHandler [NewApi]\n"
+                                + "    val clz = DOMErrorHandler::class // API 8\n"
+                                + "              ~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "1 errors, 0 warnings");
+    }
+
     public void test69788053() {
         // Regression test for issue 69788053:
         // Lint NewApi check doesn't work with inner classes that extend another class
