@@ -116,7 +116,7 @@ Status ProfilerServiceImpl::BeginSession(
   return daemon_->Execute(command, [this, response]() {
     profiler::Session* session = daemon_->sessions()->GetLastSession();
     if (session) {
-      response->mutable_session()->CopyFrom(session->info);
+      response->mutable_session()->CopyFrom(session->info());
     }
   });
 }
@@ -132,7 +132,7 @@ Status ProfilerServiceImpl::EndSession(
   return daemon_->Execute(command, [this, response]() {
     profiler::Session* session = daemon_->sessions()->GetLastSession();
     if (session) {
-      response->mutable_session()->CopyFrom(session->info);
+      response->mutable_session()->CopyFrom(session->info());
     }
   });
 

@@ -15,24 +15,40 @@
  */
 #include "session.h"
 
+#include "perfd/daemon.h"
+#include "perfd/samplers/network_connectivity_sampler.h"
+
 namespace profiler {
 
-Session::Session(int64_t device_id, int32_t pid, int64_t start_timestamp) {
+Session::Session(int64_t device_id, int32_t pid, int64_t start_timestamp,
+                 Daemon* daemon) {
   // TODO: Revisit uniqueness of this:
-  info.set_session_id(device_id ^ (start_timestamp << 1));
-  info.set_device_id(device_id);
-  info.set_pid(pid);
-  info.set_start_timestamp(start_timestamp);
-  info.set_end_timestamp(LLONG_MAX);
+  info_.set_session_id(device_id ^ (start_timestamp << 1));
+  info_.set_device_id(device_id);
+  info_.set_pid(pid);
+  info_.set_start_timestamp(start_timestamp);
+  info_.set_end_timestamp(LLONG_MAX);
+
+  if (daemon->config()->GetAgentConfig().unified_pipeline()) {
+    samplers_.push_back(
+        new profiler::NetworkConnectivitySampler(*this, daemon->buffer()));
+  }
 }
 
-bool Session::IsActive() { return info.end_timestamp() == LLONG_MAX; }
+bool Session::IsActive() const { return info_.end_timestamp() == LLONG_MAX; }
 
 bool Session::End(int64_t timestamp) {
   if (!IsActive()) {
     return false;
   }
-  info.set_end_timestamp(timestamp);
+
+  for (auto sampler : samplers_) {
+    sampler->Stop();
+    delete sampler;
+  }
+  samplers_.clear();
+
+  info_.set_end_timestamp(timestamp);
   return true;
 }
 

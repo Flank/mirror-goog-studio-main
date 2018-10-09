@@ -13,36 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PERFD_SESSIONS_SESSION_H
-#define PERFD_SESSIONS_SESSION_H
-
-#include "proto/common.pb.h"
-
-#include <vector>
+#include "network_connectivity_sampler.h"
 
 namespace profiler {
 
-class Daemon;
-class Sampler;
+void NetworkConnectivitySampler::Sample() {
+  connectivity_sampler_.Refresh();
+  auto network_data = connectivity_sampler_.Sample();
 
-// A profiling session on a specific process on a specific device.
-class Session final {
- public:
-  Session(int64_t device_id, int32_t pid, int64_t start_timestamp,
-          Daemon* daemon);
-
-  bool IsActive() const;
-
-  bool End(int64_t timestamp);
-
-  const proto::Session& info() const { return info_; }
-
- private:
-  proto::Session info_;
-  // Samplers used for the unified data pipeline.
-  std::vector<Sampler*> samplers_;
-};
+  // TODO convert |network_data| as an Event proto
+}
 
 }  // namespace profiler
-
-#endif  // PERFD_SESSIONS_SESSION_H

@@ -23,7 +23,6 @@
 #include "perfd/commands/command.h"
 #include "perfd/event_buffer.h"
 #include "perfd/profiler_component.h"
-#include "perfd/sessions/session.h"
 #include "perfd/sessions/sessions_manager.h"
 #include "proto/profiler.grpc.pb.h"
 #include "utils/clock.h"
@@ -32,7 +31,6 @@
 
 namespace profiler {
 
-class Session;
 class Command;
 
 // A daemon running on the device, collecting, caching, and transporting

@@ -27,7 +27,6 @@
 #include "commands/end_session.h"
 #include "perfd/connector.h"
 #include "perfd/generic_component.h"
-#include "perfd/sessions/session.h"
 #include "utils/android_studio_version.h"
 #include "utils/config.h"
 #include "utils/current_process.h"
