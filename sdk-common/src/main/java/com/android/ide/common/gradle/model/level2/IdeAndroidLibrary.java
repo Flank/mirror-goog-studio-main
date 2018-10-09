@@ -27,12 +27,13 @@ import java.util.Objects;
 /** Creates a deep copy of {@link Library} of type LIBRARY_ANDROID. */
 public final class IdeAndroidLibrary extends IdeModel implements Library {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @NonNull private final String myArtifactAddress;
     @NonNull private final File myFolder;
     @NonNull private final String myManifest;
     @NonNull private final String myJarFile;
+    @NonNull private final String myApiJarFile;
     @NonNull private final String myResFolder;
     @Nullable private final File resStaticLibrary;
     @NonNull private final String myAssetsFolder;
@@ -56,6 +57,7 @@ public final class IdeAndroidLibrary extends IdeModel implements Library {
             @NonNull File folder,
             @NonNull String manifest,
             @NonNull String jarFile,
+            @NonNull String apiJarFile,
             @NonNull String resFolder,
             @Nullable File resStaticLibrary,
             @NonNull String assetsFolder,
@@ -75,6 +77,7 @@ public final class IdeAndroidLibrary extends IdeModel implements Library {
         myFolder = folder;
         myManifest = manifest;
         myJarFile = jarFile;
+        myApiJarFile = apiJarFile;
         myResFolder = resFolder;
         this.resStaticLibrary = resStaticLibrary;
         myAssetsFolder = assetsFolder;
@@ -124,6 +127,12 @@ public final class IdeAndroidLibrary extends IdeModel implements Library {
     @NonNull
     public String getJarFile() {
         return myJarFile;
+    }
+
+    @Override
+    @NonNull
+    public String getApiJarFile() {
+        return myApiJarFile;
     }
 
     @Override
@@ -237,6 +246,7 @@ public final class IdeAndroidLibrary extends IdeModel implements Library {
                 && Objects.equals(myFolder, that.myFolder)
                 && Objects.equals(myManifest, that.myManifest)
                 && Objects.equals(myJarFile, that.myJarFile)
+                && Objects.equals(myApiJarFile, that.myApiJarFile)
                 && Objects.equals(myResFolder, that.myResFolder)
                 && Objects.equals(resStaticLibrary, that.resStaticLibrary)
                 && Objects.equals(myAssetsFolder, that.myAssetsFolder)
@@ -264,6 +274,7 @@ public final class IdeAndroidLibrary extends IdeModel implements Library {
                 myFolder,
                 myManifest,
                 myJarFile,
+                myApiJarFile,
                 myResFolder,
                 resStaticLibrary,
                 myAssetsFolder,
@@ -294,6 +305,9 @@ public final class IdeAndroidLibrary extends IdeModel implements Library {
                 + '\''
                 + ", myJarFile='"
                 + myJarFile
+                + '\''
+                + ", myApiJarFile='"
+                + myApiJarFile
                 + '\''
                 + ", myResFolder='"
                 + myResFolder

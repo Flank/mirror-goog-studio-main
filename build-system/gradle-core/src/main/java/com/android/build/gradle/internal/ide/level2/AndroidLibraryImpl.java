@@ -24,6 +24,7 @@ import static com.android.SdkConstants.FD_RENDERSCRIPT;
 import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.FN_ANNOTATIONS_ZIP;
+import static com.android.SdkConstants.FN_API_JAR;
 import static com.android.SdkConstants.FN_CLASSES_JAR;
 import static com.android.SdkConstants.FN_LINT_JAR;
 import static com.android.SdkConstants.FN_PROGUARD_TXT;
@@ -99,6 +100,12 @@ public final class AndroidLibraryImpl implements Library, Serializable {
     @Override
     public String getJarFile() {
         return FD_JARS + File.separatorChar + FN_CLASSES_JAR;
+    }
+
+    @NonNull
+    @Override
+    public String getApiJarFile() {
+        return FN_API_JAR;
     }
 
     @NonNull
