@@ -11,7 +11,7 @@ namespace {
 inline uint64_t GetTime() noexcept {
   struct timespec tp;
   clock_gettime(CLOCK_MONOTONIC_RAW, &tp);
-  uint64_t time = ((uint64_t)tp.tv_sec << 32) | tp.tv_nsec;
+  uint64_t time = ((uint64_t)tp.tv_sec * 1000 * 1000 * 1000) + tp.tv_nsec;
   return time;
 }
 
