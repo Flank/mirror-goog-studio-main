@@ -153,8 +153,7 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
         Preconditions.checkArgument(
                 modelClass != AndroidProject.class, "please use fetchAndroidProjects() instead");
 
-        ModelContainer<T> container =
-                buildModel(new GetAndroidModelAction<>(modelClass), modelLevel);
+        ModelContainer<T> container = buildModel(new GetAndroidModelAction<>(modelClass));
 
         // ensure there was only one project
         Preconditions.checkState(
@@ -183,7 +182,7 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
                         .build()
                         .forTasks(Collections.emptyList());
 
-        return buildModel(executor, modelLevel).getSecond();
+        return buildModel(executor).getSecond();
     }
 
     /** Fetches the multi-project Android models via the tooling API. */
@@ -246,7 +245,7 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
         // automatic generation of the implementation class of NativeSourceSet.  Make this
         // multithreaded when the issue is resolved.
         boolean isMultithreaded = modelClass != NativeAndroidProject.class;
-        return buildModel(new GetAndroidModelAction<>(modelClass, isMultithreaded), modelLevel);
+        return buildModel(new GetAndroidModelAction<>(modelClass, isMultithreaded));
     }
 
     /** Return a list of all task names of the project. */
@@ -267,13 +266,12 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
      * Returns a project model for each sub-project;
      *
      * @param action the build action to gather the model
-     * @param modelLevel whether to emulate an older IDE (studio 1.0) querying the model.
      */
     @NonNull
-    private <T> ModelContainer<T> buildModel(
-            @NonNull BuildAction<ModelContainer<T>> action, int modelLevel) throws IOException {
+    private <T> ModelContainer<T> buildModel(@NonNull BuildAction<ModelContainer<T>> action)
+            throws IOException {
         BuildActionExecuter<ModelContainer<T>> executor = projectConnection.action(action);
-        return buildModel(executor, modelLevel).getFirst();
+        return buildModel(executor).getFirst();
     }
 
     /**
@@ -282,8 +280,8 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
      * <p>Can be used both when just fetching models or when also scheduling tasks to be run.
      */
     @NonNull
-    private <T> Pair<T, GradleBuildResult> buildModel(
-            @NonNull BuildActionExecuter<T> executor, int modelLevel) throws IOException {
+    private <T> Pair<T, GradleBuildResult> buildModel(@NonNull BuildActionExecuter<T> executor)
+            throws IOException {
         with(BooleanOption.IDE_BUILD_MODEL_ONLY, true);
         with(BooleanOption.IDE_INVOKED_FROM_IDE, true);
 
