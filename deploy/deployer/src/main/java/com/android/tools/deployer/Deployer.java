@@ -20,7 +20,6 @@ import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deploy.swapper.*;
 import com.android.utils.ILogger;
 import com.google.protobuf.ByteString;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -30,7 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.zip.ZipInputStream;
+import java.util.zip.ZipFile;
 
 public class Deployer {
 
@@ -288,8 +287,7 @@ public class Deployer {
 
     private DexArchive cache(ApkFull apk) throws IOException {
         DexArchive newApk =
-                DexArchive.buildFromHostFileSystem(
-                        new ZipInputStream(new FileInputStream(apk.getPath())), apk.getDigest());
+                DexArchive.buildFromHostFileSystem(new ZipFile(apk.getPath()), apk.getDigest());
         db.enqueueUpdate(
                 delegate -> {
                     newApk.cache(delegate);

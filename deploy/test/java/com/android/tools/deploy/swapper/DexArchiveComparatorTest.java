@@ -17,7 +17,7 @@ package com.android.tools.deploy.swapper;
 
 import java.io.*;
 import java.util.List;
-import java.util.zip.ZipInputStream;
+import java.util.zip.ZipFile;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -43,9 +43,7 @@ public class DexArchiveComparatorTest {
         // Read the old APK First.
         String apk1Checksum = "DEADBEEF";
         DexArchive apk1 =
-                DexArchive.buildFromHostFileSystem(
-                        new ZipInputStream(new FileInputStream(new File(apk1Location))),
-                        apk1Checksum);
+                DexArchive.buildFromHostFileSystem(new ZipFile(apk1Location), apk1Checksum);
 
         // Cache the APK in the in memory database.
         apk1.cache(db);
@@ -75,9 +73,7 @@ public class DexArchiveComparatorTest {
         // Read the new APK
         String apk2Checksum = "BEEFDEAD";
         DexArchive apk2 =
-                DexArchive.buildFromHostFileSystem(
-                        new ZipInputStream(new FileInputStream(new File(apk2Location))),
-                        apk2Checksum);
+                DexArchive.buildFromHostFileSystem(new ZipFile(apk2Location), apk2Checksum);
 
         // Verify the delta.
         DexArchiveComparator.Result result = new DexArchiveComparator().compare(apk1Cache, apk2);
