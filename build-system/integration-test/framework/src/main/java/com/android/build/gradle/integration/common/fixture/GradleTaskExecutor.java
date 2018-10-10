@@ -23,7 +23,6 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.model.OptionalCompilationStep;
-import com.android.builder.tasks.BooleanLatch;
 import com.android.ddmlib.IDevice;
 import com.android.resources.Density;
 import com.android.sdklib.AndroidVersion;
@@ -42,7 +41,6 @@ import java.util.stream.Collectors;
 import org.gradle.tooling.BuildLauncher;
 import org.gradle.tooling.GradleConnectionException;
 import org.gradle.tooling.ProjectConnection;
-import org.gradle.tooling.ResultHandler;
 import org.gradle.tooling.events.OperationType;
 
 /** A Gradle tooling api build builder. */
@@ -156,9 +154,12 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
 
         launcher.withArguments(Iterables.toArray(args, String.class));
 
-        WaitingResultHandler handler = new WaitingResultHandler();
-        launcher.run(handler);
-        GradleConnectionException failure = handler.waitForResult();
+        GradleConnectionException failure = null;
+        try {
+            launcher.run();
+        } catch (GradleConnectionException e) {
+            failure = e;
+        }
 
         GradleBuildResult result =
                 new GradleBuildResult(stdout, stderr, progressListener.getEvents(), failure);
@@ -171,34 +172,6 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
             throw failure;
         }
         return result;
-    }
-
-    private static class WaitingResultHandler implements ResultHandler<Void> {
-
-        private final BooleanLatch latch = new BooleanLatch();
-        private GradleConnectionException failure;
-
-        @Override
-        public void onComplete(Void aVoid) {
-            latch.signal();
-        }
-
-        @Override
-        public void onFailure(GradleConnectionException e) {
-            failure = e;
-            latch.signal();
-        }
-
-        /**
-         * Waits for the build to complete.
-         *
-         * @return null if the build passed, the GradleConnectionException if the build failed.
-         */
-        @Nullable
-        private GradleConnectionException waitForResult() throws InterruptedException {
-            latch.await();
-            return failure;
-        }
     }
 
     private void setInstantRunArgs(
