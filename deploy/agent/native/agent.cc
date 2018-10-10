@@ -24,6 +24,7 @@
 #include "jni/jni_util.h"
 #include "socket.h"
 #include "swapper.h"
+#include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/log.h"
 
 namespace deploy {
@@ -37,32 +38,34 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* input,
   jvmtiEnv* jvmti;
   JNIEnv* jni;
 
+  InitEventSystem();
+
   Log::V("Prior agent invocations in this VM: %d", run_counter++);
 
   if (!GetJvmti(vm, jvmti)) {
-    Log::E("Error retrieving JVMTI function table.");
+    ErrEvent("Error retrieving JVMTI function table.");
     return JNI_OK;
   }
 
   if (!GetJni(vm, jni)) {
-    Log::E("Error retrieving JNI function table.");
+    ErrEvent("Error retrieving JNI function table.");
     return JNI_OK;
   }
 
   if (jvmti->AddCapabilities(&REQUIRED_CAPABILITIES) != JVMTI_ERROR_NONE) {
-    Log::E("Error setting capabilities.");
+    ErrEvent("Error setting capabilities.");
     return JNI_OK;
   }
 
   std::unique_ptr<deploy::Socket> socket(new deploy::Socket());
 
   if (!socket->Open()) {
-    Log::E("Could not open new socket");
+    ErrEvent("Could not open new socket");
     return JNI_OK;
   }
 
   if (!socket->Connect(input, 1000)) {
-    Log::E("Could not connect to socket");
+    ErrEvent("Could not connect to socket");
     return JNI_OK;
   }
 

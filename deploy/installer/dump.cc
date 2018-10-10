@@ -26,9 +26,9 @@
 
 #include "apk_archive.h"
 #include "apk_retriever.h"
+#include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
-#include "trace.h"
 
 namespace deploy {
 
@@ -44,10 +44,9 @@ void DumpCommand::ParseParameters(int argc, char** argv) {
 }
 
 void DumpCommand::Run(Workspace& workspace) {
-  Trace traceDump("dump");
+  Phase p("Command Dump");
 
   proto::DumpResponse* response = new proto::DumpResponse();
-  LogEvent(response->add_events(), "Starting dumping");
   workspace.GetResponse().set_allocated_dump_response(response);
 
   // Retrieve apks for this package.
@@ -55,13 +54,13 @@ void DumpCommand::Run(Workspace& workspace) {
   auto apks_path = apkRetriever.retrieve(packageName_);
   if (apks_path.size() == 0) {
     response->set_status(proto::DumpResponse::ERROR_PACKAGE_NOT_FOUND);
-    ErrEvent(response->add_events(), "ApkRetriever did not return apks");
+    ErrEvent("ApkRetriever did not return apks");
     return;
   }
 
   // Extract all apks.
   for (std::string& apkPath : apks_path) {
-    LogEvent(response->add_events(), "Processing apk: "_s + apkPath);
+    Phase p2("processing APK");
     ApkArchive archive(apkPath);
     Dump dump = archive.ExtractMetadata();
 
@@ -77,7 +76,6 @@ void DumpCommand::Run(Workspace& workspace) {
       apk_dump->set_allocated_signature(dump.signature.release());
     }
   }
-  LogEvent(response->add_events(), "Done dumping");
   response->set_status(proto::DumpResponse::OK);
 }
 

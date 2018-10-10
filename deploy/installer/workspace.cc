@@ -18,6 +18,8 @@
 
 #include <fcntl.h>
 
+#include "tools/base/deploy/common/utils.h"
+
 namespace deploy {
 
 namespace {
@@ -55,7 +57,11 @@ std::string Workspace::RetrieveBase() const noexcept {
             << executable_path_ << "'" << std::endl;
   return "";
 }
-void Workspace::SendResponse() const noexcept {
+void Workspace::SendResponse() noexcept {
+  std::unique_ptr<std::vector<Event>> events = ConsumeEvents();
+  for (Event& event : *events) {
+     ConvertEventToProtoEvent(event, response_.add_events());
+  }
   std::string responseString;
   response_.SerializeToString(&responseString);
   output_pipe_.Write(responseString);

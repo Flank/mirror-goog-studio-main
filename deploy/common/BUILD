@@ -3,14 +3,18 @@ load("//tools/base/bazel:android.bzl", "select_android", "ANDROID_COPTS", "ANDRO
 cc_library(
     name = "common_lib",
     srcs = [
+        "event.cc",
         "message_pipe_wrapper.cc",
         "size_buffer.h",
         "socket.cc",
+        "trace.cc",
         "utils.cc",
     ],
     hdrs = [
+        "event.h",
         "message_pipe_wrapper.h",
         "socket.h",
+        "trace.h",
         "utils.h",
     ],
     copts = ANDROID_COPTS,

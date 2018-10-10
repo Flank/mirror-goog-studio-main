@@ -22,6 +22,7 @@
 
 namespace deploy {
 
+// Automatically emits begin and end events to ftrace.
 class Trace {
  public:
   explicit Trace(const char* name);
@@ -32,19 +33,19 @@ class Trace {
   static void Init();
 
 #if defined(__ANDROID__)
-  inline void Begin(const char* name) const noexcept {
+  inline static void Begin(const char* name) noexcept {
     char buf[kTraceMessageLen];
     int len = snprintf(buf, kTraceMessageLen, "B|%d|%s", getpid(), name);
     write(trace_marker_fd, buf, len);
   }
 
-  inline void End() const noexcept {
+  inline static void End() noexcept {
     char c = 'E';
     write(trace_marker_fd, &c, 1);
   }
 #else
-  void Begin(const char* name) const noexcept {}
-  void End() const noexcept {}
+  static void Begin(const char* name) noexcept {}
+  static void End() noexcept {}
 #endif
 
  private:

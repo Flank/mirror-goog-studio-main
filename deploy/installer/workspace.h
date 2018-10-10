@@ -47,7 +47,7 @@ class Workspace {
 
   proto::InstallerResponse& GetResponse() noexcept { return response_; }
 
-  void SendResponse() const noexcept;
+  void SendResponse() noexcept;
 
  private:
   std::string RetrieveBase() const noexcept;

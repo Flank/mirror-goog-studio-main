@@ -14,9 +14,13 @@
  * limitations under the License.
  */
 
+#ifndef DEPLOY_UTILS_H
+#define DEPLOY_UTILS_H
+
 #include <stddef.h>
 #include <string>
 
+#include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {
@@ -28,6 +32,8 @@ inline const std::string operator"" _s(const char* c, std::size_t size) {
   return std::string(c, size);
 }
 
-void LogEvent(proto::Event* event, const std::string& message);
-void ErrEvent(proto::Event* event, const std::string& message);
+deploy::Event ConvertProtoEventToEvent(const proto::Event& proto_event) noexcept;
+void ConvertEventToProtoEvent(deploy::Event& event, proto::Event* proto_event) noexcept;
+
 }  // namespace deployer
+#endif

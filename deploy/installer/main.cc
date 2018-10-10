@@ -31,7 +31,7 @@
 #include "command_cmd.h"
 #include "dump.h"
 #include "package_manager.h"
-#include "trace.h"
+#include "tools/base/deploy/common/event.h"
 #include "workspace.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
 #include "tools/base/deploy/common/utils.h"
@@ -115,14 +115,14 @@ std::string GetInstallerPath() {
 
 int Fail(proto::InstallerResponse_Status status, Workspace& workspace, const std::string& message) {
    workspace.GetResponse().set_status(status);
-   ErrEvent(workspace.GetResponse().add_events(), message);
+   ErrEvent(message);
    workspace.SendResponse();
    return EXIT_FAILURE;
 }
 
 int main(int argc, char** argv) {
-  Trace::Init();
-  Trace mainTrace("installer");
+  InitEventSystem();
+  BeginPhase("installer");
 
   Workspace workspace(GetInstallerPath());
 
@@ -146,7 +146,7 @@ int main(int argc, char** argv) {
 
   // Verify that this program is the version the called expected.
   if (parameters.version != nullptr && strcmp(parameters.version, kVersion_hash)) {
-    const std::string message = "Version mismatch. Requested:"_s + parameters.version  + "but have "
+    std::string message = "Version mismatch. Requested:"_s + parameters.version  + "but have "
             + kVersion_hash;
     return Fail(proto::InstallerResponse::ERROR_WRONG_VERSION, workspace, message);
   }
@@ -160,7 +160,7 @@ int main(int argc, char** argv) {
   // Allow command to parse its parameters and invoke it.
   task->ParseParameters(argc - parameters.consumed, argv + parameters.consumed);
   if (!task->ReadyToRun()) {
-    const std::string message = "Command "_s + parameters.command_name + ": wrong parameters";
+    std::string message = "Command "_s + parameters.command_name + ": wrong parameters";
     return Fail(proto::InstallerResponse::ERROR_PARAMETER, workspace, message);
   }
 
@@ -172,6 +172,7 @@ int main(int argc, char** argv) {
   // Finally! Run !
   task->Run(workspace);
   workspace.GetResponse().set_status(proto::InstallerResponse::OK);
+  EndPhase();
   workspace.SendResponse();
   return EXIT_SUCCESS;
 }

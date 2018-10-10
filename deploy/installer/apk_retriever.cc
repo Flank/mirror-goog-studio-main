@@ -20,11 +20,13 @@
 
 #include "command_cmd.h"
 #include "package_manager.h"
+#include "tools/base/deploy/common/event.h"
 
 namespace deploy {
 
 std::vector<std::string> ApkRetriever::retrieve(
     const std::string& package_name) const noexcept {
+  Phase p("retrieve_apk_path");
   std::vector<std::string> apks;
   // First try with cmd. It may fail since path capability was added to "cmd" in
   // Android P.

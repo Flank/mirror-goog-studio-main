@@ -28,10 +28,10 @@
 
 #include "command_cmd.h"
 #include "shell_command.h"
-#include "tools/base/deploy/common/message_pipe_wrapper.h"
-#include "tools/base/deploy/common/utils.h"
+#include "tools/base/deploy/common/log.h"
 #include "tools/base/deploy/common/socket.h"
-#include "trace.h"
+#include "tools/base/deploy/common/trace.h"
+#include "tools/base/deploy/common/utils.h"
 
 #include "agent.so.h"
 #include "agent_server.h"
@@ -70,16 +70,15 @@ void SwapCommand::ParseParameters(int argc, char** argv) {
 }
 
 void SwapCommand::Run(Workspace& workspace) {
-  Trace traceDump("swap");
+  Phase p("Command Swap");
 
   response_ = new proto::SwapResponse();
   workspace.GetResponse().set_allocated_swap_response(response_);
-  LogEvent(response_->add_events(),
-           "Got swap request for:" + request_.package_name());
+  LogEvent("Got swap request for:" + request_.package_name());
 
   if (!Setup(workspace)) {
     response_->set_status(proto::SwapResponse::ERROR);
-    ErrEvent(response_->add_events(), "Unable to setup workspace");
+    ErrEvent("Unable to setup workspace");
     return;
   }
 
@@ -102,14 +101,14 @@ void SwapCommand::Run(Workspace& workspace) {
   if (!runner.RunAs(request_.package_name(), parameters, &write_fd, &read_fd,
                     &err_fd)) {
     response_->set_status(proto::SwapResponse::ERROR);
-    ErrEvent(response_->add_events(), "Unable to start server");
+    ErrEvent("Unable to start server");
     return;
   }
   close(err_fd);
 
   if (!AttachAgents(process_ids)) {
     response_->set_status(proto::SwapResponse::ERROR);
-    ErrEvent(response_->add_events(), "One or more agents failed to attach");
+    ErrEvent("One or more agents failed to attach");
     return;
   }
 
@@ -119,7 +118,7 @@ void SwapCommand::Run(Workspace& workspace) {
 
   if (!server_input.Write(request_bytes_)) {
     response_->set_status(proto::SwapResponse::ERROR);
-    ErrEvent(response_->add_events(), "Could not write to agent proxy server");
+    ErrEvent("Could not write to agent proxy server");
   }
 
   CmdCommand cmd;
@@ -145,8 +144,7 @@ void SwapCommand::Run(Workspace& workspace) {
     proto::AgentSwapResponse agent_response;
     if (!agent_response.ParseFromString(response_bytes)) {
       response_->set_status(proto::SwapResponse::ERROR);
-      ErrEvent(response_->add_events(),
-               "Received unparseable response from agent");
+      ErrEvent( "Received unparseable response from agent");
       return;
     }
 
@@ -157,8 +155,12 @@ void SwapCommand::Run(Workspace& workspace) {
     }
 
     agent_responses.emplace(agent_response.pid(), agent_response);
-    // Gather events from the agent.
-    response_->mutable_events()->MergeFrom(agent_response.events());
+
+    // Convert proto events to events.
+    for (int i = 0 ; i < agent_response.events_size() ; i ++) {
+      const proto::Event& event = agent_response.events(i);
+      AddRawEvent(ConvertProtoEventToEvent(event));
+    }
   }
 
   // Ensure all of the agents have responded.
@@ -179,10 +181,9 @@ void SwapCommand::Run(Workspace& workspace) {
   // on read waitng for the ResumeRequest to be sent. We first
   // ask to update the app info, and then we resume the app.
   if (request_.restart_activity()) {
-    LogEvent(response_->add_events(), "Requesting activity restart");
     CmdCommand cmd;
     cmd.UpdateAppInfo("all", request_.package_name(), nullptr);
-    LogEvent(response_->add_events(), "Activity restart requested.");
+    LogEvent("Activity restart requested.");
 
     proto::ResumeRequest resume;
     std::string resume_bytes;
@@ -191,26 +192,26 @@ void SwapCommand::Run(Workspace& workspace) {
     // Tell all agents to resume; if that fails, assume the swap failed.
     if (!server_input.Write(resume_bytes)) {
       response_->set_status(proto::SwapResponse::ERROR);
-      ErrEvent(response_->add_events(),
-               "Could not write to agent proxy server");
+      ErrEvent("Could not write to agent proxy server");
       return;
     }
   }
 
   response_->set_status(proto::SwapResponse::OK);
-  LogEvent(response_->add_events(), "Swapped");
+  LogEvent("Swapped");
 }
 
 bool SwapCommand::Setup(const Workspace& workspace) noexcept {
   // Make sure the target dir exists.
+  Phase p("Setup");
   std::string output;
   if (!RunCmd("mkdir", User::APP_PACKAGE, {"-p", target_dir_}, &output)) {
-    response_->add_events()->set_text("Could not create .studio directory");
+    ErrEvent("Could not create .studio directory");
     return false;
   }
 
   if (!CopyBinaries(workspace.GetTmpFolder(), target_dir_)) {
-    response_->add_events()->set_text("Could not copy binaries");
+    ErrEvent("Could not copy binaries");
     return false;
   }
 
@@ -234,8 +235,7 @@ bool SwapCommand::CopyBinaries(const std::string& src_path,
   // at once to minimize the expected number of additional run-as invocations.
   if (RunCmd("stat", User::APP_PACKAGE, {agent_dst_path, server_dst_path},
              nullptr)) {
-    LogEvent(response_->add_events(),
-             "Binaries already in data folder, skipping copy.");
+    LogEvent("Binaries already in data folder, skipping copy.");
     return true;
   }
 
@@ -273,8 +273,7 @@ bool SwapCommand::CopyBinaries(const std::string& src_path,
   // Copy the binaries to the agent directory.
   std::string cp_output;
   if (!RunCmd("cp", User::APP_PACKAGE, copy_args, &cp_output)) {
-    response_->add_events()->set_text("Could not copy agent binary: "_s +
-                                      cp_output);
+    ErrEvent("Could not copy agent binary: "_s + cp_output);
     return false;
   }
 
@@ -286,21 +285,18 @@ bool SwapCommand::WriteArrayToDisk(const unsigned char* array,
                                    const std::string& dst_path) const noexcept {
   int fd = open(dst_path.c_str(), O_WRONLY | O_CREAT, kRwFileMode);
   if (fd == -1) {
-    response_->add_events()->set_text("WriteArrayToDisk, open: "_s +
-                                      std::string(strerror(errno)));
+    ErrEvent("WriteArrayToDisk, open: "_s + strerror(errno));
     return false;
   }
   int written = write(fd, array, array_len);
   if (written == -1) {
-    response_->add_events()->set_text("WriteArrayToDisk, write: "_s +
-                                      std::string(strerror(errno)));
+    ErrEvent("WriteArrayToDisk, write: "_s + strerror(errno));
     return false;
   }
 
   int close_result = close(fd);
   if (close_result == -1) {
-    response_->add_events()->set_text("WriteArrayToDisk, close: "_s +
-                                      std::string(strerror(errno)));
+    ErrEvent("WriteArrayToDisk, close: "_s + strerror(errno));
     return false;
   }
 
@@ -309,14 +305,14 @@ bool SwapCommand::WriteArrayToDisk(const unsigned char* array,
 }
 
 std::vector<int> SwapCommand::GetApplicationPids() const {
+  Phase p("GetApplicationPids");
   std::vector<int> process_ids;
   std::string pidof_output;
   std::vector<std::string> process_names(request_.process_names().begin(),
                                          request_.process_names().end());
 
   if (!RunCmd("pidof", User::SHELL_USER, {process_names}, &pidof_output)) {
-    response_->add_events()->set_text("Could not get app pid for package: "_s +
-                                      request_.package_name());
+    ErrEvent("Could not get app pid for package: "_s + request_.package_name());
     return process_ids;
   }
 
@@ -330,12 +326,12 @@ std::vector<int> SwapCommand::GetApplicationPids() const {
 }
 
 bool SwapCommand::AttachAgents(const std::vector<int>& process_ids) const {
+  Phase p("AttachAgents");
   CmdCommand cmd;
   for (int pid : process_ids) {
     std::string output;
     if (!cmd.AttachAgent(pid, target_dir_ + kAgentFilename, {Socket::kDefaultAddress}, &output)) {
-      response_->add_events()->set_text(
-          "Could not attach agent to process: "_s + output);
+      ErrEvent("Could not attach agent to process: "_s + output);
       return false;
     }
   }

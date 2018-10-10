@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -43,6 +44,7 @@ public class AdbClient {
         logger.info("SHELL: " + String.join(" ", parameters));
         ByteArrayOutputReceiver receiver;
         try {
+            Trace.begin("adb shell" + Arrays.toString(parameters));
             receiver = new ByteArrayOutputReceiver();
             device.executeShellCommand(
                     String.join(" ", parameters),
@@ -56,6 +58,8 @@ public class AdbClient {
                 | IOException
                 | TimeoutException e) {
             throw new DeployerException("Unable to run shell command", e);
+        } finally {
+            Trace.end();
         }
     }
 
@@ -121,9 +125,12 @@ public class AdbClient {
 
     public void push(String from, String to) {
         try {
+            Trace.begin("adb push");
             device.pushFile(from, to);
         } catch (IOException | SyncException | TimeoutException | AdbCommandRejectedException e) {
             throw new DeployerException("Unable to push files", e);
+        } finally {
+            Trace.end();
         }
     }
 

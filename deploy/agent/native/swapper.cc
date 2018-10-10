@@ -22,6 +22,7 @@
 #include "hotswap.h"
 #include "instrumenter.h"
 #include "socket.h"
+#include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/log.h"
 #include "tools/base/deploy/common/utils.h"
 
@@ -52,14 +53,14 @@ void Swapper::Initialize(jvmtiEnv* jvmti, std::unique_ptr<Socket> socket) {
 void Swapper::StartSwap(JNIEnv* jni) {
   std::string request_bytes;
   if (!socket_->Read(&request_bytes)) {
-    Log::E("Could not read request from socket");
+    LogEvent("Could not read request from socket");
     return;
   }
 
   request_ = std::unique_ptr<proto::SwapRequest>(new proto::SwapRequest());
   if (!request_->ParseFromString(request_bytes)) {
     request_.reset();
-    Log::E("Could not parse swap request");
+    LogEvent("Could not parse swap request");
     return;
   }
 
@@ -75,10 +76,10 @@ bool Swapper::FinishSwap(JNIEnv* jni) {
   std::string error_message;
   if (!code_swap.DoHotSwap(*request_, &error_message)) {
     response.set_status(proto::AgentSwapResponse::ERROR);
-    ErrEvent(response.add_events(), error_message);
+    ErrEvent(error_message);
     SendResponse(response);
   } else {
-    LogEvent(response.add_events(), "Swap was successful");
+    LogEvent("Swap was successful");
     response.set_status(proto::AgentSwapResponse::OK);
     SendResponse(response);
     if (request_->restart_activity()) {
@@ -88,7 +89,7 @@ bool Swapper::FinishSwap(JNIEnv* jni) {
       // reload-appinfo command.
       std::string resume;
       if (!socket_->Read(&resume)) {
-        Log::E("Could not read resume request from socket");
+        LogEvent("Could not read resume request from socket");
       }
     }
   }
@@ -107,7 +108,12 @@ void Swapper::Reset() {
   jvmti_ = nullptr;
 }
 
-void Swapper::SendResponse(const proto::AgentSwapResponse& response) {
+void Swapper::SendResponse(proto::AgentSwapResponse& response) {
+  // Convert all events to proto events.
+  std::unique_ptr<std::vector<Event>> events = ConsumeEvents();
+  for (Event& event : *events) {
+    ConvertEventToProtoEvent(event, response.add_events());
+  }
   std::string response_bytes;
   response.SerializeToString(&response_bytes);
   socket_->Write(response_bytes);

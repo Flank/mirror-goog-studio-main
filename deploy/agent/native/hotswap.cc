@@ -10,6 +10,7 @@
 #include "jni/jni_class.h"
 #include "jni/jni_object.h"
 #include "jvmti.h"
+#include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/log.h"
 
 namespace deploy {
@@ -113,6 +114,7 @@ jclass HotSwap::FindClass(const std::string& name) const {
 
 bool HotSwap::DoHotSwap(const proto::SwapRequest& swap_request,
                         std::string* error_msg) const {
+  Phase p("doHotSwap");
   size_t total_classes = swap_request.classes_size();
   jvmtiClassDefinition* def = new jvmtiClassDefinition[total_classes];
 
