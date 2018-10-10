@@ -18,27 +18,29 @@ package com.android.tools.deployer;
 
 import com.android.annotations.NonNull;
 import com.android.ddmlib.*;
+import com.android.utils.ILogger;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class AdbClient {
-    private IDevice device;
+    private final IDevice device;
+    private final ILogger logger;
 
-    public AdbClient(IDevice device) {
+    public AdbClient(IDevice device, ILogger logger) {
         this.device = device;
+        this.logger = logger;
     }
 
     /**
      * Executes the given command and sends {@code input} to stdin and returns stdout as a byte[]
      */
     public byte[] shell(String[] parameters, InputStream input) throws DeployerException {
-        System.out.println("SHELL:" + Arrays.toString(parameters));
+        logger.info("SHELL: " + String.join(" ", parameters));
         ByteArrayOutputReceiver receiver;
         try {
             receiver = new ByteArrayOutputReceiver();

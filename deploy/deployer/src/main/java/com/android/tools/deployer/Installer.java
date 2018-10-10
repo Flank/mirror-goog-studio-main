@@ -16,6 +16,7 @@
 package com.android.tools.deployer;
 
 import com.android.tools.deploy.proto.Deploy;
+import com.android.utils.ILogger;
 import com.google.common.collect.ObjectArrays;
 import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.CodedOutputStream;
@@ -45,6 +46,8 @@ public class Installer {
     public static final String ANDROID_EXECUTABLE_PATH = "/tools/base/deploy/installer/android";
     private final AdbClient adb;
     private final String installersFolder;
+    private final ILogger logger;
+
     private enum OnFail {
         RETRY,
         DO_NO_RETRY
@@ -59,20 +62,21 @@ public class Installer {
      * @param path a path to a directory with all the per-abi android executables.
      * @param adb the {@code AdbClient} to use.
      */
-    public Installer(AdbClient adb) {
-        this(null, adb);
+    public Installer(AdbClient adb, ILogger logger) {
+        this(null, adb, logger);
     }
 
-    public Installer(String installersFolder, AdbClient adb) {
+    public Installer(String installersFolder, AdbClient adb, ILogger logger) {
         this.adb = adb;
         this.installersFolder = installersFolder;
+        this.logger = logger;
     }
 
-    private void printEvents(List<Deploy.Event> events) {
+    private void logEvents(List<Deploy.Event> events) {
         for (Deploy.Event event : events) {
-            System.out.println(
-                    event.getTimestampNs()
-                            + " "
+            logger.info(
+                    event.getTimestampNs() / 1000000
+                            + "ms "
                             + event.getType()
                             + " ["
                             + event.getPid()
@@ -89,8 +93,8 @@ public class Installer {
         String[] cmd = buildCmd(new String[] {"dump", packageName});
         Deploy.InstallerResponse installerResponse = invokeRemoteCommand(cmd, null);
         Deploy.DumpResponse response = installerResponse.getDumpResponse();
-        System.out.println("Dump response:" + response.getStatus().toString());
-        printEvents(response.getEventsList());
+        logger.info("Dump response:" + response.getStatus().toString());
+        logEvents(response.getEventsList());
 
         if (response.getStatus() == Deploy.DumpResponse.Status.ERROR_PACKAGE_NOT_FOUND) {
             throw new IOException(
@@ -114,15 +118,15 @@ public class Installer {
         InputStream inputStream = wrap(request);
         Deploy.InstallerResponse installerResponse = invokeRemoteCommand(cmd, inputStream);
         Deploy.SwapResponse response = installerResponse.getSwapResponse();
-        System.out.println("Swap response:" + response.getStatus().toString());
-        printEvents(response.getEventsList());
+        logger.info("Swap response:" + response.getStatus().toString());
+        logEvents(response.getEventsList());
         return response;
     }
 
     public Deploy.InstallerResponse invokeRemoteCommand(String[] cmd, InputStream inputStream) {
         Deploy.InstallerResponse response = invokeRemoteCommand(cmd, inputStream, OnFail.RETRY);
-        System.out.println("Installer response:" + response.getStatus().toString());
-        printEvents(response.getEventsList());
+        logger.info("Installer response:" + response.getStatus().toString());
+        logEvents(response.getEventsList());
         return response;
     }
 
@@ -172,7 +176,7 @@ public class Installer {
                 if (inputStream == null) {
                     continue;
                 }
-                System.out.println("Pushed installer '" + installerJarPath + "'");
+                logger.info("Pushed installer '" + installerJarPath + "'");
                 // We have a match, extract it in a tmp file.
                 installerFile = File.createTempFile(".studio_installer", abi);
                 Files.copy(
@@ -293,7 +297,7 @@ public class Installer {
     }
 
     private void printHexEditorStyle(byte[] buffer) {
-        System.out.println("Hex dump of buffer: " + buffer.length + " bytes.");
+        logger.info("Hex dump of buffer: " + buffer.length + " bytes.");
         for (int line = 0; line < buffer.length / HEX_LINE_SIZE; line++) {
             printHexEditorStyleLine(buffer, line * HEX_LINE_SIZE);
         }

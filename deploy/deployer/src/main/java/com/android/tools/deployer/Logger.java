@@ -19,9 +19,7 @@ import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
 
 public class Logger {
-    public static ILogger getLogger(Class klass) {
-        ILogger logger = new StdLogger(StdLogger.Level.VERBOSE);
-        //ILogger logger = new NullLogger();
-        return logger;
+    public static ILogger getLogger() {
+        return new StdLogger(StdLogger.Level.VERBOSE);
     }
 }

@@ -39,12 +39,12 @@ public class Deployer {
     public static final String DUMPS_DIRECTORY = BASE_DIRECTORY + "/dumps";
     public static final String INSTALLER_DIRECTORY = BASE_DIRECTORY + "/bin";
 
-    private static final ILogger LOGGER = Logger.getLogger(Deployer.class);
     private final String packageName;
     private final List<ApkFull> apks;
     private final AdbClient adb;
     private final DexArchiveDatabase db;
     private final Installer installer;
+    private final ILogger logger;
 
     private StopWatch stopWatch;
 
@@ -71,22 +71,19 @@ public class Deployer {
                 new HashMap<>(); // Set only if status == OK otherwise content is undefined.
     }
 
-    public interface InstallerCallBack {
-        void onInstallationFinished(boolean status);
-    }
-
     public Deployer(
             String packageName,
             List<String> apkPaths,
-            InstallerCallBack cb,
             AdbClient adb,
             DexArchiveDatabase db,
-            Installer installer) {
-        this.stopWatch = new StopWatch();
+            Installer installer,
+            ILogger logger) {
+        this.stopWatch = new StopWatch(logger);
         this.packageName = packageName;
         this.adb = adb;
         this.db = db;
         this.installer = installer;
+        this.logger = logger;
         this.apks = apkPaths.stream().map(ApkFull::new).collect(Collectors.toList());
     }
 
@@ -111,7 +108,7 @@ public class Deployer {
             response.status = RunResponse.Status.ERROR;
             response.errorMessage = "Install failed";
             stopWatch.mark("Install failed");
-            LOGGER.error(e, null);
+            logger.error(e, null);
         }
         return response;
     }
@@ -231,16 +228,10 @@ public class Deployer {
                 DexArchive newApk = cache(apk);
 
                 if (diffs.isEmpty()) {
-                    System.out.println("Swapper: apk " + apk.getPath() + " has not changed.");
+                    logger.info("Swapper: apk " + apk.getPath() + " has not changed.");
                     continue;
                 }
-                System.out.println(
-                        "Swapper found "
-                                + diffs.size()
-                                + " changes in apk '"
-                                + apk.getPath()
-                                + "'.");
-
+                logger.info("Swapper found %d changes in apk '%s'.", diffs.size(), apk.getPath());
                 String preSwapCheckError = PreswapCheck.verify(diffs);
 
                 if (preSwapCheckError != null) {
@@ -253,10 +244,9 @@ public class Deployer {
                 ApkDump apkDump = dumps.get(apk.getApkDetails().fileName());
                 DexArchive prevApk = DexArchive.buildFromDatabase(db, apkDump.getDigest());
                 if (prevApk == null) {
-                    System.out.println(
-                            "Unable to retrieve apk in DB ''"
-                                    + apkDump.getDigest()
-                                    + "', skipping this apk.");
+                    logger.info(
+                            "Unable to retrieve apk in DB '%s', skipping this apk.",
+                            apkDump.getDigest());
                     response.status = RunResponse.Status.ERROR;
                     response.errorMessage = "Unrecognized APK on device.";
                     return;
@@ -275,7 +265,6 @@ public class Deployer {
                                                         .build()));
 
             } catch (Exception e) {
-                System.out.println("Error while creating proto");
                 throw new DeployerException(e);
             }
         }

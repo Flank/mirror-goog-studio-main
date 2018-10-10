@@ -33,7 +33,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class ApkFull {
-    private static final ILogger LOGGER = Logger.getLogger(ApkFull.class);
+    private static final ILogger LOGGER = Logger.getLogger();
     private static final int EOCD_SIGNATURE = 0x06054b50;
     private static final int CD_SIGNATURE = 0x02014b50;
     private static final byte[] SIGNATURE_BLOCK_MAGIC = "APK Sig Block 42".getBytes();
