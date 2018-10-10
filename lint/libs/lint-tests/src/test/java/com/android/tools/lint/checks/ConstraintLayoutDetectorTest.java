@@ -460,6 +460,106 @@ public class ConstraintLayoutDetectorTest extends AbstractCheckTest {
         lint().projects(project).checkMessage(this::checkReportedError).run().expectClean();
     }
 
+    public void testIncludesOkay() {
+        // No regression test for https://issuetracker.google.com/117204543
+        lint().files(
+                        xml(
+                                "res/layout/layout1.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<android.support.constraint.ConstraintLayout xmlns:android=\"http://schemas.android.com/apk/res/android\""
+                                        + "   xmlns:app=\"http://schemas.android.com/apk/res-auto\""
+                                        + "   xmlns:tools=\"http://schemas.android.com/tools\""
+                                        + "   android:layout_width=\"match_parent\""
+                                        + "   android:layout_height=\"match_parent\">"
+                                        + "\n"
+                                        + " <android.support.constraint.Group\n"
+                                        + "                android:id=\"@+id/first_run_page_quickrestore\"\n"
+                                        + "                android:layout_width=\"wrap_content\"\n"
+                                        + "                android:layout_height=\"wrap_content\"\n"
+                                        + "                android:visibility=\"gone\"\n"
+                                        + "                app:constraint_referenced_ids=\"first_run_page3_text1,first_run_page3_text2\" />\n"
+                                        + "\n"
+                                        + " <androidx.constraintlayout.widget.Group\n"
+                                        + "                android:id=\"@+id/first_run_page_quickrestore2\"\n"
+                                        + "                android:layout_width=\"wrap_content\"\n"
+                                        + "                android:layout_height=\"wrap_content\"\n"
+                                        + "                android:visibility=\"gone\"\n"
+                                        + "                app:constraint_referenced_ids=\"first_run_page3_text1,first_run_page3_text2\" />\n"
+                                        + "\n"
+                                        + "<include layout=\"@layout/include_remote_control\" />\n"
+                                        + "\n"
+                                        + "</android.support.constraint.ConstraintLayout>\n"),
+                        gradle(
+                                ""
+                                        + "apply plugin: 'com.android.application'\n"
+                                        + "\n"
+                                        + "dependencies {\n"
+                                        + "    compile 'com.android.support.constraint:constraint-layout:2.0.0\"'\n"
+                                        + "}"))
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expectClean();
+    }
+
+    public void testAndroidxAndGroups() {
+        // Regression test for
+        // 118709915: ConstraintLayout Group highlighted as MissingConstraints
+        lint().files(
+                        xml(
+                                "res/layout/layotu1.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<androidx.constraintlayout.widget.ConstraintLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"
+                                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                        + "    android:layout_width=\"match_parent\"\n"
+                                        + "    android:layout_height=\"match_parent\"\n"
+                                        + "    tools:context=\".MainActivity\">\n"
+                                        + "\n"
+                                        + "    <TextView\n"
+                                        + "        android:id=\"@+id/textView1\"\n"
+                                        + "        android:layout_width=\"wrap_content\"\n"
+                                        + "        android:layout_height=\"wrap_content\"\n"
+                                        + "        android:layout_marginTop=\"19dp\"\n"
+                                        + "        android:text=\"Hello World!\"\n"
+                                        + "        app:layout_constraintBottom_toTopOf=\"@+id/textView2\"\n"
+                                        + "        app:layout_constraintLeft_toLeftOf=\"parent\"\n"
+                                        + "        app:layout_constraintRight_toRightOf=\"parent\"\n"
+                                        + "        app:layout_constraintTop_toTopOf=\"parent\"\n"
+                                        + "        app:layout_constraintVertical_chainStyle=\"packed\" />\n"
+                                        + "\n"
+                                        + "    <androidx.constraintlayout.widget.Group\n"
+                                        + "        android:id=\"@+id/group\"\n"
+                                        + "        android:layout_width=\"wrap_content\"\n"
+                                        + "        android:layout_height=\"wrap_content\"\n"
+                                        + "        android:visibility=\"visible\"\n"
+                                        + "        app:constraint_referenced_ids=\"textView1\" />\n"
+                                        + "\n"
+                                        + "    <androidx.constraintlayout.widget.Barrier\n"
+                                        + "        android:id=\"@+id/barrier\"\n"
+                                        + "        android:layout_width=\"wrap_content\"\n"
+                                        + "        android:layout_height=\"wrap_content\"\n"
+                                        + "        app:barrierDirection=\"right\"\n"
+                                        + "        app:constraint_referenced_ids=\"textView1,textView2\" />\n"
+                                        + "\n"
+                                        + "    <TextView\n"
+                                        + "        android:id=\"@+id/textView2\"\n"
+                                        + "        android:layout_width=\"wrap_content\"\n"
+                                        + "        android:layout_height=\"wrap_content\"\n"
+                                        + "        android:layout_marginStart=\"8dp\"\n"
+                                        + "        android:layout_marginLeft=\"8dp\"\n"
+                                        + "        android:text=\"Bye World\"\n"
+                                        + "        app:layout_constraintBottom_toBottomOf=\"parent\"\n"
+                                        + "        app:layout_constraintStart_toStartOf=\"@+id/textView1\"\n"
+                                        + "        app:layout_constraintTop_toBottomOf=\"@+id/textView1\" />\n"
+                                        + "\n"
+                                        + "</androidx.constraintlayout.widget.ConstraintLayout>"))
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expectClean();
+    }
+
     @Override
     protected void checkReportedError(
             @NonNull Context context,
