@@ -29,7 +29,7 @@ namespace profiler {
 class GraphicsServiceImpl final
     : public profiler::proto::GraphicsService::Service {
  public:
-  GraphicsServiceImpl(Clock *clock) : clock_(clock), collector_(clock) {}
+  GraphicsServiceImpl(Clock *clock) : collector_(clock) {}
 
   virtual ~GraphicsServiceImpl() = default;
 
@@ -49,8 +49,6 @@ class GraphicsServiceImpl final
       profiler::proto::GraphicsDataResponse *response) override;
 
  private:
-  Clock *clock_;
-
   GraphicsCollector collector_;  // profiler::GraphicsCollector(clock_);
 };
 }  // namespace profiler

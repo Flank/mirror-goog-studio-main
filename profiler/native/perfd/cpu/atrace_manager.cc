@@ -29,14 +29,14 @@
 #include "utils/bash_command.h"
 #include "utils/current_process.h"
 #include "utils/device_info.h"
+#include "utils/fs/disk_file_system.h"
 #include "utils/log.h"
 #include "utils/process_manager.h"
 #include "utils/tokenizer.h"
 #include "utils/trace.h"
-#include "utils/fs/disk_file_system.h"
 
-using std::string;
 using profiler::proto::Device;
+using std::string;
 
 namespace profiler {
 
@@ -59,8 +59,6 @@ AtraceManager::AtraceManager(Clock *clock, int dump_data_interval_ms)
       is_profiling_(false) {
   categories_ = BuildSupportedCategoriesString();
 }
-
-AtraceManager::~AtraceManager() {}
 
 bool AtraceManager::StartProfiling(const std::string &app_pkg_name,
                                    int sampling_interval_us,

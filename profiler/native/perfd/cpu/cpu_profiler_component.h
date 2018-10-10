@@ -46,8 +46,7 @@ class CpuProfilerComponent final : public ProfilerComponent {
   explicit CpuProfilerComponent(Clock* clock, FileCache* file_cache,
                                 const proto::AgentConfig::CpuConfig& cpu_config,
                                 TerminationService* termination_service)
-      : clock_(clock),
-        cache_(kBufferCapacity, clock, file_cache),
+      : cache_(kBufferCapacity, clock, file_cache),
         usage_sampler_(clock, &cache_),
         thread_monitor_(clock, &cache_),
         public_service_(clock, &cache_, &usage_sampler_, &thread_monitor_,
@@ -66,7 +65,6 @@ class CpuProfilerComponent final : public ProfilerComponent {
   }
 
  private:
-  Clock* clock_;
   CpuCache cache_;
   CpuUsageSampler usage_sampler_;
   ThreadMonitor thread_monitor_;

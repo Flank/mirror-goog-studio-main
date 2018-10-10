@@ -138,7 +138,7 @@ void FileCache::JanitorThread() {
         // If we're over limit, clean up oldest files until we're back under
         // limit again.
         vector<PathStat> files;
-        cache_complete_->Walk([this, &files](const PathStat &pstat) {
+        cache_complete_->Walk([&files](const PathStat &pstat) {
           if (pstat.type() == PathStat::Type::FILE) {
             files.push_back(pstat);
           }

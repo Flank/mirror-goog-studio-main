@@ -38,7 +38,7 @@ struct AtraceProfilingMetadata {
 class AtraceManager {
  public:
   explicit AtraceManager(Clock *clock, int dump_data_interval_ms);
-  ~AtraceManager();
+  virtual ~AtraceManager() = default;
 
   // Returns true if profiling of app |app_name| was started successfully.
   // |trace_path| is also set to where the trace file will be made available

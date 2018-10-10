@@ -90,7 +90,7 @@ class ProfilerServiceTest : public ::testing::Test {
     return session.end_timestamp() == LLONG_MAX;
   }
 
-  void TearDown() { server_->Shutdown(); }
+  void TearDown() override { server_->Shutdown(); }
 
   FakeClock clock_;
   FileCache file_cache_;

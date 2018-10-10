@@ -196,7 +196,7 @@ void DiskFileSystem::Close(const string &fpath) {
 
 bool DiskFileSystem::DeleteDir(const string &dpath) {
   WalkDir(dpath,
-          [this](const PathStat &pstat) { remove(pstat.full_path().c_str()); },
+          [](const PathStat &pstat) { remove(pstat.full_path().c_str()); },
           INT32_MAX);
   return remove(dpath.c_str());
 }
