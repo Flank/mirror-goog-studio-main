@@ -54,7 +54,7 @@ TEST_DATA = [
     "//prebuilts/studio/sdk:platforms/android-21_build_only",
     "//prebuilts/studio/sdk:platforms/android-23_build_only",
     "//prebuilts/studio/sdk:platforms/android-24_build_only",
-    "//prebuilts/studio/sdk:platforms/android-P",
+    "//prebuilts/studio/sdk:platforms/android-28_build_only",
     "//prebuilts/studio/sdk:platforms/latest",
     "//prebuilts/studio/sdk:platforms/latest-preview",
     "//prebuilts/studio/sdk:test-runner_latest",

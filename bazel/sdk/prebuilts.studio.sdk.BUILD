@@ -244,7 +244,7 @@ platform_filegroup(
 )
 
 platform_filegroup(
-    name = "platforms/android-P",
+    name = "platforms/android-28",
     visibility = [
         "//tools/adt/idea/android-uitests:__pkg__",
         "//tools/base/build-system/integration-test:__subpackages__",
