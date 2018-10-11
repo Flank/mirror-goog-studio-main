@@ -491,6 +491,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         )
 
         private const val ATTR_OTHERWISE = "otherwise"
+        private const val ATTR_PRODUCTION_VISIBILITY = "productionVisibility"
 
         // Must match constants in @VisibleForTesting:
         private const val VISIBILITY_PRIVATE = 2
@@ -501,6 +502,8 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
         private fun getVisibilityForTesting(annotation: UAnnotation): Int {
             val value = annotation.findDeclaredAttributeValue(ATTR_OTHERWISE)
+                // Guava within Google3:
+                ?: annotation.findDeclaredAttributeValue(ATTR_PRODUCTION_VISIBILITY)
             if (value is ULiteralExpression) {
                 val v = value.value
                 if (v is Int) {
