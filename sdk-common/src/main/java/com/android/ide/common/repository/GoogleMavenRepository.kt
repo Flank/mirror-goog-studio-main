@@ -103,6 +103,10 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
         return artifactInfo.findVersion(filter, allowPreview)
     }
 
+    fun getGroups(): Set<String> = getPackageMap().keys.toSet()
+
+    fun getArtifacts(groupId: String): Set<String> = getPackageMap()[groupId]?.artifacts().orEmpty()
+
     private fun findArtifact(groupId: String, artifactId: String): ArtifactInfo? {
         val packageInfo = getPackageMap()[groupId] ?: return null
         return packageInfo.findArtifact(artifactId)
@@ -140,7 +144,7 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
                 parser.setInput(it, SdkConstants.UTF_8)
                 while (parser.next() != XmlPullParser.END_DOCUMENT) {
                     val eventType = parser.eventType
-                    if (eventType == XmlPullParser.END_TAG) {
+                    if (eventType == XmlPullParser.END_TAG && parser.depth > 1) {
                         val tag = parser.name
                         val packageInfo = PackageInfo(tag)
                         map[tag] = packageInfo
@@ -161,6 +165,8 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
             initializeIndex(map)
             map
         }
+
+        fun artifacts(): Set<String> = artifacts.values.map { it.id }.toSet()
 
         fun findArtifact(id: String): ArtifactInfo? = artifacts[id]
 
