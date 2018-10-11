@@ -65,6 +65,9 @@ enum class StringOption(
 
     SUPPRESS_UNSUPPORTED_OPTION_WARNINGS("android.suppressUnsupportedOptionWarnings"),
 
+    // The exact version of Android Studio used, e.g. 2.4.0.6
+    IDE_ANDROID_STUDIO_VERSION(AndroidProject.PROPERTY_STUDIO_VERSION, status = STABLE),
+
     ;
 
     override fun parse(value: Any): String {
