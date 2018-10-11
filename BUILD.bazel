@@ -38,5 +38,6 @@ coverage_report(
         "//tools/base/lint/libs/lint-tests",
         "//tools/base/testutils:tools.testutils",
         #"//tools/data-binding:tools.compiler",
+        "//tools/adt/idea/android:intellij.android.core",
     ],
 )
