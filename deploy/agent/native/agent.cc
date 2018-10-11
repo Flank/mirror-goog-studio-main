@@ -42,12 +42,12 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* input,
 
   Log::V("Prior agent invocations in this VM: %d", run_counter++);
 
-  if (!GetJvmti(vm, jvmti)) {
+  if (vm->GetEnv((void**)&jvmti, JVMTI_VERSION_1_2) != JNI_OK) {
     ErrEvent("Error retrieving JVMTI function table.");
     return JNI_OK;
   }
 
-  if (!GetJni(vm, jni)) {
+  if (vm->GetEnv((void**)&jni, JNI_VERSION_1_2) != JNI_OK) {
     ErrEvent("Error retrieving JNI function table.");
     return JNI_OK;
   }

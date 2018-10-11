@@ -139,8 +139,8 @@ bool HotSwap::DoHotSwap(const proto::SwapRequest& swap_request,
 
   for (size_t i = 0; i < total_classes; i++) {
     const proto::ClassDef& class_def = swap_request.classes(i);
-    const string name = class_def.name();
-    const string code = class_def.dex();
+    const std::string name = class_def.name();
+    const std::string code = class_def.dex();
 
     def[i].klass = FindClass(name);
     if (def[i].klass == nullptr) {

@@ -27,6 +27,7 @@
 #include <fcntl.h>
 
 #include "tools/base/deploy/common/log.h"
+#include "tools/base/deploy/common/message_pipe_wrapper.h"
 #include "tools/base/deploy/common/socket.h"
 #include "tools/base/deploy/common/trace.h"
 #include "tools/base/deploy/common/utils.h"
@@ -176,26 +177,6 @@ void SwapCommand::Run(Workspace& workspace) {
   }
 
   cmd.CommitInstall(install_session, &output);
-
-  // Because we need to restart the activity, the app is now blocked
-  // on read waitng for the ResumeRequest to be sent. We first
-  // ask to update the app info, and then we resume the app.
-  if (request_.restart_activity()) {
-    CmdCommand cmd;
-    cmd.UpdateAppInfo("all", request_.package_name(), nullptr);
-    LogEvent("Activity restart requested.");
-
-    proto::ResumeRequest resume;
-    std::string resume_bytes;
-    resume.SerializeToString(&resume_bytes);
-
-    // Tell all agents to resume; if that fails, assume the swap failed.
-    if (!server_input.Write(resume_bytes)) {
-      response_->set_status(proto::SwapResponse::ERROR);
-      ErrEvent("Could not write to agent proxy server");
-      return;
-    }
-  }
 
   response_->set_status(proto::SwapResponse::OK);
   LogEvent("Swapped");

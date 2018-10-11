@@ -34,28 +34,24 @@ class JniClass {
     class_ = jni_->FindClass(name);
   }
 
-  JniClass(JniClass&&) = default;
-
   ~JniClass() { jni_->DeleteLocalRef(class_); }
+
+  JniClass(JniClass&&) = default;
+  JniClass& operator=(JniClass&&) = default;
 
   template <typename T>
   T CallStaticMethod(const JniSignature& method) {
-    jmethodID id =
-        jni_->GetStaticMethodID(class_, method.name, method.signature);
-    return JniCallStaticMethod<T>(id, {});
+    return CallStaticMethod<T>(method, nullptr);
   }
 
   template <typename T>
   T CallStaticMethod(const JniSignature& method, jvalue* args) {
-    jmethodID id =
-        jni_->GetStaticMethodID(class_, method.name, method.signature);
-    return JniCallStaticMethod<T>(id, args);
+    NO_DEFAULT_SPECIALIZATION(T)
   }
 
   template <typename T>
   T GetStaticField(const JniSignature& field) {
-    jfieldID id = jni_->GetStaticFieldID(class_, field.name, field.signature);
-    return JniGetStaticField<T>(id);
+    NO_DEFAULT_SPECIALIZATION(T)
   }
 
  private:
@@ -64,32 +60,35 @@ class JniClass {
 
   JniClass(const JniClass&) = delete;
   JniClass& operator=(const JniClass&) = delete;
-
-  template <typename T>
-  T JniCallStaticMethod(jmethodID method, jvalue* args) {
-    NO_DEFAULT_SPECIALIZATION(T)
-  }
-
-  template <typename T>
-  T JniGetStaticField(jfieldID field) {
-    NO_DEFAULT_SPECIALIZATION(T)
-  }
 };
 
 template <>
-jint JniClass::JniGetStaticField(jfieldID);
+inline void JniClass::CallStaticMethod(const JniSignature& method,
+                                       jvalue* args) {
+  jmethodID id = jni_->GetStaticMethodID(class_, method.name, method.signature);
+  jni_->CallStaticVoidMethodA(class_, id, args);
+}
 
 template <>
-void JniClass::JniCallStaticMethod(jmethodID, jvalue*);
+inline jboolean JniClass::CallStaticMethod(const JniSignature& method,
+                                           jvalue* args) {
+  jmethodID id = jni_->GetStaticMethodID(class_, method.name, method.signature);
+  return jni_->CallStaticBooleanMethodA(class_, id, args);
+}
 
 template <>
-jint JniClass::JniCallStaticMethod(jmethodID, jvalue*);
+inline jobject JniClass::CallStaticMethod(const JniSignature& method,
+                                          jvalue* args) {
+  jmethodID id = jni_->GetStaticMethodID(class_, method.name, method.signature);
+  return jni_->CallStaticObjectMethodA(class_, id, args);
+}
 
 template <>
-jboolean JniClass::JniCallStaticMethod(jmethodID, jvalue*);
-
-template <>
-JniObject JniClass::JniCallStaticMethod(jmethodID, jvalue*);
+inline JniObject JniClass::CallStaticMethod(const JniSignature& method,
+                                            jvalue* args) {
+  jobject object = CallStaticMethod<jobject>(method, args);
+  return JniObject(jni_, object);
+}
 
 }  // namespace deploy
 

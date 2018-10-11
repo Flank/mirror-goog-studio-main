@@ -38,11 +38,11 @@ struct NativeBinding {
   }
 };
 
-bool RegisterNatives(JNIEnv* jni, const std::vector<NativeBinding>& bindings);
+bool RegisterNative(JNIEnv* jni, const NativeBinding& binding);
 
-int Native_GetAppInfoChanged(JNIEnv* jni, jobject object);
-bool Native_TryRedefineClasses(JNIEnv* jni, jobject object);
-
+// This method is bound to ActivityThreadInstrumentation#updateApplicationInfo()
+void Native_UpdateApplicationInfo(JNIEnv* jni, jobject object,
+                                  jobject activity_thread);
 }  // namespace deploy
 
 #endif

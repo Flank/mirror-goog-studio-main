@@ -23,18 +23,14 @@
 #include <jni.h>
 #include <jvmti.h>
 
-using std::string;
-
 namespace deploy {
 
-// Sets the parameter jni to point to the current jni function table.
-bool GetJni(JavaVM* vm, JNIEnv*& jni);
-
-// Sets the parameter jvmti to point to the current jvmti function table.
-bool GetJvmti(JavaVM* vm, jvmtiEnv*& jvmti);
-
 // Gets an std::string from a jstring. Does not delete the jni local jstring.
-string JStringToString(JNIEnv* jni, jstring str);
+std::string JStringToString(JNIEnv* jni, jstring str);
+
+// Checks a jvmti return value and logs an error if it is a failure. Returns
+// true if the operation was a success; false otherwise.
+bool CheckJvmti(jvmtiError error, const std::string& error_message);
 
 }  // namespace deploy
 

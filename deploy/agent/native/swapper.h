@@ -42,15 +42,7 @@ class Swapper {
   // Reads a SwapRequest from the underlying socket, then performs a swap using
   // the specified JNI environment, which should be the JNI environment attached
   // to the currently executing thread.
-  //
-  // The swap will complete when FinishSwap() is called, which may be
-  // synchronously within StartSwap() or asynchronously from the native
-  // callback.
   void StartSwap(JNIEnv* jni);
-
-  // Completes a swap started via StartSwap(). The JNI environment provided
-  // should be the JNI environment attached to the currently executing thread.
-  bool FinishSwap(JNIEnv* jni);
 
   // Returns the current swapper instance.
   static Swapper& Instance();
@@ -67,7 +59,6 @@ class Swapper {
   Swapper& operator=(const Swapper&) = delete;
 
   void SendResponse(proto::AgentSwapResponse& response);
-  void RequestRestart(JNIEnv* jni);
 
   // Frees the memory associated with the socket and request objects, and closes
   // the socket. Destroys the JVMTI environment.

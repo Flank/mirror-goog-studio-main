@@ -3,8 +3,6 @@ package(default_visibility = ["//tools/base/deploy/agent/native:all"])
 cc_library(
     name = "agent_jni",
     srcs = [
-        "jni_class.cc",
-        "jni_object.cc",
         "jni_util.cc",
     ],
     hdrs = [
@@ -16,5 +14,6 @@ cc_library(
     tags = ["no_windows"],
     deps = [
         "//prebuilts/studio/jdk:jni_headers",
+        "//tools/base/deploy/common:common_lib",
     ],
 )
