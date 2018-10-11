@@ -26,6 +26,8 @@
 
 #include "apk_archive.h"
 #include "apk_retriever.h"
+#include "tools/base/deploy/common/utils.h"
+#include "tools/base/deploy/proto/deploy.pb.h"
 #include "trace.h"
 
 namespace deploy {
@@ -41,28 +43,42 @@ void DumpCommand::ParseParameters(int argc, char** argv) {
   ready_to_run_ = true;
 }
 
-bool DumpCommand::Run(const Workspace& workspace) {
+void DumpCommand::Run(Workspace& workspace) {
   Trace traceDump("dump");
-  // Clean dump files from previous runs.
-  std::string dumpBase_ = workspace.GetDumpsFolder() + packageName_ + "/";
-  mkdir(dumpBase_.c_str(), S_IRWXG | S_IRWXU | S_IRWXO);
-  workspace.ClearDirectory(dumpBase_.c_str());
+
+  proto::DumpResponse* response = new proto::DumpResponse();
+  LogEvent(response->add_events(), "Starting dumping");
+  workspace.GetResponse().set_allocated_dump_response(response);
 
   // Retrieve apks for this package.
-  ApkRetriever apkRetriever(packageName_);
-  bool success = true;
-  auto apks_path = apkRetriever.get();
+  ApkRetriever apkRetriever;
+  auto apks_path = apkRetriever.retrieve(packageName_);
   if (apks_path.size() == 0) {
-    std::cerr << "ApkRetriever did not return apks." << std::endl;
-    return false;
+    response->set_status(proto::DumpResponse::ERROR_PACKAGE_NOT_FOUND);
+    ErrEvent(response->add_events(), "ApkRetriever did not return apks");
+    return;
   }
 
   // Extract all apks.
   for (std::string& apkPath : apks_path) {
+    LogEvent(response->add_events(), "Processing apk: "_s + apkPath);
     ApkArchive archive(apkPath);
-    success &= archive.ExtractMetadata(packageName_, dumpBase_);
+    Dump dump = archive.ExtractMetadata();
+
+    proto::ApkDump* apk_dump = response->add_dumps();
+    if (dump.cd != nullptr || dump.signature != nullptr) {
+      std::string apkFilename = std::string(strrchr(apkPath.c_str(), '/') + 1);
+      apk_dump->set_name(apkFilename);
+    }
+    if (dump.cd != nullptr) {
+      apk_dump->set_allocated_cd(dump.cd.release());
+    }
+    if (dump.signature != nullptr) {
+      apk_dump->set_allocated_signature(dump.signature.release());
+    }
   }
-  return success;
+  LogEvent(response->add_events(), "Done dumping");
+  response->set_status(proto::DumpResponse::OK);
 }
 
 }  // namespace deploy

@@ -25,17 +25,25 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
+import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
+import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import javax.inject.Inject;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.tooling.BuildException;
+import org.gradle.workers.WorkerExecutor;
 
 /**
  * Copy the location our various tasks outputs into a single location.
@@ -49,6 +57,12 @@ public class CopyOutputs extends AndroidVariantTask {
     BuildableArtifact abiSplits;
     BuildableArtifact resourcesSplits;
     File destinationDir;
+    WorkerExecutorFacade workerExecutorFacade;
+
+    @Inject
+    public CopyOutputs(WorkerExecutor workerExecutor) {
+        this.workerExecutorFacade = Workers.INSTANCE.getWorker(workerExecutor);
+    }
 
     @OutputDirectory
     public java.io.File getDestinationDir() {
@@ -75,37 +89,33 @@ public class CopyOutputs extends AndroidVariantTask {
     // FIX ME : add incrementality
     @TaskAction
     protected void copy() throws IOException {
-
         FileUtils.cleanOutputDir(getDestinationDir());
-        // TODO : parallelize at this level.
-        ImmutableList.Builder<BuildOutput> allCopiedFiles = ImmutableList.builder();
-        allCopiedFiles.addAll(parallelCopy(InternalArtifactType.FULL_APK, fullApks.get()));
-        allCopiedFiles.addAll(
-                parallelCopy(InternalArtifactType.ABI_PACKAGED_SPLIT, abiSplits.get()));
-        allCopiedFiles.addAll(
-                parallelCopy(
+        List<BuildOutput> copiedFilesList = Collections.synchronizedList(new ArrayList<>());
+
+        workerExecutorFacade.submit(
+                CopyOutputsRunnable.class,
+                new CopyOutputsParams(
+                        InternalArtifactType.FULL_APK,
+                        fullApks.get(),
+                        getDestinationDir(),
+                        copiedFilesList));
+        workerExecutorFacade.submit(
+                CopyOutputsRunnable.class,
+                new CopyOutputsParams(
+                        InternalArtifactType.ABI_PACKAGED_SPLIT,
+                        abiSplits.get(),
+                        getDestinationDir(),
+                        copiedFilesList));
+        workerExecutorFacade.submit(
+                CopyOutputsRunnable.class,
+                new CopyOutputsParams(
                         InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
-                        resourcesSplits.get()));
-        // now save the merged list.
-        new BuildElements(allCopiedFiles.build()).save(getDestinationDir());
-    }
+                        resourcesSplits.get(),
+                        getDestinationDir(),
+                        copiedFilesList));
 
-    // TODO : shouldn't this be in parallel?
-    private BuildElements parallelCopy(InternalArtifactType inputType, FileCollection inputs)
-            throws IOException {
-
-        return ExistingBuildElements.from(inputType, inputs)
-                .transform(
-                        (apkInfo, inputFile) -> {
-                            File destination = new File(getDestinationDir(), inputFile.getName());
-                            try {
-                                FileUtils.copyFile(inputFile, destination);
-                            } catch (IOException e) {
-                                throw new BuildException(e.getMessage(), e);
-                            }
-                            return destination;
-                        })
-                .into(InternalArtifactType.APK);
+        workerExecutorFacade.await();
+        new BuildElements(copiedFilesList).save(getDestinationDir());
     }
 
     public static class CreationAction extends VariantTaskCreationAction<CopyOutputs> {
@@ -150,6 +160,55 @@ public class CopyOutputs extends AndroidVariantTask {
             task.resourcesSplits = artifacts.getFinalArtifactFiles(
                                     InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT);
             task.destinationDir = destinationDir;
+        }
+    }
+
+    static class CopyOutputsRunnable implements Runnable {
+        private final CopyOutputsParams params;
+
+        @Inject
+        CopyOutputsRunnable(CopyOutputsParams params) {
+            this.params = params;
+        }
+
+        @Override
+        public void run() {
+            params.copiedFilesList.addAll(
+                    copy(params.inputType, params.inputs, params.destinationDir).getElements());
+        }
+
+        private static BuildElements copy(
+                InternalArtifactType inputType, FileCollection inputs, File destinationDir) {
+            return ExistingBuildElements.from(inputType, inputs)
+                    .transform(
+                            (apkInfo, inputFile) -> {
+                                File destination = new File(destinationDir, inputFile.getName());
+                                try {
+                                    FileUtils.copyFile(inputFile, destination);
+                                } catch (IOException e) {
+                                    throw new BuildException(e.getMessage(), e);
+                                }
+                                return destination;
+                            })
+                    .into(InternalArtifactType.APK);
+        }
+    }
+
+    static class CopyOutputsParams implements Serializable {
+        private final InternalArtifactType inputType;
+        private final FileCollection inputs;
+        private final File destinationDir;
+        private final List<BuildOutput> copiedFilesList;
+
+        CopyOutputsParams(
+                InternalArtifactType inputType,
+                FileCollection inputs,
+                File destinationDir,
+                List<BuildOutput> copiedFilesList) {
+            this.inputType = inputType;
+            this.inputs = inputs;
+            this.destinationDir = destinationDir;
+            this.copiedFilesList = copiedFilesList;
         }
     }
 }

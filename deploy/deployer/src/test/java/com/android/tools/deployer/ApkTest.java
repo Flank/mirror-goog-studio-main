@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.android.testutils.TestUtils;
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -86,8 +87,8 @@ public class ApkTest {
         ApkDump remote =
                 new ApkDump(
                         "base.apk",
-                        Files.readAllBytes(cd.toPath()),
-                        Files.readAllBytes(sig.toPath()));
+                        ByteBuffer.wrap(Files.readAllBytes(cd.toPath())),
+                        ByteBuffer.wrap(Files.readAllBytes(sig.toPath())));
 
         assertEquals(local.getCrcs().keySet().size(), remote.getCrcs().keySet().size());
         assertTrue(
@@ -108,8 +109,8 @@ public class ApkTest {
         ApkDump remote =
                 new ApkDump(
                         "base.apk",
-                        Files.readAllBytes(cd.toPath()),
-                        Files.readAllBytes(sig.toPath()));
+                        ByteBuffer.wrap(Files.readAllBytes(cd.toPath())),
+                        ByteBuffer.wrap(Files.readAllBytes(sig.toPath())));
         assertEquals(local.getDigest(), remote.getDigest());
     }
 
@@ -119,7 +120,24 @@ public class ApkTest {
         File file = TestUtils.getWorkspaceFile(app1Base + "base.apk");
         File cd = new File(file.getParent(), "base.apk.remotecd");
         ApkFull local = new ApkFull(file.getPath());
-        ApkDump remote = new ApkDump("base.apk", Files.readAllBytes(cd.toPath()), null);
+        ApkDump remote =
+                new ApkDump("base.apk", ByteBuffer.wrap(Files.readAllBytes(cd.toPath())), null);
         assertEquals(local.getDigest(), remote.getDigest());
+    }
+
+    @Test
+    public void testGetApkDetails() throws IOException {
+        File file = TestUtils.getWorkspaceFile(BASE + "multiprocess.apk");
+        ApkFull apkFull = new ApkFull(file.getAbsolutePath());
+        ApkFull.ApkDetails apkDetails = apkFull.getApkDetails();
+
+        assertEquals(apkDetails.fileName(), "base.apk");
+        assertEquals(apkDetails.processNames().size(), 5);
+
+        assertTrue(apkDetails.processNames().contains("com.test.multiprocess"));
+        assertTrue(apkDetails.processNames().contains("alternate.default"));
+        assertTrue(apkDetails.processNames().contains("com.test.multiprocess:service"));
+        assertTrue(apkDetails.processNames().contains("com.test.multiprocess:private"));
+        assertTrue(apkDetails.processNames().contains(".global"));
     }
 }

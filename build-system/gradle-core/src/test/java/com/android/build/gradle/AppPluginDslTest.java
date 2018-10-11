@@ -20,7 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import com.android.build.gradle.internal.dsl.BuildType;
-import com.android.build.gradle.internal.dsl.PostprocessingOptions;
+import com.android.build.gradle.internal.dsl.PostProcessingBlock;
 import com.android.build.gradle.internal.fixture.TestConstants;
 import com.android.build.gradle.internal.fixture.TestProjects;
 import com.android.build.gradle.internal.fixture.VariantChecker;
@@ -411,7 +411,7 @@ public class AppPluginDslTest {
                         .build();
         initFieldsFromProject();
 
-        PostprocessingOptions postprocessing =
+        PostProcessingBlock postprocessing =
                 android.getBuildTypes().getByName("debug").getPostprocessing();
         postprocessing.setRemoveUnusedCode(true);
         postprocessing.setCodeShrinker("proguard");
@@ -434,7 +434,7 @@ public class AppPluginDslTest {
                         .build();
         initFieldsFromProject();
 
-        PostprocessingOptions postprocessing =
+        PostProcessingBlock postprocessing =
                 android.getBuildTypes().getByName("debug").getPostprocessing();
         postprocessing.setRemoveUnusedCode(true);
         postprocessing.setCodeShrinker("proguard");
@@ -490,7 +490,7 @@ public class AppPluginDslTest {
 
     @Test
     public void testApkShrinker_newDsl_noObfuscation() {
-        PostprocessingOptions postprocessing =
+        PostProcessingBlock postprocessing =
                 android.getBuildTypes().getByName("debug").getPostprocessing();
         postprocessing.setRemoveUnusedCode(true);
 
@@ -502,7 +502,7 @@ public class AppPluginDslTest {
 
     @Test
     public void testApkShrinker_newDsl_obfuscation() throws Exception {
-        PostprocessingOptions postprocessing =
+        PostProcessingBlock postprocessing =
                 android.getBuildTypes().getByName("debug").getPostprocessing();
         postprocessing.setRemoveUnusedCode(true);
         postprocessing.setObfuscate(true);

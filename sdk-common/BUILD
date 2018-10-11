@@ -48,6 +48,7 @@ iml_module(
         "//tools/idea/.idea/libraries:equalsverifier[test]",
         "//tools/idea/.idea/libraries:aia-manifest-proto-1.0-jarjar",
         "//tools/idea/.idea/libraries:javax-inject",
+        "//tools/idea/.idea/libraries:jetbrains-annotations-java5",
     ],
 )
 

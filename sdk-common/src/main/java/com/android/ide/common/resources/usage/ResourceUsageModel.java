@@ -16,8 +16,33 @@
 
 package com.android.ide.common.resources.usage;
 
-import static com.android.SdkConstants.*;
-import static com.android.utils.SdkUtils.*;
+import static com.android.SdkConstants.AAPT_URI;
+import static com.android.SdkConstants.ANDROID_STYLE_RESOURCE_PREFIX;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_DISCARD;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.ATTR_KEEP;
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_PARENT;
+import static com.android.SdkConstants.ATTR_SHRINK_MODE;
+import static com.android.SdkConstants.ATTR_TYPE;
+import static com.android.SdkConstants.PREFIX_ANDROID;
+import static com.android.SdkConstants.PREFIX_BINDING_EXPR;
+import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
+import static com.android.SdkConstants.PREFIX_THEME_REF;
+import static com.android.SdkConstants.PREFIX_TWOWAY_BINDING_EXPR;
+import static com.android.SdkConstants.REFERENCE_STYLE;
+import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
+import static com.android.SdkConstants.TAG_ITEM;
+import static com.android.SdkConstants.TAG_LAYOUT;
+import static com.android.SdkConstants.TAG_STYLE;
+import static com.android.SdkConstants.TOOLS_URI;
+import static com.android.SdkConstants.VALUE_SAFE;
+import static com.android.SdkConstants.VALUE_STRICT;
+import static com.android.SdkConstants.VIEW_FRAGMENT;
+import static com.android.utils.SdkUtils.endsWithIgnoreCase;
+import static com.android.utils.SdkUtils.fileNameToResourceName;
+import static com.android.utils.SdkUtils.globToRegexp;
 import static com.google.common.base.Charsets.UTF_8;
 
 import com.android.SdkConstants;
@@ -37,11 +62,21 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
-import org.w3c.dom.*;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * A model for Android resource declarations and usages
@@ -64,6 +99,22 @@ public class ResourceUsageModel {
      * aapt
      */
     private int nextInlinedResourceSuffix;
+
+    public enum ResourceActions {
+        REMOVE("remove"),
+        NO_OBFUSCATE("no_obfuscate");
+
+        private String repr;
+
+        ResourceActions(String repr) {
+            this.repr = repr;
+        }
+
+        @Override
+        public String toString() {
+            return repr;
+        }
+    }
 
 
     public static String getResourceFieldName(Element element) {
@@ -369,6 +420,26 @@ public class ResourceUsageModel {
     public String dumpWhitelistedResources() {
         return Joiner.on(",")
                 .join(mWhitelistedResources.stream().sorted().collect(Collectors.toList()));
+    }
+
+    public String dumpConfig() {
+        StringBuilder sb = new StringBuilder();
+        for (Resource resource : mResources) {
+            sb.append(resource.type);
+            sb.append('/');
+            sb.append(resource.name);
+            sb.append("#");
+            ArrayList<ResourceActions> actions = new ArrayList<>(2);
+            if (!resource.isReachable()) {
+                actions.add(ResourceActions.REMOVE);
+            }
+            if (mWhitelistedResources.contains(resource.name)) {
+                actions.add(ResourceActions.NO_OBFUSCATE);
+            }
+            sb.append(Joiner.on(",").join(actions));
+            sb.append("\n");
+        }
+        return sb.toString();
     }
 
     public String dumpReferences() {

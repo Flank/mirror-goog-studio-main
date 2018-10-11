@@ -21,7 +21,6 @@ import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
-import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Node;
 
 /**
@@ -38,7 +37,7 @@ public class SvgClipPathNode extends SvgGroupNode {
     }
 
     @Override
-    @NotNull
+    @NonNull
     public SvgClipPathNode deepCopy() {
         SvgClipPathNode newInstance = new SvgClipPathNode(getTree(), getDocumentNode(), getName());
         newInstance.copyFrom(this);
@@ -67,7 +66,7 @@ public class SvgClipPathNode extends SvgGroupNode {
     }
 
     @Override
-    public void flatten(@NotNull AffineTransform transform) {
+    public void flatten(@NonNull AffineTransform transform) {
         for (SvgNode n : mChildren) {
             mStackedTransform.setTransform(transform);
             mStackedTransform.concatenate(mLocalTransform);
@@ -88,7 +87,7 @@ public class SvgClipPathNode extends SvgGroupNode {
     }
 
     @Override
-    public void transformIfNeeded(@NotNull AffineTransform rootTransform) {
+    public void transformIfNeeded(@NonNull AffineTransform rootTransform) {
         for (SvgNode p : mChildren) {
             p.transformIfNeeded(rootTransform);
         }

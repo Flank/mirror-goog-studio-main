@@ -42,6 +42,17 @@ public class CopyOfTester {
     /**
      * Checks that all getters declared in the given class (and superclasses) are called when the
      * copying code is invoked.
+     *
+     * <p>This way it ensures that copyOf/initWith method is performed correctly. This is based on
+     * the following assumptions:
+     *
+     * <ul>
+     *   <li>In the initWith method class copying is supposed to be performed with getters ONLY
+     *   <li>If you add a new field and a getter for it, you might still forget to add the
+     *       corresponding copy operation to the initWith
+     * </ul>
+     *
+     * <p>Thus, this test will fail and you will be notified of the getter that was not called
      */
     public static <T> void assertAllGettersCalled(
             @NonNull Class<T> klass, @NonNull T object, @NonNull Consumer<T> copyingCode) {

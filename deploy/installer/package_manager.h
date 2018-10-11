@@ -17,7 +17,9 @@
 #ifndef PACKAGEMANAGER_H
 #define PACKAGEMANAGER_H
 
-#include "apk_retriever.h"
+#include <string>
+#include <vector>
+
 #include "shell_command.h"
 
 namespace deploy {
@@ -26,7 +28,7 @@ namespace deploy {
 class PackageManager : public ShellCommandRunner {
  public:
   PackageManager();
-  bool GetApks(const std::string& package_name, Apks* apks,
+  bool GetApks(const std::string& package_name, std::vector<std::string>* apks,
                std::string* error_string) const;
   static void SetPath(const char* path);
 };

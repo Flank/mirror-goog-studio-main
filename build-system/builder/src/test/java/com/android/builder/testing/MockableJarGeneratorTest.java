@@ -56,7 +56,10 @@ public class MockableJarGeneratorTest {
                             .collect(Collectors.toSet());
             assertThat(names)
                     .containsExactly(
-                            "META-INF/MANIFEST.MF", "NonFinalClass.class", "FinalClass.class");
+                            "META-INF/MANIFEST.MF",
+                            "SomeResource",
+                            "NonFinalClass.class",
+                            "FinalClass.class");
         }
     }
 }

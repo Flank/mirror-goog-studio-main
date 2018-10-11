@@ -57,7 +57,8 @@ public class InMemoryDexArchiveDatabase extends DexArchiveDatabase implements Se
 
     @Override
     public int getDexFileIndex(long dexFileChecksum) {
-        return dexFileHashToIndex.get(dexFileChecksum);
+        Integer index = dexFileHashToIndex.get(dexFileChecksum);
+        return index == null ? -1 : index;
     }
 
     @Override

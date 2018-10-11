@@ -89,42 +89,72 @@ class ConfigTableSchemaTest {
     }
 
     @Test
-    fun testAllPaths() {
-        assertThat(schema.allPaths().toList()).containsExactly(
-            matchArtifactsWith("paid/hires/debug/_main_"),
-            matchArtifactsWith("paid/hires/debug/_unit_test_"),
-            matchArtifactsWith("paid/hires/debug/_android_test_"),
-            matchArtifactsWith("paid/hires/release/_main_"),
-            matchArtifactsWith("paid/hires/release/_unit_test_"),
-            matchArtifactsWith("paid/hires/release/_android_test_"),
-            matchArtifactsWith("paid/lowres/debug/_main_"),
-            matchArtifactsWith("paid/lowres/debug/_unit_test_"),
-            matchArtifactsWith("paid/lowres/debug/_android_test_"),
-            matchArtifactsWith("paid/lowres/release/_main_"),
-            matchArtifactsWith("paid/lowres/release/_unit_test_"),
-            matchArtifactsWith("paid/lowres/release/_android_test_"),
-            matchArtifactsWith("free/hires/debug/_main_"),
-            matchArtifactsWith("free/hires/debug/_unit_test_"),
-            matchArtifactsWith("free/hires/debug/_android_test_"),
-            matchArtifactsWith("free/hires/release/_main_"),
-            matchArtifactsWith("free/hires/release/_unit_test_"),
-            matchArtifactsWith("free/hires/release/_android_test_"),
-            matchArtifactsWith("free/lowres/debug/_main_"),
-            matchArtifactsWith("free/lowres/debug/_unit_test_"),
-            matchArtifactsWith("free/lowres/debug/_android_test_"),
-            matchArtifactsWith("free/lowres/release/_main_"),
-            matchArtifactsWith("free/lowres/release/_unit_test_"),
-            matchArtifactsWith("free/lowres/release/_android_test_")
+    fun testAllArtifactPaths() {
+        assertThat(schema.allArtifactPaths().toList()).containsExactly(
+            submodulePathForString("paid/hires/debug/_main_"),
+            submodulePathForString("paid/hires/debug/_unit_test_"),
+            submodulePathForString("paid/hires/debug/_android_test_"),
+            submodulePathForString("paid/hires/release/_main_"),
+            submodulePathForString("paid/hires/release/_unit_test_"),
+            submodulePathForString("paid/hires/release/_android_test_"),
+            submodulePathForString("paid/lowres/debug/_main_"),
+            submodulePathForString("paid/lowres/debug/_unit_test_"),
+            submodulePathForString("paid/lowres/debug/_android_test_"),
+            submodulePathForString("paid/lowres/release/_main_"),
+            submodulePathForString("paid/lowres/release/_unit_test_"),
+            submodulePathForString("paid/lowres/release/_android_test_"),
+            submodulePathForString("free/hires/debug/_main_"),
+            submodulePathForString("free/hires/debug/_unit_test_"),
+            submodulePathForString("free/hires/debug/_android_test_"),
+            submodulePathForString("free/hires/release/_main_"),
+            submodulePathForString("free/hires/release/_unit_test_"),
+            submodulePathForString("free/hires/release/_android_test_"),
+            submodulePathForString("free/lowres/debug/_main_"),
+            submodulePathForString("free/lowres/debug/_unit_test_"),
+            submodulePathForString("free/lowres/debug/_android_test_"),
+            submodulePathForString("free/lowres/release/_main_"),
+            submodulePathForString("free/lowres/release/_unit_test_"),
+            submodulePathForString("free/lowres/release/_android_test_")
         )
     }
 
     @Test
-    fun testAllPathsOfLength() {
-        assertThat(schema.allPathsOfLength(2).toList()).containsExactly(
-            matchArtifactsWith("paid/hires"),
-            matchArtifactsWith("paid/lowres"),
-            matchArtifactsWith("free/hires"),
-            matchArtifactsWith("free/lowres")
+    fun testAllArtifactPathsFiltered() {
+        assertThat(schema.allArtifactPaths(matchArtifactsWith("*/lowres")).toList()).containsExactly(
+            submodulePathForString("paid/lowres/debug/_main_"),
+            submodulePathForString("paid/lowres/debug/_unit_test_"),
+            submodulePathForString("paid/lowres/debug/_android_test_"),
+            submodulePathForString("paid/lowres/release/_main_"),
+            submodulePathForString("paid/lowres/release/_unit_test_"),
+            submodulePathForString("paid/lowres/release/_android_test_"),
+            submodulePathForString("free/lowres/debug/_main_"),
+            submodulePathForString("free/lowres/debug/_unit_test_"),
+            submodulePathForString("free/lowres/debug/_android_test_"),
+            submodulePathForString("free/lowres/release/_main_"),
+            submodulePathForString("free/lowres/release/_unit_test_"),
+            submodulePathForString("free/lowres/release/_android_test_")
+        )
+    }
+
+    @Test
+    fun testAllVariantPaths() {
+        assertThat(schema.allVariantPaths().toList()).containsExactly(
+            submodulePathForString("paid/hires/debug"),
+            submodulePathForString("paid/hires/release"),
+            submodulePathForString("paid/lowres/debug"),
+            submodulePathForString("paid/lowres/release"),
+            submodulePathForString("free/hires/debug"),
+            submodulePathForString("free/hires/release"),
+            submodulePathForString("free/lowres/debug"),
+            submodulePathForString("free/lowres/release")
+        )
+    }
+
+    @Test
+    fun testAllVariantPathsFiltered() {
+        assertThat(schema.allVariantPaths(matchArtifactsWith("*/hires/release")).toList()).containsExactly(
+            submodulePathForString("paid/hires/release"),
+            submodulePathForString("free/hires/release")
         )
     }
 }

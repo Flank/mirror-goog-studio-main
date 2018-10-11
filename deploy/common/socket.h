@@ -29,7 +29,9 @@ namespace deploy {
 class Socket : public MessagePipeWrapper {
  public:
   Socket() : MessagePipeWrapper(-1) {}
-  virtual ~Socket() {}
+  virtual ~Socket() {
+    Close();
+  }
 
   Socket(Socket&& other) : MessagePipeWrapper(std::move(other)) {}
 

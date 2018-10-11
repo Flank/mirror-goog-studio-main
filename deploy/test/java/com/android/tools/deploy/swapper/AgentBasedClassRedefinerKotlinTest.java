@@ -35,8 +35,8 @@ public class AgentBasedClassRedefinerKotlinTest extends AgentBasedClassRedefiner
                 createRequest("pkg.KotlinSimpleTarget", "pkg/KotlinSimpleTarget.dex", false);
         redefiner.redefine(request);
 
-        Deploy.SwapResponse response = redefiner.getAgentResponse();
-        Assert.assertEquals(Deploy.SwapResponse.Status.OK, response.getStatus());
+        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Assert.assertEquals(Deploy.AgentSwapResponse.Status.OK, response.getStatus());
 
         android.triggerMethod(ACTIVITY_CLASS, "getKotlinSimpleTargetStatus");
         Assert.assertTrue(
@@ -56,8 +56,8 @@ public class AgentBasedClassRedefinerKotlinTest extends AgentBasedClassRedefiner
                 createRequest("pkg.KotlinFailedTarget", "pkg/KotlinFailedTarget.dex", false);
         redefiner.redefine(request);
 
-        Deploy.SwapResponse response = redefiner.getAgentResponse();
-        Assert.assertEquals(Deploy.SwapResponse.Status.ERROR, response.getStatus());
+        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Assert.assertEquals(Deploy.AgentSwapResponse.Status.ERROR, response.getStatus());
 
         android.triggerMethod(ACTIVITY_CLASS, "getKotlinFailedTargetStatus");
         Assert.assertTrue(
@@ -80,8 +80,8 @@ public class AgentBasedClassRedefinerKotlinTest extends AgentBasedClassRedefiner
                         false);
         redefiner.redefine(request);
 
-        Deploy.SwapResponse response = redefiner.getAgentResponse();
-        Assert.assertEquals(Deploy.SwapResponse.Status.OK, response.getStatus());
+        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Assert.assertEquals(Deploy.AgentSwapResponse.Status.OK, response.getStatus());
 
         android.triggerMethod(ACTIVITY_CLASS, "getKotlinCompanionTargetStatus");
         Assert.assertTrue(

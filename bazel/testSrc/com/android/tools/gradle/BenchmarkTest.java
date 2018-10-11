@@ -39,8 +39,12 @@ public class BenchmarkTest {
         File repo = null;
         String project = null;
         String benchmarkName = null;
+        String benchmarkBaseName = null;
+        String benchmarkCodeType = null;
+        String benchmarkFlag = null;
         String benchmarkSize = null;
         String benchmarkType = null;
+        List<String> setupDiffs = new ArrayList<>();
         int warmUps = 0;
         int iterations = 0;
         int removeUpperOutliers = 0;
@@ -61,6 +65,12 @@ public class BenchmarkTest {
                 distribution = new File(it.next());
             } else if (arg.equals("--repo") && it.hasNext()) {
                 repo = new File(it.next());
+            } else if (arg.equals("--benchmark_base_name")) {
+                benchmarkBaseName = it.next();
+            } else if (arg.equals("--benchmark_code_type")) {
+                benchmarkCodeType = it.next();
+            } else if (arg.equals("--benchmark_flag")) {
+                benchmarkFlag = it.next();
             } else if (arg.equals("--benchmark_size")) {
                 benchmarkSize = it.next();
             } else if (arg.equals("--benchmark_type")) {
@@ -81,6 +91,8 @@ public class BenchmarkTest {
                 cleanups.add(it.next());
             } else if (arg.equals("--benchmark") && it.hasNext()) {
                 benchmarkName = it.next();
+            } else if (arg.equals("--setup-diff") && it.hasNext()) {
+                setupDiffs.add(it.next());
             } else if (arg.equals("--mutation") && it.hasNext()) {
                 mutations.add(new File(it.next()));
             } else if (arg.equals("--build_property") && it.hasNext()) {
@@ -98,10 +110,14 @@ public class BenchmarkTest {
                         benchmarkName,
                         distribution,
                         repo,
+                        benchmarkBaseName,
+                        benchmarkCodeType,
+                        benchmarkFlag,
                         benchmarkSize,
                         benchmarkType,
                         new BenchmarkRun(
                                 warmUps, iterations, removeUpperOutliers, removeLowerOutliers),
+                        setupDiffs,
                         mutations,
                         startups,
                         cleanups,
@@ -135,9 +151,13 @@ public class BenchmarkTest {
             String benchmarkName,
             File distribution,
             File repo,
+            String benchmarkBaseName,
+            String benchmarkCodeType,
+            String benchmarkFlag,
             String benchmarkSize,
             String benchmarkType,
             BenchmarkRun benchmarkRun,
+            List<String> setupDiffs,
             List<File> mutations,
             List<String> startups,
             List<String> cleanups,
@@ -149,6 +169,13 @@ public class BenchmarkTest {
         Benchmark.Builder benchmarkBuilder =
                 new Benchmark.Builder(benchmarkName).setProject("Android Studio Gradle");
         ImmutableMap.Builder<String, String> mapBuilder = ImmutableMap.builder();
+        mapBuilder.put("benchmarkBaseName", benchmarkBaseName);
+        if (benchmarkCodeType != null) {
+            mapBuilder.put("benchmarkCodeType", benchmarkCodeType);
+        }
+        if (benchmarkFlag != null) {
+            mapBuilder.put("benchmarkFlag", benchmarkFlag);
+        }
         if (benchmarkSize != null) {
             // temporary put both for migrating from one to the other.
             mapBuilder.put("benchmarkCategory", benchmarkSize);
@@ -168,8 +195,10 @@ public class BenchmarkTest {
         home.mkdirs();
 
         Gradle.unzip(new File(data, "src.zip"), src);
-        UnifiedDiff diff = new UnifiedDiff(new File(data, "setup.diff"));
-        diff.apply(src, 3);
+        for (String setupDiff : setupDiffs) {
+            UnifiedDiff diff = new UnifiedDiff(new File(data, setupDiff));
+            diff.apply(src, 3);
+        }
 
         UnifiedDiff[] diffs = new UnifiedDiff[mutations.size()];
         for (int i = 0; i < mutations.size(); i++) {

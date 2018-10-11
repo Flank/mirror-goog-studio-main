@@ -20,4 +20,8 @@ public class DexArchiveDatabaseException extends RuntimeException {
     public DexArchiveDatabaseException(Exception e) {
         super(e);
     }
+
+    public DexArchiveDatabaseException(String msg) {
+        super(msg);
+    }
 }

@@ -23,4 +23,5 @@ data class UsbDevice(val name: String,
         val vendorId: String,
         val productId: String,
         val iProduct: String? = null,
-        val iSerial: String? = null)
+        val iSerial: String? = null,
+        var deviceId: String? = null)

@@ -71,7 +71,6 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
-import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -311,7 +310,7 @@ public class Main {
 
                     @NonNull
                     @Override
-                    public byte[] readBytes(@NotNull File file) throws IOException {
+                    public byte[] readBytes(@NonNull File file) throws IOException {
                         // .srcjar file handle?
                         byte[] srcJarBytes = readSrcJar(file);
                         if (srcJarBytes != null) {

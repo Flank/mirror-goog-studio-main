@@ -11,14 +11,15 @@ def kotlin_impl(ctx, name, roots, java_srcs, kotlin_srcs, kotlin_deps, package_p
         merged += [label_workspace_path(ctx.label) + "/" + root]
 
     kotlin_deps = list(kotlin_deps) + ctx.files._kotlin
-    args, option_files = create_java_compiler_args_srcs(ctx, merged, kotlin_jar, kotlin_deps)
+    args, option_files = create_java_compiler_args_srcs(ctx, merged, kotlin_jar, ctx.files._bootclasspath + kotlin_deps)
 
     args += ["--module_name", name]
     for friend in friends:
         args += ["--friend_dir", friend.path]
+    args += ["--no-jdk"]
 
     ctx.action(
-        inputs = java_srcs + kotlin_srcs + option_files + kotlin_deps + friends,
+        inputs = java_srcs + kotlin_srcs + option_files + kotlin_deps + friends + ctx.files._bootclasspath,
         outputs = [kotlin_jar],
         mnemonic = "kotlinc",
         arguments = args,

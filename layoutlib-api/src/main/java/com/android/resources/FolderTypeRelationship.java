@@ -17,8 +17,14 @@
 package com.android.resources;
 
 import com.android.annotations.NonNull;
-import java.util.*;
-import org.jetbrains.annotations.Nullable;
+import com.android.annotations.Nullable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
 
 /**
  * This class gives access to the bidirectional relationship between {@link ResourceType} and

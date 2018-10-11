@@ -61,13 +61,13 @@ class ConfigTableTest {
     )
 
     @Test
-    fun testGenerateVariants() {
-        val variants = table.generateVariants()
+    fun testGenerateArtifacts() {
+        val artifacts = table.generateArtifacts()
 
-        val demoLowresDebug = variants.find {it.name == "demoLowresDebug"}!!
-        assertThat(variants.size).isEqualTo(8)
-        assertThat(demoLowresDebug.mainArtifact.name).isEqualTo(ARTIFACT_NAME_MAIN)
-        assertThat(demoLowresDebug.mainArtifact.resolved.applicationIdSuffix).isEqualTo("demolowresdebugapp")
+        val variantPath = submodulePathOf("demo", "lowres", "debug")
+        val demoLowresDebug = artifacts[variantPath + ARTIFACT_NAME_MAIN]
+        assertThat(artifacts.size).isEqualTo(16)
+        assertThat(demoLowresDebug!!.resolved.applicationIdSuffix).isEqualTo("demolowresdebugapp")
     }
 
     @Test

@@ -1582,6 +1582,50 @@ public class ManifestMerger2SmallTest {
     }
 
     @Test
+    public void testInstantAppManifestDynamicFeatureWithTargetSandboxVersionSet() throws Exception {
+        String xml =
+                ""
+                        + "<manifest\n"
+                        + "    package=\"com.foo.example\""
+                        + "    xmlns:t=\"http://schemas.android.com/apk/res/android\""
+                        + "    t:targetSandboxVersion=\"1\" >\n"
+                        + "    <application t:name=\".applicationOne\">\n"
+                        + "        <activity t:name=\"activityOne\"/>\n"
+                        + "    </application>\n"
+                        + "</manifest>";
+
+        File inputFile = TestUtils.inputAsFile("InstantAppManifestDynamicFeature", xml);
+
+        MockLog mockLog = new MockLog();
+        MergingReport mergingReport =
+                ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                        .setFeatureName("dynamic_split")
+                        .withFeatures(ManifestMerger2.Invoker.Feature.ADD_FEATURE_SPLIT_ATTRIBUTE)
+                        .withFeatures(ManifestMerger2.Invoker.Feature.ADD_INSTANT_APP_MANIFEST)
+                        .merge();
+
+        assertTrue(mergingReport.getResult().isSuccess());
+        Document xmlDocument =
+                parse(mergingReport.getMergedDocument(MergedManifestKind.INSTANT_APP));
+        assertEquals(
+                "2",
+                xmlDocument
+                        .getDocumentElement()
+                        .getAttributeNS(
+                                SdkConstants.NS_RESOURCES,
+                                SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
+
+        Document mergedDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+        assertEquals(
+                "1",
+                mergedDocument
+                        .getDocumentElement()
+                        .getAttributeNS(
+                                SdkConstants.NS_RESOURCES,
+                                SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
+    }
+
+    @Test
     public void testMainAppWithDynamicFeatureInBundletool() throws Exception {
         MockLog mockLog = new MockLog();
         String app =
@@ -1721,6 +1765,84 @@ public class ManifestMerger2SmallTest {
             assertEquals(
                     "2",
                     instantAppDocument
+                            .getDocumentElement()
+                            .getAttributeNS(
+                                    SdkConstants.NS_RESOURCES,
+                                    SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
+        } finally {
+            assertTrue(appFile.delete());
+            assertTrue(libFile.delete());
+        }
+    }
+
+    @Test
+    public void testMainAppWithDynamicFeatureAndTargetSandboxVersionSetForInstantAppManifest()
+            throws Exception {
+        MockLog mockLog = new MockLog();
+        String app =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:t=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                        + "    t:targetSandboxVersion = \"1\"\n"
+                        + "    package=\"com.example.app1\">\n"
+                        + "\n"
+                        + "    <application t:name=\".applicationOne\">\n"
+                        + "    </application>"
+                        + "\n"
+                        + "</manifest>";
+        File appFile =
+                TestUtils.inputAsFile("testMainAppWithDynamicFeatureForInstantAppManifest", app);
+
+        String featureInput =
+                ""
+                        + "<manifest\n"
+                        + "    package=\"com.example.app1\""
+                        + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
+                        + "    <application t:name=\".applicationOne\">\n"
+                        + "        <activity t:name=\"activityOne\" t:splitName=\"feature\" />\n"
+                        + "    </application>\n"
+                        + "</manifest>";
+
+        File libFile =
+                TestUtils.inputAsFile(
+                        "testMainAppWithDynamicFeatureForInstantAppManifest", featureInput);
+        try {
+            MergingReport mergingReport =
+                    ManifestMerger2.newMerger(
+                                    appFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                            .withFeatures(ManifestMerger2.Invoker.Feature.ADD_INSTANT_APP_MANIFEST)
+                            .withFeatures(
+                                    ManifestMerger2.Invoker.Feature.CREATE_BUNDLETOOL_MANIFEST)
+                            .addLibraryManifest(libFile)
+                            .merge();
+            assertEquals(MergingReport.Result.SUCCESS, mergingReport.getResult());
+            // ensure tools annotation removal.
+            Document xmlDocument =
+                    parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+            assertEquals(
+                    "1",
+                    xmlDocument
+                            .getDocumentElement()
+                            .getAttributeNS(
+                                    SdkConstants.NS_RESOURCES,
+                                    SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
+
+            Document instantAppDocument =
+                    parse(mergingReport.getMergedDocument(MergedManifestKind.INSTANT_APP));
+            assertEquals(
+                    "2",
+                    instantAppDocument
+                            .getDocumentElement()
+                            .getAttributeNS(
+                                    SdkConstants.NS_RESOURCES,
+                                    SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
+
+            Document bundleDocument =
+                    parse(mergingReport.getMergedDocument(MergedManifestKind.BUNDLE));
+            assertEquals(
+                    "1",
+                    bundleDocument
                             .getDocumentElement()
                             .getAttributeNS(
                                     SdkConstants.NS_RESOURCES,

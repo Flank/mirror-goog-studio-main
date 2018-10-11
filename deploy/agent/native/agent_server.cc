@@ -1,6 +1,7 @@
 #include <signal.h>
 #include <cstdlib>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include "tools/base/deploy/common/message_pipe_wrapper.h"
@@ -11,15 +12,6 @@ using namespace deploy;
 // Server program that connects to instant run agents for a particular
 // application package. The server should be invoked with run-as, and expects an
 // agent config proto via standard input.
-//
-// The server implements a specific protocol between installer and agent(s):
-// 1. The installer sends a message to the server.
-// 2. The server forwards that message to all agents.
-// 3. The agents send zero or more messages to the server.
-// 4. The server forwards those messages to the installer.
-// 5. Once all agents have closed their connections, the server exits.
-//
-// Note that the installer only sends one message to the server.
 
 // Pipe used for writing data to the installer.
 MessagePipeWrapper installer_input(STDOUT_FILENO);
@@ -28,26 +20,75 @@ MessagePipeWrapper installer_input(STDOUT_FILENO);
 MessagePipeWrapper installer_output(STDIN_FILENO);
 
 // Socket connections to the JVMTI agents.
-std::vector<MessagePipeWrapper*> agent_sockets;
+std::unordered_set<MessagePipeWrapper*> agent_sockets;
+
+enum Status { SERVER_OK, SERVER_EXIT };
+
+Status ForwardInstallerToAgents() {
+  std::string message;
+
+  // Failure to read from the installer kills the server.
+  if (!installer_output.Read(&message)) {
+    perror("Failed to read from installer");
+    return SERVER_EXIT;
+  }
+
+  // Failure to write to an agent prevents the installer from trying to read or
+  // write any messages to/from that agent.
+  auto agent = std::begin(agent_sockets);
+  while (agent != std::end(agent_sockets)) {
+    if (!(*agent)->Write(message)) {
+      perror("Failed to write to agent");
+      agent = agent_sockets.erase(agent);
+    } else {
+      ++agent;
+    }
+  }
+
+  return SERVER_OK;
+}
+
+Status ForwardAgentToInstaller(MessagePipeWrapper* agent) {
+  std::string message;
+
+  // Failure to read from an agent prevents the installer from trying to read or
+  // write any messages to/from that agent.
+  if (!agent->Read(&message)) {
+    perror("Failed to read from agent");
+    agent_sockets.erase(agent);
+    return SERVER_OK;
+  }
+
+  // Failure to write to the installer kills the server.
+  if (!installer_input.Write(message)) {
+    perror("Could not write to installer");
+    return SERVER_EXIT;
+  }
+
+  return SERVER_OK;
+}
 
 // Reads messages from the connected agent sockets and writes those messages to
 // the server's standard output. Loops until all connected agent sockets return
 // an error or disconnect.
-void ForwardAgentsToInstaller() {
+void MessageLoop() {
   while (!agent_sockets.empty()) {
-    auto ready = MessagePipeWrapper::Poll(agent_sockets, -1);
-    for (size_t idx : ready) {
-      std::string message;
+    std::vector<MessagePipeWrapper*> poll_list(agent_sockets.begin(),
+                                               agent_sockets.end());
+    poll_list.emplace_back(&installer_output);
 
-      // If the read returns an error, stop trying to read from this socket.
-      if (!agent_sockets[idx]->Read(&message)) {
-        agent_sockets.erase(agent_sockets.begin() + idx);
-        continue;
+    std::vector<size_t> ready = MessagePipeWrapper::Poll(poll_list, -1);
+    for (size_t idx : ready) {
+      MessagePipeWrapper* fd = poll_list[idx];
+
+      Status status = SERVER_EXIT;
+      if (fd == &installer_output) {
+        status = ForwardInstallerToAgents();
+      } else {
+        status = ForwardAgentToInstaller(fd);
       }
 
-      // Forward the message from the agent to the installer.
-      if (!installer_input.Write(message)) {
-        perror("Could not write to installer");
+      if (status == SERVER_EXIT) {
         return;
       }
     }
@@ -71,14 +112,6 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  // Wait for the installer to send us some input before we start accepting
-  // connections.
-  std::string message;
-  if (!installer_output.Read(&message)) {
-    perror("Failed to read from installer");
-    return EXIT_FAILURE;
-  }
-
   // Accept socket connections from the agents.
   int socket_count = atoi(argv[1]);
   for (int i = 0; i < socket_count; ++i) {
@@ -87,23 +120,10 @@ int main(int argc, char** argv) {
       Cleanup();
       return EXIT_FAILURE;
     }
-    agent_sockets.emplace_back(socket);
+    agent_sockets.emplace(socket);
   }
 
-  // To minimize the chances of getting into an inconsistent state, only send
-  // the message after all agents have successfully connected.
-  //
-  // TODO: What do we do if a write after the first fails?
-  for (auto& agent_socket : agent_sockets) {
-    if (!agent_socket->Write(message)) {
-      Cleanup();
-      return EXIT_FAILURE;
-    }
-  }
-
-  // Continuously poll for agent responses and write them to the installer.
-  ForwardAgentsToInstaller();
-
+  MessageLoop();
   Cleanup();
   return EXIT_SUCCESS;
 }

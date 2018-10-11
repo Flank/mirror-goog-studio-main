@@ -19,7 +19,6 @@ package com.android.build.gradle;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.AppModelBuilder;
 import com.android.build.gradle.internal.ExtraModelInfo;
-import com.android.build.gradle.internal.NativeLibraryFactoryImpl;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
@@ -56,7 +55,6 @@ public class AppPlugin extends AbstractAppPlugin {
                         taskManager,
                         (BaseAppModuleExtension) config,
                         extraModelInfo,
-                        new NativeLibraryFactoryImpl(globalScope.getNdkHandler()),
                         getProjectType(),
                         AndroidProject.GENERATION_ORIGINAL));
     }

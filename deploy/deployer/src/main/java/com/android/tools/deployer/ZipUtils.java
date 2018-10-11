@@ -19,6 +19,7 @@ package com.android.tools.deployer;
 import com.google.common.io.BaseEncoding;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
@@ -62,17 +63,16 @@ public class ZipUtils {
             // buf.getShort();
             // buf.getInt();
             // buf.getInt();
-            String name = new String(buf.array(), buf.position(), pathLength);
-            buf.position(buf.position() + pathLength + extraLength + commentLength);
+            byte[] string = new byte[pathLength];
+            buf.get(string);
+            String name = new String(string, Charset.forName("UTF-8"));
+            buf.position(buf.position() + extraLength + commentLength);
             crcs.put(name, crc32);
         }
         return crcs;
     }
 
     public static String digest(ByteBuffer buffer) {
-        if (!buffer.hasArray()) {
-            throw new DeployerException("Unable to digest a non array backed ByteBuffer");
-        }
         MessageDigest messageDigest;
         try {
             messageDigest = MessageDigest.getInstance(DIGEST_ALGORITHM);
@@ -80,7 +80,8 @@ public class ZipUtils {
             throw new DeployerException("MessageDigest:" + DIGEST_ALGORITHM + " unavailable.", e);
         }
         // TODO: Parse the block and hash the top level signature instead of hashing the entire block.
-        byte[] digestBytes = messageDigest.digest(buffer.array());
+        messageDigest.update(buffer);
+        byte[] digestBytes = messageDigest.digest();
         return BaseEncoding.base16().lowerCase().encode(digestBytes);
     }
 }

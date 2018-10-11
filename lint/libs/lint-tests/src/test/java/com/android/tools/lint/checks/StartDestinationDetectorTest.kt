@@ -36,6 +36,64 @@ class StartDestinationDetectorTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
+    fun testIncludeOk() {
+        lint().files(
+            xml(
+                "res/navigation/navigation.xml",
+                """<?xml version="1.0" encoding="utf-8"?>
+                           <navigation
+                             xmlns:app="http://schemas.android.com/apk/res-auto"
+                             xmlns:android="http://schemas.android.com/apk/res/android"
+                             app:startDestination="@id/includedId">
+                               <include app:graph="@navigation/foo"/>
+                           </navigation>"""
+            ).indented(),
+            xml(
+                "res/navigation/foo.xml",
+                """<?xml version="1.0" encoding="utf-8"?>
+                           <navigation
+                             xmlns:app="http://schemas.android.com/apk/res-auto"
+                             xmlns:android="http://schemas.android.com/apk/res/android"
+                             android:id='@+id/includedId'
+                             app:startDestination="@id/foo2">
+                               <fragment android:id="@+id/foo2"/>
+                           </navigation>"""
+            ).indented()
+        ).incremental("res/navigation/navigation.xml").run().expectClean()
+    }
+
+    fun testIncludeInvalid() {
+        lint().files(
+            xml(
+                "res/navigation/navigation.xml",
+                """<?xml version="1.0" encoding="utf-8"?>
+                           <navigation
+                             xmlns:app="http://schemas.android.com/apk/res-auto"
+                             xmlns:android="http://schemas.android.com/apk/res/android"
+                             app:startDestination="@id/includedId">
+                               <include app:graph="@navigation/foo"/>
+                           </navigation>"""
+            ).indented(),
+            xml(
+                "res/navigation/foo.xml",
+                """<?xml version="1.0" encoding="utf-8"?>
+                           <navigation
+                             xmlns:app="http://schemas.android.com/apk/res-auto"
+                             xmlns:android="http://schemas.android.com/apk/res/android"
+                             android:id='@+id/includedId2'
+                             app:startDestination="@id/foo2">
+                               <fragment android:id="@+id/foo2"/>
+                           </navigation>"""
+            ).indented()
+            ).incremental("res/navigation/navigation.xml").run().expect(
+            "" +
+                    "res/navigation/navigation.xml:5: Warning: Invalid start destination @id/includedId [InvalidNavigation]\n" +
+                    "                             app:startDestination=\"@id/includedId\">\n" +
+                    "                                                   ~~~~~~~~~~~~~~\n" +
+                    "0 errors, 1 warnings"
+        )
+    }
+
     fun testNoChildren() {
         lint().files(
             xml(

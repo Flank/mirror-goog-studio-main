@@ -71,7 +71,7 @@ public class JarTestSuiteRunner extends Suite {
     private static final String JAVA_CLASS_PATH = "java.class.path";
 
     public JarTestSuiteRunner(Class<?> suiteClass, RunnerBuilder builder) throws InitializationError, ClassNotFoundException, IOException {
-        super(builder, suiteClass, getTestClasses(suiteClass));
+        super(new DelegatingRunnerBuilder(builder), suiteClass, getTestClasses(suiteClass));
         final String seed = System.getProperty("test.seed");
         if (seed != null) {
             randomizeTestOrder(Long.parseLong(seed));

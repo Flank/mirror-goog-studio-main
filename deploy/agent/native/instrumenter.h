@@ -18,14 +18,12 @@
 #ifndef INSTRUMENTER_H
 #define INSTRUMENTER_H
 
-#include "instrumenter.h"
-
 #include "slicer/dex_ir.h"
 #include "slicer/instrumentation.h"
 #include "slicer/reader.h"
 #include "slicer/writer.h"
 
-#include "utils/log.h"
+#include "tools/base/deploy/common/log.h"
 
 #include <memory>
 #include <unordered_map>
@@ -36,6 +34,9 @@ using std::string;
 using std::unordered_map;
 
 namespace deploy {
+
+bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
+                           const std::string& package_name);
 
 // Probably should be in a utility header, but also only used here.
 class JvmtiAllocator : public dex::Writer::Allocator {
@@ -91,11 +92,6 @@ class ActivityThreadHandlerTransform : public Transform {
 void AddTransform(const string& class_name, Transform* transform);
 const unordered_map<string, Transform*>& GetTransforms();
 void DeleteTransforms();
-
-// Applies transformations to classes.
-void TransformClass(jvmtiEnv* jvmti, const char* class_name, int class_data_len,
-                    const unsigned char* class_data, int*& new_class_data_len,
-                    unsigned char**& new_class_data);
 
 }  // namespace deploy
 

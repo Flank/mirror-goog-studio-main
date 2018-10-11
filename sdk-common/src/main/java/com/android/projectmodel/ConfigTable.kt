@@ -93,7 +93,8 @@ data class ConfigTable(
      * the table region described by [searchCriteria].
      */
     fun filterIntersecting(searchCriteria: ConfigPath): ConfigTable {
-        return ConfigTable(schema, associations.filter {
+        return ConfigTable(schema, if (searchCriteria.matchesEverything) associations
+        else associations.filter {
             it.path.intersects(searchCriteria)
         })
     }
@@ -109,37 +110,18 @@ data class ConfigTable(
     }
 
     /**
-     * Generates all possible [Variant] instances for this [ConfigTable] by merging every
-     * combination of schema dimensions.
-     */
-    fun generateVariants() = generateVariantsFor(generateArtifacts())
-
-    /**
      * Generates all possible [Artifact] instances for this [ConfigTable] by merging every
      * combination of schema dimensions.
      */
-    fun generateArtifacts(): Map<ConfigPath, Artifact> =
-        schema.allPaths().associate { it to Artifact(
+    fun generateArtifacts(): Map<SubmodulePath, Artifact> =
+        schema.allArtifactPaths().associate { it to Artifact(
             // We can rely on segments being non-null since allPaths returns the paths to artifacts,
             // and null segments indicates a path that never matches any artifact. We can rely on
             // there being at least one segment because there needs to be at least one dimension
-            // in order for allPaths() to return a non-empty sequence and the number of segments
+            // in order for allArtifactPaths() to return a non-empty sequence and the number of segments
             // equals the number of dimensions.
-            name = it.segments!!.last()!!,
-            resolved = configsIntersecting(it).merged()
+            resolved = configsIntersecting(it.toConfigPath()).merged()
         )}
-
-    /**
-     * Given a map of all the [Artifact] instances and their associated [ConfigPath], generates
-     * appropriate [Variant] instances to hold those [Artifact] instances.
-     */
-    fun generateVariantsFor(artifacts:Map<ConfigPath, Artifact>): List<Variant> {
-        val groupedByVariant =
-            artifacts.keys.filter { it.segments != null && it.segments.size == schema.dimensions.size }
-                .groupBy { it.parent() }
-
-        return groupedByVariant.map { Variant(it.key, it.value.mapNotNull { artifacts[it] }) }
-    }
 }
 
 /**
@@ -195,7 +177,6 @@ fun configTableWith(schema: ConfigTableSchema, associations: Map<String?, Config
  * Constructs a [ConfigTable] from the given [ConfigTableSchema]. This is intended primarily
  * as a convenient way to construct hardcoded [ConfigTable] instances from Kotlin.
  *
- * @param schema the schema to use for the table
  * @param associations the entries to include in the table, where the keys map onto entries
  * in the schema.
  */

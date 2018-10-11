@@ -32,7 +32,7 @@ class Command {
   virtual void ParseParameters(int argc, char** argv) = 0;
 
   // Execute command.
-  virtual bool Run(const Workspace& workspace) = 0;
+  virtual void Run(Workspace& workspace) = 0;
 
   bool ReadyToRun() { return ready_to_run_; }
 

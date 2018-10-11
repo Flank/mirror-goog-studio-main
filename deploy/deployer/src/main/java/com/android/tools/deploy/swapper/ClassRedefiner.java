@@ -19,5 +19,5 @@ import com.android.tools.deploy.proto.Deploy;
 
 /** Responsible for invoking the corresponding API to redefine a class in ART. */
 public abstract class ClassRedefiner {
-    public abstract void redefine(Deploy.SwapRequest request);
+    public abstract Deploy.SwapResponse redefine(Deploy.SwapRequest request);
 }

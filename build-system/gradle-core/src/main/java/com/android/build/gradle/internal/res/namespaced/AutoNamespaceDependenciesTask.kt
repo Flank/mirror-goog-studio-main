@@ -314,15 +314,14 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
                     resources.toPath(),
                     outputResourcesDirectory!!.toPath()
                 )
-                generatePublicFile(
-                    getDefinedSymbols(dependency), publicTxt, outputResourcesDirectory.toPath())
+
+                rewriter.generatePublicFile(publicTxt, outputResourcesDirectory.toPath())
             }
 
             logger.info("Finished rewriting $dependency")
 
             // Also generate fake R classes for compilation.
-            exportToCompiledJava(
-                    ImmutableList.of(symbolTables[0]),
+            rewriter.writeRClass(
                     File(
                             outputRClassesDirectory,
                             "namespaced-${dependency.sanitizedName}-R.jar"
@@ -370,11 +369,6 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
             builder.add(symbolTablesCache.getUnchecked(rDefFile))
         }
         return builder.build()
-    }
-
-    private fun getDefinedSymbols(node: DependenciesGraph.Node): SymbolTable {
-        val rDefFile = node.getFile(ArtifactType.DEFINED_ONLY_SYMBOL_LIST)!!
-        return symbolTablesCache.getUnchecked(rDefFile)
     }
 
     private fun ArtifactCollection.toMap(): ImmutableMap<String, ImmutableCollection<File>> =

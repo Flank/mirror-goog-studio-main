@@ -16,9 +16,9 @@
 package com.android.ide.common.vectordrawable;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.google.common.collect.ImmutableMap;
 import java.util.Locale;
-import org.jetbrains.annotations.Nullable;
 
 /** Methods for converting SVG color values to vector drawable format. */
 public class SvgColor {

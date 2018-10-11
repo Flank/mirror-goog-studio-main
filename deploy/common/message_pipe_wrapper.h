@@ -29,7 +29,7 @@ namespace deploy {
 class MessagePipeWrapper {
  public:
   MessagePipeWrapper(int fd) : fd_(fd) {}
-  virtual ~MessagePipeWrapper() { Close(); }
+  virtual ~MessagePipeWrapper() {}
 
   MessagePipeWrapper(MessagePipeWrapper&& other)
       : MessagePipeWrapper(std::move(other.fd_)) {

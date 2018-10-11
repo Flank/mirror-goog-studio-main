@@ -160,6 +160,7 @@
 
     <dependency mavenUrl="android.arch.navigation:navigation-fragment:+" />
     <dependency mavenUrl="android.arch.navigation:navigation-ui:+" />
+    <dependency mavenUrl="android.arch.lifecycle:extensions:1.+"/>
     <#if generateKotlin>
         <dependency mavenUrl="android.arch.navigation:navigation-fragment-ktx:+" />
         <dependency mavenUrl="android.arch.navigation:navigation-ui-ktx:+" />

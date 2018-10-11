@@ -4,6 +4,7 @@
     revision="1"
     name="Slice Provider"
     minBuildApi="28"
+    requireAndroidX="true"
     description="Creates a new SliceProvider component and adds it to your Android manifest.">
 
     <parameter

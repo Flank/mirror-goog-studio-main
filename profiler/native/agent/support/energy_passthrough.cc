@@ -94,9 +94,7 @@ constexpr int POWER_HIGH = 0x00000003;
 
 // Location provider
 constexpr char GPS_PROVIDER[] = "gps";
-constexpr char NETWORK_PROVIDER[] = "network";
 constexpr char PASSIVE_PROVIDER[] = "passive";
-constexpr char FUSED_PROVIDER[] = "fused";
 
 // Location priority
 constexpr int PRIORITY_HIGH_ACCURACY = 100;

@@ -26,14 +26,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
-class InstallerNotifier implements Deployer.InstallerCallBack {
-    @Override
-    public void onInstallationFinished(boolean status) {}
-}
-
 public class DeployerRunner {
 
-    private static final ILogger LOGGER = Logger.getLogger(DeployerRunner.class);
+    private static final ILogger LOGGER = Logger.getLogger();
     private static final String DB_PATH = "/tmp/studio.db";
     private final DexArchiveDatabase db;
 
@@ -111,10 +106,9 @@ public class DeployerRunner {
         }
 
         // Run
-        AdbClient adb = new AdbClient(device);
-        Installer installer = new Installer(adb);
-        Deployer deployer =
-                new Deployer(packageName, apks, new InstallerNotifier(), adb, db, installer);
+        AdbClient adb = new AdbClient(device, LOGGER);
+        Installer installer = new Installer(adb, LOGGER);
+        Deployer deployer = new Deployer(packageName, apks, adb, db, installer, LOGGER);
         Deployer.RunResponse response = deployer.fullSwap();
 
         if (response.status != Deployer.RunResponse.Status.OK) {

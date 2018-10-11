@@ -54,6 +54,7 @@ public class DataBindingExternalArtifactDependencyTest {
         String libV2 = BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName() + "=" + libEnableV2;
         String appV2 = BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName() + "=" + appEnableV2;
         String useX = BooleanOption.USE_ANDROID_X.getPropertyName() + "=" + useAndroidX;
+        String enableJetifier = BooleanOption.ENABLE_JETIFIER.getPropertyName() + "=" + useAndroidX;
 
         library =
                 GradleTestProject.builder()
@@ -66,6 +67,7 @@ public class DataBindingExternalArtifactDependencyTest {
                         .fromDataBindingIntegrationTest("MultiModuleTestApp", useAndroidX)
                         .addGradleProperties(appV2)
                         .addGradleProperties(useX)
+                        .addGradleProperties(enableJetifier)
                         .create();
 
         incompatible = libEnableV2 && !appEnableV2;

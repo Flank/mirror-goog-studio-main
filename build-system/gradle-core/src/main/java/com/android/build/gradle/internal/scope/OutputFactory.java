@@ -126,20 +126,19 @@ public class OutputFactory {
         return apkData;
     }
 
+    public ApkData addConfigurationSplit(OutputFile.FilterType filterType, String filterValue) {
+        ImmutableList<FilterData> filtersList =
+                ImmutableList.of(new FilterDataImpl(filterType, filterValue));
+        String filterName = getFilterNameForSplits(filtersList);
+        String baseName = variantConfiguration.computeBaseNameWithSplits(filterName);
+        return addConfigurationSplit(filtersList, getOutputFileName(baseName), filterValue);
+    }
+
     public ApkData addConfigurationSplit(
             OutputFile.FilterType filterType, String filterValue, String fileName) {
         ImmutableList<FilterData> filtersList =
                 ImmutableList.of(new FilterDataImpl(filterType, filterValue));
-        return addConfigurationSplit(filtersList, fileName);
-    }
-
-    public ApkData addConfigurationSplit(
-            OutputFile.FilterType filterType,
-            String filterValue,
-            String fileName,
-            String filterDisplayName) {
-        ImmutableList<FilterData> filtersList =
-                ImmutableList.of(new FilterDataImpl(filterType, filterValue));
+        String filterDisplayName = getFilterNameForSplits(filtersList);
         return addConfigurationSplit(filtersList, fileName, filterDisplayName);
     }
 
@@ -147,11 +146,6 @@ public class OutputFactory {
     public static String getFilterNameForSplits(Collection<FilterData> filters) {
         return Joiner.on("-")
                 .join(filters.stream().map(FilterData::getIdentifier).collect(Collectors.toList()));
-    }
-
-    private ApkData addConfigurationSplit(ImmutableList<FilterData> filtersList, String fileName) {
-        String filterDisplayName = getFilterNameForSplits(filtersList);
-        return addConfigurationSplit(filtersList, fileName, filterDisplayName);
     }
 
     private ApkData addConfigurationSplit(

@@ -93,7 +93,9 @@ public class MockableJarGenerator {
                         rewriteClass(entry, inputStream, outputStream);
                     }
                 } else if (!skipEntry(entry)) {
-                    outputStream.putNextEntry(entry);
+                    ZipEntry zipEntry = new ZipEntry(entry.getName());
+                    zipEntry.setComment(entry.getComment());
+                    outputStream.putNextEntry(zipEntry);
                     ByteStreams.copy(inputStream, outputStream);
                 }
 

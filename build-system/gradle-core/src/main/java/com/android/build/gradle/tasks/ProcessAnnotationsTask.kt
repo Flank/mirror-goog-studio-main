@@ -26,10 +26,12 @@ import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.tasks.CacheableTask
 import com.android.build.gradle.options.BooleanOption
+import org.gradle.api.file.FileTree
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
 
@@ -49,6 +51,17 @@ open class ProcessAnnotationsTask : JavaCompile(), VariantAwareTask {
     @get:PathSensitive(PathSensitivity.NONE)
     lateinit var processorListFile: BuildableArtifact
         private set
+
+    @get:Internal
+    lateinit var sourceFileTrees: () -> List<FileTree>
+        private set
+
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    @SkipWhenEmpty
+    fun getSources(): FileTree {
+        return this.project.files(this.sourceFileTrees()).asFileTree
+    }
 
     override fun compile(inputs: IncrementalTaskInputs) {
         val annotationProcessors =
@@ -73,6 +86,12 @@ open class ProcessAnnotationsTask : JavaCompile(), VariantAwareTask {
         // incremental mode when -proc:only is used. We will revisit this issue later and
         // investigate what it means for an annotation-processing-only task to be incremental.
         this.options.isIncremental = false
+
+        // Add individual sources instead of adding all at once due to a Gradle bug that happened
+        // late 2015 (see commit 830450), not sure if it has been fixed or not
+        for (source in sourceFileTrees()) {
+            this.source(source)
+        }
 
         // If no annotation processors are present, the Java compiler will proceed to compile the
         // source files even when the -proc:only option is specified (see
@@ -100,13 +119,8 @@ open class ProcessAnnotationsTask : JavaCompile(), VariantAwareTask {
             super.preConfigure(taskName)
 
             // Register annotation processing output.
-            // Note that the decision to actually execute ProcessAnnotationsTask can't be made at
-            // the task's configuration as the full information is available only at execution time
-            // (see ProcessAnnotationsTask.compile()). Therefore, the annotation processing output
-            // may be not be available when the consuming task (AndroidJavaCompile) requests it.
-            // However, that is okay because in that case, AndroidJavaCompile should perform
-            // annotation processing itself and does not need to consume the annotation processing
-            // output.
+            // Note that the annotation processing output from ProcessAnnotationsTask may be empty
+            // if the task is skipped (see ProcessAnnotationsTask.compile).
             variantScope.artifacts.createBuildableArtifact(
                 ANNOTATION_PROCESSOR_GENERATED_SOURCES_PRIVATE_USE,
                 APPEND,
@@ -127,6 +141,9 @@ open class ProcessAnnotationsTask : JavaCompile(), VariantAwareTask {
                     variantScope.artifacts.getFinalArtifactFiles(ANNOTATION_PROCESSOR_LIST)
 
             task.configurePropertiesForAnnotationProcessing(variantScope)
+
+            // Collect the list of source files to process
+            task.sourceFileTrees = { variantScope.variantData.javaSources }
 
             // Since this task does not output compiled classes, destinationDir will not be used.
             // However, Gradle requires this property to be set, so let's just set it to the

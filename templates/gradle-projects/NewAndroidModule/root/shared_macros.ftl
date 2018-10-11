@@ -66,7 +66,12 @@ android {
         targetCompatibility JavaVersion.VERSION_${javaVersion?replace('.','_','i')}
     }
 </#if>
-
+<#if isInstantApp?? && !isInstantApp>
+    <#-- Remove android-kotlin-extensions from the default template. Now dataBinding can be used -->
+    dataBinding {
+        enabled true
+    }
+</#if>
 <#if canUseProguard>
 <@proguard.proguardConfig />
 </#if>

@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.ndk;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.Abi;
-import com.android.build.gradle.internal.core.Toolchain;
 import com.android.sdklib.AndroidVersion;
 import java.io.File;
 import java.util.Collection;
@@ -28,22 +27,6 @@ import java.util.Collection;
  * Interface describing the NDK.
  */
 public interface NdkInfo {
-
-    /**
-     * Return the directory of the NDK.
-     */
-    @NonNull
-    File getRootDirectory();
-
-    /** Returns the sysroot path for compilation. */
-    @NonNull
-    String getCompilerSysrootPath(
-            @NonNull Abi abi, @NonNull String platformVersion, boolean useUnifiedHeaders);
-
-    /** Returns the sysroot path for linking. */
-    @NonNull
-    String getLinkerSysrootPath(@NonNull Abi abi, @NonNull String platformVersion);
-
     /**
      * Retrieve the newest supported version if it is not the specified version is not supported.
      *
@@ -58,82 +41,9 @@ public interface NdkInfo {
             @NonNull String variantName,
             @Nullable AndroidVersion androidVersion);
 
-    /**
-     * Return the executable for compiling C code.
-     */
+    /** Return the executable for removing debug symbols from a shared object. */
     @NonNull
-    File getCCompiler(
-            @NonNull Toolchain toolchain,
-            @NonNull String toolchainVersion,
-            @NonNull Abi abi);
-
-    /**
-     * Return the executable for compiling C++ code.
-     */
-    @NonNull
-    File getCppCompiler(
-            @NonNull Toolchain toolchain,
-            @NonNull String toolchainVersion,
-            @NonNull Abi abi);
-
-    /**
-     * Return the executable for compiling C code.
-     */
-    @NonNull
-    File getLinker(
-            @NonNull Toolchain toolchain,
-            @NonNull String toolchainVersion,
-            @NonNull Abi abi);
-
-    /**
-     * Return the executable for compiling C++ code.
-     */
-    @NonNull
-    File getAssembler(
-            @NonNull Toolchain toolchain,
-            @NonNull String toolchainVersion,
-            @NonNull Abi abi);
-
-    @NonNull
-    File getAr(
-            @NonNull Toolchain toolchain,
-            @NonNull String toolchainVersion,
-            @NonNull Abi abi);
-
-    /**
-     * Return the executable for removing debug symbols from a shared object.
-     */
-    @NonNull
-    File getStripExecutable(Toolchain toolchain, String toolchainVersion, Abi abi);
-
-    @NonNull
-    StlNativeToolSpecification getStlNativeToolSpecification(
-            @NonNull Stl stl,
-            @Nullable String stlVersion,
-            @NonNull Abi abi);
-
-    /**
-     * Return the directory containing the toolchain.
-     *
-     * @param toolchain toolchain to use.
-     * @param toolchainVersion toolchain version to use.
-     * @param abi target ABI of the toolchaina
-     * @return a directory that contains the executables.
-     */
-    @NonNull
-    File getToolchainPath(
-            @NonNull Toolchain toolchain,
-            @NonNull String toolchainVersion,
-            @NonNull Abi abi);
-
-    /**
-     * Return the default version of the specified toolchain for a target abi.
-     *
-     * The default version is the highest version found in the NDK for the specified toolchain and
-     * ABI.  The result is cached for performance.
-     */
-    @NonNull
-    String getDefaultToolchainVersion(@NonNull Toolchain toolchain, @NonNull Abi abi);
+    File getStripExecutable(Abi abi);
 
     @NonNull
     Collection<Abi> getDefault32BitsAbis();

@@ -65,6 +65,7 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
     @After
     public void tearDown() {
         android.stop();
+        redefiner.stopServer();
     }
 
     protected Deploy.SwapRequest createRequest(String name, String dex, boolean restart)
@@ -83,7 +84,7 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
         return request;
     }
 
-    protected static class LocalTestAgentBasedClassRedefiner extends ClassRedefiner {
+    protected static class LocalTestAgentBasedClassRedefiner {
         private final TemporaryFolder messageDir;
         private final FakeAndroidDriver android;
         private Process server;
@@ -98,6 +99,7 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
         protected void redefine(Deploy.SwapRequest request, boolean unused) {
             try {
                 // Start a new agent server that will connect to a single agent.
+                System.out.println("Starting agent server");
                 server = new ProcessBuilder(SERVER_LOCATION, "1").start();
 
                 // Convert the request into bytes prepended by the request size.
@@ -113,14 +115,13 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
                 stdin.write(size);
                 stdin.write(message);
                 stdin.flush();
-
                 android.attachAgent(AGENT_LOCATION);
             } catch (IOException e) {
                 System.err.println(e);
             }
         }
 
-        protected Deploy.SwapResponse getAgentResponse()
+        protected Deploy.AgentSwapResponse getAgentResponse()
                 throws IOException, InvalidProtocolBufferException {
             InputStream stdout = server.getInputStream();
             byte[] sizeBytes = new byte[4];
@@ -137,10 +138,18 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
             while (offset < messageBytes.length) {
                 offset += stdout.read(messageBytes, offset, messageBytes.length - offset);
             }
-            return Deploy.SwapResponse.parseFrom(messageBytes);
+            return Deploy.AgentSwapResponse.parseFrom(messageBytes);
         }
 
-        @Override
+        protected void stopServer() {
+            try {
+                System.out.println("Waiting for server to exit");
+                server.waitFor();
+            } catch (InterruptedException e) {
+                System.err.println(e);
+            }
+        }
+
         public void redefine(Deploy.SwapRequest request) {
             redefine(request, true);
         }

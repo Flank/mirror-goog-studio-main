@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <iostream>
 #include <map>
+#include <sstream>
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
@@ -32,6 +33,8 @@
 #include "package_manager.h"
 #include "trace.h"
 #include "workspace.h"
+#include "tools/base/deploy/proto/deploy.pb.h"
+#include "tools/base/deploy/common/utils.h"
 
 using namespace deploy;
 
@@ -46,8 +49,9 @@ struct Parameters {
   int consumed = 0;
 };
 
-void PrintUsage(const char* invoked_path) {
-  std::cerr << "Usage:" << std::endl
+std::string GetStringUsage(const char* invoked_path) {
+  std::stringstream buffer;
+  buffer    << "Usage:" << std::endl
             << invoked_path << " [env parameters] command [command_parameters]"
             << std::endl
             << std::endl
@@ -63,6 +67,7 @@ void PrintUsage(const char* invoked_path) {
             << std::endl
             << "   swap : Perform a hot-swap via JVMTI." << std::endl
             << std::endl;
+  return buffer.str();
 }
 
 bool ParseParameters(int argc, char** argv, Parameters* parameters) {
@@ -108,21 +113,30 @@ std::string GetInstallerPath() {
   return std::string(dest);
 }
 
+int Fail(proto::InstallerResponse_Status status, Workspace& workspace, const std::string& message) {
+   workspace.GetResponse().set_status(status);
+   ErrEvent(workspace.GetResponse().add_events(), message);
+   workspace.SendResponse();
+   return EXIT_FAILURE;
+}
+
 int main(int argc, char** argv) {
   Trace::Init();
   Trace mainTrace("installer");
-  if (argc < 2) {
-    PrintUsage(argv[0]);
-    return EXIT_FAILURE;
-  }
 
+  Workspace workspace(GetInstallerPath());
+
+  // Check and parse parameters
+  if (argc < 2) {
+    std::string message = GetStringUsage(argv[0]);
+    return Fail(proto::InstallerResponse::ERROR_PARAMETER, workspace, message);
+  }
   Parameters parameters;
   bool parametersParsed = ParseParameters(argc, argv, &parameters);
   if (!parametersParsed) {
-    std::cerr << "Unable to parse env parameters." << std::endl;
-    return EXIT_FAILURE;
+    std::string message = GetStringUsage(argv[0]);
+    return Fail(proto::InstallerResponse::ERROR_PARAMETER, workspace, message);
   }
-
   if (parameters.cmd_path != nullptr) {
     CmdCommand::SetPath(parameters.cmd_path);
   }
@@ -130,44 +144,34 @@ int main(int argc, char** argv) {
     PackageManager::SetPath(parameters.pm_path);
   }
 
-  if (parameters.version != nullptr) {
-    if (strcmp(parameters.version, kVersion_hash)) {
-      // TODO: Output a Response object so version failure can be differentiated
-      // from actual error.
-      // For now fake a "not found" response so ddmlib client which cannot
-      // retrieve status code will push a new version
-      std::cerr << "/system/bin/sh: /data/local/tmp/.studio/bin/installer:"
-                << std::endl;
-      std::cerr << " Version mismatch, requested '" << parameters.version
-                << "' but this is '" << kVersion_hash << "'" << std::endl;
-      return EXIT_FAILURE;
-    }
+  // Verify that this program is the version the called expected.
+  if (parameters.version != nullptr && strcmp(parameters.version, kVersion_hash)) {
+    const std::string message = "Version mismatch. Requested:"_s + parameters.version  + "but have "
+            + kVersion_hash;
+    return Fail(proto::InstallerResponse::ERROR_WRONG_VERSION, workspace, message);
   }
 
   // Retrieve Command to be invoked.
   auto task = GetCommand(parameters.command_name);
   if (task == nullptr) {
-    std::cerr << "Command '" << parameters.command_name << "' unknown."
-              << std::endl;
-    PrintUsage(parameters.binary_name);
-    return EXIT_FAILURE;
+    return Fail(proto::InstallerResponse::ERROR_CMD, workspace, "Unknown command");
   }
 
   // Allow command to parse its parameters and invoke it.
   task->ParseParameters(argc - parameters.consumed, argv + parameters.consumed);
   if (!task->ReadyToRun()) {
-    return EXIT_FAILURE;
+    const std::string message = "Command "_s + parameters.command_name + ": wrong parameters";
+    return Fail(proto::InstallerResponse::ERROR_PARAMETER, workspace, message);
   }
 
   // Create a workspace for filesystem operations.
-  Workspace workspace(GetInstallerPath());
   if (!workspace.Valid()) {
-    return EXIT_FAILURE;
+    return Fail(proto::InstallerResponse::ERROR_CMD, workspace, "Bad workspace");
   }
 
-  if (!task->Run(workspace)) {
-    return EXIT_FAILURE;
-  }
-
+  // Finally! Run !
+  task->Run(workspace);
+  workspace.GetResponse().set_status(proto::InstallerResponse::OK);
+  workspace.SendResponse();
   return EXIT_SUCCESS;
 }

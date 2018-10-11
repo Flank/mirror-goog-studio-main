@@ -86,13 +86,7 @@ data class Config(
     /**
      * True iff the [Config] is using the support library to draw vectors at runtime.
      */
-    val usingSupportLibVectors: Boolean = false,
-    /**
-     * The package name of the R file. Application projects may also use this as the default
-     * value for the application ID. It is defined here:
-     * https://developer.android.com/studio/build/application-id.html.
-     */
-    val packageName: String? = null
+    val usingSupportLibVectors: Boolean = false
 ) {
     override fun toString(): String = printProperties(this, emptyConfig)
 
@@ -122,15 +116,8 @@ data class Config(
                 other.testInstrumentationRunnerArguments
             else testInstrumentationRunnerArguments,
             resourceConfigurations = resourceConfigurations + other.resourceConfigurations,
-            usingSupportLibVectors = usingSupportLibVectors || other.usingSupportLibVectors,
-            packageName = other.packageName ?: packageName
+            usingSupportLibVectors = usingSupportLibVectors || other.usingSupportLibVectors
         )
-
-    /**
-     * Returns a copy of the receiver with the given package name. Intended to simplify construction
-     * from Java.
-     */
-    fun withPackageName(packageName: String?) = copy(packageName = packageName)
 
     /**
      * Returns a copy of the receiver with the given sources. Intended to simplify construction

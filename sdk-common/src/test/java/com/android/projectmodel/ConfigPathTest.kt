@@ -346,24 +346,6 @@ class ConfigPathTest {
     }
 
     @Test
-    fun testOperatorPlusNoArtifacts() {
-        val path = matchNoArtifacts() + "child"
-        assertThat(path).isEqualTo(matchNoArtifacts())
-    }
-
-    @Test
-    fun testOperatorPlus() {
-        val path = matchArtifactsWith("foo") + "child"
-        assertThat(path).isEqualTo(matchArtifactsWith("foo/child"))
-    }
-
-    @Test
-    fun testOperatorPlusAllArtifacts() {
-        val path = matchAllArtifacts() + "child"
-        assertThat(path).isEqualTo(matchArtifactsWith("child"))
-    }
-
-    @Test
     fun testParent() {
         assertThat(matchAllArtifacts().parent()).isEqualTo(matchAllArtifacts())
         assertThat(matchNoArtifacts().parent()).isEqualTo(matchNoArtifacts())

@@ -34,7 +34,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -130,7 +129,7 @@ class SvgTree {
         }
 
         @Override
-        public int compareTo(@NotNull LogMessage other) {
+        public int compareTo(@NonNull LogMessage other) {
             int cmp = level.compareTo(other.level);
             if (cmp != 0) {
                 return cmp;

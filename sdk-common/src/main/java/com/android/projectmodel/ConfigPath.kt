@@ -116,18 +116,6 @@ data class ConfigPath internal constructor(
     }
 
     /**
-     * Adds a segment to this [ConfigPath]. The resulting path will match artifacts that both match
-     * this path and match the following segment. If this [ConfigPath] matches nothing, the result
-     * will also match nothing.
-     */
-    operator fun plus(nextSegment: String): ConfigPath {
-        // If this path already matched nothing, adding further restrictions won't change it.
-        segments ?: return this
-
-        return ConfigPath(segments + nextSegment)
-    }
-
-    /**
      * Returns the parent of this [ConfigPath]. That is, it returns the prefix containing everything
      * except the last segment. Returns this if the path has no parent.
      */

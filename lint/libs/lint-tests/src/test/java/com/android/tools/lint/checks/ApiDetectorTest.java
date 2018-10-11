@@ -516,7 +516,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "res/layout/linear.xml:8: Warning: Attribute android:foreground has no effect on API levels lower than 23 (current min is 21) [UnusedAttribute]\n"
                         + "    android:foreground=\"?selectableItemBackground\"\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 1 warnings";
+                        + "res/layout/linear.xml:25: Warning: Attribute android:foreground has no effect on API levels lower than 23 (current min is 21) [UnusedAttribute]\n"
+                        + "  <test.pkg.MyCustomView android:foreground=\"?selectableItemBackground\"\n"
+                        + "                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 2 warnings";
 
         lint().files(
                         manifest().minSdk(21),
@@ -535,7 +538,64 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "    android:layout_width=\"wrap_content\"\n"
                                         + "    android:layout_height=\"wrap_content\"/>\n"
                                         + "\n"
-                                        + "</LinearLayout>"))
+
+                                        // Regression tests for https://issuetracker.google.com/116404240:
+
+                                        + "  <FrameLayout android:foreground=\"?selectableItemBackground\"\n"
+                                        + "    android:layout_width=\"wrap_content\"\n"
+                                        + "    android:layout_height=\"wrap_content\"/>\n"
+                                        + "\n"
+                                        + "  <HorizontalScrollView android:foreground=\"?selectableItemBackground\"\n"
+                                        + "    android:layout_width=\"wrap_content\"\n"
+                                        + "    android:layout_height=\"wrap_content\"/>\n"
+                                        + "\n"
+                                        + "  <test.pkg.MyFrameView android:foreground=\"?selectableItemBackground\"\n"
+                                        + "    android:layout_width=\"wrap_content\"\n"
+                                        + "    android:layout_height=\"wrap_content\"/>\n"
+                                        + "\n"
+                                        + "  <test.pkg.MyCustomView android:foreground=\"?selectableItemBackground\"\n"
+                                        + "    android:layout_width=\"wrap_content\"\n"
+                                        + "    android:layout_height=\"wrap_content\"/>\n"
+                                        + "\n"
+                                        + "  <test.pkg.MyUnknownView android:foreground=\"?selectableItemBackground\"\n"
+                                        + "    android:layout_width=\"wrap_content\"\n"
+                                        + "    android:layout_height=\"wrap_content\"/>\n"
+                                        + "\n"
+                                        + "</LinearLayout>"),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.widget.FrameLayout;\n"
+                                        + "\n"
+                                        + "/** @noinspection ClassNameDiffersFromFileName*/ "
+                                        + "public abstract class MyFrameView extends FrameLayout {\n"
+                                        + "    public MyFrameView() {\n"
+                                        + "        super(null);\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "/** @noinspection ClassNameDiffersFromFileName*/ "
+                                        + "public abstract class MyCustomView extends android.widget.LinearLayout {\n"
+                                        + "    public MyCustomView() {\n"
+                                        + "        super(null);\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        // Stub to make evaluator.findClass work from tests
+                        java(
+                                ""
+                                        + "package android.widget;\n"
+                                        + "\n"
+                                        + "import android.content.Context;\n"
+                                        + "\n"
+                                        + "/** @noinspection ClassNameDiffersFromFileName*/ "
+                                        + "public abstract class FrameLayout {\n"
+                                        + "    public FrameLayout(Context context) {\n"
+                                        + "    }\n"
+                                        + "}\n"))
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(expected);
@@ -5403,6 +5463,27 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "}"))
                 .run()
                 .expectClean();
+    }
+
+    public void testKotlinClassLiteral() {
+        // Regression test for 117517492: ApiDetector does not work for class literals in Kotlin.
+        lint().files(
+                        manifest().minSdk(1),
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "import org.w3c.dom.DOMErrorHandler\n"
+                                        + "\n"
+                                        + "fun test() {\n"
+                                        + "    val clz = DOMErrorHandler::class // API 8\n"
+                                        + "}\n"))
+                .run()
+                .expect(
+                        "src/test/pkg/}.kt:6: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMErrorHandler [NewApi]\n"
+                                + "    val clz = DOMErrorHandler::class // API 8\n"
+                                + "              ~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "1 errors, 0 warnings");
     }
 
     public void test69788053() {

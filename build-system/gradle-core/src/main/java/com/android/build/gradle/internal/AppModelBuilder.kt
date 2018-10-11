@@ -18,21 +18,16 @@ package com.android.build.gradle.internal
 
 import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.internal.api.artifact.singleFile
-import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.ide.DefaultAppBundleProjectBuildOutput
 import com.android.build.gradle.internal.ide.DefaultAppBundleVariantBuildOutput
 import com.android.build.gradle.internal.ide.ModelBuilder
-import com.android.build.gradle.internal.model.NativeLibraryFactory
-import com.android.build.gradle.internal.ndk.NdkHandler
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.builder.core.AndroidBuilder
 import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.builder.model.AppBundleVariantBuildOutput
 import com.google.common.collect.ImmutableList
 import org.gradle.api.Project
-import org.gradle.api.artifacts.ProjectDependency
 
 /**
  * [ModelBuilder] class created by [AppPlugin]. It needs to be put in a separate file to work around
@@ -44,7 +39,6 @@ class AppModelBuilder(
     taskManager: TaskManager,
     config: BaseAppModuleExtension,
     extraModelInfo: ExtraModelInfo,
-    nativeLibraryFactory: NativeLibraryFactory,
     projectType: Int,
     generation: Int
 ) : ModelBuilder<BaseAppModuleExtension>(
@@ -53,7 +47,6 @@ class AppModelBuilder(
     taskManager,
     config,
     extraModelInfo,
-    nativeLibraryFactory,
     projectType,
     generation
 ) {

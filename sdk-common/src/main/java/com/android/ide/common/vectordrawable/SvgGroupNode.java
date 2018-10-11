@@ -23,7 +23,6 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Node;
 
 /**
@@ -102,14 +101,14 @@ class SvgGroupNode extends SvgNode {
     }
 
     @Override
-    public void transformIfNeeded(@NotNull AffineTransform rootTransform) {
+    public void transformIfNeeded(@NonNull AffineTransform rootTransform) {
         for (SvgNode p : mChildren) {
             p.transformIfNeeded(rootTransform);
         }
     }
 
     @Override
-    public void flatten(@NotNull AffineTransform transform) {
+    public void flatten(@NonNull AffineTransform transform) {
         for (SvgNode n : mChildren) {
             mStackedTransform.setTransform(transform);
             mStackedTransform.concatenate(mLocalTransform);
@@ -126,7 +125,7 @@ class SvgGroupNode extends SvgNode {
     }
 
     @Override
-    public void fillPresentationAttributes(@NotNull String name, @NotNull String value) {
+    public void fillPresentationAttributes(@NonNull String name, @NonNull String value) {
         super.fillPresentationAttributes(name, value);
         for (SvgNode n : mChildren) {
             // Group presentation attribute should not override child.

@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.model.NativeLibraryFactory;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.AnchorOutputType;
@@ -78,13 +77,10 @@ public class ModelBuilderTest {
     @Mock GlobalScope globalScope;
     @Mock Project project;
     @Mock Gradle gradle;
-    @Mock AndroidBuilder androidBuilder;
     @Mock VariantManager variantManager;
     @Mock TaskManager taskManager;
     @Mock AndroidConfig androidConfig;
     @Mock ExtraModelInfo extraModelInfo;
-    @Mock NdkHandler ndkHandler;
-    @Mock NativeLibraryFactory nativeLibraryFactory;
     @Mock BuildArtifactsHolder artifacts;
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -115,7 +111,6 @@ public class ModelBuilderTest {
                         taskManager,
                         androidConfig,
                         extraModelInfo,
-                        nativeLibraryFactory,
                         AndroidProject.PROJECT_TYPE_APP,
                         AndroidProject.GENERATION_ORIGINAL);
     }

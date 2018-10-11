@@ -402,14 +402,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     }
 
     private void checkFileNameUniqueness() {
-
-        checkFileNameUniqueness(
-                new BuildElements(
-                        outputScope
-                                .getApkDatas()
-                                .stream()
-                                .map(this::computeBuildOutputFile)
-                                .collect(Collectors.toList())));
+        BuildElements buildElements = ExistingBuildElements.from(getTaskInputType(), resourceFiles);
+        checkFileNameUniqueness(buildElements);
     }
 
     @VisibleForTesting

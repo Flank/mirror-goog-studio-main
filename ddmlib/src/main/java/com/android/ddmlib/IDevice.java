@@ -566,14 +566,73 @@ public interface IDevice extends IShellEnabledDevice {
      * @param apks list of apks to install (1 main APK + 0..n split apks)
      * @param reinstall set to <code>true</code> if re-install of app should be performed
      * @param installOptions optional extra arguments to pass. See 'adb shell pm install --help' for
-     *            available options.
+     *     available options.
      * @param timeout installation timeout
      * @param timeoutUnit {@link TimeUnit} corresponding to the timeout parameter
      * @throws InstallException if the installation fails.
      */
-    void installPackages(@NonNull List<File> apks, boolean reinstall,
-            @NonNull List<String> installOptions, long timeout, @NonNull TimeUnit timeoutUnit)
+    void installPackages(
+            @NonNull List<File> apks,
+            boolean reinstall,
+            @NonNull List<String> installOptions,
+            long timeout,
+            @NonNull TimeUnit timeoutUnit)
             throws InstallException;
+
+    /**
+     * Installs an Android application made of several APK files (one main and 0..n split packages)
+     * with default timeout
+     *
+     * @param apks list of apks to install (1 main APK + 0..n split apks)
+     * @param reinstall set to <code>true</code> if re-install of app should be performed
+     * @param installOptions optional extra arguments to pass. See 'adb shell pm install --help' for
+     *     available options.
+     * @throws InstallException if the installation fails.
+     */
+    default void installPackages(
+            @NonNull List<File> apks, boolean reinstall, @NonNull List<String> installOptions)
+            throws InstallException {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Installs an Android application made of several APK files sitting locally on the device
+     *
+     * @param remoteApks list of apk file paths sitting on the device to install
+     * @param reinstall set to <code>true</code> if re-install of app should be performed
+     * @param installOptions optional extra arguments to pass. See 'adb shell pm install --help' for
+     *     available options.
+     * @param timeout installation timeout
+     * @param timeoutUnit {@link TimeUnit} corresponding to the timeout parameter
+     * @throws InstallException if the installation fails.
+     */
+    default void installRemotePackages(
+            @NonNull List<String> remoteApks,
+            boolean reinstall,
+            @NonNull List<String> installOptions,
+            long timeout,
+            @NonNull TimeUnit timeoutUnit)
+            throws InstallException {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Installs an Android application made of several APK files sitting locally on the device with
+     * default timeout
+     *
+     * @param apks list of apk file paths on the device to install
+     * @param reinstall set to <code>true</code> if re-install of app should be performed
+     * @param installOptions optional extra arguments to pass. See 'adb shell pm install --help' for
+     *     available options.
+     * @throws InstallException if the installation fails.
+     */
+    default void installRemotePackages(
+            @NonNull List<String> remoteApks,
+            boolean reinstall,
+            @NonNull List<String> installOptions)
+            throws InstallException {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Pushes a file to device

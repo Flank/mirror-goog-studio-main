@@ -30,7 +30,7 @@ data class SubmodulePath internal constructor(
      * Adds a segment to this [SubmodulePath].
      */
     operator fun plus(nextSegment: String): SubmodulePath {
-        return SubmodulePath(segments + nextSegment)
+        return submodulePathOf(segments + nextSegment)
     }
 
     /**
@@ -39,7 +39,7 @@ data class SubmodulePath internal constructor(
      */
     fun parent(): SubmodulePath {
         return if (segments.isEmpty()) this else {
-            SubmodulePath(segments.subList(0, segments.size - 1))
+            submodulePathOf(segments.subList(0, segments.size - 1))
         }
     }
 

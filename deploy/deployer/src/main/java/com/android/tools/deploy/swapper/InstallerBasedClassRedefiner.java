@@ -16,6 +16,7 @@
 package com.android.tools.deploy.swapper;
 
 import com.android.tools.deploy.proto.Deploy.SwapRequest;
+import com.android.tools.deploy.proto.Deploy.SwapResponse;
 import com.android.tools.deployer.Installer;
 
 public class InstallerBasedClassRedefiner extends ClassRedefiner {
@@ -26,7 +27,7 @@ public class InstallerBasedClassRedefiner extends ClassRedefiner {
     }
 
     @Override
-    public void redefine(SwapRequest request) {
-        installer.swap(request);
+    public SwapResponse redefine(SwapRequest request) {
+        return installer.swap(request);
     }
 }

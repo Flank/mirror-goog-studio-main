@@ -72,7 +72,7 @@ class JdiBasedClassRedefiner extends ClassRedefiner {
     }
 
     @Override
-    public void redefine(Deploy.SwapRequest request) {
+    public Deploy.SwapResponse redefine(Deploy.SwapRequest request) {
         Map<ReferenceType, byte[]> redefinitionRequest = new HashMap<>();
 
         for (Deploy.ClassDef redefinition : request.getClassesList()) {
@@ -82,6 +82,8 @@ class JdiBasedClassRedefiner extends ClassRedefiner {
             }
         }
         vm.redefineClasses(redefinitionRequest);
+
+        throw new UnsupportedOperationException("This method is incomplete");
     }
 
     List<ReferenceType> getReferenceTypeByName(String name) {

@@ -3,10 +3,14 @@ package ${escapeKotlinIdentifiers(packageName)}
 import android.os.Bundle
 <#if hasAppBar>
 import ${getMaterialComponentName('android.support.design.widget.Snackbar', useMaterial2)}
-import ${getMaterialComponentName('android.support.v7.app.AppCompatActivity', useAndroidX)};
+<#if navigationType == "Navigation Drawer">
+import ${getMaterialComponentName('android.support.v7.app', useAndroidX)}.ActionBarDrawerToggle
+</#if>
+import ${getMaterialComponentName('android.support.v7.app.AppCompatActivity', useAndroidX)}
 <#else>
 import ${superClassFqcn}
 </#if>
+import ${getMaterialComponentName('android.databinding', useAndroidX)}.DataBindingUtil
 <#if isNewProject>
 import android.view.Menu
 import android.view.MenuItem
@@ -14,7 +18,10 @@ import android.view.MenuItem
 <#if applicationPackage??>
 import ${applicationPackage}.R
 </#if>
-
+<#--
+Keeping it not to break the eixisting templates. Remove synthetic properties when databinding
+is available in all templates
+-->
 import kotlinx.android.synthetic.main.${layoutName}.*
 <#if includeCppSupport!false>
 <#if useFragment!false>
@@ -23,19 +30,61 @@ import kotlinx.android.synthetic.main.${fragmentLayoutName}.*
 import kotlinx.android.synthetic.main.${simpleLayoutName}.*
 </#if>
 </#if>
+<#if navComponentUsed>
+import androidx.navigation.Navigation
+import androidx.navigation.ui.NavigationUI
+</#if>
+import ${packageName}.databinding.${underscoreToCamelCase(layoutName)}Binding
+<#if navigationType == "Tabs">
+import ${packageName}.ui.main.SectionsPagerAdapter
+</#if>
+
 class ${activityClass} : ${superClass}() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.${layoutName})
-<#if hasAppBar>
-        setSupportActionBar(toolbar)
+        val binding: ${underscoreToCamelCase(layoutName)}Binding =
+                DataBindingUtil.setContentView(this, R.layout.${layoutName})
+<#if navigationType == "Navigation Drawer">
+        <#--  When navigationType is navigation drawer, the layout becomes one level deeper.  -->
+        val toolbar = binding.appbar.toolbar
+        val fab = binding.appbar.fab
+        val toggle = ActionBarDrawerToggle(
+            this, binding.drawerLayout, toolbar, R.string.navigation_drawer_open,
+                R.string.navigation_drawer_close
+        )
+        binding.drawerLayout.addDrawerListener(toggle)
+        toggle.syncState()
+        NavigationUI.setupWithNavController(
+            binding.navView, Navigation.findNavController(this, R.id.nav_host_fragment)
+        )
+<#elseif navigationType == "Bottom Navigation">
+        val toolbar = binding.toolbar
+        NavigationUI.setupWithNavController(
+            binding.contentMain.navView, Navigation.findNavController(this, R.id.nav_host_fragment)
+        )
+<#elseif navigationType == "Tabs">
+        val sectionsPagerAdapter = SectionsPagerAdapter(this, supportFragmentManager)
+        binding.viewPager.adapter = sectionsPagerAdapter
+        binding.tabs.setupWithViewPager(binding.viewPager)
+        val fab = binding.fab
+<#else>
+        val toolbar = binding.toolbar
+        val fab = binding.fab
+</#if>
 
+<#if hasAppBar>
+<#if navigationType != "Navigation Drawer" && navigationType != "Tabs" >
+        setSupportActionBar(toolbar)
+</#if>
+
+<#if navigationType != "Bottom Navigation" >
         fab.setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show()
         }
-</#if>
+</#if> <#-- navigationType != "Bottom Navigation" -->
+</#if> <#-- hasAppBar -->
 <#if parentActivityClass?has_content>
         ${kotlinActionBar}?.setDisplayHomeAsUpEnabled(true)
 </#if>

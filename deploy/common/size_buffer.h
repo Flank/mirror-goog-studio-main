@@ -23,9 +23,9 @@
 namespace deploy {
 
 // Defines the buffer class used to prefix messages.
-using SizeBuffer = std::array<unsigned char, sizeof(uint32_t)>;
+using SizeBuffer = std::array<unsigned char, sizeof(int32_t)>;
 
-inline SizeBuffer SizeToBuffer(uint32_t size) {
+inline SizeBuffer SizeToBuffer(int32_t size) {
   SizeBuffer buffer;
   for (size_t i = 0; i < buffer.size(); ++i) {
     buffer[i] = size & 0xFF;

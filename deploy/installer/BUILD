@@ -184,7 +184,7 @@ genrule(
 )
 
 cc_test(
-    name = "installer_test",
+    name = "integration_test",
     size = "small",
     srcs = [
         "tests/tests.cc",
@@ -203,6 +203,31 @@ cc_test(
     ],
 )
 
+cc_test(
+    name = "installer_tests",
+    size = "small",
+    srcs = [
+        "shell_command_test.cc",
+    ],
+    args = [
+        "$(location :shell_command_test_helper)",
+    ],
+    data = [
+        ":shell_command_test_helper",
+    ],
+    linkstatic = 1,
+    tags = ["no_windows"],
+    deps = [
+        ":installer_lib",
+        "//external:gmock_main",
+    ],
+)
+
+cc_binary(
+    name = "shell_command_test_helper",
+    srcs = ["shell_command_test_helper.cc"],
+)
+
 sh_test(
     name = "endtoend_P",
     size = "small",
@@ -211,6 +236,8 @@ sh_test(
     ],
     data = [
         ":versioned_installer",
+        "//prebuilts/tools/common/m2/repository/com/google/protobuf/protoc/3.0.0:exe",
+        "//tools/base/deploy/proto:protobuffer_src",
     ] + glob(["tests/**/*"]),
     tags = [
         "no_windows",
@@ -225,6 +252,8 @@ sh_test(
     ],
     data = [
         "versioned_installer",
+        "//prebuilts/tools/common/m2/repository/com/google/protobuf/protoc/3.0.0:exe",
+        "//tools/base/deploy/proto:protobuffer_src",
     ] + glob(["tests/**/*"]),
     tags = [
         "no_windows",
@@ -239,6 +268,8 @@ sh_test(
     ],
     data = [
         ":versioned_installer",
+        "//prebuilts/tools/common/m2/repository/com/google/protobuf/protoc/3.0.0:exe",
+        "//tools/base/deploy/proto:protobuffer_src",
     ] + glob(["tests/**/*"]),
     tags = [
         "no_windows",

@@ -24,31 +24,7 @@
 #include <cstring>
 #include <iostream>
 
-#if defined(ANDROID)
-#include <sys/sendfile.h>
-#else
-#include <stdlib.h>
-#include <unistd.h>
-ssize_t sendfile(int out_fd, int in_fd, off_t* offset, size_t count) {
-  lseek(in_fd, *offset, SEEK_SET);
-  void* storage = malloc(count);
-  uint8_t* cursor = (uint8_t*)storage;
-  ssize_t bytesRead = -1;
-  ssize_t bytesRemaining = count;
-  while (bytesRead != 0 && bytesRemaining > 0) {
-    bytesRead = read(in_fd, cursor, count);
-    bytesRemaining -= bytesRead;
-    cursor += bytesRead;
-  }
-  ssize_t written = write(out_fd, storage, count);
-  free(storage);
-  return written;
-}
-#endif
-
 namespace deploy {
-
-#define FILE_MODE (S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR | S_IWGRP | S_IWOTH)
 
 ApkArchive::ApkArchive(const std::string& path)
     : path_(path), start_(nullptr), size_(0), fd_(-1) {}
@@ -59,22 +35,20 @@ ApkArchive::~ApkArchive() {
 }
 
 ApkArchive::Location ApkArchive::GetSignatureLocation(
-    uint8_t* cdRecord) noexcept {
+    size_t offset_to_cdrecord) noexcept {
   Location location;
-  location.valid = false;
+  uint8_t* cdRecord = start_ + offset_to_cdrecord;
 
   // Check if there is a v2/v3 Signature block here.
   uint8_t* signature = cdRecord - 16;
-  if (signature >= start_ && !memcmp((const char*)signature,
-                                     "APK Sig Block "
-                                     "42",
-                                     16)) {
+  if (signature >= start_ &&
+      !memcmp((const char*)signature, "APK Sig Block 42", 16)) {
     // This is likely a signature block.
     location.size = *(uint64_t*)(signature - 8);
-    location.start = cdRecord - location.size - 8;
+    location.offset = offset_to_cdrecord - location.size - 8;
 
     // Check we have the block size at the start and at the end match.
-    if (*(uint64_t*)location.start == location.size) {
+    if (*(uint64_t*)(start_ + location.offset) == location.size) {
       location.valid = true;
     }
   }
@@ -119,39 +93,37 @@ ApkArchive::Location ApkArchive::FindCDRecord(const uint8_t* cursor) noexcept {
   ecdr_t* header = (ecdr_t*)cursor;
 
   Location location;
-  location.start = start_ + header->offsetToCdHeader;
+  location.offset = header->offsetToCdHeader;
   location.size = header->crSize;
+  location.valid = true;
   return location;
 }
 
 ApkArchive::Location ApkArchive::GetCDLocation() noexcept {
   constexpr int cdRecordFileHeaderSignature = 0x02014b50;
-
   Location location;
-  location.valid = false;
 
   // Find End of Central Directory Record
   uint8_t* cursor = FindEndOfCDRecord();
-  if (!cursor) {
+  if (cursor == nullptr) {
     std::cerr << "Unable to find End of Central Directory record." << std::endl;
     return location;
   }
 
   // Find Central Directory Record
   location = FindCDRecord(cursor);
-
-  if (cdRecordFileHeaderSignature != *(uint32_t*)location.start) {
+  if (cdRecordFileHeaderSignature != *(uint32_t*)(start_ + location.offset)) {
     std::cerr << "Unable to find Central Directory File Header." << std::endl;
-  } else {
-    location.valid = true;
+    return location;
   }
 
+  location.valid = true;
   return location;
 }
 
 bool ApkArchive::Prepare() noexcept {
   // Search End of Central Directory Record
-  fd_ = open(path_.c_str(), O_RDONLY, FILE_MODE);
+  fd_ = open(path_.c_str(), O_RDONLY, 0);
   if (fd_ == -1) {
     std::cerr << "Unable to open file '" << path_ << "'" << std::endl;
     return false;
@@ -170,54 +142,38 @@ bool ApkArchive::Prepare() noexcept {
   return true;
 }
 
-bool ApkArchive::WriteMetadata(const std::string& path, Location loc) const
-    noexcept {
-  int outFd = open(path.c_str(), O_WRONLY | O_CREAT, FILE_MODE);
-  off_t offset = (off_t)(loc.start - start_);
-  ssize_t byteSent = 0;
-  while (byteSent != -1 && loc.size != 0) {
-    byteSent = sendfile(outFd, fd_, &offset, loc.size);
-    loc.size -= byteSent;
-  }
-  if (byteSent == -1) {
-    std::cerr << "Error while writing metadata for " << path_ << std::endl;
-    std::cerr << strerror(errno) << std::endl;
-    return false;
-  }
-  close(outFd);
-  return true;
+std::unique_ptr<std::string> ApkArchive::ReadMetadata(Location loc) const noexcept {
+  std::unique_ptr<std::string> payload;
+  payload.reset(new std::string());
+  payload->resize(loc.size);
+  int fd = open(path_.c_str(), O_RDONLY, 0);
+  lseek(fd, loc.offset, SEEK_SET);
+  read(fd, (void*)payload->data(), loc.size);
+  close(fd);
+  return payload;
 }
 
-bool ApkArchive::ExtractMetadata(const std::string& packageName,
-                                 const std::string& dumpBase) noexcept {
+Dump ApkArchive::ExtractMetadata() noexcept {
   Trace traceDump("ExtractMetadata");
   bool readyForProcessing = Prepare();
 
+  Dump dump;
   if (!readyForProcessing) {
     // TODO Log errors better than this!
-    return false;
+    return dump;
   }
-
-  std::string apkFilename = std::string(strrchr(path_.c_str(), '/') + 1);
-
-  // TODO: Unlink everything in dumpBase to prevent conflict from previous dump
 
   Location cdLoc = GetCDLocation();
-  if (cdLoc.valid) {
-    std::string cdDumpPath = dumpBase + apkFilename + ".remotecd";
-    WriteMetadata(cdDumpPath, cdLoc);
-  } else {
-    // Without a valid Central Directory location, we cannot get a valid
-    // Signature location either.
-    return false;
+  if (!cdLoc.valid) {
+    return dump;
   }
+  dump.cd = ReadMetadata(cdLoc);
 
-  Location sigLoc = GetSignatureLocation(cdLoc.start);
+  Location sigLoc = GetSignatureLocation(cdLoc.offset);
   if (sigLoc.valid) {
-    std::string blockDumpPath = dumpBase + apkFilename + ".remoteblock";
-    WriteMetadata(blockDumpPath, sigLoc);
+    dump.signature = ReadMetadata(sigLoc);
   }
-  return true;
+  return dump;
 }
 
 }  // namespace deploy

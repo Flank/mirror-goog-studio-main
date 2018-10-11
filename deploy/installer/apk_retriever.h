@@ -22,19 +22,13 @@
 
 namespace deploy {
 
-using Apks = std::vector<std::string>;
-
 class ApkRetriever {
  public:
-  explicit ApkRetriever(const std::string& packageName);
-  Apks& get();
+  ApkRetriever() = default;
 
- private:
   // Retrieve the apks for the packageName_. Try to use "cmd package" first and
   // "pm" second.
-  void retrieve() noexcept;
-  Apks apks_;
-  std::string packageName_;
+  std::vector<std::string> retrieve(const std::string& packageName) const noexcept;
 };
 
 }  // namespace deploy

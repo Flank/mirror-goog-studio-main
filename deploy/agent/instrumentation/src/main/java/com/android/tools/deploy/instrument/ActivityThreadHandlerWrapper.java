@@ -29,12 +29,6 @@ public final class ActivityThreadHandlerWrapper {
     // Whether or not the handler is hot swapping.
     private static boolean isHotSwapping;
 
-    // Used by native code; points to the SwapRequest used for the swap.
-    private static long requestPtr;
-
-    // Used by native code; points to the socket object used for the swap.
-    private static long socketPtr;
-
     public static void entryHook(Object handler, Message msg) {
         synchronized (ActivityThreadHandlerWrapper.class) {
             boolean isRestarting = msg.what == appInfoChanged;
@@ -42,7 +36,7 @@ public final class ActivityThreadHandlerWrapper {
                 return;
             }
 
-            if (!tryRedefineClasses(requestPtr, socketPtr)) {
+            if (!tryRedefineClasses()) {
                 Log.w(TAG, "Redefine classes failed!");
                 msg.what = -1;
             } else {
@@ -50,21 +44,15 @@ public final class ActivityThreadHandlerWrapper {
             }
 
             isHotSwapping = false;
-
-            // The implementation of tryRedefineClasses() frees both pointers.
-            requestPtr = 0;
-            socketPtr = 0;
             return;
         }
     }
 
     // Gating the entry hook behind a boolean prevents the instrumentation from attempting to
     // redefine classes every time a non-instrumentation change occurs.
-    public static void prepareForHotSwap(long requestPtr, long socketPtr) {
+    public static void prepareForHotSwap() {
         synchronized (ActivityThreadHandlerWrapper.class) {
             isHotSwapping = true;
-            ActivityThreadHandlerWrapper.requestPtr = requestPtr;
-            ActivityThreadHandlerWrapper.socketPtr = socketPtr;
         }
     }
 
@@ -76,5 +64,5 @@ public final class ActivityThreadHandlerWrapper {
     // but do not.
     public static native int getApplicationInfoChangedValue();
 
-    public static native boolean tryRedefineClasses(long requestPtr, long socketPtr);
+    public static native boolean tryRedefineClasses();
 }

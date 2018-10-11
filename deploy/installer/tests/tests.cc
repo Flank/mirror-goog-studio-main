@@ -15,7 +15,9 @@
  */
 
 #include <gtest/gtest.h>
-#include "apk_archive.h"
+#include <iostream>
+
+#include "tools/base/deploy/installer/apk_archive.h"
 
 using namespace deploy;
 
@@ -29,7 +31,7 @@ class deploy::ApkArchiveTester {
   ApkArchive::Location GetCDLocation() noexcept {
     return archive_.GetCDLocation();
   }
-  ApkArchive::Location GetSignatureLocation(uint8_t* start) noexcept {
+  ApkArchive::Location GetSignatureLocation(size_t start) noexcept {
     return archive_.GetSignatureLocation(start);
   }
 
@@ -48,8 +50,13 @@ TEST_F(InstallerTest, TestArchiveParser) {
 
   ApkArchive::Location cdLoc = archiveTester.GetCDLocation();
   EXPECT_TRUE(cdLoc.valid);
+  ASSERT_EQ(cdLoc.offset, 2044145);
+  ASSERT_EQ(cdLoc.size, 49390);
 
   // Check that block can be retrieved
-  ApkArchive::Location sigLoc = archiveTester.GetSignatureLocation(cdLoc.start);
+  ApkArchive::Location sigLoc =
+      archiveTester.GetSignatureLocation(cdLoc.offset);
   EXPECT_TRUE(sigLoc.valid);
+  ASSERT_EQ(sigLoc.offset, 2040049);
+  ASSERT_EQ(sigLoc.size, 4088);
 }

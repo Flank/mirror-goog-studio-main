@@ -16,16 +16,21 @@
 
 package com.android.tools.deployer;
 
+import com.android.utils.ILogger;
+
 public class StopWatch {
+    private final ILogger logger;
     private long created;
 
-    public StopWatch() {}
+    public StopWatch(ILogger logger) {
+        this.logger = logger;
+    }
 
     public void start() {
         created = System.nanoTime();
     }
 
-    public void mark(String deltaed) {
-        System.out.println(deltaed + " at " + (System.nanoTime() - created) / 1000000 + "ms.");
+    public void mark(String message) {
+        logger.info("%s at %dms.", message, (System.nanoTime() - created) / 1000000);
     }
 }

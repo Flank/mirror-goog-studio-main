@@ -82,34 +82,54 @@ data class ConfigTableSchema(
     }
 
     /**
-     * Returns a sequence containing every valid [ConfigPath] in this schema.
+     * Returns a sequence containing every [SubmodulePath] for an [Artifact] in this schema that
+     * passes the given filter.
      */
-    fun allPaths(): Sequence<ConfigPath> = allPathsOfLength(dimensions.size)
+    @JvmOverloads
+    fun allArtifactPaths(filter: ConfigPath = matchAllArtifacts()) =
+        allPathsOfLength(dimensions.size, filter)
 
     /**
-     * Returns a sequence containing every valid [ConfigPath] prefix in this schema with the given
-     * length.
+     * Returns a sequence containing every [SubmodulePath] for a [Variant] in this schema that
+     * passes the given filter.
      */
-    fun allPathsOfLength(desiredPathLength: Int): Sequence<ConfigPath> =
-        if (desiredPathLength > dimensions.size)
+    @JvmOverloads
+    fun allVariantPaths(filter: ConfigPath = matchAllArtifacts()) =
+        allPathsOfLength(dimensions.size - 1, filter)
+
+    /**
+     * Returns a sequence containing every valid [SubmodulePath] prefix in this schema with the given
+     * length that matches the given [ConfigPath].
+     */
+    private fun allPathsOfLength(desiredPathLength: Int, filter: ConfigPath): Sequence<SubmodulePath> {
+        val filterList = filter.segments ?: return emptySequence()
+        return if (desiredPathLength > dimensions.size)
             throw IllegalArgumentException("desiredPathLength $desiredPathLength must not be larger than the number of dimensions (${dimensions.size})")
-        else allPathsOfLength(desiredPathLength, emptyList())
+        else allPathsOfLength(desiredPathLength, emptyList(), filterList)
+    }
 
     private fun allPathsOfLength(
         desiredPathLength: Int,
-        prefix: List<String>
-    ): Sequence<ConfigPath> {
+        prefix: List<String>,
+        filter: List<String?>
+    ): Sequence<SubmodulePath> {
         return when {
-            prefix.size == desiredPathLength - 1 -> dimensions[prefix.size].values.map {
-                ConfigPath(
-                    prefix + it
+            prefix.size == desiredPathLength ->
+                sequenceOf(
+                    submodulePathOf(
+                        prefix
+                    )
                 )
-            }.asSequence()
-            prefix.size < desiredPathLength - 1 -> dimensions[prefix.size].values.asSequence().flatMap {
-                allPathsOfLength(
-                    desiredPathLength,
-                    prefix + it
-                )
+            prefix.size < desiredPathLength -> dimensions[prefix.size].values.asSequence().flatMap {
+                val filterAtPosition = if (filter.size <= prefix.size) null else filter[prefix.size]
+                if (filterAtPosition != null && filterAtPosition != it) {
+                    emptySequence()
+                } else
+                    allPathsOfLength(
+                        desiredPathLength,
+                        prefix + it,
+                        filter
+                    )
             }
             else -> emptySequence()
         }
@@ -117,7 +137,6 @@ data class ConfigTableSchema(
 
     override fun toString()
         = "ConfigTableSchema(${dimensions.joinToString(",") {"${it.dimensionName}[${it.values.joinToString(",")}]"}})"
-
 
     class Builder {
         private val dimensions = ArrayList<ConfigDimension.Builder>()

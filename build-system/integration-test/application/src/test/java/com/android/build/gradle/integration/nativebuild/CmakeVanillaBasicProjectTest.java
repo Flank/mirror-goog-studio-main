@@ -49,8 +49,8 @@ public class CmakeVanillaBasicProjectTest {
                             HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build())
                     // Set the cmake version and set the local properties with the path to the cmake
                     // binary.
-                    .setCmakeVersion("3.10.4819442")
-                    .setWithCmakeDirInLocalProp(true)
+                    .setCmakeVersion("3.10.2")
+                    .setWithCmakeDirInLocalProp(false)
                     .create();
 
     @Before

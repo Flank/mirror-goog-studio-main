@@ -893,6 +893,11 @@ class LintDriver
 
         assert(currentProject === project)
         runFileDetectors(project, main)
+        if (isCanceled) {
+            return
+        }
+
+        runDelayedRunnables()
 
         if (checkDependencies && !Scope.checkSingleFile(scope)) {
             val libraries = project.allLibraries
@@ -913,8 +918,9 @@ class LintDriver
                 if (isCanceled) {
                     return
                 }
-
                 assert(currentProject === library)
+
+                runDelayedRunnables()
 
                 for (check in applicableDetectors) {
                     check.afterCheckEachProject(libraryContext)
@@ -2320,6 +2326,34 @@ class LintDriver
         ): GradleVersion? {
             return delegate.getHighestKnownVersion(coordinate, filter)
         }
+    }
+
+    private val runLaterOutsideReadActionList = mutableListOf<Runnable>()
+
+    /**
+     * Runs [runnable] later after running file detectors, _without_ holding the PSI read lock.
+     * Useful for network requests, for example, where we want to avoid freezing the UI.
+     * Runnables will be run in the order that they are added here.
+     *
+     * Important: the [runnable] is responsible for initiating its own read actions using
+     * [LintClient.runReadAction] if it needs to access PSI. Keep in mind that
+     * some Lint methods may access PSI implicitly, such as [Context.report].
+     */
+    fun runLaterOutsideReadAction(runnable: Runnable) {
+        runLaterOutsideReadActionList.add(runnable)
+    }
+
+    private fun runDelayedRunnables() {
+        // We allow the list of "run later" runnables to grow during iteration.
+        var i = 0
+        while (i < runLaterOutsideReadActionList.size) {
+            runLaterOutsideReadActionList[i].run()
+            if (isCanceled) {
+                return
+            }
+            ++i
+        }
+        runLaterOutsideReadActionList.clear()
     }
 
     /**

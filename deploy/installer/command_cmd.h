@@ -19,7 +19,8 @@
 
 #include "shell_command.h"
 
-#include "apk_retriever.h"
+#include <string>
+#include <vector>
 
 namespace deploy {
 
@@ -27,7 +28,8 @@ namespace deploy {
 class CmdCommand : public ShellCommandRunner {
  public:
   CmdCommand();
-  bool GetAppApks(const std::string& package_name, Apks* apks,
+  bool GetAppApks(const std::string& package_name,
+                  std::vector<std::string>* apks,
                   std::string* error_string) const noexcept;
 
   bool AttachAgent(int pid, const std::string& agent, const std::string& args,
@@ -36,6 +38,16 @@ class CmdCommand : public ShellCommandRunner {
   bool UpdateAppInfo(const std::string& user_id,
                      const std::string& package_name,
                      std::string* error_string) const noexcept;
+
+  // Prepares an installation and returns an id that can be used
+  // to finish the installation by calling |CommitInstall| or it
+  // can be aborted by calling |AbortInstall|
+  int PreInstall(const std::vector<std::string>& apks,
+                 std::string* output) const noexcept;
+
+  bool CommitInstall(int session, std::string* output) const noexcept;
+
+  bool AbortInstall(int session, std::string* output) const noexcept;
 
   static void SetPath(const char* path);
 };

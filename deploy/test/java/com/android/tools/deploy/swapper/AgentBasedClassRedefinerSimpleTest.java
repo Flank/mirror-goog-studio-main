@@ -18,6 +18,7 @@ package com.android.tools.deploy.swapper;
 import com.android.tools.deploy.proto.Deploy;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.Ignore;
 
 /** Test very simple cases on class redefinitions. */
 public class AgentBasedClassRedefinerSimpleTest extends AgentBasedClassRedefinerTestBase {
@@ -36,13 +37,14 @@ public class AgentBasedClassRedefinerSimpleTest extends AgentBasedClassRedefiner
                         false);
         redefiner.redefine(request);
 
-        Deploy.SwapResponse response = redefiner.getAgentResponse();
-        Assert.assertEquals(Deploy.SwapResponse.Status.OK, response.getStatus());
+        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Assert.assertEquals(Deploy.AgentSwapResponse.Status.OK, response.getStatus());
 
         android.triggerMethod(ACTIVITY_CLASS, "getStatus");
         Assert.assertTrue(android.waitForInput("JUST SWAPPED", RETURN_VALUE_TIMEOUT));
     }
 
+    @Ignore("b/117240186")
     @Test
     public void testSimpleClassRedefinitionWithActivityRestart() throws Exception {
         android.loadDex(DEX_LOCATION);
@@ -59,8 +61,9 @@ public class AgentBasedClassRedefinerSimpleTest extends AgentBasedClassRedefiner
         redefiner.redefine(request);
 
         // Agent should request an activity restart.
-        Deploy.SwapResponse response = redefiner.getAgentResponse();
-        Assert.assertEquals(Deploy.SwapResponse.Status.NEED_ACTIVITY_RESTART, response.getStatus());
+        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Assert.assertEquals(
+                Deploy.AgentSwapResponse.Status.NEED_ACTIVITY_RESTART, response.getStatus());
 
         // Fake an app info changed event.
         android.triggerMethod(ACTIVITY_CLASS, "updateAppInfo");
@@ -68,7 +71,7 @@ public class AgentBasedClassRedefinerSimpleTest extends AgentBasedClassRedefiner
                 android.waitForInput("APPLICATION_INFO_CHANGED triggered", RETURN_VALUE_TIMEOUT));
 
         response = redefiner.getAgentResponse();
-        Assert.assertEquals(Deploy.SwapResponse.Status.OK, response.getStatus());
+        Assert.assertEquals(Deploy.AgentSwapResponse.Status.OK, response.getStatus());
 
         android.triggerMethod(ACTIVITY_CLASS, "getStatus");
         Assert.assertTrue(android.waitForInput("JUST SWAPPED", RETURN_VALUE_TIMEOUT));
@@ -91,8 +94,8 @@ public class AgentBasedClassRedefinerSimpleTest extends AgentBasedClassRedefiner
                         false);
         redefiner.redefine(request);
 
-        Deploy.SwapResponse response = redefiner.getAgentResponse();
-        Assert.assertEquals(Deploy.SwapResponse.Status.OK, response.getStatus());
+        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Assert.assertEquals(Deploy.AgentSwapResponse.Status.OK, response.getStatus());
 
         android.triggerMethod(ACTIVITY_CLASS, "printCounter");
         Assert.assertTrue(android.waitForInput("TestActivity.counter = 0", RETURN_VALUE_TIMEOUT));

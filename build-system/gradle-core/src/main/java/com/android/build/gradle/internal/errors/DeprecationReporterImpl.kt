@@ -24,6 +24,7 @@ import com.android.build.gradle.options.StringOption
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.errors.EvalIssueReporter.Severity
 import com.android.builder.errors.EvalIssueReporter.Type
+import java.io.File
 
 class DeprecationReporterImpl(
         private val issueReporter: EvalIssueReporter,
@@ -67,21 +68,62 @@ class DeprecationReporterImpl(
         deprecationTarget: DeprecationTarget
     ) {
         if (!checkAndSet(oldApiElement)) {
-            val severity = if (projectOptions.get(BooleanOption.IDE_INVOKED_FROM_IDE)
-                && projectOptions.get(BooleanOption.DEBUG_OBSOLETE_API)
-            )
-                Severity.ERROR
-            else
-                Severity.WARNING
+            val debugApi = projectOptions.get(BooleanOption.DEBUG_OBSOLETE_API)
+
+            val messageStart = "API '$oldApiElement' is obsolete and has been replaced with '$newApiElement'.\n" +
+                    "It will be removed ${deprecationTarget.removalTime}.\n" +
+                    "For more information, see $url."
+            var messageEnd = ""
+
+            if (debugApi) {
+                val traces = Thread.currentThread().stackTrace
+
+                // special check for the Kotlin plugin.
+                val kotlin = traces.filter {
+                    it.className.startsWith("org.jetbrains.kotlin.gradle.plugin.")
+                }
+
+                messageEnd = if (kotlin.isNotEmpty()) {
+                    "REASON: The Kotlin plugin is currently calling this API. We are working to solve this."
+
+                } else {
+                    // other cases.
+                    // look to see if we get a fileName that's a full path and is a known gradle file.
+                    val gradleFile = traces.asSequence().filter {
+                        it?.fileName?.let { fileName ->
+                            val file = File(fileName)
+                            file.isAbsolute && file.isFile && (fileName.endsWith(".gradle") || fileName.endsWith(
+                                ".gradle.kts"
+                            ))
+                        } ?: false
+                    }.map {
+                        "${it.fileName}:${it.lineNumber}"
+                    }.firstOrNull()
+
+                    if (gradleFile != null) {
+                        "REASON: Called from: $gradleFile"
+
+                    } else {
+                        val formattedTraces = traces.map { "${it.className}.${it.methodName}(${it.fileName}:${it.lineNumber})\n" }
+
+                        "REASON: It is currently called from the following trace:\n" + formattedTraces.joinToString(
+                            separator = "",
+                            prefix = "",
+                            postfix = ""
+                        )
+                    }
+
+                } + "\nWARNING: Debugging obsolete API calls can take time during configuration. It's recommended to not keep it on at all times."
+            } else {
+                messageEnd = "To determine what is calling $oldApiElement, use -P${BooleanOption.DEBUG_OBSOLETE_API.propertyName}=true on the command line to display a stack trace."
+            }
 
             issueReporter.reportIssue(
                 Type.DEPRECATED_DSL,
-                severity,
-                "API '$oldApiElement' is obsolete and has been replaced with '$newApiElement'.\n" +
-                        "It will be removed ${deprecationTarget.removalTime}.\n" +
-                        "For more information, see $url.\n\n" +
-                        "To determine what is calling $oldApiElement, use -P${BooleanOption.DEBUG_OBSOLETE_API.propertyName}=true on the command line to display a stack trace."
+                Severity.WARNING,
+                "$messageStart\n$messageEnd"
             )
+
         }
     }
 

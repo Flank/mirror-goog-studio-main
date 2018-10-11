@@ -16,7 +16,6 @@
 package com.android.projectmodel
 
 import com.android.ide.common.repository.GradleCoordinate
-import com.android.ide.common.util.PathString
 import java.util.IdentityHashMap
 
 /**
@@ -48,10 +47,16 @@ data class ArtifactDependency(
      * Constructs a new [ArtifactDependency] with no dependencies or gradle coordinates. Intended
      * to simplify construction from Java.
      */
-    constructor(library: Library) : this(library=library, dependencies=emptyList())
+    constructor(library: Library) : this(library = library, dependencies = emptyList())
 
-    override fun toString(): String = printProperties(
-        this, ArtifactDependency(ExternalLibrary("")))
+    override fun toString(): String {
+        val props = ArrayList<String>()
+        props.add("library=$library")
+        if (dependencies.isNotEmpty()) props.add("dependencies.size=${dependencies.size}")
+        if (requestedMavenCoordinate != null) props.add("requestedMavenCoordinate=$requestedMavenCoordinate")
+        if (resolvedMavenCoordinate != null) props.add("resolvedMavenCoordinate=$resolvedMavenCoordinate")
+        return "ArtifactDependency(${props.joinToString(",")})"
+    }
 }
 
 /**

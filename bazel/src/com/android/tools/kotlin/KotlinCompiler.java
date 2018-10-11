@@ -40,6 +40,7 @@ public class KotlinCompiler extends JarOutputCompiler {
     private String moduleName;
     private String jvmTarget = "1.8";
     private List<String> friends = new LinkedList<>();
+    private boolean noJdk = false;
 
     protected KotlinCompiler() {
         super("kotlinc");
@@ -62,6 +63,8 @@ public class KotlinCompiler extends JarOutputCompiler {
                 friends.add(it.next());
             } else if (arg.equals("--jvm-target") && it.hasNext()) {
                 jvmTarget = it.next();
+            } else if (arg.equals("--no-jdk")) {
+                noJdk = true;
             } else {
                 filtered.add(arg);
             }
@@ -132,6 +135,9 @@ public class KotlinCompiler extends JarOutputCompiler {
             if (jvmTarget != null) {
                 args.add("-jvm-target");
                 args.add(jvmTarget);
+            }
+            if (noJdk) {
+                args.add("-no-jdk");
             }
 
             ExitCode exit =

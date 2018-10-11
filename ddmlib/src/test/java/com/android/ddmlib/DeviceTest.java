@@ -17,13 +17,17 @@
 package com.android.ddmlib;
 
 import com.android.annotations.NonNull;
+import com.android.sdklib.AndroidVersion;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import org.easymock.IAnswer;
 
-import java.util.concurrent.TimeUnit;
-
 public class DeviceTest extends TestCase {
+
     public void testScreenRecorderOptions() {
         ScreenRecorderOptions options =
                 new ScreenRecorderOptions.Builder().setBitRate(6).setSize(600, 400).build();
@@ -37,6 +41,48 @@ public class DeviceTest extends TestCase {
         options = new ScreenRecorderOptions.Builder().setTimeLimit(4, TimeUnit.MINUTES).build();
         assertEquals("screenrecord --time-limit 180 /sdcard/1.mp4",
                 Device.getScreenRecorderCommand("/sdcard/1.mp4", options));
+    }
+
+    public void testInstallPackages() throws Exception {
+        IDevice mMockIDevice = createMockDevice();
+        List<File> apks = new ArrayList<File>();
+        for (int i = 0; i < 3; i++) {
+            File apkFile = File.createTempFile("test", ".apk");
+            apks.add(apkFile);
+        }
+        List<String> installOptions = new ArrayList<String>();
+        installOptions.add("-d");
+        mMockIDevice.installPackages(apks, true, installOptions);
+        mMockIDevice.installPackages(apks, true, installOptions, 1000L, TimeUnit.MINUTES);
+        EasyMock.expect(mMockIDevice.getVersion())
+                .andStubReturn(
+                        new AndroidVersion(
+                                AndroidVersion.ALLOW_SPLIT_APK_INSTALLATION.getApiLevel()));
+        EasyMock.expectLastCall();
+        EasyMock.replay(mMockIDevice);
+        SplitApkInstaller.create(mMockIDevice, apks, true, installOptions);
+        for (File apkFile : apks) {
+            apkFile.delete();
+        }
+    }
+
+    public void testInstallRemotePackages() throws Exception {
+        IDevice mMockIDevice = createMockDevice();
+        List<String> remoteApkPaths = new ArrayList<String>();
+        remoteApkPaths.add("/data/local/tmp/foo.apk");
+        remoteApkPaths.add("/data/local/tmp/foo.dm");
+        List<String> installOptions = new ArrayList<String>();
+        installOptions.add("-d");
+        mMockIDevice.installRemotePackages(remoteApkPaths, true, installOptions);
+        mMockIDevice.installRemotePackages(
+                remoteApkPaths, true, installOptions, 1000L, TimeUnit.MINUTES);
+        EasyMock.expect(mMockIDevice.getVersion())
+                .andStubReturn(
+                        new AndroidVersion(
+                                AndroidVersion.ALLOW_SPLIT_APK_INSTALLATION.getApiLevel()));
+        EasyMock.expectLastCall();
+        EasyMock.replay(mMockIDevice);
+        RemoteSplitApkInstaller.create(mMockIDevice, remoteApkPaths, true, installOptions);
     }
 
     /** Helper method that sets the mock device to return the given response on a shell command */

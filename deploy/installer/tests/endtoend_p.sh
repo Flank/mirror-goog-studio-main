@@ -9,8 +9,12 @@ source $TEST_BASE_FOLDER/test_framework_setup.sh
 .studio/bin/installer \
 -cmd=`pwd`/$TEST_BASE_FOLDER/mock_cmd_p.sh \
 dump \
-$PACKAGE_NAME
+$PACKAGE_NAME > raw_output_protobuffer.data
+
+# Extract, parse, and write protobuffer response to disk
+parse_proto_response_and_writeto raw_output_protobuffer.data text_protobuffer.txt
 
 # Check we have the expected files
-assert_exists ".studio/dumps/$PACKAGE_NAME/sample.apk.remoteblock"
-assert_exists ".studio/dumps/$PACKAGE_NAME/sample.apk.remotecd"
+assert_exists_in_file "sample.apk" "text_protobuffer.txt"
+assert_exists_in_file "cd:" "text_protobuffer.txt"
+assert_exists_in_file "signature:" "text_protobuffer.txt"

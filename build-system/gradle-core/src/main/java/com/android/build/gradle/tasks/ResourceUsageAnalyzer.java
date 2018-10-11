@@ -49,6 +49,7 @@ import com.android.utils.Pair;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -66,6 +67,7 @@ import java.io.StringWriter;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -200,7 +202,7 @@ public class ResourceUsageAnalyzer {
     /** These can be class or dex files. */
     private final Iterable<File> mClasses;
     private final File mMergedManifest;
-    private final File mMergedResourceDir;
+    private final Iterable<File> mResourceDirs;
 
     private final File mReportFile;
     private final StringWriter mDebugOutput;
@@ -233,14 +235,14 @@ public class ResourceUsageAnalyzer {
             @NonNull Iterable<File> classes,
             @NonNull File manifest,
             @Nullable File mapping,
-            @NonNull File resources,
+            @NonNull Iterable<File> resources,
             @Nullable File reportFile,
             @NonNull ApkFormat format) {
         mResourceClassDir = rDir;
         mProguardMapping = mapping;
         mClasses = classes;
         mMergedManifest = manifest;
-        mMergedResourceDir = resources;
+        mResourceDirs = resources;
 
         mReportFile = reportFile;
         if (reportFile != null || mDebug) {
@@ -256,6 +258,17 @@ public class ResourceUsageAnalyzer {
     public enum ApkFormat {
         BINARY,
         PROTO,
+    }
+
+    public ResourceUsageAnalyzer(
+            @NonNull File rDir,
+            @NonNull Iterable<File> classes,
+            @NonNull File manifest,
+            @Nullable File mapping,
+            @NonNull File resources,
+            @Nullable File reportFile,
+            @NonNull ApkFormat format) {
+        this(rDir, classes, manifest, mapping, Arrays.asList(resources), reportFile, format);
     }
 
     public void dispose() {
@@ -287,9 +300,8 @@ public class ResourceUsageAnalyzer {
         for (File jarOrDir : mClasses) {
             recordClassUsages(jarOrDir);
         }
-
         recordManifestUsages(mMergedManifest);
-        recordResources(mMergedResourceDir);
+        recordResources(mResourceDirs);
         keepPossiblyReferencedResources();
         dumpReferences();
         mModel.processToolsAttributes();
@@ -573,6 +585,18 @@ public class ResourceUsageAnalyzer {
         Files.write(mModel.dumpWhitelistedResources(), destinationFile, UTF_8);
     }
 
+    public void emitConfig(Path destination) throws IOException {
+        File destinationFile = destination.toFile();
+        if (!destinationFile.exists()) {
+            destinationFile.getParentFile().mkdirs();
+            boolean success = destinationFile.createNewFile();
+            if (!success) {
+                throw new IOException("Could not create " + destination);
+            }
+        }
+        Files.write(mModel.dumpConfig(), destinationFile, UTF_8);
+    }
+
 
     /**
      * Remove resources (already identified by {@link #analyze()}).
@@ -632,8 +656,10 @@ public class ResourceUsageAnalyzer {
             }
 
             // Special case the base values.xml folder
-            File values = new File(mMergedResourceDir,
-                    FD_RES_VALUES + File.separatorChar + "values.xml");
+            File values =
+                    new File(
+                            Iterables.get(mResourceDirs, 0),
+                            FD_RES_VALUES + File.separatorChar + "values.xml");
             boolean valuesExists = values.exists();
             if (valuesExists) {
                 rewrite.add(values);
@@ -708,7 +734,9 @@ public class ResourceUsageAnalyzer {
                     Files.write(formatted, file, UTF_8);
                 }
             } else {
-                filteredCopy(mMergedResourceDir, destination, skip, rewritten);
+                for (File dir : mResourceDirs) {
+                    filteredCopy(dir, destination, skip, rewritten);
+                }
             }
         } else {
             assert false;
@@ -1237,14 +1265,17 @@ public class ResourceUsageAnalyzer {
         return false;
     }
 
-    private void recordResources(File resDir)
+    private void recordResources(Iterable<File> resources)
             throws IOException, SAXException, ParserConfigurationException {
-        File[] resourceFolders = resDir.listFiles();
-        if (resourceFolders != null) {
-            for (File folder : resourceFolders) {
-                ResourceFolderType folderType = ResourceFolderType.getFolderType(folder.getName());
-                if (folderType != null) {
-                    recordResources(folderType, folder);
+        for (File resDir : resources) {
+            File[] resourceFolders = resDir.listFiles();
+            if (resourceFolders != null) {
+                for (File folder : resourceFolders) {
+                    ResourceFolderType folderType =
+                            ResourceFolderType.getFolderType(folder.getName());
+                    if (folderType != null) {
+                        recordResources(folderType, folder);
+                    }
                 }
             }
         }

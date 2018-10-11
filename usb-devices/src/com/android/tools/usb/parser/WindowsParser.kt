@@ -19,21 +19,21 @@ import com.android.tools.usb.UsbDevice
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
-import java.nio.charset.Charset
 import java.util.function.BiConsumer
 import java.util.function.BinaryOperator
 import java.util.function.Function
 import java.util.function.Supplier
 import java.util.stream.Collector
 
-private val NEW_DEVICE_KEY = "Availability"
-private val NAME_KEY = "Name"
-private val DEVICEID_KEY = "DeviceID"
+private const val NEW_DEVICE_KEY = "Availability"
+private const val NAME_KEY = "Name"
+private const val DEVICEID_KEY = "DeviceID"
 
 private fun extractValues(lines: List<String>): UsbDevice? {
     var name: String? = null
     var vendorId = ""
     var productId = ""
+    var deviceId = ""
     lines.forEach { line ->
         if (line.startsWith(NAME_KEY)) {
             name = line.substring(line.indexOf("=")+1)
@@ -46,11 +46,13 @@ private fun extractValues(lines: List<String>): UsbDevice? {
             if (pidIndex != -1) {
                 productId = "0x" + line.substring(pidIndex + 4, pidIndex + 8)
             }
-
+            deviceId = line.substring(line.indexOf("=") + 1)
+              .replace("&amp;", "&")
+              .replace("USB\\", "")
         }
     }
-    if (name != null && vendorId != null && productId != null) {
-        return UsbDevice(name!!, productId!!, vendorId!!)
+    if (name != null) {
+        return UsbDevice(name!!, productId, vendorId, null, null, deviceId)
     }
     return null
 }
@@ -85,6 +87,6 @@ class WindowsParser : OutputParser {
     override fun parse(output: InputStream): List<UsbDevice> {
         return BufferedReader(InputStreamReader(output, Charsets.UTF_8))
             .lines()
-            .collect(WindowsUSBCollector).mapNotNull { usbLines -> extractValues(usbLines) }
+            .collect(WindowsUSBCollector).mapNotNull { usbLines -> extractValues(usbLines) }.distinct()
     }
 }

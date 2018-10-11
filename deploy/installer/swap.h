@@ -19,24 +19,26 @@
 
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "command.h"
-#include "deploy.pb.h"
+#include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {
 
 class SwapCommand : public Command {
  public:
-  SwapCommand(){};
+  SwapCommand() : response_(nullptr){};
   ~SwapCommand(){};
 
   void ParseParameters(int argc, char** argv) override;
-  bool Run(const Workspace& workspace) override;
+  void Run(Workspace& workspace) override;
 
  private:
   std::string request_bytes_;
-  std::string package_name_;
+  proto::SwapRequest request_;
   std::string target_dir_;
+  proto::SwapResponse* response_;
 
   enum class User { SHELL_USER, APP_PACKAGE };
 
@@ -48,13 +50,15 @@ class SwapCommand : public Command {
   // Starts the agent server using fork/exec. Populates the read_fd field with a
   // file descriptor to allow reading from the server; populates the write_fd
   // field with a descriptor to allow writing to the server.
-  bool StartServer(int* read_fd, int* write_fd) const;
+  bool StartServer(int agent_count, int* read_fd, int* write_fd) const;
 
-  // Attaches the agents to the app processes, using pidof to obtain the pids of
-  // of all processes owned by the application. If all agents successfully
-  // attach, returns the number of agents; if any agent fails to attach, returns
-  // zero.
-  size_t AttachAgents() const;
+  // Obtains a list of process ids corresponding to processes running on the
+  // device that match the names present in the SwapRequest object.
+  std::vector<int> GetApplicationPids() const;
+
+  // Tries to attach an agent to each process in process_ids; if any agent fails
+  // to attach, returns false.
+  bool AttachAgents(const std::vector<int>& process_ids) const;
 
   // Runs a command with the provided arguments. If run_as_package is true,
   // the command is invoked with 'run-as'. If the command fails, prints the

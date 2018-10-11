@@ -482,6 +482,118 @@ class RestrictToDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun testVisibleForTestingInGoogle3() {
+        // Regression test for
+        //   117544702: com.google.common.annotations.VisibleForTesting.productionVisibility
+        //              is not recognized
+        val expected =
+            """
+            src/test/otherpkg/OtherPkg.java:11: Error: ProductionCode.testHelper6 can only be called from tests [RestrictedApi]
+                    new ProductionCode().testHelper6(); // ERROR
+                                         ~~~~~~~~~~~
+            src/test/pkg/ProductionCode.java:27: Error: ProductionCode.testHelper6 can only be called from tests [RestrictedApi]
+                        testHelper6(); // ERROR: should only be called from tests
+                        ~~~~~~~~~~~
+            src/test/otherpkg/OtherPkg.java:8: Warning: This method should only be accessed from tests or within protected scope [VisibleForTests]
+                    new ProductionCode().testHelper3(); // ERROR
+                                         ~~~~~~~~~~~
+            src/test/otherpkg/OtherPkg.java:9: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]
+                    new ProductionCode().testHelper4(); // ERROR
+                                         ~~~~~~~~~~~
+            src/test/otherpkg/OtherPkg.java:10: Warning: This method should only be accessed from tests or within package private scope [VisibleForTests]
+                    new ProductionCode().testHelper5(); // ERROR
+                                         ~~~~~~~~~~~
+            2 errors, 3 warnings
+            """
+        lint().files(
+            java(
+                """
+                package test.pkg;
+                import com.google.common.annotations.VisibleForTesting;
+
+                @SuppressWarnings("ClassNameDiffersFromFileName")
+                public class ProductionCode {
+                    @VisibleForTesting(productionVisibility = VisibleForTesting.Visibility.PROTECTED)
+                    public void testHelper3() {
+                    }
+
+                    @VisibleForTesting(productionVisibility = VisibleForTesting.Visibility.PRIVATE)
+                    public void testHelper4() {
+                    }
+
+                    @VisibleForTesting(productionVisibility = VisibleForTesting.Visibility.PACKAGE_PRIVATE)
+                    public void testHelper5() {
+                    }
+
+                    @VisibleForTesting(productionVisibility = VisibleForTesting.Visibility.NONE)
+                    public void testHelper6() {
+                    }
+
+                    private class Local {
+                        private void localProductionCode() {
+                            testHelper3();
+                            testHelper4();
+                            testHelper5();
+                            testHelper6(); // ERROR: should only be called from tests
+
+                        }
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package test.otherpkg;
+                import android.support.annotation.VisibleForTesting;
+                import test.pkg.ProductionCode;
+
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class OtherPkg {
+                    public void test() {
+                        new ProductionCode().testHelper3(); // ERROR
+                        new ProductionCode().testHelper4(); // ERROR
+                        new ProductionCode().testHelper5(); // ERROR
+                        new ProductionCode().testHelper6(); // ERROR
+
+                    }
+                }
+                """
+            ).indented(),
+            // test/ prefix makes it a test folder entry:
+            java(
+                "test/test/pkg/UnitTest.java", """
+                package test.pkg;
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class UnitTest {
+                    public void test() {
+                        new ProductionCode().testHelper3(); // OK
+                        new ProductionCode().testHelper4(); // OK
+                        new ProductionCode().testHelper5(); // OK
+                        new ProductionCode().testHelper6(); // OK
+
+                    }
+                }
+                """
+            ).indented(),
+            // From Guava; also Apache licensed
+            java(
+                """
+                package com.google.common.annotations;
+                @SuppressWarnings("ClassNameDiffersFromFileName")
+                public @interface VisibleForTesting {
+                    enum Visibility {
+                        NONE,
+                        PRIVATE,
+                        PACKAGE_PRIVATE,
+                        PROTECTED;
+                    }
+                  Visibility productionVisibility() default Visibility.PRIVATE;
+                }
+                """
+            ).indented()
+        ).run().expect(expected)
+    }
+
     fun testRestrictedInheritedAnnotation() {
         // Regression test for http://b.android.com/230387
         // Ensure that when we perform the @RestrictTo check, we don't incorrectly

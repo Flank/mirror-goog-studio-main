@@ -17,10 +17,13 @@
 package com.android.tools.lint.checks
 
 import com.android.SdkConstants.ANDROID_URI
+import com.android.SdkConstants.ATTR_GRAPH
 import com.android.SdkConstants.ATTR_ID
 import com.android.SdkConstants.ATTR_START_DESTINATION
 import com.android.SdkConstants.AUTO_URI
+import com.android.SdkConstants.TAG_INCLUDE
 import com.android.SdkConstants.TAG_NAVIGATION
+import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.resources.ResourceFolderType
 import com.android.resources.ResourceType
 import com.android.resources.ResourceUrl
@@ -31,7 +34,11 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
+import com.android.tools.lint.detector.api.stripIdPrefix
 import org.w3c.dom.Element
+import org.xmlpull.v1.XmlPullParser
+import org.xmlpull.v1.XmlPullParserException
+import java.io.IOException
 
 /**
  * Check to make sure the startDestination attribute on navigation elements is set and valid.
@@ -63,19 +70,19 @@ class StartDestinationDetector : ResourceXmlDetector() {
 
     override fun getApplicableElements() = listOf(TAG_NAVIGATION)
 
-    override fun visitElement(context: XmlContext, navigation: Element) {
-        val children = navigation.childNodes
+    override fun visitElement(context: XmlContext, element: Element) {
+        val children = element.childNodes
         // If there are no children, don't show the warning yet.
         if ((0 until children.length).none { children.item(it) is Element }) return
 
-        val destinationAttr = navigation.getAttributeNodeNS(AUTO_URI, ATTR_START_DESTINATION)
+        val destinationAttr = element.getAttributeNodeNS(AUTO_URI, ATTR_START_DESTINATION)
         val destinationAttrValue = destinationAttr?.value
         // smart cast to non-null doesn't seem to work with isNullOrBlank
         if (destinationAttrValue == null || destinationAttrValue.isBlank()) {
             context.report(
                 ISSUE,
-                navigation,
-                context.getNameLocation(navigation),
+                element,
+                context.getNameLocation(element),
                 "No start destination specified"
             )
         } else {
@@ -84,26 +91,62 @@ class StartDestinationDetector : ResourceXmlDetector() {
             if (url == null || url.type != ResourceType.ID) {
                 context.report(
                     ISSUE,
-                    navigation,
-                    context.getNameLocation(navigation),
+                    element,
+                    context.getNameLocation(element),
                     "startDestination must be an id"
                 )
                 return
             }
             for (i in 0 until children.length) {
                 val child = children.item(i) as? Element ?: continue
-                val childId = child.getAttributeNS(ANDROID_URI, ATTR_ID)
-                val childUrl = ResourceUrl.parse(childId) ?: continue
-                if (url.name == childUrl.name) {
-                    return
+                if (child.tagName == TAG_INCLUDE) {
+                    val includedGraph = child.getAttributeNS(AUTO_URI, ATTR_GRAPH)
+                    val includedUrl = ResourceUrl.parse(includedGraph) ?: continue
+                    val repository =
+                        context.client.getResourceRepository(context.project, true, true)
+                            ?: continue
+                    val items = repository.getResources(
+                        ResourceNamespace.TODO(),
+                        includedUrl.type,
+                        includedUrl.name
+                    )
+                    for (item in items) {
+                        val source = item.source ?: continue
+                        try {
+                            val parser = context.client.createXmlPullParser(source)
+                            if (parser != null && checkId(parser, url.name)) {
+                                return
+                            }
+                        } catch (ignore: XmlPullParserException) {
+                            // Users might be editing these files in the IDE; don't flag
+                        } catch (ignore: IOException) {
+                            // Users might be editing these files in the IDE; don't flag
+                        }
+                    }
+                } else {
+                    val childId = child.getAttributeNS(ANDROID_URI, ATTR_ID)
+                    val childUrl = ResourceUrl.parse(childId) ?: continue
+                    if (url.name == childUrl.name) {
+                        return
+                    }
                 }
             }
             context.report(
                 ISSUE,
-                navigation,
+                element,
                 context.getValueLocation(destinationAttr),
                 "Invalid start destination $destinationAttrValue"
             )
+        }
+    }
+
+    private fun checkId(parser: XmlPullParser, target: String): Boolean {
+        while (true) {
+            when (parser.next()) {
+                XmlPullParser.START_TAG ->
+                    return stripIdPrefix(parser.getAttributeValue(ANDROID_URI, ATTR_ID)) == target
+                XmlPullParser.END_TAG, XmlPullParser.END_DOCUMENT -> return false
+            }
         }
     }
 }

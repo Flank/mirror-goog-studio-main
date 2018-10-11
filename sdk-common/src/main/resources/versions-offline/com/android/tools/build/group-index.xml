@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <com.android.tools.build>
   <gradle-experimental versions="0.11.1"/>
-  <manifest-merger versions="26.1.2,26.2.0-alpha16"/>
-  <gradle-api versions="3.1.2,3.2.0-alpha16"/>
+  <manifest-merger versions="26.1.4,26.3.0-alpha11"/>
+  <gradle-api versions="3.1.4,3.3.0-alpha11"/>
   <transform-api versions="2.0.0-deprecated-use-gradle-api"/>
-  <apksig versions="3.1.2,3.2.0-alpha16"/>
-  <builder-test-api versions="3.1.2,3.2.0-alpha16"/>
-  <gradle versions="3.1.2,3.2.0-alpha16"/>
-  <builder versions="3.1.2,3.2.0-alpha16"/>
-  <builder-model versions="3.1.2,3.2.0-alpha16"/>
-  <gradle-core versions="3.1.2,3.2.0-alpha10"/>
+  <apksig versions="3.1.4,3.3.0-alpha11"/>
+  <builder-test-api versions="3.1.4,3.3.0-alpha11"/>
+  <gradle versions="3.1.4,3.3.0-alpha11"/>
+  <builder versions="3.1.4,3.3.0-alpha11"/>
+  <builder-model versions="3.1.4,3.3.0-alpha11"/>
+  <gradle-core versions="3.1.4,3.2.0-alpha10"/>
   <aapt2-proto versions="0.3.1"/>
-  <bundletool versions="0.4.1"/>
-  <apkzlib versions="3.2.0-alpha16"/>
-  <aapt2 versions="3.2.0-alpha16-4748712"/>
+  <bundletool versions="0.6.0"/>
+  <apkzlib versions="3.3.0-alpha11"/>
+  <aapt2 versions="3.3.0-alpha11-4982317"/>
 </com.android.tools.build>
 

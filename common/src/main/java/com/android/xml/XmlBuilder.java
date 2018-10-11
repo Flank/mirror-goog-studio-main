@@ -15,7 +15,11 @@
  */
 package com.android.xml;
 
+import static com.android.SdkConstants.ATTR_LAYOUT_HEIGHT;
+import static com.android.SdkConstants.ATTR_LAYOUT_WIDTH;
 import static com.android.SdkConstants.PreferenceTags.PREFERENCE_CATEGORY;
+import static com.android.SdkConstants.VALUE_MATCH_PARENT;
+import static com.android.SdkConstants.VALUE_WRAP_CONTENT;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -93,6 +97,23 @@ public final class XmlBuilder {
         stringBuilder.append(name).append("=\"").append(value).append("\"\n");
 
         lastAppendedConstruct = Construct.ATTRIBUTE;
+        return this;
+    }
+
+    @NonNull
+    public XmlBuilder wrapContent() {
+        return withSize(VALUE_WRAP_CONTENT, VALUE_WRAP_CONTENT);
+    }
+
+    @NonNull
+    public XmlBuilder matchParent() {
+        return withSize(VALUE_MATCH_PARENT, VALUE_MATCH_PARENT);
+    }
+
+    @NonNull
+    public XmlBuilder withSize(@NonNull String width, @NonNull String height) {
+        androidAttribute(ATTR_LAYOUT_WIDTH, width);
+        androidAttribute(ATTR_LAYOUT_HEIGHT, height);
         return this;
     }
 

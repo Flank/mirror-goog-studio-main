@@ -1227,14 +1227,6 @@ maven_java_library(
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
-    name = "org.jetbrains.kotlin_kotlin-scripting-compiler-embeddable",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-scripting-compiler-embeddable/1.2.71:jar",
-    visibility = ["//visibility:public"],
-    exports = [],
-)
-
-# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
-maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-stdlib",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.2.71:jar",
     visibility = ["//visibility:public"],
