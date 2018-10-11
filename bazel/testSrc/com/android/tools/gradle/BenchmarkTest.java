@@ -32,6 +32,7 @@ import java.util.Properties;
 public class BenchmarkTest {
 
     private static final String ROOT = "prebuilts/studio/";
+    private static final String PRESUBMIT_PROP = "android.presubmit.run";
 
     public static void main(String[] args) throws Exception {
 
@@ -123,7 +124,8 @@ public class BenchmarkTest {
                         cleanups,
                         tasks,
                         listeners,
-                        buildProperties);
+                        buildProperties,
+                        Boolean.valueOf(System.getProperty(PRESUBMIT_PROP)));
     }
 
     @SuppressWarnings("unchecked")
@@ -163,7 +165,8 @@ public class BenchmarkTest {
             List<String> cleanups,
             List<String> tasks,
             List<BenchmarkListener> listeners,
-            List<String> buildProperties)
+            List<String> buildProperties,
+            boolean presubmitRun)
             throws Exception {
 
         Benchmark.Builder benchmarkBuilder =
@@ -211,33 +214,42 @@ public class BenchmarkTest {
             gradle.addArgument("-Dcom.android.gradle.version=" + getLocalGradleVersion());
             gradle.addArgument("-Duser.home=" + home.getAbsolutePath());
             buildProperties.forEach(gradle::addArgument);
-            listeners.forEach(it -> it.configure(home, gradle, benchmarkRun));
+
+            if (!presubmitRun) {
+                listeners.forEach(it -> it.configure(home, gradle, benchmarkRun));
+            }
 
             gradle.run(startups);
 
-            listeners.forEach(it -> it.benchmarkStarting(benchmark));
-            for (int i = 0; i < benchmarkRun.warmUps + benchmarkRun.iterations; i++) {
-                gradle.run(cleanups);
+            if (!presubmitRun) {
+                listeners.forEach(it -> it.benchmarkStarting(benchmark));
 
-                for (int j = 0; j < diffs.length; j++) {
-                    diffs[j].apply(src, 3);
-                    diffs[j] = diffs[j].invert();
-                }
-                if (i >= benchmarkRun.warmUps) {
-                    listeners.forEach(it -> it.iterationStarting());
-                }
-                gradle.run(tasks);
-                if (i >= benchmarkRun.warmUps) {
-                    listeners.forEach(BenchmarkListener::iterationDone);
-                }
-            }
-            listeners.forEach(BenchmarkListener::benchmarkDone);
+                for (int i = 0; i < benchmarkRun.warmUps + benchmarkRun.iterations; i++) {
+                    gradle.run(cleanups);
 
-            // If only warm-up builds were executed, no data needs to be written with PerfData
-            if (benchmarkRun.iterations > 0) {
+                    for (int j = 0; j < diffs.length; j++) {
+                        diffs[j].apply(src, 3);
+                        diffs[j] = diffs[j].invert();
+                    }
+                    if (i >= benchmarkRun.warmUps) {
+                        listeners.forEach(it -> it.iterationStarting());
+                    }
+                    gradle.run(tasks);
+                    if (i >= benchmarkRun.warmUps) {
+                        listeners.forEach(BenchmarkListener::iterationDone);
+                    }
+                }
+ 
+                listeners.forEach(BenchmarkListener::benchmarkDone);
+
                 PerfData perfData = new PerfData();
                 perfData.addBenchmark(benchmark);
                 perfData.commit();
+            } else {
+                System.out.println("Presubmit Run: Apply mutations once and quit.");
+                for (int j = 0; j < diffs.length; j++) {
+                    diffs[j].apply(src, 3);
+                }
             }
         }
     }
