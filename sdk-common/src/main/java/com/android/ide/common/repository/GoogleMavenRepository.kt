@@ -107,6 +107,11 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
 
     fun getArtifacts(groupId: String): Set<String> = getPackageMap()[groupId]?.artifacts().orEmpty()
 
+    fun getVersions(groupId: String, artifactId: String): Set<GradleVersion> {
+        val artifactInfo = findArtifact(groupId, artifactId) ?: return emptySet()
+        return artifactInfo.getGradleVersions().toSet()
+    }
+
     private fun findArtifact(groupId: String, artifactId: String): ArtifactInfo? {
         val packageInfo = getPackageMap()[groupId] ?: return null
         return packageInfo.findArtifact(artifactId)
@@ -123,11 +128,14 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
     }
 
     private data class ArtifactInfo(val id: String, val versions: String) {
+        fun getGradleVersions(): Sequence<GradleVersion> =
+          versions.splitToSequence(",")
+            .map { GradleVersion.tryParse(it) }
+            .filterNotNull()
+
         fun findVersion(filter: ((GradleVersion) -> Boolean)?, allowPreview: Boolean = false):
                 GradleVersion? =
-            versions.splitToSequence(",")
-                .map { GradleVersion.tryParse(it) }
-                .filterNotNull()
+          getGradleVersions()
                 .filter { filter == null || filter(it) }
                 .filter { allowPreview || !it.isPreview }
                 .max()

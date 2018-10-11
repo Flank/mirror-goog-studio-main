@@ -165,5 +165,6 @@ class GoogleMavenRepositoryTest : BaseTestCase() {
 
         assertEquals(setOf("foo.bar", "foo.bar.baz"), repo.getGroups())
         assertEquals(setOf("my-artifact", "another-artifact"), repo.getArtifacts("foo.bar"))
+        assertEquals(setOf(GradleVersion.parse("2.5.0"), GradleVersion.parse("2.6.0-rc1")), repo.getVersions("foo.bar", "another-artifact"))
     }
 }
