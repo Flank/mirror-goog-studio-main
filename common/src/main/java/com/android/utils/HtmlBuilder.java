@@ -17,7 +17,6 @@ package com.android.utils;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
 import java.awt.Color;
 import java.net.URL;
 
@@ -261,6 +260,23 @@ public class HtmlBuilder {
 
     public HtmlBuilder endDiv() {
         mStringBuilder.append("</div>");
+        return this;
+    }
+
+
+    public HtmlBuilder beginParagraph() {
+        return beginParagraph(null);
+    }
+
+    public HtmlBuilder beginParagraph(@Nullable String cssStyle) {
+        mStringBuilder.append("<p");
+        appendStyle(cssStyle);
+        mStringBuilder.append('>');
+        return this;
+    }
+
+    public HtmlBuilder endParagraph() {
+        mStringBuilder.append("</p>");
         return this;
     }
 

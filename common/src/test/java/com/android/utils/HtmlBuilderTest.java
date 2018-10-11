@@ -15,11 +15,10 @@
  */
 package com.android.utils;
 
-import junit.framework.TestCase;
-
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
+import junit.framework.TestCase;
 
 public class HtmlBuilderTest extends TestCase {
 
@@ -118,6 +117,22 @@ public class HtmlBuilderTest extends TestCase {
         assertEquals("<div style=\"padding: 10px; text-color: gray\">Hello</div>",
                      builder.beginDiv("padding: 10px; text-color: gray").add("Hello").endDiv()
                        .getHtml());
+    }
+
+    public void testAddParagraph() {
+        HtmlBuilder builder = new HtmlBuilder();
+        assertEquals(
+                "<p>Hello</p>", builder.beginParagraph().add("Hello").endParagraph().getHtml());
+    }
+
+    public void testAddParagraphWithPadding() {
+        HtmlBuilder builder = new HtmlBuilder();
+        assertEquals(
+                "<p style=\"padding: 10px; text-color: gray\">Hello</p>",
+                builder.beginParagraph("padding: 10px; text-color: gray")
+                        .add("Hello")
+                        .endParagraph()
+                        .getHtml());
     }
 
     public void testAddSpan() {
