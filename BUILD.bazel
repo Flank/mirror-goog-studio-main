@@ -40,4 +40,7 @@ coverage_report(
         #"//tools/data-binding:tools.compiler",
         "//tools/adt/idea/android:intellij.android.core",
     ],
+    tags = [
+        "manual",
+    ],
 )
