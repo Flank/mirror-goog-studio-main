@@ -20,7 +20,7 @@ build:local --test_timeout=120,600,1800,7200
 # Test results caching is on by default. This is here so we have a presubmit
 # config as bazel rules can use the config to determine presubmit invocation.
 build:presubmit --cache_test_results=yes
-run:presubmit --jvmopt='-Dandroid.presubmit.run=true'
+test:presubmit --jvmopt='-Dandroid.presubmit.run=true'
 
 # Postsubmit bots don't cache results and use keep_going to find all
 # failures. Config should be inherited by postsubmit configs.
