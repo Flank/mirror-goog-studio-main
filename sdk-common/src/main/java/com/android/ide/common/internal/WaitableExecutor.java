@@ -43,7 +43,10 @@ import java.util.concurrent.RejectedExecutionException;
  * #waitForTasksWithQuickFail(boolean)}, or {@link #waitForAllTasks()}.
  *
  * <p>Tasks can also be individually monitored using the {@link Future<>} object
+ *
+ * @deprecated Use {@link com.android.ide.common.workers.WorkerExecutorFacade} instead.
  */
+@Deprecated
 public class WaitableExecutor {
 
     @NonNull private final ForkJoinPool forkJoinPool;
