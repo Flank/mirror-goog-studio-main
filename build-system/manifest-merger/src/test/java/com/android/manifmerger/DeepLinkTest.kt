@@ -42,6 +42,10 @@ class DeepLinkTest {
 
         assertThat(DeepLink.fromUri("file:/c:/foo", UNKNOWN, false).schemes)
                 .containsExactly("file")
+
+        // test support for '+', '-', and '.' as per https://tools.ietf.org/html/rfc3986#section-3.1
+        assertThat(DeepLink.fromUri("a+-.://www.example.com", UNKNOWN, false).schemes)
+            .containsExactly("a+-.")
     }
 
     @Test
