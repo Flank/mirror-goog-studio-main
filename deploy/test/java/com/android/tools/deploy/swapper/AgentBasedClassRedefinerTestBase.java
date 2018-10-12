@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.UUID;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
@@ -87,20 +88,21 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
     protected static class LocalTestAgentBasedClassRedefiner {
         private final TemporaryFolder messageDir;
         private final FakeAndroidDriver android;
+        private final String socketName;
         private Process server;
-        private String messageLocation;
 
         protected LocalTestAgentBasedClassRedefiner(
                 FakeAndroidDriver android, TemporaryFolder messageDir) {
             this.android = android;
             this.messageDir = messageDir;
+            this.socketName = "irsocket:" + UUID.randomUUID();
         }
 
         protected void redefine(Deploy.SwapRequest request, boolean unused) {
             try {
                 // Start a new agent server that will connect to a single agent.
                 System.out.println("Starting agent server");
-                server = new ProcessBuilder(SERVER_LOCATION, "1").start();
+                server = new ProcessBuilder(SERVER_LOCATION, "1", socketName).start();
 
                 // Convert the request into bytes prepended by the request size.
                 byte[] message = request.toByteArray();
@@ -115,7 +117,7 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
                 stdin.write(size);
                 stdin.write(message);
                 stdin.flush();
-                android.attachAgent(AGENT_LOCATION);
+                android.attachAgent(AGENT_LOCATION + "=" + socketName);
             } catch (IOException e) {
                 System.err.println(e);
             }

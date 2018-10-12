@@ -30,6 +30,7 @@
 #include "shell_command.h"
 #include "tools/base/deploy/common/message_pipe_wrapper.h"
 #include "tools/base/deploy/common/utils.h"
+#include "tools/base/deploy/common/socket.h"
 #include "trace.h"
 
 #include "agent.so.h"
@@ -95,6 +96,7 @@ void SwapCommand::Run(Workspace& workspace) {
 
   std::vector<std::string> parameters;
   parameters.push_back(agent_count);
+  parameters.push_back(Socket::kDefaultAddress);
 
   int read_fd, write_fd, err_fd;
   if (!runner.RunAs(request_.package_name(), parameters, &write_fd, &read_fd,
@@ -331,7 +333,7 @@ bool SwapCommand::AttachAgents(const std::vector<int>& process_ids) const {
   CmdCommand cmd;
   for (int pid : process_ids) {
     std::string output;
-    if (!cmd.AttachAgent(pid, target_dir_ + kAgentFilename, {}, &output)) {
+    if (!cmd.AttachAgent(pid, target_dir_ + kAgentFilename, {Socket::kDefaultAddress}, &output)) {
       response_->add_events()->set_text(
           "Could not attach agent to process: "_s + output);
       return false;
