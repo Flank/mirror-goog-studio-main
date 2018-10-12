@@ -245,11 +245,7 @@ platform_filegroup(
 
 platform_filegroup(
     name = "platforms/android-28",
-    visibility = [
-        "//tools/adt/idea/android-uitests:__pkg__",
-        "//tools/base/build-system/integration-test:__subpackages__",
-        "//tools/data-binding:__pkg__",
-    ],
+    visibility = ["//visibility:public"], # TODO: revert visibility when platforms/latest becomes android-28
 )
 
 platform_filegroup(
