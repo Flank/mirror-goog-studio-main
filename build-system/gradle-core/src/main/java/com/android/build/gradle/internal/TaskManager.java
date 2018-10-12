@@ -45,6 +45,7 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTA
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JNI_LIBS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES;
@@ -940,8 +941,10 @@ public abstract class TaskManager {
                                 .addContentType(ExtendedContentType.NATIVE_LIBS)
                                 .addScope(Scope.PROJECT)
                                 .setFileCollection(
-                                        project.files(variantScope.getMergeNativeLibsOutputDir())
-                                                .builtBy(mergeJniLibFoldersTask.getName()))
+                                        variantScope
+                                                .getArtifacts()
+                                                .getFinalArtifactFiles(MERGED_JNI_LIBS)
+                                                .get())
                                 .build());
 
         // create a stream that contains the content of the local NDK build
@@ -1391,7 +1394,6 @@ public abstract class TaskManager {
         // compile the shaders
         TaskProvider<ShaderCompile> shaderCompileTask =
                 taskFactory.register(new ShaderCompile.CreationAction(scope));
-        TaskFactoryUtils.dependsOn(shaderCompileTask, mergeShadersTask);
 
         TaskFactoryUtils.dependsOn(scope.getTaskContainer().getAssetGenTask(), shaderCompileTask);
     }

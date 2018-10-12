@@ -1067,18 +1067,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         "blame", "res", getDirectorySegments()));
     }
 
-    @NonNull
-    @Override
-    public File getMergeNativeLibsOutputDir() {
-        return FileUtils.join(globalScope.getIntermediatesDir(), "/jniLibs/" + getDirName());
-    }
-
-    @NonNull
-    @Override
-    public File getMergeShadersOutputDir() {
-        return FileUtils.join(globalScope.getIntermediatesDir(), "/shaders/" + getDirName());
-    }
-
     @Override
     @NonNull
     public File getBuildConfigSourceOutputDir() {

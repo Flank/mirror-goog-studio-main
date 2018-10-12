@@ -16,7 +16,11 @@
 
 package com.android.build.gradle.tasks;
 
+import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_SHADERS;
+
 import com.android.annotations.NonNull;
+import com.android.build.api.artifact.BuildableArtifact;
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -63,7 +67,12 @@ public class ShaderCompile extends AndroidBuilderTask {
         return getBuildTools().getRevision().toString();
     }
 
-    private File sourceDir;
+    private BuildableArtifact sourceDir;
+
+    @InputFiles
+    public BuildableArtifact getSourceDir() {
+        return sourceDir;
+    }
 
     @NonNull
     private List<String> defaultArgs = ImmutableList.of();
@@ -74,9 +83,10 @@ public class ShaderCompile extends AndroidBuilderTask {
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
     public FileTree getSourceFiles() {
+        File sourceDirFile = BuildableArtifactUtil.singleFile(sourceDir);
         FileTree src = null;
-        if (sourceDir.isDirectory()) {
-            src = getProject().files(sourceDir).getAsFileTree().matching(PATTERN_SET);
+        if (sourceDirFile.isDirectory()) {
+            src = getProject().files(sourceDirFile).getAsFileTree().matching(PATTERN_SET);
         }
         return src == null ? getProject().files().getAsFileTree() : src;
     }
@@ -90,14 +100,14 @@ public class ShaderCompile extends AndroidBuilderTask {
         try {
             getBuilder()
                     .compileAllShaderFiles(
-                            sourceDir,
+                            BuildableArtifactUtil.singleFile(sourceDir),
                             getOutputDir(),
                             defaultArgs,
                             scopedArgs,
                             ndkLocation,
                             new LoggedProcessOutputHandler(getILogger()));
         } catch (Exception e) {
-            throw  new RuntimeException(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -108,10 +118,6 @@ public class ShaderCompile extends AndroidBuilderTask {
 
     public void setOutputDir(File sourceOutputDir) {
         this.outputDir = sourceOutputDir;
-    }
-
-    public void setSourceDir(File sourceDir) {
-        this.sourceDir = sourceDir;
     }
 
     @NonNull
@@ -172,7 +178,7 @@ public class ShaderCompile extends AndroidBuilderTask {
 
             task.ndkLocation = scope.getGlobalScope().getNdkHandler().getNdkDirectory();
 
-            task.setSourceDir(scope.getMergeShadersOutputDir());
+            task.sourceDir = scope.getArtifacts().getFinalArtifactFiles(MERGED_SHADERS);
             task.setOutputDir(outputDir);
             task.setDefaultArgs(variantConfiguration.getDefautGlslcArgs());
             task.setScopedArgs(variantConfiguration.getScopedGlslcArgs());

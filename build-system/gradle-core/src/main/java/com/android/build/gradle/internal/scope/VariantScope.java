@@ -209,12 +209,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getResourceBlameLogDir();
 
     @NonNull
-    File getMergeNativeLibsOutputDir();
-
-    @NonNull
-    File getMergeShadersOutputDir();
-
-    @NonNull
     File getBuildConfigSourceOutputDir();
 
     @NonNull

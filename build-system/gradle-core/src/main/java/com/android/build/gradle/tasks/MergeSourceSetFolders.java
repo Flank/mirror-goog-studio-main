@@ -53,7 +53,9 @@ import java.util.function.Supplier;
 import javax.inject.Inject;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -70,15 +72,11 @@ public class MergeSourceSetFolders extends IncrementalTask {
 
     // ----- PUBLIC TASK API -----
 
-    private File outputDir;
+    private Provider<Directory> outputDir;
 
     @OutputDirectory
-    public File getOutputDir() {
+    public Provider<Directory> getOutputDir() {
         return outputDir;
-    }
-
-    public void setOutputDir(File outputDir) {
-        this.outputDir = outputDir;
     }
 
     // ----- PRIVATE TASK API -----
@@ -114,7 +112,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
     @Override
     protected void doFullTaskAction() throws IOException {
         // this is full run, clean the previous output
-        File destinationDir = getOutputDir();
+        File destinationDir = getOutputDir().get().getAsFile();
         FileUtils.cleanOutputDir(destinationDir);
 
         List<AssetSet> assetSets = computeAssetSetList();
@@ -195,7 +193,8 @@ public class MergeSourceSetFolders extends IncrementalTask {
                 }
             }
 
-            MergedAssetWriter writer = new MergedAssetWriter(getOutputDir(), workerExecutor);
+            MergedAssetWriter writer =
+                    new MergedAssetWriter(getOutputDir().get().getAsFile(), workerExecutor);
 
             merger.mergeData(writer, false /*doCleanUp*/);
 
@@ -361,7 +360,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
 
         final boolean includeDependencies;
         final ArtifactType outputArtifactType;
-        private File outputDir;
+        private Provider<Directory> outputDir;
 
         public MergeAssetBaseCreationAction(
                 @NonNull VariantScope scope,
@@ -384,7 +383,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
             outputDir =
                     getVariantScope()
                             .getArtifacts()
-                            .appendArtifact(outputArtifactType, taskName, "out");
+                            .createDirectory(outputArtifactType, taskName, "out");
         }
 
         @Override
@@ -419,7 +418,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
                 task.libraries = scope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, ASSETS);
             }
 
-            task.setOutputDir(outputDir);
+            task.outputDir = outputDir;
 
             task.dependsOn(scope.getTaskContainer().getAssetGenTask());
         }
@@ -450,6 +449,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
     }
 
     public static class MergeJniLibFoldersCreationAction extends CreationAction {
+        private Provider<Directory> outputDir;
 
         public MergeJniLibFoldersCreationAction(@NonNull VariantScope scope) {
             super(scope);
@@ -459,6 +459,15 @@ public class MergeSourceSetFolders extends IncrementalTask {
         @Override
         public String getName() {
             return getVariantScope().getTaskName("merge", "JniLibFolders");
+        }
+
+        @Override
+        public void preConfigure(@NonNull String taskName) {
+            super.preConfigure(taskName);
+            outputDir =
+                    getVariantScope()
+                            .getArtifacts()
+                            .createDirectory(InternalArtifactType.MERGED_JNI_LIBS, taskName, "out");
         }
 
         @Override
@@ -474,11 +483,12 @@ public class MergeSourceSetFolders extends IncrementalTask {
             mergeAssetsTask.sourceFolderInputs =
                     () -> variantConfig.getSourceFiles(assetDirFunction);
 
-            mergeAssetsTask.setOutputDir(getVariantScope().getMergeNativeLibsOutputDir());
+            mergeAssetsTask.outputDir = outputDir;
         }
     }
 
     public static class MergeShaderSourceFoldersCreationAction extends CreationAction {
+        private Provider<Directory> outputDir;
 
         public MergeShaderSourceFoldersCreationAction(@NonNull VariantScope scope) {
             super(scope);
@@ -488,6 +498,15 @@ public class MergeSourceSetFolders extends IncrementalTask {
         @Override
         public String getName() {
             return getVariantScope().getTaskName("merge", "Shaders");
+        }
+
+        @Override
+        public void preConfigure(@NonNull String taskName) {
+            super.preConfigure(taskName);
+            outputDir =
+                    getVariantScope()
+                            .getArtifacts()
+                            .createDirectory(InternalArtifactType.MERGED_SHADERS, taskName, "out");
         }
 
         @Override
@@ -503,7 +522,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
             mergeAssetsTask.sourceFolderInputs =
                     () -> variantConfig.getSourceFiles(assetDirFunction);
 
-            mergeAssetsTask.setOutputDir(getVariantScope().getMergeShadersOutputDir());
+            mergeAssetsTask.outputDir = outputDir;
         }
     }
 }

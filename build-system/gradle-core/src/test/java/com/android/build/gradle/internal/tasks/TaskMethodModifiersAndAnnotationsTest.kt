@@ -188,7 +188,6 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.tasks.MergeResources::setPublicFile",
                 "com.android.build.gradle.tasks.MergeResources::setResources",
                 "com.android.build.gradle.tasks.MergeSourceSetFolders::setLibraries",
-                "com.android.build.gradle.tasks.MergeSourceSetFolders::setOutputDir",
                 "com.android.build.gradle.tasks.NdkCompile::setDebuggable",
                 "com.android.build.gradle.tasks.NdkCompile::setForTesting",
                 "com.android.build.gradle.tasks.NdkCompile::setGeneratedMakefile",
@@ -218,7 +217,6 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.tasks.ShaderCompile::setDefaultArgs",
                 "com.android.build.gradle.tasks.ShaderCompile::setOutputDir",
                 "com.android.build.gradle.tasks.ShaderCompile::setScopedArgs",
-                "com.android.build.gradle.tasks.ShaderCompile::setSourceDir",
                 "com.android.build.gradle.tasks.ir.FastDeployRuntimeExtractorTask::setOutputFile"
             )
 
