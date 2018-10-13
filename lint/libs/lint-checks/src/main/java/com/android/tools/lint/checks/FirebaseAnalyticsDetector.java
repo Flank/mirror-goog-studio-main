@@ -51,8 +51,8 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
 public class FirebaseAnalyticsDetector extends Detector implements SourceCodeScanner {
 
-    private static final int EVENT_NAME_MAX_LENGTH = 32;
-    private static final int EVENT_PARAM_NAME_MAX_LENGTH = 24;
+    private static final int EVENT_NAME_MAX_LENGTH = 40;
+    private static final int EVENT_PARAM_NAME_MAX_LENGTH = 40;
     private static final Implementation IMPLEMENTATION =
             new Implementation(FirebaseAnalyticsDetector.class, Scope.JAVA_FILE_SCOPE);
 
