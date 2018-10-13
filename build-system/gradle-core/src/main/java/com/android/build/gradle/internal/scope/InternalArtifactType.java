@@ -147,6 +147,8 @@ public enum InternalArtifactType implements ArtifactType {
     RENDERSCRIPT_HEADERS,
     // source output for rs
     RENDERSCRIPT_SOURCE_OUTPUT_DIR(Category.GENERATED),
+    // renderscript library
+    RENDERSCRIPT_LIB,
 
     // An output of AndroidManifest.xml check
     CHECK_MANIFEST_RESULT,

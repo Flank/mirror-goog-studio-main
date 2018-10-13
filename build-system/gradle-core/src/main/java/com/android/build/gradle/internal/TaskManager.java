@@ -50,6 +50,7 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGE
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.NDK_LIBS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_LIB;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -984,42 +985,31 @@ public abstract class TaskManager {
         // create a stream containing the content of the renderscript compilation output
         // if support mode is enabled.
         if (variantScope.getVariantConfiguration().getRenderscriptSupportModeEnabled()) {
-            final Callable<Collection<File>> callable =
-                    () -> {
-                        ImmutableList.Builder<File> builder = ImmutableList.builder();
+            ConfigurableFileCollection rsFileCollection =
+                    project.files(
+                            variantScope
+                                    .getArtifacts()
+                                    .getFinalArtifactFiles(RENDERSCRIPT_LIB)
+                                    .get());
 
-                        if (variantScope.getRenderscriptLibOutputDir().isDirectory()) {
-                            builder.add(variantScope.getRenderscriptLibOutputDir());
-                        }
+            File rsLibs =
+                    variantScope.getGlobalScope().getAndroidBuilder().getSupportNativeLibFolder();
+            if (rsLibs != null && rsLibs.isDirectory()) {
+                rsFileCollection.from(rsLibs);
+            }
+            if (variantScope.getVariantConfiguration().getRenderscriptSupportModeBlasEnabled()) {
+                File rsBlasLib =
+                        variantScope.getGlobalScope().getAndroidBuilder().getSupportBlasLibFolder();
 
-                        File rsLibs =
-                                variantScope
-                                        .getGlobalScope()
-                                        .getAndroidBuilder()
-                                        .getSupportNativeLibFolder();
-                        if (rsLibs != null && rsLibs.isDirectory()) {
-                            builder.add(rsLibs);
-                        }
-                        if (variantScope
-                                .getVariantConfiguration()
-                                .getRenderscriptSupportModeBlasEnabled()) {
-                            File rsBlasLib =
-                                    variantScope
-                                            .getGlobalScope()
-                                            .getAndroidBuilder()
-                                            .getSupportBlasLibFolder();
-
-                            if (rsBlasLib == null || !rsBlasLib.isDirectory()) {
-                                throw new GradleException(
-                                        "Renderscript BLAS support mode is not supported "
-                                                + "in BuildTools"
-                                                + rsBlasLib);
-                            } else {
-                                builder.add(rsBlasLib);
-                            }
-                        }
-                        return builder.build();
-                    };
+                if (rsBlasLib == null || !rsBlasLib.isDirectory()) {
+                    throw new GradleException(
+                            "Renderscript BLAS support mode is not supported "
+                                    + "in BuildTools"
+                                    + rsBlasLib);
+                } else {
+                    rsFileCollection.from(rsBlasLib);
+                }
+            }
 
             variantScope
                     .getTransformManager()
@@ -1027,12 +1017,7 @@ public abstract class TaskManager {
                             OriginalStream.builder(project, "rs-support-mode-output")
                                     .addContentType(ExtendedContentType.NATIVE_LIBS)
                                     .addScope(Scope.PROJECT)
-                                    .setFileCollection(
-                                            project.files(callable)
-                                                    .builtBy(
-                                                            taskContainer
-                                                                    .getRenderscriptCompileTask()
-                                                                    .getName()))
+                                    .setFileCollection(rsFileCollection)
                                     .build());
         }
 

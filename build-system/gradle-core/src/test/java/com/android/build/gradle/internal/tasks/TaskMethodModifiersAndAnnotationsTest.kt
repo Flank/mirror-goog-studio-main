@@ -206,7 +206,6 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.tasks.ProcessTestManifest::setTmpDir",
                 "com.android.build.gradle.tasks.RenderscriptCompile::setDebugBuild",
                 "com.android.build.gradle.tasks.RenderscriptCompile::setImportDirs",
-                "com.android.build.gradle.tasks.RenderscriptCompile::setLibOutputDir",
                 "com.android.build.gradle.tasks.RenderscriptCompile::setNdkMode",
                 "com.android.build.gradle.tasks.RenderscriptCompile::setObjOutputDir",
                 "com.android.build.gradle.tasks.RenderscriptCompile::setOptimLevel",

@@ -1030,12 +1030,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @NonNull
-    public File getRenderscriptLibOutputDir() {
-        return new File(globalScope.getIntermediatesDir(), "rs/" + getDirName() + "/lib");
-    }
-
-    @Override
-    @NonNull
     public File getDefaultMergeResourcesOutputDir() {
         return FileUtils.join(globalScope.getIntermediatesDir(), FD_RES, FD_MERGED, getDirName());
     }
