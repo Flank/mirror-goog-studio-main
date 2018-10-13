@@ -195,7 +195,6 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.tasks.NdkCompile::setNdkDirectory",
                 "com.android.build.gradle.tasks.NdkCompile::setNdkRenderScriptMode",
                 "com.android.build.gradle.tasks.NdkCompile::setObjFolder",
-                "com.android.build.gradle.tasks.NdkCompile::setSoFolder",
                 "com.android.build.gradle.tasks.PackageAndroidArtifact::setAbiFilters",
                 "com.android.build.gradle.tasks.PackageAndroidArtifact::setDebugBuild",
                 "com.android.build.gradle.tasks.PackageAndroidArtifact::setJniDebugBuild",

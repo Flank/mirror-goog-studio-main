@@ -121,11 +121,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     TransformManager getTransformManager();
 
     @Nullable
-    Collection<File> getNdkSoFolder();
-
-    void setNdkSoFolder(@NonNull Collection<File> ndkSoFolder);
-
-    @Nullable
     File getNdkDebuggableLibraryFolders(@NonNull Abi abi);
 
     void addNdkDebuggableLibraryFolders(@NonNull Abi abi, @NonNull File searchPath);

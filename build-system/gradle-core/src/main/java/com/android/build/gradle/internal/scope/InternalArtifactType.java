@@ -131,6 +131,8 @@ public enum InternalArtifactType implements ArtifactType {
     MERGED_JNI_LIBS,
     // source folder shaders merged into a single folder
     MERGED_SHADERS,
+    // folder for NDK *.so libraries
+    NDK_LIBS,
 
     // Assets created by compiling shader
     SHADER_ASSETS,

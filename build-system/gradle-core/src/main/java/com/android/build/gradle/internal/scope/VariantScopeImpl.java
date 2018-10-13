@@ -152,7 +152,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull private final GlobalScope globalScope;
     @NonNull private final BaseVariantData variantData;
     @NonNull private final TransformManager transformManager;
-    @Nullable private Collection<File> ndkSoFolder;
     @NonNull private final Map<Abi, File> ndkDebuggableLibraryFolders = Maps.newHashMap();
 
     @NonNull private BuildArtifactsHolder buildArtifactsHolder;
@@ -546,17 +545,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     public String getTaskName(@NonNull String prefix, @NonNull String suffix) {
         return variantData.getTaskName(prefix, suffix);
-    }
-
-    @Override
-    @Nullable
-    public Collection<File> getNdkSoFolder() {
-        return ndkSoFolder;
-    }
-
-    @Override
-    public void setNdkSoFolder(@NonNull Collection<File> ndkSoFolder) {
-        this.ndkSoFolder = ndkSoFolder;
     }
 
     /**

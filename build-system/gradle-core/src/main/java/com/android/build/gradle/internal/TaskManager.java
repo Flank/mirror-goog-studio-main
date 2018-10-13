@@ -48,6 +48,7 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGE
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JNI_LIBS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.NDK_LIBS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
@@ -240,7 +241,6 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -361,9 +361,6 @@ public abstract class TaskManager {
      */
     public void configureScopeForNdk(@NonNull VariantScope scope) {
         final BaseVariantData variantData = scope.getVariantData();
-        scope.setNdkSoFolder(Collections.singleton(new File(
-                scope.getGlobalScope().getIntermediatesDir(),
-                "ndk/" + variantData.getVariantConfiguration().getDirName() + "/lib")));
         File objFolder = new File(scope.getGlobalScope().getIntermediatesDir(),
                 "ndk/" + variantData.getVariantConfiguration().getDirName() + "/obj");
         for (Abi abi : NdkHandler.getAbiList()) {
@@ -948,21 +945,20 @@ public abstract class TaskManager {
                                 .build());
 
         // create a stream that contains the content of the local NDK build
-        ConfigurableFileCollection fileCollection =
-                project.files((Callable<Collection<File>>) variantScope::getNdkSoFolder);
-        if (variantScope.getTaskContainer().getNdkCompileTask() != null) {
-            fileCollection =
-                    fileCollection.builtBy(variantScope.getTaskContainer().getNdkCompileTask());
+        if (shouldCreateNdkCompile()) {
+            variantScope
+                    .getTransformManager()
+                    .addStream(
+                            OriginalStream.builder(project, "local-ndk-build")
+                                    .addContentType(ExtendedContentType.NATIVE_LIBS)
+                                    .addScope(Scope.PROJECT)
+                                    .setFileCollection(
+                                            variantScope
+                                                    .getArtifacts()
+                                                    .getFinalArtifactFiles(NDK_LIBS)
+                                                    .get())
+                                    .build());
         }
-
-        variantScope
-                .getTransformManager()
-                .addStream(
-                        OriginalStream.builder(project, "local-ndk-build")
-                                .addContentType(ExtendedContentType.NATIVE_LIBS)
-                                .addScope(Scope.PROJECT)
-                                .setFileCollection(fileCollection)
-                                .build());
 
         // create a stream that contains the content of the local external native build
         if (taskContainer.getExternalNativeJsonGenerator() != null) {
@@ -1607,9 +1603,13 @@ public abstract class TaskManager {
                 taskFactory.register(new ExternalNativeCleanTask.CreationAction(generator, scope)));
     }
 
+    private boolean shouldCreateNdkCompile() {
+        return !ExternalNativeBuildTaskUtils.isExternalNativeBuildEnabled(
+                extension.getExternalNativeBuild());
+    }
+
     public void createNdkTasks(@NonNull VariantScope scope) {
-        if (ExternalNativeBuildTaskUtils.isExternalNativeBuildEnabled(
-                extension.getExternalNativeBuild())) {
+        if (!shouldCreateNdkCompile()) {
             return;
         }
 
