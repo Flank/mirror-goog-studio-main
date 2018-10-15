@@ -23,6 +23,7 @@
 #include "perfd/event_buffer.h"
 #include "perfd/sessions/session.h"
 #include "proto/profiler.grpc.pb.h"
+#include "utils/log.h"
 
 namespace profiler {
 

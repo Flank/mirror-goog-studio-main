@@ -72,7 +72,7 @@ TEST(FakeSampler, TestSamplerInsertion) {
   Config config(agent_config);
   FileCache file_cache(std::unique_ptr<FileSystem>(new MemoryFileSystem()),
                        "/");
-  EventBuffer event_buffer;
+  EventBuffer event_buffer(&clock);
 
   Daemon daemon(&clock, &config, &file_cache, &event_buffer);
   Session session(0, 0, 0, &daemon);

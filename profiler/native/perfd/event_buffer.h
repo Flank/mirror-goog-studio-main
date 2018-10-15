@@ -22,24 +22,31 @@
 
 #include "proto/profiler.grpc.pb.h"
 #include "utils/circular_buffer.h"
+#include "utils/clock.h"
 
 namespace profiler {
 
 // This class is thread safe
 class EventBuffer {
  public:
-  EventBuffer()
-      : interrupt_write_(false), events_added_(0), events_(500), groups_(100) {}
+  EventBuffer(Clock* clock)
+      : clock_(clock),
+        interrupt_write_(false),
+        events_added_(0),
+        events_(500),
+        groups_(100) {}
 
   // Visible for testing
-  EventBuffer(size_t events_capacity, size_t group_capacity)
-      : interrupt_write_(false),
+  EventBuffer(Clock* clock, size_t events_capacity, size_t group_capacity)
+      : clock_(clock),
+        interrupt_write_(false),
         events_added_(0),
         events_(events_capacity),
         groups_(group_capacity) {}
 
-  // Currently events are assumed to be added in timestamp order.
-  // TODO: Manage timing inside the event buffer to ensure correct ordering.
+  // Note that the |EventBuffer| will generate/overwrite the event's timestamp
+  // based on the time it is added. This ensure that the events stored in the
+  // buffer is in order.
   void Add(proto::Event& event);
 
   // All events are written to the |consumer| then cleared from the queue.
@@ -64,6 +71,7 @@ class EventBuffer {
   bool GetGroup(int64_t event_id, proto::EventGroup* group);
 
  private:
+  Clock* clock_;
   std::mutex mutex_;
   bool interrupt_write_;
   int events_added_;  // Guarded by mutex_

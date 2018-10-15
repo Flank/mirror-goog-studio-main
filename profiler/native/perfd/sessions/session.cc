@@ -16,7 +16,8 @@
 #include "session.h"
 
 #include "perfd/daemon.h"
-#include "perfd/samplers/network_connectivity_sampler.h"
+#include "perfd/samplers/network_connection_count_sampler.h"
+#include "perfd/samplers/network_speed_sampler.h"
 
 namespace profiler {
 
@@ -31,7 +32,9 @@ Session::Session(int64_t device_id, int32_t pid, int64_t start_timestamp,
 
   if (daemon->config()->GetAgentConfig().unified_pipeline()) {
     samplers_.push_back(
-        new profiler::NetworkConnectivitySampler(*this, daemon->buffer()));
+        new profiler::NetworkConnectionCountSampler(*this, daemon->buffer()));
+    samplers_.push_back(new profiler::NetworkSpeedSampler(
+        *this, daemon->clock(), daemon->buffer()));
   }
 }
 

@@ -35,7 +35,7 @@ class ProfilerServiceTest : public ::testing::Test {
   ProfilerServiceTest()
       : file_cache_(unique_ptr<FileSystem>(new MemoryFileSystem()), "/"),
         config_(agent_config_),
-        buffer_(10, 5),
+        buffer_(&clock_, 10, 5),
         daemon_(&clock_, &config_, &file_cache_, &buffer_),
         service_(&daemon_) {}
   void SetUp() override {

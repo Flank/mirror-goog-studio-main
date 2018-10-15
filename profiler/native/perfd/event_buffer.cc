@@ -22,6 +22,7 @@ namespace profiler {
 void EventBuffer::Add(proto::Event& event) {
   std::unique_lock<std::mutex> lock(mutex_);
   events_added_++;
+  event.set_timestamp(clock_->GetCurrentTime());
   events_.Add(event);
   lock.unlock();
   events_cv_.notify_all();

@@ -19,6 +19,8 @@ package profiler.proto;
 option java_package = "com.android.tools.profiler.proto";
 option java_outer_classname = "Common";
 
+import "network_data.proto";
+
 // Note: stream_id should NOT be part of an |Event| message because a session
 // (which is a collection of events) could be serialized and imported later.
 // Since an event can appear in multiple streams, it is confusing to have a
@@ -32,6 +34,8 @@ message Event {
     SESSION = 3;
 
     // Network Profiler Prefix = 100
+    NETWORK_SPEED = 101;
+    NETWORK_CONNECTION_COUNT = 102;
 
     // Cpu Profiler Prefix = 200
 
@@ -61,7 +65,26 @@ message Event {
 
     // Event Profiler Prefix = 500
   }
-  
+
+  // Fixed ID for pre-determined EventGroup. Event.Type is reserved for data types
+  // that contain multiple states. So we use these group Ids to categorize data that
+  // belong to the same Event.kind.
+  enum EventGroupIds {
+    INVALID = 0;
+
+    // Network Profiler Prefix = 100
+    NETWORK_TX = 101; // for NETWORK_SPEED sent data
+    NETWORK_RX = 102; // for NETWORK_SPEED received data
+
+    // Cpu Profiler Prefix = 200
+
+    // Memory Profiler Prefix = 300
+
+    // Energy Profiler Prefix = 400
+
+    // Event Profiler Prefix = 500
+  }
+
   // The session the event belongs to. For session events this is the same as
   // |event_id|
   int64 session_id = 1;
@@ -86,6 +109,15 @@ message Event {
     SessionEnded session_ended = 7;
     Process process = 8;
     Stream stream = 9;
+
+    // Network Profiler Prefix = 100
+    NetworkSpeedData network_speed = 101;
+    NetworkConnectionData network_connections = 102;
+
+    // Cpu Profiler Prefix = 200
+    // Memory Profiler Prefix = 300
+    // Energy Profiler Prefix = 400
+    // Event Profiler Prefix = 500
   }
 }
 

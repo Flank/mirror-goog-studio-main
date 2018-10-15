@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "network_connectivity_sampler.h"
+syntax = "proto3";
 
-namespace profiler {
+package profiler.proto;
+option java_package = "com.android.tools.profiler.proto";
+option java_outer_classname = "Network";
 
-void NetworkConnectivitySampler::Sample() {
-  connectivity_sampler_.Refresh();
-  auto network_data = connectivity_sampler_.Sample();
-
-  // TODO convert |network_data| as an Event proto
+message NetworkSpeedData {
+  int64 throughput = 1; // bytes / sec
 }
 
-}  // namespace profiler
+message NetworkConnectionData {
+  int32 num_connections = 1;
+}

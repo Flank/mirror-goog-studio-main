@@ -3,7 +3,8 @@ load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS", "and
 filegroup(
     name = "samplers_h",
     srcs = glob([
-        "samplers/network_connectivity_sampler.h",
+        "samplers/network_connection_count_sampler.h",
+        "samplers/network_speed_sampler.h",
         "samplers/sampler.h",
     ]),
 )
@@ -11,7 +12,8 @@ filegroup(
 filegroup(
     name = "samplers_cc",
     srcs = glob([
-        "samplers/network_connectivity_sampler.cc",
+        "samplers/network_connection_count_sampler.cc",
+        "samplers/network_speed_sampler.cc",
         "samplers/sampler.cc",
     ]),
 )
