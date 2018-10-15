@@ -30,8 +30,7 @@ import kotlinx.android.synthetic.main.${fragmentLayoutName}.*
 import kotlinx.android.synthetic.main.${simpleLayoutName}.*
 </#if>
 </#if>
-<#--  <#if navigationType == "Navigation Drawer" || navigationType == "Bottom Navigation">  -->
-<#if navComponentUsed>
+<#if navigationType == "Navigation Drawer">
 import androidx.navigation.Navigation
 import androidx.navigation.ui.NavigationUI
 </#if>
@@ -56,11 +55,6 @@ class ${activityClass} : ${superClass}() {
         NavigationUI.setupWithNavController(
             binding.navView, Navigation.findNavController(this, R.id.nav_host_fragment)
         )
-<#elseif navigationType == "Bottom Navigation">
-        val toolbar = binding.toolbar
-        NavigationUI.setupWithNavController(
-            binding.contentMain.navView, Navigation.findNavController(this, R.id.nav_host_fragment)
-        )
 <#else>
         val toolbar = binding.toolbar
         val fab = binding.fab
@@ -70,14 +64,11 @@ class ${activityClass} : ${superClass}() {
 <#if navigationType != "Navigation Drawer">
         setSupportActionBar(toolbar)
 </#if>
-
-<#if navigationType != "Bottom Navigation" >
         fab.setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show()
         }
-</#if> <#-- navigationType != "Bottom Navigation" -->
-</#if> <#-- hasAppBar -->
+</#if>
 <#if parentActivityClass?has_content>
         ${kotlinActionBar}?.setDisplayHomeAsUpEnabled(true)
 </#if>
