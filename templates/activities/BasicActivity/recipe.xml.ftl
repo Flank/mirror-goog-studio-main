@@ -71,21 +71,6 @@
                  to="${escapeXmlAttribute(resOut)}/layout/nav_content_main.xml" />
     <merge from="root://activities/common/navigation/bottom_navigation/res/values/strings.xml.ftl"
            to="${escapeXmlAttribute(resOut)}/values/strings.xml" />
-<#elseif navigationType == "Tabs">
-    <#assign inputDir="root://activities/common/navigation/tabs" />
-    <instantiate from="${inputDir}/src/ui/main/PageViewModel.${ktOrJavaExt}.ftl"
-                 to="${escapeXmlAttribute(srcOut)}/ui/main/PageViewModel.${ktOrJavaExt}" />
-    <instantiate from="${inputDir}/src/ui/main/PlaceHolderFragment.${ktOrJavaExt}.ftl"
-                 to="${escapeXmlAttribute(srcOut)}/ui/main/PlaceHolderFragment.${ktOrJavaExt}" />
-    <instantiate from="${inputDir}/src/ui/main/SectionsPagerAdapter.${ktOrJavaExt}.ftl"
-                 to="${escapeXmlAttribute(srcOut)}/ui/main/SectionsPagerAdapter.${ktOrJavaExt}" />
-    <instantiate from="${inputDir}/res/layout/fragment_main.xml.ftl"
-                 to="${escapeXmlAttribute(resOut)}/layout/fragment_main.xml" />
-    <merge from="${inputDir}/res/values/strings.xml.ftl"
-           to="${escapeXmlAttribute(resOut)}/values/strings.xml" />
-    <merge from="${inputDir}/res/values/dimens.xml.ftl"
-           to="${escapeXmlAttribute(resOut)}/values/dimens.xml" />
-    <merge from="${inputDir}/res/values-w820dp/dimens.xml.ftl"
-           to="${escapeXmlAttribute(resOut)}/values-w820dp/dimens.xml" />
+
 </#if>
 </recipe>
