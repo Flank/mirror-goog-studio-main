@@ -8,7 +8,7 @@ public class ${navViewModelClass} extends ViewModel {
 
     private MutableLiveData<String> mText;
 
-    public ${navViewModelClass}() {
+    ${navViewModelClass}() {
         mText = new MutableLiveData<>();
         mText.setValue("This is ${navFragmentPrefix} fragment");
     }
