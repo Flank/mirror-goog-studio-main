@@ -978,7 +978,6 @@ public abstract class BaseExtension implements AndroidConfig {
     }
 
     /** {@inheritDoc} */
-    @Deprecated
     @Override
     public JacocoOptions getJacoco() {
         return jacoco;
