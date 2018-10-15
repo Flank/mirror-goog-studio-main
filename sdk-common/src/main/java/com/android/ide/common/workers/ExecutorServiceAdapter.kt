@@ -17,6 +17,7 @@
 package com.android.ide.common.workers
 
 import java.io.Serializable
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Future
 
@@ -44,15 +45,27 @@ open class ExecutorServiceAdapter(
     }
 
     override fun await() {
-        close()
-    }
-
-    override fun close() {
         val currentTasks = mutableListOf<Future<*>>()
         synchronized(this) {
             currentTasks.addAll(futures)
             futures.clear()
         }
-        currentTasks.forEach { it.get() }
+        val exceptions = ArrayList<Throwable>()
+        currentTasks.forEach {
+            try {
+                it.get()
+            } catch (e: ExecutionException) {
+                exceptions.add(e)
+            }
+        }
+        if (!exceptions.isEmpty()) {
+            throw WorkerExecutorException(exceptions)
+        }
+    }
+
+    // We need to call await on closing because Gradle is not aware of any java workers spawned by
+    // a task, so we should wait till everything is finished.
+    override fun close() {
+        await()
     }
 }

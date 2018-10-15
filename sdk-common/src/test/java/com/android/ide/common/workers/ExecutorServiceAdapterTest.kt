@@ -21,7 +21,6 @@ import org.junit.Before
 import org.junit.Test
 import java.io.Serializable
 import java.lang.reflect.InvocationTargetException
-import java.util.concurrent.ExecutionException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
@@ -84,8 +83,9 @@ class ExecutorServiceAdapterTest {
             ExecutorServiceAdapter(executorService).use {
                 it.submit(WrongAction::class.java, Parameters("foo", "foo"))
             }
-        } catch (e : ExecutionException) {
-            throw e.cause!!
+        } catch (e: WorkerExecutorException) {
+            assertThat(e.causes.size).isEqualTo(1)
+            throw e.cause!!.cause!!
         }
     }
 
@@ -95,8 +95,9 @@ class ExecutorServiceAdapterTest {
             ExecutorServiceAdapter(executorService).use {
                 it.submit(BadConstructorAction::class.java, Parameters("foo", "foo"))
             }
-        } catch (e: ExecutionException) {
-            throw e.cause!!
+        } catch (e: WorkerExecutorException) {
+            assertThat(e.causes.size).isEqualTo(1)
+            throw e.cause!!.cause!!
         }
     }
 
@@ -107,6 +108,24 @@ class ExecutorServiceAdapterTest {
         }
     }
 
+    @Test(expected = IllegalStateException::class)
+    fun wrappingTasksExecutionExceptions() {
+        ExecutorServiceAdapter(executorService).use {
+            for (i in 1..4) {
+                it.submit(Action::class.java, Parameters("Foo", "Bar"))
+            }
+            for (i in 1..4) {
+                it.submit(Action::class.java, Parameters("Foo", "Foo"))
+            }
+            try {
+                it.await()
+            } catch (e: WorkerExecutorException) {
+                assertThat(e.causes.size).isEqualTo(4)
+                assertThat(e.causes[0].message).contains("wrong parameters value")
+                throw e.cause!!.cause!!
+            }
+        }
+    }
 
     private class Action(val parameters: Parameters) : Runnable {
 

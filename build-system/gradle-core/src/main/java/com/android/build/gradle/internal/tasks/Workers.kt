@@ -19,8 +19,10 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.ide.common.workers.ExecutorServiceAdapter
+import com.android.ide.common.workers.WorkerExecutorException
 import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.workers.IsolationMode
+import org.gradle.workers.WorkerExecutionException
 import org.gradle.workers.WorkerExecutor
 import java.io.Serializable
 import java.util.concurrent.ExecutorService
@@ -93,9 +95,13 @@ object Workers {
         }
 
         override fun await() {
-            workerExecutor.await()
+            try {
+                workerExecutor.await()
+            } catch (e: WorkerExecutionException) {
+                throw WorkerExecutorException(e.causes)
+            }
         }
-
+        
         /**
          * In a normal situation you would like to call await() here, however:
          * 1) Gradle currently can only run a SINGLE @TaskAction for a given project
