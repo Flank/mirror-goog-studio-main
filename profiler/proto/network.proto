@@ -81,12 +81,6 @@ message ConnectivityData {
 }
 
 message NetworkDataRequest {
-  enum SpecialValues {
-    // First enum value is required to be zero.
-    UNSPECIFIED = 0;
-    // process_id field special value, it means these data is applicable to any app.
-    ANY_APP = -1;
-  }
   enum Type {
     // All types of network data are requested.
     ALL = 0;
