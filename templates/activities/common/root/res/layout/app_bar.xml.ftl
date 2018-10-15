@@ -23,11 +23,8 @@
 
         </${getMaterialComponentName('android.support.design.widget.AppBarLayout', useMaterial2)}>
 
-        <include 
-            android:id="@+id/content_main"
-            layout="@layout/${simpleLayoutName}"/>
+        <include layout="@layout/${simpleLayoutName}"/>
 
-<#if navigationType != "Bottom Navigation" >
         <${getMaterialComponentName('android.support.design.widget.FloatingActionButton', useMaterial2)}
             android:id="@+id/fab"
             android:layout_width="wrap_content"
@@ -35,6 +32,6 @@
             android:layout_gravity="bottom|end"
             android:layout_margin="@dimen/fab_margin"
             app:srcCompat="@android:drawable/ic_dialog_email" />
-</#if>
+
     </${getMaterialComponentName('android.support.design.widget.CoordinatorLayout', useAndroidX)}>
 </layout>

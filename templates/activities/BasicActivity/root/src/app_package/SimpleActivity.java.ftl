@@ -23,7 +23,7 @@ import android.view.MenuItem;
 <#if applicationPackage??>
 import ${applicationPackage}.R;
 </#if>
-<#if navigationType == "Navigation Drawer" || navigationType == "Bottom Navigation">
+<#if navigationType == "Navigation Drawer">
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.NavigationUI;
 </#if>
@@ -50,11 +50,6 @@ public class ${activityClass} extends ${superClass} {
         NavigationUI.setupWithNavController(
             binding.navView, Navigation.findNavController(this, R.id.nav_host_fragment)
         );
-<#elseif navigationType == "Bottom Navigation">
-        Toolbar toolbar = binding.toolbar;
-        NavigationUI.setupWithNavController(
-            binding.contentMain.navView, Navigation.findNavController(this, R.id.nav_host_fragment)
-        );
 <#else>
         Toolbar toolbar = binding.toolbar;
         View fab = binding.fab;
@@ -63,7 +58,7 @@ public class ${activityClass} extends ${superClass} {
 <#if navigationType != "Navigation Drawer">
         setSupportActionBar(toolbar);
 </#if>
-<#if navigationType != "Bottom Navigation" >
+
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -71,8 +66,7 @@ public class ${activityClass} extends ${superClass} {
                         .setAction("Action", null).show();
             }
         });
-</#if> <#-- navigationType != "Bottom Navigation" -->
-</#if> <#-- hasAppBar -->
+</#if>
 <#if parentActivityClass != "">
         get${Support}ActionBar().setDisplayHomeAsUpEnabled(true);
 </#if>

@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
-<#assign navComponentUsed=navigationType == "Navigation Drawer" || navigationType == "Bottom Navigation">
-<#if navComponentUsed>
+<#if navigationType != "None">
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
 </#if>
     android:id="@+id/mobile_navigation"
-    <#if navComponentUsed>app:startDestination="@+id/home_fragment"</#if>>
+    <#if navigationType == "Navigation Drawer">app:startDestination="@+id/home_fragment"</#if>>
 
-<#if navComponentUsed>
+<#if navigationType == "Navigation Drawer">
     <fragment
         android:id="@+id/home_fragment"
         android:name="${packageName}.ui.home.HomeFragment"

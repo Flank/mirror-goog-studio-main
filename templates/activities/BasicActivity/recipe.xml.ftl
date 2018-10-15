@@ -12,10 +12,7 @@
     -->
     <global id="layoutName" value="nav_activity_main" />
     <global id="simpleLayoutName" value="nav_content_main" />
-<#elseif navigationType == "Bottom Navigation">
-    <global id="simpleLayoutName" value="nav_content_main" />
 </#if>
-
 
 <#if useFragment>
     <#include "recipe_fragment.xml.ftl" />
@@ -59,18 +56,5 @@
                  to="${escapeXmlAttribute(resOut)}/layout/nav_activity_main.xml" />
     <instantiate from="root://activities/common/navigation/navigation_drawer/res/layout/nav_content_main.xml.ftl"
                  to="${escapeXmlAttribute(resOut)}/layout/nav_content_main.xml" />
-<#elseif navigationType == "Bottom Navigation">
-    <@navigation.instantiateFragmentAndViewModel fragmentPrefix="home" />
-    <@navigation.instantiateFragmentAndViewModel fragmentPrefix="page1" />
-    <@navigation.instantiateFragmentAndViewModel fragmentPrefix="page2" />
-    <copy from="root://activities/common/navigation/bottom_navigation/res/drawable"
-          to="${escapeXmlAttribute(resOut)}/drawable" />
-    <instantiate from="root://activities/common/navigation/bottom_navigation/res/menu/bottom_nav_menu.xml.ftl"
-          to="${escapeXmlAttribute(resOut)}/menu/bottom_nav_menu.xml" />
-    <instantiate from="root://activities/common/navigation/bottom_navigation/res/layout/nav_content_main.xml.ftl"
-                 to="${escapeXmlAttribute(resOut)}/layout/nav_content_main.xml" />
-    <merge from="root://activities/common/navigation/bottom_navigation/res/values/strings.xml.ftl"
-           to="${escapeXmlAttribute(resOut)}/values/strings.xml" />
-
 </#if>
 </recipe>
