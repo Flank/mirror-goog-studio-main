@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 
@@ -232,12 +233,12 @@ public class Deployer {
                 }
                 logger.info("Swapper found %d changes in apk '%s'.", diffs.size(), apk.getPath());
                 Trace.begin("verify");
-                String preSwapCheckError = PreswapCheck.verify(diffs);
+                Set<String> preSwapCheckErrors = PreswapCheck.verify(diffs, restart);
                 Trace.end();
 
-                if (preSwapCheckError != null) {
+                if (!preSwapCheckErrors.isEmpty()) {
                     response.status = RunResponse.Status.ERROR;
-                    response.errorMessage = preSwapCheckError;
+                    response.errorMessage = String.join("\n", preSwapCheckErrors);
                     return;
                 }
 
