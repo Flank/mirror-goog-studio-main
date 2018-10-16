@@ -116,6 +116,12 @@ class AtraceManager {
   // the atrace clock with the device boot clock (used by studio).
   virtual void WriteClockSyncMarker();
 
+  // Checks the atrace allocated buffer matches the expected buffer size.
+  // Atrace requires a contiguous block of memory to be allocated for the
+  // buffer as such sometimes requesting the memory fails.
+  // The expected size is in units of kilobytes.
+  virtual bool ValidateBuffer(int expected_buffer_size_kb);
+
  protected:
   // Takes the output from atrace --list_categories parses the output and
   // returns the set of supported categories.

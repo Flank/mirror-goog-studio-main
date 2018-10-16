@@ -44,6 +44,11 @@ const char *AtraceManager::kAtraceExecutable = "/system/bin/atrace";
 const char *kTracingFileNames[] = {"/sys/kernel/debug/tracing/tracing_on",
                                    // Legacy tracing file name.
                                    "/sys/kernel/tracing/tracing_on"};
+
+const char *kTracingBufferFileNames[] = {
+    "/sys/kernel/debug/tracing/buffer_size_kb",
+    // Legacy tracing file name.
+    "/sys/kernel/tracing/buffer_size_kb"};
 const int kBufferSize = 1024 * 4;  // About the size of a page.
 // Number of times we attempt to run the same atrace command.
 const int kRetryAttempts = 5;
@@ -73,9 +78,6 @@ bool AtraceManager::StartProfiling(const std::string &app_pkg_name,
   dumps_created_ = 0;
   Trace trace("CPU: StartProfiling atrace");
   Log::D("Profiler:Received query to profile %s", app_pkg_name.c_str());
-  std::ostringstream buffer_size_stream;
-  buffer_size_stream << "-b " << (buffer_size_in_mb * 1024);
-  buffer_size_arg_ = buffer_size_stream.str();
   // Build entry to keep track of what is being profiled.
   profiled_app_.trace_path = GetTracePath(app_pkg_name);
   profiled_app_.app_pkg_name = app_pkg_name;
@@ -84,13 +86,28 @@ bool AtraceManager::StartProfiling(const std::string &app_pkg_name,
   // Check if atrace is already running, if it is its okay to use that instance.
   bool isRunning = IsAtraceRunning();
   for (int i = 0; i < kRetryAttempts && !isRunning; i++) {
+    std::ostringstream buffer_size_stream;
+    buffer_size_stream << "-b " << (buffer_size_in_mb * 1024);
+    buffer_size_arg_ = buffer_size_stream.str();
     RunAtrace(app_pkg_name, profiled_app_.trace_path, "--async_start",
               buffer_size_arg_);
     isRunning = IsAtraceRunning();
+    // Verify buffer size, if this is not our expected buffersize then cut it in
+    // half and try again. This can happen frequently due to the fact that
+    // atrace must allocate a contiguous block of memory in the size
+    // we are requesting.
+    if (!ValidateBuffer(buffer_size_in_mb * 1024)) {
+      buffer_size_in_mb /= 2;
+      if (isRunning) {
+        profiler::BashCommandRunner atrace(kAtraceExecutable);
+        atrace.Run("--async_stop", nullptr);
+        isRunning = false;
+      }
+    }
   }
-  // This is checked for in the thread below.
-  // Setting the value here ensures the thread reads the correct value
-  // before executing.
+
+  // This is checked for in the thread below. Setting the
+  // value here ensures the thread reads the correct value before executing.
   is_profiling_ = isRunning;
   if (!isRunning) {
     assert(error != nullptr);
@@ -112,6 +129,22 @@ void AtraceManager::RunAtrace(const string &app_pkg_name, const string &path,
   // any errors.
   Log::D("Running Atrace with the following args: %s", args.str().c_str());
   atrace.Run(args.str(), nullptr);
+}
+
+bool AtraceManager::ValidateBuffer(int expected_buffer_size_kb) {
+  DiskFileSystem fs;
+  int fileNameCount =
+      sizeof(kTracingBufferFileNames) / sizeof(kTracingBufferFileNames[0]);
+  bool hasExpectedBufferSize = false;
+  for (int i = 0; i < fileNameCount; i++) {
+    string contents = fs.GetFileContents(kTracingBufferFileNames[i]);
+    // Only need to test the value of the first file contains some content
+    if (!contents.empty()) {
+      hasExpectedBufferSize = atoi(contents.c_str()) == expected_buffer_size_kb;
+      break;
+    }
+  }
+  return hasExpectedBufferSize;
 }
 
 bool AtraceManager::IsAtraceRunning() {

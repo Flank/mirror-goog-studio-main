@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "perfd/cpu/fake_atrace_manager.h"
-#include "utils/fake_clock.h"
-#include "utils/tokenizer.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <condition_variable>
 #include <queue>
+#include "perfd/cpu/fake_atrace_manager.h"
+#include "utils/fake_clock.h"
+#include "utils/tokenizer.h"
 
 using std::string;
 using testing::EndsWith;
@@ -124,10 +124,10 @@ TEST(AtraceManagerTest, StopProfilingCombinesFiles) {
   // file and write how many dumps have been created to this point to the file.
   FakeAtraceManager atrace(&test_data.fake_clock,
                            [](const std::string& path, int count) {
-    FILE* file = fopen(path.c_str(), "wb");
-    fwrite(&count, sizeof(int), 1, file);
-    fclose(file);
-  });
+                             FILE* file = fopen(path.c_str(), "wb");
+                             fwrite(&count, sizeof(int), 1, file);
+                             fclose(file);
+                           });
   EXPECT_TRUE(atrace.StartProfiling(test_data.app_name, 1000, 8,
                                     &test_data.trace_path, &test_data.error));
   EXPECT_THAT(atrace.GetDumpCount(), Ge(0));
@@ -150,5 +150,18 @@ TEST(AtraceManagerTest, StopProfilingCombinesFiles) {
   int read_amount = fread(&value, sizeof(int), 1, file);
   EXPECT_THAT(read_amount, 0);
   fclose(file);
+}
+
+TEST(AtraceManagerTest, BufferAutoDownSamples) {
+  TestInitializer test_data;
+  FakeAtraceManager atrace(&test_data.fake_clock);
+  atrace.SetAvailableBufferSizeKb(4096);
+  atrace.SetBufferTest(true);
+  EXPECT_TRUE(atrace.StartProfiling(test_data.app_name, 1000, 8,
+                                    &test_data.trace_path, &test_data.error));
+  atrace.BlockForXTraces(1);
+  EXPECT_THAT(atrace.GetDumpCount(), Ge(1));
+  EXPECT_TRUE(atrace.IsProfiling());
+  EXPECT_TRUE(atrace.StopProfiling(test_data.app_name, true, &test_data.error));
 }
 }  // namespace profiler
