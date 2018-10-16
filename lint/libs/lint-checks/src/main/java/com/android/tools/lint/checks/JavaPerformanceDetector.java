@@ -305,7 +305,8 @@ public class JavaPerformanceDetector extends Detector implements SourceCodeScann
                         && !isLazilyInitialized(node)) {
                     reportAllocation(node);
                 }
-            } else if (functionName.equals("getClipBounds")) {
+            } else if (functionName.equals("getClipBounds")
+                    || functionName.equals("clipBounds")) { // Kotlin
                 if (node.getValueArgumentCount() == 0) {
                     Location callLocation = mContext.getLocation(node);
                     mContext.report(
