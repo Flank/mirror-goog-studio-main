@@ -510,6 +510,12 @@ interface SourceCodeScanner : FileScanner {
     fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean
 
     /**
+     * Whether this lint detector wants to consider annotations on an
+     * element that were inherited (e.g. defined on a super class or super method)
+     */
+    fun inheritAnnotation(annotation: String): Boolean
+
+    /**
      * Called whenever the given element references an element that has been annotated with one
      * of the annotations returned from [.applicableAnnotations].
      *

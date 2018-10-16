@@ -454,6 +454,28 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                 } else if (type.endsWith(RES_SUFFIX)) {
                     // Check that resource type annotations are on ints
                     checkTargetType(annotation, TYPE_INT, TYPE_LONG, true);
+                } else if (RESTRICT_TO_ANNOTATION.isEquals(type)) {
+                    UExpression attributeValue = annotation.findDeclaredAttributeValue(ATTR_VALUE);
+                    if (attributeValue == null) {
+                        attributeValue = annotation.findDeclaredAttributeValue(null);
+                    }
+                    if (attributeValue == null) {
+                        mContext.report(
+                                ANNOTATION_USAGE,
+                                annotation,
+                                mContext.getLocation(annotation),
+                                "Restrict to what? Expected at least one `RestrictTo.Scope` arguments.");
+                    } else {
+                        String values = attributeValue.asSourceString();
+                        if (values.contains("SUBCLASSES")
+                                && annotation.getUastParent() instanceof UClass) {
+                            mContext.report(
+                                    ANNOTATION_USAGE,
+                                    annotation,
+                                    mContext.getLocation(annotation),
+                                    "`RestrictTo.Scope.SUBCLASSES` should only be specified on methods and fields");
+                        }
+                    }
                 }
             } else {
                 // Look for typedefs (and make sure they're specified on the right type)

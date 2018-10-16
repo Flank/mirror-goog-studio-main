@@ -1098,6 +1098,125 @@ class TypedefDetectorTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
+    fun testOpenStringDef() {
+        // Regression test for https://issuetracker.google.com/72756166
+        // 117529548: MediaMetadataCompat.Builder does not support custom keys
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import androidx.annotation.StringDef;
+
+                import java.lang.annotation.Documented;
+                import java.lang.annotation.Retention;
+                import java.lang.annotation.RetentionPolicy;
+
+                @SuppressWarnings("ClassNameDiffersFromFileName")
+                public class StringDefTest2 {
+
+                    public void method(@MyTypeDef String param) {
+                    }
+
+                    public void test() {
+                        method(FOO); // OK
+                        method("bar"); // OK
+                    }
+
+                    @StringDef(value = {FOO}, open = true)
+                    @Retention(RetentionPolicy.SOURCE)
+                    @Documented
+                    public @interface MyTypeDef {
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package androidx.annotation;
+                import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
+                import static java.lang.annotation.RetentionPolicy.SOURCE;
+
+                import java.lang.annotation.Retention;
+                import java.lang.annotation.Target;
+                @SuppressWarnings("ALL")
+                @Retention(SOURCE)
+                @Target({ANNOTATION_TYPE})
+                public @interface StringDef {
+                    String[] value() default {};
+                    boolean open() default false;
+                }
+                """
+            ).indented()
+        ).run().expectClean()
+    }
+
+    fun testOpenStringDef2() {
+        // 117529548: MediaMetadataCompat.Builder does not support custom keys
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.support.v4.media.MediaMetadataCompat;
+
+                @SuppressWarnings("ClassNameDiffersFromFileName")
+                public class MediaBuilderTest {
+                    public void test() {
+                        MediaMetadataCompat.Builder builder = new MediaMetadataCompat.Builder();
+                        builder.putString(MediaMetadataCompat.METADATA_KEY_TITLE, "something"); // OK
+                        builder.putString("custom-key", "something"); // OK
+                        builder.putLong("custom-key", 0L); // OK
+                    }
+                }
+
+                """
+            ).indented(),
+            java(
+                """
+                package android.support.v4.media;
+                import androidx.annotation.StringDef;
+                import java.lang.annotation.Retention;
+                import java.lang.annotation.RetentionPolicy;
+
+                @SuppressWarnings("ClassNameDiffersFromFileName")
+                public final class MediaMetadataCompat {
+                    public static final String METADATA_KEY_TITLE = "android.media.metadata.TITLE";
+                    public static class Builder {
+                        public void putString(@TextKey String key, String value) {
+                        }
+                        public void putLong(@TextKey String key, long value) {
+                        }
+                    }
+
+                    @StringDef({METADATA_KEY_TITLE})
+                    @Retention(RetentionPolicy.SOURCE)
+                    public @interface TextKey {}
+
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package androidx.annotation;
+                import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
+                import static java.lang.annotation.RetentionPolicy.SOURCE;
+                import java.lang.annotation.Retention;
+                import java.lang.annotation.Target;
+                @SuppressWarnings("ALL")
+                @Retention(SOURCE)
+                @Target({ANNOTATION_TYPE})
+                public @interface StringDef {
+                    String[] value() default {};
+                    boolean open() default false;
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
+
     fun test75993782() {
         // Regression test for https://issuetracker.google.com/75993782
         // Ensure that we handle finding typedef constants defined in Kotlin

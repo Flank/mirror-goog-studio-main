@@ -787,6 +787,40 @@ public class AnnotationDetectorTest extends AbstractCheckTest {
                                 + "2 errors, 0 warnings\n");
     }
 
+    public void testRestrictToArgument() {
+        lint().files(
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "import android.support.annotation.RestrictTo\n"
+                                        + "\n"
+                                        + "@RestrictTo\n"
+                                        + "class RestrictTest {\n"
+                                        + "}"),
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "import android.support.annotation.RestrictTo\n"
+                                        + "\n"
+                                        + "@RestrictTo(RestrictTo.Scope.SUBCLASSES)\n"
+                                        + "class RestrictTest2 {\n"
+                                        + "}"),
+                        SUPPORT_ANNOTATIONS_CLASS_PATH,
+                        SUPPORT_ANNOTATIONS_JAR)
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/RestrictTest.kt:5: Error: Restrict to what? Expected at least one RestrictTo.Scope arguments. [SupportAnnotationUsage]\n"
+                                + "@RestrictTo\n"
+                                + "~~~~~~~~~~~\n"
+                                + "src/test/pkg/RestrictTest2.kt:5: Error: RestrictTo.Scope.SUBCLASSES should only be specified on methods and fields [SupportAnnotationUsage]\n"
+                                + "@RestrictTo(RestrictTo.Scope.SUBCLASSES)\n"
+                                + "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "2 errors, 0 warnings");
+    }
+
     @Override
     protected Detector getDetector() {
         return new AnnotationDetector();
