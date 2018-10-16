@@ -2133,7 +2133,7 @@ public class VersionChecksTest extends AbstractCheckTest {
                 .run()
                 .expect(
                         ""
-                                + "src/p1/p2/NestedChecks.kt:39: Error: Call requires API level 14 (current min is 11): new android.widget.GridLayout [NewApi]\n"
+                                + "src/p1/p2/NestedChecks.kt:39: Error: Call requires API level 14 (current min is 11): android.widget.GridLayout() [NewApi]\n"
                                 + "        GridLayout(null) // ERROR\n"
                                 + "        ~~~~~~~~~~~~~~~~\n"
                                 + "src/p1/p2/NestedChecks.kt:51: Warning: Unnecessary; SDK_INT is always >= 11 [ObsoleteSdkInt]\n"
@@ -2492,6 +2492,73 @@ public class VersionChecksTest extends AbstractCheckTest {
                         mSupportJar)
                 .run()
                 .expectClean();
+    }
+
+    public void testExceptionsAndErrorsAsExitPoints() {
+        // Regression lifted from issue 117793069
+        lint().files(
+                        kotlin(
+                                ""
+                                        + "import android.app.Activity\n"
+                                        + "\n"
+                                        + "import android.os.Build.VERSION.SDK_INT\n"
+                                        + "\n"
+                                        + "class ExitTest: Activity() {\n"
+                                        + "\n"
+                                        + "    fun testThrow() {\n"
+                                        + "        if (SDK_INT < 11) {\n"
+                                        + "            throw IllegalStateException()\n"
+                                        + "        }\n"
+                                        + "        val actionBar = getActionBar() // OK\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    fun testError() {\n"
+                                        + "        if (SDK_INT < 11) {\n"
+                                        + "            error(\"Api\")\n"
+                                        + "        }\n"
+                                        + "        val actionBar = getActionBar() // OK\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    fun testTodo() {\n"
+                                        + "        if (SDK_INT < 11) {\n"
+                                        + "            TODO()\n"
+                                        + "        }\n"
+                                        + "        val actionBar = getActionBar() // OK\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        mSupportJar)
+                .run()
+                .expectInlinedMessages(false);
+    }
+
+    public void testNotEquals() {
+        // Regression lifted from issue 117793069
+        lint().files(
+                        manifest().minSdk(1),
+                        kotlin(
+                                ""
+                                        + "import android.app.Activity\n"
+                                        + "\n"
+                                        + "import android.widget.TextView\n"
+                                        + "import android.os.Build.VERSION.SDK_INT\n"
+                                        + "\n"
+                                        + "class SameTest : Activity() {\n"
+                                        + "\n"
+                                        + "    fun test(textView: TextView) {\n"
+                                        + "        if (SDK_INT != 11 || getActionBar() == null) { // OK\n"
+                                        + "            //NO ERROR\n"
+                                        + "        }\n"
+                                        + "        if (SDK_INT != 10 || /*Call requires API level 11 (current min is 1): android.app.Activity#getActionBar*/getActionBar/**/() == null) { // ERROR\n"
+                                        + "            //ERROR\n"
+                                        + "        }\n"
+                                        + "        if (SDK_INT != 12 || /*Call requires API level 11 (current min is 1): android.app.Activity#getActionBar*/getActionBar/**/() == null) { // ERROR\n"
+                                        + "            //ERROR\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        mSupportJar)
+                .run()
+                .expectInlinedMessages(false);
     }
 
     @Override

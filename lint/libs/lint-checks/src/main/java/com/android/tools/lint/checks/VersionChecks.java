@@ -49,6 +49,7 @@ import org.jetbrains.uast.UQualifiedReferenceExpression;
 import org.jetbrains.uast.UReferenceExpression;
 import org.jetbrains.uast.UReturnExpression;
 import org.jetbrains.uast.USwitchClauseExpressionWithBody;
+import org.jetbrains.uast.UThrowExpression;
 import org.jetbrains.uast.UUnaryExpression;
 import org.jetbrains.uast.UastBinaryOperator;
 import org.jetbrains.uast.UastContext;
@@ -302,8 +303,17 @@ public class VersionChecks {
         if (statement instanceof UBlockExpression) {
             List<UExpression> expressions = ((UBlockExpression) statement).getExpressions();
             int statements = expressions.size();
-            if (statements > 0 && expressions.get(statements - 1) instanceof UReturnExpression) {
-                return true;
+            if (statements > 0) {
+                UExpression last = expressions.get(statements - 1);
+                if (last instanceof UReturnExpression || last instanceof UThrowExpression) {
+                    return true;
+                } else if (last instanceof UCallExpression) {
+                    UCallExpression call = (UCallExpression) last;
+                    String methodName = getMethodName(call);
+                    if ("error".equals(methodName) || "TODO".equals(methodName)) {
+                        return true;
+                    }
+                }
             }
         }
         return statement instanceof UReturnExpression;
@@ -717,7 +727,9 @@ public class VersionChecks {
                 || tokenType == UastBinaryOperator.LESS_OR_EQUALS
                 || tokenType == UastBinaryOperator.LESS
                 || tokenType == UastBinaryOperator.EQUALS
-                || tokenType == UastBinaryOperator.IDENTITY_EQUALS) {
+                || tokenType == UastBinaryOperator.IDENTITY_EQUALS
+                || tokenType == UastBinaryOperator.NOT_EQUALS
+                || tokenType == UastBinaryOperator.IDENTITY_NOT_EQUALS) {
             UExpression left = binary.getLeftOperand();
             int level;
             UExpression right;
@@ -750,6 +762,10 @@ public class VersionChecks {
                         || tokenType == UastBinaryOperator.IDENTITY_EQUALS) {
                     // if (SDK_INT == ICE_CREAM_SANDWICH) { <call> } else {  }
                     return level >= api && fromThen;
+                } else if (tokenType == UastBinaryOperator.NOT_EQUALS
+                        || tokenType == UastBinaryOperator.IDENTITY_NOT_EQUALS) {
+                    // if (SDK_INT != ICE_CREAM_SANDWICH) { <call> } else {  }
+                    return level == api && !fromThen;
                 } else {
                     assert false : tokenType;
                 }

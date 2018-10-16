@@ -168,7 +168,7 @@ class TestLintResult internal constructor(
      *
      * @return this
      */
-    fun expectInlinedMessages(): TestLintResult {
+    fun expectInlinedMessages(useRaw: Boolean = false): TestLintResult {
         for (project in task.projects) {
             for (file in project.files) {
                 val plainContents: String?
@@ -243,11 +243,12 @@ class TestLintResult internal constructor(
                         val endMarker: String
                         var message = warning.message
 
-                        // Use plain ascii in the test golden files for now. (This also ensures
-                        // that the markup is well-formed, e.g. if we have a ` without a matching
-                        // closing `, the ` would show up in the plain text.)
-                        message = TextFormat.RAW.convertTo(message, TextFormat.TEXT)
-
+                        if (!useRaw) {
+                            // Use plain ascii in the test golden files for now. (This also ensures
+                            // that the markup is well-formed, e.g. if we have a ` without a matching
+                            // closing `, the ` would show up in the plain text.)
+                            message = TextFormat.RAW.convertTo(message, TextFormat.TEXT)
+                        }
                         if (isXml) {
                             val tag = warning.severity.description.toLowerCase(Locale.ROOT)
                             startMarker = "<?$tag message=\"$message\"?>"

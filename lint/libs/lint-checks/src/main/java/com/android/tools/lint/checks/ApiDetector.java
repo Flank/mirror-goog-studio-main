@@ -942,7 +942,7 @@ public class ApiDetector extends ResourceXmlDetector
     // ---- Implements ClassScanner ----
 
     private static void checkSimpleDateFormat(
-            JavaContext context, UCallExpression call, int minSdk) {
+            @NonNull JavaContext context, @NonNull UCallExpression call, int minSdk) {
         if (minSdk >= 9) {
             // Already OK
             return;
@@ -1200,7 +1200,7 @@ public class ApiDetector extends ResourceXmlDetector
             Location location = mContext.getLocation(expression);
             String message =
                     String.format(
-                            "Method reference requires API level %1$d (current min is %2$d): %3$s",
+                            "Method reference requires API level %1$d (current min is %2$d): `%3$s`",
                             api, Math.max(minSdk, getTargetApi(expression)), signature);
             mContext.report(UNSUPPORTED, expression, location, message, apiLevelFix(api));
         }
@@ -1266,7 +1266,7 @@ public class ApiDetector extends ResourceXmlDetector
 
             String message =
                     String.format(
-                            "Class requires API level %1$d (current min is %2$d): %3$s",
+                            "Class requires API level %1$d (current min is %2$d): `%3$s`",
                             api, Math.max(minSdk, getTargetApi(node)), expressionOwner);
 
             Location location = mContext.getLocation(node);
@@ -1404,7 +1404,7 @@ public class ApiDetector extends ResourceXmlDetector
                                     String.format(
                                             "This method is not overriding anything with the current "
                                                     + "build target, but will in API level %1$d (current "
-                                                    + "target is %2$d): %3$s",
+                                                    + "target is %2$d): `%3$s`",
                                             api, buildSdk, fqcn);
 
                             PsiElement locationNode = method.getNameIdentifier();
@@ -1538,7 +1538,7 @@ public class ApiDetector extends ResourceXmlDetector
             minSdk = Math.max(minSdk, getTargetApi(element));
             String message =
                     String.format(
-                            "%1$s requires API level %2$d (current min is %3$d): %4$s",
+                            "%1$s requires API level %2$d (current min is %3$d): `%4$s`",
                             descriptor == null ? "Class" : descriptor,
                             api,
                             Math.max(minSdk, getTargetApi(element)),
@@ -1558,7 +1558,7 @@ public class ApiDetector extends ResourceXmlDetector
                         Location location = mContext.getLocation(element);
                         String message =
                                 String.format(
-                                        "Type annotations are not supported in Android: %1$s",
+                                        "Type annotations are not supported in Android: `%1$s`",
                                         referenceName);
                         mContext.report(UNSUPPORTED, element, location, message);
                     }
@@ -1648,6 +1648,14 @@ public class ApiDetector extends ResourceXmlDetector
                 return;
             }
 
+            visitCall(method, expression, expression);
+        }
+
+        private void visitCall(
+                @NonNull PsiMethod method,
+                @Nullable UCallExpression call,
+                @NonNull UElement reference) {
+
             PsiClass containingClass = method.getContainingClass();
             if (containingClass == null) {
                 return;
@@ -1655,17 +1663,17 @@ public class ApiDetector extends ResourceXmlDetector
 
             // Enforce @RequiresApi
             PsiModifierList modifierList = method.getModifierList();
-            if (!checkRequiresApi(expression, method, modifierList)) {
+            if (!checkRequiresApi(reference, method, modifierList)) {
                 modifierList = containingClass.getModifierList();
                 if (modifierList != null) {
-                    checkRequiresApi(expression, method, modifierList);
+                    checkRequiresApi(reference, method, modifierList);
                 }
             }
 
             PsiParameterList parameterList = method.getParameterList();
-            if (parameterList.getParametersCount() > 0) {
+            if (parameterList.getParametersCount() > 0 && call != null) {
                 PsiParameter[] parameters = parameterList.getParameters();
-                List<UExpression> arguments = expression.getValueArguments();
+                List<UExpression> arguments = call.getValueArguments();
                 for (int i = 0; i < parameters.length; i++) {
                     PsiType parameterType = parameters[i].getType();
                     if (parameterType instanceof PsiClassType) {
@@ -1711,10 +1719,11 @@ public class ApiDetector extends ResourceXmlDetector
                 return;
             }
 
-            if (startsWithEquivalentPrefix(owner, "java/text/SimpleDateFormat")
+            if (call != null
+                    && startsWithEquivalentPrefix(owner, "java/text/SimpleDateFormat")
                     && name.equals(CONSTRUCTOR_NAME)
                     && !desc.equals("()V")) {
-                checkSimpleDateFormat(mContext, expression, getMinSdk(mContext));
+                checkSimpleDateFormat(mContext, call, getMinSdk(mContext));
             }
 
             int api = mApiDatabase.getMethodVersion(owner, name, desc);
@@ -1756,8 +1765,8 @@ public class ApiDetector extends ResourceXmlDetector
             // "-1" and we can't tell if that means "doesn't exist" or "present in API 1", we
             // then check the package prefix to see whether we know it's an API method whose
             // members should all have been inlined.
-            if (UastExpressionUtils.isMethodCall(expression)) {
-                UExpression qualifier = expression.getReceiver();
+            if (call != null && UastExpressionUtils.isMethodCall(call)) {
+                UExpression qualifier = call.getReceiver();
                 if (qualifier != null
                         && !(qualifier instanceof UThisExpression)
                         && !(qualifier instanceof PsiSuperExpression)) {
@@ -1809,9 +1818,9 @@ public class ApiDetector extends ResourceXmlDetector
                     // the correct receiver type in Kotlin.
                     PsiClass cls = null;
                     if (mContext.file.getPath().endsWith(DOT_JAVA)) {
-                        cls = UastUtils.getContainingClass(expression);
+                        cls = UastUtils.getContainingClass(call);
                     } else {
-                        PsiType receiverType = expression.getReceiverType();
+                        PsiType receiverType = call.getReceiverType();
                         if (receiverType instanceof PsiClassType) {
                             cls = ((PsiClassType) receiverType).resolve();
                         }
@@ -1879,12 +1888,12 @@ public class ApiDetector extends ResourceXmlDetector
                 }
             }
 
-            if (isSuppressed(mContext, api, expression, minSdk)) {
+            if (isSuppressed(mContext, api, reference, minSdk)) {
                 return;
             }
 
-            if (UastExpressionUtils.isMethodCall(expression)) {
-                UExpression receiver = expression.getReceiver();
+            if (call != null && UastExpressionUtils.isMethodCall(call)) {
+                UExpression receiver = call.getReceiver();
 
                 PsiClass target = null;
                 if (!method.isConstructor()) {
@@ -1894,7 +1903,7 @@ public class ApiDetector extends ResourceXmlDetector
                             target = ((PsiClassType) type).resolve();
                         }
                     } else {
-                        target = UastUtils.getContainingClass(expression);
+                        target = UastUtils.getContainingClass(call);
                     }
                 }
 
@@ -1927,7 +1936,7 @@ public class ApiDetector extends ResourceXmlDetector
                 // called by the framework on the right API levels. (There is a danger of somebody
                 // calling that method locally in other contexts, but this is hopefully unlikely.)
                 if (receiver instanceof USuperExpression) {
-                    PsiMethod containingMethod = UastUtils.getContainingMethod(expression);
+                    PsiMethod containingMethod = UastUtils.getContainingMethod(call);
                     if (containingMethod != null
                             && name.equals(containingMethod.getName())
                             && evaluator.areSignaturesEqual(method, containingMethod)
@@ -1952,13 +1961,12 @@ public class ApiDetector extends ResourceXmlDetector
                     && api == 19
                     && startsWithEquivalentPrefix(owner, "java/lang/")
                     && desc.length() == 4
-                    && isUsingDesugar(mContext, expression)
+                    && isUsingDesugar(mContext, reference)
                     && (desc.equals("(JJ)")
                             || desc.equals("(ZZ)")
                             || desc.equals("(BB)")
                             || desc.equals("(CC)")
                             || desc.equals("(II)")
-                            || desc.equals("(JJ)")
                             || desc.equals("(SS)"))) {
                 return;
             }
@@ -1968,7 +1976,7 @@ public class ApiDetector extends ResourceXmlDetector
                     && api == 19
                     && owner.equals("java.util.Objects")
                     && desc.equals("(Ljava.lang.Object;)")
-                    && isUsingDesugar(mContext, expression)) {
+                    && isUsingDesugar(mContext, reference)) {
                 return;
             }
 
@@ -1976,35 +1984,39 @@ public class ApiDetector extends ResourceXmlDetector
                     && api == 19
                     && owner.equals("java.lang.Throwable")
                     && desc.equals("(Ljava.lang.Throwable;)")
-                    && isUsingDesugar(mContext, expression)) {
+                    && isUsingDesugar(mContext, reference)) {
                 return;
             }
 
             String signature;
             if (CONSTRUCTOR_NAME.equals(name)) {
-                signature = "new " + fqcn;
+                if (Lint.isKotlin(reference.getSourcePsi())) {
+                    signature = fqcn + "()";
+                } else {
+                    signature = "new " + fqcn;
+                }
             } else {
                 signature = fqcn + '#' + name;
             }
 
-            UElement nameIdentifier = expression.getMethodIdentifier();
+            UElement nameIdentifier = call != null ? call.getMethodIdentifier() : reference;
 
             Location location;
-            if (UastExpressionUtils.isConstructorCall(expression)
-                    && expression.getClassReference() != null) {
-                location =
-                        mContext.getRangeLocation(expression, 0, expression.getClassReference(), 0);
+            if (call != null
+                    && UastExpressionUtils.isConstructorCall(call)
+                    && call.getClassReference() != null) {
+                location = mContext.getRangeLocation(call, 0, call.getClassReference(), 0);
             } else if (nameIdentifier != null) {
                 location = mContext.getLocation(nameIdentifier);
             } else {
-                location = mContext.getLocation(expression);
+                location = mContext.getLocation(reference);
             }
             String message =
                     String.format(
-                            "Call requires API level %1$d (current min is %2$d): %3$s",
-                            api, Math.max(minSdk, getTargetApi(expression)), signature);
+                            "Call requires API level %1$d (current min is %2$d): `%3$s`",
+                            api, Math.max(minSdk, getTargetApi(reference)), signature);
 
-            mContext.report(UNSUPPORTED, expression, location, message, apiLevelFix(api));
+            mContext.report(UNSUPPORTED, reference, location, message, apiLevelFix(api));
         }
 
         private int getRequiresApiFromAnnotations(PsiModifierList modifierList) {
@@ -2133,7 +2145,8 @@ public class ApiDetector extends ResourceXmlDetector
 
         @Override
         public void visitBinaryExpression(@NonNull UBinaryExpression expression) {
-            if (expression.getOperator() instanceof UastBinaryOperator.AssignOperator) {
+            UastBinaryOperator operator = expression.getOperator();
+            if (operator instanceof UastBinaryOperator.AssignOperator) {
                 UExpression rExpression = expression.getRightOperand();
                 PsiType rhsType = rExpression.getExpressionType();
                 if (!(rhsType instanceof PsiClassType)) {
@@ -2150,6 +2163,11 @@ public class ApiDetector extends ResourceXmlDetector
                 }
 
                 checkCast(rExpression, (PsiClassType) rhsType, (PsiClassType) interfaceType);
+            } else if (operator == UastBinaryOperator.OTHER) {
+                PsiMethod method = expression.resolveOperator();
+                if (method != null) {
+                    visitCall(method, null, expression);
+                }
             }
         }
 
@@ -2248,7 +2266,7 @@ public class ApiDetector extends ResourceXmlDetector
                 String fqcn = resolved.getQualifiedName();
                 String message =
                         String.format(
-                                "Class requires API level %1$d (current min is %2$d): %3$s",
+                                "Class requires API level %1$d (current min is %2$d): `%3$s`",
                                 api, minSdk, fqcn);
                 mContext.report(UNSUPPORTED, location, message, apiLevelFix(api));
             }
