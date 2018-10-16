@@ -3,7 +3,7 @@
     format="5"
     revision="6"
     name="Login Activity"
-    description="Creates a new login activity, allowing users to optionally sign in with Google+ or enter an email address and password to log in to or register with your application."
+    description="Creates a new login activity, allowing users to enter an email address and password to log in or to register with your application."
     minApi="8"
     minBuildApi="14">
 
