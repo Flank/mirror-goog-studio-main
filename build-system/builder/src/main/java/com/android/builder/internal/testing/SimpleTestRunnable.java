@@ -20,6 +20,7 @@ import static com.android.ddmlib.DdmPreferences.getTimeOut;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.testing.BaseTestRunner;
 import com.android.builder.testing.TestData;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
@@ -39,6 +40,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collection;
@@ -47,8 +49,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import javax.inject.Inject;
 
 /**
  * Basic Callable to run tests on a given {@link DeviceConnector} using {@link
@@ -56,7 +58,7 @@ import java.util.concurrent.TimeUnit;
  *
  * <p>The boolean return value is true if success.
  */
-public class SimpleTestCallable implements Callable<Boolean> {
+public class SimpleTestRunnable implements Runnable {
 
     public static final String FILE_COVERAGE_EC = "coverage.ec";
     private static final String TMP = "/data/local/tmp/";
@@ -72,38 +74,29 @@ public class SimpleTestCallable implements Callable<Boolean> {
     @NonNull private final Collection<String> installOptions;
     @NonNull private final ILogger logger;
     @NonNull private final Set<File> helperApks;
+    @NonNull private final BaseTestRunner.TestResult testResult;
 
     private final int timeoutInMs;
 
-    public SimpleTestCallable(
-            @NonNull DeviceConnector device,
-            @NonNull String projectName,
-            @NonNull RemoteAndroidTestRunner runner,
-            @NonNull String flavorName,
-            @NonNull List<File> testedApks,
-            @NonNull TestData testData,
-            @NonNull Set<File> helperApks,
-            @NonNull File resultsDir,
-            @NonNull File coverageDir,
-            int timeoutInMs,
-            @NonNull Collection<String> installOptions,
-            @NonNull ILogger logger) {
-        this.projectName = projectName;
-        this.device = device;
-        this.runner = runner;
-        this.flavorName = flavorName;
-        this.helperApks = helperApks;
-        this.resultsDir = resultsDir;
-        this.coverageDir = coverageDir;
-        this.testedApks = testedApks;
-        this.testData = testData;
-        this.timeoutInMs = timeoutInMs;
-        this.installOptions = installOptions;
-        this.logger = logger;
+    @Inject
+    public SimpleTestRunnable(SimpleTestParams params) {
+        this.projectName = params.projectName;
+        this.device = params.device;
+        this.runner = params.runner;
+        this.flavorName = params.flavorName;
+        this.helperApks = params.helperApks;
+        this.resultsDir = params.resultsDir;
+        this.coverageDir = params.coverageDir;
+        this.testedApks = params.testedApks;
+        this.testData = params.testData;
+        this.timeoutInMs = params.timeoutInMs;
+        this.installOptions = params.installOptions;
+        this.logger = params.logger;
+        this.testResult = params.testResult;
     }
 
     @Override
-    public Boolean call() throws Exception {
+    public void run() {
         String deviceName = device.getName();
         boolean isInstalled = false;
 
@@ -207,10 +200,13 @@ public class SimpleTestCallable implements Callable<Boolean> {
 
                 // end the run to generate the XML file.
                 fakeRunListener.testRunEnded(System.currentTimeMillis() - time, emptyMetrics);
-                return false;
+                testResult.setTestResult(BaseTestRunner.TestResult.Result.FAILED);
+                return;
             }
-
-            return !testRunResult.hasFailedTests() && !testRunResult.isRunFailure();
+            testResult.setTestResult(
+                    (testRunResult.hasFailedTests() || testRunResult.isRunFailure())
+                            ? BaseTestRunner.TestResult.Result.FAILED
+                            : BaseTestRunner.TestResult.Result.SUCCEEDED);
         } catch (Exception e) {
             Map<String, String> emptyMetrics = Collections.emptyMap();
 
@@ -227,22 +223,38 @@ public class SimpleTestCallable implements Callable<Boolean> {
             runListener.testRunEnded(System.currentTimeMillis() - time, emptyMetrics);
 
             // and throw
-            throw e;
+            throw new RuntimeException(e);
         } finally {
             if (isInstalled) {
                 // Get the coverage if needed.
                 if (success && testData.isTestCoverageEnabled()) {
-                    pullCoverageData(deviceName, coverageFile, runner.getCoverageOutputType());
+                    try {
+                        pullCoverageData(deviceName, coverageFile, runner.getCoverageOutputType());
+                    } catch (Throwable e) {
+                        throw new RuntimeException(e);
+                    }
                 }
 
-                uninstall(testData.getTestApk(), testData.getApplicationId(), deviceName);
+                try {
+                    uninstall(testData.getTestApk(), testData.getApplicationId(), deviceName);
+                } catch (DeviceException e) {
+                    throw new RuntimeException(e);
+                }
 
                 for (File testedApk : testedApks) {
-                    uninstall(testedApk, testData.getTestedApplicationId(), deviceName);
+                    try {
+                        uninstall(testedApk, testData.getTestedApplicationId(), deviceName);
+                    } catch (DeviceException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             }
 
-            device.disconnect(timeoutInMs, logger);
+            try {
+                device.disconnect(timeoutInMs, logger);
+            } catch (TimeoutException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -400,6 +412,52 @@ public class SimpleTestCallable implements Callable<Boolean> {
             logger.verbose(
                     "DeviceConnector '%s': unable to uninstall %s: unable to get package name",
                     deviceName, apkFile);
+        }
+    }
+
+    public static class SimpleTestParams implements Serializable {
+        @NonNull private final RemoteAndroidTestRunner runner;
+        @NonNull private final String projectName;
+        @NonNull private final DeviceConnector device;
+        @NonNull private final String flavorName;
+        @NonNull private final TestData testData;
+        @NonNull private final File resultsDir;
+        @NonNull private final File coverageDir;
+        @NonNull private final List<File> testedApks;
+        @NonNull private final Collection<String> installOptions;
+        @NonNull private final ILogger logger;
+        @NonNull private final Set<File> helperApks;
+        @NonNull private final BaseTestRunner.TestResult testResult;
+
+        private final int timeoutInMs;
+
+        public SimpleTestParams(
+                @NonNull DeviceConnector device,
+                @NonNull String projectName,
+                @NonNull RemoteAndroidTestRunner runner,
+                @NonNull String flavorName,
+                @NonNull List<File> testedApks,
+                @NonNull TestData testData,
+                @NonNull Set<File> helperApks,
+                @NonNull File resultsDir,
+                @NonNull File coverageDir,
+                int timeoutInMs,
+                @NonNull Collection<String> installOptions,
+                @NonNull ILogger logger,
+                @NonNull BaseTestRunner.TestResult testResult) {
+            this.projectName = projectName;
+            this.device = device;
+            this.runner = runner;
+            this.flavorName = flavorName;
+            this.helperApks = helperApks;
+            this.resultsDir = resultsDir;
+            this.coverageDir = coverageDir;
+            this.testedApks = testedApks;
+            this.testData = testData;
+            this.timeoutInMs = timeoutInMs;
+            this.installOptions = installOptions;
+            this.logger = logger;
+            this.testResult = testResult;
         }
     }
 }

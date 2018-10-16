@@ -18,14 +18,16 @@ package com.android.builder.testing;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.internal.testing.ShardedTestCallable;
+import com.android.builder.internal.testing.ShardedTestRunnable;
 import com.android.builder.testing.api.DeviceConnector;
-import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.ProcessExecutor;
+import com.android.ide.common.workers.ExecutorServiceAdapter;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -38,14 +40,15 @@ public class ShardedTestRunner extends BaseTestRunner {
     public ShardedTestRunner(
             @Nullable File splitSelectExec,
             @NonNull ProcessExecutor processExecutor,
-            @Nullable Integer numShards) {
-        super(splitSelectExec, processExecutor);
+            @Nullable Integer numShards,
+            @NonNull ExecutorServiceAdapter executor) {
+        super(splitSelectExec, processExecutor, executor);
         this.numShards = numShards;
     }
 
     @Override
     @NonNull
-    protected WaitableExecutor scheduleTests(
+    protected List<TestResult> scheduleTests(
             @NonNull String projectName,
             @NonNull String variantName,
             @NonNull TestData testData,
@@ -56,9 +59,6 @@ public class ShardedTestRunner extends BaseTestRunner {
             @NonNull File resultsDir,
             @NonNull File coverageDir,
             @NonNull ILogger logger) {
-        WaitableExecutor executor =
-                WaitableExecutor.useNewFixedSizeThreadPool(apksForDevice.keySet().size());
-
         int numShards;
         if (this.numShards == null) {
             numShards = apksForDevice.size();
@@ -67,10 +67,10 @@ public class ShardedTestRunner extends BaseTestRunner {
         }
 
         AtomicInteger currentShard = new AtomicInteger(-1);
-        ShardedTestCallable.ProgressListener progressListener =
-                new ShardedTestCallable.ProgressListener(numShards, logger);
-        ShardedTestCallable.ShardProvider shardProvider =
-                new ShardedTestCallable.ShardProvider() {
+        ShardedTestRunnable.ProgressListener progressListener =
+                new ShardedTestRunnable.ProgressListener(numShards, logger);
+        ShardedTestRunnable.ShardProvider shardProvider =
+                new ShardedTestRunnable.ShardProvider() {
                     @Nullable
                     @Override
                     public Integer getNextShard() {
@@ -84,9 +84,12 @@ public class ShardedTestRunner extends BaseTestRunner {
                     }
                 };
         logger.lifecycle("will shard tests into %d shards", numShards);
+        List<TestResult> results = new ArrayList<>();
         for (Map.Entry<DeviceConnector, ImmutableList<File>> runners : apksForDevice.entrySet()) {
-            ShardedTestCallable shardedTestCallable =
-                    new ShardedTestCallable(
+            TestResult result = new TestResult();
+            results.add(result);
+            ShardedTestRunnable.ShardedTestParams shardedTestParams =
+                    new ShardedTestRunnable.ShardedTestParams(
                             runners.getKey(),
                             projectName,
                             variantName,
@@ -96,10 +99,11 @@ public class ShardedTestRunner extends BaseTestRunner {
                             coverageDir,
                             timeoutInMs,
                             logger,
-                            shardProvider);
-            shardedTestCallable.setProgressListener(progressListener);
-            executor.execute(shardedTestCallable);
+                            shardProvider,
+                            progressListener,
+                            result);
+            executor.submit(ShardedTestRunnable.class, shardedTestParams);
         }
-        return executor;
+        return results;
     }
 }

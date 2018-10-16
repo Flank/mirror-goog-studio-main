@@ -18,15 +18,17 @@ package com.android.builder.testing;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.internal.testing.SimpleTestCallable;
+import com.android.builder.internal.testing.SimpleTestRunnable;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
-import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.ProcessExecutor;
+import com.android.ide.common.workers.ExecutorServiceAdapter;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -34,13 +36,15 @@ import java.util.Set;
 public class SimpleTestRunner extends BaseTestRunner {
 
     public SimpleTestRunner(
-            @Nullable File splitSelectExec, @NonNull ProcessExecutor processExecutor) {
-        super(splitSelectExec, processExecutor);
+            @Nullable File splitSelectExec,
+            @NonNull ProcessExecutor processExecutor,
+            @NonNull ExecutorServiceAdapter executor) {
+        super(splitSelectExec, processExecutor, executor);
     }
 
     @Override
     @NonNull
-    protected WaitableExecutor scheduleTests(
+    protected List<TestResult> scheduleTests(
             @NonNull String projectName,
             @NonNull String variantName,
             @NonNull TestData testData,
@@ -51,12 +55,13 @@ public class SimpleTestRunner extends BaseTestRunner {
             @NonNull File resultsDir,
             @NonNull File coverageDir,
             @NonNull ILogger logger) {
-        WaitableExecutor executor = WaitableExecutor.useGlobalSharedThreadPool();
-
+        List<TestResult> results = new ArrayList<>();
         for (Map.Entry<DeviceConnector, ImmutableList<File>> apks : apksForDevice.entrySet()) {
             DeviceConnector device = apks.getKey();
-            SimpleTestCallable testCallable =
-                    new SimpleTestCallable(
+            TestResult result = new TestResult();
+            results.add(result);
+            SimpleTestRunnable.SimpleTestParams simpleTestParams =
+                    new SimpleTestRunnable.SimpleTestParams(
                             device,
                             projectName,
                             createRemoteAndroidTestRunner(testData, device),
@@ -68,10 +73,11 @@ public class SimpleTestRunner extends BaseTestRunner {
                             coverageDir,
                             timeoutInMs,
                             installOptions,
-                            logger);
-            executor.execute(testCallable);
+                            logger,
+                            result);
+            executor.submit(SimpleTestRunnable.class, simpleTestParams);
         }
-        return executor;
+        return results;
     }
 
     @NonNull

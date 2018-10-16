@@ -27,6 +27,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import com.android.builder.testing.BaseTestRunner;
 import com.android.builder.testing.StubTestData;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.ddmlib.InstallException;
@@ -44,7 +45,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mockito;
 
-public class SimpleTestCallableTest {
+public class SimpleTestRunnableTest {
     private static final int TIMEOUT = 4000;
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -78,7 +79,8 @@ public class SimpleTestCallableTest {
         try {
             call(2);
             fail("Should ");
-        } catch (InstallException e) {
+        } catch (Exception e) {
+            assertThat(e.getCause() instanceof InstallException).isTrue();
             assertThat(e.getMessage()).contains("Internal error");
         }
     }
@@ -113,24 +115,27 @@ public class SimpleTestCallableTest {
         File resultsDir = temporaryFolder.newFile();
         File coverageDir = temporaryFolder.newFile();
         List<String> installOptions = ImmutableList.of();
-        SimpleTestCallable callable =
-                new SimpleTestCallable(
-                        deviceConnector,
-                        "project",
-                        new RemoteAndroidTestRunner(
-                                testData.getApplicationId(),
-                                testData.getInstrumentationRunner(),
-                                deviceConnector),
-                        "flavor",
-                        testedApks,
-                        testData,
-                        Collections.singleton(buddyApk),
-                        resultsDir,
-                        coverageDir,
-                        TIMEOUT,
-                        installOptions,
-                        logger);
-        callable.call();
+        SimpleTestRunnable runnable =
+                new SimpleTestRunnable(
+                        new SimpleTestRunnable.SimpleTestParams(
+                                deviceConnector,
+                                "project",
+                                new RemoteAndroidTestRunner(
+                                        testData.getApplicationId(),
+                                        testData.getInstrumentationRunner(),
+                                        deviceConnector),
+                                "flavor",
+                                testedApks,
+                                testData,
+                                Collections.singleton(buddyApk),
+                                resultsDir,
+                                coverageDir,
+                                TIMEOUT,
+                                installOptions,
+                                logger,
+                                new BaseTestRunner.TestResult()));
+        runnable.run();
+
         verify(deviceConnector, atLeastOnce()).getName();
         verify(deviceConnector).connect(TIMEOUT, logger);
         verify(deviceConnector).installPackage(testApk, installOptions, TIMEOUT, logger);
