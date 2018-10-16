@@ -18,12 +18,12 @@
 
 #include <vector>
 
+#include <sys/syscall.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <sys/syscall.h>
 
-#include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/common/log.h"
+#include "tools/base/deploy/common/utils.h"
 
 namespace deploy {
 
@@ -31,7 +31,7 @@ namespace {
 inline uint64_t GetTime() noexcept {
   struct timespec tp;
   clock_gettime(CLOCK_MONOTONIC, &tp);
-  uint64_t time = ((uint64_t) tp.tv_sec * 1000 * 1000 * 1000) + tp.tv_nsec;
+  uint64_t time = ((uint64_t)tp.tv_sec * 1000 * 1000 * 1000) + tp.tv_nsec;
   return time;
 }
 
@@ -42,11 +42,9 @@ inline int64_t gettid() noexcept {
 }
 
 std::vector<Event>* events = new std::vector<Event>();
-} // namespace anonymous
+}  // namespace
 
-void InitEventSystem() {
-  Trace::Init();
-}
+void InitEventSystem() { Trace::Init(); }
 
 static inline void AddEvent(Event::Type type, const std::string& text) {
   AddRawEvent({GetTime(), type, getpid(), gettid(), text});
@@ -72,9 +70,7 @@ void EndPhase() {
   Trace::End();
 }
 
-void AddRawEvent(const Event& event) {
- events->emplace_back(event);
-}
+void AddRawEvent(const Event& event) { events->emplace_back(event); }
 
 std::unique_ptr<std::vector<Event>> ConsumeEvents() {
   std::unique_ptr<std::vector<Event>> ptr(events);
@@ -82,4 +78,4 @@ std::unique_ptr<std::vector<Event>> ConsumeEvents() {
   return ptr;
 }
 
-} // namespace deploy
+}  // namespace deploy

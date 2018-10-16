@@ -18,10 +18,10 @@
 #ifndef JNI_UTIL_H
 #define JNI_UTIL_H
 
-#include "jni.h"
-#include "jvmti.h"
-
 #include <string>
+
+#include <jni.h>
+#include <jvmti.h>
 
 using std::string;
 

@@ -23,15 +23,13 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-#include "message_pipe_wrapper.h"
+#include "tools/base/deploy/common/message_pipe_wrapper.h"
 
 namespace deploy {
 class Socket : public MessagePipeWrapper {
  public:
   Socket() : MessagePipeWrapper(-1) {}
-  virtual ~Socket() {
-    Close();
-  }
+  virtual ~Socket() { Close(); }
 
   Socket(Socket&& other) : MessagePipeWrapper(std::move(other)) {}
 

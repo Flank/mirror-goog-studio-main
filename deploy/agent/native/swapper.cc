@@ -15,16 +15,17 @@
  *
  */
 
-#include "swapper.h"
+#include "tools/base/deploy/agent/native/swapper.h"
 
 #include <unistd.h>
-#include "deploy.pb.h"
-#include "hotswap.h"
-#include "instrumenter.h"
-#include "socket.h"
+
+#include "tools/base/deploy/agent/native/hotswap.h"
+#include "tools/base/deploy/agent/native/instrumenter.h"
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/log.h"
+#include "tools/base/deploy/common/socket.h"
 #include "tools/base/deploy/common/utils.h"
+#include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {
 

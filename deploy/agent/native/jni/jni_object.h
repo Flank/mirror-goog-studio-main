@@ -18,12 +18,13 @@
 #ifndef JNI_OBJECT_H
 #define JNI_OBJECT_H
 
-#define NO_DEFAULT_SPECIALIZATION(T) static_assert(sizeof(T) == 0, "");
-
-#include "jni.h"
-#include "jni_signature.h"
-
 #include <string>
+
+#include <jni.h>
+
+#include "tools/base/deploy/agent/native/jni/jni_signature.h"
+
+#define NO_DEFAULT_SPECIALIZATION(T) static_assert(sizeof(T) == 0, "");
 
 using std::string;
 

@@ -17,7 +17,7 @@
 #ifndef COMMANDCMD_H
 #define COMMANDCMD_H
 
-#include "shell_command.h"
+#include "tools/base/deploy/installer/shell_command.h"
 
 #include <string>
 #include <vector>

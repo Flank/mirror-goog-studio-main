@@ -14,14 +14,17 @@
  * limitations under the License.
  */
 
-#include "command_cmd.h"
+#include "tools/base/deploy/installer/command_cmd.h"
+
+#include <iostream>
+#include <sstream>
+
 #include <sys/stat.h>
 #include <cstdlib>
 #include <cstring>
-#include <iostream>
-#include <sstream>
-#include "trace.h"
+
 #include "tools/base/deploy/common/event.h"
+#include "tools/base/deploy/common/trace.h"
 
 namespace deploy {
 

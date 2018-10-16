@@ -19,7 +19,7 @@
 
 #include <memory>
 
-#include "workspace.h"
+#include "tools/base/deploy/installer/workspace.h"
 
 namespace deploy {
 

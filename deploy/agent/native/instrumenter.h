@@ -18,16 +18,16 @@
 #ifndef INSTRUMENTER_H
 #define INSTRUMENTER_H
 
+#include <memory>
+#include <unordered_map>
+
+#include <jvmti.h>
+
 #include "slicer/dex_ir.h"
 #include "slicer/instrumentation.h"
 #include "slicer/reader.h"
 #include "slicer/writer.h"
-
 #include "tools/base/deploy/common/log.h"
-
-#include <memory>
-#include <unordered_map>
-#include "jvmti.h"
 
 using std::shared_ptr;
 using std::string;

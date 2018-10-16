@@ -14,15 +14,17 @@
  * limitations under the License.
  */
 
-#include "apk_archive.h"
-#include "trace.h"
+#include "tools/base/deploy/installer/apk_archive.h"
+
+#include <iostream>
 
 #include <fcntl.h>
 #include <libgen.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <cstring>
-#include <iostream>
+
+#include "tools/base/deploy/common/trace.h"
 
 namespace deploy {
 
@@ -142,7 +144,8 @@ bool ApkArchive::Prepare() noexcept {
   return true;
 }
 
-std::unique_ptr<std::string> ApkArchive::ReadMetadata(Location loc) const noexcept {
+std::unique_ptr<std::string> ApkArchive::ReadMetadata(Location loc) const
+    noexcept {
   std::unique_ptr<std::string> payload;
   payload.reset(new std::string());
   payload->resize(loc.size);

@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
+#include "tools/base/deploy/common/message_pipe_wrapper.h"
+
 #include <poll.h>
 #include <unistd.h>
 
-#include "message_pipe_wrapper.h"
-#include "size_buffer.h"
+#include "tools/base/deploy/common/size_buffer.h"
 
 namespace deploy {
 

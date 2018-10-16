@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-#include "native_callbacks.h"
+#include "tools/base/deploy/agent/native/native_callbacks.h"
 
-#include "jni/jni_class.h"
-#include "swapper.h"
+#include "tools/base/deploy/agent/native/jni/jni_class.h"
+#include "tools/base/deploy/agent/native/swapper.h"
 
 namespace deploy {
 
-bool RegisterNatives(JNIEnv* jni, const vector<NativeBinding>& bindings) {
+bool RegisterNatives(JNIEnv* jni, const std::vector<NativeBinding>& bindings) {
   for (auto& binding : bindings) {
     jclass klass = jni->FindClass(binding.class_name);
 

@@ -17,11 +17,12 @@
 #ifndef HOTSWAP_H
 #define HOTSWAP_H
 
-#include "deploy.pb.h"
-#include "jni.h"
-#include "jvmti.h"
-
 #include <string>
+
+#include <jni.h>
+#include <jvmti.h>
+
+#include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {
 

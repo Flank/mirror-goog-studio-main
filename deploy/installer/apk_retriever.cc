@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-#include "apk_retriever.h"
+#include "tools/base/deploy/installer/apk_retriever.h"
 
 #include <iostream>
 
-#include "command_cmd.h"
-#include "package_manager.h"
 #include "tools/base/deploy/common/event.h"
+#include "tools/base/deploy/installer/command_cmd.h"
+#include "tools/base/deploy/installer/package_manager.h"
 
 namespace deploy {
 

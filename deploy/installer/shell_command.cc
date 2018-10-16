@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-#include "shell_command.h"
+#include "tools/base/deploy/installer/shell_command.h"
+
+#include <iostream>
 
 #include <fcntl.h>
 #include <poll.h>
 #include <stdlib.h>
 #include <sys/wait.h>
-#include <iostream>
-#include "trace.h"
+
+#include "tools/base/deploy/common/trace.h"
 
 using std::string;
 namespace deploy {

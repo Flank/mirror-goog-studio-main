@@ -15,17 +15,17 @@
  *
  */
 
-#include "jni.h"
-#include "jvmti.h"
-
 #include <memory>
 
-#include "capabilities.h"
-#include "jni/jni_util.h"
-#include "socket.h"
-#include "swapper.h"
+#include <jni.h>
+#include <jvmti.h>
+
+#include "tools/base/deploy/agent/native/capabilities.h"
+#include "tools/base/deploy/agent/native/jni/jni_util.h"
+#include "tools/base/deploy/agent/native/swapper.h"
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/log.h"
+#include "tools/base/deploy/common/socket.h"
 
 namespace deploy {
 

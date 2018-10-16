@@ -15,10 +15,11 @@
  *
  */
 
-#include "jni_object.h"
+#include "tools/base/deploy/agent/native/jni/jni_object.h"
 
 #include <string>
-#include "jni_util.h"
+
+#include "tools/base/deploy/agent/native/jni/jni_util.h"
 
 using std::string;
 

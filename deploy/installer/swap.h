@@ -21,9 +21,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include "command.h"
-#include "tools/base/deploy/proto/deploy.pb.h"
 #include "tools/base/deploy/common/message_pipe_wrapper.h"
+#include "tools/base/deploy/installer/command.h"
+#include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {
 
@@ -80,6 +80,7 @@ class SwapCommand : public Command {
   void HandleAgentResponses(
       const std::unordered_map<int, proto::SwapResponse>& agent_responses) const
       noexcept;
+
  private:
   bool RestartActivity(const MessagePipeWrapper& server_input) noexcept;
 };

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "tools/base/deploy/installer/shell_command.h"
+
 #include <fcntl.h>
 #include <gtest/gtest.h>
 

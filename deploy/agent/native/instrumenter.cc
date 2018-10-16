@@ -1,18 +1,34 @@
-#include "instrumenter.h"
+/*
+ * Copyright (C) 2018 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 
-#include "jni.h"
-#include "jvmti.h"
+#include "tools/base/deploy/agent/native/instrumenter.h"
 
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include <string>
 
-#include "jni/jni_class.h"
-#include "native_callbacks.h"
-#include "tools/base/deploy/common/log.h"
+#include <fcntl.h>
+#include <jni.h>
+#include <jvmti.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
-#include "instrumentation.jar.cc"
+#include "tools/base/deploy/agent/native/instrumentation.jar.cc"
+#include "tools/base/deploy/agent/native/jni/jni_class.h"
+#include "tools/base/deploy/agent/native/native_callbacks.h"
+#include "tools/base/deploy/common/log.h"
 #include "tools/base/deploy/common/utils.h"
 
 namespace deploy {
@@ -22,7 +38,8 @@ const char* kBreadcrumbClass = "com/android/tools/deploy/instrument/Breadcrumb";
 const char* kHandlerWrapperClass =
     "com/android/tools/deploy/instrument/ActivityThreadHandlerWrapper";
 
-const std::string kInstrumentationJarName = "instruments-"_s + instrumentation_jar_hash + ".jar";
+const std::string kInstrumentationJarName =
+    "instruments-"_s + instrumentation_jar_hash + ".jar";
 
 static unordered_map<string, Transform*> transforms;
 
@@ -233,7 +250,7 @@ bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
     return false;
   }
 
-  vector<NativeBinding> native_bindings;
+  std::vector<NativeBinding> native_bindings;
   native_bindings.emplace_back(kHandlerWrapperClass,
                                "getApplicationInfoChangedValue", "()I",
                                (void*)&Native_GetAppInfoChanged);

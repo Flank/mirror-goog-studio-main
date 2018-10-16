@@ -15,7 +15,7 @@
  *
  */
 
-#include "jni_util.h"
+#include "tools/base/deploy/agent/native/jni/jni_util.h"
 
 namespace deploy {
 

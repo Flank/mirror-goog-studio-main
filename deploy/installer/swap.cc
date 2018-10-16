@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "swap.h"
+#include "tools/base/deploy/installer/swap.h"
 
 #include <algorithm>
 #include <fstream>
@@ -26,15 +26,15 @@
 
 #include <fcntl.h>
 
-#include "command_cmd.h"
-#include "shell_command.h"
 #include "tools/base/deploy/common/log.h"
 #include "tools/base/deploy/common/socket.h"
 #include "tools/base/deploy/common/trace.h"
 #include "tools/base/deploy/common/utils.h"
+#include "tools/base/deploy/installer/command_cmd.h"
+#include "tools/base/deploy/installer/shell_command.h"
 
-#include "agent.so.h"
-#include "agent_server.h"
+#include "tools/base/deploy/installer/agent.so.h"
+#include "tools/base/deploy/installer/agent_server.h"
 
 namespace deploy {
 
@@ -144,7 +144,7 @@ void SwapCommand::Run(Workspace& workspace) {
     proto::AgentSwapResponse agent_response;
     if (!agent_response.ParseFromString(response_bytes)) {
       response_->set_status(proto::SwapResponse::ERROR);
-      ErrEvent( "Received unparseable response from agent");
+      ErrEvent("Received unparseable response from agent");
       return;
     }
 
@@ -157,7 +157,7 @@ void SwapCommand::Run(Workspace& workspace) {
     agent_responses.emplace(agent_response.pid(), agent_response);
 
     // Convert proto events to events.
-    for (int i = 0 ; i < agent_response.events_size() ; i ++) {
+    for (int i = 0; i < agent_response.events_size(); i++) {
       const proto::Event& event = agent_response.events(i);
       AddRawEvent(ConvertProtoEventToEvent(event));
     }
@@ -330,7 +330,8 @@ bool SwapCommand::AttachAgents(const std::vector<int>& process_ids) const {
   CmdCommand cmd;
   for (int pid : process_ids) {
     std::string output;
-    if (!cmd.AttachAgent(pid, target_dir_ + kAgentFilename, {Socket::kDefaultAddress}, &output)) {
+    if (!cmd.AttachAgent(pid, target_dir_ + kAgentFilename,
+                         {Socket::kDefaultAddress}, &output)) {
       ErrEvent("Could not attach agent to process: "_s + output);
       return false;
     }

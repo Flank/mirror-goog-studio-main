@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#include "log.h"
+#include "tools/base/deploy/common/log.h"
+
 #include <cstdio>
 
 namespace deploy {

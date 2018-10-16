@@ -1,12 +1,27 @@
+/*
+ * Copyright (C) 2018 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 #ifndef NATIVE_CALLBACKS_H
 #define NATIVE_CALLBACKS_H
 
-#include "jni.h"
-#include "jvmti.h"
-
 #include <vector>
 
-using std::vector;
+#include <jni.h>
+#include <jvmti.h>
 
 namespace deploy {
 
@@ -23,7 +38,7 @@ struct NativeBinding {
   }
 };
 
-bool RegisterNatives(JNIEnv* jni, const vector<NativeBinding>& bindings);
+bool RegisterNatives(JNIEnv* jni, const std::vector<NativeBinding>& bindings);
 
 int Native_GetAppInfoChanged(JNIEnv* jni, jobject object);
 bool Native_TryRedefineClasses(JNIEnv* jni, jobject object);

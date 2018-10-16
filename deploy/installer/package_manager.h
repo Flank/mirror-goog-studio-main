@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-#include "shell_command.h"
+#include "tools/base/deploy/installer/shell_command.h"
 
 namespace deploy {
 

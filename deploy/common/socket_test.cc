@@ -16,7 +16,7 @@
 
 #include <gtest/gtest.h>
 
-#include "socket.h"
+#include "tools/base/deploy/common/socket.h"
 
 namespace deploy {
 

@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-#include "command.h"
+#include "tools/base/deploy/installer/command.h"
 
 #include <functional>
 #include <unordered_map>
 
-#include "dump.h"
-#include "swap.h"
+#include "tools/base/deploy/installer/dump.h"
+#include "tools/base/deploy/installer/swap.h"
 
 namespace deploy {
 

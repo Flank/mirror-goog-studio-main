@@ -20,9 +20,10 @@
 
 #define NO_DEFAULT_SPECIALIZATION(T) static_assert(sizeof(T) == 0, "");
 
-#include "jni.h"
-#include "jni_object.h"
-#include "jni_signature.h"
+#include <jni.h>
+
+#include "tools/base/deploy/agent/native/jni/jni_object.h"
+#include "tools/base/deploy/agent/native/jni/jni_signature.h"
 
 namespace deploy {
 

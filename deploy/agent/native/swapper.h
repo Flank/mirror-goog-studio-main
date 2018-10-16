@@ -17,11 +17,11 @@
 #ifndef SWAP_ACTION_H_
 #define SWAP_ACTION_H_
 
-#include "jni.h"
-#include "jvmti.h"
-
 #include <memory>
 #include <string>
+
+#include <jni.h>
+#include <jvmti.h>
 
 namespace proto {
 class SwapRequest;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "workspace.h"
+#include "tools/base/deploy/installer/workspace.h"
 
 #include <fcntl.h>
 
@@ -60,7 +60,7 @@ std::string Workspace::RetrieveBase() const noexcept {
 void Workspace::SendResponse() noexcept {
   std::unique_ptr<std::vector<Event>> events = ConsumeEvents();
   for (Event& event : *events) {
-     ConvertEventToProtoEvent(event, response_.add_events());
+    ConvertEventToProtoEvent(event, response_.add_events());
   }
   std::string responseString;
   response_.SerializeToString(&responseString);

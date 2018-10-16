@@ -27,16 +27,16 @@ namespace deploy {
 
 struct Event {
   uint64_t timestamp_ns;
-  enum Type {Logging, Error, Begin, End};
+  enum Type { Logging, Error, Begin, End };
   Type type;
   int64_t pid;
   int64_t tid;
   std::string text;
 };
 
-// None of these methods are thread-safe. If we add threading to the native side of this project
-// we must change the implementation of the method to protect the event storage (e.g: using an
-// std::lock_guard for example).
+// None of these methods are thread-safe. If we add threading to the native side
+// of this project we must change the implementation of the method to protect
+// the event storage (e.g: using an std::lock_guard for example).
 void InitEventSystem();
 void LogEvent(const std::string& text);
 void ErrEvent(const std::string& text);
@@ -48,13 +48,11 @@ std::unique_ptr<std::vector<Event>> ConsumeEvents();
 // Automatically emit begin/end events (via RAII). Also emit to ftrace.
 class Phase {
  public:
-  Phase(const std::string& name) : trace_(name){
-    BeginPhase(name);
-  }
+  Phase(const std::string& name) : trace_(name) { BeginPhase(name); }
   ~Phase() { EndPhase(); }
 
  private:
-    Trace trace_;
+  Trace trace_;
 };
 }  // namespace deploy
 

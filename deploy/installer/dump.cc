@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-#include "dump.h"
+#include "tools/base/deploy/installer/dump.h"
+
+#include <iostream>
 
 #include <dirent.h>
 #include <libgen.h>
@@ -22,12 +24,11 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <iostream>
 
-#include "apk_archive.h"
-#include "apk_retriever.h"
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/utils.h"
+#include "tools/base/deploy/installer/apk_archive.h"
+#include "tools/base/deploy/installer/apk_retriever.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {

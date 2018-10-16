@@ -28,7 +28,8 @@ class ApkRetriever {
 
   // Retrieve the apks for the packageName_. Try to use "cmd package" first and
   // "pm" second.
-  std::vector<std::string> retrieve(const std::string& packageName) const noexcept;
+  std::vector<std::string> retrieve(const std::string& packageName) const
+      noexcept;
 };
 
 }  // namespace deploy

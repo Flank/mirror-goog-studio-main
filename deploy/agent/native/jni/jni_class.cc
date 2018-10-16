@@ -15,7 +15,7 @@
  *
  */
 
-#include "jni_class.h"
+#include "tools/base/deploy/agent/native/jni/jni_class.h"
 
 namespace deploy {
 

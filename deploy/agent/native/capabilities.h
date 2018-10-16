@@ -18,7 +18,7 @@
 #ifndef CAPABILITIES_H
 #define CAPABILITIES_H
 
-#include "jvmti.h"
+#include <jvmti.h>
 
 namespace deploy {
 
