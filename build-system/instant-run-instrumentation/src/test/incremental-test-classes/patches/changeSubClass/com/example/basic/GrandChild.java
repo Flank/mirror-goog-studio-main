@@ -35,6 +35,7 @@ public class GrandChild extends ParentInvocation {
                 + super.doNotOverridePublicMethodDispatch(12d, "from grand child", 26);
     }
 
+    @SuppressWarnings("ComplexBooleanConstant")
     @Override
     public boolean equals(Object o) {
         return super.equals(o) && false;
