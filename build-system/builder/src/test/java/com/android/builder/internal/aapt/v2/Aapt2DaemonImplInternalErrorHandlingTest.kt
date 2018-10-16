@@ -242,15 +242,8 @@ class Aapt2DaemonImplInternalErrorHandlingTest {
     @After
     fun assertNoWarningOrErrorLogs() {
         assertThat(
-                logger.messages.filter {
-                    !(isStartOrShutdownLog(it) ||
-                            it.startsWith("V") ||
-                            // Process might exit while the output handler expects no output,
-                            // which is only logged as it is on the wrong thread.
-                            it.endsWith("Unexpectedly exit."))
-                }
-        )
-            .isEmpty()
+            logger.messages.filter { !(isStartOrShutdownLog(it) || it.startsWith("V")) }
+        ).isEmpty()
     }
 
     private fun isStartOrShutdownLog(line: String) =

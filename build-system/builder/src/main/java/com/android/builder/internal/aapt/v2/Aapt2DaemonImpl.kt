@@ -237,15 +237,15 @@ class Aapt2DaemonImpl(
         override fun out(line: String?) {
             if (line != null) {
                 logger.error(null, "$displayName: Unexpected standard output: $line")
-            } else {
-                // Don't try to handle process exit here, just allow the next task to fail.
-                logger.error(null, "$displayName: Unexpectedly exit.")
             }
         }
 
         override fun err(line: String?) {
-            line?.let {
-                logger.error(null, "$displayName: Unexpected error output: $it")
+            if (line != null) {
+                logger.error(null, "$displayName: Unexpected error output: $line")
+            } else {
+                // Don't try to handle process exit here, just allow the next task to fail.
+                logger.error(null, "$displayName: Idle daemon unexpectedly exit. This should not happen.")
             }
         }
     }
