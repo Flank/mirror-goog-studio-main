@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.lint
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.testutils.truth.FileSubject.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -24,9 +25,8 @@ import org.junit.Test
 /**
  * Test for the standalone lint plugin.
  *
- *
  * To run just this test:
- * ./gradlew :base:build-system:integration-test:application:test -D:base:build-system:integration-test:application:test.single=LintStandaloneTest
+ * ./gradlew :base:build-system:integration-test:application:test --tests LintStandaloneTest
  */
 class LintStandaloneTest {
     @Rule @JvmField
@@ -41,5 +41,20 @@ class LintStandaloneTest {
         assertThat(file).exists()
         assertThat(file).contains("MyClass.java:5: Warning: Use Boolean.valueOf(true) instead")
         assertThat(file).contains("0 errors, 1 warnings")
+
+        // Check that lint re-runs if the options have changed.
+        // Lint always re-runs at the moment, but we should fix this at some point. (b/117870210)
+        TestFileUtils.searchAndReplace(
+            project.buildFile,
+            "textOutput file(\"lint-results.txt\")",
+            "textOutput file(\"lint-results2.txt\")"
+        )
+        project.execute("lint")
+
+        val secondFile = project.file("lint-results2.txt")
+        assertThat(secondFile).exists()
+        assertThat(secondFile).contains("MyClass.java:5: Warning: Use Boolean.valueOf(true) instead")
+        assertThat(secondFile).contains("0 errors, 1 warnings")
+
     }
 }

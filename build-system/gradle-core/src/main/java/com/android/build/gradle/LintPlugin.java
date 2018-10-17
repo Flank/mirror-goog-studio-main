@@ -118,6 +118,7 @@ public class LintPlugin implements Plugin<Project> {
         task.setReportDir(testResultsDir);
         task.setLintOptions(lintOptions);
         task.setLintChecks(customLintChecksConfig);
+        task.getOutputs().upToDateWhen(task1 -> false);
         return task;
     }
 
