@@ -25,6 +25,8 @@
 
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/trace.h"
+#include "tools/base/deploy/common/utils.h"
+#include "tools/base/deploy/installer/executor.h"
 
 namespace deploy {
 
@@ -32,26 +34,26 @@ namespace {
 const char* CMD_EXEC = "/system/bin/cmd";
 }  // namespace
 
-CmdCommand::CmdCommand() : ShellCommandRunner(CMD_EXEC) {}
+CmdCommand::CmdCommand() {}
 
 bool CmdCommand::GetAppApks(const std::string& package_name,
                             std::vector<std::string>* apks,
                             std::string* error_string) const noexcept {
   Trace trace("CmdCommand::GetAppApks");
-  std::string parameters;
-  parameters.append("package ");
-  parameters.append("path ");
-  parameters.append(package_name);
-  std::string output;
-  bool success = Run(parameters, &output);
+  std::vector<std::string> parameters;
+  parameters.emplace_back("package");
+  parameters.emplace_back("path");
+  parameters.emplace_back(package_name);
+  std::string out;
+  std::string err;
+  bool success = Executor::Run(CMD_EXEC, parameters, &out, &err);
   if (!success) {
-    *error_string = output;
-    std::cerr << output;
+    *error_string = err;
     return false;
   }
 
   // Parse output
-  std::stringstream ss(output);
+  std::stringstream ss(out);
   std::string line;
 
   // Return path prefixed with "package:"
@@ -68,26 +70,28 @@ bool CmdCommand::AttachAgent(int pid, const std::string& agent,
                              const std::string& args,
                              std::string* error_string) const noexcept {
   Trace trace("CmdCommand::AttachAgent");
-  std::stringstream parameters;
-  parameters << "activity ";
-  parameters << "attach-agent ";
-  parameters << pid << " ";
-  parameters << agent << "=" << args;
+  std::vector<std::string> parameters;
+  parameters.emplace_back("activity");
+  parameters.emplace_back("attach-agent");
+  parameters.emplace_back(to_string(pid));
+  parameters.emplace_back(agent + "=" + args);
 
-  return Run(parameters.str(), error_string);
+  std::string out;
+  return Executor::Run(CMD_EXEC, parameters, &out, error_string);
 }
 
 bool CmdCommand::UpdateAppInfo(const std::string& user_id,
                                const std::string& package_name,
                                std::string* error_string) const noexcept {
   Trace trace("CmdCommand::UpdateAppInfo");
-  std::stringstream parameters;
-  parameters << "activity ";
-  parameters << "update-appinfo ";
-  parameters << user_id << " ";
-  parameters << package_name << " ";
+  std::vector<std::string> parameters;
+  parameters.emplace_back("activity");
+  parameters.emplace_back("update-appinfo");
+  parameters.emplace_back(user_id);
+  parameters.emplace_back(package_name);
 
-  return Run(parameters.str(), error_string);
+  std::string out;
+  return Executor::Run(CMD_EXEC, parameters, &out, error_string);
 }
 
 int get_file_size(std::string path) {
@@ -101,11 +105,14 @@ int CmdCommand::PreInstall(const std::vector<std::string>& apks,
   Phase p("Preinstall");
   output->clear();
   Trace trace("CmdCommand::Install");
-  std::stringstream parameters;
-  parameters << "package ";
-  parameters << "install-create ";
-  parameters << "-t -r --dont-kill ";
-  Run(parameters.str(), output);
+  std::vector<std::string> parameters;
+  parameters.emplace_back("package");
+  parameters.emplace_back("install-create");
+  parameters.emplace_back("-t");
+  parameters.emplace_back("-r");
+  parameters.emplace_back("--dont-kill");
+  std::string err;
+  Executor::Run(CMD_EXEC, parameters, output, &err);
   std::string match = "Success: created install session [";
   if (output->find(match, 0) != 0) {
     return -1;
@@ -124,7 +131,7 @@ int CmdCommand::PreInstall(const std::vector<std::string>& apks,
     parameters.push_back(size.str());
     parameters.push_back(session);
     parameters.push_back(apk.substr(apk.rfind("/") + 1));
-    Run(parameters, apk, &output, &error);
+    Executor::RunWithInput(CMD_EXEC, parameters, &output, &error, apk);
   }
   return atoi(session.c_str());
 }  // namespace deploy
@@ -133,16 +140,22 @@ bool CmdCommand::CommitInstall(int session, std::string* output) const
     noexcept {
   Phase p("Commit Install");
   output->clear();
-  std::stringstream parameters;
-  parameters << "package install-commit " << session;
-  return Run(parameters.str(), output);
+  std::vector<std::string> parameters;
+  parameters.emplace_back("package");
+  parameters.emplace_back("install-commit");
+  parameters.emplace_back(to_string(session));
+  std::string err;
+  return Executor::Run(CMD_EXEC, parameters, output, &err);
 }
 
 bool CmdCommand::AbortInstall(int session, std::string* output) const noexcept {
-  std::stringstream parameters;
-  parameters << "package install-abandon " << session;
+  std::vector<std::string> parameters;
+  parameters.emplace_back("package");
+  parameters.emplace_back("install-abandon");
+  parameters.emplace_back(to_string(session));
   output->clear();
-  return Run(parameters.str(), output);
+  std::string err;
+  return Executor::Run(CMD_EXEC, parameters, output, &err);
 }
 
 void CmdCommand::SetPath(const char* path) { CMD_EXEC = path; }

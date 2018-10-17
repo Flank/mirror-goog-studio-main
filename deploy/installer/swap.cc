@@ -25,6 +25,8 @@
 #include <vector>
 
 #include <fcntl.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #include "tools/base/deploy/common/log.h"
 #include "tools/base/deploy/common/message_pipe_wrapper.h"
@@ -32,7 +34,7 @@
 #include "tools/base/deploy/common/trace.h"
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/command_cmd.h"
-#include "tools/base/deploy/installer/shell_command.h"
+#include "tools/base/deploy/installer/executor.h"
 
 #include "tools/base/deploy/installer/agent.so.h"
 #include "tools/base/deploy/installer/agent_server.h"
@@ -92,30 +94,27 @@ void SwapCommand::Run(Workspace& workspace) {
   std::string agent_count = os.str();
 
   std::string command = target_dir_ + kServerFilename;
-  ShellCommandRunner runner(command);
-
   std::vector<std::string> parameters;
   parameters.push_back(agent_count);
   parameters.push_back(Socket::kDefaultAddress);
-
   int read_fd, write_fd, err_fd;
-  if (!runner.RunAs(request_.package_name(), parameters, &write_fd, &read_fd,
-                    &err_fd)) {
-    response_->set_status(proto::SwapResponse::ERROR);
+  int agent_server_pid;
+  if (!Executor::ForkAndExecAs(command, request_.package_name(), parameters,
+                               &write_fd, &read_fd, &err_fd,
+                               &agent_server_pid)) {
     ErrEvent("Unable to start server");
+    response_->set_status(proto::SwapResponse::ERROR);
     return;
   }
   close(err_fd);
+  OwnedMessagePipeWrapper server_input(write_fd);
+  OwnedMessagePipeWrapper server_output(read_fd);
 
   if (!AttachAgents(process_ids)) {
     response_->set_status(proto::SwapResponse::ERROR);
     ErrEvent("One or more agents failed to attach");
     return;
   }
-
-  // Both these wrappers will close the fds when they go out of scope.
-  MessagePipeWrapper server_input(write_fd);
-  MessagePipeWrapper server_output(read_fd);
 
   if (!server_input.Write(request_bytes_)) {
     response_->set_status(proto::SwapResponse::ERROR);
@@ -177,6 +176,10 @@ void SwapCommand::Run(Workspace& workspace) {
   }
 
   cmd.CommitInstall(install_session, &output);
+
+  // Cleanup zombi agent-server status from the kernel.
+  int status;
+  waitpid(agent_server_pid, &status, 0);
 
   response_->set_status(proto::SwapResponse::OK);
   LogEvent("Swapped");
@@ -324,20 +327,13 @@ bool SwapCommand::AttachAgents(const std::vector<int>& process_ids) const {
 bool SwapCommand::RunCmd(const std::string& shell_cmd, User run_as,
                          const std::vector<std::string>& args,
                          std::string* output) const {
-  ShellCommandRunner cmd(shell_cmd);
-
-  std::string params;
-  for (auto& arg : args) {
-    params.append(arg);
-    params.append(" ");
-  }
+  std::string err;
   if (run_as == User::APP_PACKAGE) {
-    return cmd.RunAs(request_.package_name(), params, output);
+    return Executor::RunAs(shell_cmd, request_.package_name(), args,
+                           output, &err);
   } else {
-    return cmd.Run(params, output);
+    return Executor::Run(shell_cmd, args, output, &err);
   }
-
-  return true;
 }
 
 }  // namespace deploy

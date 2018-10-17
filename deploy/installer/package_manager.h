@@ -20,12 +20,10 @@
 #include <string>
 #include <vector>
 
-#include "tools/base/deploy/installer/shell_command.h"
-
 namespace deploy {
 
 // Wrapper around Android executable "pm" (Android Package Manager).
-class PackageManager : public ShellCommandRunner {
+class PackageManager {
  public:
   PackageManager();
   bool GetApks(const std::string& package_name, std::vector<std::string>* apks,

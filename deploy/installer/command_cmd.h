@@ -17,15 +17,13 @@
 #ifndef COMMANDCMD_H
 #define COMMANDCMD_H
 
-#include "tools/base/deploy/installer/shell_command.h"
-
 #include <string>
 #include <vector>
 
 namespace deploy {
 
 // Wrapper around Android executable "service client".
-class CmdCommand : public ShellCommandRunner {
+class CmdCommand {
  public:
   CmdCommand();
   bool GetAppApks(const std::string& package_name,

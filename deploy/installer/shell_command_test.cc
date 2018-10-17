@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "tools/base/deploy/installer/shell_command.h"
+#include "tools/base/deploy/installer/executor.h"
+#include "tools/base/deploy/common/utils.h"
 
 #include <fcntl.h>
 #include <gtest/gtest.h>
@@ -42,9 +43,12 @@ class ShellCommandRunnerTest : public ::testing::Test {
 };
 
 TEST_F(ShellCommandRunnerTest, TestSimpleRun) {
-  ShellCommandRunner runner("sh");
   string output;
-  runner.Run("-c \"echo Hello\"", &output);
+  string error;
+  std::vector<std::string> args;
+  args.emplace_back("-c");
+  args.emplace_back("echo \"Hello\"");
+  Executor::Run("sh", args, &output, &error);
   ASSERT_EQ("Hello\n", output);
 }
 
@@ -68,12 +72,11 @@ TEST_F(ShellCommandRunnerTest, TestPiped) {
   free(name);
 
   string output, error;
-  ShellCommandRunner runner(helper_path);
   vector<string> args;
   std::stringstream string_size;
   string_size << size;
   args.push_back(string_size.str());
-  runner.Run(args, tmp, &output, &error);
+  Executor::RunWithInput(helper_path, args, &output, &error, tmp);
   ASSERT_EQ(size * 3 + 3, output.size());
   EXPECT_EQ(0, strncmp(output.data(), buffer0, size));
   EXPECT_EQ(0, strncmp(output.data() + size + 1, buffer1, size));

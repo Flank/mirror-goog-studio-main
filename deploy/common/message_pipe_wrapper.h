@@ -71,6 +71,16 @@ class MessagePipeWrapper {
   template <typename T>
   bool WriteBytes(T* array, size_t size) const;
 };
+
+// A derived class that owns the fd passed in the constructor and will therefore
+// close it when it is destructed.
+class OwnedMessagePipeWrapper: public MessagePipeWrapper {
+ public:
+  OwnedMessagePipeWrapper(int fd) : MessagePipeWrapper(fd) {}
+  virtual ~OwnedMessagePipeWrapper() {
+    Close();
+  }
+};
 }  // namespace deploy
 
 #endif
