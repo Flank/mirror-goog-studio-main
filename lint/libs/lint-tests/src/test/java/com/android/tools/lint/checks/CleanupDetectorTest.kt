@@ -16,8 +16,6 @@
 
 package com.android.tools.lint.checks
 
-import com.android.tools.lint.checks.CleanupDetector.SHARED_PREF
-
 import com.android.tools.lint.detector.api.Detector
 
 class CleanupDetectorTest : AbstractCheckTest() {
@@ -1522,7 +1520,7 @@ class CleanupDetectorTest : AbstractCheckTest() {
                         }
                     }"""
             )
-        ).issues(SHARED_PREF).run().expectClean()
+        ).issues(CleanupDetector.SHARED_PREF).run().expectClean()
     }
 
     fun testCommitVariable() {
