@@ -87,7 +87,8 @@ int main(int argc, char** argv) {
       &profiler::EventProfilerComponent::AgentStatusChangedCallback,
       &event_component, std::placeholders::_1, std::placeholders::_2));
 
-  profiler::NetworkProfilerComponent network_component(&clock, &file_cache);
+  profiler::NetworkProfilerComponent network_component(*(daemon.config()),
+                                                       &clock, &file_cache);
   daemon.RegisterComponent(&network_component);
 
   profiler::EnergyProfilerComponent energy_component(&file_cache);

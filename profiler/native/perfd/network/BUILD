@@ -52,6 +52,7 @@ cc_test(
         "connection_count_sampler_test.cc",
         "connectivity_sampler_test.cc",
         "net_stats_file_reader_test.cc",
+        "network_collector_test.cc",
         "speed_converter_test.cc",
     ],
     copts = [

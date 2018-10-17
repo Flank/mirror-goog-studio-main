@@ -16,6 +16,7 @@
 #include "sampler.h"
 
 #include <unistd.h>
+#include <cassert>
 #include <thread>
 
 #include "utils/clock.h"
@@ -30,15 +31,21 @@ Sampler::Sampler(const profiler::Session& session, EventBuffer* buffer,
     : session_(session),
       buffer_(buffer),
       sample_interval_ns_(sample_interval_ns),
-      is_running_(true) {
-  sampling_thread_ = std::thread(&Sampler::SamplingThread, this);
-}
+      is_running_(false) {}
 
 Sampler::~Sampler() { Stop(); }
 
+void Sampler::Start() {
+  if (!is_running_.exchange(true)) {
+    // the worker thread should not be running in this case.
+    assert(!sampling_thread_.joinable());
+    sampling_thread_ = std::thread(&Sampler::SamplingThread, this);
+  }
+}
+
 void Sampler::Stop() {
-  is_running_.exchange(false);
-  if (sampling_thread_.joinable()) {
+  if (is_running_.exchange(false)) {
+    assert(sampling_thread_.joinable());
     sampling_thread_.join();
   }
 }

@@ -33,9 +33,16 @@ class Session final {
 
   bool IsActive() const;
 
+  void StartSamplers();
+  void StopSamplers();
+
+  // Mark the session as ended. Also stops the samplers in the process.
   bool End(int64_t timestamp);
 
   const proto::Session& info() const { return info_; }
+
+  // Visible for testing.
+  const std::vector<Sampler*>& samplers() const { return samplers_; }
 
  private:
   proto::Session info_;

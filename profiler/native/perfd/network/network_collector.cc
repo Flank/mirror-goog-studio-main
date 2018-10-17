@@ -30,21 +30,26 @@
 
 namespace profiler {
 
-NetworkCollector::NetworkCollector(Clock* clock, int sample_ms)
+NetworkCollector::NetworkCollector(const Config& config, Clock* clock,
+                                   int sample_ms)
     : clock_(clock), sample_us_(sample_ms * 1000) {
-  samplers_.emplace_back(new ConnectivitySampler());
-  samplers_.emplace_back(
-      new SpeedSampler(clock, NetworkConstants::GetTrafficBytesFilePath()));
-  samplers_.emplace_back(
-      new ConnectionCountSampler(NetworkConstants::GetConnectionFilePaths()));
+  if (!config.GetAgentConfig().unified_pipeline()) {
+    samplers_.emplace_back(new ConnectivitySampler());
+    samplers_.emplace_back(
+        new SpeedSampler(clock, NetworkConstants::GetTrafficBytesFilePath()));
+    samplers_.emplace_back(
+        new ConnectionCountSampler(NetworkConstants::GetConnectionFilePaths()));
 
-  is_running_.exchange(true);
-  profiler_thread_ = std::thread(&NetworkCollector::Collect, this);
+    is_running_.exchange(true);
+    profiler_thread_ = std::thread(&NetworkCollector::Collect, this);
+  }
 }
 
 NetworkCollector::~NetworkCollector() {
   is_running_.exchange(false);
-  profiler_thread_.join();
+  if (profiler_thread_.joinable()) {
+    profiler_thread_.join();
+  }
 }
 
 void NetworkCollector::Collect() {

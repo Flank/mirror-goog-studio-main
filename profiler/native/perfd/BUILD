@@ -109,7 +109,8 @@ cc_test(
     srcs = [
         "event_buffer_test.cc",
         "profiler_service_test.cc",
-        #"samplers/sampler_test.cc", // b/117965764
+        "samplers/sampler_test.cc",
+        "sessions/session_test.cc",
     ],
     copts = [
         "-Itools/base/profiler/native",

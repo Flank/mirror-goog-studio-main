@@ -293,19 +293,21 @@ message GetEventGroupsRequest {
   int64 session_id = 2;
   // An event is returned if |kind| matches.
   Event.Kind kind = 3;
+    // An event is returned if |group_id| matches.
+  int64 group_id = 4;
   // |end| field is used to determine whether a group should be returned when
   // |from_timestamp| is set.
   // A group becomes active at any event whose type is not |end|, and becomes
   // inactive at an event of type |end|. A group may be active multiple times
   // during the lifetime. A group is returned if it's ever active during the
   // range of [from_timestamp, to_timestamp].
-  Event.Type end = 4;
+  Event.Type end = 5;
   // When |from_timestamp| and/or |to_timestamp| are set, an event group is
   // returned including the events during with the range, also including the
   // last event before |from_timestamp| and the first one after |to_timestamp|
   // in each group.
-  int64 from_timestamp = 5;  // inclusive
-  int64 to_timestamp = 6;    // inclusive
+  int64 from_timestamp = 6;  // inclusive
+  int64 to_timestamp = 7;    // inclusive
 }
 
 message GetEventGroupsResponse {

@@ -40,17 +40,24 @@ Session::Session(int64_t device_id, int32_t pid, int64_t start_timestamp,
 
 bool Session::IsActive() const { return info_.end_timestamp() == LLONG_MAX; }
 
+void Session::StartSamplers() {
+  for (auto sampler : samplers_) {
+    sampler->Start();
+  }
+}
+
+void Session::StopSamplers() {
+  for (auto sampler : samplers_) {
+    sampler->Stop();
+  }
+}
+
 bool Session::End(int64_t timestamp) {
   if (!IsActive()) {
     return false;
   }
 
-  for (auto sampler : samplers_) {
-    sampler->Stop();
-    delete sampler;
-  }
-  samplers_.clear();
-
+  StopSamplers();
   info_.set_end_timestamp(timestamp);
   return true;
 }
