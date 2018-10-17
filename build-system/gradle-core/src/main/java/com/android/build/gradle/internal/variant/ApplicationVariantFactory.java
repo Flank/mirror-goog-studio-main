@@ -82,15 +82,15 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
         ApplicationVariantData variant =
                 new ApplicationVariantData(
                         globalScope, extension, taskManager, variantConfiguration, recorder);
-
-        computeOutputs(variantConfiguration, variant);
+        computeOutputs(variantConfiguration, variant, true);
 
         return variant;
     }
 
-    private void computeOutputs(
+    protected void computeOutputs(
             @NonNull GradleVariantConfiguration variantConfiguration,
-            ApplicationVariantData variant) {
+            @NonNull ApplicationVariantData variant,
+            boolean includeMainApk) {
         variant.calculateFilters(extension.getSplits());
 
         Set<String> densities = variant.getFilters(OutputFile.FilterType.DENSITY);
@@ -106,22 +106,34 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
 
         OutputFactory outputFactory = variant.getOutputFactory();
 
-        // create its output
-        if (variant.getMultiOutputPolicy() == MultiOutputPolicy.MULTI_APK) {
-            populateMultiApkOutputs(abis, densities, outputFactory);
-        } else {
-            populatePureSplitsOutputs(
-                    abis, densities, languages, outputFactory, variantConfiguration);
+        switch (variant.getMultiOutputPolicy()) {
+            case MULTI_APK:
+                populateMultiApkOutputs(abis, densities, outputFactory, includeMainApk);
+                break;
+            case SPLITS:
+                populatePureSplitsOutputs(
+                        abis,
+                        densities,
+                        languages,
+                        outputFactory,
+                        variantConfiguration,
+                        includeMainApk);
+                break;
         }
 
         restrictEnabledOutputs(variantConfiguration, variant.getOutputScope().getApkDatas());
     }
 
     private void populateMultiApkOutputs(
-            Set<String> abis, Set<String> densities, OutputFactory outputFactory) {
+            Set<String> abis,
+            Set<String> densities,
+            OutputFactory outputFactory,
+            boolean includeMainApk) {
         if (densities.isEmpty() && abis.isEmpty()) {
             // If both are empty, we will have only the main Apk.
-            outputFactory.addMainApk();
+            if (includeMainApk) {
+                outputFactory.addMainApk();
+            }
             return;
         }
 
@@ -162,9 +174,12 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
             Set<String> densities,
             Set<String> languages,
             OutputFactory outputFactory,
-            GradleVariantConfiguration variantConfiguration) {
+            GradleVariantConfiguration variantConfiguration,
+            boolean includeMainApk) {
         // Pure splits always have a main apk.
-        outputFactory.addMainApk();
+        if (includeMainApk) {
+            outputFactory.addMainApk();
+        }
 
         Iterable<ApkData> producedApks =
                 Iterables.concat(
