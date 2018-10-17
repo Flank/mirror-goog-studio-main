@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
+import java.util.concurrent.TimeUnit;
 
 // TODO: Instead of using synchronized method, use ThreadLocal
 public class Trace {
@@ -39,6 +40,11 @@ public class Trace {
         END
     }
 
+    private static long enabledUntil = System.nanoTime();
+    private static boolean enabled() {
+        return (enabledUntil - System.nanoTime()) > 0;
+    }
+
     static class Event {
         public Type type;
         public long pid;
@@ -51,6 +57,9 @@ public class Trace {
     private static HashMap<Long, Stack<Event>> threadBegins = new HashMap<>();
 
     public static synchronized void reset() {
+        if (!enabled()) {
+            return;
+        }
         events.clear();
         threadBegins.clear();
     }
@@ -79,6 +88,9 @@ public class Trace {
     }
 
     public static synchronized void begin(String text) {
+        if (!enabled()) {
+            return;
+        }
         Event event = new Event();
         event.pid = 0;
         event.tid = Thread.currentThread().getId();
@@ -90,6 +102,9 @@ public class Trace {
     }
 
     public static synchronized void end() {
+        if (!enabled()) {
+            return;
+        }
         if (getCurrentThreadBeginStack().isEmpty()) {
             // This is an error.
             return;
@@ -104,6 +119,10 @@ public class Trace {
     }
 
     public static synchronized void endtWithRemoteEvents(List<Deploy.Event> remoteEvents) {
+        if (!enabled()) {
+            return;
+        }
+
         Event matchingBegin = getCurrentThreadBeginStack().peek();
 
         if (matchingBegin == null) {
@@ -160,11 +179,24 @@ public class Trace {
         end();
     }
 
+    public static synchronized void start() {
+        // Record events for a maximum of two minutes, even if finish() is not called.
+        enabledUntil = System.nanoTime() + TimeUnit.MINUTES.toNanos(2);
+        reset();
+    }
+
     public static synchronized void finish() {
+        if (!enabled()) {
+            return;
+        }
         closeOutstandingPhases();
+        enabledUntil = System.nanoTime();
     }
 
     public static synchronized void consume(TraceConsumer consumer) {
+        if (!enabled()) {
+            return;
+        }
         finish();
         consumer.onStart();
         for (Event event : events) {
