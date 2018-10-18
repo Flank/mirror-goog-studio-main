@@ -34,7 +34,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.AbstractAndroidCompile;
+import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.utils.AndroidXDependency;
 import com.android.builder.core.AndroidBuilder;
@@ -47,6 +47,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -64,12 +65,10 @@ import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.CompileClasspath;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 
@@ -88,7 +87,7 @@ import org.gradle.api.tasks.TaskProvider;
  * where ProGuarding is enabled.
  */
 @CacheableTask
-public class ExtractAnnotations extends AbstractAndroidCompile {
+public class ExtractAnnotations extends AndroidVariantTask {
 
     @NonNull
     private static final AndroidXDependency ANDROIDX_ANNOTATIONS =
@@ -109,20 +108,9 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
 
     @Nullable FileCollection lintClassPath;
 
-    private String variantName;
+    private final List<Object> sources = new ArrayList<>();
 
-    @Internal
-    @NonNull
-    @Override
-    public String getVariantName() {
-        return variantName;
-    }
-
-    @Override
-    public void setVariantName(@NonNull String name) {
-        variantName = name;
-    }
-
+    private FileCollection classpath;
 
     /** Lint classpath */
     @InputFiles
@@ -132,12 +120,21 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
     }
 
     @NonNull
-    @Override
     @PathSensitive(PathSensitivity.NAME_ONLY)
     @InputFiles
-    @SkipWhenEmpty
     public FileTree getSource() {
-        return super.getSource();
+        return getProject().files(sources).getAsFileTree();
+    }
+
+    @CompileClasspath
+    @PathSensitive(PathSensitivity.NONE)
+    public FileCollection getClasspath() {
+        return classpath;
+    }
+
+    /** Used by the variant API */
+    public void source(Object source) {
+        sources.add(source);
     }
 
     /** Boot classpath: typically android.jar */
@@ -204,7 +201,6 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
         this.classDir = classDir;
     }
 
-    @Override
     @TaskAction
     protected void compile() {
         SourceFileVisitor fileVisitor = new SourceFileVisitor();
@@ -384,7 +380,6 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
 
             // publish intermediate annotation data
             task.setOutput(output);
-            task.setDestinationDir(output.getParentFile());
 
             task.typedefFile = typedefFile;
 
@@ -393,11 +388,9 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
                             .getArtifacts()
                             .getFinalArtifactFiles(AnchorOutputType.ALL_CLASSES));
 
-            task.setSource(variantScope.getVariantData().getJavaSources());
+            task.source(variantScope.getVariantData().getJavaSources());
             task.setEncoding(extension.getCompileOptions().getEncoding());
-            task.setSourceCompatibility(
-                    extension.getCompileOptions().getSourceCompatibility().toString());
-            task.setClasspath(variantScope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES));
+            task.classpath = variantScope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES);
 
             task.libraries = variantScope.getArtifactCollection(
                     COMPILE_CLASSPATH, EXTERNAL, CLASSES);
