@@ -50,7 +50,7 @@ class DataBindingWithFeaturesIntegrationTestAppTest(useAndroidX: Boolean) {
                     + "=" + useAndroidX
         ).also {
             if (SdkVersionInfo.HIGHEST_KNOWN_STABLE_API < 28 && useAndroidX) {
-                it.withCompileSdkVersion("\"android-28\"")
+                it.withCompileSdkVersion("28")
             }
         }
         .create()
