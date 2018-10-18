@@ -62,7 +62,7 @@ public class ResourcesSwapConnectedTest {
         TestFileUtils.appendToFile(
                 mProject.getBuildFile(),
                 // Use Guava for hashing:
-                "dependencies { compile 'com.google.guava:guava:19.0'}\n"
+                "dependencies { api 'com.google.guava:guava:19.0'}\n"
                         // Don't mess with the PNGs, to keep hashes stable:
                         + "android.aaptOptions.cruncherEnabled = false\n");
 
