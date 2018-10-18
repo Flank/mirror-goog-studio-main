@@ -114,7 +114,7 @@ public class Deployer {
             return dumps;
         }
 
-        generateHashs(apks, dumps, response);
+        generateHashes(apks, dumps, response);
         if (response.status == RunResponse.Status.NOT_INSTALLED) {
             return dumps;
         }
@@ -167,7 +167,7 @@ public class Deployer {
         return analysis;
     }
 
-    private void generateHashs(
+    private void generateHashes(
             List<ApkFull> apks, Map<String, ApkDump> dumps, RunResponse response) {
         for (ApkFull apk : apks) {
             RunResponse.Analysis analysis = findOrCreateAnalysis(response, apk.getPath());
