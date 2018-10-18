@@ -72,6 +72,17 @@ void SwapCommand::ParseParameters(int argc, char** argv) {
   ready_to_run_ = true;
 }
 
+inline void FilterPids(std::vector<int>& process_ids, proto::SwapRequest request) {
+  process_ids.erase(remove_if(process_ids.begin(), process_ids.end(),
+                              [&](bool x) {
+                                return std::find(request.skip_process_ids().begin(),
+                                            request.skip_process_ids().end(),
+                                            x) !=
+                                       request.skip_process_ids().end();
+                              }),
+                    process_ids.end());
+}
+
 void SwapCommand::Run(Workspace& workspace) {
   Phase p("Command Swap");
 
@@ -87,6 +98,21 @@ void SwapCommand::Run(Workspace& workspace) {
 
   // Get the list of processes we need to attach to.
   std::vector<int> process_ids = GetApplicationPids();
+  if (process_ids.empty()) {
+    response_->set_status(proto::SwapResponse::ERROR);
+    ErrEvent("No PIDs found.");
+    return;
+  }
+
+  // Filter out PIDs that was instructed to skip.
+  FilterPids(process_ids, request_);
+
+  // Don't brother with the server if we have no work to do.
+  if (process_ids.empty()) {
+    response_->set_status(proto::SwapResponse::OK);
+    LogEvent("No PIDs needs to be swapped");
+    return;
+  }
 
   // TODO: Use std::to_string. NDK doesn't currently support it.
   std::ostringstream os;

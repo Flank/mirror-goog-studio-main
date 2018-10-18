@@ -200,6 +200,19 @@ public final class JdwpPacket {
         mBuffer.position(oldPosn);
     }
 
+    /** Replace the payload of the package with a buffer. The current position is unchanged. */
+    public void setPayLoad(ByteBuffer buf) {
+        if (mLength - JDWP_HEADER_LEN != buf.remaining()) {
+            throw new UnsupportedOperationException("Changing payload size not supported");
+        }
+
+        int oldPosn = mBuffer.position();
+
+        mBuffer.position(JDWP_HEADER_LEN);
+        mBuffer.put(buf);
+        mBuffer.position(oldPosn);
+    }
+
     /**
      * Consume the JDWP packet.
      *

@@ -18,9 +18,9 @@ package com.android.ddmlib.jdwp;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ddmlib.JdwpPacket;
+import com.android.ddmlib.jdwp.packets.CapabilitiesNewReply;
 import com.android.ddmlib.jdwp.packets.IdSizesReply;
 import com.google.common.base.Charsets;
-
 import java.nio.ByteBuffer;
 
 public class JdwpProtocol {
@@ -75,6 +75,19 @@ public class JdwpProtocol {
                     return packet;
                 }
             });
+        } else if (packet.is(JdwpCommands.SET_VM, JdwpCommands.CMD_VM_CAPABILITIESNEW)) {
+            target.addReplyInterceptor(
+                    packet.getId(),
+                    new JdwpInterceptor() {
+                        @Override
+                        public JdwpPacket intercept(
+                                @NonNull JdwpAgent agent, @NonNull JdwpPacket packet) {
+                            CapabilitiesNewReply reply = new CapabilitiesNewReply();
+                            reply.parse(packet.getPayload(), JdwpProtocol.this);
+                            packet.setPayLoad(reply.getConverted());
+                            return packet;
+                        }
+                    });
         }
     }
 }

@@ -89,7 +89,7 @@ public class DeployerRunner {
                 if (command.equals("fullswap")) {
                     deployer.fullSwap(packageName, apks);
                 } else if (command.equals("codeswap")) {
-                    deployer.codeSwap(packageName, apks);
+                    deployer.codeSwap(packageName, apks, null);
                 }
             } catch (DeployerException e) {
                 LOGGER.error(e, "Error executing the deployer");

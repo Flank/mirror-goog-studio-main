@@ -81,9 +81,11 @@ class JdiBasedClassRedefiner extends ClassRedefiner {
                 redefinitionRequest.put(classRef, redefinition.getDex().toByteArray());
             }
         }
-        vm.redefineClasses(redefinitionRequest);
 
-        throw new UnsupportedOperationException("This method is incomplete");
+        Deploy.SwapResponse.Builder response = Deploy.SwapResponse.newBuilder();
+        vm.redefineClasses(redefinitionRequest);
+        response.setStatus(Deploy.SwapResponse.Status.OK);
+        return response.build();
     }
 
     List<ReferenceType> getReferenceTypeByName(String name) {

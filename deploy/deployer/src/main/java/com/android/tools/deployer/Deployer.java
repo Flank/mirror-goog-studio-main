@@ -81,19 +81,24 @@ public class Deployer {
         }
     }
 
-    public void codeSwap(String packageName, List<String> apks) throws DeployerException {
+    public void codeSwap(String packageName, List<String> apks, DebuggerCodeSwapAdapter adapter)
+            throws DeployerException {
         Trace.begin("codeSwap");
-        swap(packageName, apks, false /* Restart Activity */);
+        swap(packageName, apks, false /* Restart Activity */, adapter);
         Trace.end();
     }
 
     public void fullSwap(String packageName, List<String> apks) throws DeployerException {
         Trace.begin("fullSwap");
-        swap(packageName, apks, true /* Restart Activity */);
+        swap(packageName, apks, true /* Restart Activity */, null);
         Trace.end();
     }
 
-    private void swap(String packageName, List<String> paths, boolean restart)
+    private void swap(
+            String packageName,
+            List<String> paths,
+            boolean restart,
+            DebuggerCodeSwapAdapter adapter)
             throws DeployerException {
         // Get the list of files from the local apks
         List<ApkEntry> newFiles = new ApkParser().parsePaths(paths);
@@ -121,8 +126,21 @@ public class Deployer {
         // However if the compare task doesn't get to execute we still update the database.
         computeClassChecksums(newFiles);
 
-        // Actually do the swap
-        sendSwapRequest(packageName, restart, apkPaths, processNames, toSwap);
+        // Temporary disables all the breakpoints if debuggers are attached.
+        disableBreakPoints(adapter);
+
+        // Builds the Request Protocol Buffer.
+        Deploy.SwapRequest request =
+                buildSwapRequest(packageName, restart, apkPaths, processNames, toSwap, adapter);
+
+        // Send Request to agent
+        sendAgentSwapRequest(request);
+
+        // Send Request to debugger
+        sendDebuggerSwapRequest(request, adapter);
+
+        // Restores all breakpoints if debuggers are attached.
+        enableBreakPoints(adapter);
     }
 
     private List<FileDiff> verify(List<FileDiff> diffs, boolean restart) throws DeployerException {
@@ -181,13 +199,13 @@ public class Deployer {
         };
     }
 
-    private void sendSwapRequest(
+    private Deploy.SwapRequest buildSwapRequest(
             String packageName,
             boolean restart,
             List<String> apkPaths,
             Set<String> processNames,
-            List<DexClass> classes)
-            throws DeployerException {
+            List<DexClass> classes,
+            DebuggerCodeSwapAdapter adapter) {
         Deploy.SwapRequest.Builder request = Deploy.SwapRequest.newBuilder();
         request.setPackageName(packageName);
         request.setRestartActivity(restart);
@@ -198,12 +216,31 @@ public class Deployer {
                             .setDex(ByteString.copyFrom(clz.code)));
         }
 
-        ClassRedefiner redefiner = new InstallerBasedClassRedefiner(installer);
         request.addAllApks(apkPaths);
         request.addAllProcessNames(processNames);
-        Deploy.SwapResponse swapResponse = redefiner.redefine(request.build());
+
+        if (adapter != null) {
+            for (int pid : adapter.getPids()) {
+                request.addSkipProcessIds(pid);
+            }
+        }
+
+        return request.build();
+    }
+
+    private void sendAgentSwapRequest(Deploy.SwapRequest request) throws DeployerException {
+        ClassRedefiner redefiner = new InstallerBasedClassRedefiner(installer);
+        Deploy.SwapResponse swapResponse = redefiner.redefine(request);
         if (swapResponse.getStatus() != Deploy.SwapResponse.Status.OK) {
             throw new DeployerException(DeployerException.Error.REDEFINER_ERROR, "Swap failed");
+        }
+    }
+
+    private void sendDebuggerSwapRequest(
+            Deploy.SwapRequest request, DebuggerCodeSwapAdapter adapter) {
+        if (adapter != null) {
+            adapter.setRequest(request);
+            adapter.performSwap();
         }
     }
 
@@ -278,6 +315,19 @@ public class Deployer {
             throws DeployerException {
         try (Trace ignored = Trace.begin("diff")) {
             return new ApkDiffer().diff(oldFiles, newFiles);
+        }
+    }
+
+    private void disableBreakPoints(DebuggerCodeSwapAdapter adapter) {
+        if (adapter != null) {
+            adapter.disableBreakPoints();
+        }
+    }
+
+    /** Re-enables breakpoint. Should depend on code swap to be completely finished */
+    private void enableBreakPoints(DebuggerCodeSwapAdapter adapter) {
+        if (adapter != null) {
+            adapter.enableBreakPoints();
         }
     }
 }
