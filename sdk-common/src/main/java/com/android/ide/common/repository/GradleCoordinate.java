@@ -33,25 +33,25 @@ import java.util.regex.Pattern;
 /**
  * This class represents a maven coordinate and allows for comparison at any level.
  * <p>
- * This class does not directly implement {@link java.lang.Comparable}; instead,
- * you should use one of the specific {@link java.util.Comparator} constants based
+ *
+ * Maven coordinates take the following form: groupId:artifactId:packaging:classifier:version
+ * where
+ *   groupId is dot-notated alphanumeric
+ *   artifactId is the name of the project
+ *   packaging is optional and is jar/war/pom/aar/etc
+ *   classifier is optional and provides filtering context
+ *   version uniquely identifies a version.
+ *
+ * We only care about coordinates of the following form: groupId:artifactId:revision
+ * where revision is a series of '.' separated numbers optionally terminated by a '+' character.
+ * <p>
+ *
+ * This class does not directly implement {@link Comparable}; instead,
+ * you should use one of the specific {@link Comparator} constants based
  * on what type of ordering you need.
  */
 public final class GradleCoordinate {
     private static final String NONE = "NONE";
-
-    /**
-     * Maven coordinates take the following form: groupId:artifactId:packaging:classifier:version
-     * where
-     *   groupId is dot-notated alphanumeric
-     *   artifactId is the name of the project
-     *   packaging is optional and is jar/war/pom/aar/etc
-     *   classifier is optional and provides filtering context
-     *   version uniquely identifies a version.
-     *
-     * We only care about coordinates of the following form: groupId:artifactId:revision
-     * where revision is a series of '.' separated numbers optionally terminated by a '+' character.
-     */
 
     /**
      * List taken from <a href="http://maven.apache.org/pom.html#Maven_Coordinates">http://maven.apache.org/pom.html#Maven_Coordinates</a>
@@ -255,7 +255,7 @@ public final class GradleCoordinate {
      * A list of components separated by dashes.
      */
     public static class ListComponent extends RevisionComponent {
-        private final List<RevisionComponent> mItems = new ArrayList<RevisionComponent>();
+        private final List<RevisionComponent> mItems = new ArrayList<>();
         private boolean mClosed = false;
 
         public static ListComponent of(RevisionComponent... components) {
@@ -324,7 +324,7 @@ public final class GradleCoordinate {
 
     private final ArtifactType mArtifactType;
 
-    private final List<RevisionComponent> mRevisions = new ArrayList<RevisionComponent>(3);
+    private final List<RevisionComponent> mRevisions = new ArrayList<>(3);
 
     private static final Pattern MAVEN_PATTERN =
             Pattern.compile("([\\w\\d\\.-]+):([\\w\\d\\.-]+):([^:@]+)(@[\\w-]+)?");
@@ -351,7 +351,7 @@ public final class GradleCoordinate {
     }
 
     private static List<RevisionComponent> createComponents(int[] revisions) {
-        List<RevisionComponent> result = new ArrayList<RevisionComponent>(revisions.length);
+        List<RevisionComponent> result = new ArrayList<>(revisions.length);
         for (int revision : revisions) {
             if (revision == PLUS_REV_VALUE) {
                 result.add(PLUS_REV);
@@ -382,10 +382,6 @@ public final class GradleCoordinate {
      */
     @Nullable
     public static GradleCoordinate parseCoordinateString(@NonNull String coordinateString) {
-        if (coordinateString == null) {
-            return null;
-        }
-
         Matcher matcher = MAVEN_PATTERN.matcher(coordinateString);
         if (!matcher.matches()) {
             return null;
@@ -413,7 +409,7 @@ public final class GradleCoordinate {
 
     @NonNull
     public static List<RevisionComponent> parseRevisionNumber(@NonNull String revision) {
-        List<RevisionComponent> components = new ArrayList<RevisionComponent>();
+        List<RevisionComponent> components = new ArrayList<>();
         StringBuilder buffer = new StringBuilder();
         for (int i = 0; i < revision.length(); i++) {
             char c = revision.charAt(i);
@@ -485,12 +481,12 @@ public final class GradleCoordinate {
         return s;
     }
 
-    @Nullable
+    @NonNull
     public String getGroupId() {
         return mGroupId;
     }
 
-    @Nullable
+    @NonNull
     public String getArtifactId() {
         return mArtifactId;
     }
