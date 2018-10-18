@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "perfd/profiler_service.h"
+#include "perfd/event_writer.h"
 
 #include <sys/time.h>
 #include "utils/android_studio_version.h"
@@ -36,6 +37,20 @@ namespace {
 int64_t device_id_in_last_begin_session_request = -1;
 }  // namespace
 namespace profiler {
+/**
+ * Helper class to wrap the EventWriter interface. This class is passed to the
+ * EventBuffer and forwards any events to the attached ServerWriter.
+ */
+class ServerEventWriter final : public EventWriter {
+ public:
+  ServerEventWriter(ServerWriter<proto::Event>& writer) : writer_(writer) {}
+  bool Write(const proto::Event& event) override {
+    return writer_.Write(event);
+  }
+
+ private:
+  ServerWriter<proto::Event>& writer_;
+};
 
 Status ProfilerServiceImpl::GetCurrentTime(
     ServerContext* context, const profiler::proto::TimeRequest* request,
@@ -179,7 +194,8 @@ Status ProfilerServiceImpl::Execute(
 Status ProfilerServiceImpl::GetEvents(
     ServerContext* context, const profiler::proto::GetEventsRequest* request,
     ServerWriter<proto::Event>* response) {
-  daemon_->WriteEventsTo(response);
+  ServerEventWriter writer(*response);
+  daemon_->WriteEventsTo(&writer);
   // Only return when a connection between the client and server is terminated.
   return Status::OK;
 }

@@ -19,12 +19,13 @@
 #include <condition_variable>
 #include <mutex>
 #include <queue>
-
 #include "proto/profiler.grpc.pb.h"
 #include "utils/circular_buffer.h"
 #include "utils/clock.h"
 
 namespace profiler {
+
+class EventWriter;
 
 // This class is thread safe
 class EventBuffer {
@@ -49,10 +50,10 @@ class EventBuffer {
   // buffer is in order.
   void Add(proto::Event& event);
 
-  // All events are written to the |consumer| then cleared from the queue.
+  // All current and new events are written to the |writer|.
   // This call is blocking and will not return until InterruptWriteEvents is
   // called.
-  void WriteEventsTo(grpc::ServerWriter<proto::Event>* consumer);
+  void WriteEventsTo(EventWriter* writer);
 
   // Interrupts the WriteEventsTo.
   void InterruptWriteEvents();

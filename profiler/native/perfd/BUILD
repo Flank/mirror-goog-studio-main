@@ -24,6 +24,7 @@ cc_library(
         "commands/command.h",
         "daemon.h",
         "event_buffer.h",
+        "event_writer.h",
         "profiler_component.h",
         "profiler_service.h",
         "sessions/session.h",
@@ -55,6 +56,7 @@ cc_library(
         "daemon.h",
         "event_buffer.cc",
         "event_buffer.h",
+        "event_writer.h",
         "generic_component.cc",
         "generic_component.h",
         "profiler_component.h",
@@ -105,6 +107,7 @@ cc_binary(
 cc_test(
     name = "perfd_test",
     srcs = [
+        "event_buffer_test.cc",
         "profiler_service_test.cc",
         #"samplers/sampler_test.cc", // b/117965764
     ],

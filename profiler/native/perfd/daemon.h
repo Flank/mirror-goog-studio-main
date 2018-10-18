@@ -22,6 +22,7 @@
 #include <vector>
 #include "perfd/commands/command.h"
 #include "perfd/event_buffer.h"
+#include "perfd/event_writer.h"
 #include "perfd/profiler_component.h"
 #include "perfd/sessions/sessions_manager.h"
 #include "proto/profiler.grpc.pb.h"
@@ -91,11 +92,9 @@ class Daemon {
 
   EventBuffer* buffer() { return buffer_; }
 
-  // All events are written to the |consumer| then cleared from the queue.
+  // All current and new are written to the |writer|.
   // This call is blocking and will not return until cancel listener is called.
-  void WriteEventsTo(grpc::ServerWriter<proto::Event>* consumer) {
-    buffer_->WriteEventsTo(consumer);
-  }
+  void WriteEventsTo(EventWriter* writer) { buffer_->WriteEventsTo(writer); }
 
   // Interrupts the WriteEventsTo.
   void InterruptWriteEvents() { buffer_->InterruptWriteEvents(); }
