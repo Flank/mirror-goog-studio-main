@@ -64,7 +64,7 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* input,
     return JNI_OK;
   }
 
-  if (!socket->Connect(input, 1000)) {
+  if (!socket->Connect(input, Socket::kConnectionTimeoutMs)) {
     ErrEvent("Could not connect to socket");
     return JNI_OK;
   }

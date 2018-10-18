@@ -50,6 +50,11 @@ class Socket : public MessagePipeWrapper {
   // Default socket binding address.
   static constexpr auto kDefaultAddress = "irsocket";
 
+  // Default socket connection timeout, in milliseconds. Five seconds is the
+  // "Application Not Responding" timeout, so this value should be less than
+  // that.
+  static constexpr auto kConnectionTimeoutMs = 3000;
+
  private:
   Socket(const Socket&) = delete;
   Socket& operator=(const Socket&) = delete;
