@@ -26,19 +26,16 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APKS_FROM_BUNDLE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CONSUMER_PROGUARD_RULES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAVA_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JNI;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_JAVA_RES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.MODULE_PATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
 import static com.android.build.gradle.internal.scope.ArtifactPublishingUtil.publishArtifactToConfiguration;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_RESOURCE_PKG;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS;
@@ -131,8 +128,8 @@ import com.android.build.gradle.internal.tasks.ValidateSigningTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingGenBaseClassesTask;
+import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeBaseClassLogTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeDependencyArtifactsTask;
-import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeGenClassLogTransform;
 import com.android.build.gradle.internal.tasks.factory.PreConfigAction;
 import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
@@ -596,30 +593,6 @@ public abstract class TaskManager {
                                 variantScope.getArtifactCollection(
                                         RUNTIME_CLASSPATH, EXTERNAL, JNI))
                         .build());
-
-        // data binding related artifacts for external libs
-        if (extension.getDataBinding().isEnabled()) {
-            transformManager.addStream(
-                    OriginalStream.builder(project, "sub-project-data-binding-base-classes")
-                            .addContentTypes(TransformManager.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
-                            .addScope(Scope.SUB_PROJECTS)
-                            .setArtifactCollection(
-                                    variantScope.getArtifactCollection(
-                                            COMPILE_CLASSPATH,
-                                            MODULE,
-                                            DATA_BINDING_BASE_CLASS_LOG_ARTIFACT))
-                            .build());
-            transformManager.addStream(
-                    OriginalStream.builder(project, "ext-libs-data-binding-base-classes")
-                            .addContentTypes(TransformManager.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
-                            .addScope(Scope.EXTERNAL_LIBRARIES)
-                            .setArtifactCollection(
-                                    variantScope.getArtifactCollection(
-                                            COMPILE_CLASSPATH,
-                                            EXTERNAL,
-                                            DATA_BINDING_BASE_CLASS_LOG_ARTIFACT))
-                            .build());
-        }
 
         // for the sub modules, new intermediary classes artifact has its own stream
         transformManager.addStream(
@@ -2683,24 +2656,8 @@ public abstract class TaskManager {
                 return;
             }
         }
-        File outFolder =
-                variantScope.getIntermediateDir(DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS);
 
-        variantScope
-                .getTransformManager()
-                .addTransform(
-                        taskFactory,
-                        variantScope,
-                        new DataBindingMergeGenClassLogTransform(getLogger(), outFolder),
-                        taskName ->
-                                variantScope
-                                        .getArtifacts()
-                                        .appendArtifact(
-                                                DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS,
-                                                ImmutableList.of(outFolder),
-                                                taskName),
-                        null,
-                        null);
+        taskFactory.register(new DataBindingMergeBaseClassLogTask.CreationAction(variantScope));
     }
 
     protected void createDataBindingTasksIfNecessary(

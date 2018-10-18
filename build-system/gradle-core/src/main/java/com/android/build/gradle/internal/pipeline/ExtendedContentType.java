@@ -55,9 +55,6 @@ public enum ExtendedContentType implements ContentType {
 
     /** The content is a dex archive. It contains a single DEX file per class. */
     DEX_ARCHIVE(0x40000),
-
-    /** The content is an artifact exported by the data binding gen base classes task. */
-    DATA_BINDING_BASE_CLASS_LOG(0x100000),
     ;
 
     private final int value;
