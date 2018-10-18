@@ -212,10 +212,9 @@ public class Deployer {
         request.setRestartActivity(restart);
 
         HashSet<String> processNames = new HashSet<>();
+        adb.shell(
+            new String[] {"rm", "-r", APK_DIRECTORY, ";", "mkdir", "-p", APK_DIRECTORY}, null);
         for (ApkFull apk : apks) {
-            adb.shell(
-                    new String[] {"rm", "-r", APK_DIRECTORY, ";", "mkdir", "-p", APK_DIRECTORY},
-                    null);
             String target = APK_DIRECTORY + "/" + Paths.get(apk.getPath()).getFileName();
             adb.push(apk.getPath(), target);
             request.addApks(target);
