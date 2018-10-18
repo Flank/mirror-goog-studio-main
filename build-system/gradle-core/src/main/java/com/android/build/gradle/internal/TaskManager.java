@@ -1954,6 +1954,7 @@ public abstract class TaskManager {
                             testVariantScope
                                     .getArtifacts()
                                     .getFinalArtifactFiles(InternalArtifactType.APK),
+                            FeatureSplitUtils.getFeatureName(globalScope.getProject().getPath()),
                             baseVariantData
                                     .getScope()
                                     .getArtifactFileCollection(

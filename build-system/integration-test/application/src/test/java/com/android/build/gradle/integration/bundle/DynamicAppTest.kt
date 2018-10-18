@@ -409,11 +409,7 @@ class DynamicAppTest {
         Truth.assertThat(apkFileArray.toList()).named("APK List for API 27")
             .containsExactly(
                 "base-master.apk",
-                "base-xxhdpi.apk",
-                "feature1-master.apk",
-                "feature1-xxhdpi.apk",
-                "feature2-master.apk",
-                "feature2-xxhdpi.apk")
+                "base-xxhdpi.apk")
 
         val baseApk = File(apkFolder, "base-master.apk")
         Zip(baseApk).use {
@@ -500,8 +496,6 @@ class DynamicAppTest {
             .containsExactly(
                 "base-master.apk",
                 "base-xxhdpi.apk",
-                "feature1-master.apk",
-                "feature1-xxhdpi.apk",
                 "feature2-master.apk",
                 "feature2-xxhdpi.apk")
 
