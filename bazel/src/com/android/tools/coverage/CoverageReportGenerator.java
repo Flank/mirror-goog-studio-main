@@ -265,13 +265,13 @@ public class CoverageReportGenerator {
         }
 
         boolean exclude =
-                packageName.equals(
-                                "com.android.tools.idea.gradle.project.sync.ng.nosyncbuilder.proto")
-                        || packageName.equals("com.android.tools.profiler.protobuf3jarjar")
-                        || packageName.endsWith("com.google.protobuf")
-                        || packageName.startsWith("com.android.tools.r8.com.google")
+                packageName.contains("proto")
+                        || packageName.startsWith("com.android.tools.r8")
                         || packageName.equals("com.google.wireless.android.sdk.stats")
-                        || packageName.equals("com.google.wireless.android.play.playlog.proto")
+                        || packageName.startsWith("com.android.internal")
+                        || packageName.startsWith("com.android.bundle")
+                        || packageName.startsWith("com.android.aapt")
+                        || packageName.startsWith("com.android.i18n")
                         || packageName.contains("unimi.dsi.fastutil");
 
         return !exclude;
