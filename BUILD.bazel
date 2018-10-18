@@ -42,5 +42,6 @@ coverage_report(
     ],
     tags = [
         "manual",
+        "no_windows",
     ],
 )
