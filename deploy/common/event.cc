@@ -44,7 +44,10 @@ inline int64_t gettid() noexcept {
 std::vector<Event>* events = new std::vector<Event>();
 }  // namespace
 
-void InitEventSystem() { Trace::Init(); }
+void InitEventSystem() {
+  Trace::Init();
+  events->clear();
+}
 
 static inline void AddEvent(Event::Type type, const std::string& text) {
   AddRawEvent({GetTime(), type, getpid(), gettid(), text});
