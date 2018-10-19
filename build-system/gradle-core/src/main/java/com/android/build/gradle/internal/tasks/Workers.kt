@@ -96,6 +96,21 @@ object Workers {
             workerExecutor.await()
         }
 
+        /**
+         * In a normal situation you would like to call await() here, however:
+         * 1) Gradle currently can only run a SINGLE @TaskAction for a given project
+         *    (and this should be fixed!)
+         * 2) WorkerExecutor passed to a task instance is tied to the task and Gradle is able
+         *    to control which worker items are executed by which task
+         *
+         * Thus, if you put await() here, only a single task can run.
+         * If not (as it is), gradle will start another task right after it finishes executing a
+         * @TaskAction (which ideally should be just some preparation + a number of submit() calls
+         * to a WorkerExecutorFacade. In case the task B depends on the task A and the work items
+         * of the task A hasn't finished yet, gradle will call await() on the dedicated
+         * WorkerExecutor of the task A and therefore work items will finish before task B
+         * @TaskAction starts (so, we are safe!).
+         */
         override fun close() {
             // do nothing.
         }
