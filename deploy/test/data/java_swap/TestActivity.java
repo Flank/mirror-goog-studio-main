@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.deploy.swapper.testapp;
+package app;
 
 import android.app.Activity;
 import android.app.ActivityThread;
@@ -79,5 +79,4 @@ public class TestActivity extends Activity {
     public void getLambdaFailedTargetStatus() {
         System.out.println(new LambdaFailedTarget().getStatus());
     }
-
 }

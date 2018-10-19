@@ -13,13 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.deploy.swapper.testapp;
+package app;
 
-/** This is a class that much of the swapper will be swapping in the Activity for testing. */
-public class Target {
-    private static int seqNumber = 0;
-    /** This is the method to identify the class that is current in the VM. */
-    public static String getStatus() {
-        return "JUST SWAPPED " + seqNumber++;
+public class ClinitTarget {
+
+    static {
+        TestActivity.incrementCounter();
+    }
+
+    public String getStatus() {
+        return "ClinitTarget JUST SWAPPED";
     }
 }

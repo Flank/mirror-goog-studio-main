@@ -18,8 +18,8 @@ package com.android.tools.deploy.swapper;
 import com.android.tools.deploy.proto.Deploy;
 import com.google.protobuf.ByteString;
 import org.junit.Assert;
-import org.junit.Test;
 import org.junit.Ignore;
+import org.junit.Test;
 
 /** Test cases where the agent fail to redefine classes for various reasons. */
 public class AgentBasedClassRedefinerFailureTest extends AgentBasedClassRedefinerTestBase {
@@ -33,11 +33,7 @@ public class AgentBasedClassRedefinerFailureTest extends AgentBasedClassRedefine
         android.triggerMethod(ACTIVITY_CLASS, "getStatus");
         Assert.assertTrue(android.waitForInput("NOT SWAPPED 0", RETURN_VALUE_TIMEOUT));
 
-        Deploy.SwapRequest request =
-                createRequest(
-                        "com.android.tools.deploy.swapper.testapp.Target",
-                        "com/android/tools/deploy/swapper/testapp/ClinitTarget.dex",
-                        true);
+        Deploy.SwapRequest request = createRequest("app.Target", "app/ClinitTarget.dex", true);
         redefiner.redefine(request);
 
         // Agent should request an activity restart.
@@ -66,10 +62,7 @@ public class AgentBasedClassRedefinerFailureTest extends AgentBasedClassRedefine
         Assert.assertTrue(android.waitForInput("FailedTarget NOT SWAPPED 0", RETURN_VALUE_TIMEOUT));
 
         Deploy.SwapRequest request =
-                createRequest(
-                        "com.android.tools.deploy.swapper.testapp.FailedTarget",
-                        "com/android/tools/deploy/swapper/testapp/FailedTarget.dex",
-                        false);
+                createRequest("app.FailedTarget", "app/FailedTarget.dex", false);
         redefiner.redefine(request);
 
         Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
@@ -92,19 +85,13 @@ public class AgentBasedClassRedefinerFailureTest extends AgentBasedClassRedefine
 
         Deploy.ClassDef classDef1 =
                 Deploy.ClassDef.newBuilder()
-                        .setName("com.android.tools.deploy.swapper.testapp.FailedTarget")
-                        .setDex(
-                                ByteString.copyFrom(
-                                        getSplittedDex(
-                                                "com/android/tools/deploy/swapper/testapp/FailedTarget.dex")))
+                        .setName("app.FailedTarget")
+                        .setDex(ByteString.copyFrom(getSplittedDex("app/FailedTarget.dex")))
                         .build();
         Deploy.ClassDef classDef2 =
                 Deploy.ClassDef.newBuilder()
-                        .setName("com.android.tools.deploy.swapper.testapp.Target")
-                        .setDex(
-                                ByteString.copyFrom(
-                                        getSplittedDex(
-                                                "com/android/tools/deploy/swapper/testapp/Target.dex")))
+                        .setName("app.Target")
+                        .setDex(ByteString.copyFrom(getSplittedDex("app/Target.dex")))
                         .build();
         Deploy.SwapRequest request =
                 Deploy.SwapRequest.newBuilder()

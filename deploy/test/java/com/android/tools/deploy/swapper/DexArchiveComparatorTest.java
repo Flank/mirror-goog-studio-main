@@ -79,7 +79,7 @@ public class DexArchiveComparatorTest {
         DexArchiveComparator.Result result = new DexArchiveComparator().compare(apk1Cache, apk2);
         Assert.assertEquals(1, result.changedClasses.size());
         DexArchiveComparator.Entry changed = result.changedClasses.get(0);
-        Assert.assertEquals("com.android.tools.deploy.swapper.testapk.Changed", changed.name);
+        Assert.assertEquals("testapk.Changed", changed.name);
         Assert.assertNotNull(changed.dex);
 
         // Also cache the new APK

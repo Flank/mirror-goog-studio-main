@@ -9,6 +9,6 @@ dex_library(
 
 java_binary(
     name = "apk_java",
-    srcs = glob(["com/android/tools/deploy/swapper/testapk/*.java"]),
+    srcs = glob(["*.java"]),
     create_executable = 0,
 )

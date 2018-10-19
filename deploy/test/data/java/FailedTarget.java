@@ -13,20 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.deploy.swapper.testapp;
+package app;
 
-public class LambdaFailedTarget {
-    public static int seqNumber = 0;
+/** Specifically created to failed to hotswap */
+public class FailedTarget {
+    private static int seqNumber = 0;
 
-    public interface StatusGetter {
-        public String getStatus(int x);
-    }
-
-    public StatusGetter getStatusGetter(int seq) {
-        return x -> "LambdaFailedTarget NOT SWAPPED " + x + ":" + x;
-    }
-
-    public String getStatus() {
-        return getStatusGetter(seqNumber).getStatus(seqNumber++);
+    public static String getStatus() {
+        return "FailedTarget NOT SWAPPED " + seqNumber++;
     }
 }

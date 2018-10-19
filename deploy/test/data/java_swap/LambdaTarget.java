@@ -13,13 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.deploy.swapper.testapp;
+package app;
 
-/** This is a class that much of the swapper will be swapping in the Activity for testing. */
-public class Target {
-    private static int seqNumber = 0;
-    /** This is the method to identify the class that is current in the VM. */
-    public static String getStatus() {
-        return "NOT SWAPPED " + seqNumber++;
+public class LambdaTarget {
+    public static int seqNumber = 0;
+
+    public interface StatusGetter {
+        public String getStatus(int x);
+    }
+
+    public StatusGetter getStatusGetter(int seq) {
+        // Added capature variable is fine for hotswapping.
+        return x -> "LambdaTarget JUST SWAPPED " + x + ":" + seq;
+    }
+
+    public String getStatus() {
+        return getStatusGetter(seqNumber).getStatus(seqNumber++);
     }
 }

@@ -1,4 +1,4 @@
-package com.android.tools.deploy.swapper.testapk;
+package testapk;
 
 public final class Changed {
     public Changed() {

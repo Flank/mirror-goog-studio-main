@@ -13,18 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.deploy.swapper.testapp;
+package app;
 
-public class ClinitTarget {
+/** Specifically created to failed to hotswap */
+public class FailedTarget {
+    public static final String newField = "FailedTarget SWAPPED!";
 
-    // The original clinit sets the counter to 2. However, since it was never
-    // loaded before the swap, the counter should never get past 1.
-    static {
-        TestActivity.incrementCounter();
-        TestActivity.incrementCounter();
-    }
-
-    public String getStatus() {
-        return "ClinitTarget NOT SWAPPED";
+    public static String getStatus() {
+        return newField;
     }
 }

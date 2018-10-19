@@ -30,8 +30,7 @@ import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
 public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTestBase {
-    protected static final String ACTIVITY_CLASS =
-            "com.android.tools.deploy.swapper.testapp.TestActivity";
+    protected static final String ACTIVITY_CLASS = "app.TestActivity";
 
     // Location of the initial test-app that has the ACTIVITY_CLASS
     protected static final String DEX_LOCATION = ProcessRunner.getProcessPath("app.dex.location");
@@ -147,6 +146,7 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
             try {
                 System.out.println("Waiting for server to exit");
                 server.waitFor();
+                System.out.println("Server exited");
             } catch (InterruptedException e) {
                 System.err.println(e);
             }

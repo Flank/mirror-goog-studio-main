@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.deploy.swapper.testapp;
+package app;
 
-public class LambdaTarget {
+public class LambdaFailedTarget {
     public static int seqNumber = 0;
 
     public interface StatusGetter {
@@ -24,7 +24,7 @@ public class LambdaTarget {
 
     public StatusGetter getStatusGetter(int seq) {
         // Added capature variable is fine for hotswapping.
-        return x -> "LambdaTarget JUST SWAPPED " + x + ":" + seq;
+        return x -> "LambdaFailedTarget JUST SWAPPED " + x + ":" + seq;
     }
 
     public String getStatus() {
