@@ -31,7 +31,7 @@ TEST_DATA = [
     "//prebuilts/studio/sdk:constraint-layout_latest",
     "//prebuilts/studio/sdk:espresso_latest",
     "//prebuilts/studio/sdk:platforms/android-27_build_only",
-    "//prebuilts/studio/sdk:platforms/android-P_build_only",
+    "//prebuilts/studio/sdk:platforms/android-28_build_only",
     "//prebuilts/studio/sdk:test-runner_latest",
     "//prebuilts/tools/common/kotlin-plugin:Kotlin/kotlinc/build.txt",
     "//tools/base/build-system:gradle-distrib",

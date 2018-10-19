@@ -16,13 +16,14 @@ build-tools;25.0.0
 build-tools;24.0.3
 
 # Platforms. There's no Google APIs for 25.
-platforms;android-P
+platforms;android-28
 platforms;android-27
 platforms;android-25
 platforms;android-24
 add-ons;addon-google_apis-google-24:**:docs/**
 
 # Sources
+sources;android-28:{package.xml,android/view/View.java}
 sources;android-27:{package.xml,android/view/View.java}
 sources;android-24:{package.xml,android/view/View.java}
 sources;android-25:{package.xml,android/view/View.java}

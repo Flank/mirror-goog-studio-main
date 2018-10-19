@@ -78,9 +78,9 @@ public class OsProcessRunnerTest {
         runner.start(pb);
         assertThat(runner.waitFor(10, TimeUnit.SECONDS)).isTrue();
 
-        // 1.0.39+ of adb print the help message on stdout
+        // 1.0.39 of adb print the help message on stdout
         AdbVersion adbVersion = AdbVersion.get(pathToAdb);
-        if (adbVersion.micro >= 39) {
+        if (adbVersion.micro == 39) {
             assertThat(runner.getStdout()).isNotEmpty();
             assertThat(runner.getStderr()).isEmpty();
         } else {

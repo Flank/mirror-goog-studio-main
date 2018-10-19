@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -208,16 +209,19 @@ public class InstrumentationResultParser extends MultiLineReceiver {
     private String mOnError = null;
 
     /**
-     * Stores key-value pairs under INSTRUMENTATION_RESULT header, these are printed at the end of a
-     * test run, if applicable
+     * Stores key-value pairs under INSTRUMENTATION_RESULT header, keeping the order in which they
+     * were reported. The {@link ITestRunListener}s may choose to display some or all of them when
+     * the test run ends.
      */
-    private Map<String, String> mInstrumentationResultBundle = new HashMap<String, String>();
+    private Map<String, String> mInstrumentationResultBundle = new LinkedHashMap<>();
 
     /**
-     * Stores key-value pairs of metrics emitted during the execution of each test case.  Note that
-     * standard keys that are stored in the TestResults class are filtered out of this Map.
+     * Stores key-value pairs of metrics emitted during the execution of each test case, keeping the
+     * order in which they were reported. Note that standard keys that are stored in the TestResults
+     * class are filtered out of this Map. The {@link ITestRunListener}s may choose to display some
+     * or all of them when the test case ends.
      */
-    private Map<String, String> mTestMetrics = new HashMap<String, String>();
+    private Map<String, String> mTestMetrics = new LinkedHashMap<>();
 
     private static final String LOG_TAG = "InstrumentationResultParser";
 

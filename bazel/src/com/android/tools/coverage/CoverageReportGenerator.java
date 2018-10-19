@@ -270,6 +270,8 @@ public class CoverageReportGenerator {
                         || packageName.equals("com.android.tools.profiler.protobuf3jarjar")
                         || packageName.endsWith("com.google.protobuf")
                         || packageName.startsWith("com.android.tools.r8.com.google")
+                        || packageName.equals("com.google.wireless.android.sdk.stats")
+                        || packageName.equals("com.google.wireless.android.play.playlog.proto")
                         || packageName.contains("unimi.dsi.fastutil");
 
         return !exclude;

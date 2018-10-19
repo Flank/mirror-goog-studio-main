@@ -94,7 +94,6 @@ public class Installer {
         Deploy.InstallerResponse installerResponse = invokeRemoteCommand(cmd, null);
         Deploy.DumpResponse response = installerResponse.getDumpResponse();
         logger.info("Dump response:" + response.getStatus().toString());
-        logEvents(response.getEventsList());
 
         if (response.getStatus() == Deploy.DumpResponse.Status.ERROR_PACKAGE_NOT_FOUND) {
             throw new IOException(
@@ -119,14 +118,14 @@ public class Installer {
         Deploy.InstallerResponse installerResponse = invokeRemoteCommand(cmd, inputStream);
         Deploy.SwapResponse response = installerResponse.getSwapResponse();
         logger.info("Swap response:" + response.getStatus().toString());
-        logEvents(response.getEventsList());
         return response;
     }
 
     public Deploy.InstallerResponse invokeRemoteCommand(String[] cmd, InputStream inputStream) {
+        Trace.begin("./installer " + cmd[2]);
         Deploy.InstallerResponse response = invokeRemoteCommand(cmd, inputStream, OnFail.RETRY);
-        logger.info("Installer response:" + response.getStatus().toString());
         logEvents(response.getEventsList());
+        Trace.endtWithRemoteEvents(response.getEventsList());
         return response;
     }
 

@@ -127,6 +127,12 @@ public enum InternalArtifactType implements ArtifactType {
     LIBRARY_JNI,
     // packaged JNI for AAR publishing
     LIBRARY_AND_LOCAL_JARS_JNI,
+    // source folder jni libs merged into a single folder
+    MERGED_JNI_LIBS,
+    // source folder shaders merged into a single folder
+    MERGED_SHADERS,
+    // folder for NDK *.so libraries
+    NDK_LIBS,
 
     // Assets created by compiling shader
     SHADER_ASSETS,
@@ -141,6 +147,8 @@ public enum InternalArtifactType implements ArtifactType {
     RENDERSCRIPT_HEADERS,
     // source output for rs
     RENDERSCRIPT_SOURCE_OUTPUT_DIR(Category.GENERATED),
+    // renderscript library
+    RENDERSCRIPT_LIB,
 
     // An output of AndroidManifest.xml check
     CHECK_MANIFEST_RESULT,

@@ -27,7 +27,6 @@ import static com.google.common.base.Preconditions.checkState;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.compiling.DependencyFileProcessor;
 import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.files.IncrementalRelativeFileSets;
@@ -37,7 +36,6 @@ import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.BlockingResourceLinker;
 import com.android.builder.internal.aapt.v2.Aapt2Exception;
 import com.android.builder.internal.aapt.v2.Aapt2InternalException;
-import com.android.builder.internal.compiler.AidlProcessor;
 import com.android.builder.internal.compiler.DirectoryWalker;
 import com.android.builder.internal.compiler.RenderScriptProcessor;
 import com.android.builder.internal.compiler.ShaderProcessor;
@@ -70,6 +68,7 @@ import com.android.manifmerger.PlaceholderHandler;
 import com.android.repository.Revision;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
+import com.android.tools.build.apkzlib.sign.SigningOptions;
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory;
 import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode;
 import com.android.utils.FileUtils;
@@ -1153,16 +1152,15 @@ public class AndroidBuilder {
             v2SigningEnabled = false;
         }
 
+        SigningOptions signingOptions =
+                new SigningOptions(
+                        key, certificate, v1SigningEnabled, v2SigningEnabled, API_LEVEL_SPLIT_APK);
         ApkCreatorFactory.CreationData creationData =
                 new ApkCreatorFactory.CreationData(
                         outApkLocation,
-                        key,
-                        certificate,
-                        v1SigningEnabled,
-                        v2SigningEnabled,
+                        signingOptions,
                         null,
                         mCreatedBy,
-                        API_LEVEL_SPLIT_APK,
                         NativeLibrariesPackagingMode.COMPRESSED,
                         s -> false);
 

@@ -61,7 +61,6 @@ message SwapResponse {
   }
 
   Status status = 1;
-  repeated Event events = 2;
 }
 
 // Message returned by the Android native IRR installer. There are two layers :
@@ -114,6 +113,5 @@ message DumpResponse {
   }
 
   Status status = 1;
-  repeated Event events = 2;
   repeated ApkDump dumps = 3;
 }

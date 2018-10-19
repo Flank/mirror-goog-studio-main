@@ -359,7 +359,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "commons-codec_commons-codec",
-    export_artifact = "//prebuilts/tools/common/m2/repository/commons-codec/commons-codec/1.9:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/commons-codec/commons-codec/1.10:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -745,7 +745,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.apache.httpcomponents_httpclient",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpclient/4.5.2:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpclient/4.5.6:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":commons-codec_commons-codec",
@@ -757,7 +757,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.apache.httpcomponents_httpcore",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpcore/4.4.5:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpcore/4.4.10:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -765,7 +765,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.apache.httpcomponents_httpmime",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpmime/4.5.2:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpmime/4.5.6:jar",
     visibility = ["//visibility:public"],
     exports = [":org.apache.httpcomponents_httpclient"],
 )

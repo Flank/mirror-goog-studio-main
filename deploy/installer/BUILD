@@ -23,7 +23,6 @@ cc_library(
         "package_manager.cc",
         "shell_command.cc",
         "swap.cc",
-        "trace.cc",
         "workspace.cc",
     ],
     hdrs = [
@@ -35,7 +34,6 @@ cc_library(
         "package_manager.h",
         "shell_command.h",
         "swap.h",
-        "trace.h",
         "workspace.h",
     ],
     copts = ANDROID_COPTS + [
@@ -52,6 +50,7 @@ cc_library(
     deps = [
         ":agent_header",
         "//tools/base/deploy/common:common_lib",
+        "//tools/base/deploy/common:log",
         "//tools/base/deploy/proto:cc_proto",
     ],
 )

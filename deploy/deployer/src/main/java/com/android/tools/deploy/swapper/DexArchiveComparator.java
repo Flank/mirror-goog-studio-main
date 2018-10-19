@@ -17,14 +17,9 @@ package com.android.tools.deploy.swapper;
 
 import com.android.tools.r8.*;
 import com.android.tools.r8.origin.Origin;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.*;
 import java.util.zip.CRC32;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+
 
 /**
  * Given two sets of dex archives, this class computes individual classes that are modified between
@@ -158,29 +153,6 @@ public class DexArchiveComparator {
                 DexArchiveComparator.this.notify();
             }
         }
-    }
-
-    private byte[] getFileFromApk(File apk, String name) throws IOException {
-        ZipInputStream zis = new ZipInputStream(new FileInputStream(apk));
-        for (ZipEntry entry = zis.getNextEntry(); entry != null; entry = zis.getNextEntry()) {
-            if (!entry.getName().equals(name)) {
-                continue;
-            }
-
-            byte[] buffer = new byte[1024];
-            ByteArrayOutputStream dexContent = new ByteArrayOutputStream();
-
-            int len;
-            while ((len = zis.read(buffer)) > 0) {
-                dexContent.write(buffer, 0, len);
-            }
-            zis.closeEntry();
-            zis.close();
-            return dexContent.toByteArray();
-        }
-        zis.closeEntry();
-        zis.close();
-        return null;
     }
 
     /** VM type names to the more readable class names. */

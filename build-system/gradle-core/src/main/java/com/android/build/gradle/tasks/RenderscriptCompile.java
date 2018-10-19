@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.RENDERSCRIPT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_LIB;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR;
 
 import com.android.annotations.NonNull;
@@ -41,7 +42,9 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -63,7 +66,7 @@ public class RenderscriptCompile extends NdkTask {
 
     private File objOutputDir;
 
-    private File libOutputDir;
+    private Provider<Directory> libOutputDir;
 
 
     // ----- PRIVATE TASK API -----
@@ -117,12 +120,8 @@ public class RenderscriptCompile extends NdkTask {
     }
 
     @OutputDirectory
-    public File getLibOutputDir() {
+    public Provider<Directory> getLibOutputDir() {
         return libOutputDir;
-    }
-
-    public void setLibOutputDir(File libOutputDir) {
-        this.libOutputDir = libOutputDir;
     }
 
     @InputFiles
@@ -199,7 +198,7 @@ public class RenderscriptCompile extends NdkTask {
         File objDestDir = getObjOutputDir();
         FileUtils.cleanOutputDir(objDestDir);
 
-        File libDestDir = getLibOutputDir();
+        File libDestDir = libOutputDir.get().getAsFile();
         FileUtils.cleanOutputDir(libDestDir);
 
         Set<File> sourceDirectories = sourceDirs.getFiles();
@@ -250,6 +249,7 @@ public class RenderscriptCompile extends NdkTask {
     public static class CreationAction extends VariantTaskCreationAction<RenderscriptCompile> {
 
         private File sourceOutputDir;
+        private Provider<Directory> libOutputDir;
 
         public CreationAction(@NonNull VariantScope scope) {
             super(scope);
@@ -275,6 +275,10 @@ public class RenderscriptCompile extends NdkTask {
                     getVariantScope()
                             .getArtifacts()
                             .appendArtifact(RENDERSCRIPT_SOURCE_OUTPUT_DIR, taskName, "out");
+            libOutputDir =
+                    getVariantScope()
+                            .getArtifacts()
+                            .createDirectory(RENDERSCRIPT_LIB, taskName, "lib");
         }
 
         @Override
@@ -313,7 +317,7 @@ public class RenderscriptCompile extends NdkTask {
             renderscriptTask.setSourceOutputDir(sourceOutputDir);
             renderscriptTask.setResOutputDir(scope.getRenderscriptResOutputDir());
             renderscriptTask.setObjOutputDir(scope.getRenderscriptObjOutputDir());
-            renderscriptTask.setLibOutputDir(scope.getRenderscriptLibOutputDir());
+            renderscriptTask.libOutputDir = libOutputDir;
 
             renderscriptTask.setNdkConfig(config.getNdkConfig());
 

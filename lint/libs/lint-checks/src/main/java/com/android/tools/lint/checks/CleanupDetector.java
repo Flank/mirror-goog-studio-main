@@ -341,7 +341,6 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
             @NonNull UCallExpression node,
             @NonNull final String recycleType,
             @NonNull final String recycleName) {
-
         if (!USE_NEW_DATA_FLOW_ANALYZER) {
             checkRecycledOld(context, node, recycleType, recycleName);
             return;
@@ -796,6 +795,16 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
 
                 // with, run, let, apply, etc chained to the end of this call
                 if (CommitCallVisitor.lastArgCallsCommit(context, call, checker)) {
+                    return true;
+                }
+            }
+
+            // Check preceding calls too (but not for chained lambdas)
+            for (int i = chain.size() - 2; i > 0; i--) {
+                UExpression call = chain.get(i);
+                if (call == node || !(call instanceof UCallExpression)) {
+                    break;
+                } else if (checker.isCommitCall(context, (UCallExpression) call)) {
                     return true;
                 }
             }

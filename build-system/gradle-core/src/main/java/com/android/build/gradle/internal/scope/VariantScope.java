@@ -121,11 +121,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     TransformManager getTransformManager();
 
     @Nullable
-    Collection<File> getNdkSoFolder();
-
-    void setNdkSoFolder(@NonNull Collection<File> ndkSoFolder);
-
-    @Nullable
     File getNdkDebuggableLibraryFolders(@NonNull Abi abi);
 
     void addNdkDebuggableLibraryFolders(@NonNull Abi abi, @NonNull File searchPath);
@@ -197,9 +192,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getIntermediateJarOutputFolder();
 
     @NonNull
-    File getRenderscriptLibOutputDir();
-
-    @NonNull
     File getDefaultMergeResourcesOutputDir();
 
     @NonNull
@@ -207,12 +199,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getResourceBlameLogDir();
-
-    @NonNull
-    File getMergeNativeLibsOutputDir();
-
-    @NonNull
-    File getMergeShadersOutputDir();
 
     @NonNull
     File getBuildConfigSourceOutputDir();

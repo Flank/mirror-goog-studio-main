@@ -45,9 +45,12 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTA
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JNI_LIBS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.NDK_LIBS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_LIB;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -239,7 +242,6 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -360,9 +362,6 @@ public abstract class TaskManager {
      */
     public void configureScopeForNdk(@NonNull VariantScope scope) {
         final BaseVariantData variantData = scope.getVariantData();
-        scope.setNdkSoFolder(Collections.singleton(new File(
-                scope.getGlobalScope().getIntermediatesDir(),
-                "ndk/" + variantData.getVariantConfiguration().getDirName() + "/lib")));
         File objFolder = new File(scope.getGlobalScope().getIntermediatesDir(),
                 "ndk/" + variantData.getVariantConfiguration().getDirName() + "/obj");
         for (Abi abi : NdkHandler.getAbiList()) {
@@ -940,26 +939,27 @@ public abstract class TaskManager {
                                 .addContentType(ExtendedContentType.NATIVE_LIBS)
                                 .addScope(Scope.PROJECT)
                                 .setFileCollection(
-                                        project.files(variantScope.getMergeNativeLibsOutputDir())
-                                                .builtBy(mergeJniLibFoldersTask.getName()))
+                                        variantScope
+                                                .getArtifacts()
+                                                .getFinalArtifactFiles(MERGED_JNI_LIBS)
+                                                .get())
                                 .build());
 
         // create a stream that contains the content of the local NDK build
-        ConfigurableFileCollection fileCollection =
-                project.files((Callable<Collection<File>>) variantScope::getNdkSoFolder);
-        if (variantScope.getTaskContainer().getNdkCompileTask() != null) {
-            fileCollection =
-                    fileCollection.builtBy(variantScope.getTaskContainer().getNdkCompileTask());
+        if (shouldCreateNdkCompile()) {
+            variantScope
+                    .getTransformManager()
+                    .addStream(
+                            OriginalStream.builder(project, "local-ndk-build")
+                                    .addContentType(ExtendedContentType.NATIVE_LIBS)
+                                    .addScope(Scope.PROJECT)
+                                    .setFileCollection(
+                                            variantScope
+                                                    .getArtifacts()
+                                                    .getFinalArtifactFiles(NDK_LIBS)
+                                                    .get())
+                                    .build());
         }
-
-        variantScope
-                .getTransformManager()
-                .addStream(
-                        OriginalStream.builder(project, "local-ndk-build")
-                                .addContentType(ExtendedContentType.NATIVE_LIBS)
-                                .addScope(Scope.PROJECT)
-                                .setFileCollection(fileCollection)
-                                .build());
 
         // create a stream that contains the content of the local external native build
         if (taskContainer.getExternalNativeJsonGenerator() != null) {
@@ -985,42 +985,31 @@ public abstract class TaskManager {
         // create a stream containing the content of the renderscript compilation output
         // if support mode is enabled.
         if (variantScope.getVariantConfiguration().getRenderscriptSupportModeEnabled()) {
-            final Callable<Collection<File>> callable =
-                    () -> {
-                        ImmutableList.Builder<File> builder = ImmutableList.builder();
+            ConfigurableFileCollection rsFileCollection =
+                    project.files(
+                            variantScope
+                                    .getArtifacts()
+                                    .getFinalArtifactFiles(RENDERSCRIPT_LIB)
+                                    .get());
 
-                        if (variantScope.getRenderscriptLibOutputDir().isDirectory()) {
-                            builder.add(variantScope.getRenderscriptLibOutputDir());
-                        }
+            File rsLibs =
+                    variantScope.getGlobalScope().getAndroidBuilder().getSupportNativeLibFolder();
+            if (rsLibs != null && rsLibs.isDirectory()) {
+                rsFileCollection.from(rsLibs);
+            }
+            if (variantScope.getVariantConfiguration().getRenderscriptSupportModeBlasEnabled()) {
+                File rsBlasLib =
+                        variantScope.getGlobalScope().getAndroidBuilder().getSupportBlasLibFolder();
 
-                        File rsLibs =
-                                variantScope
-                                        .getGlobalScope()
-                                        .getAndroidBuilder()
-                                        .getSupportNativeLibFolder();
-                        if (rsLibs != null && rsLibs.isDirectory()) {
-                            builder.add(rsLibs);
-                        }
-                        if (variantScope
-                                .getVariantConfiguration()
-                                .getRenderscriptSupportModeBlasEnabled()) {
-                            File rsBlasLib =
-                                    variantScope
-                                            .getGlobalScope()
-                                            .getAndroidBuilder()
-                                            .getSupportBlasLibFolder();
-
-                            if (rsBlasLib == null || !rsBlasLib.isDirectory()) {
-                                throw new GradleException(
-                                        "Renderscript BLAS support mode is not supported "
-                                                + "in BuildTools"
-                                                + rsBlasLib);
-                            } else {
-                                builder.add(rsBlasLib);
-                            }
-                        }
-                        return builder.build();
-                    };
+                if (rsBlasLib == null || !rsBlasLib.isDirectory()) {
+                    throw new GradleException(
+                            "Renderscript BLAS support mode is not supported "
+                                    + "in BuildTools"
+                                    + rsBlasLib);
+                } else {
+                    rsFileCollection.from(rsBlasLib);
+                }
+            }
 
             variantScope
                     .getTransformManager()
@@ -1028,12 +1017,7 @@ public abstract class TaskManager {
                             OriginalStream.builder(project, "rs-support-mode-output")
                                     .addContentType(ExtendedContentType.NATIVE_LIBS)
                                     .addScope(Scope.PROJECT)
-                                    .setFileCollection(
-                                            project.files(callable)
-                                                    .builtBy(
-                                                            taskContainer
-                                                                    .getRenderscriptCompileTask()
-                                                                    .getName()))
+                                    .setFileCollection(rsFileCollection)
                                     .build());
         }
 
@@ -1391,7 +1375,6 @@ public abstract class TaskManager {
         // compile the shaders
         TaskProvider<ShaderCompile> shaderCompileTask =
                 taskFactory.register(new ShaderCompile.CreationAction(scope));
-        TaskFactoryUtils.dependsOn(shaderCompileTask, mergeShadersTask);
 
         TaskFactoryUtils.dependsOn(scope.getTaskContainer().getAssetGenTask(), shaderCompileTask);
     }
@@ -1605,9 +1588,13 @@ public abstract class TaskManager {
                 taskFactory.register(new ExternalNativeCleanTask.CreationAction(generator, scope)));
     }
 
+    private boolean shouldCreateNdkCompile() {
+        return !ExternalNativeBuildTaskUtils.isExternalNativeBuildEnabled(
+                extension.getExternalNativeBuild());
+    }
+
     public void createNdkTasks(@NonNull VariantScope scope) {
-        if (ExternalNativeBuildTaskUtils.isExternalNativeBuildEnabled(
-                extension.getExternalNativeBuild())) {
+        if (!shouldCreateNdkCompile()) {
             return;
         }
 

@@ -40,7 +40,6 @@ public class AndroidxNameUtils {
     static final ImmutableMap<String, String> ANDROIDX_FULL_CLASS_MAPPING;
 
     static final ImmutableMap<String, String> ANDROIDX_COORDINATES_MAPPING;
-    static final ImmutableMap<String, String> ANDROIDX_VERSIONED_COORDINATES_MAPPING;
 
     /** Ordered list of old android support packages sorted by decreasing length */
     static final ImmutableList<String> ANDROIDX_OLD_PKGS;
@@ -49,7 +48,6 @@ public class AndroidxNameUtils {
         ImmutableMap.Builder<String, String> classTransformMap = ImmutableMap.builder();
         ImmutableMap.Builder<String, String> packageTransformMap = ImmutableMap.builder();
         ImmutableMap.Builder<String, String> coordinatesTransformMap = ImmutableMap.builder();
-        ImmutableMap.Builder<String, String> versionedCoordinatesTransformMap = ImmutableMap.builder();
         try {
             AndroidxMigrationParserKt.parseMigrationFile(
                     new MigrationParserVisitor() {
@@ -71,9 +69,6 @@ public class AndroidxNameUtils {
                             coordinatesTransformMap.put(
                                     oldGroupName + ":" + oldArtifactName,
                                     newGroupName + ":" + newArtifactName);
-                            versionedCoordinatesTransformMap.put(
-                                    oldGroupName + ":" + oldArtifactName,
-                                    newGroupName + ":" + newArtifactName + ":" + newBaseVersion);
                         }
 
                         @Override
@@ -101,7 +96,6 @@ public class AndroidxNameUtils {
                                         })
                         .immutableSortedCopy(ANDROIDX_PKG_MAPPING.keySet());
         ANDROIDX_COORDINATES_MAPPING = coordinatesTransformMap.build();
-        ANDROIDX_VERSIONED_COORDINATES_MAPPING = versionedCoordinatesTransformMap.build();
     }
 
     @NonNull
@@ -146,11 +140,12 @@ public class AndroidxNameUtils {
     public static String getVersionedCoordinateMapping(@NonNull String coordinate) {
         // Strip version
         String[] components = coordinate.split(":");
-        if (components.length < 2) {
+        if (components.length < 3) {
             return coordinate;
         }
         String canonicalCoordinate = components[0] + ":" + components[1];
-        return ANDROIDX_VERSIONED_COORDINATES_MAPPING.getOrDefault(canonicalCoordinate, coordinate);
+        String result = ANDROIDX_COORDINATES_MAPPING.getOrDefault(canonicalCoordinate, null);
+        return result == null ? coordinate : result + ":+";
     }
 
     @NonNull

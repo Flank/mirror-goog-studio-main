@@ -21,6 +21,7 @@
 #include <iostream>
 #include <sstream>
 #include "trace.h"
+#include "tools/base/deploy/common/event.h"
 
 namespace deploy {
 
@@ -94,6 +95,7 @@ int get_file_size(std::string path) {
 
 int CmdCommand::PreInstall(const std::vector<std::string>& apks,
                            std::string* output) const noexcept {
+  Phase p("Preinstall");
   output->clear();
   Trace trace("CmdCommand::Install");
   std::stringstream parameters;
@@ -126,6 +128,7 @@ int CmdCommand::PreInstall(const std::vector<std::string>& apks,
 
 bool CmdCommand::CommitInstall(int session, std::string* output) const
     noexcept {
+  Phase p("Commit Install");
   output->clear();
   std::stringstream parameters;
   parameters << "package install-commit " << session;

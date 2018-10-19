@@ -105,15 +105,22 @@ int main(int argc, char** argv) {
   // Prevent SIGPIPE from hard-crashing the server.
   signal(SIGPIPE, SIG_IGN);
 
+  if (argc < 3) {
+    perror("Expecting number of agents in parameter");
+    return EXIT_FAILURE;
+  }
+
+  int socket_count = atoi(argv[1]);
+  char* socket_name = argv[2];
+
   // Start a server bound to an abstract socket.
   Socket server;
-  if (!server.Open() || !server.BindAndListen(Socket::kDefaultAddress)) {
+  if (!server.Open() || !server.BindAndListen(socket_name)) {
     perror("Could not bind to socket");
     return EXIT_FAILURE;
   }
 
   // Accept socket connections from the agents.
-  int socket_count = atoi(argv[1]);
   for (int i = 0; i < socket_count; ++i) {
     Socket* socket = new Socket();
     if (!server.Accept(socket, 1000)) {

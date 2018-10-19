@@ -16,6 +16,8 @@
 
 package com.android.ddmlib.testrunner;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
@@ -255,6 +257,7 @@ public class InstrumentationResultParserTest extends TestCase {
         StringBuilder output = buildCommonResult();
 
         addStatusKey(output, "randomKey", "randomValue");
+        addStatusKey(output, "randomKey2", "randomValue2");
         addTimeStamp(output);
         addSuccessCode(output);
 
@@ -267,6 +270,10 @@ public class InstrumentationResultParserTest extends TestCase {
         injectAndVerifyTestString(output.toString());
 
         assertEquals("randomValue", captureMetrics.getValue().get("randomKey"));
+        assertEquals("randomValue2", captureMetrics.getValue().get("randomKey2"));
+        assertThat(captureMetrics.getValue().keySet())
+                .containsExactly("randomKey", "randomKey2")
+                .inOrder();
     }
 
     /**
@@ -494,7 +501,9 @@ public class InstrumentationResultParserTest extends TestCase {
         assertEquals("2390", captureMetrics.getValue().get("other_pss"));
         assertEquals("2539", captureMetrics.getValue().get("java_allocated"));
         assertEquals("bar", captureMetrics.getValue().get("foo"));
-        assertEquals(3, captureMetrics.getValue().size());
+        assertThat(captureMetrics.getValue().keySet())
+                .containsExactly("other_pss", "java_allocated", "foo")
+                .inOrder();
     }
 
     public void testParse_AssumptionFailuresIgnored() {

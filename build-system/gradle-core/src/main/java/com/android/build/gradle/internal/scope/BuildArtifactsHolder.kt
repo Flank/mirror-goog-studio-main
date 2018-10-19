@@ -132,6 +132,7 @@ abstract class BuildArtifactsHolder(
         override fun getBuildDependencies(): TaskDependency = final().buildDependencies
         override fun get(): FileCollection = final().get()
         private fun final() : BuildableArtifact = artifacts.getArtifactRecord(artifactType).last
+        override fun toString(): String = "FinalBuildableArtifact($artifactType, $artifacts, $files)"
     }
 
     /**

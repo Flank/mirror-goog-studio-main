@@ -152,7 +152,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull private final GlobalScope globalScope;
     @NonNull private final BaseVariantData variantData;
     @NonNull private final TransformManager transformManager;
-    @Nullable private Collection<File> ndkSoFolder;
     @NonNull private final Map<Abi, File> ndkDebuggableLibraryFolders = Maps.newHashMap();
 
     @NonNull private BuildArtifactsHolder buildArtifactsHolder;
@@ -546,17 +545,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     public String getTaskName(@NonNull String prefix, @NonNull String suffix) {
         return variantData.getTaskName(prefix, suffix);
-    }
-
-    @Override
-    @Nullable
-    public Collection<File> getNdkSoFolder() {
-        return ndkSoFolder;
-    }
-
-    @Override
-    public void setNdkSoFolder(@NonNull Collection<File> ndkSoFolder) {
-        this.ndkSoFolder = ndkSoFolder;
     }
 
     /**
@@ -1042,12 +1030,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @NonNull
-    public File getRenderscriptLibOutputDir() {
-        return new File(globalScope.getIntermediatesDir(), "rs/" + getDirName() + "/lib");
-    }
-
-    @Override
-    @NonNull
     public File getDefaultMergeResourcesOutputDir() {
         return FileUtils.join(globalScope.getIntermediatesDir(), FD_RES, FD_MERGED, getDirName());
     }
@@ -1065,18 +1047,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 globalScope.getIntermediatesDir(),
                 StringHelper.toStrings(
                         "blame", "res", getDirectorySegments()));
-    }
-
-    @NonNull
-    @Override
-    public File getMergeNativeLibsOutputDir() {
-        return FileUtils.join(globalScope.getIntermediatesDir(), "/jniLibs/" + getDirName());
-    }
-
-    @NonNull
-    @Override
-    public File getMergeShadersOutputDir() {
-        return FileUtils.join(globalScope.getIntermediatesDir(), "/shaders/" + getDirName());
     }
 
     @Override

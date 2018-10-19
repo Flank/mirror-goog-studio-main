@@ -36,11 +36,11 @@ public class DeployerRunner {
         if (!Files.exists(Paths.get(DB_PATH))) {
             InMemoryDexArchiveDatabase db = new InMemoryDexArchiveDatabase();
             saveDB(db);
-            return db;
         }
 
         try (FileInputStream file = new FileInputStream(DB_PATH);
                 ObjectInputStream in = new ObjectInputStream(file)) {
+            Trace.begin("readDB");
             InMemoryDexArchiveDatabase db = (InMemoryDexArchiveDatabase) in.readObject();
             return db;
         } catch (InvalidClassException e) {
@@ -50,22 +50,33 @@ public class DeployerRunner {
             return readDB();
         } catch (IOException | ClassNotFoundException e) {
             throw new DeployerException("Unable to load database", e);
+        } finally {
+            Trace.end();
         }
     }
 
     static void saveDB(InMemoryDexArchiveDatabase db) {
+        Trace.begin("saveDB");
         try (FileOutputStream file = new FileOutputStream(DB_PATH);
                 ObjectOutputStream out = new ObjectOutputStream(file); ) {
             out.writeObject(db);
         } catch (IOException e) {
             throw new DeployerException("Unable to save database", e);
+        } finally {
+            Trace.end();
         }
     }
 
     // Run it from bazel with the following command:
     // bazel run :deployer.runner org.wikipedia.alpha PATH_TO_APK1 PATH_TO_APK2
-    public static void main(String[] args)
-            throws IOException, ClassNotFoundException, InterruptedException {
+    public static void main(String[] args) throws IOException {
+        Trace.begin("main");
+        tracedMain(args);
+        Trace.end();
+        Trace.consume(new SystraceConsumer("/tmp/report.json", LOGGER));
+    }
+
+    public static void tracedMain(String[] args) throws IOException {
         InMemoryDexArchiveDatabase db = null;
         try {
             db = readDB();
@@ -99,17 +110,21 @@ public class DeployerRunner {
             apks.add(args[i]);
         }
 
+        Trace.begin("getDevice()");
         IDevice device = getDevice();
         if (device == null) {
             LOGGER.error(null, "%s", "No device found.");
             return;
         }
+        Trace.end();
 
         // Run
         AdbClient adb = new AdbClient(device, LOGGER);
         Installer installer = new Installer(adb, LOGGER);
         Deployer deployer = new Deployer(packageName, apks, adb, db, installer, LOGGER);
+        Trace.begin("fullswap");
         Deployer.RunResponse response = deployer.fullSwap();
+        Trace.end();
 
         if (response.status != Deployer.RunResponse.Status.OK) {
             LOGGER.info("%s", response.errorMessage);
@@ -126,7 +141,7 @@ public class DeployerRunner {
                         LOGGER.info("%s has been CREATED.", key);
                         break;
                     case DELETED:
-                        LOGGER.info("%s has been DELETED.", key);
+                        //LOGGER.info("%s has been DELETED.", key);
                         break;
                     case MODIFIED:
                         LOGGER.info("%s has been MODIFIED.", key);

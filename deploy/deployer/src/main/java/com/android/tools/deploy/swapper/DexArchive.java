@@ -17,13 +17,15 @@ package com.android.tools.deploy.swapper;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import java.util.zip.ZipFile;
 
 /**
  * An abstract representation of an Archive (.apk) that contains multiple DexFile files (.dex) that
@@ -53,28 +55,35 @@ public final class DexArchive {
         return db.retrieveCache(checksum);
     }
 
-    /** Given a zip file, builds an representation of the archive. */
-    public static DexArchive buildFromHostFileSystem(ZipInputStream zis, String checksum)
+
+    public static DexArchive buildFromHostFileSystem(ZipFile file, String checksum)
             throws IOException {
         final Map<String, DexFile> dexFiles = new HashMap<>();
-        for (ZipEntry entry = zis.getNextEntry(); entry != null; entry = zis.getNextEntry()) {
-            if (!entry.getName().endsWith(".dex")) {
-                zis.closeEntry();
-                continue;
+        try {
+            final Enumeration<? extends ZipEntry> entries = file.entries();
+            while (entries.hasMoreElements()) {
+                final ZipEntry entry = entries.nextElement();
+                if (!entry.getName().endsWith(".dex")) {
+                    continue;
+                }
+
+                final byte[] buffer = new byte[1024];
+                ByteArrayOutputStream dexContent = new ByteArrayOutputStream();
+                int read;
+                InputStream is = file.getInputStream(entry);
+                while ((read = is.read(buffer, 0, buffer.length)) != -1) {
+                    dexContent.write(buffer, 0, read);
+                }
+                byte[] code = dexContent.toByteArray();
+                dexFiles.put(
+                        entry.getName(), new OnHostDexFile(entry.getCrc(), entry.getName(), code));
             }
-            byte[] buffer = new byte[1024];
-            ByteArrayOutputStream dexContent = new ByteArrayOutputStream();
-            int len;
-            while ((len = zis.read(buffer)) > 0) {
-                dexContent.write(buffer, 0, len);
-            }
-            byte[] code = dexContent.toByteArray();
-            dexFiles.put(entry.getName(), new OnHostDexFile(entry.getCrc(), entry.getName(), code));
-            zis.closeEntry();
+        } finally {
+            file.close();
         }
-        zis.close();
         return new DexArchive(checksum, dexFiles);
     }
+
 
     private final String checksum;
     private final Map<String, DexFile> dexFiles;

@@ -20,6 +20,7 @@ build:local --test_timeout=120,600,1800,7200
 # Test results caching is on by default. This is here so we have a presubmit
 # config as bazel rules can use the config to determine presubmit invocation.
 build:presubmit --cache_test_results=yes
+test:presubmit --jvmopt='-Dandroid.presubmit.run=true'
 
 # Postsubmit bots don't cache results and use keep_going to find all
 # failures. Config should be inherited by postsubmit configs.
@@ -46,6 +47,7 @@ coverage --define coverage=true
 
 build --sandbox_tmpfs_path=/tmp
 build --javacopt="-g:source,lines,vars"  # Keep debug info
+build --javacopt=-Xep:DoNotCall:OFF  # github.com/google/error-prone/issues/1131
 build --javacopt=-Xep:FallThrough:OFF  # enforcing Google style, essentially
 build --javacopt=-Xep:StreamResourceLeak:WARN # has been downgraded on Error Prone HEAD
 build --cxxopt=-std=c++11
@@ -161,9 +163,7 @@ build:remote-cache --config=remote_common
 build:remote-cache --experimental_strict_action_env=true
 
 # Set various strategies so that all action results can be looked up from and
-# uploaded to the remote cache. You can use --experimental_remote_spawn_cache
-# instead of --spawn_strategy=remote to enable sandboxing.
-build:remote-cache --experimental_remote_spawn_cache
+# uploaded to the remote cache.
 build:remote-cache --spawn_strategy=sandboxed
 build:remote-cache --strategy=Javac=sandboxed
 build:remote-cache --strategy=Closure=sandboxed
@@ -174,7 +174,6 @@ build:results-local --config=upsalite_results
 build:results-local --tls_enabled=true
 build:results-local --auth_enabled=true
 build:results-local --spawn_strategy=local
-build:results-local --experimental_remote_spawn_cache
 build:results-local --remote_cache=remotebuildexecution.googleapis.com
 build:results-local --remote_timeout=3600
 build:results-local --remote_instance_name=projects/google.com:android-studio-alphasource/instances/default_instance

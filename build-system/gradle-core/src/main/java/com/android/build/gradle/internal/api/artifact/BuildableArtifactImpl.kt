@@ -84,4 +84,11 @@ class BuildableArtifactImpl(
             checkResolvable()
             return fileCollection.asFileTree
         }
+
+    override fun toString(): String =
+        if (isResolvable()) {
+            "BuildableArtifactImpl (${get()})"
+        } else {
+            "BuildableArtifactImpl (Not currently resolvable)"
+        }
 }

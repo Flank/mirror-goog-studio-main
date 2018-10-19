@@ -121,6 +121,7 @@ class ExternalLibsMergerTransform(
             // since we are merging into a single DEX_ARCHIVE (possibly containing 1 to many DEX
             // merged DEX files, no need to use a separate thread.
             callable.call()
+            forkJoinPool.shutdown()
         }
     }
 }

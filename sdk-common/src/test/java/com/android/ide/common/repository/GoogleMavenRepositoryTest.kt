@@ -162,5 +162,9 @@ class GoogleMavenRepositoryTest : BaseTestCase() {
         assertEquals("2.6.0-rc1", repo.findVersion(gc2!!).toString())
         val gc3 = GradleCoordinate.parseCoordinateString("foo.bar:another-artifact:2.6.+")
         assertEquals("2.6.0-rc1", repo.findVersion(gc3!!, null, allowPreview = true).toString())
+
+        assertEquals(setOf("foo.bar", "foo.bar.baz"), repo.getGroups())
+        assertEquals(setOf("my-artifact", "another-artifact"), repo.getArtifacts("foo.bar"))
+        assertEquals(setOf(GradleVersion.parse("2.5.0"), GradleVersion.parse("2.6.0-rc1")), repo.getVersions("foo.bar", "another-artifact"))
     }
 }

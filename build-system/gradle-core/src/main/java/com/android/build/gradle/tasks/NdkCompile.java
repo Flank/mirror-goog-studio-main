@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks;
 
 import static com.android.SdkConstants.CURRENT_PLATFORM;
 import static com.android.SdkConstants.PLATFORM_WINDOWS;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.NDK_LIBS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR;
 import static com.android.build.gradle.options.LongOption.DEPRECATED_NDK_COMPILE_LEASE;
 import static com.android.build.gradle.options.NdkLease.DEPRECATED_NDK_COMPILE_LEASE_DAYS;
@@ -50,10 +51,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import org.gradle.api.Action;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileTree;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
@@ -63,7 +65,6 @@ import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
-import org.gradle.api.tasks.incremental.InputFileDetails;
 import org.gradle.api.tasks.util.PatternSet;
 
 public class NdkCompile extends NdkTask {
@@ -93,7 +94,7 @@ public class NdkCompile extends NdkTask {
 
     private boolean debuggable;
 
-    private File soFolder;
+    private Provider<Directory> soFolder;
 
     private File objFolder;
 
@@ -128,12 +129,8 @@ public class NdkCompile extends NdkTask {
     }
 
     @OutputDirectory
-    public File getSoFolder() {
+    public Provider<Directory> getSoFolder() {
         return soFolder;
-    }
-
-    public void setSoFolder(File soFolder) {
-        this.soFolder = soFolder;
     }
 
     @OutputDirectory
@@ -239,7 +236,7 @@ public class NdkCompile extends NdkTask {
 
         if (sourceFiles.isEmpty()) {
             makefile.delete();
-            FileUtils.cleanOutputDir(getSoFolder());
+            FileUtils.cleanOutputDir(soFolder.get().getAsFile());
             FileUtils.cleanOutputDir(getObjFolder());
             return;
         }
@@ -257,26 +254,19 @@ public class NdkCompile extends NdkTask {
         if (!inputs.isIncremental()) {
             getLogger().info("Unable do incremental execution: full task run");
             generateMakeFile.setValue(true);
-            FileUtils.cleanOutputDir(getSoFolder());
+            FileUtils.cleanOutputDir(soFolder.get().getAsFile());
             FileUtils.cleanOutputDir(getObjFolder());
         } else {
             // look for added or removed files *only*
 
-            inputs.outOfDate(new Action<InputFileDetails>() {
-                @Override
-                public void execute(InputFileDetails change) {
-                    if (change.isAdded()) {
-                        generateMakeFile.setValue(true);
-                    }
-                }
-            });
+            inputs.outOfDate(
+                    change -> {
+                        if (change.isAdded()) {
+                            generateMakeFile.setValue(true);
+                        }
+                    });
 
-            inputs.removed(new Action<InputFileDetails>() {
-                @Override
-                public void execute(InputFileDetails change) {
-                    generateMakeFile.setValue(true);
-                }
-            });
+            inputs.removed(change -> generateMakeFile.setValue(true));
 
         }
 
@@ -389,7 +379,7 @@ public class NdkCompile extends NdkTask {
         builder.addArgs("NDK_OUT=" + getObjFolder().getAbsolutePath());
 
         // libs out
-        builder.addArgs("NDK_LIBS_OUT=" + getSoFolder().getAbsolutePath());
+        builder.addArgs("NDK_LIBS_OUT=" + soFolder.get().getAsFile().getAbsolutePath());
 
         // debug builds
         if (isDebuggable()) {
@@ -431,6 +421,7 @@ public class NdkCompile extends NdkTask {
     }
 
     public static class CreationAction extends VariantTaskCreationAction<NdkCompile> {
+        private Provider<Directory> soFolder;
 
         public CreationAction(@NonNull VariantScope variantScope) {
             super(variantScope);
@@ -446,6 +437,13 @@ public class NdkCompile extends NdkTask {
         @Override
         public Class<NdkCompile> getType() {
             return NdkCompile.class;
+        }
+
+        @Override
+        public void preConfigure(@NonNull String taskName) {
+            super.preConfigure(taskName);
+
+            soFolder = getVariantScope().getArtifacts().createDirectory(NDK_LIBS, taskName, "lib");
         }
 
         @Override
@@ -496,10 +494,7 @@ public class NdkCompile extends NdkTask {
                             variantScope.getGlobalScope().getIntermediatesDir(),
                             "ndk/" + variantData.getVariantConfiguration().getDirName() + "/obj"));
 
-            Collection<File> ndkSoFolder = variantScope.getNdkSoFolder();
-            if (ndkSoFolder != null && !ndkSoFolder.isEmpty()) {
-                ndkCompile.setSoFolder(ndkSoFolder.iterator().next());
-            }
+            ndkCompile.soFolder = soFolder;
 
             if (Boolean.TRUE.equals(
                     variantConfig.getMergedFlavor().getRenderscriptNdkModeEnabled())) {

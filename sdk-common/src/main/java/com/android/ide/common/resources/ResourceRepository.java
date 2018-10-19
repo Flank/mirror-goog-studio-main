@@ -151,11 +151,10 @@ public interface ResourceRepository {
     Set<ResourceNamespace> getNamespaces();
 
     /**
-     * Returns all leaf resource repositories contained in this resource, or this repository itself,
-     * if it does not contain any other repositories and implements
+     * Returns all leaf resource repositories contained in this repository, or this repository
+     * itself, if it does not contain any other repositories and implements
      * {@link SingleNamespaceResourceRepository}.
-     *
-     * @param result the collection to add the leaf repositories to
      */
-    void getLeafResourceRepositories(@NonNull Collection<SingleNamespaceResourceRepository> result);
+    @NonNull
+    Collection<SingleNamespaceResourceRepository> getLeafResourceRepositories();
 }

@@ -20,7 +20,6 @@ import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deploy.swapper.*;
 import com.android.utils.ILogger;
 import com.google.protobuf.ByteString;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -30,7 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.zip.ZipInputStream;
+import java.util.zip.ZipFile;
 
 public class Deployer {
 
@@ -45,8 +44,6 @@ public class Deployer {
     private final DexArchiveDatabase db;
     private final Installer installer;
     private final ILogger logger;
-
-    private StopWatch stopWatch;
 
     // status field is always set.
     // If status is ERROR, only errorMessage is set.
@@ -78,7 +75,6 @@ public class Deployer {
             DexArchiveDatabase db,
             Installer installer,
             ILogger logger) {
-        this.stopWatch = new StopWatch(logger);
         this.packageName = packageName;
         this.adb = adb;
         this.db = db;
@@ -93,30 +89,24 @@ public class Deployer {
      * the size of the patch.
      */
     public RunResponse install() throws IOException {
-        stopWatch.start();
         for (ApkFull apk : apks) {
-            cache(apk);
+            tracedCache(apk);
         }
-        stopWatch.mark("Apk cached");
         RunResponse response = new RunResponse();
         try {
             adb.installMultiple(apks, true);
-            stopWatch.mark("Install succeeded");
             response.status = RunResponse.Status.OK;
             response.errorMessage = "Install succeeded";
         } catch (DeployerException e) {
             response.status = RunResponse.Status.ERROR;
             response.errorMessage = "Install failed";
-            stopWatch.mark("Install failed");
             logger.error(e, null);
         }
         return response;
     }
 
     private Map<String, ApkDump> diff(RunResponse response) throws IOException {
-        stopWatch.start();
         Map<String, ApkDump> dumps = installer.dump(packageName);
-        stopWatch.mark("Dumps retrieved");
 
         chechDumps(apks, dumps, response);
         if (response.status == RunResponse.Status.ERROR) {
@@ -134,16 +124,24 @@ public class Deployer {
     }
 
     public RunResponse codeSwap() throws IOException {
+        Trace.begin("codeSwap");
         RunResponse response = new RunResponse();
         Map<String, ApkDump> dumps = diff(response);
         swap(response, dumps, false /* Restart Activity */);
+        Trace.end();
         return response;
     }
 
     public RunResponse fullSwap() throws IOException {
+        Trace.begin("fullSwap");
         RunResponse response = new RunResponse();
+        Trace.begin("diff");
         Map<String, ApkDump> dumps = diff(response);
+        Trace.end();
+        Trace.begin("swap");
         swap(response, dumps, true /* Restart Activity */);
+        Trace.end();
+        Trace.end();
         return response;
     }
 
@@ -207,7 +205,6 @@ public class Deployer {
 
     private void swap(RunResponse response, Map<String, ApkDump> dumps, boolean restart)
             throws DeployerException {
-        stopWatch.mark("Swap started.");
         ClassRedefiner redefiner = new InstallerBasedClassRedefiner(installer);
         Deploy.SwapRequest.Builder request = Deploy.SwapRequest.newBuilder();
         request.setPackageName(packageName);
@@ -227,14 +224,16 @@ public class Deployer {
             processNames.addAll(apk.getApkDetails().processNames());
 
             try {
-                DexArchive newApk = cache(apk);
+                DexArchive newApk = tracedCache(apk);
 
                 if (diffs.isEmpty()) {
                     logger.info("Swapper: apk " + apk.getPath() + " has not changed.");
                     continue;
                 }
                 logger.info("Swapper found %d changes in apk '%s'.", diffs.size(), apk.getPath());
+                Trace.begin("verify");
                 String preSwapCheckError = PreswapCheck.verify(diffs);
+                Trace.end();
 
                 if (preSwapCheckError != null) {
                     response.status = RunResponse.Status.ERROR;
@@ -244,7 +243,9 @@ public class Deployer {
 
                 // TODO: Only pass in a list of changed files instead of doing a full APK comparision.
                 ApkDump apkDump = dumps.get(apk.getApkDetails().fileName());
+                Trace.begin("buildFromDatabase");
                 DexArchive prevApk = DexArchive.buildFromDatabase(db, apkDump.getDigest());
+                Trace.end();
                 if (prevApk == null) {
                     logger.info(
                             "Unable to retrieve apk in DB '%s', skipping this apk.",
@@ -254,6 +255,7 @@ public class Deployer {
                     return;
                 }
 
+                Trace.begin("compare apk");
                 DexArchiveComparator comparator = new DexArchiveComparator();
                 comparator
                         .compare(prevApk, newApk)
@@ -265,7 +267,7 @@ public class Deployer {
                                                         .setName(e.name)
                                                         .setDex(ByteString.copyFrom(e.dex))
                                                         .build()));
-
+                Trace.end();
             } catch (Exception e) {
                 throw new DeployerException(e);
             }
@@ -273,10 +275,7 @@ public class Deployer {
 
         request.addAllProcessNames(processNames);
 
-        stopWatch.mark("Piping request...");
         Deploy.SwapResponse swapResponse = redefiner.redefine(request.build());
-        stopWatch.mark("Swap finished.");
-
         // TODO: This is overwriting any existing errors in the object. Is that a problem?
         if (swapResponse.getStatus() == Deploy.SwapResponse.Status.OK) {
             response.status = RunResponse.Status.OK;
@@ -288,13 +287,21 @@ public class Deployer {
 
     private DexArchive cache(ApkFull apk) throws IOException {
         DexArchive newApk =
-                DexArchive.buildFromHostFileSystem(
-                        new ZipInputStream(new FileInputStream(apk.getPath())), apk.getDigest());
+                DexArchive.buildFromHostFileSystem(new ZipFile(apk.getPath()), apk.getDigest());
         db.enqueueUpdate(
                 delegate -> {
+                    Trace.begin("actualCache");
                     newApk.cache(delegate);
+                    Trace.end();
                     return null;
                 });
         return newApk;
+    }
+
+    private DexArchive tracedCache(ApkFull apk) throws IOException {
+        Trace.begin("cache");
+        DexArchive toReturn = cache(apk);
+        Trace.end();
+        return toReturn;
     }
 }
