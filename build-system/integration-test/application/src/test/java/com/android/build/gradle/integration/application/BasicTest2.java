@@ -107,8 +107,7 @@ public class BasicTest2 {
     @BeforeClass
     public static void getModel() throws Exception {
         outputModel =
-                project.executeAndReturnModel(
-                        ProjectBuildOutput.class, "clean", "assemble", "assembleAndroidTest");
+                project.executeAndReturnOutputModel("clean", "assemble", "assembleAndroidTest");
         // basic project overwrites buildConfigField which emits a sync warning
         modelContainer = project.model().ignoreSyncIssues().fetchAndroidProjects();
         modelContainer

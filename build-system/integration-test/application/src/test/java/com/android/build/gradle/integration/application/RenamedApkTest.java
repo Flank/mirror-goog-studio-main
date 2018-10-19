@@ -43,8 +43,7 @@ public class RenamedApkTest {
 
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
-        outputModel =
-                project.executeAndReturnModel(ProjectBuildOutput.class, "clean", "assembleDebug");
+        outputModel = project.executeAndReturnOutputModel("clean", "assembleDebug");
     }
 
     @AfterClass

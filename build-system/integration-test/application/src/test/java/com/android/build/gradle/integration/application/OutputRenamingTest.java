@@ -67,7 +67,7 @@ public class OutputRenamingTest {
                         + "    }\n"
                         + "  }\n"
                         + "}");
-        outputModel = project.executeAndReturnModel(ProjectBuildOutput.class, "clean", "assemble");
+        outputModel = project.executeAndReturnOutputModel("clean", "assemble");
         model =
                 project.model()
                         .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)

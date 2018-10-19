@@ -66,7 +66,7 @@ public class DensitySplitInLWithFlavorsTest {
     @Test
     public void checkSplitOutputs() throws Exception {
         ProjectBuildOutput outputModel =
-                project.executeAndReturnModel(ProjectBuildOutput.class, "clean", "assembleDebug");
+                project.executeAndReturnOutputModel("clean", "assembleDebug");
 
         // Check we generate all the expected outputs for both flavors.
         checkOutputs(outputModel, "f1Debug");

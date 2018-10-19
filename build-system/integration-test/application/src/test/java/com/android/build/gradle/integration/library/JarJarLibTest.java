@@ -77,7 +77,7 @@ public class JarJarLibTest {
                         + "}\n");
 
         ProjectBuildOutput outputModel =
-                project.executeAndReturnModel(ProjectBuildOutput.class, "clean", "assembleDebug");
+                project.executeAndReturnOutputModel("clean", "assembleDebug");
 
         VariantBuildOutput debugBuildOutput =
                 ProjectBuildOutputUtils.getDebugVariantBuildOutput(outputModel);

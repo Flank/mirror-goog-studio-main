@@ -33,8 +33,7 @@ public class DensitySplitInLTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        outputModel =
-                project.executeAndReturnModel(ProjectBuildOutput.class, "clean", "assembleDebug");
+        outputModel = project.executeAndReturnOutputModel("clean", "assembleDebug");
     }
 
     @AfterClass
@@ -84,8 +83,7 @@ public class DensitySplitInLTest {
                             "exclude \"ldpi\", \"tvdpi\", \"xxxhdpi\"",
                             "exclude \"ldpi\", \"tvdpi\"");
                     ProjectBuildOutput incrementalModel =
-                            project.executeAndReturnModel(
-                                    ProjectBuildOutput.class, "assembleDebug");
+                            project.executeAndReturnOutputModel("assembleDebug");
 
                     Collection<? extends OutputFile> outputs = getOutputs(incrementalModel);
                     assertThat(outputs).hasSize(6);
@@ -126,8 +124,7 @@ public class DensitySplitInLTest {
                             "exclude \"ldpi\", \"tvdpi\", \"xxxhdpi\"",
                             "exclude \"ldpi\", \"tvdpi\", \"xxxhdpi\", \"xxhdpi\"");
                     ProjectBuildOutput incrementalModel =
-                            project.executeAndReturnModel(
-                                    ProjectBuildOutput.class, "assembleDebug");
+                            project.executeAndReturnOutputModel("assembleDebug");
 
                     Collection<? extends OutputFile> outputs = getOutputs(incrementalModel);
                     assertThat(outputs).hasSize(4);

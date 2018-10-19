@@ -29,6 +29,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.Version;
 import com.android.io.StreamException;
 import com.android.sdklib.SdkVersionInfo;
@@ -1168,32 +1169,16 @@ public final class GradleTestProject implements TestRule {
     }
 
     /**
-     * Runs gradle on the project, and returns the project model. Throws exception on failure.
+     * Runs gradle on the project, and returns the (minimal) output model. Throws exception on
+     * failure.
      *
-     * @param modelLevel whether to emulate an older IDE (studio 1.0) querying the model.
      * @param tasks Variadic list of tasks to execute.
-     * @return the AndroidProject model for the project.
+     * @return the output model for the project
      */
     @NonNull
-    public ModelContainer<AndroidProject> executeAndReturnModel(int modelLevel, String... tasks)
+    public ProjectBuildOutput executeAndReturnOutputModel(String... tasks)
             throws IOException, InterruptedException {
-        lastBuildResult = executor().run(tasks);
-        return model().level(modelLevel).fetchAndroidProjects();
-    }
-
-    /**
-     * Runs gradle on the project, and returns the project model. Throws exception on failure.
-     *
-     * @param modelClass Class of the model to return
-     * @param modelLevel whether to emulate an older IDE (studio 1.0) querying the model.
-     * @param tasks Variadic list of tasks to execute.
-     * @return the AndroidProject model for the project.
-     */
-    @NonNull
-    public <T> T executeAndReturnModel(Class<T> modelClass, int modelLevel, String... tasks)
-            throws IOException, InterruptedException {
-        lastBuildResult = executor().run(tasks);
-        return model().level(modelLevel).fetch(modelClass);
+        return executeAndReturnModel(ProjectBuildOutput.class, tasks);
     }
 
     /**

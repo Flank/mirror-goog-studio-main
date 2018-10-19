@@ -54,7 +54,7 @@ public class CombinedAbiDensityPureSplits {
     @Test
     public void testCombinedDensityAndAbiPureSplits() throws Exception {
         ProjectBuildOutput projectBuildOutput =
-                project.executeAndReturnModel(ProjectBuildOutput.class, "clean", "assembleDebug");
+                project.executeAndReturnOutputModel("clean", "assembleDebug");
         VariantBuildOutput debugBuildOutput =
                 ProjectBuildOutputUtils.getDebugVariantBuildOutput(projectBuildOutput);
 

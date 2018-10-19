@@ -43,7 +43,7 @@ public class CombinedDensityAndLanguageTest {
     @Test
     public void testCombinedDensityAndLanguagePureSplits() throws Exception {
         ProjectBuildOutput projectBuildOutput =
-                project.executeAndReturnModel(ProjectBuildOutput.class, "clean", "assembleDebug");
+                project.executeAndReturnOutputModel("clean", "assembleDebug");
         VariantBuildOutput debugBuildOutput =
                 ProjectBuildOutputUtils.getDebugVariantBuildOutput(projectBuildOutput);
         assertNotNull("Debug variant info null-check", debugBuildOutput);

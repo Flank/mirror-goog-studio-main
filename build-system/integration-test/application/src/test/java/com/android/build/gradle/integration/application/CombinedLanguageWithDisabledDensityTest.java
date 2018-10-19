@@ -55,7 +55,7 @@ public class CombinedLanguageWithDisabledDensityTest {
     @Test
     public void testCombinedDensityAndDisabledLanguagePureSplit() throws Exception {
         ProjectBuildOutput projectBuildOutput =
-                project.executeAndReturnModel(ProjectBuildOutput.class, "clean", "assembleDebug");
+                project.executeAndReturnOutputModel("clean", "assembleDebug");
         VariantBuildOutput debugVariantOutput =
                 ProjectBuildOutputUtils.getDebugVariantBuildOutput(projectBuildOutput);
 
