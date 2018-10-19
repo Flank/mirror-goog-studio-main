@@ -17,7 +17,6 @@
     <instantiate from="root/${resIn}/menu/main.xml.ftl"
             to="${escapeXmlAttribute(resOut)}/menu/${menuName}.xml" />
 
-<#if appCompatActivity>
     <copy from="root/res-buildApi22/drawable"
             to="${escapeXmlAttribute(resOut)}/drawable" />
     <copy from="root/res-buildApi22/drawable-v21"
@@ -36,7 +35,31 @@
         <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+"/>
     </#if>
 
-    <#include "../common/recipe_simple.xml.ftl" />
+    <#if useNavController>
+        <dependency mavenUrl="com.android.support.constraint:constraint-layout:+" />
+
+        <instantiate from="root/res-buildApi22/layout/navigation_content_main.xml.ftl"
+                     to="${escapeXmlAttribute(resOut)}/layout/${simpleLayoutName}.xml" />
+
+        <#if (isNewProject!false) && !(excludeMenu!false)>
+            <#include "../common/recipe_simple_menu.xml.ftl" />
+        </#if>
+
+        <#import "root://activities/common/navigation/navigation_common_macros.ftl" as navigation>
+        <@navigation.instantiateFragmentAndViewModel fragmentPrefix="home" />
+        <@navigation.instantiateFragmentAndViewModel fragmentPrefix="gallery" />
+        <@navigation.instantiateFragmentAndViewModel fragmentPrefix="slideshow" />
+        <@navigation.instantiateFragmentAndViewModel fragmentPrefix="tools" />
+        <@navigation.instantiateFragmentAndViewModel fragmentPrefix="share" />
+        <@navigation.instantiateFragmentAndViewModel fragmentPrefix="send" />
+        <@navigation.navigationDependencies />
+
+        <instantiate from="root/res-buildApi22/navigation/mobile_navigation.xml.ftl"
+                     to="${escapeXmlAttribute(resOut)}/navigation/mobile_navigation.xml" />
+        <open file="${escapeXmlAttribute(resOut)}/navigation/mobile_navigation.xml" />
+    <#else>
+        <#include "../common/recipe_simple.xml.ftl" />
+    </#if>
 
     <#if hasAppBar>
         <#include "../common/recipe_app_bar.xml.ftl" />
@@ -56,44 +79,10 @@
     <instantiate from="root/res-buildApi22/layout/navigation_header.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/layout/${navHeaderLayoutName}.xml" />
 
-
     <instantiate from="root/src-buildApi22/app_package/DrawerActivity.${ktOrJavaExt}.ftl"
                    to="${escapeXmlAttribute(srcOut)}/${activityClass}.${ktOrJavaExt}" />
 
     <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.${ktOrJavaExt}" />
 
     <open file="${escapeXmlAttribute(resOut)}/layout/${contentLayoutName}.xml" />
-<#else>
-    <!-- TODO: switch on Holo Dark v. Holo Light -->
-    <copy from="root/res/drawable-hdpi"
-            to="${escapeXmlAttribute(resOut)}/drawable-hdpi" />
-    <copy from="root/res/drawable-mdpi"
-            to="${escapeXmlAttribute(resOut)}/drawable-mdpi" />
-    <copy from="root/res/drawable-xhdpi"
-            to="${escapeXmlAttribute(resOut)}/drawable-xhdpi" />
-    <copy from="root/res/drawable-xxhdpi"
-            to="${escapeXmlAttribute(resOut)}/drawable-xxhdpi" />
-
-    <instantiate from="root/res/menu/global.xml.ftl"
-                   to="${escapeXmlAttribute(resOut)}/menu/global.xml" />
-
-    <merge from="root/res/values-w820dp/dimens.xml"
-             to="${escapeXmlAttribute(resOut)}/values-w820dp/dimens.xml" />
-
-    <instantiate from="root/res/layout/activity_drawer.xml.ftl"
-                   to="${escapeXmlAttribute(resOut)}/layout/${layoutName}.xml" />
-    <instantiate from="root/res/layout/fragment_navigation_drawer.xml.ftl"
-                   to="${escapeXmlAttribute(resOut)}/layout/${navigationDrawerLayout}.xml" />
-    <instantiate from="root/res/layout/fragment_simple.xml.ftl"
-                   to="${escapeXmlAttribute(resOut)}/layout/${fragmentLayoutName}.xml" />
-
-    <instantiate from="root/src/app_package/DrawerActivity.java.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/${activityClass}.java" />
-    <instantiate from="root/src/app_package/NavigationDrawerFragment.java.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/NavigationDrawerFragment.java" />
-
-    <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.java" />
-    <open file="${escapeXmlAttribute(resOut)}/layout/${fragmentLayoutName}.xml" />
-</#if>
-
 </recipe>
