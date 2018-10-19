@@ -480,6 +480,54 @@ public class AnnotationDetectorTest extends AbstractCheckTest {
                                         + "}\n")));
     }
 
+    public void testMissingSwitchConstantsWithElse() {
+        // Regression test for
+        // 117854168: Wrong lint warning used for PlaybackStateCompat.STATE_* constants
+        lint().files(
+                        kotlin(
+                                ""
+                                        + "@file:Suppress(\"unused\")\n"
+                                        + "\n"
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "class PlayConstantsTest {\n"
+                                        + "    fun test(@PlaybackStateCompat.State playState: Int) {\n"
+                                        + "        when (playState) {\n"
+                                        + "            PlaybackStateCompat.STATE_PAUSED -> {\n"
+                                        + "                println(\"paused\")\n"
+                                        + "            }\n"
+                                        + "            PlaybackStateCompat.STATE_STOPPED -> {\n"
+                                        + "                println(\"paused\")\n"
+                                        + "            }\n"
+                                        + "            else -> {\n"
+                                        + "                println(\"Something else\")\n"
+                                        + "            }\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.support.annotation.IntDef;\n"
+                                        + "\n"
+                                        + "public class PlaybackStateCompat {\n"
+                                        + "    @IntDef({STATE_NONE, STATE_STOPPED, STATE_PAUSED, STATE_PLAYING, STATE_FAST_FORWARDING})\n"
+                                        + "    public @interface State {\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    public static final int STATE_NONE = 0;\n"
+                                        + "    public static final int STATE_STOPPED = 1;\n"
+                                        + "    public static final int STATE_PAUSED = 2;\n"
+                                        + "    public static final int STATE_PLAYING = 3;\n"
+                                        + "    public static final int STATE_FAST_FORWARDING = 4;\n"
+                                        + "}"),
+                        SUPPORT_ANNOTATIONS_CLASS_PATH,
+                        SUPPORT_ANNOTATIONS_JAR)
+                .run()
+                .expectClean();
+    }
+
     public void testMatchEcjAndExternalFieldNames() throws Exception {
         assertEquals(
                 "No warnings.",
