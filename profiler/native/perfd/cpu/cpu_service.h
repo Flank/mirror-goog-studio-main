@@ -32,6 +32,7 @@
 #include "utils/activity_manager.h"
 #include "utils/current_process.h"
 #include "utils/device_info.h"
+#include "utils/fs/disk_file_system.h"
 
 namespace profiler {
 
@@ -50,8 +51,9 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
             // The average user will run a capture around 20 seconds, however to
             // support longer captures we should dump the data (causing a
             // hitch). This data dump enables us to have long captures.
-            std::unique_ptr<AtraceManager>(
-                new AtraceManager(clock, 1000 * 30))) {}
+            std::unique_ptr<AtraceManager>(new AtraceManager(
+                std::unique_ptr<FileSystem>(new DiskFileSystem()), clock,
+                1000 * 30))) {}
 
   CpuServiceImpl(Clock* clock, CpuCache* cpu_cache,
                  CpuUsageSampler* usage_sampler, ThreadMonitor* thread_monitor,

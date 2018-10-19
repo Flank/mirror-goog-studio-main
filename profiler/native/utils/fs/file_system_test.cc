@@ -375,6 +375,29 @@ TEST(FileSystem, CanWriteToFile) {
   EXPECT_EQ(f->Contents(), "Hello World");
 }
 
+TEST(FileSystem, AppendFile) {
+  MemoryFileSystem fs;
+  auto root = fs.NewDir("/mock/root");
+  auto f1 = root->NewFile("test.txt");
+  auto f2 = root->NewFile("test2.txt");
+  EXPECT_EQ(f1->Contents(), "");
+  EXPECT_EQ(f2->Contents(), "");
+  f1->OpenForWrite();
+  f2->OpenForWrite();
+  f1->Append("Hello ");
+  f2->Append("World");
+  f1->Close();
+  f2->Close();
+  EXPECT_EQ(f1->Contents(), "Hello ");
+  EXPECT_EQ(f2->Contents(), "World");
+
+  f1->OpenForWrite();
+  fs.AppendFile(f1->path(), f2->path());
+  f1->Close();
+
+  EXPECT_EQ(f1->Contents(), "Hello World");
+}
+
 TEST(FileSystem, CannotWriteToFileNotInWriteMode) {
   MemoryFileSystem fs;
   auto root = fs.NewDir("/mock/root");

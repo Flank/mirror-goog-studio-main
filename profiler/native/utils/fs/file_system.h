@@ -132,6 +132,15 @@ class FileSystem {
   // already exist.
   std::shared_ptr<File> GetOrNewFile(const std::string &abs_path);
 
+  // Remove a file.
+  virtual bool DeleteFile(const std::string &fpath) = 0;
+
+  // Append the contents of the |spath| file to the end of the contents of the
+  // |dpath| file. This should not be called if the |dpath| file is not already
+  // in write mode.
+  virtual bool AppendFile(const std::string &dpath,
+                          const std::string &spath) = 0;
+
  protected:
   virtual bool HasDir(const std::string &dpath) const = 0;
 
@@ -203,9 +212,6 @@ class FileSystem {
 
   // Remove a directory and all of its contents recursively.
   virtual bool DeleteDir(const std::string &dpath) = 0;
-
-  // Remove a file.
-  virtual bool DeleteFile(const std::string &fpath) = 0;
 
   // Return the free space available on the disk which contains the target path.
   // The path must exist, or this will return 0.

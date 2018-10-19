@@ -15,6 +15,7 @@
  *
  */
 #include "atrace_manager.h"
+#include "atrace.h"
 
 #include <fcntl.h>
 #include <stdlib.h>
@@ -40,30 +41,18 @@ using std::string;
 
 namespace profiler {
 
-const char *AtraceManager::kAtraceExecutable = "/system/bin/atrace";
-const char *kTracingFileNames[] = {"/sys/kernel/debug/tracing/tracing_on",
-                                   // Legacy tracing file name.
-                                   "/sys/kernel/tracing/tracing_on"};
-
-const char *kTracingBufferFileNames[] = {
-    "/sys/kernel/debug/tracing/buffer_size_kb",
-    // Legacy tracing file name.
-    "/sys/kernel/tracing/buffer_size_kb"};
-const int kBufferSize = 1024 * 4;  // About the size of a page.
 // Number of times we attempt to run the same atrace command.
 const int kRetryAttempts = 5;
-const char *kCategories[] = {"gfx", "input",  "view", "wm",   "am",
-                             "sm",  "camera", "hal",  "app",  "res",
-                             "pm",  "sched",  "freq", "idle", "load"};
-const int kCategoriesCount = sizeof(kCategories) / sizeof(kCategories[0]);
 
-AtraceManager::AtraceManager(Clock *clock, int dump_data_interval_ms)
-    : clock_(clock),
+AtraceManager::AtraceManager(std::unique_ptr<FileSystem> file_system,
+                             Clock *clock, int dump_data_interval_ms,
+                             std::unique_ptr<Atrace> atrace)
+    : file_system_(std::move(file_system)),
+      clock_(clock),
       dump_data_interval_ms_(dump_data_interval_ms),
       dumps_created_(0),
-      is_profiling_(false) {
-  categories_ = BuildSupportedCategoriesString();
-}
+      is_profiling_(false),
+      atrace_(std::move(atrace)) {}
 
 bool AtraceManager::StartProfiling(const std::string &app_pkg_name,
                                    int sampling_interval_us,
@@ -84,23 +73,23 @@ bool AtraceManager::StartProfiling(const std::string &app_pkg_name,
   // Point trace path to entry's trace path so the trace can be pulled later.
   *trace_path = profiled_app_.trace_path;
   // Check if atrace is already running, if it is its okay to use that instance.
-  bool isRunning = IsAtraceRunning();
+  bool isRunning = atrace_->IsAtraceRunning();
   for (int i = 0; i < kRetryAttempts && !isRunning; i++) {
     std::ostringstream buffer_size_stream;
     buffer_size_stream << "-b " << (buffer_size_in_mb * 1024);
     buffer_size_arg_ = buffer_size_stream.str();
-    RunAtrace(app_pkg_name, profiled_app_.trace_path, "--async_start",
-              buffer_size_arg_);
-    isRunning = IsAtraceRunning();
+    atrace_->Run({app_pkg_name, profiled_app_.trace_path, "--async_start",
+                  buffer_size_arg_});
+    isRunning = atrace_->IsAtraceRunning();
+
     // Verify buffer size, if this is not our expected buffersize then cut it in
     // half and try again. This can happen frequently due to the fact that
     // atrace must allocate a contiguous block of memory in the size
     // we are requesting.
-    if (!ValidateBuffer(buffer_size_in_mb * 1024)) {
+    if (atrace_->GetBufferSizeKb() != buffer_size_in_mb * 1024) {
       buffer_size_in_mb /= 2;
       if (isRunning) {
-        profiler::BashCommandRunner atrace(kAtraceExecutable);
-        atrace.Run("--async_stop", nullptr);
+        atrace_->Stop();
         isRunning = false;
       }
     }
@@ -118,80 +107,6 @@ bool AtraceManager::StartProfiling(const std::string &app_pkg_name,
   return isRunning;
 }
 
-void AtraceManager::RunAtrace(const string &app_pkg_name, const string &path,
-                              const string &command,
-                              const string &additional_arguments) {
-  std::ostringstream args;
-  args << "-z " << additional_arguments << " -a " << app_pkg_name << " -o "
-       << path << " " << command << " " << categories_;
-  profiler::BashCommandRunner atrace(kAtraceExecutable);
-  // Log when we run an atrace command, this will help in the future if we have
-  // any errors.
-  Log::D("Running Atrace with the following args: %s", args.str().c_str());
-  atrace.Run(args.str(), nullptr);
-}
-
-bool AtraceManager::ValidateBuffer(int expected_buffer_size_kb) {
-  DiskFileSystem fs;
-  int fileNameCount =
-      sizeof(kTracingBufferFileNames) / sizeof(kTracingBufferFileNames[0]);
-  bool hasExpectedBufferSize = false;
-  for (int i = 0; i < fileNameCount; i++) {
-    string contents = fs.GetFileContents(kTracingBufferFileNames[i]);
-    // Only need to test the value of the first file contains some content
-    if (!contents.empty()) {
-      hasExpectedBufferSize = atoi(contents.c_str()) == expected_buffer_size_kb;
-      break;
-    }
-  }
-  return hasExpectedBufferSize;
-}
-
-bool AtraceManager::IsAtraceRunning() {
-  DiskFileSystem fs;
-  int fileNameCount = sizeof(kTracingFileNames) / sizeof(kTracingFileNames[0]);
-  bool isRunning = false;
-  for (int i = 0; i < fileNameCount; i++) {
-    string contents = fs.GetFileContents(kTracingFileNames[i]);
-    // Only need to test the value of the first file with a value.
-    if (!contents.empty()) {
-      isRunning = contents[0] == '1';
-      break;
-    }
-  }
-  return isRunning;
-}
-
-std::string AtraceManager::BuildSupportedCategoriesString() {
-  string output;
-  profiler::BashCommandRunner atrace(kAtraceExecutable);
-  atrace.Run("--list_categories", &output);
-  std::set<std::string> supportedCategories = ParseListCategoriesOutput(output);
-  std::ostringstream categories;
-  for (int i = 0; i < kCategoriesCount; i++) {
-    if (supportedCategories.find(string(kCategories[i])) !=
-        supportedCategories.end()) {
-      categories << " " << kCategories[i];
-    }
-  }
-  return categories.str();
-}
-
-std::set<std::string> AtraceManager::ParseListCategoriesOutput(
-    const std::string &output) {
-  string category;
-  std::set<std::string> supportedCategories;
-  std::istringstream categoriesList(output);
-  while (getline(categoriesList, category, '\n')) {
-    std::string name;
-    Tokenizer tokenizer = Tokenizer{category, " - "};
-    if (tokenizer.GetNextToken(&name)) {
-      supportedCategories.emplace(name);
-    }
-  }
-  return supportedCategories;
-}
-
 void AtraceManager::DumpData() {
   while (is_profiling_) {
     std::unique_lock<std::mutex> lock(dump_data_mutex_);
@@ -202,8 +117,8 @@ void AtraceManager::DumpData() {
     // longer profiling we do not need to collect an async_dump as stop
     // profiling will do that for us.
     if (is_profiling_) {
-      RunAtrace(profiled_app_.app_pkg_name, GetNextDumpPath(), "--async_dump",
-                buffer_size_arg_);
+      atrace_->Run({profiled_app_.app_pkg_name, GetNextDumpPath(),
+                    "--async_dump", buffer_size_arg_});
     }
   }
 }
@@ -213,6 +128,7 @@ string AtraceManager::GetTracePath(const string &app_name) const {
   path << CurrentProcess::dir() << GetFileBaseName(app_name) << ".atrace.trace";
   return path.str();
 }
+
 string AtraceManager::GetFileBaseName(const string &app_name) const {
   std::ostringstream trace_filebase;
   trace_filebase << "atrace-";
@@ -235,25 +151,26 @@ bool AtraceManager::StopProfiling(const std::string &app_pkg_name,
   Trace trace("CPU:StopProfiling atrace");
   Log::D("Profiler:Stopping profiling for %s", app_pkg_name.c_str());
   is_profiling_ = false;
-  // Should occur after is_profiling is set to false to stop our polling thread.
+  // Should occur after is_profiling is set to false to stop our polling
+  // thread.
   dump_data_condition_.notify_all();
   atrace_thread_.join();
-  bool isRunning = IsAtraceRunning();
+  bool isRunning = atrace_->IsAtraceRunning();
   string path = GetNextDumpPath();
   for (int i = 0; i < kRetryAttempts && isRunning; i++) {
     // For pre O devices, simply stopping atrace doesn't always write a file.
-    // As such we need to create the file first. This allows atrace to properly
-    // modify the contents of the file.
+    // As such we need to create the file first. This allows atrace to
+    // properly modify the contents of the file.
     if (DeviceInfo::feature_level() < Device::O) {
       DiskFileSystem fs;
       fs.CreateFile(path);
     }
     // Before stopping atrace we write a clock sync marker. We do this because
-    // internally to atrace there is a ring buffer of data. The data may clobber
-    // the initial clock sync marker.
-    WriteClockSyncMarker();
-    RunAtrace(profiled_app_.app_pkg_name, path, "--async_stop");
-    isRunning = IsAtraceRunning();
+    // internally to atrace there is a ring buffer of data. The data may
+    // clobber the initial clock sync marker.
+    atrace_->WriteClockSyncMarker();
+    atrace_->Run({profiled_app_.app_pkg_name, path, "--async_stop", ""});
+    isRunning = atrace_->IsAtraceRunning();
   }
   if (isRunning) {
     assert(error != nullptr);
@@ -267,79 +184,35 @@ bool AtraceManager::StopProfiling(const std::string &app_pkg_name,
   return !isRunning;
 }
 
-void AtraceManager::WriteClockSyncMarker() {
-  const std::string debugfs_path = "/sys/kernel/debug/tracing/";
-  const std::string tracefs_path = "/sys/kernel/tracing/";
-  const std::string trace_file = "trace_marker";
-  std::string write_path = "";
-  bool tracefs = access((tracefs_path + trace_file).c_str(), F_OK) != -1;
-  bool debugfs = access((debugfs_path + trace_file).c_str(), F_OK) != -1;
-
-  if (!tracefs && !debugfs) {
-    Log::E("Atrace: Did not find trace folder");
-    return;
-  }
-
-  if (tracefs) {
-    write_path.append(tracefs_path);
-  } else {
-    write_path.append(debugfs_path);
-  }
-  write_path.append(trace_file);
-
-  char buffer[128];
-  int len = 0;
-  int fd = open((write_path).c_str(), O_WRONLY);
-  if (fd == -1) {
-    Log::E("Atrace: error opening %s: %s (%d)", write_path.c_str(),
-           strerror(errno), errno);
-    return;
-  }
-  float now_in_seconds = clock_->GetCurrentTime() / 1000000000.0f;
-
-  // Write the clock sync marker in the same format as the initial
-  len = snprintf(buffer, 128, "trace_event_clock_sync: parent_ts=%f\n",
-                 now_in_seconds);
-  if (write(fd, buffer, len) != len) {
-    Log::E("Atrace: error writing clock sync marker %s (%d)", strerror(errno),
-           errno);
-  }
-  close(fd);
-}
-
 void AtraceManager::Shutdown() {
   std::lock_guard<std::mutex> lock(start_stop_mutex_);
   Trace trace("CPU:Shutdown atrace");
   if (is_profiling_) {
     Log::D("Profiler:Shutdown atrace");
     is_profiling_ = false;
-    profiler::BashCommandRunner atrace(kAtraceExecutable);
-    atrace.Run("--async_stop", nullptr);
+    atrace_->Stop();
   }
 }
 
 bool AtraceManager::CombineFiles(const std::string &combine_file_prefix,
                                  int count, const std::string &output_path) {
-  FILE *file = fopen(output_path.c_str(), "wb");
-  if (file == nullptr) {
+  std::shared_ptr<File> file = file_system_->GetOrNewFile(output_path);
+  file->OpenForWrite();
+  if (!file->Exists() || !file->IsOpenForWrite()) {
     return false;
   }
 
-  char buffer[kBufferSize];
   for (int i = 0; i < count; i++) {
-    off_t offset = 0;
-    int read_size = 0;
-    std::ostringstream filePath;
-    filePath << combine_file_prefix << i;
-    int dump_file = open(filePath.str().c_str(), O_RDONLY);
-    while ((read_size = pread(dump_file, buffer, kBufferSize, offset)) > 0) {
-      offset += read_size;
-      fwrite(buffer, sizeof(char), read_size, file);
+    std::ostringstream file_path;
+    file_path << combine_file_prefix << i;
+    std::shared_ptr<File> buffer_file = file_system_->GetFile(file_path.str());
+    if (!buffer_file->Exists()) {
+      return false;
     }
-    close(dump_file);
-    remove(filePath.str().c_str());
+    file_system_->AppendFile(output_path, file_path.str());
+    file_system_->DeleteFile(file_path.str());
   }
-  fclose(file);
+  file->Close();
   return true;
 }
 
