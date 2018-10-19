@@ -20,6 +20,7 @@ import com.android.SdkConstants
 import com.android.SdkConstants.CLASS_FOLDER
 import com.android.SdkConstants.DOT_AAR
 import com.android.SdkConstants.DOT_JAR
+import com.android.SdkConstants.DOT_SRCJAR
 import com.android.SdkConstants.DOT_XML
 import com.android.SdkConstants.FD_ASSETS
 import com.android.SdkConstants.FN_BUILD_GRADLE
@@ -645,7 +646,8 @@ abstract class LintClient {
                 val jars = libs.listFiles()
                 if (jars != null) {
                     for (jar in jars) {
-                        if (endsWith(jar.path, DOT_JAR) && !libraries.contains(jar)) {
+                        if ((endsWith(jar.path, DOT_JAR) || endsWith(jar.path, DOT_SRCJAR)) &&
+                            !libraries.contains(jar)) {
                             libraries.add(jar)
                         }
                     }

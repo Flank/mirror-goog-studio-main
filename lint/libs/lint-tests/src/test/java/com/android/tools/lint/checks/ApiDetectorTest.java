@@ -6148,6 +6148,91 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "1 errors, 0 warnings");
     }
 
+    public void testSourceJars() {
+        // Make sure that resolving files through srcjars is working properly
+
+        //noinspection all // Sample code
+        lint().files(
+                        manifest().minSdk(15),
+                        jar(
+                                "libs/library.srcjar",
+                                java(
+                                        ""
+                                                + "package test.pkg.library;\n"
+                                                + "\n"
+                                                + "import android.support.annotation.RequiresApi;\n"
+                                                + "import android.os.Build;\n"
+                                                + "@SuppressWarnings({\"WeakerAccess\", \"unused\"})\n"
+                                                + "public class Library {\n"
+                                                + "    @RequiresApi(19)\n"
+                                                + "    public void requiresKitKat() {\n"
+                                                + "    }\n"
+                                                + "}\n")),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import test.pkg.library.Library;\n"
+                                        + "@SuppressWarnings({\"WeakerAccess\", \"unused\"})\n"
+                                        + "public class TestRequiresApi {\n"
+                                        + "    public void caller() {\n"
+                                        + "        new Library().requiresKitKat(); // ERROR - requires 19\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        mSupportClasspath,
+                        mSupportJar)
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/TestRequiresApi.java:7: Error: Call requires API level 19 (current min is 15): requiresKitKat [NewApi]\n"
+                                + "        new Library().requiresKitKat(); // ERROR - requires 19\n"
+                                + "                      ~~~~~~~~~~~~~~\n"
+                                + "1 errors, 0 warnings");
+    }
+
+    public void testSourceJarsKotlin() {
+        // Make sure that resolving files through srcjars is working properly, including
+        // sources in srcjars only provided as Kotlin sources, not as compiled libraries
+
+        //noinspection all // Sample code
+        lint().files(
+                        manifest().minSdk(15),
+                        jar(
+                                "libs/library.srcjar",
+                                kotlin(
+                                        ""
+                                                + "package test.pkg\n"
+                                                + "\n"
+                                                + "import android.support.annotation.RequiresApi\n"
+                                                + "\n"
+                                                + "class Library {\n"
+                                                + "    @RequiresApi(19)\n"
+                                                + "    fun requiresKitKat() {\n"
+                                                + "    }\n"
+                                                + "}\n"
+                                                + " ")),
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "import test.pkg.library.Library\n"
+                                        + "\n"
+                                        + "class TestRequiresApi {\n"
+                                        + "    fun caller() {\n"
+                                        + "        Library().requiresKitKat() // ERROR - requires 19\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        mSupportClasspath,
+                        mSupportJar)
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/TestRequiresApi.kt:7: Error: Call requires API level 19 (current min is 15): requiresKitKat [NewApi]\n"
+                                + "        Library().requiresKitKat() // ERROR - requires 19\n"
+                                + "                  ~~~~~~~~~~~~~~\n"
+                                + "1 errors, 0 warnings");
+    }
+
     @Override
     protected boolean ignoreSystemErrors() {
         //noinspection SimplifiableIfStatement

@@ -1068,7 +1068,7 @@ open class GradleDetector : Detector(), GradleScanner {
      * start with "androidx." but links to non-androidx classes
      */
     private fun MavenCoordinates.isAndroidxArtifact() =
-      groupId.startsWith(ANDROIDX_PKG_PREFIX) && groupId != "androidx.navigation"
+        groupId.startsWith(ANDROIDX_PKG_PREFIX) && groupId != "androidx.navigation"
 
     private fun checkConsistentSupportLibraries(
         context: Context,
@@ -1100,8 +1100,7 @@ open class GradleDetector : Detector(), GradleScanner {
                     "found `$usesOldSupportLib` and `$usesAndroidX` incompatible dependencies"
             if (cookie != null) {
                 reportNonFatalCompatibilityIssue(context, cookie, message)
-            }
-            else {
+            } else {
                 reportNonFatalCompatibilityIssue(context, guessGradleLocation(context.project), message)
             }
         }

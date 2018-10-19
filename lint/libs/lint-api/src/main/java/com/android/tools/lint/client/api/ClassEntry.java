@@ -18,6 +18,7 @@ package com.android.tools.lint.client.api;
 
 import static com.android.SdkConstants.DOT_CLASS;
 import static com.android.SdkConstants.DOT_JAR;
+import static com.android.SdkConstants.DOT_SRCJAR;
 import static org.objectweb.asm.Opcodes.ASM5;
 
 import com.android.annotations.NonNull;
@@ -177,7 +178,8 @@ class ClassEntry implements Comparable<ClassEntry> {
             @NonNull List<ClassEntry> entries,
             @NonNull List<File> classPath) {
         for (File classPathEntry : classPath) {
-            if (classPathEntry.getName().endsWith(DOT_JAR)) {
+            String name = classPathEntry.getName();
+            if (name.endsWith(DOT_JAR)) {
                 //noinspection UnnecessaryLocalVariable
                 File jarFile = classPathEntry;
                 if (!jarFile.exists()) {
@@ -216,7 +218,7 @@ class ClassEntry implements Comparable<ClassEntry> {
                         client.log(e, null);
                     }
                 }
-            } else {
+            } else if (!name.endsWith(DOT_SRCJAR)) {
                 client.log(null, "Ignoring class path entry %1$s", classPathEntry);
             }
         }
