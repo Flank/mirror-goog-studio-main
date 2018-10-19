@@ -40,6 +40,9 @@ enum class BooleanOption(
     // tell bundletool to only extract instant APKs.
     IDE_EXTRACT_INSTANT(AndroidProject.PROPERTY_EXTRACT_INSTANT_APK, status = Option.Status.STABLE),
 
+    // Flag used to indicate a "deploy as instant" run configuration.
+    IDE_DEPLOY_AS_INSTANT_APP(AndroidProject.PROPERTY_DEPLOY_AS_INSTANT_APP, false, status = Option.Status.STABLE),
+
 
     // ---------------
     // Permanent Other Flags -- No lifecycle
@@ -69,7 +72,6 @@ enum class BooleanOption(
     DEPLOYMENT_PROVIDES_LIST_OF_CHANGES("android.deployment.provideListOfChanges", false),
     ENABLE_RESOURCE_NAMESPACING_DEFAULT("android.enableResourceNamespacingDefault", false),
     NAMESPACED_R_CLASS("android.namespacedRClass", false),
-    DEPLOY_AS_INSTANT_APP(AndroidProject.PROPERTY_DEPLOY_AS_INSTANT_APP, false),
     ENABLE_SEPARATE_ANNOTATION_PROCESSING("android.enableSeparateAnnotationProcessing", false),
     FULL_R8("android.enableR8.fullMode", false),
 
