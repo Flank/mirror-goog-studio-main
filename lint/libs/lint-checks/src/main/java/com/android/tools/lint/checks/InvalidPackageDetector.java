@@ -109,7 +109,8 @@ public class InvalidPackageDetector extends Detector implements ClassScanner {
         }
 
         if ((classNode.access & Opcodes.ACC_ANNOTATION) != 0
-                || classNode.superName.startsWith("javax/annotation/")) {
+                || classNode.superName != null
+                        && classNode.superName.startsWith("javax/annotation/")) {
             // Don't flag references from annotations and annotation processors
             return;
         }
