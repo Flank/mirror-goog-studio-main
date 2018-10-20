@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.tasks.databinding
 
-import android.databinding.tool.DataBindingBuilder
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE
@@ -28,9 +27,6 @@ import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.workers.WorkerExecutorFacade
-import org.apache.commons.io.FileUtils
-import org.apache.commons.io.filefilter.IOFileFilter
-import org.apache.commons.io.filefilter.TrueFileFilter
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
@@ -38,11 +34,7 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.workers.WorkerExecutor
 import java.io.File
-import java.io.Serializable
 import javax.inject.Inject
-
-private fun isClassListFile(listFile: String) =
-    listFile.endsWith(DataBindingBuilder.BINDING_CLASS_LIST_SUFFIX)
 
 open class DataBindingMergeBaseClassLogTask @Inject
 constructor(workerExecutor: WorkerExecutor): IncrementalTask() {
@@ -61,49 +53,18 @@ constructor(workerExecutor: WorkerExecutor): IncrementalTask() {
 
     private val workers: WorkerExecutorFacade = Workers.getWorker(workerExecutor)
 
+    private lateinit var delegate: DataBindingMergeBaseClassLogDelegate
+
     override fun isIncremental(): Boolean {
         return true
     }
 
     override fun doFullTaskAction() {
-        com.android.utils.FileUtils.cleanOutputDir(outFolder.get().asFile)
-
-        workers.let { facade ->
-            moduleClassLog
-                .union(externalClassLog)
-                .filter { it.exists() }
-                .forEach { folder ->
-                    FileUtils.listFiles(
-                        folder,
-                        object : IOFileFilter {
-                            override fun accept(file: File): Boolean {
-                                return isClassListFile(file.name)
-                            }
-
-                            override fun accept(dir: File, name: String): Boolean {
-                                return isClassListFile(name)
-                            }
-                        },
-                        TrueFileFilter.INSTANCE
-                    ).forEach {
-                        facade.submit(
-                            DataBindingMergeBaseClassLogDelegate::class.java,
-                            DataBindingMergeBaseClassLogDelegate.Params(it, outFolder.get().asFile, FileStatus.NEW)
-                        )
-                    }
-                }
-        }
+        delegate.doFullRun(workers)
     }
 
     override fun doIncrementalTaskAction(changedInputs: Map<File, FileStatus>) {
-        workers.let { facade ->
-            changedInputs.forEach {
-                facade.submit(
-                    DataBindingMergeBaseClassLogDelegate::class.java,
-                    DataBindingMergeBaseClassLogDelegate.Params(it.key, outFolder.get().asFile, it.value)
-                )
-            }
-        }
+        delegate.doIncrementalRun(workers, changedInputs)
     }
 
     class CreationAction(variantScope: VariantScope) :
@@ -140,28 +101,11 @@ constructor(workerExecutor: WorkerExecutor): IncrementalTask() {
                 EXTERNAL,
                 ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT
             )
-        }
-    }
-}
 
-
-class DataBindingMergeBaseClassLogDelegate @Inject constructor(private val params: Params) : Runnable {
-
-    data class Params(val file: File, val outFolder: File, val status: FileStatus) : Serializable
-
-    override fun run() {
-        if (isClassListFile(params.file.name)) {
-            when (params.status) {
-                FileStatus.NEW, FileStatus.CHANGED ->
-                    FileUtils.copyFile(params.file, File(params.outFolder, params.file.name))
-
-                FileStatus.REMOVED -> {
-                    val outFile = File(params.outFolder, params.file.name)
-                    if (outFile.exists()) {
-                        FileUtils.forceDelete(outFile)
-                    }
-                }
-            }
+            task.delegate = DataBindingMergeBaseClassLogDelegate(
+                task.moduleClassLog,
+                task.externalClassLog,
+                task.outFolder)
         }
     }
 }
