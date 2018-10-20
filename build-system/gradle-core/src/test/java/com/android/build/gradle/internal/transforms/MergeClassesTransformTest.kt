@@ -21,6 +21,8 @@ import com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASS
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
 import com.android.build.api.transform.QualifiedContent.Scope.PROJECT
 import com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS
+import com.android.build.gradle.internal.res.namespaced.JarRequest
+import com.android.build.gradle.internal.res.namespaced.JarWorkerRunnable
 import com.android.build.gradle.internal.transforms.TransformTestHelper.invocationBuilder
 import com.android.build.gradle.internal.transforms.TransformTestHelper.singleJarBuilder
 import com.android.builder.packaging.JarMerger.MODULE_PATH
@@ -56,14 +58,10 @@ class MergeClassesTransformTest {
             action: Action<in WorkerConfiguration>
         ) {
             val workerConfiguration = Mockito.mock(WorkerConfiguration::class.java)
-            val captor = ArgumentCaptor.forClass(
-                DexArchiveBuilderTransform.DexConversionParameters::class.java
-            )
+            val captor = ArgumentCaptor.forClass(JarRequest::class.java)
             action.execute(workerConfiguration)
-            Mockito.verify<WorkerConfiguration>(workerConfiguration).setParams(captor.capture())
-            val workAction = DexArchiveBuilderTransform.DexConversionWorkAction(
-                captor.value
-            )
+            Mockito.verify<WorkerConfiguration>(workerConfiguration).params(captor.capture())
+            val workAction = JarWorkerRunnable(captor.value)
             workAction.run()
         }
 
