@@ -15,40 +15,57 @@
  */
 package com.android.tools.deployer;
 
+import com.android.annotations.NonNull;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Do some verification before sending off to the VM.
  *
  * <p>TODO: Return some sort of error object instead of a String.
  */
-class PreswapCheck {
+public class PreswapCheck {
+    public static final String STATIC_LIB_MODIFIED_ERROR =
+            "Modifying .so requires application restart.";
+    public static final String MODIFYING_ANDROID_MANIFEST_XML_FILES_NOT_SUPPORTED =
+            "Modifying AndroidManifest.xml files not supported.";
+    public static final String RESOURCE_MODIFICATION_NOT_ALLOWED =
+            "Resource modification not allowed.";
 
-    /** @return An error message should we abort swap request, otherwise, null; */
-    public static String verify(HashMap<String, ApkDiffer.ApkEntryStatus> diffs) {
+    /**
+     * @return A non-empty set of error messages should we abort swap/apply request, otherwise an
+     *     empty set;
+     */
+    @NonNull
+    public static Set<String> verify(
+            HashMap<String, ApkDiffer.ApkEntryStatus> diffs, boolean allowResourceModification) {
+        Set<String> errorSet = new HashSet<>();
         for (Map.Entry<String, ApkDiffer.ApkEntryStatus> diff : diffs.entrySet()) {
             String name = diff.getKey();
             ApkDiffer.ApkEntryStatus status = diff.getValue();
 
-            if (status.equals(ApkDiffer.ApkEntryStatus.MODIFIED)) {
-                String err = verifyModified(name);
-                if (err != null) {
-                    return err;
-                }
+            String err = verifyStatus(name, status, allowResourceModification);
+            if (err != null) {
+                errorSet.add(err);
             }
         }
-        return null;
+        return errorSet;
     }
 
-    private static String verifyModified(String name) {
-        if (name.endsWith(".so")) {
-            return "Modifying .so requires application restart";
+    private static String verifyStatus(
+            @NonNull String fileName,
+            @NonNull ApkDiffer.ApkEntryStatus status,
+            boolean allowResourceModification) {
+        if (fileName.endsWith(".so")) {
+            return status == ApkDiffer.ApkEntryStatus.MODIFIED ? STATIC_LIB_MODIFIED_ERROR : null;
+        } else if (fileName.equals("AndroidManifest.xml")) {
+            return MODIFYING_ANDROID_MANIFEST_XML_FILES_NOT_SUPPORTED;
+        } else if (fileName.startsWith("META-INF/") || fileName.endsWith(".dex")) {
+            return null;
+        } else {
+            return allowResourceModification ? null : RESOURCE_MODIFICATION_NOT_ALLOWED;
         }
-
-        if (name.equals("AndroidManifest.xml")) {
-            return "Modifying AndroidManifest.xml files not supported.";
-        }
-        return null;
     }
 }
