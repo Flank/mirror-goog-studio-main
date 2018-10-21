@@ -338,12 +338,11 @@ public class XmlDocument {
     }
 
     /**
-     * Returns the targetSdk version specified in the uses_sdk element if present or the
-     * default value.
+     * Returns the targetSdk version specified in the uses_sdk element if present in the
+     * AndroidManifest.xml file, or null if not explicitly specified.
      */
-    @NonNull
-    private String getRawTargetSdkVersion() {
-
+    @Nullable
+    private String getExplicitTargetSdkVersion() {
         Optional<XmlElement> usesSdk = getByTypeAndKey(
                 ManifestModel.NodeTypes.USES_SDK, null);
         if (usesSdk.isPresent()) {
@@ -352,6 +351,19 @@ public class XmlDocument {
             if (targetSdkVersion.isPresent()) {
                 return targetSdkVersion.get().getValue();
             }
+        }
+        return null;
+    }
+
+    /**
+     * Returns the targetSdk version specified in the uses_sdk element if present or the default
+     * value.
+     */
+    @NonNull
+    private String getRawTargetSdkVersion() {
+        String explicitTargetSdkVersion = getExplicitTargetSdkVersion();
+        if (explicitTargetSdkVersion != null) {
+            return explicitTargetSdkVersion;
         }
         return getRawMinSdkVersion();
     }
@@ -432,8 +444,11 @@ public class XmlDocument {
         // sdk version is using the same code name.
         String libraryTargetSdkVersion = lowerPriorityDocument.getTargetSdkVersion();
         if (!Character.isDigit(libraryTargetSdkVersion.charAt(0))) {
-            // this is a code name, ensure this document uses the same code name.
-            if (!libraryTargetSdkVersion.equals(getTargetSdkVersion())) {
+            // this is a code name, ensure this document uses the same code name, unless the
+            // targetSdkVersion is not explicitly specified by the library... in that case, there's
+            // no need to check here because we'll be doing a similar check for the minSdkVersion.
+            if (!libraryTargetSdkVersion.equals(getTargetSdkVersion())
+                    && lowerPriorityDocument.getExplicitTargetSdkVersion() != null) {
                 mergingReport.addMessage(getSourceFile(), MergingReport.Record.Severity.ERROR,
                         String.format(
                                 "uses-sdk:targetSdkVersion %1$s cannot be different than version "
