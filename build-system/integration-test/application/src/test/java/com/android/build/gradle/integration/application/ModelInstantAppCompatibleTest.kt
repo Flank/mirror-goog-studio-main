@@ -51,22 +51,26 @@ class ModelInstantAppCompatibleTest {
         TestFileUtils.searchAndReplace(
             File(project.getSubproject(":app").mainSrcDir.parent, "/AndroidManifest.xml"),
             "package=",
-            "xmlns:dist=\"http://schemas.android.com/apk/distribution\" package=")
+            "xmlns:dist=\"http://schemas.android.com/apk/distribution\" package="
+        )
         TestFileUtils.searchAndReplace(
             File(project.getSubproject(":app").mainSrcDir.parent, "AndroidManifest.xml"),
             "<application>",
-            "<dist:module dist:instant=\"true\" /> <application>")
+            "<dist:module dist:instant=\"true\" /> <application>"
+        )
         TestFileUtils.searchAndReplace(
             File(project.getSubproject(":feature1").mainSrcDir.parent, "AndroidManifest.xml"),
             "dist:title=",
-            "dist:instant=\"false\" dist:title=")
+            "dist:instant=\"false\" dist:title="
+        )
         TestFileUtils.searchAndReplace(
             File(project.getSubproject(":feature2").mainSrcDir.parent, "AndroidManifest.xml"),
             "dist:onDemand=\"true\"",
-            "dist:onDemand=\"false\" dist:instant=\"true\"")
+            "dist:onDemand=\"false\" dist:instant=\"true\""
+        )
         var models = project.model().ignoreSyncIssues().fetchAndroidProjects().onlyModelMap
         for ((_, model) in models) {
-            for(variant in model.variants) {
+            for (variant in model.variants) {
                 if (model.name == "feature1") {
                     Truth.assertThat(variant.isInstantAppCompatible)
                         .named("Project ${model.name} isInstantAppCompatible property populated from manifest")
@@ -81,26 +85,64 @@ class ModelInstantAppCompatibleTest {
     }
 
     @Test
+    fun testBuildModelForInstantAppWithManifestWithInvalidCharacters() {
+        TestFileUtils.searchAndReplace(
+            File(project.getSubproject(":app").mainSrcDir.parent, "/AndroidManifest.xml"),
+            "package=",
+            "xmlns:dist=\"http://schemas.android.com/apk/distribution\" package="
+        )
+        TestFileUtils.searchAndReplace(
+            File(project.getSubproject(":app").mainSrcDir.parent, "AndroidManifest.xml"),
+            "<application>",
+            " <dist:module dist:instant=\"true\" /> <application>"
+        ) // String with non-breaking space in it.
+        TestFileUtils.searchAndReplace(
+            File(project.getSubproject(":feature1").mainSrcDir.parent, "AndroidManifest.xml"),
+            "dist:title=",
+            "dist:instant=\"false\" dist:title="
+        )
+        TestFileUtils.searchAndReplace(
+            File(project.getSubproject(":feature2").mainSrcDir.parent, "AndroidManifest.xml"),
+            "dist:onDemand=\"true\"",
+            "dist:onDemand=\"false\" dist:instant=\"true\""
+        )
+        val issues =
+            project.model().ignoreSyncIssues().fetchAndroidProjects().onlyModelMap[":app"]!!.syncIssues
+        Truth.assertThat(issues).hasSize(1)
+        Truth.assertThat(issues.first().message).startsWith("Failed to parse XML")
+        Truth.assertThat(issues.first().message).contains(
+            File(
+                project.getSubproject(":app").mainSrcDir.parent,
+                "/AndroidManifest.xml"
+            ).toString()
+        )
+    }
+
+    @Test
     fun testBuildModelForInstantAppWithDynamicFeaturesAndBuildTypeManifestOverlay() {
         TestFileUtils.searchAndReplace(
             File(buildTypeProject.mainSrcDir.parent, "/AndroidManifest.xml"),
             "package=",
-            "xmlns:dist=\"http://schemas.android.com/apk/distribution\" package=")
+            "xmlns:dist=\"http://schemas.android.com/apk/distribution\" package="
+        )
         TestFileUtils.searchAndReplace(
             File(buildTypeProject.mainSrcDir.parent, "/AndroidManifest.xml"),
             "</manifest",
-            "<dist:module dist:instant=\"false\" /> </manifest")
+            "<dist:module dist:instant=\"false\" /> </manifest"
+        )
         TestFileUtils.searchAndReplace(
             File(buildTypeProject.mainSrcDir.parentFile.parent, "/debug/AndroidManifest.xml"),
             "package=",
-            "xmlns:dist=\"http://schemas.android.com/apk/distribution\" package=")
+            "xmlns:dist=\"http://schemas.android.com/apk/distribution\" package="
+        )
         TestFileUtils.searchAndReplace(
             File(buildTypeProject.mainSrcDir.parentFile.parent, "/debug/AndroidManifest.xml"),
             "</manifest",
-            "<dist:module dist:instant=\"true\" /> </manifest")
+            "<dist:module dist:instant=\"true\" /> </manifest"
+        )
         var models = buildTypeProject.model().ignoreSyncIssues().fetchAndroidProjects().onlyModelMap
         for ((_, model) in models) {
-            for(variant in model.variants) {
+            for (variant in model.variants) {
                 if (variant.buildType == "debug") {
                     Truth.assertThat(variant.isInstantAppCompatible)
                         .named("Project ${model.name} isInstantAppCompatible property populated from manifest")
@@ -119,22 +161,26 @@ class ModelInstantAppCompatibleTest {
         TestFileUtils.searchAndReplace(
             File(flavorProject.mainSrcDir.parent, "/AndroidManifest.xml"),
             "package=",
-            "xmlns:dist=\"http://schemas.android.com/apk/distribution\" package=")
+            "xmlns:dist=\"http://schemas.android.com/apk/distribution\" package="
+        )
         TestFileUtils.searchAndReplace(
             File(flavorProject.mainSrcDir.parent, "/AndroidManifest.xml"),
             "<application",
-            "<dist:module dist:instant=\"false\" /> <application")
+            "<dist:module dist:instant=\"false\" /> <application"
+        )
         TestFileUtils.searchAndReplace(
             File(flavorProject.mainSrcDir.parentFile.parent, "/free/AndroidManifest.xml"),
             "<manifest",
-            "<manifest xmlns:dist=\"http://schemas.android.com/apk/distribution\"")
+            "<manifest xmlns:dist=\"http://schemas.android.com/apk/distribution\""
+        )
         TestFileUtils.searchAndReplace(
             File(flavorProject.mainSrcDir.parentFile.parent, "/free/AndroidManifest.xml"),
             "<application",
-            "<dist:module dist:instant=\"true\" /> <application")
+            "<dist:module dist:instant=\"true\" /> <application"
+        )
         var models = flavorProject.model().ignoreSyncIssues().fetchAndroidProjects().onlyModelMap
         for ((_, model) in models) {
-            for(variant in model.variants) {
+            for (variant in model.variants) {
                 if (variant.productFlavors.contains("free")) {
                     Truth.assertThat(variant.isInstantAppCompatible)
                         .named("Project ${model.name} isInstantAppCompatible property populated from manifest")
@@ -153,38 +199,46 @@ class ModelInstantAppCompatibleTest {
         TestFileUtils.searchAndReplace(
             File(project.getSubproject(":app").mainSrcDir.parent, "/AndroidManifest.xml"),
             "package=",
-            "xmlns:apkd=\"http://schemas.android.com/apk/distribution\" package=")
+            "xmlns:apkd=\"http://schemas.android.com/apk/distribution\" package="
+        )
         TestFileUtils.searchAndReplace(
             File(project.getSubproject(":app").mainSrcDir.parent, "AndroidManifest.xml"),
             "<application>",
-            "<apkd:module apkd:instant=\"true\" /> <application>")
+            "<apkd:module apkd:instant=\"true\" /> <application>"
+        )
         TestFileUtils.searchAndReplace(
             File(project.getSubproject(":feature1").mainSrcDir.parent, "AndroidManifest.xml"),
             "dist:title=",
-            "dist:instant=\"false\" dist:title=")
+            "dist:instant=\"false\" dist:title="
+        )
         TestFileUtils.searchAndReplace(
             File(project.getSubproject(":feature2").mainSrcDir.parent, "AndroidManifest.xml"),
             "dist:onDemand=\"true\"",
-            "dist:onDemand=\"false\" dist:instant=\"true\"")
+            "dist:onDemand=\"false\" dist:instant=\"true\""
+        )
         TestFileUtils.searchAndReplace(
             File(project.getSubproject(":feature1").mainSrcDir.parent, "/AndroidManifest.xml"),
             "xmlns:dist",
-            "xmlns:apkd")
+            "xmlns:apkd"
+        )
         TestFileUtils.searchAndReplace(
             File(project.getSubproject(":feature1").mainSrcDir.parent, "/AndroidManifest.xml"),
             "dist:",
-            "apkd:")
+            "apkd:"
+        )
         TestFileUtils.searchAndReplace(
             File(project.getSubproject(":feature2").mainSrcDir.parent, "/AndroidManifest.xml"),
             "xmlns:dist",
-            "xmlns:apkd")
+            "xmlns:apkd"
+        )
         TestFileUtils.searchAndReplace(
             File(project.getSubproject(":feature2").mainSrcDir.parent, "/AndroidManifest.xml"),
             "dist:",
-            "apkd:")
+            "apkd:"
+        )
         var models = project.model().ignoreSyncIssues().fetchAndroidProjects().onlyModelMap
         for ((_, model) in models) {
-            for(variant in model.variants) {
+            for (variant in model.variants) {
                 if (model.name == "feature1") {
                     Truth.assertThat(variant.isInstantAppCompatible)
                         .named("Project ${model.name} isInstantAppCompatible property populated from manifest")
@@ -203,22 +257,26 @@ class ModelInstantAppCompatibleTest {
         TestFileUtils.searchAndReplace(
             File(project.getSubproject(":app").mainSrcDir.parent, "/AndroidManifest.xml"),
             "package=",
-            "xmlns:dist=\"http://schemas.android.com/apk/distribution\" package=")
+            "xmlns:dist=\"http://schemas.android.com/apk/distribution\" package="
+        )
         TestFileUtils.searchAndReplace(
             File(project.getSubproject(":app").mainSrcDir.parent, "AndroidManifest.xml"),
             "<application>",
-            "<dist:module android:instant=\"true\" /> <application>")
+            "<dist:module android:instant=\"true\" /> <application>"
+        )
         TestFileUtils.searchAndReplace(
             File(project.getSubproject(":feature1").mainSrcDir.parent, "AndroidManifest.xml"),
             "dist:title=",
-            "dist:instant=\"false\" dist:title=")
+            "dist:instant=\"false\" dist:title="
+        )
         TestFileUtils.searchAndReplace(
             File(project.getSubproject(":feature2").mainSrcDir.parent, "AndroidManifest.xml"),
             "dist:onDemand=\"true\"",
-            "dist:onDemand=\"false\" android:instant=\"true\"")
+            "dist:onDemand=\"false\" android:instant=\"true\""
+        )
         var models = project.model().ignoreSyncIssues().fetchAndroidProjects().onlyModelMap
         for ((_, model) in models) {
-            for(variant in model.variants) {
+            for (variant in model.variants) {
                 Truth.assertThat(variant.isInstantAppCompatible)
                     .named("Project ${model.name} isInstantAppCompatible property populated from manifest")
                     .isFalse()
@@ -231,14 +289,16 @@ class ModelInstantAppCompatibleTest {
         TestFileUtils.searchAndReplace(
             File(project.getSubproject(":app").mainSrcDir.parent, "/AndroidManifest.xml"),
             "package=",
-            "xmlns:dist=\"http://schemas.android.com/apk/distribution\" package=")
+            "xmlns:dist=\"http://schemas.android.com/apk/distribution\" package="
+        )
         TestFileUtils.searchAndReplace(
             File(project.getSubproject(":app").mainSrcDir.parent, "AndroidManifest.xml"),
             "<application>",
-            "<dist:module dist:instant=\"true\" /> <application>")
+            "<dist:module dist:instant=\"true\" /> <application>"
+        )
         var models = project.model().ignoreSyncIssues().fetchAndroidProjects().onlyModelMap
         for ((_, model) in models) {
-            for(variant in model.variants) {
+            for (variant in model.variants) {
                 if (model.name == "app") {
                     Truth.assertThat(variant.isInstantAppCompatible)
                         .named("Project ${model.name} isInstantAppCompatible property populated from manifest")
@@ -257,14 +317,16 @@ class ModelInstantAppCompatibleTest {
         TestFileUtils.searchAndReplace(
             File(project.getSubproject(":app").mainSrcDir.parent, "/AndroidManifest.xml"),
             "package=",
-            "xmlns:dist=\"http://schemas.android.com/apk/distribution\" package=")
+            "xmlns:dist=\"http://schemas.android.com/apk/distribution\" package="
+        )
         TestFileUtils.searchAndReplace(
             File(project.getSubproject(":app").mainSrcDir.parent, "AndroidManifest.xml"),
             "<application>",
-            "<dist:module dist:instant=\"blah\" /> <application>")
+            "<dist:module dist:instant=\"blah\" /> <application>"
+        )
         var models = project.model().ignoreSyncIssues().fetchAndroidProjects().onlyModelMap
         for ((_, model) in models) {
-            for(variant in model.variants) {
+            for (variant in model.variants) {
                 Truth.assertThat(variant.isInstantAppCompatible)
                     .named("Project ${model.name} isInstantAppCompatible property populated from manifest")
                     .isFalse()
