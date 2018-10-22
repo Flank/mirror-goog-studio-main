@@ -65,6 +65,21 @@ public class JacocoConnectedTest {
 
     @Test
     @Category(DeviceTests.class)
+    public void connectedCheckNamespacedRClasses() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(), "android.aaptOptions.namespaced = true\n");
+
+        adb.exclusiveAccess();
+        project.executor().run("connectedCheck");
+
+        assertThat(
+                        project.file(
+                                "build/reports/coverage/debug/com.example.helloworld/HelloWorld.kt.html"))
+                .exists();
+    }
+
+    @Test
+    @Category(DeviceTests.class)
     public void connectedCheckWithOrchestrator() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),

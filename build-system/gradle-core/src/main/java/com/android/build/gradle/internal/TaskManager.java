@@ -48,6 +48,7 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGE
 import static com.android.build.gradle.internal.scope.InternalArtifactType.NDK_LIBS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_LIB;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_CLASSES;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -96,6 +97,7 @@ import com.android.build.gradle.internal.res.GenerateLibraryRFileTask;
 import com.android.build.gradle.internal.res.LinkAndroidResForBundleTask;
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask;
 import com.android.build.gradle.internal.res.namespaced.NamespacedResourcesTaskManager;
+import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -1071,6 +1073,21 @@ public abstract class TaskManager {
                             packageOutputType,
                             baseName,
                             useAaptToGenerateLegacyMultidexMainDexProguardRules);
+
+            FileCollection rFiles =
+                    scope.getArtifacts().getFinalArtifactFiles(RUNTIME_R_CLASS_CLASSES).get();
+
+            scope.getTransformManager()
+                    .addStream(
+                            OriginalStream.builder(project, "final-r-classes")
+                                    .addContentTypes(
+                                            DefaultContentType.CLASSES,
+                                            DefaultContentType.RESOURCES)
+                                    .addScope(Scope.PROJECT)
+                                    .setFileCollection(rFiles)
+                                    .build());
+
+            scope.getArtifacts().appendArtifact(AnchorOutputType.ALL_CLASSES, rFiles);
             return;
         }
         createNonNamespacedResourceTasks(
@@ -1415,23 +1432,6 @@ public abstract class TaskManager {
                                 .setFileCollection(
                                         scope.getVariantData().getAllPostJavacGeneratedBytecode())
                                 .build());
-
-        if (artifacts.hasArtifact(InternalArtifactType.RUNTIME_R_CLASS_CLASSES)) {
-            scope.getTransformManager()
-                    .addStream(
-                            OriginalStream.builder(project, "final-r-classes")
-                                    .addContentTypes(
-                                            DefaultContentType.CLASSES,
-                                            DefaultContentType.RESOURCES)
-                                    .addScope(Scope.PROJECT)
-                                    .setFileCollection(
-                                            artifacts
-                                                    .getFinalArtifactFiles(
-                                                            InternalArtifactType
-                                                                    .RUNTIME_R_CLASS_CLASSES)
-                                                    .get())
-                                    .build());
-        }
 
         if (scope.getGlobalScope().getExtension().getAaptOptions().getNamespaced()
                 && projectOptions.get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
