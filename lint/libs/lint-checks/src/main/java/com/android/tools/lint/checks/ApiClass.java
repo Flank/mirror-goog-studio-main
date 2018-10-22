@@ -267,8 +267,6 @@ public final class ApiClass implements Comparable<ApiClass> {
     }
 
     void addField(String name, int since, int deprecatedIn, int removedIn) {
-        Integer i = mFields.get(name);
-        assert i == null;
         mFields.put(name, since);
         addToDeprecated(name, deprecatedIn);
         addToRemoved(name, removedIn);
@@ -285,9 +283,6 @@ public final class ApiClass implements Comparable<ApiClass> {
         if (index != -1) {
             name = name.substring(0, index + 1);
         }
-
-        Integer i = mMethods.get(name);
-        assert i == null || i == since : i;
         mMethods.put(name, since);
         addToDeprecated(name, deprecatedIn);
         addToRemoved(name, removedIn);

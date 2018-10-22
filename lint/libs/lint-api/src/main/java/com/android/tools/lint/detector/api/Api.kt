@@ -30,7 +30,8 @@ const val CURRENT_API = 3
 /** Describes the given API level */
 fun describeApi(api: Int): String {
     return when (api) {
-        3 -> "3.3+" // 3.3.0-alpha12
+        4 -> "3.4+" // 3.4.0-alpha3
+        3 -> "3.3" // 3.3.0-alpha12
         2 -> "3.2" // 3.2.0-alpha7
         1 -> "3.1" // Initial; 3.1.0-alpha4
         0 -> "3.0 and older"

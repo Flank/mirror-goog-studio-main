@@ -150,9 +150,9 @@ class CleanupDetector : Detector(), SourceCodeScanner {
             )
         ) {
             checkRecycled(context, node, VELOCITY_TRACKER_CLS, RECYCLE)
-        } else if ((OBTAIN_STYLED_ATTRIBUTES == name
-                    || OBTAIN_ATTRIBUTES == name
-                    || OBTAIN_TYPED_ARRAY == name) && (evaluator.extendsClass(
+        } else if ((OBTAIN_STYLED_ATTRIBUTES == name ||
+                    OBTAIN_ATTRIBUTES == name ||
+                    OBTAIN_TYPED_ARRAY == name) && (evaluator.extendsClass(
                 containingClass,
                 CLASS_CONTEXT,
                 false
@@ -174,17 +174,17 @@ class CleanupDetector : Detector(), SourceCodeScanner {
             )
         ) {
             checkRecycled(context, node, CONTENT_PROVIDER_CLIENT_CLS, RELEASE)
-        } else if ((QUERY == name
-                    || RAW_QUERY == name
-                    || QUERY_WITH_FACTORY == name
-                    || RAW_QUERY_WITH_FACTORY == name) && (evaluator.extendsClass(
+        } else if ((QUERY == name ||
+                    RAW_QUERY == name ||
+                    QUERY_WITH_FACTORY == name ||
+                    RAW_QUERY_WITH_FACTORY == name) && (evaluator.extendsClass(
                 containingClass,
                 SQLITE_DATABASE_CLS,
                 false
-            )
-                    || evaluator.extendsClass(containingClass, CONTENT_RESOLVER_CLS, false)
-                    || evaluator.extendsClass(containingClass, CLASS_CONTENTPROVIDER, false)
-                    || evaluator.extendsClass(
+            ) ||
+                    evaluator.extendsClass(containingClass, CONTENT_RESOLVER_CLS, false) ||
+                    evaluator.extendsClass(containingClass, CLASS_CONTENTPROVIDER, false) ||
+                    evaluator.extendsClass(
                 containingClass, CONTENT_PROVIDER_CLIENT_CLS, false
             ))
         ) {
@@ -273,7 +273,8 @@ class CleanupDetector : Detector(), SourceCodeScanner {
             }
 
             override fun argument(
-                call: UCallExpression, reference: UElement
+                call: UCallExpression,
+                reference: UElement
             ) {
                 // Special case
                 if (recycleType == SURFACE_TEXTURE_CLS && call.isConstructorCall()) {
@@ -357,9 +358,9 @@ class CleanupDetector : Detector(), SourceCodeScanner {
 
                                 if (resolved != null && variables.contains(resolved)) {
                                     return true
-                                } else if (resolved is PsiMethod
-                                    && operand is UCallExpression
-                                    && isCommittedInChainedCalls(
+                                } else if (resolved is PsiMethod &&
+                                    operand is UCallExpression &&
+                                    isCommittedInChainedCalls(
                                     this.context, operand
                                     )
                                 ) {
@@ -403,7 +404,8 @@ class CleanupDetector : Detector(), SourceCodeScanner {
     }
 
     private fun isCommittedInChainedCalls(
-        context: JavaContext, node: UCallExpression
+        context: JavaContext,
+        node: UCallExpression
     ): Boolean {
         // Look for chained calls since the FragmentManager methods all return "this"
         // to allow constructor chaining, e.g.
@@ -417,20 +419,22 @@ class CleanupDetector : Detector(), SourceCodeScanner {
     }
 
     private fun isTransactionCommitMethodCall(
-        context: JavaContext, call: UCallExpression
+        context: JavaContext,
+        call: UCallExpression
     ): Boolean {
 
         val methodName = getMethodName(call)
-        return (COMMIT == methodName
-                || COMMIT_ALLOWING_LOSS == methodName
-                || COMMIT_NOW_ALLOWING_LOSS == methodName
-                || COMMIT_NOW == methodName) && isMethodOnFragmentClass(
+        return (COMMIT == methodName ||
+                COMMIT_ALLOWING_LOSS == methodName ||
+                COMMIT_NOW_ALLOWING_LOSS == methodName ||
+                COMMIT_NOW == methodName) && isMethodOnFragmentClass(
             context, call, FRAGMENT_TRANSACTION_CLS, FRAGMENT_TRANSACTION_V4_CLS, true
         )
     }
 
     private fun isShowFragmentMethodCall(
-        context: JavaContext, call: UCallExpression
+        context: JavaContext,
+        call: UCallExpression
     ): Boolean {
         val methodName = getMethodName(call)
         return SHOW == methodName && isMethodOnFragmentClass(
@@ -501,9 +505,9 @@ class CleanupDetector : Detector(), SourceCodeScanner {
 
                                 if (resolved != null && variables.contains(resolved)) {
                                     return true
-                                } else if (resolved is PsiMethod
-                                    && operand is UCallExpression
-                                    && isEditorCommittedInChainedCalls(
+                                } else if (resolved is PsiMethod &&
+                                    operand is UCallExpression &&
+                                    isEditorCommittedInChainedCalls(
                                     this.context, operand
                                     )
                                 ) {
@@ -541,7 +545,8 @@ class CleanupDetector : Detector(), SourceCodeScanner {
     }
 
     private fun isSharedEditorCreation(
-        context: JavaContext, method: PsiMethod
+        context: JavaContext,
+        method: PsiMethod
     ): Boolean {
         val methodName = method.name
         if (EDIT == methodName) {
@@ -557,7 +562,8 @@ class CleanupDetector : Detector(), SourceCodeScanner {
     }
 
     private fun isEditorCommittedInChainedCalls(
-        context: JavaContext, node: UCallExpression
+        context: JavaContext,
+        node: UCallExpression
     ): Boolean {
         val checker: (JavaContext, UCallExpression) -> Boolean = { c, call ->
             isEditorCommitMethodCall(c, call) || isEditorApplyMethodCall(c, call)
@@ -613,7 +619,8 @@ class CleanupDetector : Detector(), SourceCodeScanner {
     }
 
     private fun isEditorCommitMethodCall(
-        context: JavaContext, call: UCallExpression
+        context: JavaContext,
+        call: UCallExpression
     ): Boolean {
         val methodName = getMethodName(call)
         if (COMMIT == methodName) {
@@ -628,8 +635,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                     suggestApplyIfApplicable(context, call)
                     return true
                 }
-            } else
-                if (call.valueArgumentCount == 0) {
+            } else if (call.valueArgumentCount == 0) {
                     // Couldn't find method but it *looks* like an apply call
                     return true
                 }
@@ -639,7 +645,8 @@ class CleanupDetector : Detector(), SourceCodeScanner {
     }
 
     private fun isEditorApplyMethodCall(
-        context: JavaContext, call: UCallExpression
+        context: JavaContext,
+        call: UCallExpression
     ): Boolean {
         val methodName = getMethodName(call)
         if (APPLY == methodName) {
@@ -650,8 +657,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                 return evaluator.extendsClass(
                     containingClass, ANDROID_CONTENT_SHARED_PREFERENCES_EDITOR, false
                 )
-            } else
-                if (call.valueArgumentCount == 0) {
+            } else if (call.valueArgumentCount == 0) {
                     // Couldn't find method but it *looks* like an apply call
                     return true
                 }
@@ -661,7 +667,8 @@ class CleanupDetector : Detector(), SourceCodeScanner {
     }
 
     private fun suggestApplyIfApplicable(
-        context: JavaContext, node: UCallExpression
+        context: JavaContext,
+        node: UCallExpression
     ) {
         if (context.project.minSdkVersion.apiLevel >= 9) {
             // See if the return value is read: can only replace commit with
@@ -675,11 +682,11 @@ class CleanupDetector : Detector(), SourceCodeScanner {
             }
             var returnValueIgnored = true
 
-            if (parent is UCallExpression
-                || parent is UVariable
-                || parent is UPolyadicExpression
-                || parent is UUnaryExpression
-                || parent is UReturnExpression
+            if (parent is UCallExpression ||
+                parent is UVariable ||
+                parent is UPolyadicExpression ||
+                parent is UUnaryExpression ||
+                parent is UReturnExpression
             ) {
                 returnValueIgnored = false
             } else if (parent is UIfExpression) {
@@ -694,9 +701,9 @@ class CleanupDetector : Detector(), SourceCodeScanner {
             }
 
             if (returnValueIgnored) {
-                val message = ("Consider using `apply()` instead; `commit` writes "
-                        + "its data to persistent storage immediately, whereas "
-                        + "`apply` will handle it in the background")
+                val message = ("Consider using `apply()` instead; `commit` writes " +
+                        "its data to persistent storage immediately, whereas " +
+                        "`apply` will handle it in the background")
                 val location = context.getLocation(node)
                 val fix = LintFix.create()
                     .name("Replace commit() with apply()")
@@ -710,7 +717,8 @@ class CleanupDetector : Detector(), SourceCodeScanner {
     }
 
     private fun isBeginTransaction(
-        context: JavaContext, method: PsiMethod
+        context: JavaContext,
+        method: PsiMethod
     ): Boolean {
         val methodName = method.name
         if (BEGIN_TRANSACTION == methodName) {
@@ -1019,7 +1027,9 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         @JvmStatic
         @JvmOverloads
         fun getVariableElement(
-            rhs: UCallExpression, allowChainedCalls: Boolean = false, allowFields: Boolean = false
+            rhs: UCallExpression,
+            allowChainedCalls: Boolean = false,
+            allowFields: Boolean = false
         ): PsiVariable? {
             return DataFlowAnalyzer.getVariableElement(rhs, allowChainedCalls, allowFields)
         }
