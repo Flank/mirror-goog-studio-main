@@ -68,6 +68,9 @@ public final class ProcessProfileWriter implements ProfileRecordWriter {
 
     private final GradleBuildProfile.Builder mBuild;
 
+    private final List<AndroidStudioEvent.Builder> otherEvents =
+            Collections.synchronizedList(new ArrayList<>());
+
     private final LoadingCache<String, Project> mProjects;
 
     private final boolean mEnableChromeTracingOutput;
@@ -116,6 +119,10 @@ public final class ProcessProfileWriter implements ProfileRecordWriter {
         spans.add(executionRecord.build());
     }
 
+    /** Appends a generic event (e.g. test execution record) to be uploaded. */
+    public void recordEvent(@NonNull AndroidStudioEvent.Builder event) {
+        otherEvents.add(event);
+    }
     /**
      * Finishes processing the outstanding {@link GradleBuildProfileSpan} publication and shuts down
      * the processing queue. Write the final output file to the given path.
@@ -186,6 +193,9 @@ public final class ProcessProfileWriter implements ProfileRecordWriter {
                         .setJavaProcessStats(CommonMetricsData.getJavaProcessStats())
                         .setJvmDetails(CommonMetricsData.getJvmDetails()));
 
+        for (AndroidStudioEvent.Builder otherEvent : otherEvents) {
+            UsageTracker.log(otherEvent);
+        }
     }
 
     @NonNull

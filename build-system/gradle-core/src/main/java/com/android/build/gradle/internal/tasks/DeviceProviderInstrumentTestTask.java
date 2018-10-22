@@ -35,6 +35,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.test.AbstractTestDataImpl;
+import com.android.build.gradle.internal.test.InstrumentationTestAnalytics;
+import com.android.build.gradle.internal.test.report.CompositeTestResults;
 import com.android.build.gradle.internal.test.report.ReportType;
 import com.android.build.gradle.internal.test.report.TestReport;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -74,6 +76,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.gradle.api.GradleException;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.JavaBasePlugin;
@@ -111,6 +114,11 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
     private TestRunnerFactory testRunnerFactory;
     private boolean ignoreFailures;
     private boolean testFailed;
+
+    // For analytics only
+    private boolean codeCoverageEnabled;
+    private TestOptions.Execution testExecution;
+    private Configuration dependencies;
 
     @Nullable private Collection<String> installOptions;
 
@@ -168,6 +176,10 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
                                 resultsOutDir,
                                 coverageOutDir,
                                 getILogger());
+            } catch (Exception e) {
+                InstrumentationTestAnalytics.recordCrashedTestRun(
+                        dependencies, testExecution, codeCoverageEnabled);
+                throw e;
             } finally {
                 deviceProvider.terminate();
             }
@@ -179,7 +191,10 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
         FileUtils.cleanOutputDir(reportOutDir);
 
         TestReport report = new TestReport(ReportType.SINGLE_FLAVOR, resultsOutDir, reportOutDir);
-        report.generateReport();
+        CompositeTestResults results = report.generateReport();
+
+        InstrumentationTestAnalytics.recordOkTestRun(
+                dependencies, testExecution, codeCoverageEnabled, results.getTestCount());
 
         if (!success) {
             testFailed = true;
@@ -487,6 +502,9 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
                 default:
                     throw new AssertionError("Unknown value " + executionEnum);
             }
+            task.codeCoverageEnabled = scope.getVariantConfiguration().isTestCoverageEnabled();
+            task.dependencies = scope.getVariantDependencies().getRuntimeClasspath();
+            task.testExecution = executionEnum;
 
             String flavorFolder = testData.getFlavorName();
             if (!flavorFolder.isEmpty()) {
