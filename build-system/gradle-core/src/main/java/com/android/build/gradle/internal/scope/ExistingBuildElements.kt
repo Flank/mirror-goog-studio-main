@@ -23,7 +23,6 @@ import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.api.artifact.forName
 import com.android.build.gradle.internal.ide.FilterDataImpl
 import com.android.ide.common.build.ApkInfo
-import com.android.ide.common.internal.WaitableExecutor
 import com.google.common.collect.ImmutableList
 import com.google.gson.GsonBuilder
 import com.google.gson.TypeAdapter
@@ -45,14 +44,12 @@ class ExistingBuildElements {
 
     companion object {
 
-        private val METADATA_FILE_NAME = "output.json"
-
-        val executor: WaitableExecutor = WaitableExecutor.useGlobalSharedThreadPool()
+        private const val METADATA_FILE_NAME = "output.json"
 
         @JvmStatic
         fun from(artifactType: ArtifactType, buildableArtifact : BuildableArtifact) : BuildElements {
             val metadataFile = buildableArtifact.forName(METADATA_FILE_NAME)
-            return _from(artifactType, metadataFile)
+            return loadFrom(artifactType, metadataFile)
         }
 
         /**
@@ -63,7 +60,7 @@ class ExistingBuildElements {
         @JvmStatic
         fun from(elementType: ArtifactType, from: FileCollection): BuildElements {
             val metadataFile = getMetadataFileIfPresent(from)
-            return _from(elementType, metadataFile)
+            return loadFrom(elementType, metadataFile)
         }
 
         /**
@@ -75,20 +72,33 @@ class ExistingBuildElements {
         fun from(elementType: ArtifactType, from: File): BuildElements {
 
             val metadataFile = getMetadataFileIfPresent(from)
-            return _from(elementType, metadataFile)
+            return loadFrom(elementType, metadataFile)
         }
 
-        private fun _from(elementType: ArtifactType,
+        /**
+         * create a {@link BuildElement} containing all artifact types from a previous task
+         * execution metadata file.
+         * @param from the folder containing the metadata file.
+         */
+        @JvmStatic
+        fun from(from: File): BuildElements {
+
+            val metadataFile = getMetadataFileIfPresent(from)
+            return loadFrom(null, metadataFile)
+        }
+
+        private fun loadFrom(
+            elementType: ArtifactType?,
                 metadataFile: File?): BuildElements {
             if (metadataFile == null || !metadataFile.exists()) {
                 return BuildElements(ImmutableList.of())
             }
             try {
-                FileReader(metadataFile).use({ reader ->
+                FileReader(metadataFile).use { reader ->
                     return BuildElements(load(metadataFile.parentFile.toPath(),
-                            elementType,
-                            reader))
-                })
+                        elementType,
+                        reader))
+                }
             } catch (e: IOException) {
                 return BuildElements(ImmutableList.of<BuildOutput>())
             }
