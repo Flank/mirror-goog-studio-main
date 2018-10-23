@@ -48,11 +48,8 @@ std::unique_ptr<std::vector<Event>> ConsumeEvents();
 // Automatically emit begin/end events (via RAII). Also emit to ftrace.
 class Phase {
  public:
-  Phase(const std::string& name) : trace_(name) { BeginPhase(name); }
+  Phase(const std::string& name) { BeginPhase(name); }
   ~Phase() { EndPhase(); }
-
- private:
-  Trace trace_;
 };
 }  // namespace deploy
 
