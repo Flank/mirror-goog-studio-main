@@ -14,14 +14,6 @@ if [[ "$unamestr" == 'Darwin' ]]; then
   exit 0;
 fi
 
-# For Windows, we know that the string will contain Cygwin (if
-# executed through Cygwin) combined with NT Version.  Since NT
-# version is variable due to updates, check for CYGWIN in regex string.
-if [[ "$unamestr" == *'CYGWIN'* ]]; then
-  echo "Windows Cygwin Build Detected.  No Build to perform."
-  exit 0;
-fi
-
 readonly script_dir="$(dirname "$0")"
 
 # Grab the location of the command_log file for bazel daemon so we can search it later.
@@ -37,6 +29,7 @@ if [[ -d "${dist_dir}" ]]; then
 
   # follow conventions to use gtest-testlog-forwarding on ATP
   readonly testlogs_dir="$(${script_dir}/bazel info bazel-testlogs)"
+  echo "The testlogs_dir is $testlogs_dir"
   mkdir "${dist_dir}"/gtest
   # This does not handle spaces in file names.
   for source_xml in $(cd "${testlogs_dir}" && find -name '*.xml' -printf '%P\n'); do
