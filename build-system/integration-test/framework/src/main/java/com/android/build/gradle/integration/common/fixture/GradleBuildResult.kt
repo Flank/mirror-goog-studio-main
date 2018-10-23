@@ -27,7 +27,6 @@ import com.google.common.collect.ImmutableList
 import com.google.common.collect.Sets
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.util.HashSet
 import org.gradle.api.ProjectConfigurationException
 import org.gradle.api.tasks.TaskExecutionException
 import org.gradle.internal.serialize.PlaceholderException
