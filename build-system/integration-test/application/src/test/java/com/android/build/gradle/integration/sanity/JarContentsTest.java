@@ -296,6 +296,7 @@ public class JarContentsTest {
                 "com/android/tools/r8/ir/optimize/classinliner/",
                 "com/android/tools/r8/ir/optimize/lambda/",
                 "com/android/tools/r8/ir/optimize/lambda/kotlin/",
+                "com/android/tools/r8/ir/optimize/peepholes/",
                 "com/android/tools/r8/ir/optimize/staticizer/",
                 "com/android/tools/r8/ir/optimize/string/",
                 "com/android/tools/r8/ir/regalloc/",
