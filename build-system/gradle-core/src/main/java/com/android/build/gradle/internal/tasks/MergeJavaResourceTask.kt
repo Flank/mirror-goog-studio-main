@@ -98,8 +98,7 @@ open class MergeJavaResourceTask
 
     private val workers = Workers.getWorker(workerExecutor)
 
-    //TODO, set in configuration below
-    override fun isIncremental() = false
+    override fun isIncremental() = true
 
     override fun doFullTaskAction() {
         workers.use {
@@ -113,15 +112,36 @@ open class MergeJavaResourceTask
                     outputFile,
                     packagingOptions,
                     incrementalStateFile,
-                    isIncremental,
-                    cacheDir
+                    false,
+                    cacheDir,
+                    null
                 )
             )
         }
     }
 
     override fun doIncrementalTaskAction(changedInputs: MutableMap<File, FileStatus>) {
-            //TODO implement this is subsequent CL
+        if (!incrementalStateFile.isFile) {
+            doFullTaskAction()
+            return
+        }
+        workers.use {
+            it.submit(
+                MergeJavaResRunnable::class.java,
+                MergeJavaResParams(
+                    projectJavaRes.files,
+                    subProjectJavaRes?.files,
+                    externalLibJavaRes?.files,
+                    featureJavaRes?.files,
+                    outputFile,
+                    packagingOptions,
+                    incrementalStateFile,
+                    true,
+                    cacheDir,
+                    changedInputs
+                )
+            )
+        }
     }
 
     class CreationAction(
@@ -221,12 +241,15 @@ private class MergeJavaResParams(
     val packagingOptions: SerializablePackagingOptions,
     val incrementalStateFile: File,
     val isIncremental: Boolean,
-    val cacheDir: File
+    val cacheDir: File,
+    val changedInputs: Map<File, FileStatus>?
 ): Serializable
 
 private class MergeJavaResRunnable @Inject constructor(val params: MergeJavaResParams) : Runnable {
     override fun run() {
-        FileUtils.deleteIfExists(params.outputFile)
+        if (!params.isIncremental) {
+            FileUtils.deleteIfExists(params.outputFile)
+        }
         FileUtils.mkdirs(params.cacheDir)
 
         val zipCache = FileCacheByPath(params.cacheDir)
@@ -242,7 +265,7 @@ private class MergeJavaResRunnable @Inject constructor(val params: MergeJavaResP
         val inputs =
             toInputs(
                 inputMap,
-                null, // TODO fix this for incremental case
+                params.changedInputs,
                 zipCache,
                 cacheUpdates,
                 !params.isIncremental,
