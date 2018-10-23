@@ -43,6 +43,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 import org.apache.tools.ant.BuildException;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
@@ -230,6 +231,7 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
             extends AnnotationProcessingTaskCreationAction<ProcessLibraryManifest> {
 
         Provider<RegularFile> manifestOutputFile;
+        Provider<Directory> manifestOutputDirectory;
         File aaptFriendlyManifestOutputDirectory;
         VariantScope scope;
         private File reportFile;
@@ -255,6 +257,14 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
                                     BuildArtifactsHolder.OperationType.INITIAL,
                                     taskName,
                                     SdkConstants.ANDROID_MANIFEST_XML);
+
+            manifestOutputDirectory =
+                    scope.getArtifacts()
+                            .createDirectory(
+                                    InternalArtifactType.MERGED_MANIFESTS,
+                                    BuildArtifactsHolder.OperationType.INITIAL,
+                                    taskName,
+                                    "");
 
             aaptFriendlyManifestOutputDirectory =
                     getVariantScope()
@@ -327,6 +337,7 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
 
             task.setAaptFriendlyManifestOutputDirectory(aaptFriendlyManifestOutputDirectory);
 
+            task.setManifestOutputDirectory(manifestOutputDirectory);
             task.manifestOutputFile = manifestOutputFile;
 
             task.outputScope = getVariantScope().getOutputScope();

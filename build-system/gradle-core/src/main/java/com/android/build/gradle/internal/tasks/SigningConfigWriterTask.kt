@@ -20,8 +20,6 @@ import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.tasks.AnnotationProcessingTaskCreationAction
-import com.android.build.gradle.tasks.Initial
-import com.android.build.gradle.tasks.InternalID
 import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
 import java.io.IOException
@@ -36,8 +34,6 @@ import org.gradle.api.tasks.TaskAction
 open class SigningConfigWriterTask : AndroidVariantTask() {
 
     @get:OutputDirectory
-    @get:InternalID(InternalArtifactType.FEATURE_SIGNING_CONFIG)
-    @get:Initial(out="")
     var outputDirectory: Provider<Directory>? = null
         internal set
 
@@ -60,9 +56,19 @@ open class SigningConfigWriterTask : AndroidVariantTask() {
             variantScope.getTaskName("signingConfigWriter"),
             SigningConfigWriterTask::class.java) {
 
+        private var outputDirectory: Provider<Directory>? = null
+
+        override fun preConfigure(taskName: String) {
+            super.preConfigure(taskName)
+            outputDirectory = variantScope.artifacts.createDirectory(
+                InternalArtifactType.FEATURE_SIGNING_CONFIG,
+                taskName)
+        }
+
         override fun configure(task: SigningConfigWriterTask) {
             super.configure(task)
 
+            task.outputDirectory = outputDirectory
             // convert to a serializable signing config. Objects from DSL are not serializable.
             task.signingConfig = variantScope.variantConfiguration.signingConfig?.let {
                 SigningConfig(it.name).initWith(it)
