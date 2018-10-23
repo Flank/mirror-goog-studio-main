@@ -1379,12 +1379,15 @@ public abstract class TaskManager {
     public TaskProvider<? extends JavaCompile> createJavacTask(@NonNull final VariantScope scope) {
         taskFactory.register(new JavaPreCompileTask.CreationAction(scope));
 
-        if (ProcessAnnotationsTask.taskShouldBeCreated(scope)) {
+        boolean processAnnotationsTaskCreated = ProcessAnnotationsTask.taskShouldBeCreated(scope);
+        if (processAnnotationsTaskCreated) {
             taskFactory.register(new ProcessAnnotationsTask.CreationAction(scope));
         }
 
         final TaskProvider<? extends JavaCompile> javacTask =
-                taskFactory.register(new AndroidJavaCompile.CreationAction(scope));
+                taskFactory.register(
+                        new AndroidJavaCompile.CreationAction(
+                                scope, processAnnotationsTaskCreated));
 
         postJavacCreation(scope);
 

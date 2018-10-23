@@ -52,10 +52,9 @@ import java.io.File
  * The separate annotation processing task can be either KaptTask or [ProcessAnnotationsTask].
  *
  * [ProcessAnnotationsTask] is needed if all of the following conditions are met:
- *   1. Kapt is not used
- *   2. Incremental compilation is requested (either by the user through the DSL or by default)
- *   3. Not all of the annotation processors are incremental
- *   4. The [BooleanOption.ENABLE_SEPARATE_ANNOTATION_PROCESSING] flag is enabled
+ *   1. Incremental compilation is requested (either by the user through the DSL or by default)
+ *   2. Kapt is not used
+ *   3. The [BooleanOption.ENABLE_SEPARATE_ANNOTATION_PROCESSING] flag is enabled
  *
  * When Kapt is used (e.g., in most Kotlin-only or hybrid Kotlin-Java projects):
  *   + [ProcessAnnotationsTask] is not created.
@@ -67,8 +66,8 @@ import java.io.File
  *   + If [ProcessAnnotationsTask] is needed (see above), [ProcessAnnotationsTask] first performs
  *     annotation processing only, without compiling, and [AndroidJavaCompile] then performs
  *     compilation only, without annotation processing.
- *   + Otherwise, [ProcessAnnotationsTask] is either not created or skipped, and
- *     [AndroidJavaCompile] performs both annotation processing and compilation.
+ *   + Otherwise, [ProcessAnnotationsTask] is not created, and [AndroidJavaCompile] performs both
+ *     annotation processing and compilation.
  */
 @CacheableTask
 open class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
@@ -84,15 +83,15 @@ open class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
     var incrementalFromDslOrByDefault: Boolean = DEFAULT_INCREMENTAL_COMPILATION
         private set
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.NONE)
-    lateinit var processorListFile: BuildableArtifact
-        internal set
-
     @get:Input
     var separateAnnotationProcessingFlag: Boolean =
         BooleanOption.ENABLE_SEPARATE_ANNOTATION_PROCESSING.defaultValue
         private set
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    lateinit var processorListFile: BuildableArtifact
+        internal set
 
     @get:Internal
     lateinit var sourceFileTrees: () -> List<FileTree>
@@ -129,16 +128,14 @@ open class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
             annotationProcessors.filter { it -> it.value == java.lang.Boolean.FALSE }
         val allAPsAreIncremental = nonIncrementalAPs.isEmpty()
 
-        // If incremental compilation is requested but not all of the annotation processors are
-        // incremental, and annotation processing is performed by this task, then compilation
-        // will not be incremental. We warn users about non-incremental annotation processors and
-        // tell them to enable the separateAnnotationProcessing flag to make compilation
-        // incremental. (Note that Kapt already takes care of annotation processing, hence the check
-        // !hasKapt.)
-        if (!hasKapt
-            && incrementalFromDslOrByDefault
-            && !allAPsAreIncremental
+        // If incremental compilation is requested and annotation processing is performed by this
+        // task, but not all of the annotation processors are incremental, then compilation will not
+        // be incremental. We warn users about non-incremental annotation processors and tell them
+        // to enable the separateAnnotationProcessing flag to make compilation incremental.
+        if (incrementalFromDslOrByDefault
+            && !hasKapt
             && !separateAnnotationProcessingFlag
+            && !allAPsAreIncremental
         ) {
             logger
                 .warn(
@@ -152,24 +149,6 @@ open class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
                 )
         }
 
-        // This is the condition that ProcessAnnotationsTask is executed (see the documentation of
-        // AndroidJavaCompile)
-        val processAnnotationsTaskExecuted = !hasKapt
-                && incrementalFromDslOrByDefault
-                && !allAPsAreIncremental
-                && separateAnnotationProcessingFlag
-
-        // Disable annotation processing if it is done by ProcessAnnotationsTask
-        if (processAnnotationsTaskExecuted) {
-            this.options.compilerArgs.add(PROC_NONE)
-            // We set this directory earlier during the task's configuration as we didn't know
-            // whether this task would perform annotation processing or not. Now that we know, we
-            // need to unset it, otherwise Gradle may delete this directory in certain cases (e.g.,
-            // when moving from a build with separateAnnotationProcessingFlag disabled to a build
-            // with separateAnnotationProcessingFlag enabled).
-            this.options.annotationProcessorGeneratedSourcesDirectory = null
-        }
-
         this.options.isIncremental = incrementalFromDslOrByDefault
 
         // Add individual sources instead of adding all at once due to a Gradle bug that happened
@@ -181,13 +160,13 @@ open class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
         /*
          * HACK: The following are workarounds for known issues.
          */
-        if (!hasKapt
-            && incrementalFromDslOrByDefault
-            && !allAPsAreIncremental
+        if (incrementalFromDslOrByDefault
+            && !hasKapt
             && !separateAnnotationProcessingFlag
+            && !allAPsAreIncremental
         ) {
-            // If incremental compilation is requested but not all of the annotation processors are
-            // incremental, and annotation processing is performed by this task, then compilation
+            // If incremental compilation is requested and annotation processing is performed by
+            // this task, but not all of the annotation processors are incremental, then compilation
             // should not be incremental. However, there is a Gradle bug that if a non-incremental
             // annotation processor changes a resource, Gradle will mistakenly remain in incremental
             // mode, and may not even perform any recompilation at all even though this task is not
@@ -196,9 +175,7 @@ open class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
             this.options.isIncremental = false
         }
         if (hasKapt
-            || incrementalFromDslOrByDefault
-            && !allAPsAreIncremental
-            && separateAnnotationProcessingFlag
+            || incrementalFromDslOrByDefault && separateAnnotationProcessingFlag
         ) {
             /*
              * If Kapt or ProcessAnnotationTask has done annotation processing earlier, this task
@@ -262,7 +239,10 @@ open class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
         return hash != null && hash.apiLevel >= 24
     }
 
-    class CreationAction(variantScope: VariantScope) :
+    class CreationAction(
+        variantScope: VariantScope,
+        private val processAnnotationsTaskCreated: Boolean
+    ) :
         VariantTaskCreationAction<AndroidJavaCompile>(variantScope) {
 
         private lateinit var destinationDir: File
@@ -327,23 +307,23 @@ open class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
             // Configure properties that are specific to AndroidJavaCompile
             task.incrementalFromDslOrByDefault = compileOptions.incremental ?:
                     DEFAULT_INCREMENTAL_COMPILATION
+            task.separateAnnotationProcessingFlag = separateAnnotationProcessingFlag
             task.processorListFile =
                     variantScope.artifacts.getFinalArtifactFiles(ANNOTATION_PROCESSOR_LIST)
-            task.separateAnnotationProcessingFlag = separateAnnotationProcessingFlag
             task.compileSdkVersion = globalScope.extension.compileSdkVersion
             task.instantRunBuildContext = variantScope.instantRunBuildContext
 
-            // Annotation processing may or may not be done by AndroidJavaCompile, but because we
-            // don't know at this point, we have to prepare this task for annotation processing
-            // always.
-            task.configurePropertiesForAnnotationProcessing(variantScope)
+            // Configure properties for annotation processing, but only if it is not done by
+            // ProcessAnnotationsTask
+            if (!processAnnotationsTaskCreated) {
+                task.configurePropertiesForAnnotationProcessing(variantScope)
+            } else {
+                // Otherwise, disable annotation processing
+                task.options.compilerArgs.add(PROC_NONE)
+            }
 
             // Collect the list of source files to process/compile, which includes the annotation
-            // processing output from ProcessAnnotationsTask if ProcessAnnotationsTask is executed.
-            // Note that the annotation processing output from ProcessAnnotationsTask may be empty
-            // if that task is skipped (see ProcessAnnotationsTask.compile).
-            val processAnnotationsTaskCreated =
-                ProcessAnnotationsTask.taskShouldBeCreated(variantScope)
+            // processing output if annotation processing is done by ProcessAnnotationsTask
             if (processAnnotationsTaskCreated) {
                 val generatedSourcesArtifact = variantScope.artifacts
                     .getFinalArtifactFiles(ANNOTATION_PROCESSOR_GENERATED_SOURCES_PRIVATE_USE)
@@ -358,7 +338,7 @@ open class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
                     sources.toList()
                 }
             } else {
-                task.sourceFileTrees = { variantScope.variantData.javaSources}
+                task.sourceFileTrees = { variantScope.variantData.javaSources }
             }
 
             task.destinationDir = destinationDir
