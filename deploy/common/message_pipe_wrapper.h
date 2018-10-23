@@ -29,6 +29,7 @@ namespace deploy {
 class MessagePipeWrapper {
  public:
   MessagePipeWrapper(int fd) : fd_(fd) {}
+  MessagePipeWrapper(const MessagePipeWrapper&) = delete;
   virtual ~MessagePipeWrapper() {}
 
   MessagePipeWrapper(MessagePipeWrapper&& other)
@@ -62,7 +63,6 @@ class MessagePipeWrapper {
   int fd_;
 
  private:
-  MessagePipeWrapper(const MessagePipeWrapper&) = delete;
   MessagePipeWrapper& operator=(const MessagePipeWrapper&) = delete;
 
   template <typename T>

@@ -62,7 +62,6 @@ void Swapper::StartSwap(JNIEnv* jni) {
 
   request_ = std::unique_ptr<proto::SwapRequest>(new proto::SwapRequest());
   if (!request_->ParseFromString(request_bytes)) {
-    request_.reset();
     LogEvent("Could not parse swap request");
     return;
   }

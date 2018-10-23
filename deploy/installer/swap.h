@@ -48,11 +48,6 @@ class SwapCommand : public Command {
   // - Make sure the  configuration file to app data folder.
   bool Setup(const Workspace& workspace) noexcept;
 
-  // Starts the agent server using fork/exec. Populates the read_fd field with a
-  // file descriptor to allow reading from the server; populates the write_fd
-  // field with a descriptor to allow writing to the server.
-  bool StartServer(int agent_count, int* read_fd, int* write_fd) const;
-
   // Obtains a list of process ids corresponding to processes running on the
   // device that match the names present in the SwapRequest object.
   std::vector<int> GetApplicationPids() const;
@@ -76,13 +71,6 @@ class SwapCommand : public Command {
   // file to the path specified by dst_path.
   bool WriteArrayToDisk(const unsigned char* array, uint64_t array_len,
                         const std::string& dst_path) const noexcept;
-
-  void HandleAgentResponses(
-      const std::unordered_map<int, proto::SwapResponse>& agent_responses) const
-      noexcept;
-
- private:
-  bool RestartActivity(const MessagePipeWrapper& server_input) noexcept;
 };
 
 }  // namespace deploy

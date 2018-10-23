@@ -36,7 +36,6 @@ class JniClass {
 
   ~JniClass() { jni_->DeleteLocalRef(class_); }
 
-  JniClass(JniClass&&) = default;
   JniClass& operator=(JniClass&&) = default;
 
   template <typename T>

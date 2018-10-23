@@ -3,8 +3,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "trace.h"
-
+#include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/installer/executor.h"
 
 namespace deploy {
@@ -18,7 +17,7 @@ PackageManager::PackageManager() {}
 bool PackageManager::GetApks(const std::string& package_name,
                              std::vector<std::string>* apks,
                              std::string* error_string) const {
-  Trace trace("PackageManager::GetAppBaseFolder");
+  Phase p("PackageManager::GetAppBaseFolder");
   std::vector<std::string> parameters;
   parameters.emplace_back("path");
   parameters.emplace_back(package_name);
