@@ -79,6 +79,7 @@ import com.android.tools.lint.client.api.LintRequest;
 import com.android.tools.lint.client.api.UastParser;
 import com.android.tools.lint.client.api.XmlParser;
 import com.android.tools.lint.detector.api.Context;
+import com.android.tools.lint.detector.api.GradleContext;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Lint;
@@ -100,6 +101,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
+import com.intellij.openapi.util.Computable;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import java.io.ByteArrayInputStream;
@@ -139,6 +142,9 @@ public class TestLintClient extends LintCliClient {
     @SuppressWarnings("NullableProblems")
     @NonNull
     TestLintTask task;
+
+    /** Used to test PSI read lock issues. */
+    private boolean insideReadAction = false;
 
     public TestLintClient() {
         this(CLIENT_UNIT_TESTS);
@@ -708,6 +714,28 @@ public class TestLintClient extends LintCliClient {
     }
 
     @Override
+    public void runReadAction(@NonNull Runnable runnable) {
+        boolean prev = insideReadAction;
+        insideReadAction = true;
+        try {
+            super.runReadAction(runnable);
+        } finally {
+            insideReadAction = prev;
+        }
+    }
+
+    @Override
+    public <T> T runReadAction(@NonNull Computable<T> computable) {
+        boolean prev = insideReadAction;
+        insideReadAction = true;
+        try {
+            return super.runReadAction(computable);
+        } finally {
+            insideReadAction = prev;
+        }
+    }
+
+    @Override
     public void report(
             @NonNull Context context,
             @NonNull Issue issue,
@@ -717,6 +745,17 @@ public class TestLintClient extends LintCliClient {
             @NonNull TextFormat format,
             @Nullable LintFix fix) {
         assertNotNull(location);
+
+        // Ensure that we're inside a read action if we might need access to PSI.
+        // This is one heuristic; we could add more assertions elsewhere as needed.
+        if (context instanceof JavaContext
+                || context instanceof GradleContext
+                || location.getSource() instanceof PsiElement) {
+            assertTrue(
+                    "LintClient.report accessing a PSI element should "
+                            + "always be called inside a runReadAction",
+                    insideReadAction);
+        }
 
         if (issue == IssueRegistry.LINT_ERROR) {
             if (!task.allowSystemErrors) {

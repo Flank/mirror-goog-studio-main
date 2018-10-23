@@ -644,17 +644,14 @@ open class GradleDetector : Detector(), GradleScanner {
                     val parsed = GradleVersion.tryParse(revision)
                     if (parsed != null && parsed < "1.21.6") {
                         val fix = getUpdateDependencyFix(revision, "1.22.1")
-                        // checkDependency is called outside a read action.
-                        context.client.runReadAction(Runnable {
-                            report(
-                                context,
-                                cookie,
-                                DEPENDENCY,
-                                "Use Fabric Gradle plugin version 1.21.6 or later to " +
-                                    "improve Instant Run performance (was $revision)",
-                                fix
-                            )
-                        })
+                        report(
+                            context,
+                            cookie,
+                            DEPENDENCY,
+                            "Use Fabric Gradle plugin version 1.21.6 or later to " +
+                                "improve Instant Run performance (was $revision)",
+                            fix
+                        )
                     } else {
                         // From https://s3.amazonaws.com/fabric-artifacts/public/io/fabric/tools/gradle/maven-metadata.xml
                         newerVersion = getNewerVersion(version, GradleVersion(1, 25, 1))
@@ -665,17 +662,14 @@ open class GradleDetector : Detector(), GradleScanner {
                 if ("bugsnag-android-gradle-plugin" == artifactId) {
                     if (!version.isAtLeast(2, 1, 2)) {
                         val fix = getUpdateDependencyFix(revision, "2.4.1")
-                        // checkDependency is called outside a read action.
-                        context.client.runReadAction(Runnable {
-                            report(
-                                context,
-                                cookie,
-                                DEPENDENCY,
-                                "Use BugSnag Gradle plugin version 2.1.2 or later to " +
-                                    "improve Instant Run performance (was $revision)",
-                                fix
-                            )
-                        })
+                        report(
+                            context,
+                            cookie,
+                            DEPENDENCY,
+                            "Use BugSnag Gradle plugin version 2.1.2 or later to " +
+                                "improve Instant Run performance (was $revision)",
+                            fix
+                        )
                     } else {
                         // From http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22com.bugsnag%22%20AND
                         // %20a%3A%22bugsnag-android-gradle-plugin%22
@@ -692,10 +686,7 @@ open class GradleDetector : Detector(), GradleScanner {
                 val message = getBlacklistedDependencyMessage(context, path)
                 if (message != null) {
                     val fix = fix().name("Delete dependency").replace().all().build()
-                    // checkDependency is called outside a read action.
-                    context.client.runReadAction(Runnable {
-                        report(context, statementCookie, DUPLICATE_CLASSES, message, fix)
-                    })
+                    report(context, statementCookie, DUPLICATE_CLASSES, message, fix)
                 }
             }
         }
@@ -731,10 +722,7 @@ open class GradleDetector : Detector(), GradleScanner {
                     ""
 
             val message = "$prefix Details: ${deprecated.message}$separatorDot$suffix"
-            // checkDependency is called outside a read action.
-            context.client.runReadAction(Runnable {
-                report(context, statementCookie, issue, message, fix)
-            })
+            report(context, statementCookie, issue, message, fix)
         } else {
             val recommended = sdkRegistry.getRecommendedVersion(dependency)
             if (recommended != null && (newerVersion == null || recommended > newerVersion)) {
@@ -776,10 +764,7 @@ open class GradleDetector : Detector(), GradleScanner {
             val versionString = newerVersion.toString()
             val message = getNewerVersionAvailableMessage(dependency, versionString)
             val fix = if (!isResolved) getUpdateDependencyFix(revision, versionString) else null
-            // checkDependency is called outside a read action.
-            context.client.runReadAction(Runnable {
-                report(context, cookie, issue, message, fix)
-            })
+            report(context, cookie, issue, message, fix)
         }
     }
 
@@ -874,10 +859,7 @@ open class GradleDetector : Detector(), GradleScanner {
                     GRADLE_PLUGIN_MINIMUM_VERSION +
                     " and the recommended version is " +
                     recommended
-            // checkGradlePluginDependency is called outside a read action.
-            context.client.runReadAction(Runnable {
-                report(context, cookie, GRADLE_PLUGIN_COMPATIBILITY, message)
-            })
+            report(context, cookie, GRADLE_PLUGIN_COMPATIBILITY, message)
             return true
         }
         return false
@@ -1397,19 +1379,23 @@ open class GradleDetector : Detector(), GradleScanner {
         message: String,
         fix: LintFix? = null
     ) {
-        if (context.isEnabled(issue) && context is GradleContext) {
-            // Suppressed?
-            // Temporarily unconditionally checking for suppress comments in Gradle files
-            // since Studio insists on an AndroidLint id prefix
-            val checkComments = /*context.getClient().checkForSuppressComments() &&*/
-                context.containsCommentSuppress()
-            if (checkComments && context.isSuppressedWithComment(cookie, issue)) {
-                return
-            }
+        // Some methods in GradleDetector are run without the PSI read lock in order
+        // to accommodate network requests, so we grab the read lock here.
+        context.client.runReadAction(Runnable {
+            if (context.isEnabled(issue) && context is GradleContext) {
+                // Suppressed?
+                // Temporarily unconditionally checking for suppress comments in Gradle files
+                // since Studio insists on an AndroidLint id prefix
+                val checkComments = /*context.getClient().checkForSuppressComments() &&*/
+                    context.containsCommentSuppress()
+                if (checkComments && context.isSuppressedWithComment(cookie, issue)) {
+                    return@Runnable
+                }
 
-            val location = context.getLocation(cookie)
-            context.report(issue, location, message, fix)
-        }
+                val location = context.getLocation(cookie)
+                context.report(issue, location, message, fix)
+            }
+        })
     }
 
     /**
@@ -1465,7 +1451,11 @@ open class GradleDetector : Detector(), GradleScanner {
         location: Location,
         message: String
     ) {
-        context.report(COMPATIBILITY, location, message)
+        // Some methods in GradleDetector are run without the PSI read lock in order
+        // to accommodate network requests, so we grab the read lock here.
+        context.client.runReadAction(Runnable {
+            context.report(COMPATIBILITY, location, message)
+        })
     }
 
     /** See [.reportFatalCompatibilityIssue] for an explanation. */
@@ -1478,7 +1468,11 @@ open class GradleDetector : Detector(), GradleScanner {
             return
         }
 
-        context.report(COMPATIBILITY, location, message)
+        // Some methods in GradleDetector are run without the PSI read lock in order
+        // to accommodate network requests, so we grab the read lock here.
+        context.client.runReadAction(Runnable {
+            context.report(COMPATIBILITY, location, message)
+        })
     }
 
     private fun getSdkVersion(value: String): Int {
