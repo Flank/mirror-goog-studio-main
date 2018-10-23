@@ -40,7 +40,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 public class DataSetTest {
-
     @Rule
     public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
 
@@ -148,9 +147,9 @@ public class DataSetTest {
 
     private static DataSet getDataSet() {
         return new DataSet("foo", false) {
-
             @Override
-            protected DataSet createSet(String name) {
+            @NonNull
+            protected DataSet createSet(@NonNull String name) {
                 return null;
             }
 
@@ -164,8 +163,8 @@ public class DataSetTest {
             protected void readSourceFolder(File sourceFolder, ILogger logger)
                     throws MergingException {}
 
-            @Nullable
             @Override
+            @Nullable
             protected DataFile createFileAndItems(File sourceFolder, File file, ILogger logger)
                     throws MergingException {
                 return null;

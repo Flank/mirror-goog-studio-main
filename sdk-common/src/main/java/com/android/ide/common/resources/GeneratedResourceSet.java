@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.resources;
 
 import com.android.SdkConstants;
@@ -30,7 +29,6 @@ import org.w3c.dom.Node;
  * set when it encounters a file that needs to be replaced by generated files.
  */
 public class GeneratedResourceSet extends ResourceSet {
-
     public static final String ATTR_GENERATED = "generated";
 
     public GeneratedResourceSet(ResourceSet originalSet) {
@@ -49,7 +47,8 @@ public class GeneratedResourceSet extends ResourceSet {
     }
 
     @Override
-    protected DataSet<ResourceMergerItem, ResourceFile> createSet(String name) {
+    @NonNull
+    protected DataSet<ResourceMergerItem, ResourceFile> createSet(@NonNull String name) {
         return new GeneratedResourceSet(name, ResourceNamespace.TODO(), getLibraryName());
     }
 
