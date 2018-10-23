@@ -25,7 +25,7 @@ import com.android.tools.lint.client.api.IssueRegistry
  * value, not read the current value from the hosting lint environment
  * when the custom lint checks are loaded into lint.
  */
-const val CURRENT_API = 3
+const val CURRENT_API = 4
 
 /** Describes the given API level */
 fun describeApi(api: Int): String {
