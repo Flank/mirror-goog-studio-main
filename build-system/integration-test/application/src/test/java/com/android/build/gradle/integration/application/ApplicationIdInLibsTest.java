@@ -29,8 +29,7 @@ public class ApplicationIdInLibsTest {
     @Test
     public void testLibPlaceholderSubstitutaionInFinalApk() throws Exception {
         Map<String, ProjectBuildOutput> outputModels =
-                project.executeAndReturnMultiModel(
-                        ProjectBuildOutput.class, "clean", "app:assembleDebug");
+                project.executeAndReturnOutputMultiModel("clean", "app:assembleDebug");
         assertThat(
                         checkPermissionPresent(
                                 outputModels,
@@ -42,9 +41,7 @@ public class ApplicationIdInLibsTest {
                 "manifest_merger_example.flavor",
                 "manifest_merger_example.change");
 
-        outputModels =
-                project.executeAndReturnMultiModel(
-                        ProjectBuildOutput.class, "clean", "app:assembleDebug");
+        outputModels = project.executeAndReturnOutputMultiModel("clean", "app:assembleDebug");
         assertThat(
                         checkPermissionPresent(
                                 outputModels,

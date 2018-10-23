@@ -1178,7 +1178,11 @@ public final class GradleTestProject implements TestRule {
     @NonNull
     public ProjectBuildOutput executeAndReturnOutputModel(String... tasks)
             throws IOException, InterruptedException {
-        return executeAndReturnModel(ProjectBuildOutput.class, tasks);
+        ModelContainer<ProjectBuildOutput> buildOutputContainer =
+                executor().withOutputModelQuery().run(tasks).getBuildOutputContainer();
+        Preconditions.checkNotNull(
+                buildOutputContainer, "Build output model not found after build.");
+        return buildOutputContainer.getOnlyModel();
     }
 
     /**
@@ -1208,6 +1212,23 @@ public final class GradleTestProject implements TestRule {
             throws IOException, InterruptedException {
         lastBuildResult = executor().run(tasks);
         return model().fetchMulti(modelClass);
+    }
+
+    /**
+     * Runs gradle on the project, and returns the output model of the specified type for each
+     * sub-project. Throws exception on failure.
+     *
+     * @param tasks Variadic list of tasks to execute.
+     * @return map of project names to output models
+     */
+    @NonNull
+    public Map<String, ProjectBuildOutput> executeAndReturnOutputMultiModel(String... tasks)
+            throws IOException, InterruptedException {
+        ModelContainer<ProjectBuildOutput> buildOutputContainer =
+                executor().withOutputModelQuery().run(tasks).getBuildOutputContainer();
+        Preconditions.checkNotNull(
+                buildOutputContainer, "Build output model not found after build.");
+        return buildOutputContainer.getOnlyModelMap();
     }
 
     /** Returns the latest build result. */

@@ -48,8 +48,7 @@ public class PlaceholderInLibsTest {
     @BeforeClass
     public static void setup() throws IOException, InterruptedException {
         outputModels =
-                project.executeAndReturnMultiModel(
-                        ProjectBuildOutput.class,
+                project.executeAndReturnOutputMultiModel(
                         "clean",
                         ":examplelibrary:generateDebugAndroidTestSources",
                         "app:assembleDebug");

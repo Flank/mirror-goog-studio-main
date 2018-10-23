@@ -20,6 +20,7 @@ import com.google.common.truth.Truth.assert_
 import com.android.build.gradle.integration.common.truth.GradleOutputFileSubject
 import com.android.build.gradle.integration.common.truth.GradleOutputFileSubjectFactory
 import com.android.build.gradle.integration.common.truth.TaskStateList
+import com.android.builder.model.ProjectBuildOutput
 import com.google.api.client.repackaged.com.google.common.base.Preconditions
 import com.google.api.client.repackaged.com.google.common.base.Throwables
 import com.google.common.base.Splitter
@@ -40,15 +41,22 @@ import org.gradle.tooling.events.ProgressEvent
  *
  * @property exception The exception from the build, null if the build succeeded.
  */
-class GradleBuildResult(
+class GradleBuildResult @JvmOverloads constructor(
     stdout: ByteArrayOutputStream,
     stderr: ByteArrayOutputStream,
     private val taskEvents: ImmutableList<ProgressEvent>,
-    val exception: GradleConnectionException?
+    val exception: GradleConnectionException?,
+    buildOutputContainer: ModelContainer<ProjectBuildOutput>? = null
 ) {
 
     val stdout: String = stdout.toString()
     val stderr: String = stderr.toString()
+
+    private val _buildOutputContainer = buildOutputContainer
+    val buildOutputContainer: ModelContainer<ProjectBuildOutput>
+        get() = _buildOutputContainer
+                ?: throw IllegalStateException("ProjectBuildOutput models were not fetched by the "
+                    + "build. Make sure to use GradleTaskExecutor::withOutputModelQuery.")
 
     /**
      * Most tests don't examine the state of the build's tasks and [TaskStateList] is relatively

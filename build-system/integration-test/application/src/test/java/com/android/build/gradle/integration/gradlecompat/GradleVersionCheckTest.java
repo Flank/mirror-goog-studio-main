@@ -29,7 +29,7 @@ import org.junit.Test;
 public class GradleVersionCheckTest {
 
     /** An old version of Gradle to use in this test. */
-    private static final String OLD_GRADLE_VERSION = "3.4.1";
+    private static final String OLD_GRADLE_VERSION = "4.5";
 
     @Rule
     public GradleTestProject project =

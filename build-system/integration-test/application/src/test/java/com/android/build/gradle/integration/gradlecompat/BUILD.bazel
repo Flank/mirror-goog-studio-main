@@ -13,7 +13,7 @@ TEST_DEPS = [
 
 # An old version of Gradle used by an integration test to prevent
 # regression of https://issuetracker.google.com/73383831
-OLD_GRADLE_VERSION_FOR_TESTING = "3.4.1"
+OLD_GRADLE_VERSION_FOR_TESTING = "4.5"
 
 TEST_DATA = [
     "//prebuilts/studio/sdk:typos",  #something from the SDK to make the test framework happy.
