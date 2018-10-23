@@ -32,12 +32,15 @@ public class Trace {
 
         void onEnd(Event event);
 
+        void onInfo(Event event);
+
         void onFinish();
     }
 
     enum Type {
         BEGIN,
-        END
+        END,
+        INFO
     }
 
     private static long enabledUntil = System.nanoTime();
@@ -150,10 +153,17 @@ public class Trace {
 
         long remoteDuration = endRemoteNs - startRemoteNs;
         if (remoteDuration > duration) {
-            throw new DeployerException(
-                    "Remote duration longer than local ("
-                            + (remoteDuration - duration) / 1000000
-                            + "ms).");
+            Event event = new Event();
+            event.pid = 0;
+            event.tid = Thread.currentThread().getId();
+            event.text =
+                    "Remote events could not be integrated (duration too long:"
+                            + (remoteDuration - duration)
+                            + ")";
+            event.timestamp_ns = System.nanoTime();
+            event.type = Type.INFO;
+            events.add(event);
+            return;
         }
         long floatOffset = (duration - remoteDuration) / 2;
 
@@ -200,11 +210,16 @@ public class Trace {
         finish();
         consumer.onStart();
         for (Event event : events) {
-            if (event.type == Type.BEGIN) {
-                consumer.onBegin(event);
-            }
-            if (event.type == Type.END) {
-                consumer.onEnd(event);
+            switch (event.type) {
+                case BEGIN:
+                    consumer.onBegin(event);
+                    break;
+                case END:
+                    consumer.onEnd(event);
+                    break;
+                case INFO:
+                    consumer.onInfo(event);
+                    break;
             }
         }
         consumer.onFinish();
