@@ -23,9 +23,12 @@ import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
 import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
 import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildElements
 import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.MutableTaskContainer
+import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant2.DslScopeImpl
 import com.android.ide.common.build.ApkInfo
 import com.google.common.collect.ImmutableList
@@ -36,22 +39,34 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
 import com.google.common.truth.Truth.assertThat
+import org.gradle.api.Project
+import org.mockito.Mock
+import org.mockito.Mockito.`when`
+import org.mockito.MockitoAnnotations
 
 class CopyOutputsTest {
     @get:Rule
     val temporaryFolder = TemporaryFolder()
+
+    @Mock
+    internal lateinit var variantScope: VariantScope
+
+    @Mock
+    internal lateinit var buildArtifactsHolder: BuildArtifactsHolder
+
+    @Mock
+    internal lateinit var taskContainer: MutableTaskContainer
 
     private lateinit var fileSet: Set<String>
 
     private lateinit var outputDir: File
     private lateinit var testDir: File
 
-    private lateinit var artifact: BuildableArtifact
+    private lateinit var project: Project
 
-    private fun getOrCreateFile(name: String): File {
-        val file = File(testDir.path + File.separator + name)
+    private fun getOrCreateFile(parent: File, name: String): File {
+        val file = File(parent.path + File.separator + name)
         if (!file.exists()) {
-            file.parentFile.mkdirs()
             file.createNewFile()
         }
         return file
@@ -59,9 +74,15 @@ class CopyOutputsTest {
 
     @Before
     fun setUp() {
+        MockitoAnnotations.initMocks(this)
         testDir = temporaryFolder.newFolder()
         outputDir = temporaryFolder.newFolder()
-        val project = ProjectBuilder.builder().withProjectDir(testDir).build()
+
+        val apkDir = temporaryFolder.newFolder()
+        val splitDir = temporaryFolder.newFolder()
+        val resDir = temporaryFolder.newFolder()
+
+        project = ProjectBuilder.builder().withProjectDir(testDir).build()
 
         val dslScope = DslScopeImpl(
             FakeEvalIssueReporter(throwOnError = true),
@@ -72,44 +93,48 @@ class CopyOutputsTest {
         val apkInfo =
             ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of<FilterData>(), 12345)
 
-        val elements = BuildElements(
-            mutableListOf(
+        BuildElements(
+            listOf(
                 BuildOutput(
                     InternalArtifactType.FULL_APK,
                     apkInfo,
-                    getOrCreateFile("apk1")
+                    getOrCreateFile(apkDir, "apk1")
                 ),
                 BuildOutput(
                     InternalArtifactType.FULL_APK,
                     apkInfo,
-                    getOrCreateFile("apk2")
-                ),
-                BuildOutput(
-                    InternalArtifactType.ABI_PACKAGED_SPLIT,
-                    apkInfo,
-                    getOrCreateFile("split1")
-                ),
-                BuildOutput(
-                    InternalArtifactType.ABI_PACKAGED_SPLIT,
-                    apkInfo,
-                    getOrCreateFile("split2")
-                ),
-                BuildOutput(
-                    InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
-                    apkInfo,
-                    getOrCreateFile("resource1")
-                ),
-                BuildOutput(
-                    InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
-                    apkInfo,
-                    getOrCreateFile("resource2")
+                    getOrCreateFile(apkDir, "apk2")
                 )
             )
-        )
-
-        elements.save(testDir)
-
-        artifact = BuildableArtifactImpl(project.files(getOrCreateFile("output.json")), dslScope)
+        ).save(apkDir)
+        BuildElements(
+            listOf(
+                BuildOutput(
+                    InternalArtifactType.ABI_PACKAGED_SPLIT,
+                    apkInfo,
+                    getOrCreateFile(splitDir, "split1")
+                ),
+                BuildOutput(
+                    InternalArtifactType.ABI_PACKAGED_SPLIT,
+                    apkInfo,
+                    getOrCreateFile(splitDir, "split2")
+                )
+            )
+        ).save(splitDir)
+        BuildElements(
+            listOf(
+                BuildOutput(
+                    InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
+                    apkInfo,
+                    getOrCreateFile(resDir, "resource1")
+                ),
+                BuildOutput(
+                    InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
+                    apkInfo,
+                    getOrCreateFile(resDir, "resource2")
+                )
+            )
+        ).save(resDir)
 
         fileSet = setOf(
             "apk1",
@@ -120,47 +145,33 @@ class CopyOutputsTest {
             "resource2",
             "output.json"
         )
+
+        `when`<BuildArtifactsHolder>(variantScope.artifacts).thenReturn(buildArtifactsHolder)
+        `when`<String>(variantScope.fullVariantName).thenReturn("test")
+        `when`(taskContainer.preBuildTask).thenReturn(project.tasks.register("preBuildTask"))
+        `when`<MutableTaskContainer>(variantScope.taskContainer).thenReturn(taskContainer)
+
+        `when`<BuildableArtifact>(buildArtifactsHolder.getFinalArtifactFiles(InternalArtifactType.FULL_APK)).thenReturn(
+            BuildableArtifactImpl(project.files(getOrCreateFile(apkDir, "output.json")), dslScope)
+        )
+        `when`<BuildableArtifact>(buildArtifactsHolder.getFinalArtifactFiles(InternalArtifactType.ABI_PACKAGED_SPLIT)).thenReturn(
+            BuildableArtifactImpl(project.files(getOrCreateFile(splitDir, "output.json")), dslScope)
+        )
+        `when`<BuildableArtifact>(buildArtifactsHolder.getFinalArtifactFiles(InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT)).thenReturn(
+            BuildableArtifactImpl(project.files(getOrCreateFile(resDir, "output.json")), dslScope)
+        )
     }
 
     @Test
     fun copyOutputs() {
-        val copiedFilesList = ArrayList<BuildOutput>()
-        var task = CopyOutputs.CopyOutputsRunnable(
-            CopyOutputs.CopyOutputsParams(
-                InternalArtifactType.FULL_APK,
-                artifact.get(),
-                outputDir,
-                copiedFilesList
-            )
-        )
-        task.run()
+        val creationAction = CopyOutputs.CreationAction(variantScope, outputDir)
 
-        task = CopyOutputs.CopyOutputsRunnable(
-            CopyOutputs.CopyOutputsParams(
-                InternalArtifactType.ABI_PACKAGED_SPLIT,
-                artifact.get(),
-                outputDir,
-                copiedFilesList
-            )
-        )
-        task.run()
+        val task = project.tasks.create("copyOutputs", CopyOutputs::class.java)
 
-        task = CopyOutputs.CopyOutputsRunnable(
-            CopyOutputs.CopyOutputsParams(
-                InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
-                artifact.get(),
-                outputDir,
-                copiedFilesList
-            )
-        )
-        task.run()
-
-        BuildElements(copiedFilesList).save(outputDir)
+        creationAction.configure(task)
+        task.copy()
 
         assertThat(outputDir.listFiles()).hasLength(7)
-
-        assertThat(HashSet<String>().apply {
-            outputDir.listFiles().forEach { add(it.name) }
-        }).containsExactlyElementsIn(fileSet)
+        assertThat(outputDir.listFiles().map { it.name }.toSet()).containsExactlyElementsIn(fileSet)
     }
 }
