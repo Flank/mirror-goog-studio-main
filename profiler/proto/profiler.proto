@@ -25,7 +25,6 @@ service ProfilerService {
   // Gets current timestamp that used in the device's profiling data.
   // A client may use this API to relate profiling data' timestamps to other
   // clocks such as the desktop's calendar time.
-  // TODO(b/29223899): Add device's calendar time.
   rpc GetCurrentTime(TimeRequest) returns (TimeResponse) {
   }
 
