@@ -538,7 +538,7 @@ public class DexArchiveBuilderTransform extends Transform {
             @NonNull Set<File> additionalPaths,
             @NonNull D8DesugaringCacheInfo cacheInfo)
             throws Exception {
-        if (!isIncremental || additionalPaths.contains(jarInput.getFile())) {
+        if (!isIncremental) {
             Preconditions.checkState(
                     jarInput.getFile().exists(),
                     "File %s does not exist, yet it is reported as input. Try \n"
@@ -551,7 +551,8 @@ public class DexArchiveBuilderTransform extends Transform {
                     bootclasspath,
                     classpath,
                     cacheInfo);
-        } else if (jarInput.getStatus() != Status.NOTCHANGED) {
+        } else if (jarInput.getStatus() != Status.NOTCHANGED
+                || additionalPaths.contains(jarInput.getFile())) {
             // delete all preDex jars if they exists.
             for (int bucketId = 0; bucketId < numberOfBuckets; bucketId++) {
                 File shardedOutput = getOutputForJar(transformOutputProvider, jarInput, bucketId);
@@ -567,7 +568,9 @@ public class DexArchiveBuilderTransform extends Transform {
             }
 
             // and perform dexing if necessary.
-            if (jarInput.getStatus() == Status.ADDED || jarInput.getStatus() == Status.CHANGED) {
+            if (jarInput.getStatus() == Status.ADDED
+                    || jarInput.getStatus() == Status.CHANGED
+                    || additionalPaths.contains(jarInput.getFile())) {
                 return convertJarToDexArchive(
                         context,
                         jarInput,
