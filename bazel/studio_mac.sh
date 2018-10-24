@@ -12,7 +12,7 @@ readonly script_dir="$(dirname "$0")"
 readonly command_log="$(${script_dir}/bazel info command_log)"
 
 # Run Bazel
-"${script_dir}/bazel" --max_idle_secs=60 --bazelrc=/dev/null test --config=postsubmit --config=local --config=mac-experimental --build_tag_filters=-no_mac --test_tag_filters=-no_mac,-no_test_mac,-qa_sanity,-qa_fast,-qa_unreliable --auth_credentials=/Users/peterx/.android-studio-alphasource.json -- @blaze//:aswb_tests //prebuilts/studio/... //prebuilts/tools/... //tools/...
+"${script_dir}/bazel" --max_idle_secs=60 --bazelrc=/dev/null test --config=postsubmit --config=local --config=mac-experimental --build_tag_filters=-no_mac --test_tag_filters=-no_mac,-no_test_mac,-qa_sanity,-qa_fast,-qa_unreliable --auth_credentials=/buildbot/android-studio-alphasource.json -- @blaze//:aswb_tests //prebuilts/studio/... //prebuilts/tools/... //tools/...
 
 if [[ -d "${dist_dir}" ]]; then
   # Grab the upsalite_id from the stdout of the bazel command.  This is captured in command.log
