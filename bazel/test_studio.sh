@@ -17,7 +17,7 @@ fi
 readonly script_dir="$(dirname "$0")"
 
 # Grab the location of the command_log file for bazel daemon so we can search it later.
-readonly command_log="$(${script_dir}/bazel info command_log)"
+readonly command_log="$(${script_dir}/bazel info command_log --config=remote)"
 
 # Run Bazel
 "${script_dir}/bazel" --max_idle_secs=60 --bazelrc=/dev/null test --keep_going --nobuild_runfile_links --bes_backend=buildeventservice.googleapis.com --auth_credentials="$HOME"/.android-studio-alphasource.json --auth_scope=https://www.googleapis.com/auth/cloud-source-tools --project_id=908081808034 --config=remote --cache_test_results=no --build_tag_filters=-no_linux --test_tag_filters=-no_linux,-no_test_linux,-qa_sanity,-qa_fast,-qa_unreliable,-slow -- $(< "${script_dir}/targets")
@@ -28,8 +28,7 @@ if [[ -d "${dist_dir}" ]]; then
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/$upsalite_id\" />" > "${dist_dir}"/upsalite_test_results.html
 
   # follow conventions to use gtest-testlog-forwarding on ATP
-  readonly testlogs_dir="$(${script_dir}/bazel info bazel-testlogs)"
-  echo "The testlogs_dir is $testlogs_dir"
+  readonly testlogs_dir="$(${script_dir}/bazel info bazel-testlogs --config=remote)"
   mkdir "${dist_dir}"/gtest
   # This does not handle spaces in file names.
   for source_xml in $(cd "${testlogs_dir}" && find -name '*.xml' -printf '%P\n'); do
