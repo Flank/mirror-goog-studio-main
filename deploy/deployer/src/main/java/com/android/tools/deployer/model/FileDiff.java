@@ -13,13 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.deploy.swapper;
+package com.android.tools.deployer.model;
 
-import com.android.tools.deploy.proto.Deploy;
-import com.android.tools.deployer.DeployerException;
+public class FileDiff {
+    public enum Status {
+        CREATED,
+        MODIFIED,
+        DELETED
+    }
 
-/** Responsible for invoking the corresponding API to redefine a class in ART. */
-public abstract class ClassRedefiner {
-    public abstract Deploy.SwapResponse redefine(Deploy.SwapRequest request)
-            throws DeployerException;
+    public final ApkEntry oldFile;
+    public final ApkEntry newFile;
+    public final Status status;
+
+    public FileDiff(ApkEntry oldFile, ApkEntry newFile, Status status) {
+        this.oldFile = oldFile;
+        this.newFile = newFile;
+        this.status = status;
+    }
 }

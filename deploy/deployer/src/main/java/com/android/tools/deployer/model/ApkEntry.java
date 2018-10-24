@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.deploy.swapper;
+package com.android.tools.deployer.model;
 
-/** Represents errors encountered while accessing the dex cache database. */
-public class DexArchiveDatabaseException extends RuntimeException {
-    public DexArchiveDatabaseException(Exception e) {
-        super(e);
-    }
+public class ApkEntry {
+    public final String name;
+    public final long checksum;
+    public final Apk apk;
 
-    public DexArchiveDatabaseException(String msg) {
-        super(msg);
+    public ApkEntry(String name, long checksum, Apk apk) {
+        this.name = name;
+        this.checksum = checksum;
+        this.apk = apk;
     }
 }

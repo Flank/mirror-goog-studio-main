@@ -34,9 +34,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class Installer {
 
@@ -87,32 +85,15 @@ public class Installer {
         }
     }
 
-    // TODO: Convert dump to return a dumpResponse containing the dump contents instead of using
-    //       the filesystem.
-    public Map<String, ApkDump> dump(String packageName) throws IOException {
+    public Deploy.DumpResponse dump(String packageName) throws IOException {
         String[] cmd = buildCmd(new String[] {"dump", packageName});
         Deploy.InstallerResponse installerResponse = invokeRemoteCommand(cmd, null);
         Deploy.DumpResponse response = installerResponse.getDumpResponse();
         logger.info("Dump response:" + response.getStatus().toString());
-
-        if (response.getStatus() == Deploy.DumpResponse.Status.ERROR_PACKAGE_NOT_FOUND) {
-            throw new IOException(
-                    "Cannot list apks for package " + packageName + ". Is the app installed?");
-        }
-
-        Map<String, ApkDump> dumps = new HashMap<>();
-        for (Deploy.ApkDump dump : response.getDumpsList()) {
-            dumps.put(
-                    dump.getName(),
-                    new ApkDump(
-                            dump.getName(),
-                            dump.getCd().asReadOnlyByteBuffer(),
-                            dump.getSignature().asReadOnlyByteBuffer()));
-        }
-        return dumps;
+        return response;
     }
 
-    public Deploy.SwapResponse swap(Deploy.SwapRequest request) {
+    public Deploy.SwapResponse swap(Deploy.SwapRequest request) throws IOException {
         String[] cmd = buildCmd(new String[] {"swap"});
         InputStream inputStream = wrap(request);
         Deploy.InstallerResponse installerResponse = invokeRemoteCommand(cmd, inputStream);
@@ -121,7 +102,8 @@ public class Installer {
         return response;
     }
 
-    public Deploy.InstallerResponse invokeRemoteCommand(String[] cmd, InputStream inputStream) {
+    public Deploy.InstallerResponse invokeRemoteCommand(String[] cmd, InputStream inputStream)
+            throws IOException {
         Trace.begin("./installer " + cmd[2]);
         Deploy.InstallerResponse response = invokeRemoteCommand(cmd, inputStream, OnFail.RETRY);
         logEvents(response.getEventsList());
@@ -133,7 +115,7 @@ public class Installer {
     // Send content of data into the executable standard input and return a proto buffer
     // object specific to the command.
     public Deploy.InstallerResponse invokeRemoteCommand(
-            String[] cmd, InputStream inputStream, OnFail onFail) {
+            String[] cmd, InputStream inputStream, OnFail onFail) throws IOException {
         byte[] output = adb.shell(cmd, inputStream);
         Deploy.InstallerResponse response = unwrap(output, Deploy.InstallerResponse.parser());
 
@@ -144,7 +126,7 @@ public class Installer {
             printHexEditorStyle(output);
             if (onFail == OnFail.DO_NO_RETRY) {
                 // This is the second time this error happens. Aborting.
-                throw new DeployerException("COMM error");
+                throw new IOException("Invalid installer response");
             }
             prepare();
             return invokeRemoteCommand(cmd, inputStream, OnFail.DO_NO_RETRY);
@@ -158,7 +140,7 @@ public class Installer {
         return response;
     }
 
-    public void prepare() {
+    public void prepare() throws IOException {
         File installerFile = null;
         List<String> abis = adb.getAbis();
         // The jar archive contains the android executables:
@@ -183,14 +165,10 @@ public class Installer {
                         Paths.get(installerFile.getAbsolutePath()),
                         StandardCopyOption.REPLACE_EXISTING);
                 break;
-            } catch (IOException e) {
-                throw new DeployerException(
-                        "Unable to extract installer binary to push to device.", e);
             }
         }
         if (installerFile == null) {
-            throw new DeployerException(
-                    "Cannot find suitable installer for abis: " + Arrays.toString(abis.toArray()));
+            throw new IOException("Unsupported abis: " + Arrays.toString(abis.toArray()));
         }
 
         adb.shell(new String[] {"mkdir", "-p", Deployer.INSTALLER_DIRECTORY}, null);
@@ -230,8 +208,8 @@ public class Installer {
                     CodedInputStream.newInstance(b, Integer.BYTES, b.length - Integer.BYTES);
             return parser.parseFrom(cis);
         } catch (IOException e) {
-            e.printStackTrace(System.out);
-            return null;
+            // All in-memory buffers, should not happen
+            throw new IllegalStateException(e);
         }
     }
 
@@ -248,7 +226,8 @@ public class Installer {
             CodedOutputStream cos = CodedOutputStream.newInstance(buffer, Integer.BYTES, size);
             message.writeTo(cos);
         } catch (IOException e) {
-            throw new DeployerException(e);
+            // In memory buffers, should not happen
+            throw new IllegalStateException(e);
         }
         return new ByteArrayInputStream(buffer);
     }

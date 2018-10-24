@@ -18,54 +18,20 @@ package com.android.tools.deployer;
 
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
-import com.android.tools.deploy.swapper.DexArchiveDatabase;
-import com.android.tools.deploy.swapper.InMemoryDexArchiveDatabase;
+import com.android.tools.deploy.swapper.ApkFileDatabase;
+import com.android.tools.deploy.swapper.SqlApkFileDatabase;
+import com.android.tools.deployer.tasks.TaskRunner;
 import com.android.utils.ILogger;
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class DeployerRunner {
 
     private static final ILogger LOGGER = Logger.getLogger();
     private static final String DB_PATH = "/tmp/studio.db";
-    private final DexArchiveDatabase db;
-
-    static InMemoryDexArchiveDatabase readDB() throws IOException {
-        if (!Files.exists(Paths.get(DB_PATH))) {
-            InMemoryDexArchiveDatabase db = new InMemoryDexArchiveDatabase();
-            saveDB(db);
-        }
-
-        try (FileInputStream file = new FileInputStream(DB_PATH);
-                ObjectInputStream in = new ObjectInputStream(file)) {
-            Trace.begin("readDB");
-            InMemoryDexArchiveDatabase db = (InMemoryDexArchiveDatabase) in.readObject();
-            return db;
-        } catch (InvalidClassException e) {
-            // This may occur if the layout of InMemoryDexArchiveDatabase has changed since
-            // last run.
-            Files.delete(Paths.get(DB_PATH));
-            return readDB();
-        } catch (IOException | ClassNotFoundException e) {
-            throw new DeployerException("Unable to load database", e);
-        } finally {
-            Trace.end();
-        }
-    }
-
-    static void saveDB(InMemoryDexArchiveDatabase db) {
-        Trace.begin("saveDB");
-        try (FileOutputStream file = new FileOutputStream(DB_PATH);
-                ObjectOutputStream out = new ObjectOutputStream(file); ) {
-            out.writeObject(db);
-        } catch (IOException e) {
-            throw new DeployerException("Unable to save database", e);
-        } finally {
-            Trace.end();
-        }
-    }
+    private final ApkFileDatabase db;
 
     // Run it from bazel with the following command:
     // bazel run :deployer.runner org.wikipedia.alpha PATH_TO_APK1 PATH_TO_APK2
@@ -78,20 +44,16 @@ public class DeployerRunner {
     }
 
     public static void tracedMain(String[] args) throws IOException {
-        InMemoryDexArchiveDatabase db = null;
         try {
-            db = readDB();
+            ApkFileDatabase db = new SqlApkFileDatabase(new File(DB_PATH));
             DeployerRunner runner = new DeployerRunner(db);
             runner.run(args);
-        } catch (RuntimeException e) {
-            e.printStackTrace(System.out);
         } finally {
-            saveDB(db);
             AndroidDebugBridge.terminate();
         }
     }
 
-    public DeployerRunner(DexArchiveDatabase db) {
+    public DeployerRunner(ApkFileDatabase db) {
         this.db = db;
     }
 
@@ -102,12 +64,10 @@ public class DeployerRunner {
             return;
         }
 
-        // Get package name.
-        String packageName = args[0];
-
-        // Get all apks with base and splits.
-        ArrayList<String> apks = new ArrayList();
-        for (int i = 1; i < args.length; i++) {
+        String command = args[0];
+        String packageName = args[1];
+        ArrayList<String> apks = new ArrayList<>();
+        for (int i = 2; i < args.length; i++) {
             apks.add(args[i]);
         }
 
@@ -122,34 +82,22 @@ public class DeployerRunner {
         // Run
         AdbClient adb = new AdbClient(device, LOGGER);
         Installer installer = new Installer(adb, LOGGER);
-        Deployer deployer = new Deployer(packageName, apks, adb, db, installer, LOGGER);
-        Trace.begin("fullswap");
-        Deployer.RunResponse response = deployer.fullSwap();
-        Trace.end();
-
-        if (response.status != Deployer.RunResponse.Status.OK) {
-            LOGGER.info("%s", response.errorMessage);
-            return;
-        }
-
-        // Output apks differences found.
-        for (String apkName : response.result.keySet()) {
-            Deployer.RunResponse.Analysis analysis = response.result.get(apkName);
-            for (String key : analysis.diffs.keySet()) {
-                ApkDiffer.ApkEntryStatus status = analysis.diffs.get(key);
-                switch (status) {
-                    case CREATED:
-                        LOGGER.info("%s has been CREATED.", key);
-                        break;
-                    case DELETED:
-                        //LOGGER.info("%s has been DELETED.", key);
-                        break;
-                    case MODIFIED:
-                        LOGGER.info("%s has been MODIFIED.", key);
-                        break;
+        ExecutorService service = Executors.newFixedThreadPool(5);
+        Deployer deployer = new Deployer(adb, db, new TaskRunner(service), installer);
+        if (command.equals("install")) {
+            deployer.install(apks);
+        } else {
+            try {
+                if (command.equals("fullswap")) {
+                    deployer.fullSwap(packageName, apks);
+                } else if (command.equals("codeswap")) {
+                    deployer.codeSwap(packageName, apks);
                 }
+            } catch (DeployerException e) {
+                LOGGER.error(e, "Error executing the deployer");
             }
         }
+        service.shutdown();
     }
 
     private IDevice getDevice() {

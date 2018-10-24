@@ -15,7 +15,9 @@
  */
 package com.android.tools.deployer;
 
-import com.android.utils.ILogger;
+import com.android.tools.deploy.proto.Deploy;
+import com.android.tools.deployer.model.Apk;
+import com.android.tools.deployer.model.ApkEntry;
 import com.google.common.collect.ImmutableList;
 import com.google.devrel.gmscore.tools.apk.arsc.*;
 import java.io.File;
@@ -26,14 +28,11 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-public class ApkFull {
-    private static final ILogger LOGGER = Logger.getLogger();
+public class ApkParser {
     private static final int EOCD_SIGNATURE = 0x06054b50;
     private static final int CD_SIGNATURE = 0x02014b50;
     private static final byte[] SIGNATURE_BLOCK_MAGIC = "APK Sig Block 42".getBytes();
@@ -43,12 +42,7 @@ public class ApkFull {
             new HashSet<>(
                     Arrays.asList("activity", "application", "provider", "receiver", "service"));
 
-    private final String path;
-    private HashMap<String, Long> crcs = null;
-    private String digest = null;
-    private ApkDetails apkDetails = null;
-
-    public class ApkArchiveMap {
+    private static class ApkArchiveMap {
         public static final long UNINITIALIZED = -1;
         long cdOffset = UNINITIALIZED;
         long cdSize = UNINITIALIZED;
@@ -60,72 +54,61 @@ public class ApkFull {
         long eocdSize = UNINITIALIZED;
     }
 
-    public class ApkDetails {
-        final String fileName;
-        private final Collection<String> processNames;
+    private static class ApkDetails {
+        private final String fileName;
+        private final List<String> processNames;
 
-        private ApkDetails(String fileName, Collection<String> processNames) {
+        private ApkDetails(String fileName, List<String> processNames) {
             this.fileName = fileName;
             this.processNames = processNames;
         }
-
-        public String fileName() {
-            return fileName;
-        }
-
-        public Collection<String> processNames() {
-            return processNames;
-        }
     }
-
-    private final ApkArchiveMap map;
 
     /** A class to manipulate .apk files. */
-    public ApkFull(String apkPath) {
+    public ApkParser() {}
+
+    public List<ApkEntry> parse(String apkPath) throws IOException {
         File file = new File(apkPath);
         MappedByteBuffer mmap;
-        path = file.getAbsolutePath();
-        try (RandomAccessFile raf = new RandomAccessFile(path, "r");
+        String absolutePath = file.getAbsolutePath();
+        String digest;
+        HashMap<String, Long> crcs;
+        try (RandomAccessFile raf = new RandomAccessFile(absolutePath, "r");
                 FileChannel fileChannel = raf.getChannel()) {
             mmap = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, fileChannel.size());
-            map = parse(mmap);
-        } catch (IOException e) {
-            throw new DeployerException("Unable to open apk archive: " + path, e);
-        }
-    }
-
-    public HashMap<String, Long> getCrcs() {
-        if (crcs != null) {
-            return crcs;
-        }
-        try {
-            RandomAccessFile raf = new RandomAccessFile(path, "r");
-            crcs = readCrcs(raf, map);
-        } catch (IOException e) {
-            LOGGER.error(e, "Unable to retrieve CRCs for apk '%s'.", path);
-        }
-        return crcs;
-    }
-
-    public String getDigest() {
-        if (digest != null) {
-            return digest;
-        }
-        try {
-            RandomAccessFile raf = new RandomAccessFile(path, "r");
+            ApkArchiveMap map = parse(mmap);
             digest = generateDigest(raf, map);
-        } catch (IOException e) {
-            LOGGER.error(e, "Unable to generate digest for apk '%s'.", path);
+            crcs = readCrcs(raf, map);
         }
-        return digest;
+        ApkDetails apkDetails;
+        try (ZipFile zipFile = new ZipFile(absolutePath)) {
+            ZipEntry manifestEntry = zipFile.getEntry("AndroidManifest.xml");
+            InputStream stream = zipFile.getInputStream(manifestEntry);
+            apkDetails = parseManifest(stream);
+        }
+
+        List<ApkEntry> files = new ArrayList<>();
+        Apk apk = new Apk(apkDetails.fileName, digest, absolutePath, apkDetails.processNames);
+        for (Map.Entry<String, Long> entry : crcs.entrySet()) {
+            files.add(new ApkEntry(entry.getKey(), entry.getValue(), apk));
+        }
+        return files;
     }
 
-    public boolean exists() {
-        return Files.exists(Paths.get(path));
-    }
-
-    public String getPath() {
-        return path;
+    List<ApkEntry> parse(List<Deploy.ApkDump> protoDumps) {
+        List<ApkEntry> dumps = new ArrayList<>();
+        for (Deploy.ApkDump dump : protoDumps) {
+            ByteBuffer cd = dump.getCd().asReadOnlyByteBuffer();
+            ByteBuffer signature = dump.getSignature().asReadOnlyByteBuffer();
+            HashMap<String, Long> crcs = ZipUtils.readCrcs(cd);
+            cd.rewind();
+            String digest = ZipUtils.digest(signature.remaining() != 0 ? signature : cd);
+            Apk apk = new Apk(dump.getName(), digest, null, ImmutableList.of());
+            for (Map.Entry<String, Long> entry : crcs.entrySet()) {
+                dumps.add(new ApkEntry(entry.getKey(), entry.getValue(), apk));
+            }
+        }
+        return dumps;
     }
 
     // Parse the APK archive. The ByteBuffer is expected to contain the entire APK archive.
@@ -136,7 +119,7 @@ public class ApkFull {
         // Make sure the magic number in the Central Directory is what is expected.
         bytes.position((int) map.cdOffset);
         if (bytes.getInt() != CD_SIGNATURE) {
-            throw new DeployerException("Central Directory signature invalid.");
+            throw new IllegalArgumentException("Central Directory signature invalid.");
         }
 
         readSignatureBlock(bytes, map);
@@ -221,37 +204,21 @@ public class ApkFull {
         return ZipUtils.digest(buffer);
     }
 
-    public ApkDetails getApkDetails() {
-        if (apkDetails != null) {
-            return apkDetails;
-        }
-
-        try (ZipFile zipFile = new ZipFile(path)) {
-            ZipEntry manifestEntry = zipFile.getEntry("AndroidManifest.xml");
-            InputStream stream = zipFile.getInputStream(manifestEntry);
-            apkDetails = parseManifest(stream);
-        } catch (IOException e) {
-            throw new DeployerException("Unable to retrieve apk details for " + path, e);
-        }
-
-        return apkDetails;
-    }
-
     private ApkDetails parseManifest(InputStream decompressedManifest) throws IOException {
         BinaryResourceFile file = BinaryResourceFile.fromInputStream(decompressedManifest);
         List<Chunk> chunks = file.getChunks();
 
         if (chunks.isEmpty()) {
-            throw new DeployerException("Invalid APK, empty manifest");
+            throw new IllegalArgumentException("Invalid APK, empty manifest");
         }
 
         if (!(chunks.get(0) instanceof XmlChunk)) {
-            throw new DeployerException("APK manifest chunk[0] != XmlChunk");
+            throw new IllegalArgumentException("APK manifest chunk[0] != XmlChunk");
         }
 
         String packageName = null;
         String splitName = null;
-        HashSet<String> processNames = new HashSet<String>();
+        HashSet<String> processNames = new HashSet<>();
 
         XmlChunk xmlChunk = (XmlChunk) chunks.get(0);
         for (Chunk chunk : xmlChunk.getChunks().values()) {
@@ -282,7 +249,7 @@ public class ApkFull {
         }
 
         if (packageName == null) {
-            throw new DeployerException("Package name was not found in manifest");
+            throw new IllegalArgumentException("Package name was not found in manifest");
         }
 
         String apkFileName = splitName == null ? "base.apk" : "split_" + splitName + ".apk";
@@ -302,9 +269,5 @@ public class ApkFull {
         // Default process name is the name of the package.
         builder.add(packageName);
         return new ApkDetails(apkFileName, builder.build());
-    }
-
-    ApkArchiveMap getMap() {
-        return map;
     }
 }

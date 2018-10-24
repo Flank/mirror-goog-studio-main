@@ -25,11 +25,6 @@ swap_test(
 )
 
 swap_test(
-    name = "DexArchiveComparatorTest",
-    srcs = ["java/com/android/tools/deploy/swapper/DexArchiveComparatorTest.java"],
-)
-
-swap_test(
     name = "JdiBasedClassRedefinerTest",
     srcs = ["java/com/android/tools/deploy/swapper/JdiBasedClassRedefinerTest.java"],
 )

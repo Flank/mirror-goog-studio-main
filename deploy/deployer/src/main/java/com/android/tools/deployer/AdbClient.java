@@ -16,7 +16,6 @@
 
 package com.android.tools.deployer;
 
-import com.android.annotations.NonNull;
 import com.android.ddmlib.*;
 import com.android.utils.ILogger;
 import java.io.ByteArrayOutputStream;
@@ -27,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class AdbClient {
     private final IDevice device;
@@ -40,7 +40,7 @@ public class AdbClient {
     /**
      * Executes the given command and sends {@code input} to stdin and returns stdout as a byte[]
      */
-    public byte[] shell(String[] parameters, InputStream input) throws DeployerException {
+    public byte[] shell(String[] parameters, InputStream input) throws IOException {
         logger.info("SHELL: " + String.join(" ", parameters));
         ByteArrayOutputReceiver receiver;
         try {
@@ -55,57 +55,15 @@ public class AdbClient {
             return receiver.toByteArray();
         } catch (AdbCommandRejectedException
                 | ShellCommandUnresponsiveException
-                | IOException
                 | TimeoutException e) {
-            throw new DeployerException("Unable to run shell command", e);
+            throw new IOException(e);
         } finally {
             Trace.end();
         }
     }
 
-    public void pull(String srcDirectory, String dstDirectory) throws DeployerException {
-        try {
-            // TODO: Move to a protobuf stdout:
-            // Pulling a directory is super slow and hacky with ddmlib, which effectively
-            // does this:
-            List<String> files = new ArrayList<>();
-            device.executeShellCommand(
-                    "ls -A1 " + srcDirectory,
-                    new MultiLineReceiver() {
-                        @Override
-                        public void processNewLines(@NonNull String[] lines) {
-                            for (String line : lines) {
-                                if (!line.trim().isEmpty()) {
-                                    files.add(line.trim());
-                                }
-                            }
-                        }
-
-                        @Override
-                        public boolean isCancelled() {
-                            return false;
-                        }
-                    });
-            String dirName = new File(srcDirectory).getName();
-            File dstDir = new File(dstDirectory, dirName);
-            dstDir.mkdirs();
-            for (String file : files) {
-                device.pullFile(srcDirectory + "/" + file, dstDir.getPath() + "/" + file);
-            }
-        } catch (AdbCommandRejectedException
-                | ShellCommandUnresponsiveException
-                | IOException
-                | SyncException
-                | TimeoutException e) {
-            throw new DeployerException("Unable to pull files.", e);
-        }
-    }
-
-    public void installMultiple(List<ApkFull> apks, boolean kill) throws DeployerException {
-        List<File> files = new ArrayList<>();
-        for (ApkFull apk : apks) {
-            files.add(new File(apk.getPath()));
-        }
+    public boolean installMultiple(List<String> apks, boolean kill) throws IOException {
+        List<File> files = apks.stream().map(File::new).collect(Collectors.toList());
         try {
             List<String> options = new ArrayList<>();
             options.add("-t");
@@ -114,8 +72,9 @@ public class AdbClient {
                 options.add("--dont-kill");
             }
             device.installPackages(files, true, options, 10, TimeUnit.SECONDS);
+            return true;
         } catch (InstallException e) {
-            throw new DeployerException("Unable to install packages.", e);
+            throw new IOException(e);
         }
     }
 
@@ -123,12 +82,12 @@ public class AdbClient {
         return device.getAbis();
     }
 
-    public void push(String from, String to) {
+    public void push(String from, String to) throws IOException {
         try {
             Trace.begin("adb push");
             device.pushFile(from, to);
-        } catch (IOException | SyncException | TimeoutException | AdbCommandRejectedException e) {
-            throw new DeployerException("Unable to push files", e);
+        } catch (SyncException | TimeoutException | AdbCommandRejectedException e) {
+            throw new IOException(e);
         } finally {
             Trace.end();
         }

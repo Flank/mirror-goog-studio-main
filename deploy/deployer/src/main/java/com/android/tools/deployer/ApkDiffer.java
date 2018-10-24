@@ -16,42 +16,61 @@
 
 package com.android.tools.deployer;
 
+import com.android.tools.deployer.model.ApkEntry;
+import com.android.tools.deployer.model.FileDiff;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class ApkDiffer {
 
-    public enum ApkEntryStatus {
-        CREATED,
-        MODIFIED,
-        DELETED
-    }
-
-    public HashMap<String, ApkEntryStatus> diff(ApkFull local, ApkDump remote)
+    public List<FileDiff> diff(List<ApkEntry> oldFiles, List<ApkEntry> newFiles)
             throws DeployerException {
 
-        HashMap<String, Long> localCrcs = local.getCrcs();
-        HashMap<String, Long> remoteCrcs = remote.getCrcs();
+        Map<String, Map<String, ApkEntry>> oldMap = groupFiles(oldFiles);
+        Map<String, Map<String, ApkEntry>> newMap = groupFiles(newFiles);
+
+        if (newMap.size() != oldMap.size()) {
+            throw new DeployerException(
+                    DeployerException.Error.DIFFERENT_NUMBER_OF_APKS,
+                    "Local and remote apk counts differ");
+        }
+        if (!newMap.keySet().equals(oldMap.keySet())) {
+            throw new DeployerException(
+                    DeployerException.Error.DIFFERENT_NAMES_OF_APKS,
+                    "Local and remote apk naming scheme differs");
+        }
 
         // Traverse local and remote list of crcs in order to detect what has changed in a local apk.
-        HashMap<String, ApkEntryStatus> diffs = new HashMap<>();
-        for (String key : localCrcs.keySet()) {
-            if (!remoteCrcs.containsKey(key)) {
-                diffs.put(key, ApkEntryStatus.DELETED);
+        List<FileDiff> diffs = new ArrayList<>();
+        for (ApkEntry newFile : newFiles) {
+            ApkEntry oldFile = oldMap.get(newFile.apk.name).get(newFile.name);
+            if (oldFile == null) {
+                diffs.add(new FileDiff(null, newFile, FileDiff.Status.CREATED));
             } else {
                 // Check if modified.
-                long remoteCrc = remoteCrcs.get(key);
-                long localCrc = localCrcs.get(key);
-                if (remoteCrc != localCrc) {
-                    diffs.put(key, ApkEntryStatus.MODIFIED);
+                if (oldFile.checksum != newFile.checksum) {
+                    diffs.add(new FileDiff(oldFile, newFile, FileDiff.Status.MODIFIED));
                 }
             }
         }
 
-        for (String key : remoteCrcs.keySet()) {
-            if (!localCrcs.containsKey(key)) {
-                diffs.put(key, ApkEntryStatus.CREATED);
+        for (ApkEntry oldFile : oldFiles) {
+            ApkEntry newFile = newMap.get(oldFile.apk.name).get(oldFile.name);
+            if (newFile == null) {
+                diffs.add(new FileDiff(oldFile, null, FileDiff.Status.DELETED));
             }
-    }
+        }
         return diffs;
+    }
+
+    public Map<String, Map<String, ApkEntry>> groupFiles(List<ApkEntry> oldFiles) {
+        Map<String, Map<String, ApkEntry>> oldMap = new HashMap<>();
+        for (ApkEntry file : oldFiles) {
+            Map<String, ApkEntry> map = oldMap.computeIfAbsent(file.apk.name, k -> new HashMap<>());
+            map.put(file.name, file);
+        }
+        return oldMap;
     }
 }

@@ -15,20 +15,18 @@
  */
 package com.android.tools.deploy.swapper;
 
-/**
- * Public API to do hotswapping.
- *
- * <p>A place holder for the class that performs hot swapping. This class with be the the public API
- * that the deployer is going to interact with. It will take in a dex file (potentially with
- * multiple Java classes) and invoke VM supported class redefinition APIs.
- *
- * <p>Note that it only be responsible for the current runnindg process and will not be responsible
- * for making the class swap persistent across application restarts.
- */
-public class HotSwapManager {
-    private final ClassRedefiner classRedefiner;
+import com.android.annotations.VisibleForTesting;
+import com.android.tools.deployer.model.ApkEntry;
+import com.android.tools.deployer.model.DexClass;
+import java.util.List;
 
-    public HotSwapManager(ClassRedefiner redefiner) {
-        classRedefiner = redefiner;
-    }
+public interface ApkFileDatabase {
+    void addClasses(List<DexClass> allClasses);
+
+    List<DexClass> getClasses(ApkEntry dex);
+
+    void close();
+
+    @VisibleForTesting
+    List<DexClass> dump();
 }

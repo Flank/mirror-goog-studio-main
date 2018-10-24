@@ -16,16 +16,43 @@
 
 package com.android.tools.deployer;
 
-public class DeployerException extends RuntimeException {
-    public DeployerException(String message) {
+public class DeployerException extends Exception {
+
+    private final Error error;
+
+    public enum Error {
+        SWAP_NOT_INSTALLED,
+        DUMP_FAILED,
+        READ_HOST_APK_FAILED,
+        CANNOT_SWAP,
+        REMOTE_APK_NOT_FOUND_ON_DB,
+        REDEFINER_ERROR,
+        DIFFERENT_NUMBER_OF_APKS,
+        LOCAL_APK_NOT_FOUND,
+        ERROR_EXECUTING_SWAP,
+        DUMP_UNKNOWN_PACKAGE,
+        INVALID_APK,
+        FAILED_TO_SPLIT_DEXES,
+        ADDING_CLASSES_NOT_SUPPORTED,
+        INTERRUPTED,
+        CANNOT_SWAP_STATIC_LIB,
+        CANNOT_SWAP_MANIFEST,
+        CANNOT_SWAP_RESOURCE,
+        ERROR_PUSHING_APK,
+        DIFFERENT_NAMES_OF_APKS,
+    }
+
+    public DeployerException(Error error, String message) {
         super(message);
+        this.error = error;
     }
 
-    public DeployerException(Throwable t) {
+    public DeployerException(Error error, Throwable t) {
         super(t);
+        this.error = error;
     }
 
-    public DeployerException(String message, Throwable t) {
-        super(message, t);
+    public Error getError() {
+        return error;
     }
 }

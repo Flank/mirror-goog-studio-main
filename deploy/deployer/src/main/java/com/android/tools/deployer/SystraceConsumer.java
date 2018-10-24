@@ -42,7 +42,7 @@ public class SystraceConsumer implements Trace.TraceConsumer {
                             + Paths.get(filepath).toAbsolutePath().toString()
                             + "'");
         } catch (FileNotFoundException | UnsupportedEncodingException e) {
-            throw new DeployerException(e);
+            throw new IllegalStateException(e);
         }
         writer.println("[{}");
     }

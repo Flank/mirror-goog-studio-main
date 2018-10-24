@@ -77,7 +77,8 @@ public class ZipUtils {
         try {
             messageDigest = MessageDigest.getInstance(DIGEST_ALGORITHM);
         } catch (NoSuchAlgorithmException e) {
-            throw new DeployerException("MessageDigest:" + DIGEST_ALGORITHM + " unavailable.", e);
+            throw new IllegalStateException(
+                    "MessageDigest:" + DIGEST_ALGORITHM + " unavailable.", e);
         }
         // TODO: Parse the block and hash the top level signature instead of hashing the entire block.
         messageDigest.update(buffer);

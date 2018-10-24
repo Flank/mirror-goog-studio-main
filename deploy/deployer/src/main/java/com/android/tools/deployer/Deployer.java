@@ -18,290 +18,294 @@ package com.android.tools.deployer;
 
 import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deploy.swapper.*;
-import com.android.utils.ILogger;
+import com.android.tools.deployer.model.Apk;
+import com.android.tools.deployer.model.ApkEntry;
+import com.android.tools.deployer.model.DexClass;
+import com.android.tools.deployer.model.FileDiff;
+import com.android.tools.deployer.tasks.TaskRunner;
+import com.google.common.io.ByteStreams;
 import com.google.protobuf.ByteString;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.UncheckedIOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class Deployer {
 
     public static final String BASE_DIRECTORY = "/data/local/tmp/.studio";
     public static final String APK_DIRECTORY = BASE_DIRECTORY + "/apks";
-    public static final String DUMPS_DIRECTORY = BASE_DIRECTORY + "/dumps";
     public static final String INSTALLER_DIRECTORY = BASE_DIRECTORY + "/bin";
 
-    private final String packageName;
-    private final List<ApkFull> apks;
     private final AdbClient adb;
-    private final DexArchiveDatabase db;
+    private final ApkFileDatabase db;
     private final Installer installer;
-    private final ILogger logger;
+    private final TaskRunner runner;
 
-    // status field is always set.
-    // If status is ERROR, only errorMessage is set.
-    // If status is OK, all fields except errorMessage are set.
-    // If status is NO_INSTALLED, only localApkHash fields are set.
-    public static class RunResponse {
-        public enum Status {
-            OK,
-            NOT_INSTALLED,
-            ERROR
-        }
-
-        public static class Analysis {
-            public HashMap<String, ApkDiffer.ApkEntryStatus> diffs;
-            public String localApkHash;
-            public String remoteApkHash;
-        }
-
-        public Status status = Status.OK; // Always set.
-        public String errorMessage; // Set only if status != OK.
-        public HashMap<String, Analysis> result =
-                new HashMap<>(); // Set only if status == OK otherwise content is undefined.
-    }
-
-    public Deployer(
-            String packageName,
-            List<String> apkPaths,
-            AdbClient adb,
-            DexArchiveDatabase db,
-            Installer installer,
-            ILogger logger) {
-        this.packageName = packageName;
+    public Deployer(AdbClient adb, ApkFileDatabase db, TaskRunner runner, Installer installer) {
         this.adb = adb;
         this.db = db;
+        this.runner = runner;
         this.installer = installer;
-        this.logger = logger;
-        this.apks = apkPaths.stream().map(ApkFull::new).collect(Collectors.toList());
     }
 
-    /*
-     * Generates a diff between the new apks and the remote apks installed on the device,
-     * followed immediately with either a full install or a patch install depending on
-     * the size of the patch.
+    /**
+     * Installs the given apks. This method will register the APKs in the database for subsequent
+     * swaps
      */
-    public RunResponse install() throws IOException {
-        for (ApkFull apk : apks) {
-            tracedCache(apk);
-        }
-        RunResponse response = new RunResponse();
+    public void install(List<String> apks) throws IOException {
+        Trace.begin("install");
         try {
+            // There could be tasks running from the previous cycle that were
+            // left to complete in the background. We wait for them to finish
+            // So that we don't accumulate them.
+            runner.join();
+
+            // Run installation on the current thread.
             adb.installMultiple(apks, true);
-            response.status = RunResponse.Status.OK;
-            response.errorMessage = "Install succeeded";
-        } catch (DeployerException e) {
-            response.status = RunResponse.Status.ERROR;
-            response.errorMessage = "Install failed";
-            logger.error(e, null);
+
+            // Run the update on a separate thread.
+            runner.create("update", this::cache, runner.create(apks));
+        } finally {
+            Trace.end();
         }
-        return response;
     }
 
-    private Map<String, ApkDump> diff(RunResponse response) throws IOException {
-        Map<String, ApkDump> dumps = installer.dump(packageName);
-
-        chechDumps(apks, dumps, response);
-        if (response.status == RunResponse.Status.ERROR) {
-            return dumps;
-        }
-
-        generateHashes(apks, dumps, response);
-        if (response.status == RunResponse.Status.NOT_INSTALLED) {
-            return dumps;
-        }
-
-        generateDiffs(apks, dumps, response);
-
-        return dumps;
+    private boolean cache(List<String> paths) throws DeployerException {
+        computeClassChecksums(readApks(paths));
+        return true;
     }
 
-    public RunResponse codeSwap() throws IOException {
+    public void codeSwap(String packageName, List<String> apks) throws DeployerException {
         Trace.begin("codeSwap");
-        RunResponse response = new RunResponse();
-        Map<String, ApkDump> dumps = diff(response);
-        swap(response, dumps, false /* Restart Activity */);
+        swap(packageName, apks, false /* Restart Activity */);
         Trace.end();
-        return response;
     }
 
-    public RunResponse fullSwap() throws IOException {
+    public void fullSwap(String packageName, List<String> apks) throws DeployerException {
         Trace.begin("fullSwap");
-        RunResponse response = new RunResponse();
-        Trace.begin("diff");
-        Map<String, ApkDump> dumps = diff(response);
+        swap(packageName, apks, true /* Restart Activity */);
         Trace.end();
-        Trace.begin("swap");
-        swap(response, dumps, true /* Restart Activity */);
-        Trace.end();
-        Trace.end();
-        return response;
     }
 
-    private static void chechDumps(
-            List<ApkFull> apks, Map<String, ApkDump> dumps, RunResponse response) {
-        int remoteApks = dumps.size();
-        if (remoteApks == 0) { // No remote apks. App probably was not installed.
-            response.status = RunResponse.Status.NOT_INSTALLED;
-            response.errorMessage = "App not installed";
-        } else if (remoteApks != apks.size()) { // If the number doesn't match we cannot do a diff.
-            response.status = RunResponse.Status.ERROR;
-            response.errorMessage = "Remote apks count differ, unable to generate a diff.";
-        }
-    }
-
-    private RunResponse.Analysis findOrCreateAnalysis(RunResponse response, String apkName) {
-        RunResponse.Analysis analysis = response.result.get(apkName);
-        if (analysis == null) {
-            analysis = new RunResponse.Analysis();
-            response.result.put(apkName, analysis);
-        }
-        return analysis;
-    }
-
-    private void generateHashes(
-            List<ApkFull> apks, Map<String, ApkDump> dumps, RunResponse response) {
-        for (ApkFull apk : apks) {
-            RunResponse.Analysis analysis = findOrCreateAnalysis(response, apk.getPath());
-            analysis.localApkHash = apk.getDigest();
-            String name = apk.getApkDetails().fileName();
-            ApkDump dump = dumps.get(name);
-            if (dump != null) {
-                analysis.remoteApkHash = dump.getDigest();
-            }
-        }
-    }
-
-    private void generateDiffs(
-            List<ApkFull> apks, Map<String, ApkDump> dumps, RunResponse response) {
-        for (ApkFull apk : apks) {
-            try {
-                ApkDump dump = dumps.get(apk.getApkDetails().fileName());
-                if (dump == null) {
-                    response.status = RunResponse.Status.ERROR;
-                    response.errorMessage = "Cannot find dump for local apk: " + apk.getPath();
-                    return;
-                }
-                RunResponse.Analysis analysis = findOrCreateAnalysis(response, apk.getPath());
-                ApkDiffer apkDiffer1 = new ApkDiffer();
-                analysis.diffs = apkDiffer1.diff(apk, dump);
-                response.result.put(apk.getPath(), analysis);
-            } catch (DeployerException e) {
-                response.status = RunResponse.Status.ERROR;
-                StringWriter stringWriter = new StringWriter();
-                PrintWriter printWriter = new PrintWriter(stringWriter);
-                e.printStackTrace(printWriter);
-                response.errorMessage = stringWriter.toString();
-            }
-        }
-    }
-
-    private void swap(RunResponse response, Map<String, ApkDump> dumps, boolean restart)
+    private void swap(String packageName, List<String> paths, boolean restart)
             throws DeployerException {
-        ClassRedefiner redefiner = new InstallerBasedClassRedefiner(installer);
+        // Get the list of files from the local apks
+        List<ApkEntry> newFiles = readApks(paths);
+
+        // Get the list of files from the installed app
+        List<ApkEntry> dumps = dump(packageName);
+
+        // Calculate the difference between them
+        List<FileDiff> diffs = diff(dumps, newFiles);
+
+        // Push the apks to device and get the remote paths
+        List<String> apkPaths = pushApks(newFiles);
+
+        // Obtain the process names from the local apks
+        Set<String> processNames = extractProcessNames(newFiles);
+
+        // Verify the changes are swappable and get only the dexes that we can change
+        List<FileDiff> dexDiffs = verify(diffs, restart);
+
+        // Compare the local vs remote dex files.
+        List<DexClass> toSwap = compare(dexDiffs);
+
+        // Update the database with the entire new apk. In the normal case this should
+        // be a no-op because the dexes that were modified were extracted at comparison time.
+        // However if the compare task doesn't get to execute we still update the database.
+        computeClassChecksums(newFiles);
+
+        // Actually do the swap
+        sendSwapRequest(packageName, restart, apkPaths, processNames, toSwap);
+    }
+
+    private List<FileDiff> verify(List<FileDiff> diffs, boolean restart) throws DeployerException {
+        return new SwapVerifier().verify(diffs, restart);
+    }
+
+    private List<ApkEntry> readApks(List<String> paths) throws DeployerException {
+        Trace.begin("parseApks");
+        try {
+            List<ApkEntry> newFiles = new ArrayList<>();
+            for (String apkPath : paths) {
+                newFiles.addAll(new ApkParser().parse(apkPath));
+            }
+            return newFiles;
+        } catch (IOException e) {
+            throw new DeployerException(DeployerException.Error.INVALID_APK, "Error reading APK");
+        } finally {
+            Trace.end();
+        }
+    }
+
+    private boolean computeClassChecksums(List<ApkEntry> newFiles) throws DeployerException {
+        try {
+            Trace.begin("update");
+            Function<ApkEntry, byte[]> dexProvider = dexProvider();
+            for (ApkEntry file : newFiles) {
+                if (file.name.endsWith(".dex")) {
+                    extractClasses(file, dexProvider, null);
+                }
+            }
+            return true;
+        } finally {
+            Trace.end();
+        }
+    }
+
+    private List<DexClass> compare(List<FileDiff> dexDiffs) throws DeployerException {
+        try {
+            Trace.begin("compare");
+            List<DexClass> toSwap = new ArrayList<>();
+            for (FileDiff diff : dexDiffs) {
+                List<DexClass> oldClasses = extractClasses(diff.oldFile, null, null);
+                Map<String, Long> checksums = new HashMap<>();
+                for (DexClass clz : oldClasses) {
+                    checksums.put(clz.name, clz.checksum);
+                }
+                // Memory optimization to discard not needed code
+                Predicate<DexClass> needsCode =
+                        (DexClass clz) -> {
+                            Long oldChecksum = checksums.get(clz.name);
+                            return oldChecksum != null && clz.checksum != oldChecksum;
+                        };
+
+                Function<ApkEntry, byte[]> dexProvider = dexProvider();
+                List<DexClass> newClasses = extractClasses(diff.newFile, dexProvider, needsCode);
+                toSwap.addAll(
+                        newClasses
+                                .stream()
+                                .filter(c -> c.code != null)
+                                .collect(Collectors.toList()));
+            }
+            return toSwap;
+        } finally {
+            Trace.end();
+        }
+    }
+
+    private Function<ApkEntry, byte[]> dexProvider() {
+        // TODO Check if opening the file several times matters
+        return (ApkEntry dex) -> {
+            try (ZipFile file = new ZipFile(dex.apk.path)) {
+                ZipEntry entry = file.getEntry(dex.name);
+                return ByteStreams.toByteArray(file.getInputStream(entry));
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        };
+    }
+
+    private void sendSwapRequest(
+            String packageName,
+            boolean restart,
+            List<String> apkPaths,
+            Set<String> processNames,
+            List<DexClass> classes)
+            throws DeployerException {
         Deploy.SwapRequest.Builder request = Deploy.SwapRequest.newBuilder();
         request.setPackageName(packageName);
         request.setRestartActivity(restart);
-
-        HashSet<String> processNames = new HashSet<>();
-        adb.shell(
-            new String[] {"rm", "-r", APK_DIRECTORY, ";", "mkdir", "-p", APK_DIRECTORY}, null);
-        for (ApkFull apk : apks) {
-            String target = APK_DIRECTORY + "/" + Paths.get(apk.getPath()).getFileName();
-            adb.push(apk.getPath(), target);
-            request.addApks(target);
-            HashMap<String, ApkDiffer.ApkEntryStatus> diffs =
-                    response.result.get(apk.getPath()).diffs;
-
-            processNames.addAll(apk.getApkDetails().processNames());
-
-            try {
-                DexArchive newApk = tracedCache(apk);
-
-                if (diffs.isEmpty()) {
-                    logger.info("Swapper: apk " + apk.getPath() + " has not changed.");
-                    continue;
-                }
-                logger.info("Swapper found %d changes in apk '%s'.", diffs.size(), apk.getPath());
-                Trace.begin("verify");
-                Set<String> preSwapCheckErrors = PreswapCheck.verify(diffs, restart);
-                Trace.end();
-
-                if (!preSwapCheckErrors.isEmpty()) {
-                    response.status = RunResponse.Status.ERROR;
-                    response.errorMessage = String.join("\n", preSwapCheckErrors);
-                    return;
-                }
-
-                // TODO: Only pass in a list of changed files instead of doing a full APK comparision.
-                ApkDump apkDump = dumps.get(apk.getApkDetails().fileName());
-                Trace.begin("buildFromDatabase");
-                DexArchive prevApk = DexArchive.buildFromDatabase(db, apkDump.getDigest());
-                Trace.end();
-                if (prevApk == null) {
-                    logger.info(
-                            "Unable to retrieve apk in DB '%s', skipping this apk.",
-                            apkDump.getDigest());
-                    response.status = RunResponse.Status.ERROR;
-                    response.errorMessage = "Unrecognized APK on device.";
-                    return;
-                }
-
-                Trace.begin("compare apk");
-                DexArchiveComparator comparator = new DexArchiveComparator();
-                comparator
-                        .compare(prevApk, newApk)
-                        .changedClasses
-                        .forEach(
-                                e ->
-                                        request.addClasses(
-                                                Deploy.ClassDef.newBuilder()
-                                                        .setName(e.name)
-                                                        .setDex(ByteString.copyFrom(e.dex))
-                                                        .build()));
-                Trace.end();
-            } catch (Exception e) {
-                throw new DeployerException(e);
-            }
+        for (DexClass clz : classes) {
+            request.addClasses(
+                    Deploy.ClassDef.newBuilder()
+                            .setName(clz.name)
+                            .setDex(ByteString.copyFrom(clz.code)));
         }
 
+        ClassRedefiner redefiner = new InstallerBasedClassRedefiner(installer);
+        request.addAllApks(apkPaths);
         request.addAllProcessNames(processNames);
-
         Deploy.SwapResponse swapResponse = redefiner.redefine(request.build());
-        // TODO: This is overwriting any existing errors in the object. Is that a problem?
-        if (swapResponse.getStatus() == Deploy.SwapResponse.Status.OK) {
-            response.status = RunResponse.Status.OK;
-        } else {
-            response.status = RunResponse.Status.ERROR;
-            response.errorMessage = "Swap failed.";
+        if (swapResponse.getStatus() != Deploy.SwapResponse.Status.OK) {
+            throw new DeployerException(DeployerException.Error.REDEFINER_ERROR, "Swap failed");
         }
     }
 
-    private DexArchive cache(ApkFull apk) throws IOException {
-        DexArchive newApk =
-                DexArchive.buildFromHostFileSystem(new ZipFile(apk.getPath()), apk.getDigest());
-        db.enqueueUpdate(
-                delegate -> {
-                    Trace.begin("actualCache");
-                    newApk.cache(delegate);
-                    Trace.end();
-                    return null;
-                });
-        return newApk;
+    private Set<String> extractProcessNames(List<ApkEntry> newFiles) {
+        Set<String> processNames = new HashSet<>();
+        Set<Apk> apks = new HashSet<>();
+        for (ApkEntry file : newFiles) {
+            apks.add(file.apk);
+        }
+        for (Apk apk : apks) {
+            processNames.addAll(apk.processes);
+        }
+        return processNames;
     }
 
-    private DexArchive tracedCache(ApkFull apk) throws IOException {
-        Trace.begin("cache");
-        DexArchive toReturn = cache(apk);
-        Trace.end();
-        return toReturn;
+    private List<DexClass> extractClasses(
+            ApkEntry dex, Function<ApkEntry, byte[]> dexProvider, Predicate<DexClass> needsCode)
+            throws DeployerException {
+        // Try a cached version
+        List<DexClass> classes = db.getClasses(dex);
+        if (classes.isEmpty() || needsCode != null) {
+            if (dexProvider == null) {
+                throw new DeployerException(
+                        DeployerException.Error.REMOTE_APK_NOT_FOUND_ON_DB,
+                        "Cannot generate classes for unknown dex");
+            }
+            byte[] code = dexProvider.apply(dex);
+            classes = new DexSplitter().split(dex, code, needsCode);
+            db.addClasses(classes);
+        }
+        return classes;
+    }
+
+    private List<String> pushApks(List<ApkEntry> fullApks) throws DeployerException {
+        try {
+            List<String> apkPaths = new ArrayList<>();
+            adb.shell(
+                    new String[] {"rm", "-r", APK_DIRECTORY, ";", "mkdir", "-p", APK_DIRECTORY},
+                    null);
+            Set<Apk> apks = new HashSet<>();
+            for (ApkEntry file : fullApks) {
+                apks.add(file.apk);
+            }
+            for (Apk apk : apks) {
+                String target = APK_DIRECTORY + "/" + Paths.get(apk.path).getFileName();
+                adb.push(apk.path, target);
+                apkPaths.add(target);
+            }
+            return apkPaths;
+        } catch (IOException e) {
+            throw new DeployerException(DeployerException.Error.ERROR_PUSHING_APK, e);
+        }
+    }
+
+    private List<ApkEntry> dump(String packageName) throws DeployerException {
+        try {
+            Deploy.DumpResponse response = installer.dump(packageName);
+            if (response.getStatus() == Deploy.DumpResponse.Status.ERROR_PACKAGE_NOT_FOUND) {
+                throw new DeployerException(
+                        DeployerException.Error.DUMP_UNKNOWN_PACKAGE,
+                        "Cannot list apks for package " + packageName + ". Is the app installed?");
+            }
+
+            return new ApkParser().parse(response.getDumpsList());
+        } catch (IOException e) {
+            throw new DeployerException(DeployerException.Error.DUMP_FAILED, e);
+        }
+    }
+
+    /** Calculates the different files between two sets of apks. */
+    private List<FileDiff> diff(List<ApkEntry> oldFiles, List<ApkEntry> newFiles)
+            throws DeployerException {
+        Trace.begin("diff");
+        try {
+            return new ApkDiffer().diff(oldFiles, newFiles);
+        } finally {
+            Trace.end();
+        }
     }
 }

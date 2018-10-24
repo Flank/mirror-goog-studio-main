@@ -93,7 +93,10 @@ java_test(
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":tools.deployer",
+        "//prebuilts/tools/common/m2/repository/com/google/guava/guava/23.0:jar",
+        "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.4.0:jar",
         "//tools/base/common:tools.common",
+        "//tools/base/deploy/proto:deploy_java_proto",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:junit_junit",
     ],

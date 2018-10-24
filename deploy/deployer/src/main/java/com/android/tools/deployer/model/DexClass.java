@@ -13,13 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.deploy.swapper;
+package com.android.tools.deployer.model;
 
-import com.android.tools.deploy.proto.Deploy;
-import com.android.tools.deployer.DeployerException;
+public class DexClass {
+    public final String name;
+    public final long checksum;
+    public final byte[] code;
+    public final ApkEntry dex;
 
-/** Responsible for invoking the corresponding API to redefine a class in ART. */
-public abstract class ClassRedefiner {
-    public abstract Deploy.SwapResponse redefine(Deploy.SwapRequest request)
-            throws DeployerException;
+    public DexClass(String name, long checksum, byte[] code, ApkEntry dex) {
+        this.name = name;
+        this.checksum = checksum;
+        this.code = code;
+        this.dex = dex;
+    }
 }

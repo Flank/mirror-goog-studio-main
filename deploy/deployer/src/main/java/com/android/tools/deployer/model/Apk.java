@@ -13,13 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.deploy.swapper;
+package com.android.tools.deployer.model;
 
-import com.android.tools.deploy.proto.Deploy;
-import com.android.tools.deployer.DeployerException;
+import java.util.List;
 
-/** Responsible for invoking the corresponding API to redefine a class in ART. */
-public abstract class ClassRedefiner {
-    public abstract Deploy.SwapResponse redefine(Deploy.SwapRequest request)
-            throws DeployerException;
+public class Apk {
+    public final String name;
+    public final String checksum;
+    public final String path;
+    public final List<String> processes;
+
+    public Apk(String name, String checksum, String path, List<String> processes) {
+        this.name = name;
+        this.checksum = checksum;
+        this.path = path;
+        this.processes = processes;
+    }
 }
