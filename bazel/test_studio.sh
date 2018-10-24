@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -x
 # Invoked by Android Build Launchcontrol for continuous builds.
 
 # Expected arguments:
