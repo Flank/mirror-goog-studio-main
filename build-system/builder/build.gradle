@@ -25,6 +25,7 @@ dependencies {
     compile libs.bouncycastle_prov
     compile libs.asm
     compile libs.asm_tree
+    compile libs.javax_inject
     // R8 deps
     compile libs.asm_commons
     compile libs.asm_util

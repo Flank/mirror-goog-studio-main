@@ -24,19 +24,20 @@ import static com.android.SdkConstants.currentPlatform;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.process.ProcessResult;
+import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
+import javax.inject.Inject;
 
 /**
  * A Source File processor for AIDL files. This compiles each aidl file found by the SourceSearcher.
@@ -50,6 +51,7 @@ public class ShaderProcessor implements DirectoryWalker.FileAction {
     public static final String EXT_FRAG = "frag";
     public static final String EXT_COMP = "comp";
 
+    @Nullable private final WorkerExecutorFacade workers;
     @Nullable
     private File mNdkLocation;
     @NonNull
@@ -68,8 +70,6 @@ public class ShaderProcessor implements DirectoryWalker.FileAction {
     @NonNull
     private  final ProcessOutputHandler mProcessOutputHandler;
 
-    @Nullable private final WaitableExecutor mExecutor;
-
     private File mGlslcLocation;
 
     public ShaderProcessor(
@@ -80,7 +80,7 @@ public class ShaderProcessor implements DirectoryWalker.FileAction {
             @NonNull Map<String, List<String>> scopedArgs,
             @NonNull ProcessExecutor processExecutor,
             @NonNull ProcessOutputHandler processOutputHandler,
-            @Nullable WaitableExecutor executor) {
+            @Nullable WorkerExecutorFacade workers) {
         mNdkLocation = ndkLocation;
         mSourceFolder = sourceFolder;
         mOutputDir = new File(outputDir, "shaders");
@@ -88,7 +88,7 @@ public class ShaderProcessor implements DirectoryWalker.FileAction {
         mScopedArgs = scopedArgs;
         mProcessExecutor = processExecutor;
         mProcessOutputHandler = processOutputHandler;
-        mExecutor = executor;
+        this.workers = workers;
 
         init();
     }
@@ -135,73 +135,120 @@ public class ShaderProcessor implements DirectoryWalker.FileAction {
 
     @Override
     public void call(@NonNull Path start, @NonNull Path path) throws IOException {
-        Callable c =
-                () -> {
-                    ProcessInfoBuilder builder = new ProcessInfoBuilder();
-                    builder.setExecutable(mGlslcLocation);
-
-                    // working dir for the includes
-                    builder.addArgs("-I", mSourceFolder.getPath());
-
-                    // compute the output file path
-                    String relativePath = FileUtils.relativePath(path.toFile(), start.toFile());
-                    File destFile = new File(mOutputDir, relativePath + ".spv");
-
-                    // add the args
-                    builder.addArgs(getArgs(relativePath));
-
-                    // the source file
-                    builder.addArgs(path.toString());
-
-                    // add the output file
-                    builder.addArgs("-o", destFile.getPath());
-
-                    // make sure the output file's parent folder is created.
-                    FileUtils.mkdirs(destFile.getParentFile());
-
-                    ProcessResult result =
-                            mProcessExecutor.execute(
-                                    builder.createProcess(), mProcessOutputHandler);
-
-                    try {
-                        result.rethrowFailure().assertNormalExitValue();
-                    } catch (ProcessException pe) {
-                        throw new IOException(pe);
-                    }
-
-                    return null;
-                };
-
-        if (mExecutor != null) {
-            mExecutor.execute(c);
+        ShaderProcessorParams params =
+                new ShaderProcessorParams(
+                        mSourceFolder,
+                        mOutputDir,
+                        mDefaultArgs,
+                        mScopedArgs,
+                        mProcessExecutor,
+                        mProcessOutputHandler,
+                        start,
+                        path,
+                        mGlslcLocation);
+        if (workers == null) {
             try {
-                mExecutor.waitForAllTasks();
-            } catch (InterruptedException e) {
+                new ShaderProcessorRunnable(params).run();
+            } catch (Exception e) {
                 throw new IOException(e);
             }
         } else {
+            workers.submit(ShaderProcessorRunnable.class, params);
+        }
+    }
+
+    private static class ShaderProcessorRunnable implements Runnable {
+        private final ShaderProcessorParams params;
+
+        @Inject
+        ShaderProcessorRunnable(ShaderProcessorParams params) {
+            this.params = params;
+        }
+
+        @NonNull
+        private List<String> getArgs(@NonNull String relativePath) {
+            int pos = relativePath.indexOf(File.separatorChar);
+            if (pos == -1) {
+                return params.mDefaultArgs;
+            }
+
+            String key = relativePath.substring(0, pos);
+
+            List<String> args = params.mScopedArgs.get(key);
+            if (args != null) {
+                return args;
+            }
+
+            return params.mDefaultArgs;
+        }
+
+        @Override
+        public void run() {
+            ProcessInfoBuilder builder = new ProcessInfoBuilder();
+            builder.setExecutable(params.mGlslcLocation);
+
+            // working dir for the includes
+            builder.addArgs("-I", params.mSourceFolder.getPath());
+
+            // compute the output file path
+            String relativePath =
+                    FileUtils.relativePath(params.path.toFile(), params.start.toFile());
+            File destFile = new File(params.mOutputDir, relativePath + ".spv");
+
+            // add the args
+            builder.addArgs(getArgs(relativePath));
+
+            // the source file
+            builder.addArgs(params.path.toString());
+
+            // add the output file
+            builder.addArgs("-o", destFile.getPath());
+
+            // make sure the output file's parent folder is created.
+            FileUtils.mkdirs(destFile.getParentFile());
+
+            ProcessResult result =
+                    params.mProcessExecutor.execute(
+                            builder.createProcess(), params.mProcessOutputHandler);
+
             try {
-                c.call();
-            } catch (Exception e) {
-                throw new IOException(e);
+                result.rethrowFailure().assertNormalExitValue();
+            } catch (ProcessException pe) {
+                throw new RuntimeException(pe);
             }
         }
     }
 
-    @NonNull
-    private List<String> getArgs(@NonNull String relativePath) {
-        int pos = relativePath.indexOf(File.separatorChar);
-        if (pos == -1) {
-            return mDefaultArgs;
+    private static class ShaderProcessorParams implements Serializable {
+        @NonNull private final File mSourceFolder;
+        @NonNull private final File mOutputDir;
+        @NonNull private final List<String> mDefaultArgs;
+        @NonNull private final Map<String, List<String>> mScopedArgs;
+        @NonNull private final ProcessExecutor mProcessExecutor;
+        @NonNull private final ProcessOutputHandler mProcessOutputHandler;
+        @NonNull private final Path start;
+        @NonNull private final Path path;
+        @NonNull private final File mGlslcLocation;
+
+        ShaderProcessorParams(
+                @NonNull File mSourceFolder,
+                @NonNull File mOutputDir,
+                @NonNull List<String> mDefaultArgs,
+                @NonNull Map<String, List<String>> mScopedArgs,
+                @NonNull ProcessExecutor mProcessExecutor,
+                @NonNull ProcessOutputHandler mProcessOutputHandler,
+                @NonNull Path start,
+                @NonNull Path path,
+                @NonNull File mGlslcLocation) {
+            this.mSourceFolder = mSourceFolder;
+            this.mOutputDir = mOutputDir;
+            this.mDefaultArgs = mDefaultArgs;
+            this.mScopedArgs = mScopedArgs;
+            this.mProcessExecutor = mProcessExecutor;
+            this.mProcessOutputHandler = mProcessOutputHandler;
+            this.start = start;
+            this.path = path;
+            this.mGlslcLocation = mGlslcLocation;
         }
-
-        String key = relativePath.substring(0, pos);
-
-        List<String> args = mScopedArgs.get(key);
-        if (args != null) {
-            return args;
-        }
-
-        return mDefaultArgs;
     }
 }

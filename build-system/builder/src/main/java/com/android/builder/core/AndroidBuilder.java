@@ -45,7 +45,6 @@ import com.android.builder.packaging.PackagerException;
 import com.android.builder.sdk.SdkInfo;
 import com.android.builder.sdk.TargetInfo;
 import com.android.ide.common.blame.MessageReceiver;
-import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.JavaProcessExecutor;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
@@ -60,6 +59,7 @@ import com.android.ide.common.symbols.RGeneration;
 import com.android.ide.common.symbols.SymbolIo;
 import com.android.ide.common.symbols.SymbolTable;
 import com.android.ide.common.symbols.SymbolUtils;
+import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.manifmerger.ManifestProvider;
 import com.android.manifmerger.ManifestSystemProperty;
@@ -965,7 +965,6 @@ public class AndroidBuilder {
      * @param sourceFolder the source folder with the merged shaders
      * @param outputDir the output dir in which to generate the output
      * @throws IOException failed
-     * @throws InterruptedException failed
      */
     public void compileAllShaderFiles(
             @NonNull File sourceFolder,
@@ -973,8 +972,9 @@ public class AndroidBuilder {
             @NonNull List<String> defaultArgs,
             @NonNull Map<String, List<String>> scopedArgs,
             @Nullable File nkdLocation,
-            @NonNull ProcessOutputHandler processOutputHandler)
-            throws IOException, InterruptedException, ProcessException {
+            @NonNull ProcessOutputHandler processOutputHandler,
+            @NonNull WorkerExecutorFacade workers)
+            throws IOException {
         checkNotNull(sourceFolder, "sourceFolder cannot be null.");
         checkNotNull(outputDir, "outputDir cannot be null.");
         checkState(mTargetInfo != null,
@@ -990,7 +990,7 @@ public class AndroidBuilder {
                                 scopedArgs,
                                 mProcessExecutor,
                                 processOutputHandler,
-                                WaitableExecutor.useGlobalSharedThreadPool());
+                                workers);
 
         DirectoryWalker.builder()
                 .root(sourceFolder.toPath())
@@ -1013,7 +1013,6 @@ public class AndroidBuilder {
      * @param shaderFile the shader file to compile
      * @param outputDir the output dir
      * @throws IOException failed
-     * @throws InterruptedException failed
      */
     public void compileShaderFile(
             @NonNull File sourceFolder,
@@ -1023,7 +1022,7 @@ public class AndroidBuilder {
             @NonNull Map<String, List<String>> scopedArgs,
             @Nullable File nkdLocation,
             @NonNull ProcessOutputHandler processOutputHandler)
-            throws IOException, InterruptedException, ProcessException {
+            throws IOException {
         checkNotNull(sourceFolder, "sourceFolder cannot be null.");
         checkNotNull(shaderFile, "aidlFile cannot be null.");
         checkNotNull(outputDir, "outputDir cannot be null.");
