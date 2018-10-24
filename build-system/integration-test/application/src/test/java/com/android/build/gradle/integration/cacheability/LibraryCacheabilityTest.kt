@@ -16,22 +16,17 @@
 
 package com.android.build.gradle.integration.cacheability
 
-import com.google.common.truth.Truth.assertThat
-
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp
-import com.android.build.gradle.integration.common.truth.TaskStateList
-import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.UP_TO_DATE
-import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.FROM_CACHE
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.DID_WORK
-import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.SKIPPED
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.FAILED
-import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.FROM_CACHE
+import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.SKIPPED
+import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.UP_TO_DATE
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
-
 import com.google.common.collect.Sets
-import org.junit.Before
+import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -98,7 +93,6 @@ class LibraryCacheabilityTest {
                     ":lib:compileReleaseAidl",
                     ":lib:compileReleaseRenderscript",
                     ":lib:generateReleaseAssets",
-                    ":lib:generateReleaseSources",
                     ":lib:processReleaseJavaRes"
                 ),
                 FAILED to setOf()

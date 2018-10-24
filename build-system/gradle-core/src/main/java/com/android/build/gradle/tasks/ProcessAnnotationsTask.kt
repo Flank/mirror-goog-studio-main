@@ -135,8 +135,6 @@ open class ProcessAnnotationsTask : JavaCompile(), VariantAwareTask {
             // However, Gradle requires this property to be set, so let's just set it to the
             // annotation processor output directory for convenience.
             task.destinationDir = variantScope.annotationProcessorOutputDir
-
-            task.dependsOn(variantScope.taskContainer.sourceGenTask)
         }
     }
 

@@ -86,7 +86,6 @@ class CacheabilityTest {
                  */
                 DID_WORK to setOf(
                     ":app:checkDebugManifest" /* Bug 74595857 */,
-                    ":app:prepareLintJar" /* Bug 120413672 */,
                     ":app:compileDebugShaders" /* Bug 120413401 */,
                     ":app:transformClassesWithDexBuilderForDebug" /* Bug 74595921 */,
                     ":app:mergeDexDebug" /* Bug 120413559 */,
@@ -98,11 +97,9 @@ class CacheabilityTest {
                 SKIPPED to setOf(
                     ":app:compileDebugAidl",
                     ":app:compileDebugRenderscript",
-                    ":app:generateDebugSources",
                     ":app:generateDebugAssets",
                     ":app:processDebugJavaRes",
                     ":app:assembleDebug",
-                    ":app:generateDebugUnitTestSources",
                     ":app:processDebugUnitTestJavaRes"
                 ),
                 FAILED to setOf()

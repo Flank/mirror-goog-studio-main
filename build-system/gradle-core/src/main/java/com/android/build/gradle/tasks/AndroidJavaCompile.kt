@@ -323,14 +323,6 @@ open class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
             }
 
             task.destinationDir = destinationDir
-
-            // When ProcessAnnotationsTask is created, it also depends on the following task
-            // dependencies, and because AndroidJavaCompile already depends on
-            // ProcessAnnotationsTask, we don't need to set the dependencies again here (this makes
-            // the task dependencies simpler).
-            if (!processAnnotationsTaskCreated) {
-                task.dependsOn(variantScope.taskContainer.sourceGenTask)
-            }
         }
     }
 }
