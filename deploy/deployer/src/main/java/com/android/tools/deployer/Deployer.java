@@ -63,8 +63,7 @@ public class Deployer {
      * swaps
      */
     public void install(List<String> apks) throws IOException {
-        Trace.begin("install");
-        try {
+        try (Trace ignored = Trace.begin("install")) {
             // There could be tasks running from the previous cycle that were
             // left to complete in the background. We wait for them to finish
             // So that we don't accumulate them.
@@ -75,8 +74,6 @@ public class Deployer {
 
             // Run the update on a separate thread.
             runner.create("update", this::cache, runner.create(apks));
-        } finally {
-            Trace.end();
         }
     }
 
@@ -134,8 +131,7 @@ public class Deployer {
     }
 
     private List<ApkEntry> readApks(List<String> paths) throws DeployerException {
-        Trace.begin("parseApks");
-        try {
+        try (Trace ignored = Trace.begin("parseApks")) {
             List<ApkEntry> newFiles = new ArrayList<>();
             for (String apkPath : paths) {
                 newFiles.addAll(new ApkParser().parse(apkPath));
@@ -143,14 +139,11 @@ public class Deployer {
             return newFiles;
         } catch (IOException e) {
             throw new DeployerException(DeployerException.Error.INVALID_APK, "Error reading APK");
-        } finally {
-            Trace.end();
         }
     }
 
     private boolean computeClassChecksums(List<ApkEntry> newFiles) throws DeployerException {
-        try {
-            Trace.begin("update");
+        try (Trace ignored = Trace.begin("update")) {
             Function<ApkEntry, byte[]> dexProvider = dexProvider();
             for (ApkEntry file : newFiles) {
                 if (file.name.endsWith(".dex")) {
@@ -158,14 +151,11 @@ public class Deployer {
                 }
             }
             return true;
-        } finally {
-            Trace.end();
         }
     }
 
     private List<DexClass> compare(List<FileDiff> dexDiffs) throws DeployerException {
-        try {
-            Trace.begin("compare");
+        try (Trace ignored = Trace.begin("compare")) {
             List<DexClass> toSwap = new ArrayList<>();
             for (FileDiff diff : dexDiffs) {
                 List<DexClass> oldClasses = extractClasses(diff.oldFile, null, null);
@@ -189,8 +179,6 @@ public class Deployer {
                                 .collect(Collectors.toList()));
             }
             return toSwap;
-        } finally {
-            Trace.end();
         }
     }
 
@@ -301,11 +289,8 @@ public class Deployer {
     /** Calculates the different files between two sets of apks. */
     private List<FileDiff> diff(List<ApkEntry> oldFiles, List<ApkEntry> newFiles)
             throws DeployerException {
-        Trace.begin("diff");
-        try {
+        try (Trace ignored = Trace.begin("diff")) {
             return new ApkDiffer().diff(oldFiles, newFiles);
-        } finally {
-            Trace.end();
         }
     }
 }
