@@ -73,23 +73,22 @@ public interface AndroidBundle extends Library {
     File getManifest();
 
     /**
-     * Returns the location of the jar file to use for packaging (or compiling if the API jar file
-     * is not present).
+     * Returns the location of the jar file to use for packaging.
      *
-     * @see #getApiJarFile()
      * @return a File for the jar file. The file may not point to an existing file.
+     * @see #getCompileJarFile()
      */
     @NonNull
     File getJarFile();
 
     /**
-     * Returns the location of the API jar file to use for compiling.
+     * Returns the location of the jar file to use for compiling.
      *
+     * @return a File for the jar file. The file may not point to an existing file.
      * @see #getJarFile()
-     * @return a File for the API jar file. The file may not point to an existing file.
      */
     @NonNull
-    File getApiJarFile();
+    File getCompileJarFile();
 
     /**
      * Returns the location of the non-namespaced res folder.

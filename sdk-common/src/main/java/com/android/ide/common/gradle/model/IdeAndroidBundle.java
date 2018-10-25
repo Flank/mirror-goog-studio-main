@@ -15,7 +15,6 @@
  */
 package com.android.ide.common.gradle.model;
 
-import static com.android.SdkConstants.FN_API_JAR;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
@@ -41,7 +40,7 @@ public abstract class IdeAndroidBundle extends IdeLibrary implements AndroidBund
     @NonNull private final Collection<? extends JavaLibrary> myJavaDependencies;
     @NonNull private final File myManifest;
     @NonNull private final File myJarFile;
-    @NonNull private final File myApiJarFile;
+    @NonNull private final File myCompileJarFile;
     @NonNull private final File myResFolder;
     @Nullable private final File myResStaticLibrary;
     @NonNull private final File myAssetsFolder;
@@ -62,12 +61,9 @@ public abstract class IdeAndroidBundle extends IdeLibrary implements AndroidBund
 
         myManifest = bundle.getManifest();
         myJarFile = bundle.getJarFile();
-        // Older plugins may not have the getApiJarFile() method so we use a default value in that
-        // case
-        myApiJarFile =
-                checkNotNull(
-                        copyNewProperty(
-                                bundle::getApiJarFile, new File(bundle.getFolder(), FN_API_JAR)));
+        // Older plugins may not have the getCompileJarFile() method; in that case, fall back
+        // to use the regular jar file for compile.
+        myCompileJarFile = checkNotNull(copyNewProperty(bundle::getCompileJarFile, myJarFile));
         myResFolder = bundle.getResFolder();
         myResStaticLibrary = copyNewProperty(bundle::getResStaticLibrary, null);
         myAssetsFolder = bundle.getAssetsFolder();
@@ -126,8 +122,8 @@ public abstract class IdeAndroidBundle extends IdeLibrary implements AndroidBund
 
     @Override
     @NonNull
-    public File getApiJarFile() {
-        return myApiJarFile;
+    public File getCompileJarFile() {
+        return myCompileJarFile;
     }
 
     @Override
@@ -174,7 +170,7 @@ public abstract class IdeAndroidBundle extends IdeLibrary implements AndroidBund
                 && Objects.equals(myJavaDependencies, bundle.myJavaDependencies)
                 && Objects.equals(myManifest, bundle.myManifest)
                 && Objects.equals(myJarFile, bundle.myJarFile)
-                && Objects.equals(myApiJarFile, bundle.myApiJarFile)
+                && Objects.equals(myCompileJarFile, bundle.myCompileJarFile)
                 && Objects.equals(myResFolder, bundle.myResFolder)
                 && Objects.equals(myAssetsFolder, bundle.myAssetsFolder)
                 && Objects.equals(myProjectVariant, bundle.myProjectVariant);
@@ -201,7 +197,7 @@ public abstract class IdeAndroidBundle extends IdeLibrary implements AndroidBund
                 myJavaDependencies,
                 myManifest,
                 myJarFile,
-                myApiJarFile,
+                myCompileJarFile,
                 myResFolder,
                 myAssetsFolder,
                 myProjectVariant);
@@ -224,8 +220,8 @@ public abstract class IdeAndroidBundle extends IdeLibrary implements AndroidBund
                 + myManifest
                 + ", myJarFile="
                 + myJarFile
-                + ", myApiJarFile="
-                + myApiJarFile
+                + ", myCompileJarFile="
+                + myCompileJarFile
                 + ", myResFolder="
                 + myResFolder
                 + ", myAssetsFolder="

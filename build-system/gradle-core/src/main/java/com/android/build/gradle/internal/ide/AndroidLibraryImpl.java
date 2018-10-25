@@ -139,8 +139,11 @@ public final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibr
 
     @NonNull
     @Override
-    public File getApiJarFile() {
-        return FileUtils.join(folder, FN_API_JAR);
+    public File getCompileJarFile() {
+        // We use the api.jar file for compiling if that file exists (api.jar is optional in an
+        // AAR); otherwise, we use the regular jar file for compiling.
+        File apiJarFile = FileUtils.join(folder, FN_API_JAR);
+        return apiJarFile.exists() ? apiJarFile : getJarFile();
     }
 
     @NonNull

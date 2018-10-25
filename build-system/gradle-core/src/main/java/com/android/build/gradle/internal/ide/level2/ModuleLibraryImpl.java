@@ -107,9 +107,9 @@ public final class ModuleLibraryImpl implements Library, Serializable {
 
     @NonNull
     @Override
-    public String getApiJarFile() {
+    public String getCompileJarFile() {
         throw new UnsupportedOperationException(
-                "getApiJarFile() cannot be called when getType() returns LIBRARY_MODULE");
+                "getCompileJarFile() cannot be called when getType() returns LIBRARY_MODULE");
     }
 
     @NonNull
