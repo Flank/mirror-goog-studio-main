@@ -106,7 +106,7 @@ cc_test(
     name = "perfd_test",
     srcs = [
         "profiler_service_test.cc",
-        "samplers/sampler_test.cc",
+        #"samplers/sampler_test.cc", // b/117965764
     ],
     copts = [
         "-Itools/base/profiler/native",
