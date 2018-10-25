@@ -19,10 +19,9 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.blame.Message;
+import com.android.utils.HashCodes;
 import com.android.utils.ILogger;
-import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -71,7 +70,7 @@ abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>>
     private final boolean mValidateEnabled;
 
     /** List of source files. The may not have been loaded yet. */
-    private final List<File> mSourceFiles = new ArrayList<>();
+    @NonNull private final List<File> mSourceFiles = new ArrayList<>();
 
     /**
      * The key is the {@link DataItem#getKey()}. This is a multimap to support moving a data item
@@ -80,29 +79,33 @@ abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>>
      * <p>Use LinkedListMultimap to preserve original order of items for any display of resources
      * that want to show them in order.
      */
-    private final ListMultimap<String, I> mItems = LinkedListMultimap.create();
+    @NonNull private final ListMultimap<String, I> mItems = LinkedListMultimap.create();
 
     /**
      * Map of source files to DataFiles. This is a multimap because the key is the source
      * file/folder, not the File for the DataFile itself.
      */
+    @NonNull
     private final ListMultimap<File, F> mSourceFileToDataFilesMap = ArrayListMultimap.create();
 
     /** Map from a File to its DataFile. */
-    private final Map<File, F> mDataFileMap = new HashMap<>();
+    @NonNull private final Map<File, F> mDataFileMap = new HashMap<>();
+
+    @NonNull private PatternBasedFileFilter mFileFilter = new PatternBasedFileFilter();
 
     /**
      * Creates a DataSet with a given configName. The name is used to identify the set across
      * sessions.
      *
-     * @param configName the name of the config this set is associated with.
+     * @param configName the name of the config this set is associated with
      */
-    public DataSet(String configName, boolean validateEnabled) {
+    protected DataSet(@NonNull String configName, boolean validateEnabled) {
         mConfigName = configName;
         mValidateEnabled = validateEnabled;
     }
 
-    protected abstract DataSet<I, F> createSet(String name);
+    @NonNull
+    protected abstract DataSet<I, F> createSet(@NonNull String name);
 
     /**
      * Creates a DataFile and associated DataItems from an XML node from a file created with
@@ -286,13 +289,16 @@ abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>>
         // add the config name attribute
         NodeUtils.addAttribute(document, setNode, null, ATTR_CONFIG, mConfigName);
         NodeUtils.addAttribute(
-                document, setNode, null, ATTR_IGNORE_PATTERN, getAaptStyleIgnoredPattern());
+                document,
+                setNode,
+                null,
+                ATTR_IGNORE_PATTERN,
+                mFileFilter.getAaptStyleIgnoredPattern());
 
         // add the source files.
         // we need to loop on the source files themselves and not the map to ensure we
         // write empty resourceSets
         for (File sourceFile : mSourceFiles) {
-
             // the node for the source and its path attribute
             Node sourceNode = document.createElement(NODE_SOURCE);
             setNode.appendChild(sourceNode);
@@ -605,116 +611,21 @@ abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>>
      * @return true if it is a valid file, false if it should be ignored.
      */
     protected boolean checkFileForAndroidRes(@NonNull File file) {
-        return !isIgnored(file);
-    }
-
-    /**
-     * The pattern to use for ignoring asset files. Defaults to the same value as aapt but
-     * can be customized via {@code $ANDROID_AAPT_IGNORE}.
-     * <p>
-     * Patterns syntax:
-     * <ul>
-     *   <li> Delimiter is :
-     *   <li> Entry can start with the flag ! to avoid printing a warning
-     *        about the file being ignored.
-     *   <li> Entry can have the flag {@code <dir>} to match only directories
-     *        or {@code <file>} to match only files. Default is to match both.
-     *   <li> Entry can be a simplified glob {@code <prefix>*} or {@code *<suffix>}
-     *        where prefix/suffix must have at least 1 character (so that
-     *        we don't match a '*' catch-all pattern.)
-     *   <li> The special filenames "." and ".." are always ignored.
-     *   <li> Otherwise the full string is matched.
-     *   <li> match is not case-sensitive.
-     * </ul>
-     */
-    private Iterable<String> sIgnoredPatterns;
-
-    {
-        String patterns = System.getenv("ANDROID_AAPT_IGNORE"); //$NON-NLS-1$
-        if (patterns == null || patterns.isEmpty()) {
-            // Matches aapt: frameworks/base/tools/aapt/AaptAssets.cpp:gDefaultIgnoreAssets
-            patterns = "!.svn:!.git:!.ds_store:!*.scc:.*:<dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~";
-        }
-
-        setIgnoredPatterns(patterns);
+        return !mFileFilter.isIgnored(file);
     }
 
     public void setIgnoredPatterns(String aaptStylePattern) {
-        // don't keep the result of split and put it in a new list instead.
-        // This is because the custom iterable returned by Splitter does not implement equals.
-        sIgnoredPatterns = Splitter.on(':').splitToList(aaptStylePattern);
-    }
-
-    private String getAaptStyleIgnoredPattern() {
-        return Joiner.on(':').join(sIgnoredPatterns);
+        mFileFilter = new PatternBasedFileFilter(aaptStylePattern);
     }
 
     /**
      * Returns whether the given file should be ignored.
      *
      * @param file the file to check
-     * @return true if the file is hidden
+     * @return true if the file should be ignored
      */
     public boolean isIgnored(@NonNull File file) {
-        String path = file.getPath();
-
-        if (path.equals(".") || path.equals("..")) {
-            return true;
-        }
-
-        boolean ignore = false;
-        boolean isDirectory = file.isDirectory();
-
-        int nameIndex = path.lastIndexOf(File.separatorChar) + 1;
-        int nameLength = path.length() - nameIndex;
-        for (String token : sIgnoredPatterns) {
-            if (token.isEmpty()) {
-                continue;
-            }
-            int tokenIndex = 0;
-            if (token.charAt(tokenIndex) == '!') {
-                tokenIndex++; // skip !
-            }
-
-            if (token.regionMatches(tokenIndex, "<dir>", 0, 5)) {
-                if (!isDirectory) {
-                    continue;
-                }
-                tokenIndex += 5;
-            }
-            if (token.regionMatches(tokenIndex, "<file>", 0, 6)) {
-                if (isDirectory) {
-                    continue;
-                }
-                tokenIndex += 6;
-            }
-
-            int n = token.length() - tokenIndex;
-
-            if (token.charAt(tokenIndex) == '*') {
-                // Match *suffix such as *.scc or *~
-                tokenIndex++;
-                n--;
-                if (n <= nameLength) {
-                    ignore = token.regionMatches(true, tokenIndex, path,
-                            nameIndex + nameLength - n, n);
-                }
-            } else if (n > 1 && token.charAt(token.length() - 1) == '*') {
-                // Match prefix* such as .* or _*
-                ignore = token.regionMatches(true, tokenIndex, path, nameIndex, n - 1);
-            } else {
-                // Match exactly, such as thumbs.db, .git, etc.
-                ignore = (token.length() - tokenIndex) == (path.length() - nameIndex)
-                        && token.regionMatches(true, tokenIndex, path, nameIndex,
-                        path.length() - nameIndex);
-            }
-
-            if (ignore) {
-                break;
-            }
-        }
-
-        return ignore;
+        return mFileFilter.isIgnored(file);
     }
 
     protected boolean getValidateEnabled() {
@@ -730,21 +641,24 @@ abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>>
             return false;
         }
         DataSet<?, ?> dataSet = (DataSet<?, ?>) o;
-        return mValidateEnabled == dataSet.mValidateEnabled &&
-                Objects.equals(mConfigName, dataSet.mConfigName) &&
-                Objects.equals(mSourceFiles, dataSet.mSourceFiles) &&
-                Objects.equals(mItems, dataSet.mItems) &&
-                Objects.equals(mSourceFileToDataFilesMap, dataSet.mSourceFileToDataFilesMap)
-                &&
-                Objects.equals(mDataFileMap, dataSet.mDataFileMap) &&
-                Objects.equals(sIgnoredPatterns, dataSet.sIgnoredPatterns);
+        return mValidateEnabled == dataSet.mValidateEnabled
+                && Objects.equals(mConfigName, dataSet.mConfigName)
+                && Objects.equals(mSourceFiles, dataSet.mSourceFiles)
+                && Objects.equals(mItems, dataSet.mItems)
+                && Objects.equals(mSourceFileToDataFilesMap, dataSet.mSourceFileToDataFilesMap)
+                && Objects.equals(mDataFileMap, dataSet.mDataFileMap)
+                && Objects.equals(mFileFilter, dataSet.mFileFilter);
     }
 
     @Override
     public int hashCode() {
-        return Objects
-                .hash(mConfigName, mValidateEnabled, mSourceFiles, mItems,
-                        mSourceFileToDataFilesMap,
-                        mDataFileMap, sIgnoredPatterns);
+        return HashCodes.mix(
+                mConfigName.hashCode(),
+                Boolean.hashCode(mValidateEnabled),
+                mSourceFiles.hashCode(),
+                mItems.hashCode(),
+                mSourceFileToDataFilesMap.hashCode(),
+                mDataFileMap.hashCode(),
+                mFileFilter.hashCode());
     }
 }

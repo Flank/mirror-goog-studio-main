@@ -98,6 +98,7 @@ java_library(
     deps = [
         "//tools/idea/.idea/libraries:Guava",
         "//tools/idea/.idea/libraries:Trove4j",
+        "//tools/idea/.idea/libraries:jetbrains-annotations-java5",
         "//tools/idea/build/lib:jps",
     ],
 )

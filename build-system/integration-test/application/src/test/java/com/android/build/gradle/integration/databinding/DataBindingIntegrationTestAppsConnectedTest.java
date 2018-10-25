@@ -51,7 +51,7 @@ public class DataBindingIntegrationTestAppsConnectedTest {
                                 BooleanOption.USE_ANDROID_X.getPropertyName() + "=" + useAndroidX)
                         .withDependencyChecker(!"KotlinTestApp".equals(projectName));
         if (SdkVersionInfo.HIGHEST_KNOWN_STABLE_API < 28 && useAndroidX) {
-            builder.withCompileSdkVersion("\"android-28\"");
+            builder.withCompileSdkVersion("28");
         }
         this.project = builder.create();
     }

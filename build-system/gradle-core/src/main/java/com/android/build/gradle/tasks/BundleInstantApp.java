@@ -27,25 +27,36 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.build.gradle.internal.tasks.ModuleMetadata;
+import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.ide.common.workers.WorkerExecutorFacade;
+import com.android.tools.build.apkzlib.zip.ZFile;
+import com.android.tools.build.apkzlib.zip.ZFileOptions;
+import com.android.tools.build.apkzlib.zip.compress.DeflateExecutionCompressor;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
-import org.apache.commons.compress.utils.IOUtils;
+import java.util.zip.Deflater;
+import javax.inject.Inject;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.workers.WorkerExecutor;
 
 /** Task to bundle a bundle of feature APKs. */
 public class BundleInstantApp extends AndroidVariantTask {
+    private final WorkerExecutorFacade workers;
+
+    @Inject
+    public BundleInstantApp(WorkerExecutor workerExecutor) {
+        this.workers = Workers.INSTANCE.getWorker(workerExecutor);
+    }
 
     @TaskAction
     public void taskAction() throws IOException {
@@ -55,22 +66,27 @@ public class BundleInstantApp extends AndroidVariantTask {
         File bundleFile = new File(bundleDirectory, bundleName);
         FileUtils.deleteIfExists(bundleFile);
 
-        // FIXME: Use ZFile to compress in parallel.
-        try (ZipOutputStream zipOutputStream =
-                new ZipOutputStream(new FileOutputStream(bundleFile))) {
+        ZFileOptions zFileOptions = new ZFileOptions();
+        zFileOptions.setCompressor(
+                new DeflateExecutionCompressor(
+                        (compressTask) ->
+                                workers.submit(
+                                        BundleInstantAppRunnable.class,
+                                        new BundleInstantAppParams(compressTask)),
+                        Deflater.DEFAULT_COMPRESSION));
+        try (ZFile file = new ZFile(bundleFile, zFileOptions)) {
             for (File apkDirectory : apkDirectories) {
                 for (BuildOutput buildOutput :
                         ExistingBuildElements.from(InternalArtifactType.APK, apkDirectory)) {
                     File apkFile = buildOutput.getOutputFile();
                     try (FileInputStream fileInputStream = new FileInputStream(apkFile)) {
-                        byte[] inputBuffer = IOUtils.toByteArray(fileInputStream);
-                        zipOutputStream.putNextEntry(new ZipEntry(apkFile.getName()));
-                        zipOutputStream.write(inputBuffer, 0, inputBuffer.length);
-                        zipOutputStream.closeEntry();
+                        file.add(apkFile.getName(), fileInputStream);
                     }
                 }
             }
         }
+
+        workers.await();
 
         // Write the json output.
         InstantAppOutputScope instantAppOutputScope =
@@ -163,5 +179,27 @@ public class BundleInstantApp extends AndroidVariantTask {
 
         private final VariantScope scope;
         private final File bundleDirectory;
+    }
+
+    private static class BundleInstantAppRunnable implements Runnable {
+        private final BundleInstantAppParams params;
+
+        @Inject
+        BundleInstantAppRunnable(BundleInstantAppParams params) {
+            this.params = params;
+        }
+
+        @Override
+        public void run() {
+            params.compressTask.run();
+        }
+    }
+
+    private static class BundleInstantAppParams implements Serializable {
+        private final Runnable compressTask;
+
+        BundleInstantAppParams(Runnable compressTask) {
+            this.compressTask = compressTask;
+        }
     }
 }

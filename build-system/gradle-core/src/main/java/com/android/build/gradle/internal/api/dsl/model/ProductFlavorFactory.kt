@@ -16,13 +16,14 @@
 
 package com.android.build.gradle.internal.api.dsl.model
 
+import com.android.build.api.dsl.model.ProductFlavor
 import com.android.build.gradle.internal.api.dsl.DslScope
 import org.gradle.api.NamedDomainObjectFactory
 
 class ProductFlavorFactory(private val dslScope: DslScope)
-        : NamedDomainObjectFactory<ProductFlavorImpl> {
+        : NamedDomainObjectFactory<ProductFlavor> {
 
-    override fun create(name: String): ProductFlavorImpl {
+    override fun create(name: String): ProductFlavor {
 
         val baseFlavor= BaseFlavorImpl(dslScope)
 

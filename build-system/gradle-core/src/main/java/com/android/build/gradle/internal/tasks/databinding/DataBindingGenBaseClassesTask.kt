@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
-import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional

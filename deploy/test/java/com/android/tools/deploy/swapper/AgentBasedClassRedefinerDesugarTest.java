@@ -32,10 +32,7 @@ public class AgentBasedClassRedefinerDesugarTest extends AgentBasedClassRedefine
                 android.waitForInput("LambdaTarget NOT SWAPPED 0:0", RETURN_VALUE_TIMEOUT));
 
         Deploy.SwapRequest request =
-                createRequest(
-                        "com.android.tools.deploy.swapper.testapp.LambdaTarget",
-                        "com/android/tools/deploy/swapper/testapp/LambdaTarget.dex",
-                        false);
+                createRequest("app.LambdaTarget", "app/LambdaTarget.dex", false);
         redefiner.redefine(request, true);
 
         android.triggerMethod(ACTIVITY_CLASS, "getLambdaTargetStatus");
@@ -53,10 +50,7 @@ public class AgentBasedClassRedefinerDesugarTest extends AgentBasedClassRedefine
                 android.waitForInput("LambdaFailedTarget NOT SWAPPED 0:0", RETURN_VALUE_TIMEOUT));
 
         Deploy.SwapRequest request =
-                createRequest(
-                        "com.android.tools.deploy.swapper.testapp.LambdaFailedTarget",
-                        "com/android/tools/deploy/swapper/testapp/LambdaFailedTarget.dex",
-                        false);
+                createRequest("app.LambdaFailedTarget", "app/LambdaFailedTarget.dex", false);
         redefiner.redefine(request, false);
 
         android.triggerMethod(ACTIVITY_CLASS, "getLambdaFailedTargetStatus");

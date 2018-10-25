@@ -18,6 +18,7 @@
 #define DEPLOY_UTILS_H
 
 #include <stddef.h>
+#include <sstream>
 #include <string>
 
 #include "tools/base/deploy/common/event.h"
@@ -32,8 +33,19 @@ inline const std::string operator"" _s(const char* c, std::size_t size) {
   return std::string(c, size);
 }
 
-deploy::Event ConvertProtoEventToEvent(const proto::Event& proto_event) noexcept;
-void ConvertEventToProtoEvent(deploy::Event& event, proto::Event* proto_event) noexcept;
+deploy::Event ConvertProtoEventToEvent(
+    const proto::Event& proto_event) noexcept;
+void ConvertEventToProtoEvent(deploy::Event& event,
+                              proto::Event* proto_event) noexcept;
 
-}  // namespace deployer
+// std::to_string is not available in the current NDK.
+// TODO: Delete this when we update to a newer version.
+template <typename T>
+std::string to_string(const T& n) {
+  std::ostringstream stm;
+  stm << n;
+  return stm.str();
+}
+
+}  // namespace deploy
 #endif

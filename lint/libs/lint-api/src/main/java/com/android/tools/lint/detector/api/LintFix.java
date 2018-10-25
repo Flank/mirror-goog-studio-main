@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import org.intellij.lang.annotations.Language;
+import org.intellij.lang.annotations.RegExp;
 import org.jetbrains.annotations.Nls;
 
 /**
@@ -459,6 +460,7 @@ public class LintFix {
         @Nls @Nullable protected String familyName;
         private String newText;
         private String oldText;
+        private String selectPattern;
         private boolean shortenNames;
         private boolean reformat;
         private boolean robot;
@@ -557,6 +559,15 @@ public class LintFix {
         /** Inserts after the end of the range */
         public ReplaceStringBuilder end() {
             oldText = ReplaceString.INSERT_END;
+            return this;
+        }
+
+        /**
+         * Sets a pattern to select; if it contains parentheses, group(1) will be selected. To just
+         * set the caret, use an empty group.
+         */
+        public ReplaceStringBuilder select(@RegExp @Nullable String selectPattern) {
+            this.selectPattern = selectPattern;
             return this;
         }
 
@@ -673,6 +684,7 @@ public class LintFix {
                     familyName,
                     oldText,
                     oldPattern,
+                    selectPattern,
                     newText != null ? newText : "",
                     shortenNames,
                     reformat,
@@ -1212,7 +1224,7 @@ public class LintFix {
                 int mark,
                 boolean robot,
                 boolean independent) {
-            super(displayName);
+            super(displayName, familyName);
             this.namespace = namespace;
             this.attribute = attribute;
             this.value = value;
@@ -1269,6 +1281,10 @@ public class LintFix {
          * replacement range.
          */
         @Nullable public final String oldPattern;
+
+        /** Pattern to select; if it contains parentheses, group(1) will be selected */
+        @Nullable public final String selectPattern;
+
         /** The replacement string. */
         @NonNull public final String replacement;
 
@@ -1309,6 +1325,7 @@ public class LintFix {
                 @Nullable String familyName,
                 @Nullable String oldString,
                 @Nullable String oldPattern,
+                @Nullable String selectPattern,
                 @NonNull String replacement,
                 boolean shortenNames,
                 boolean reformat,
@@ -1318,6 +1335,7 @@ public class LintFix {
             super(displayName, familyName);
             this.oldString = oldString;
             this.oldPattern = oldPattern;
+            this.selectPattern = selectPattern;
             this.replacement = replacement;
             this.shortenNames = shortenNames;
             this.reformat = reformat;

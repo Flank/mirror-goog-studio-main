@@ -35,7 +35,7 @@ swap_test(
 )
 
 dex_library(
-    name = "test-app",
+    name = "original_dex",
     dexer = "D8",
     # Test dex compiles with a non-release build.
     # Also make it desugar as much as possible with API 23.
@@ -43,49 +43,46 @@ dex_library(
         "--debug",
         "--min-api 23",
     ],
-    jars = [":test-app_java_deploy.jar"],
+    jars = [":original_java_deploy.jar"],
 )
 
 java_binary(
-    name = "test-app_java",
-    srcs = glob(["java/com/android/tools/deploy/swapper/testapp/**/*.java"]),
+    name = "original_java",
+    srcs = glob(["data/java/*.java"]),
     create_executable = 0,
     deps = [
-        ":test-app-kotlin-lib_java",
+        ":original_kotlin",
         "//tools/base/fakeandroid:android-mock",
     ],
 )
 
+kotlin_library(
+    name = "original_kotlin",
+    srcs = ["data/kotlin"],
+)
+
 dex_library(
-    name = "test-app-swap",
+    name = "swapped_dex",
     dexer = "D8",
     flags = [
         "--file-per-class",
         "--debug",
         "--min-api 23",
     ],
-    jars = [":test-app-swap_java_deploy.jar"],
+    jars = [":swapped_java_deploy.jar"],
 )
 
 java_binary(
-    name = "test-app-swap_java",
-    srcs =
-        glob(["test_swap/com/android/tools/deploy/swapper/testapp/**/*.java"]) + [
-            "java/com/android/tools/deploy/swapper/testapp/TestActivity.java",
-        ],
+    name = "swapped_java",
+    srcs = glob(["data/java_swap/*.java"]),
     create_executable = 0,
     deps = [
-        ":test-app-kotlin-lib-swap_java",
+        ":swapped_kotlin",
         "//tools/base/fakeandroid:android-mock",
     ],
 )
 
 kotlin_library(
-    name = "test-app-kotlin-lib_java",
-    srcs = ["kotlin"],
-)
-
-kotlin_library(
-    name = "test-app-kotlin-lib-swap_java",
-    srcs = ["kotlin_swap"],
+    name = "swapped_kotlin",
+    srcs = ["data/kotlin_swap"],
 )

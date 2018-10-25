@@ -27,8 +27,8 @@ import java.io.Serializable
 data class SourceSetImpl(private val myName: String,
                          private val mySourceDirectories: Collection<File>,
                          private val myResourcesDirectories: Collection<File>,
-                         private val myClassesOutputDirectory: File,
-                         private val myResourcesOutputDirectory: File,
+                         private val myClassesOutputDirectories: Collection<File>,
+                         private val myResourcesOutputDirectory: File?,
                          private val myCompileClasspathDependencies: Collection<JavaLibrary>) : SourceSet, Serializable {
 
   override fun getName(): String {
@@ -43,11 +43,11 @@ data class SourceSetImpl(private val myName: String,
     return myResourcesDirectories
   }
 
-  override fun getClassesOutputDirectory(): File {
-    return myClassesOutputDirectory
+  override fun getClassesOutputDirectories(): Collection<File> {
+    return myClassesOutputDirectories
   }
 
-  override fun getResourcesOutputDirectory(): File {
+  override fun getResourcesOutputDirectory(): File? {
     return myResourcesOutputDirectory
   }
 

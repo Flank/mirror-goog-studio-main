@@ -100,6 +100,13 @@ public final class JavaLibraryImpl implements Library, Serializable {
 
     @NonNull
     @Override
+    public String getApiJarFile() {
+        throw new UnsupportedOperationException(
+                "getApiJarFile() cannot be called when getType() returns LIBRARY_JAVA");
+    }
+
+    @NonNull
+    @Override
     public String getResFolder() {
         throw new UnsupportedOperationException(
                 "getResFolder() cannot be called when getType() returns LIBRARY_JAVA");

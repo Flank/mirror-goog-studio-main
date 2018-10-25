@@ -443,6 +443,35 @@ public class InvalidPackageDetectorTest extends AbstractCheckTest {
                 lintProject(manifest().minSdk(14), mLayout, mThemes, mThemes2, mUnsupported));
     }
 
+    public void testNullSuperClass() {
+        // Regression test for
+        // 117686566: InvalidPackage crashes on module-info.class from byte-buddy
+        lint().files(
+                        jar(
+                                "libs/something.jar",
+                                base64gzip(
+                                        "bin/classes/module-info.class",
+                                        ""
+                                                + "H4sIAAAAAAAAAJWU2VbUQBCGqxFZZCeNguw7KkxQAVFRUVERRXF7gE7SMzQk"
+                                                + "nTlJZ45zx3N54QP4SF54rNQMcmbiMJCLL0nVX13L6e5ff378BIB1+MagKwi9"
+                                                + "xJcrSufDdmAMerQ0OadspJN4XtmCKxWT/c/E4SqD0RqTLQpS43+ifE9GHNoZ"
+                                                + "DNQJ4oBDJwOr1kwRHLoYjNQ6PBm7kSoaFWoOPQzmGrptoXVoREXZx2C+sVLq"
+                                                + "JJBRVTrAYLKxNK9kWpjFYKqxKJDmMETVEIOZc1Shp3A5HMsNBhONdaZclBxG"
+                                                + "GAzVacpaBMrlMMpg/L8u2w+Fp3SBw3g2Q1USuyKfD9OeJrMzqtPYSvtKYzHT"
+                                                + "DBabSOPEcX0RxxxmGYzVilVQ9GWAO6M68nkGC+cpbGFMpJzEYOrFptrku/KV"
+                                                + "iHA/3mIwfa7WURobv8NguamsZjutZEZVH4EON/SwXrvp4lUpHoVYFXDxuww2"
+                                                + "LhNhFyMVKKNKmO3+ZWMjmZeR1C7GrjNYvVisG/q+dCujeMAgd9EoHRuhDYeH"
+                                                + "F55JIAMnPSGPM7s/EMY9TF1PGAzWuoph6HN4lglJDG4Mg/vieeaIV13pKEvK"
+                                                + "lwUcx8vMqToVlVSsTIipX2VSHImocqW9yURXXTiGIMBJcHjLoO9IlERO4Vyi"
+                                                + "JO3egnep0TvOJTpOisUwMtKzYL9yP57dvjm6Vy34yKCTlnBELC34xKBtn65t"
+                                                + "Br2VjwPhHqM4PgFogdOnBb4gf0Mr/bXCe9jG9wfiAfHzSeqZhTZSdBCvEbuJ"
+                                                + "vcR+4iCRE68Th4k3iWPECeIUcYY4R1wgLhFvE5eJOeIq8R5xjbhB3CQ+Im4R"
+                                                + "nxK3iS+IO8TXxF3iHpw9X8ma9teBfXVjP/3YB8f6h7HuMax3Cuucw/qWsK5l"
+                                                + "rGcV61jD/JuYdwvzbWOeHVx/F/b+Agf9lfE3BwAA")))
+                .run()
+                .expectClean();
+    }
+
     @Override
     protected TestLintClient createClient() {
         if ("testSkipProvidedLibraries".equals(getName())) {

@@ -21,6 +21,7 @@ import com.android.builder.testing.api.DeviceConfigProvider
 import com.android.bundle.Devices
 import com.android.tools.build.bundletool.commands.ExtractApksCommand
 import com.google.common.base.Joiner
+import com.google.common.collect.ImmutableSet
 import com.google.protobuf.util.JsonFormat
 import java.nio.file.Files
 import java.nio.file.Path
@@ -48,7 +49,11 @@ internal fun getDeviceJson(device: DeviceConfigProvider): Path {
     }
 }
 
-internal fun getApkFiles(apkBundle: Path, device: DeviceConfigProvider): List<Path> {
+internal fun getApkFiles(
+    apkBundle: Path,
+    device: DeviceConfigProvider,
+    moduleName: String? = null
+): List<Path> {
     // get the device info to create the APKs
     val jsonFile = getDeviceJson(device)
     val tempFolder: Path = Files.createTempDirectory("apkSelect")
@@ -65,6 +70,7 @@ internal fun getApkFiles(apkBundle: Path, device: DeviceConfigProvider): List<Pa
         .setDeviceSpec(builder.build())
         .setOutputDirectory(tempFolder)
 
+    moduleName?.let { command.setModules(ImmutableSet.of(it)) }
 
     // create the APKs
     return command.build().execute()

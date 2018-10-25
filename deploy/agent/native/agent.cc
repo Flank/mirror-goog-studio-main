@@ -15,17 +15,17 @@
  *
  */
 
-#include "jni.h"
-#include "jvmti.h"
-
 #include <memory>
 
-#include "capabilities.h"
-#include "jni/jni_util.h"
-#include "socket.h"
-#include "swapper.h"
+#include <jni.h>
+#include <jvmti.h>
+
+#include "tools/base/deploy/agent/native/capabilities.h"
+#include "tools/base/deploy/agent/native/jni/jni_util.h"
+#include "tools/base/deploy/agent/native/swapper.h"
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/log.h"
+#include "tools/base/deploy/common/socket.h"
 
 namespace deploy {
 
@@ -42,12 +42,12 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* input,
 
   Log::V("Prior agent invocations in this VM: %d", run_counter++);
 
-  if (!GetJvmti(vm, jvmti)) {
+  if (vm->GetEnv((void**)&jvmti, JVMTI_VERSION_1_2) != JNI_OK) {
     ErrEvent("Error retrieving JVMTI function table.");
     return JNI_OK;
   }
 
-  if (!GetJni(vm, jni)) {
+  if (vm->GetEnv((void**)&jni, JNI_VERSION_1_2) != JNI_OK) {
     ErrEvent("Error retrieving JNI function table.");
     return JNI_OK;
   }
@@ -64,7 +64,7 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* input,
     return JNI_OK;
   }
 
-  if (!socket->Connect(input, 1000)) {
+  if (!socket->Connect(input, Socket::kConnectionTimeoutMs)) {
     ErrEvent("Could not connect to socket");
     return JNI_OK;
   }

@@ -8,7 +8,7 @@
     <category value="Application" />
 
     <thumbs>
-        <thumb>dynamic-feature-instant.png</thumb>
+        <thumb>instant-dynamic-feature-module.png</thumb>
     </thumbs>
 
     <globals file="../NewDynamicFeatureModule/globals.xml.ftl" />

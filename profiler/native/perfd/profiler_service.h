@@ -77,7 +77,7 @@ class ProfilerServiceImpl final
 
   grpc::Status GetEvents(grpc::ServerContext* context,
                          const profiler::proto::GetEventsRequest* request,
-                         profiler::proto::GetEventsResponse* response) override;
+                         grpc::ServerWriter<proto::Event>* response) override;
 
   grpc::Status GetEventGroups(
       grpc::ServerContext* context,

@@ -872,4 +872,147 @@ class ThreadDetectorTest : AbstractCheckTest() {
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
+
+    fun testAnonymousInnerClasses() {
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.support.annotation.UiThread;
+                import android.support.annotation.WorkerThread;
+
+                @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "Convert2Lambda", "Convert2MethodRef", "Anonymous2MethodRef"})
+                public class ThreadNesting {
+                    @WorkerThread
+                    public void workerWithAnonymousClass() {
+                        DispatchingFramework dispatcher = new DispatchingFramework();
+
+                        return dispatcher.dispatch(new Runnable() {
+                            @Override
+                            public void run() {
+                                ui();
+                            }
+                        });
+                    }
+
+                    @WorkerThread
+                    public void workerWithLambdas() {
+                        DispatchingFramework dispatcher = new DispatchingFramework();
+                        return dispatcher.dispatch(() -> ui());
+                    }
+
+                    @WorkerThread
+                    public void workerWithMethodReference() {
+                        // Anonymous inner class
+                        DispatchingFramework dispatcher = new DispatchingFramework();
+                        return dispatcher.dispatch(this::ui);
+                    }
+
+                    @UiThread
+                    public void ui() {
+                    }
+
+                    @SuppressWarnings("WeakerAccess")
+                    public class DispatchingFramework {
+                        public boolean dispatch(Runnable run) {
+                            return true;
+                        }
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
+
+    fun testAnonymousInnerClasses2() {
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.annotation.SuppressLint;
+                import android.app.Activity;
+                import android.os.AsyncTask;
+                import android.os.Bundle;
+                import android.util.Pair;
+                import android.view.View;
+                import android.widget.Button;
+
+                import java.util.List;
+
+                import android.support.annotation.Nullable;
+
+                @SuppressWarnings("ClassNameDiffersFromFileName")
+                public class ThreadNesting2 extends Activity {
+                    @Override
+                    protected void onCreate(@Nullable Bundle savedInstanceState) {
+                        super.onCreate(savedInstanceState);
+                        Button shuffle = new Button(this);
+
+                        shuffle.setOnClickListener(new View.OnClickListener() {
+                            @SuppressLint("StaticFieldLeak")
+                            @Override
+                            public void onClick(View view) {
+                                //noinspection unchecked
+                                new AsyncTask<List<String>, Void, Pair<List<String>, Object>>() {
+
+                                    @Override
+                                    protected Pair<List<String>, Object> doInBackground(
+                                            List<String>... lists) {
+                                        return new Pair(null, null);
+                                    }
+                                }.execute();
+                            }
+                        });
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
+
+    fun testLambdas() {
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.app.Activity;
+                import android.os.AsyncTask;
+                import android.os.Bundle;
+                import android.util.Pair;
+                import android.widget.Button;
+
+                import java.util.List;
+
+                @SuppressWarnings("ClassNameDiffersFromFileName")
+                public class ThreadNesting2 extends Activity {
+                    @Override
+                    protected void onCreate(Bundle savedInstanceState) {
+                        super.onCreate(savedInstanceState);
+                        Button shuffle = new Button(this);
+
+                        shuffle.setOnClickListener(view -> {
+                            //noinspection unchecked
+                            new AsyncTask<List<String>, Void, Pair<List<String>, Object>>() {
+                                @Override
+                                protected Pair<List<String>, Object> doInBackground(
+                                        List<String>... lists) {
+                                    return null;
+                                }
+                            }.execute();
+                        });
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
 }

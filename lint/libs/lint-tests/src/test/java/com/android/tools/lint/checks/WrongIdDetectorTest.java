@@ -31,12 +31,12 @@ public class WrongIdDetectorTest extends AbstractCheckTest {
                         + "res/layout/layout1.xml:14: Error: The id \"button5\" is not defined anywhere. Did you mean one of {button1, button2, button3, button4} ? [UnknownId]\n"
                         + "        android:layout_alignBottom=\"@+id/button5\"\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/layout/layout1.xml:17: Error: The id \"my_id3\" is not defined anywhere. Did you mean my_id2 ? [UnknownId]\n"
+                        + "res/layout/layout1.xml:17: Error: The id \"my_id3\" is not defined anywhere. Did you mean one of {my_id0, my_id1, my_id2} ? [UnknownId]\n"
                         + "        android:layout_alignRight=\"@+id/my_id3\"\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/layout/layout1.xml:18: Error: The id \"my_id1\" is defined but not assigned to any views. Did you mean my_id2 ? [UnknownId]\n"
-                        + "        android:layout_alignTop=\"@+id/my_id1\"\n"
-                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "res/layout/layout1.xml:18: Error: @id/my_id1 is not a sibling in the same RelativeLayout [NotSibling]\n"
+                        + "        android:layout_alignTop=\"@id/my_id1\"\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "res/layout/layout1.xml:15: Warning: The id \"my_id2\" is not referring to any views in this layout [UnknownIdInLayout]\n"
                         + "        android:layout_alignLeft=\"@+id/my_id2\"\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
@@ -47,6 +47,9 @@ public class WrongIdDetectorTest extends AbstractCheckTest {
     public void testSingleFile() throws Exception {
         assertEquals(
                 ""
+                        + "res/layout/layout1.xml:18: Error: @id/my_id1 is not a sibling in the same RelativeLayout [NotSibling]\n"
+                        + "        android:layout_alignTop=\"@id/my_id1\"\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "res/layout/layout1.xml:14: Warning: The id \"button5\" is not referring to any views in this layout [UnknownIdInLayout]\n"
                         + "        android:layout_alignBottom=\"@+id/button5\"\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
@@ -56,10 +59,7 @@ public class WrongIdDetectorTest extends AbstractCheckTest {
                         + "res/layout/layout1.xml:17: Warning: The id \"my_id3\" is not referring to any views in this layout [UnknownIdInLayout]\n"
                         + "        android:layout_alignRight=\"@+id/my_id3\"\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/layout/layout1.xml:18: Warning: The id \"my_id1\" is not referring to any views in this layout [UnknownIdInLayout]\n"
-                        + "        android:layout_alignTop=\"@+id/my_id1\"\n"
-                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 4 warnings\n",
+                        + "1 errors, 3 warnings\n",
                 lintFiles(mLayout1));
     }
 
@@ -74,7 +74,11 @@ public class WrongIdDetectorTest extends AbstractCheckTest {
     public void testNewIdPrefix() throws Exception {
         //noinspection all // Sample code
         assertEquals(
-                "No warnings.",
+                ""
+                        + "res/layout/detailed_item.xml:10: Error: @id/video_badges is not a sibling in the same RelativeLayout [NotSibling]\n"
+                        + "        android:layout_below=\"@id/video_badges\" />\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings\n",
                 lintFiles(
                         xml(
                                 "res/layout/default_item_badges.xml",
@@ -350,12 +354,12 @@ public class WrongIdDetectorTest extends AbstractCheckTest {
                         + "res/layout/layout1.xml:14: Error: The id \"button5\" is not defined anywhere. Did you mean one of {button1, button2, button3, button4} ? [UnknownId]\n"
                         + "        android:layout_alignBottom=\"@+id/button5\"\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/layout/layout1.xml:17: Error: The id \"my_id3\" is not defined anywhere. Did you mean one of {my_id1, my_id2} ? [UnknownId]\n"
+                        + "res/layout/layout1.xml:17: Error: The id \"my_id3\" is not defined anywhere. Did you mean one of {my_id0, my_id1, my_id2} ? [UnknownId]\n"
                         + "        android:layout_alignRight=\"@+id/my_id3\"\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/layout/layout1.xml:18: Error: The id \"my_id1\" is defined but not assigned to any views. Did you mean one of {my_id2, my_id3} ? [UnknownId]\n"
-                        + "        android:layout_alignTop=\"@+id/my_id1\"\n"
-                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "res/layout/layout1.xml:18: Error: The id \"my_id1\" is defined but not assigned to any views. Did you mean one of {my_id0, my_id2, my_id3} ? [UnknownId]\n"
+                        + "        android:layout_alignTop=\"@id/my_id1\"\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "res/layout/layout1.xml:15: Warning: The id \"my_id2\" is not referring to any views in this layout [UnknownIdInLayout]\n"
                         + "        android:layout_alignLeft=\"@+id/my_id2\"\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
@@ -490,11 +494,29 @@ public class WrongIdDetectorTest extends AbstractCheckTest {
                                         + "</android.support.constraint.ConstraintLayout>")));
     }
 
-    public void testConstraintReferencedIds() {
+    public void testConstraintReferencedIds() throws Exception {
         // Validate id lists in <Barrier> elements
+        //   text1 is a sibling defined in the current layout
+        //   text2 is not defined anywhere
+        //   text3 is not a sibling but defined in the current layout
+        //   my_id1 is a sibling but defined in a values file
+        //   my_id0 is not a sibling and defined in a values file
 
         //noinspection all // Sample code
-        lint().files(
+        assertEquals(
+                ""
+                        + "res/layout/layout3.xml:13: Error: The id \"text2\" is not defined anywhere. Did you mean one of {text1, text3} ? [UnknownId]\n"
+                        + "        app:constraint_referenced_ids=\"text1,text2,text3,my_id0,my_id1\" />\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "res/layout/layout3.xml:13: Error: my_id0 is not a sibling in the same ConstraintLayout [NotSibling]\n"
+                        + "        app:constraint_referenced_ids=\"text1,text2,text3,my_id0,my_id1\" />\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "res/layout/layout3.xml:13: Error: text3 is not a sibling in the same ConstraintLayout [NotSibling]\n"
+                        + "        app:constraint_referenced_ids=\"text1,text2,text3,my_id0,my_id1\" />\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "3 errors, 0 warnings\n",
+                lintProject(
+                        mIds,
                         xml(
                                 "res/layout/layout3.xml",
                                 ""
@@ -511,7 +533,7 @@ public class WrongIdDetectorTest extends AbstractCheckTest {
                                         + "        android:layout_width=\"wrap_content\"\n"
                                         + "        android:layout_height=\"wrap_content\"\n"
                                         + "        app:barrierDirection=\"end\"\n"
-                                        + "        app:constraint_referenced_ids=\"text1,text2\" />\n"
+                                        + "        app:constraint_referenced_ids=\"text1,text2,text3,my_id0,my_id1\" />\n"
                                         + "\n"
                                         + "    <TextView\n"
                                         + "        android:layout_width=\"wrap_content\"\n"
@@ -523,14 +545,281 @@ public class WrongIdDetectorTest extends AbstractCheckTest {
                                         + "        app:layout_constraintRight_toRightOf=\"parent\"\n"
                                         + "        app:layout_constraintTop_toTopOf=\"parent\" />\n"
                                         + "\n"
-                                        + "</android.support.constraint.ConstraintLayout>\n"))
-                .incremental()
+                                        + "    <TextView\n"
+                                        + "        android:layout_width=\"wrap_content\"\n"
+                                        + "        android:layout_height=\"wrap_content\"\n"
+                                        + "        android:text=\"Happy New Year!\"\n"
+                                        + "        android:id=\"@id/my_id1\"\n"
+                                        + "        app:layout_constraintBottom_toBottomOf=\"parent\"\n"
+                                        + "        app:layout_constraintLeft_toLeftOf=\"parent\"\n"
+                                        + "        app:layout_constraintRight_toRightOf=\"parent\"\n"
+                                        + "        app:layout_constraintTop_toTopOf=\"parent\" />\n"
+                                        + "\n"
+                                        + "    <LinearLayout\n"
+                                        + "        android:layout_width=\"wrap_content\"\n"
+                                        + "        android:layout_height=\"wrap_content\"\n"
+                                        + "        app:layout_constraintBottom_toBottomOf=\"parent\"\n"
+                                        + "        app:layout_constraintLeft_toLeftOf=\"parent\"\n"
+                                        + "        app:layout_constraintRight_toRightOf=\"parent\"\n"
+                                        + "        app:layout_constraintTop_toTopOf=\"parent\">\n"
+                                        + "\n"
+                                        + "        <TextView\n"
+                                        + "            android:layout_width=\"wrap_content\"\n"
+                                        + "            android:layout_height=\"wrap_content\"\n"
+                                        + "            android:text=\"Happy New Year!\"\n"
+                                        + "            android:id=\"@+id/text3\" />\n"
+                                        + "\n"
+                                        + "        <TextView\n"
+                                        + "            android:layout_width=\"wrap_content\"\n"
+                                        + "            android:layout_height=\"wrap_content\"\n"
+                                        + "            android:text=\"Happy New Year!\"\n"
+                                        + "            android:id=\"@id/my_id0\" />\n"
+                                        + "    </LinearLayout>"
+                                        + "\n"
+                                        + "</android.support.constraint.ConstraintLayout>\n")));
+    }
+
+    public void testConstraintReferencedIdsMissingValuesFile() throws Exception {
+        // Validate id lists in <Barrier> elements
+
+        //noinspection all // Sample code
+        assertEquals(
+                ""
+                        + "res/layout/layout3.xml:13: Error: The id \"my_id0\" is not defined anywhere. [UnknownId]\n"
+                        + "        app:constraint_referenced_ids=\"text1,text2,text3,my_id0,my_id1\" />\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "res/layout/layout3.xml:13: Error: The id \"my_id1\" is not defined anywhere. [UnknownId]\n"
+                        + "        app:constraint_referenced_ids=\"text1,text2,text3,my_id0,my_id1\" />\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "res/layout/layout3.xml:13: Error: The id \"text2\" is not defined anywhere. Did you mean one of {text1, text3} ? [UnknownId]\n"
+                        + "        app:constraint_referenced_ids=\"text1,text2,text3,my_id0,my_id1\" />\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "res/layout/layout3.xml:13: Error: text3 is not a sibling in the same ConstraintLayout [NotSibling]\n"
+                        + "        app:constraint_referenced_ids=\"text1,text2,text3,my_id0,my_id1\" />\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "4 errors, 0 warnings\n",
+                lintProject(
+                        xml(
+                                "res/layout/layout3.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<android.support.constraint.ConstraintLayout "
+                                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"
+                                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                        + "    android:layout_width=\"match_parent\"\n"
+                                        + "    android:layout_height=\"match_parent\">\n"
+                                        + "\n"
+                                        + "    <android.support.constraint.Barrier\n"
+                                        + "        android:id=\"@+id/barrier\"\n"
+                                        + "        android:layout_width=\"wrap_content\"\n"
+                                        + "        android:layout_height=\"wrap_content\"\n"
+                                        + "        app:barrierDirection=\"end\"\n"
+                                        + "        app:constraint_referenced_ids=\"text1,text2,text3,my_id0,my_id1\" />\n"
+                                        + "\n"
+                                        + "    <TextView\n"
+                                        + "        android:layout_width=\"wrap_content\"\n"
+                                        + "        android:layout_height=\"wrap_content\"\n"
+                                        + "        android:text=\"Hello World!\"\n"
+                                        + "        android:id=\"@+id/text1\"\n"
+                                        + "        app:layout_constraintBottom_toBottomOf=\"parent\"\n"
+                                        + "        app:layout_constraintLeft_toLeftOf=\"parent\"\n"
+                                        + "        app:layout_constraintRight_toRightOf=\"parent\"\n"
+                                        + "        app:layout_constraintTop_toTopOf=\"parent\" />\n"
+                                        + "\n"
+                                        + "    <TextView\n"
+                                        + "        android:layout_width=\"wrap_content\"\n"
+                                        + "        android:layout_height=\"wrap_content\"\n"
+                                        + "        android:text=\"Happy New Year!\"\n"
+                                        + "        android:id=\"@id/my_id1\"\n"
+                                        + "        app:layout_constraintBottom_toBottomOf=\"parent\"\n"
+                                        + "        app:layout_constraintLeft_toLeftOf=\"parent\"\n"
+                                        + "        app:layout_constraintRight_toRightOf=\"parent\"\n"
+                                        + "        app:layout_constraintTop_toTopOf=\"parent\" />\n"
+                                        + "\n"
+                                        + "    <LinearLayout\n"
+                                        + "        android:layout_width=\"wrap_content\"\n"
+                                        + "        android:layout_height=\"wrap_content\"\n"
+                                        + "        app:layout_constraintBottom_toBottomOf=\"parent\"\n"
+                                        + "        app:layout_constraintLeft_toLeftOf=\"parent\"\n"
+                                        + "        app:layout_constraintRight_toRightOf=\"parent\"\n"
+                                        + "        app:layout_constraintTop_toTopOf=\"parent\">\n"
+                                        + "\n"
+                                        + "        <TextView\n"
+                                        + "            android:layout_width=\"wrap_content\"\n"
+                                        + "            android:layout_height=\"wrap_content\"\n"
+                                        + "            android:text=\"Happy New Year!\"\n"
+                                        + "            android:id=\"@+id/text3\" />\n"
+                                        + "\n"
+                                        + "        <TextView\n"
+                                        + "            android:layout_width=\"wrap_content\"\n"
+                                        + "            android:layout_height=\"wrap_content\"\n"
+                                        + "            android:text=\"Happy New Year!\"\n"
+                                        + "            android:id=\"@id/my_id0\" />\n"
+                                        + "    </LinearLayout>"
+                                        + "\n"
+                                        + "</android.support.constraint.ConstraintLayout>\n")));
+    }
+
+    public void testConstraintReferencedIdsSingleFile() throws Exception {
+        // Validate id lists in <Barrier> elements
+
+        //noinspection all // Sample code
+        assertEquals(
+                ""
+                        + "res/layout/layout3.xml:13: Error: my_id0 is not a sibling in the same ConstraintLayout [NotSibling]\n"
+                        + "        app:constraint_referenced_ids=\"text1,text2,text3,my_id0,my_id1\" />\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "res/layout/layout3.xml:13: Error: text2 is not a sibling in the same ConstraintLayout [NotSibling]\n"
+                        + "        app:constraint_referenced_ids=\"text1,text2,text3,my_id0,my_id1\" />\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "res/layout/layout3.xml:13: Error: text3 is not a sibling in the same ConstraintLayout [NotSibling]\n"
+                        + "        app:constraint_referenced_ids=\"text1,text2,text3,my_id0,my_id1\" />\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "3 errors, 0 warnings\n",
+                lintFiles(
+                        xml(
+                                "res/layout/layout3.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<android.support.constraint.ConstraintLayout "
+                                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"
+                                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                        + "    android:layout_width=\"match_parent\"\n"
+                                        + "    android:layout_height=\"match_parent\">\n"
+                                        + "\n"
+                                        + "    <android.support.constraint.Barrier\n"
+                                        + "        android:id=\"@+id/barrier\"\n"
+                                        + "        android:layout_width=\"wrap_content\"\n"
+                                        + "        android:layout_height=\"wrap_content\"\n"
+                                        + "        app:barrierDirection=\"end\"\n"
+                                        + "        app:constraint_referenced_ids=\"text1,text2,text3,my_id0,my_id1\" />\n"
+                                        + "\n"
+                                        + "    <TextView\n"
+                                        + "        android:layout_width=\"wrap_content\"\n"
+                                        + "        android:layout_height=\"wrap_content\"\n"
+                                        + "        android:text=\"Hello World!\"\n"
+                                        + "        android:id=\"@+id/text1\"\n"
+                                        + "        app:layout_constraintBottom_toBottomOf=\"parent\"\n"
+                                        + "        app:layout_constraintLeft_toLeftOf=\"parent\"\n"
+                                        + "        app:layout_constraintRight_toRightOf=\"parent\"\n"
+                                        + "        app:layout_constraintTop_toTopOf=\"parent\" />\n"
+                                        + "\n"
+                                        + "    <TextView\n"
+                                        + "        android:layout_width=\"wrap_content\"\n"
+                                        + "        android:layout_height=\"wrap_content\"\n"
+                                        + "        android:text=\"Happy New Year!\"\n"
+                                        + "        android:id=\"@id/my_id1\"\n"
+                                        + "        app:layout_constraintBottom_toBottomOf=\"parent\"\n"
+                                        + "        app:layout_constraintLeft_toLeftOf=\"parent\"\n"
+                                        + "        app:layout_constraintRight_toRightOf=\"parent\"\n"
+                                        + "        app:layout_constraintTop_toTopOf=\"parent\" />\n"
+                                        + "\n"
+                                        + "    <LinearLayout\n"
+                                        + "        android:layout_width=\"wrap_content\"\n"
+                                        + "        android:layout_height=\"wrap_content\"\n"
+                                        + "        app:layout_constraintBottom_toBottomOf=\"parent\"\n"
+                                        + "        app:layout_constraintLeft_toLeftOf=\"parent\"\n"
+                                        + "        app:layout_constraintRight_toRightOf=\"parent\"\n"
+                                        + "        app:layout_constraintTop_toTopOf=\"parent\">\n"
+                                        + "\n"
+                                        + "        <TextView\n"
+                                        + "            android:layout_width=\"wrap_content\"\n"
+                                        + "            android:layout_height=\"wrap_content\"\n"
+                                        + "            android:text=\"Happy New Year!\"\n"
+                                        + "            android:id=\"@+id/text3\" />\n"
+                                        + "\n"
+                                        + "        <TextView\n"
+                                        + "            android:layout_width=\"wrap_content\"\n"
+                                        + "            android:layout_height=\"wrap_content\"\n"
+                                        + "            android:text=\"Happy New Year!\"\n"
+                                        + "            android:id=\"@id/my_id0\" />\n"
+                                        + "    </LinearLayout>"
+                                        + "\n"
+                                        + "</android.support.constraint.ConstraintLayout>\n")));
+    }
+
+    public void testIncludes() {
+        lint().files(
+                        xml(
+                                "res/layout/layout4.xml",
+                                ""
+                                        + "<RelativeLayout\n"
+                                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"
+                                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                        + "    android:layout_width=\"match_parent\"\n"
+                                        + "    android:layout_height=\"match_parent\">\n"
+                                        + "\n"
+                                        + "    <View\n"
+                                        + "        android:layout_width=\"wrap_content\"\n"
+                                        + "        android:layout_height=\"wrap_content\"\n"
+                                        + "        android:text=\"Hello World!\"\n"
+                                        + "        android:id=\"@+id/text1\"\n"
+                                        + "        android:layout_alignBottom=\"@+id/id1\"\n"
+                                        + "        android:layout_alignLeft=\"@+id/id2\"\n"
+                                        + "    />\n"
+                                        + "    <include layout=\"@layout/included1\"/>\n"
+                                        + "    <include layout=\"@layout/included2\"/>\n"
+                                        + "</RelativeLayout>\n"),
+                        xml(
+                                "res/layout/included1.xml",
+                                ""
+                                        + "<LinearLayout\n"
+                                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"
+                                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                        + "    android:id=\"@+id/id1\"\n"
+                                        + "    android:layout_width=\"match_parent\"\n"
+                                        + "    android:layout_height=\"match_parent\"/>\n"),
+                        xml(
+                                "res/layout/included2.xml",
+                                ""
+                                        + "<merge\n"
+                                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"
+                                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                        + "    android:id=\"@+id/my_merge\"\n"
+                                        + "    android:layout_width=\"match_parent\"\n"
+                                        + "    android:layout_height=\"match_parent\">\n"
+                                        + "    <View\n"
+                                        + "        android:layout_width=\"wrap_content\"\n"
+                                        + "        android:layout_height=\"wrap_content\"\n"
+                                        + "        android:text=\"Hello World!\"\n"
+                                        + "        android:id=\"@+id/id2\"\n"
+                                        + "    />\n"
+                                        + "</merge>"))
+                .incremental("res/layout/layout4.xml")
                 .run()
-                .expect(
-                        "res/layout/layout3.xml:13: Error: The id \"text2\" is not defined anywhere. Did you mean text1 ? [UnknownId]\n"
-                                + "        app:constraint_referenced_ids=\"text1,text2\" />\n"
-                                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                                + "1 errors, 0 warnings");
+                .expectClean();
+    }
+
+    public void testUknownIncludes() {
+        lint().files(
+                        xml(
+                                "res/layout/layout4.xml",
+                                ""
+                                        + "<RelativeLayout\n"
+                                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"
+                                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                        + "    android:layout_width=\"match_parent\"\n"
+                                        + "    android:layout_height=\"match_parent\">\n"
+                                        + "\n"
+                                        + "    <View\n"
+                                        + "        android:layout_width=\"wrap_content\"\n"
+                                        + "        android:layout_height=\"wrap_content\"\n"
+                                        + "        android:text=\"Hello World!\"\n"
+                                        + "        android:id=\"@+id/text1\"\n"
+                                        + "        android:layout_alignBottom=\"@+id/id1\"\n"
+                                        + "        android:layout_alignLeft=\"@+id/id2\"\n"
+                                        + "    />\n"
+                                        + "    <include layout=\"@layout/included1\"/>\n"
+                                        + "    <include layout=\"@layout/included2\"/>\n"
+                                        + "</RelativeLayout>\n"))
+                .run()
+                .expectClean();
     }
 
     @SuppressWarnings("all") // Sample code
@@ -541,6 +830,7 @@ public class WrongIdDetectorTest extends AbstractCheckTest {
                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                             + "<resources>\n"
                             + "\n"
+                            + "    <item name=\"my_id0\" type=\"id\"/>\n"
                             + "    <item name=\"my_id1\" type=\"id\"/>\n"
                             + "\n"
                             + "</resources>\n");
@@ -568,9 +858,9 @@ public class WrongIdDetectorTest extends AbstractCheckTest {
                             + "        android:layout_alignLeft=\"@+id/my_id2\"\n"
                             + "        android:layout_alignParentTop=\"true\"\n"
                             + "        android:layout_alignRight=\"@+id/my_id3\"\n"
-                            + "        android:layout_alignTop=\"@+id/my_id1\"\n"
+                            + "        android:layout_alignTop=\"@id/my_id1\"\n"
                             + "        android:text=\"Button\"\n"
-                            + "        tools:ignore=\"UnknownIdInLayout,UnknownId\" />\n"
+                            + "        tools:ignore=\"UnknownIdInLayout,UnknownId,NotSibling\" />\n"
                             + "\n"
                             + "    <Button\n"
                             + "        android:id=\"@+id/button2\"\n"
@@ -620,7 +910,7 @@ public class WrongIdDetectorTest extends AbstractCheckTest {
                             + "        android:layout_alignLeft=\"@+id/my_id2\"\n"
                             + "        android:layout_alignParentTop=\"true\"\n"
                             + "        android:layout_alignRight=\"@+id/my_id3\"\n"
-                            + "        android:layout_alignTop=\"@+id/my_id1\"\n"
+                            + "        android:layout_alignTop=\"@id/my_id1\"\n"
                             + "        android:text=\"Button\" />\n"
                             + "\n"
                             + "    <Button\n"

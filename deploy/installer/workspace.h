@@ -17,14 +17,15 @@
 #ifndef INSTALLER_WORKSPACE_H
 #define INSTALLER_WORKSPACE_H
 
+#include <iostream>
+#include <string>
+
 #include <dirent.h>
 #include <libgen.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <iostream>
-#include <string>
 
 #include "tools/base/deploy/common/message_pipe_wrapper.h"
 #include "tools/base/deploy/proto/deploy.pb.h"

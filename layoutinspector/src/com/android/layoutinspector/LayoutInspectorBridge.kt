@@ -34,7 +34,9 @@ object LayoutInspectorBridge {
         val hierarchy =
             window.loadWindowData(options, 20, TimeUnit.SECONDS) ?: return LayoutInspectorResult(
                 null,
-                "Unexpected error: empty view hierarchy"
+                "There was a timeout error capturing the layout data from the device.\n" +
+                "The device may be too slow, the captured view may be too complex, or the view may contain animations.\n\n" +
+                "Please retry with a simplified view and ensure the device is responsive."
             )
 
         var root: ViewNode?

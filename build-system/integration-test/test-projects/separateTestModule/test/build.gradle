@@ -13,7 +13,7 @@ android {
     targetProjectPath ':app'
 }
 
-task checkDependencies << {
+task('checkDependencies').doLast {
     assert project.connectedCheck instanceof Task
     def deps =  project.connectedCheck.taskDependencies.getDependencies(project.connectedCheck)
 

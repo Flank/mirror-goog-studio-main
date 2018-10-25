@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
 
   profiler::SteadyClock clock;
   profiler::Config config(FLAGS_config_file);
-  profiler::EventBuffer buffer;
+  profiler::EventBuffer buffer(&clock);
   profiler::FileCache file_cache(FLAGS_profiler_test
                                      ? getenv("TEST_TMPDIR")
                                      : profiler::CurrentProcess::dir());

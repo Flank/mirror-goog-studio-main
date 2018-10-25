@@ -15,31 +15,26 @@
  *
  */
 
-#include "jni_util.h"
+#include "tools/base/deploy/agent/native/jni/jni_util.h"
+
+#include "tools/base/deploy/common/event.h"
 
 namespace deploy {
 
-// Sets the pointer jni to the current JNI instance.
-bool GetJni(JavaVM* vm, JNIEnv*& jni) {
-  if (vm->GetEnv((void**)&jni, JNI_VERSION_1_2) != JNI_OK) {
-    return false;
-  }
-  return true;
-}
-
-// Sets the pointer jvmti to the current JVMTI instance.
-bool GetJvmti(JavaVM* vm, jvmtiEnv*& jvmti) {
-  if (vm->GetEnv((void**)&jvmti, JVMTI_VERSION_1_2) != JNI_OK) {
-    return false;
-  }
-  return true;
-}
-
-string JStringToString(JNIEnv* jni, jstring str) {
+std::string JStringToString(JNIEnv* jni, jstring str) {
   const char* nativeString = jni->GetStringUTFChars(str, 0);
-  string copy(nativeString);
+  std::string copy(nativeString);
   jni->ReleaseStringUTFChars(str, nativeString);
   return copy;
+}
+
+bool CheckJvmti(jvmtiError error, const std::string& error_message) {
+  if (error != JVMTI_ERROR_NONE) {
+    ErrEvent(error_message);
+    return false;
+  }
+
+  return true;
 }
 
 }  // namespace deploy

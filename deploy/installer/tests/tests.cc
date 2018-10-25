@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-#include <gtest/gtest.h>
 #include <iostream>
+
+#include <gtest/gtest.h>
 
 #include "tools/base/deploy/installer/apk_archive.h"
 

@@ -32,11 +32,13 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils
 import com.android.tools.lint.detector.api.UastLintUtils.containsAnnotation
+import com.android.tools.lint.detector.api.isKotlin
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiMember
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.util.PsiTypesUtil
 import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UCallExpression
@@ -45,6 +47,7 @@ import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.ULiteralExpression
 import org.jetbrains.uast.UReferenceExpression
+import org.jetbrains.uast.UTypeReferenceExpression
 import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.util.isArrayInitializer
@@ -59,6 +62,11 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         GUAVA_VISIBLE_FOR_TESTING
     )
 
+    override fun inheritAnnotation(annotation: String): Boolean {
+        // Require restriction annotations to be annotated everywhere
+        return false
+    }
+
     override fun visitAnnotationUsage(
         context: JavaContext,
         usage: UElement,
@@ -72,13 +80,23 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         allClassAnnotations: List<UAnnotation>,
         allPackageAnnotations: List<UAnnotation>
     ) {
+        if (type == AnnotationUsageType.EXTENDS && usage is UTypeReferenceExpression) {
+            // If it's a constructor reference we don't need to also check the type
+            // reference. Ideally we'd do a "parent is KtConstructorCalleeExpression"
+            // here, but that points to impl classes in its hierarchy which leads to
+            // class loading trouble.
+            val sourcePsi = usage.sourcePsi
+            if (isKotlin(sourcePsi) && sourcePsi?.parent?.toString() == "CONSTRUCTOR_CALLEE") {
+                return
+            }
+        }
 
         val member = method ?: referenced as? PsiMember
         when (qualifiedName) {
             RESTRICT_TO_ANNOTATION.oldName(), RESTRICT_TO_ANNOTATION.newName() -> {
                 checkRestrictTo(
-                        context, usage, member, annotation, allMemberAnnotations,
-                        allClassAnnotations, true
+                    context, usage, member, annotation, allMemberAnnotations,
+                    allClassAnnotations, true
                 )
             }
             GMS_HIDE_ANNOTATION -> {
@@ -286,8 +304,10 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     ) {
 
         val containingClass = when {
+            node is UTypeReferenceExpression -> PsiTypesUtil.getPsiClass(node.type)
             member != null -> member.containingClass
             node is UCallExpression -> node.classReference?.resolve() as PsiClass?
+            node is PsiClass -> node
             else -> null
         }
 
@@ -428,6 +448,8 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         var api: String
         api = if (member == null || member is PsiMethod && member.isConstructor) {
             member?.name ?: containingClass.name + " constructor"
+        } else if (containingClass == member) {
+            member.name ?: "class"
         } else {
             containingClass.name + "." + member.name
         }

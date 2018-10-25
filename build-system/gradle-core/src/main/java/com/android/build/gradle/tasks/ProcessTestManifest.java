@@ -53,7 +53,9 @@ import java.util.Set;
 import java.util.function.Supplier;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
@@ -279,6 +281,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         private final VariantScope scope;
 
         @Nullable private final BuildableArtifact testTargetMetadata;
+        private Provider<Directory> manifestOutputDirectory;
 
         public CreationAction(
                 @NonNull VariantScope scope, @Nullable BuildableArtifact testTargetMetadata) {
@@ -296,6 +299,14 @@ public class ProcessTestManifest extends ManifestProcessorTask {
                             BuildArtifactsHolder.OperationType.INITIAL,
                             scope.getArtifacts()
                                     .getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS));
+
+            manifestOutputDirectory =
+                    scope.getArtifacts()
+                            .createDirectory(
+                                    InternalArtifactType.MERGED_MANIFESTS,
+                                    BuildArtifactsHolder.OperationType.INITIAL,
+                                    taskName,
+                                    "");
         }
 
         @Override
@@ -309,6 +320,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         public void configure(@NonNull final ProcessTestManifest task) {
             super.configure(task);
 
+            task.setManifestOutputDirectory(manifestOutputDirectory);
             task.checkManifestResult =
                     scope.getArtifacts()
                             .getFinalArtifactFilesIfPresent(

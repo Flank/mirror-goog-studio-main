@@ -28,6 +28,10 @@ import org.gradle.api.tasks.TaskDependency
 
 class FakeDependencySet: DependencySet {
 
+    override fun addAllLater(p0: Provider<out MutableIterable<Dependency>>) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
     override fun whenObjectAdded(p0: Action<in Dependency>): Action<in Dependency> {
         // ignore for now
         return p0

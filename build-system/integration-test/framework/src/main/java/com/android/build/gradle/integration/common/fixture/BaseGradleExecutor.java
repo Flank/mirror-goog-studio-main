@@ -200,8 +200,6 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         arguments.add("-Dfile.encoding=" + System.getProperty("file.encoding"));
         arguments.add("-Dsun.jnu.encoding=" + System.getProperty("sun.jnu.encoding"));
 
-        // Don't search in parent folders for a settings.gradle file.
-        arguments.add("--no-search-upward");
 
         if (offline) {
             arguments.add("--offline");

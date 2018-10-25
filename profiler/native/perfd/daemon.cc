@@ -27,7 +27,6 @@
 #include "commands/end_session.h"
 #include "perfd/connector.h"
 #include "perfd/generic_component.h"
-#include "perfd/sessions/session.h"
 #include "utils/android_studio_version.h"
 #include "utils/config.h"
 #include "utils/current_process.h"
@@ -248,11 +247,6 @@ grpc::Status Daemon::Execute(const proto::Command& command_data,
 
 grpc::Status Daemon::Execute(const proto::Command& command_data) {
   return Execute(command_data, []() {});
-}
-
-std::vector<proto::Event> Daemon::GetEvents(
-    const proto::GetEventsRequest* request) {
-  return buffer_->Get(request->from_timestamp(), request->to_timestamp());
 }
 
 std::vector<proto::EventGroup> Daemon::GetEventGroups(

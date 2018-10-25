@@ -571,6 +571,8 @@ abstract class Detector {
         return type != AnnotationUsageType.BINARY && type != AnnotationUsageType.EQUALITY
     }
 
+    open fun inheritAnnotation(annotation: String): Boolean = true
+
     open fun getApplicableElements(): Collection<String>? = null
 
     open fun getApplicableAttributes(): Collection<String>? = null

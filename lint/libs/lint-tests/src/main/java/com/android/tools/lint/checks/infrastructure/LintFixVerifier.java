@@ -503,7 +503,37 @@ public class LintFixVerifier {
             }
         }
 
-        return contents.substring(0, startOffset) + replacement + contents.substring(endOffset);
+        String s = contents.substring(0, startOffset) + replacement + contents.substring(endOffset);
+
+        // Insert selection/caret markers if configured for this fix
+        if (replaceFix.selectPattern != null) {
+            Pattern pattern = Pattern.compile(replaceFix.selectPattern);
+            Matcher matcher = pattern.matcher(s);
+            if (matcher.find(start.getOffset())) {
+                int selectStart;
+                int selectEnd;
+                if (matcher.groupCount() > 0) {
+                    selectStart = matcher.start(1);
+                    selectEnd = matcher.end(1);
+                } else {
+                    selectStart = matcher.start();
+                    selectEnd = matcher.end();
+                }
+                if (selectStart == selectEnd) {
+                    s = s.substring(0, selectStart) + "|" + s.substring(selectEnd);
+
+                } else {
+                    s =
+                            s.substring(0, selectStart)
+                                    + "["
+                                    + s.substring(selectStart, selectEnd)
+                                    + "]"
+                                    + s.substring(selectEnd);
+                }
+            }
+        }
+
+        return s;
     }
 
     private void appendDiff(

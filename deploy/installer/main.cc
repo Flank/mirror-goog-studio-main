@@ -14,27 +14,26 @@
  * limitations under the License.
  */
 
-#include <getopt.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string>
-
 #include <algorithm>
 #include <iostream>
 #include <map>
 #include <sstream>
+#include <string>
 
+#include <getopt.h>
+#include <stdlib.h>
+#include <unistd.h>
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
 #endif
 
-#include "command_cmd.h"
-#include "dump.h"
-#include "package_manager.h"
 #include "tools/base/deploy/common/event.h"
-#include "workspace.h"
-#include "tools/base/deploy/proto/deploy.pb.h"
 #include "tools/base/deploy/common/utils.h"
+#include "tools/base/deploy/installer/command_cmd.h"
+#include "tools/base/deploy/installer/dump.h"
+#include "tools/base/deploy/installer/package_manager.h"
+#include "tools/base/deploy/installer/workspace.h"
+#include "tools/base/deploy/proto/deploy.pb.h"
 
 using namespace deploy;
 
@@ -51,22 +50,22 @@ struct Parameters {
 
 std::string GetStringUsage(const char* invoked_path) {
   std::stringstream buffer;
-  buffer    << "Usage:" << std::endl
-            << invoked_path << " [env parameters] command [command_parameters]"
-            << std::endl
-            << std::endl
-            << "Environment parameters available:" << std::endl
-            << "  -cmd=X: Define path to cmd executable (to mock android)."
-            << std::endl
-            << "  -pm=X : Define path to package manager executable (to mock "
-               "android)."
-            << std::endl
-            << "  -version=X : Program will fail if version != X." << std::endl
-            << "Commands available:" << std::endl
-            << "   dump : Extract CDs and Signatures for a given applicationID."
-            << std::endl
-            << "   swap : Perform a hot-swap via JVMTI." << std::endl
-            << std::endl;
+  buffer << "Usage:" << std::endl
+         << invoked_path << " [env parameters] command [command_parameters]"
+         << std::endl
+         << std::endl
+         << "Environment parameters available:" << std::endl
+         << "  -cmd=X: Define path to cmd executable (to mock android)."
+         << std::endl
+         << "  -pm=X : Define path to package manager executable (to mock "
+            "android)."
+         << std::endl
+         << "  -version=X : Program will fail if version != X." << std::endl
+         << "Commands available:" << std::endl
+         << "   dump : Extract CDs and Signatures for a given applicationID."
+         << std::endl
+         << "   swap : Perform a hot-swap via JVMTI." << std::endl
+         << std::endl;
   return buffer.str();
 }
 
@@ -113,11 +112,12 @@ std::string GetInstallerPath() {
   return std::string(dest);
 }
 
-int Fail(proto::InstallerResponse_Status status, Workspace& workspace, const std::string& message) {
-   workspace.GetResponse().set_status(status);
-   ErrEvent(message);
-   workspace.SendResponse();
-   return EXIT_FAILURE;
+int Fail(proto::InstallerResponse_Status status, Workspace& workspace,
+         const std::string& message) {
+  workspace.GetResponse().set_status(status);
+  ErrEvent(message);
+  workspace.SendResponse();
+  return EXIT_FAILURE;
 }
 
 int main(int argc, char** argv) {
@@ -145,28 +145,33 @@ int main(int argc, char** argv) {
   }
 
   // Verify that this program is the version the called expected.
-  if (parameters.version != nullptr && strcmp(parameters.version, kVersion_hash)) {
-    std::string message = "Version mismatch. Requested:"_s + parameters.version  + "but have "
-            + kVersion_hash;
-    return Fail(proto::InstallerResponse::ERROR_WRONG_VERSION, workspace, message);
+  if (parameters.version != nullptr &&
+      strcmp(parameters.version, kVersion_hash)) {
+    std::string message = "Version mismatch. Requested:"_s +
+                          parameters.version + "but have " + kVersion_hash;
+    return Fail(proto::InstallerResponse::ERROR_WRONG_VERSION, workspace,
+                message);
   }
 
   // Retrieve Command to be invoked.
   auto task = GetCommand(parameters.command_name);
   if (task == nullptr) {
-    return Fail(proto::InstallerResponse::ERROR_CMD, workspace, "Unknown command");
+    return Fail(proto::InstallerResponse::ERROR_CMD, workspace,
+                "Unknown command");
   }
 
   // Allow command to parse its parameters and invoke it.
   task->ParseParameters(argc - parameters.consumed, argv + parameters.consumed);
   if (!task->ReadyToRun()) {
-    std::string message = "Command "_s + parameters.command_name + ": wrong parameters";
+    std::string message =
+        "Command "_s + parameters.command_name + ": wrong parameters";
     return Fail(proto::InstallerResponse::ERROR_PARAMETER, workspace, message);
   }
 
   // Create a workspace for filesystem operations.
   if (!workspace.Valid()) {
-    return Fail(proto::InstallerResponse::ERROR_CMD, workspace, "Bad workspace");
+    return Fail(proto::InstallerResponse::ERROR_CMD, workspace,
+                "Bad workspace");
   }
 
   // Finally! Run !

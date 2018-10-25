@@ -15,6 +15,7 @@
  */
 package com.android.ide.common.gradle.model.level2;
 
+import static com.android.SdkConstants.FN_API_JAR;
 import static com.android.builder.model.level2.Library.LIBRARY_ANDROID;
 import static com.android.builder.model.level2.Library.LIBRARY_JAVA;
 import static com.android.builder.model.level2.Library.LIBRARY_MODULE;
@@ -53,6 +54,13 @@ class IdeLibraryFactory {
                     library.getFolder(),
                     getFullPath(folder, library.getManifest()),
                     getFullPath(folder, library.getJarFile()),
+                    /* Older plugins may not have the getApiJarFile() method so we use a default
+                    value in that case */
+                    getFullPath(
+                            folder,
+                            defaultValueIfNotPresent(
+                                    library::getApiJarFile,
+                                    new File(folder, FN_API_JAR).getPath())),
                     getFullPath(folder, library.getResFolder()),
                     library.getResStaticLibrary(),
                     getFullPath(folder, library.getAssetsFolder()),
@@ -113,6 +121,12 @@ class IdeLibraryFactory {
                     androidLibrary.getFolder(),
                     androidLibrary.getManifest().getPath(),
                     androidLibrary.getJarFile().getPath(),
+                    /* Older plugins may not have the getApiJarFile() method so we use the default
+                    value in that case. */
+                    defaultValueIfNotPresent(
+                                    androidLibrary::getApiJarFile,
+                                    new File(androidLibrary.getFolder(), FN_API_JAR))
+                            .getPath(),
                     androidLibrary.getResFolder().getPath(),
                     nullIfNotPresent(androidLibrary::getResStaticLibrary),
                     androidLibrary.getAssetsFolder().getPath(),
@@ -154,6 +168,18 @@ class IdeLibraryFactory {
         } catch (UnsupportedOperationException ignored) {
             return null;
         }
+    }
+
+    @NonNull
+    protected static <T> T defaultValueIfNotPresent(
+            @NonNull Supplier<T> propertyInvoker, @NonNull T defaultValue) {
+        T value;
+        try {
+            value = propertyInvoker.get();
+        } catch (UnsupportedOperationException ignored) {
+            return defaultValue;
+        }
+        return value != null ? value : defaultValue;
     }
 
     /**

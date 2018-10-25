@@ -26,19 +26,16 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APKS_FROM_BUNDLE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CONSUMER_PROGUARD_RULES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAVA_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JNI;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_JAVA_RES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.MODULE_PATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
 import static com.android.build.gradle.internal.scope.ArtifactPublishingUtil.publishArtifactToConfiguration;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_RESOURCE_PKG;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS;
@@ -51,6 +48,7 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGE
 import static com.android.build.gradle.internal.scope.InternalArtifactType.NDK_LIBS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_LIB;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_CLASSES;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -80,7 +78,6 @@ import com.android.build.gradle.internal.coverage.JacocoReportTask;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
-import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.DataBindingOptions;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.incremental.BuildInfoLoaderTask;
@@ -99,6 +96,7 @@ import com.android.build.gradle.internal.res.GenerateLibraryRFileTask;
 import com.android.build.gradle.internal.res.LinkAndroidResForBundleTask;
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask;
 import com.android.build.gradle.internal.res.namespaced.NamespacedResourcesTaskManager;
+import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -131,8 +129,8 @@ import com.android.build.gradle.internal.tasks.ValidateSigningTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingGenBaseClassesTask;
+import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeBaseClassLogTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeDependencyArtifactsTask;
-import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeGenClassLogTransform;
 import com.android.build.gradle.internal.tasks.factory.PreConfigAction;
 import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
@@ -596,30 +594,6 @@ public abstract class TaskManager {
                                 variantScope.getArtifactCollection(
                                         RUNTIME_CLASSPATH, EXTERNAL, JNI))
                         .build());
-
-        // data binding related artifacts for external libs
-        if (extension.getDataBinding().isEnabled()) {
-            transformManager.addStream(
-                    OriginalStream.builder(project, "sub-project-data-binding-base-classes")
-                            .addContentTypes(TransformManager.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
-                            .addScope(Scope.SUB_PROJECTS)
-                            .setArtifactCollection(
-                                    variantScope.getArtifactCollection(
-                                            COMPILE_CLASSPATH,
-                                            MODULE,
-                                            DATA_BINDING_BASE_CLASS_LOG_ARTIFACT))
-                            .build());
-            transformManager.addStream(
-                    OriginalStream.builder(project, "ext-libs-data-binding-base-classes")
-                            .addContentTypes(TransformManager.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
-                            .addScope(Scope.EXTERNAL_LIBRARIES)
-                            .setArtifactCollection(
-                                    variantScope.getArtifactCollection(
-                                            COMPILE_CLASSPATH,
-                                            EXTERNAL,
-                                            DATA_BINDING_BASE_CLASS_LOG_ARTIFACT))
-                            .build());
-        }
 
         // for the sub modules, new intermediary classes artifact has its own stream
         transformManager.addStream(
@@ -1098,6 +1072,21 @@ public abstract class TaskManager {
                             packageOutputType,
                             baseName,
                             useAaptToGenerateLegacyMultidexMainDexProguardRules);
+
+            FileCollection rFiles =
+                    scope.getArtifacts().getFinalArtifactFiles(RUNTIME_R_CLASS_CLASSES).get();
+
+            scope.getTransformManager()
+                    .addStream(
+                            OriginalStream.builder(project, "final-r-classes")
+                                    .addContentTypes(
+                                            DefaultContentType.CLASSES,
+                                            DefaultContentType.RESOURCES)
+                                    .addScope(Scope.PROJECT)
+                                    .setFileCollection(rFiles)
+                                    .build());
+
+            scope.getArtifacts().appendArtifact(AnchorOutputType.ALL_CLASSES, rFiles);
             return;
         }
         createNonNamespacedResourceTasks(
@@ -1203,10 +1192,6 @@ public abstract class TaskManager {
 
         TaskProvider<PackageSplitRes> task =
                 taskFactory.register(new PackageSplitRes.CreationAction(scope));
-
-        if (scope.getVariantConfiguration().getSigningConfig() != null) {
-            TaskFactoryUtils.dependsOn(task, getValidateSigningTask(scope));
-        }
     }
 
     @Nullable
@@ -1239,11 +1224,6 @@ public abstract class TaskManager {
         // then package those resources with the appropriate JNI libraries.
         TaskProvider<PackageSplitAbi> packageSplitAbiTask =
                 taskFactory.register(new PackageSplitAbi.CreationAction(scope));
-
-        if (scope.getVariantConfiguration().getSigningConfig() != null) {
-            TaskFactoryUtils.dependsOn(
-                    packageSplitAbiTask, getValidateSigningTask(variantData.getScope()));
-        }
 
         return packageSplitAbiTask;
     }
@@ -1442,23 +1422,6 @@ public abstract class TaskManager {
                                 .setFileCollection(
                                         scope.getVariantData().getAllPostJavacGeneratedBytecode())
                                 .build());
-
-        if (artifacts.hasArtifact(InternalArtifactType.RUNTIME_R_CLASS_CLASSES)) {
-            scope.getTransformManager()
-                    .addStream(
-                            OriginalStream.builder(project, "final-r-classes")
-                                    .addContentTypes(
-                                            DefaultContentType.CLASSES,
-                                            DefaultContentType.RESOURCES)
-                                    .addScope(Scope.PROJECT)
-                                    .setFileCollection(
-                                            artifacts
-                                                    .getFinalArtifactFiles(
-                                                            InternalArtifactType
-                                                                    .RUNTIME_R_CLASS_CLASSES)
-                                                    .get())
-                                    .build());
-        }
 
         if (scope.getGlobalScope().getExtension().getAaptOptions().getNamespaced()
                 && projectOptions.get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
@@ -1991,6 +1954,7 @@ public abstract class TaskManager {
                             testVariantScope
                                     .getArtifacts()
                                     .getFinalArtifactFiles(InternalArtifactType.APK),
+                            FeatureSplitUtils.getFeatureName(globalScope.getProject().getPath()),
                             baseVariantData
                                     .getScope()
                                     .getArtifactFileCollection(
@@ -2683,24 +2647,8 @@ public abstract class TaskManager {
                 return;
             }
         }
-        File outFolder =
-                variantScope.getIntermediateDir(DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS);
 
-        variantScope
-                .getTransformManager()
-                .addTransform(
-                        taskFactory,
-                        variantScope,
-                        new DataBindingMergeGenClassLogTransform(getLogger(), outFolder),
-                        taskName ->
-                                variantScope
-                                        .getArtifacts()
-                                        .appendArtifact(
-                                                DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS,
-                                                ImmutableList.of(outFolder),
-                                                taskName),
-                        null,
-                        null);
+        taskFactory.register(new DataBindingMergeBaseClassLogTask.CreationAction(variantScope));
     }
 
     protected void createDataBindingTasksIfNecessary(
@@ -2811,8 +2759,6 @@ public abstract class TaskManager {
                         ? InternalArtifactType.SHRUNK_PROCESSED_RES
                         : InternalArtifactType.PROCESSED_RES;
 
-        CoreSigningConfig signingConfig = variantScope.getVariantConfiguration().getSigningConfig();
-
         // Common code for both packaging tasks.
         Action<Task> configureResourcesAndAssetsDependencies =
                 task -> {
@@ -2838,9 +2784,6 @@ public abstract class TaskManager {
                         null,
                         task -> {
                             //noinspection VariableNotUsedInsideIf - we use the whole packaging scope below.
-                            if (signingConfig != null) {
-                                task.dependsOn(getValidateSigningTask(variantScope));
-                            }
 
                             task.dependsOn(taskContainer.getJavacTask());
 
@@ -2867,8 +2810,6 @@ public abstract class TaskManager {
                     taskFactory.register(
                             new InstantRunResourcesApkBuilder.CreationAction(
                                     resourceFilesInputType, variantScope));
-            TaskFactoryUtils.dependsOn(
-                    packageInstantRunResources, getValidateSigningTask(variantScope));
 
             // make sure the task run even if none of the files we consume are available,
             // this is necessary so we can clean up output.
@@ -3753,14 +3694,26 @@ public abstract class TaskManager {
                     task.setGroup(ANDROID_GROUP);
                 });
 
-        taskFactory.register(
-                "signingReport",
-                SigningReportTask.class,
-                task -> {
-                    task.setDescription("Displays the signing info for each variant.");
-                    task.setVariants(variantScopes);
-                    task.setGroup(ANDROID_GROUP);
-                });
+
+        List<VariantScope> signingReportScopes =
+                variantScopes
+                        .stream()
+                        .filter(
+                                variantScope ->
+                                        variantScope.getType().isForTesting()
+                                                || variantScope.getType().isBaseModule())
+                        .collect(Collectors.toList());
+        if (!signingReportScopes.isEmpty()) {
+            taskFactory.register(
+                    "signingReport",
+                    SigningReportTask.class,
+                    task -> {
+                        task.setDescription(
+                                "Displays the signing info for the base and test modules");
+                        task.setVariants(signingReportScopes);
+                        task.setGroup(ANDROID_GROUP);
+                    });
+        }
     }
 
     public void createAnchorTasks(@NonNull VariantScope scope) {

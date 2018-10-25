@@ -23,7 +23,6 @@
 #include "perfd/commands/command.h"
 #include "perfd/event_buffer.h"
 #include "perfd/profiler_component.h"
-#include "perfd/sessions/session.h"
 #include "perfd/sessions/sessions_manager.h"
 #include "proto/profiler.grpc.pb.h"
 #include "utils/clock.h"
@@ -32,7 +31,6 @@
 
 namespace profiler {
 
-class Session;
 class Command;
 
 // A daemon running on the device, collecting, caching, and transporting
@@ -72,8 +70,6 @@ class Daemon {
   grpc::Status Execute(const proto::Command& command,
                        std::function<void(void)> post);
 
-  std::vector<proto::Event> GetEvents(const proto::GetEventsRequest* request);
-
   std::vector<proto::EventGroup> GetEventGroups(
       const proto::GetEventGroupsRequest* request);
 
@@ -94,6 +90,15 @@ class Daemon {
   SessionsManager* sessions() { return &session_manager_; }
 
   EventBuffer* buffer() { return buffer_; }
+
+  // All events are written to the |consumer| then cleared from the queue.
+  // This call is blocking and will not return until cancel listener is called.
+  void WriteEventsTo(grpc::ServerWriter<proto::Event>* consumer) {
+    buffer_->WriteEventsTo(consumer);
+  }
+
+  // Interrupts the WriteEventsTo.
+  void InterruptWriteEvents() { buffer_->InterruptWriteEvents(); }
 
   void GetAgentStatus(const proto::AgentStatusRequest* request,
                       proto::AgentStatusResponse* response);

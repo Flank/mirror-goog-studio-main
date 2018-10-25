@@ -17,7 +17,7 @@
 #ifndef INSTALLER_APK_TOOLKIT_H_
 #define INSTALLER_APK_TOOLKIT_H_
 
-#include "command.h"
+#include "tools/base/deploy/installer/command.h"
 
 #include <string>
 

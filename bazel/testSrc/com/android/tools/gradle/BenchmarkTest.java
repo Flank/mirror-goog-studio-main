@@ -192,9 +192,9 @@ public class BenchmarkTest {
         Benchmark benchmark = benchmarkBuilder.build();
 
         File data = new File(ROOT + "buildbenchmarks/" + project);
-        File out = new File(System.getenv("TEST_TMPDIR"), ".gradle_out");
-        File src = new File(System.getenv("TEST_TMPDIR"), ".gradle_src");
-        File home = new File(System.getenv("TEST_TMPDIR"), ".home");
+        File out = new File(System.getenv("TEST_TMPDIR"), "tmp_gradle_out");
+        File src = new File(System.getenv("TEST_TMPDIR"), "tmp_gradle_src");
+        File home = new File(System.getenv("TEST_TMPDIR"), "tmp_home");
         home.mkdirs();
 
         Gradle.unzip(new File(data, "src.zip"), src);

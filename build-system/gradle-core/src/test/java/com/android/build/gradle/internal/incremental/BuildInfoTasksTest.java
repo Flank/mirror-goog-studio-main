@@ -113,7 +113,7 @@ public class BuildInfoTasksTest {
         loader.pastBuildsFolder = pastBuildsDirectory;
         loader.buildContext = context;
         loader.logger = logger;
-        loader.execute();
+        loader.executeAction();
     }
 
     private void runWriterTask(@NonNull Project project, @NonNull InstantRunBuildContext context) {
@@ -122,7 +122,7 @@ public class BuildInfoTasksTest {
         writer.tmpBuildInfoFile = tmpBuildInfoFile;
         writer.logger = logger;
         writer.buildContext = context;
-        writer.execute();
+        writer.executeAction();
     }
 
     private Project createProject() throws IOException {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "log.h"
+#include "tools/base/deploy/common/log.h"
 
 #include <android/log.h>
 

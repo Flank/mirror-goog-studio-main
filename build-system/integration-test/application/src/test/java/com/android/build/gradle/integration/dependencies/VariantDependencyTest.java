@@ -114,7 +114,7 @@ public class VariantDependencyTest {
                         + "\"\n"
                         + "}\n");
 
-        outputModel = project.executeAndReturnModel(ProjectBuildOutput.class, "clean", "assemble");
+        outputModel = project.executeAndReturnOutputModel("clean", "assemble");
         model = project.model().fetchAndroidProjects();
         helper = new LibraryGraphHelper(model);
 

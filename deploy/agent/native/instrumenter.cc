@@ -1,18 +1,34 @@
-#include "instrumenter.h"
+/*
+ * Copyright (C) 2018 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 
-#include "jni.h"
-#include "jvmti.h"
+#include "tools/base/deploy/agent/native/instrumenter.h"
 
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include <string>
 
-#include "jni/jni_class.h"
-#include "native_callbacks.h"
-#include "tools/base/deploy/common/log.h"
+#include <fcntl.h>
+#include <jni.h>
+#include <jvmti.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
-#include "instrumentation.jar.cc"
+#include "tools/base/deploy/agent/native/instrumentation.jar.cc"
+#include "tools/base/deploy/agent/native/jni/jni_class.h"
+#include "tools/base/deploy/agent/native/native_callbacks.h"
+#include "tools/base/deploy/common/log.h"
 #include "tools/base/deploy/common/utils.h"
 
 namespace deploy {
@@ -20,9 +36,10 @@ namespace deploy {
 namespace {
 const char* kBreadcrumbClass = "com/android/tools/deploy/instrument/Breadcrumb";
 const char* kHandlerWrapperClass =
-    "com/android/tools/deploy/instrument/ActivityThreadHandlerWrapper";
+    "com/android/tools/deploy/instrument/ActivityThreadInstrumentation";
 
-const std::string kInstrumentationJarName = "instruments-"_s + instrumentation_jar_hash + ".jar";
+const std::string kInstrumentationJarName =
+    "instruments-"_s + instrumentation_jar_hash + ".jar";
 
 static unordered_map<string, Transform*> transforms;
 
@@ -56,8 +73,8 @@ bool WriteJarToDiskIfNecessary(const std::string& jar_path) {
     return true;
   }
 
-  // TODO: Would be more efficient to have the offet and size and use sendfile()
-  // to avoid a userland trip.
+  // TODO: Would be more efficient to have the offset and size and use
+  // sendfile() to avoid a userland trip.
   int fd = open(jar_path.c_str(), O_WRONLY | O_CREAT, FILE_MODE);
   if (fd == -1) {
     Log::E("WriteJarToDiskIfNecessary(). Unable to open().");
@@ -121,45 +138,61 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar) {
   }
 
   // Check if we need to instrument, or if a previous agent successfully did.
-  if (!breadcrumb.CallStaticMethod<jboolean>(
+  if (breadcrumb.CallStaticMethod<jboolean>(
           {"isFinishedInstrumenting", "()Z"})) {
-    // Instrument the activity thread handler using RetransformClasses.
-    // TODO: If we instrument more, make this more general.
-
-    AddTransform("android/app/ActivityThread$H",
-                 new ActivityThreadHandlerTransform());
-
-    jclass activity_thread_h = jni->FindClass("android/app/ActivityThread$H");
-    if (jni->ExceptionCheck()) {
-      Log::E("Could not find activity thread handler");
-      jni->ExceptionClear();
-      return false;
-    }
-
-    jvmti->SetEventNotificationMode(JVMTI_ENABLE,
-                                    JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, NULL);
-    jvmti->RetransformClasses(1, &activity_thread_h);
-    jvmti->SetEventNotificationMode(JVMTI_DISABLE,
-                                    JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, NULL);
-
-    jni->DeleteLocalRef(activity_thread_h);
-
-    DeleteTransforms();
-
-    // Mark that we've finished instrumentation.
-    breadcrumb.CallStaticMethod<void>({"setFinishedInstrumenting", "()V"});
-    Log::V("Finished instrumenting");
+    return true;
   }
 
-  return true;
+  bool success = true;
+  std::vector<jclass> classes;
+  for (auto& transform : GetTransforms()) {
+    jclass klass = jni->FindClass(transform.first.c_str());
+    if (jni->ExceptionCheck()) {
+      ErrEvent("Could not find class for instrumentation: " + transform.first);
+      jni->ExceptionClear();
+      success = false;
+    }
+    classes.emplace_back(klass);
+  }
+
+  if (success) {
+    success &=
+        CheckJvmti(jvmti->SetEventNotificationMode(
+                       JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, NULL),
+                   "Could not enable class file load hook event");
+    success &=
+        CheckJvmti(jvmti->RetransformClasses(classes.size(), classes.data()),
+                   "Could not retransform classes");
+
+    // Failing to disable this event does not actually have any bearing on
+    // whether or not instrumentation was a success, so we do not modify the
+    // success flag.
+    CheckJvmti(jvmti->SetEventNotificationMode(
+                   JVMTI_DISABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, NULL),
+               "Could not disable class file load hook event");
+  }
+
+  if (success) {
+    breadcrumb.CallStaticMethod<void>({"setFinishedInstrumenting", "()V"});
+    LogEvent("Finished instrumenting");
+  }
+
+  DeleteTransforms();
+  for (jclass klass : classes) {
+    jni->DeleteLocalRef(klass);
+  }
+
+  return success;
 }
 }  // namespace
 
-void AddTransform(const string& class_name, Transform* transform) {
-  transforms[class_name] = transform;
+void AddTransform(Transform* transform) {
+  transforms[transform->GetClassName()] = transform;
 }
 
-const unordered_map<string, Transform*>& GetTransforms() { return transforms; }
+const unordered_map<std::string, Transform*>& GetTransforms() {
+  return transforms;
+}
 
 // The agent never truly "exits", so we need to take extra care to free memory.
 void DeleteTransforms() {
@@ -228,25 +261,18 @@ bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
     return false;
   }
 
+  AddTransform(new ActivityThreadTransform());
+
   if (!Instrument(jvmti, jni, instrument_jar_path)) {
     Log::E("Error instrumenting application.");
     return false;
   }
 
-  vector<NativeBinding> native_bindings;
-  native_bindings.emplace_back(kHandlerWrapperClass,
-                               "getApplicationInfoChangedValue", "()I",
-                               (void*)&Native_GetAppInfoChanged);
-  native_bindings.emplace_back(kHandlerWrapperClass, "tryRedefineClasses",
-                               "()Z", (void*)&Native_TryRedefineClasses);
-
   // Need to register native methods every time; otherwise, the Java methods
   // could potentially call old versions if a previous agent.so was loaded.
-  RegisterNatives(jni, native_bindings);
-
-  // Enable hot-swapping via the callback.
-  JniClass handlerWrapper(jni, kHandlerWrapperClass);
-  handlerWrapper.CallStaticMethod<void>({"prepareForHotSwap", "()V"});
+  RegisterNative(
+      jni, {kHandlerWrapperClass, "updateApplicationInfo",
+            "(Ljava/lang/Object;)V", (void*)&Native_UpdateApplicationInfo});
 
   return true;
 }

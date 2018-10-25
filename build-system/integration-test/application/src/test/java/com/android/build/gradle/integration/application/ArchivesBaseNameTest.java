@@ -57,7 +57,7 @@ public class ArchivesBaseNameTest {
     private void checkApkName(String name, String extension)
             throws IOException, InterruptedException {
         ProjectBuildOutput projectBuildOutput =
-                project.executeAndReturnModel(ProjectBuildOutput.class, "assembleDebug");
+                project.executeAndReturnOutputModel("assembleDebug");
         VariantBuildOutput debugBuildOutput =
                 ProjectBuildOutputUtils.getDebugVariantBuildOutput(projectBuildOutput);
 

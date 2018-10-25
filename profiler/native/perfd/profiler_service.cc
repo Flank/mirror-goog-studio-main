@@ -22,6 +22,7 @@
 #include "utils/trace.h"
 
 using grpc::ServerContext;
+using grpc::ServerWriter;
 using grpc::Status;
 using grpc::StatusCode;
 using std::string;
@@ -116,7 +117,7 @@ Status ProfilerServiceImpl::BeginSession(
   return daemon_->Execute(command, [this, response]() {
     profiler::Session* session = daemon_->sessions()->GetLastSession();
     if (session) {
-      response->mutable_session()->CopyFrom(session->info);
+      response->mutable_session()->CopyFrom(session->info());
     }
   });
 }
@@ -132,7 +133,7 @@ Status ProfilerServiceImpl::EndSession(
   return daemon_->Execute(command, [this, response]() {
     profiler::Session* session = daemon_->sessions()->GetLastSession();
     if (session) {
-      response->mutable_session()->CopyFrom(session->info);
+      response->mutable_session()->CopyFrom(session->info());
     }
   });
 
@@ -177,10 +178,9 @@ Status ProfilerServiceImpl::Execute(
 
 Status ProfilerServiceImpl::GetEvents(
     ServerContext* context, const profiler::proto::GetEventsRequest* request,
-    profiler::proto::GetEventsResponse* response) {
-  for (auto& event : daemon_->GetEvents(request)) {
-    response->add_events()->CopyFrom(event);
-  }
+    ServerWriter<proto::Event>* response) {
+  daemon_->WriteEventsTo(response);
+  // Only return when a connection between the client and server is terminated.
   return Status::OK;
 }
 

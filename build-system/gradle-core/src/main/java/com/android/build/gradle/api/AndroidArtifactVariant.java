@@ -27,14 +27,15 @@ import java.util.Set;
 public interface AndroidArtifactVariant extends VersionedVariant {
 
     /**
-     * Returns the {@link SigningConfig} for this build variant,
-     * if one has been specified.
+     * Returns the {@link SigningConfig} for this build variant, if one has been specified. This is
+     * only returned for the base application module.
      */
     @Nullable
     SigningConfig getSigningConfig();
 
     /**
-     * Returns true if this variant has the information it needs to create a signed APK.
+     * Returns true if this variant has the information it needs to create a signed APK. This can
+     * only be true for the base application module.
      */
     boolean isSigningReady();
 

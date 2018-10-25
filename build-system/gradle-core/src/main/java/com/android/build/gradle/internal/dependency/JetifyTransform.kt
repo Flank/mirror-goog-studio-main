@@ -42,8 +42,9 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
 
         @JvmStatic
         val jetifyProcessor: Processor by lazy {
-            Processor.createProcessor(
-                ConfigParser.loadDefaultConfig()!!,
+            Processor.createProcessor2(
+                config = ConfigParser.loadDefaultConfig()!!,
+                allowAmbiguousPackages = false,
                 dataBindingVersion = Version.ANDROID_GRADLE_PLUGIN_VERSION
             )
         }
@@ -202,11 +203,8 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
                 .single()
         } catch (exception: Exception) {
             throw RuntimeException(
-                "Failed to transform '$aarOrJarFile' using Jetifier."
-                        + " Reason: ${exception.message}. (Run with --stacktrace for more details.)"
-                        + " To disable Jetifier,"
-                        + " set ${BooleanOption.ENABLE_JETIFIER.propertyName}=false in your"
-                        + " gradle.properties file.",
+                "Failed to transform '$aarOrJarFile' using Jetifier." +
+                        " Reason: ${exception.message}. (Run with --stacktrace for more details.)",
                 exception
             )
         }

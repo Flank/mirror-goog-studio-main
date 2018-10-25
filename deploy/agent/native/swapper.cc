@@ -15,16 +15,19 @@
  *
  */
 
-#include "swapper.h"
+#include "tools/base/deploy/agent/native/swapper.h"
 
 #include <unistd.h>
-#include "deploy.pb.h"
-#include "hotswap.h"
-#include "instrumenter.h"
-#include "socket.h"
+
+#include "tools/base/deploy/agent/native/hotswap.h"
+#include "tools/base/deploy/agent/native/instrumenter.h"
+#include "tools/base/deploy/agent/native/jni/jni_class.h"
+
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/log.h"
+#include "tools/base/deploy/common/socket.h"
 #include "tools/base/deploy/common/utils.h"
+#include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {
 
@@ -59,15 +62,15 @@ void Swapper::StartSwap(JNIEnv* jni) {
 
   request_ = std::unique_ptr<proto::SwapRequest>(new proto::SwapRequest());
   if (!request_->ParseFromString(request_bytes)) {
-    request_.reset();
     LogEvent("Could not parse swap request");
     return;
   }
 
-  FinishSwap(jni);
-}
+  if (!InstrumentApplication(jvmti_, jni, request_->package_name())) {
+    LogEvent("Could not instrument application");
+    return;
+  }
 
-bool Swapper::FinishSwap(JNIEnv* jni) {
   HotSwap code_swap(jvmti_, jni);
 
   proto::AgentSwapResponse response;
@@ -77,26 +80,23 @@ bool Swapper::FinishSwap(JNIEnv* jni) {
   if (!code_swap.DoHotSwap(*request_, &error_message)) {
     response.set_status(proto::AgentSwapResponse::ERROR);
     ErrEvent(error_message);
-    SendResponse(response);
   } else {
-    LogEvent("Swap was successful");
     response.set_status(proto::AgentSwapResponse::OK);
-    SendResponse(response);
-    if (request_->restart_activity()) {
-      // Wait for the installer to request the activity restart
-      // Note that this will BLOCK the main thread until the
-      // installer finishes the installation and issues a
-      // reload-appinfo command.
-      std::string resume;
-      if (!socket_->Read(&resume)) {
-        LogEvent("Could not read resume request from socket");
-      }
-    }
+    LogEvent("Swap was successful");
   }
 
-  Reset();
+  // Prepare the instrumented code to restart after the package installation (if
+  // a restart was requested).
+  if (response.status() == proto::AgentSwapResponse::OK) {
+    JniClass instrument(
+        jni,
+        "com/android/tools/deploy/instrument/ActivityThreadInstrumentation");
+    jvalue arg{.z = request_->restart_activity()};
+    instrument.CallStaticMethod<void>({"setRestart", "(Z)V"}, &arg);
+  }
 
-  return response.status() == proto::AgentSwapResponse::OK;
+  SendResponse(response);
+  Reset();
 }
 
 void Swapper::Reset() {

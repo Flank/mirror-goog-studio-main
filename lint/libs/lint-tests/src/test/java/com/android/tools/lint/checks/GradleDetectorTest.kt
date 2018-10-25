@@ -48,6 +48,7 @@ import com.android.tools.lint.checks.GradleDetector.Companion.STRING_INTEGER
 import com.android.tools.lint.checks.GradleDetector.Companion.getNamedDependency
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry
 import com.android.tools.lint.checks.infrastructure.TestLintTask
+import com.android.tools.lint.checks.infrastructure.TestResultTransformer
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Project
@@ -2396,6 +2397,64 @@ class GradleDetectorTest : AbstractCheckTest() {
                 +     compile 'com.example.ads.thirdparty:example:7.3.1' // ERROR
                 """
             )
+    }
+
+    fun testAndroidxMixedDependencies() {
+        val expected = """
+            build.gradle: Error: Dependencies using groupId com.android.support and androidx.* can not be combined but found __ and __ incompatible dependencies [GradleCompatible]
+            1 errors, 0 warnings"""
+
+        lint().files(
+            gradle(
+                "" +
+                        "buildscript {\n" +
+                        "    repositories {\n" +
+                        "        jcenter()\n" +
+                        "    }\n" +
+                        "    dependencies {\n" +
+                        "        classpath 'com.android.tools.build:gradle:3.2.0-alpha15'\n" +
+                        "    }\n" +
+                        "}\n" +
+                        "dependencies {\n" +
+                        "    compile 'com.android.support:recyclerview-v7:28.0.0'\n" +
+                        "    compile 'androidx.appcompat:appcompat:1.0.0-alpha1'\n" +
+                        "}\n"
+            )
+        )
+            .issues(COMPATIBILITY)
+            .run()
+            .expect(expected, TestResultTransformer {
+                it.replace(
+                    Regex("found .* and .* incompatible"),
+                    "found __ and __ incompatible")
+            })
+    }
+
+    /**
+     * Tests that the navigation libraries are not considered as part of androidx even when
+     * their name does start with "androidx."
+     */
+    fun testAndroidxMixedDependenciesWithNavigation() {
+        lint().files(
+            gradle(
+                "" +
+                        "buildscript {\n" +
+                        "    repositories {\n" +
+                        "        jcenter()\n" +
+                        "    }\n" +
+                        "    dependencies {\n" +
+                        "        classpath 'com.android.tools.build:gradle:3.2.0-alpha15'\n" +
+                        "    }\n" +
+                        "}\n" +
+                        "dependencies {\n" +
+                        "    compile 'com.android.support:recyclerview-v7:28.0.0'\n" +
+                        "    compile 'androidx.navigation:navigation-fragment:1.0.0-alpha01'\n" +
+                        "}\n"
+            )
+        )
+            .issues(COMPATIBILITY)
+            .run()
+            .expect("No warnings.")
     }
 
     // -------------------------------------------------------------------------------------------

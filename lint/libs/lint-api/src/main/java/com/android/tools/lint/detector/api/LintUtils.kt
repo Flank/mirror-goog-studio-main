@@ -105,6 +105,7 @@ import com.intellij.psi.PsiType
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.ClassUtil
 import com.intellij.psi.util.PsiTreeUtil
+import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.resolve.calls.callUtil.getResolvedCall
 import org.jetbrains.uast.UCallExpression
@@ -1959,7 +1960,7 @@ fun isKotlin(element: PsiElement?): Boolean {
 
 /** Returns true if the given language is Kotlin  */
 fun isKotlin(language: Language?): Boolean {
-    return language != null && language.id == "kotlin"
+    return language == KotlinLanguage.INSTANCE
 }
 
 /** Returns true if the given string contains only digits */

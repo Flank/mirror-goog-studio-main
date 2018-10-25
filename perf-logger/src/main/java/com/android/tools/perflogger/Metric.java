@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 /**
  * Utility class used for logging and outputting benchmark which can be consumed by our dashboard
@@ -77,8 +78,7 @@ public class Metric {
 
 
     // Our perf data upload script does not permit a certain set of characters in the file names.
-    private static final String INVALID_CHARACTERS = "[\\[\\]\\s]";
-    private static final String REPLACEMENT_CHARACTER = "-";
+    private static final Pattern VALID_CHARACTERS = Pattern.compile("([A-Za-z0-9\\-\\_\\.]+)");
 
     @NonNull private final String myMetricName;
     @NonNull private final File myOutputDirectory;
@@ -90,17 +90,13 @@ public class Metric {
      *     for a line series on a dashboard (usually the name of a test).
      */
     public Metric(@NonNull String metricName) {
-        String replacedMetricName =
-                metricName.replaceAll(INVALID_CHARACTERS, REPLACEMENT_CHARACTER);
-        if (!replacedMetricName.equals(metricName)) {
-            getLogger()
-                    .info(
-                            String.format(
-                                    "Metric name contains disallowed characters and have been renamed to %s",
-                                    replacedMetricName));
+        if (!VALID_CHARACTERS.matcher(metricName).matches()) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            "The name must only contain letters, numbers, and '-' or '_' the name given was %s",
+                            metricName));
         }
-
-        myMetricName = replacedMetricName;
+        myMetricName = metricName;
         myOutputDirectory = TestUtils.getTestOutputDir();
 
         // Preserve insertion order - mostly for test purposes.

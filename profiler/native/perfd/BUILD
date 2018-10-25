@@ -1,5 +1,23 @@
 load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS", "android_cc_binary")
 
+filegroup(
+    name = "samplers_h",
+    srcs = glob([
+        "samplers/network_connection_count_sampler.h",
+        "samplers/network_speed_sampler.h",
+        "samplers/sampler.h",
+    ]),
+)
+
+filegroup(
+    name = "samplers_cc",
+    srcs = glob([
+        "samplers/network_connection_count_sampler.cc",
+        "samplers/network_speed_sampler.cc",
+        "samplers/sampler.cc",
+    ]),
+)
+
 cc_library(
     name = "perfd_internal_headers",
     hdrs = [
@@ -11,6 +29,7 @@ cc_library(
         "sessions/session.h",
         "sessions/sessions_manager.h",
         "termination_service.h",
+        ":samplers_h",
     ],
     copts = [
         "-Itools/base/profiler/native",
@@ -47,6 +66,8 @@ cc_library(
         "sessions/sessions_manager.h",
         "termination_service.cc",
         "termination_service.h",
+        ":samplers_cc",
+        ":samplers_h",
     ],
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",
@@ -85,6 +106,7 @@ cc_test(
     name = "perfd_test",
     srcs = [
         "profiler_service_test.cc",
+        "samplers/sampler_test.cc",
     ],
     copts = [
         "-Itools/base/profiler/native",

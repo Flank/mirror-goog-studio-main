@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.builder.core.VariantTypeImpl
 import com.google.common.collect.ImmutableList
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
@@ -77,6 +78,7 @@ open class MainApkListPersistenceTest {
         Mockito.`when`(variantScope.artifacts).thenReturn(artifacts)
         Mockito.`when`(variantScope.taskContainer).thenReturn(MutableTaskContainer())
         Mockito.`when`(variantScope.fullVariantName).thenReturn("theVariantName")
+        Mockito.`when`(config.type).thenReturn(VariantTypeImpl.BASE_APK)
 
         variantScope.taskContainer.preBuildTask = project.tasks.register("preBuildTask")
 

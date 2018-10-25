@@ -32,8 +32,7 @@ import org.junit.Test;
 public class JdiBasedClassRedefinerTest {
     private FakeAndroidDriver android;
 
-    private static final String ACTIVITY_CLASS =
-            "com.android.tools.deploy.swapper.testapp.TestActivity";
+    private static final String ACTIVITY_CLASS = "app.TestActivity";
     private static final String LOCAL_HOST = "127.0.0.1";
     private static final int RETURN_VALUE_TIMEOUT = 1000;
 
@@ -81,7 +80,7 @@ public class JdiBasedClassRedefinerTest {
         // TODO(acleung): JDI Checks for redefiner.hasRedefineClassesCapabilities() before
         // we can invoke the redefine classes command so we cannot test hotswap yet.
 
-        // redefiner.redefineClass("com.android.tools.deploy.swapper.testapp", new byte[0]);
+        // redefiner.redefineClass("com.deploy.app", new byte[0]);
         // redefiner.commit();
 
         android.triggerMethod(ACTIVITY_CLASS, "getStatus");

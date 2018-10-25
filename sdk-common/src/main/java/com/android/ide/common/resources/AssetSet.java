@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.resources;
 
 import com.android.annotations.NonNull;
@@ -26,19 +25,19 @@ import org.w3c.dom.Node;
  * Represents a set of Assets.
  */
 public class AssetSet extends DataSet<AssetItem, AssetFile> {
-
     /**
-     * Creates an asset set with a given configName. The name is used to identify the set
-     * across sessions.
+     * Creates an asset set with a given configName. The name is used to identify the set across
+     * sessions.
      *
-     * @param configName the name of the config this set is associated with.
+     * @param configName the name of the config this set is associated with
      */
-    public AssetSet(String configName) {
+    public AssetSet(@NonNull String configName) {
         super(configName, true /*validateEnabled*/);
     }
 
     @Override
-    protected DataSet<AssetItem, AssetFile> createSet(String name) {
+    @NonNull
+    protected DataSet<AssetItem, AssetFile> createSet(@NonNull String name) {
         return new AssetSet(name);
     }
 

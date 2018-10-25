@@ -29,7 +29,6 @@ import com.android.annotations.NonNull;
 import com.android.build.VariantOutput;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
@@ -52,9 +51,13 @@ import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import kotlin.jvm.functions.Function2;
 import org.gradle.api.Project;
+import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.FileTree;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.After;
 import org.junit.Before;
@@ -81,8 +84,11 @@ public class InstantRunResourcesApkBuilderTest {
     @Mock GradleVariantConfiguration variantConfiguration;
     @Mock GlobalScope globalScope;
     @Mock AndroidBuilder androidBuilder;
-    @Mock CoreSigningConfig signingConfig;
+    @Mock FileCollection signingConfig;
     @Mock InstantRunBuildContext buildContext;
+    @Mock FileTree signingConfigFileTree;
+
+    @Rule public TemporaryFolder signingConfigDirectory = new TemporaryFolder();
 
     public static class InstantRunResourcesApkBuilderForTest extends InstantRunResourcesApkBuilder {
         @Override
@@ -109,10 +115,14 @@ public class InstantRunResourcesApkBuilderTest {
         when(variantScope.getFullVariantName()).thenReturn("testVariant");
         when(variantScope.getGlobalScope()).thenReturn(globalScope);
         when(variantScope.getVariantConfiguration()).thenReturn(variantConfiguration);
-        when(variantConfiguration.getSigningConfig()).thenReturn(signingConfig);
         when(globalScope.getAndroidBuilder()).thenReturn(androidBuilder);
         when(variantScope.getInstantRunBuildContext()).thenReturn(buildContext);
         when(buildContext.getPatchingPolicy()).thenReturn(MULTI_APK_SEPARATE_RESOURCES);
+        when(signingConfig.getAsFileTree()).thenReturn(signingConfigFileTree);
+        File signingConfigFile = signingConfigDirectory.newFile("signing-config.json");
+        when(signingConfigFileTree.getFiles())
+                .thenReturn(new HashSet<>(Arrays.asList(signingConfigFile)));
+        when(signingConfigFileTree.getSingleFile()).thenReturn(signingConfigFile);
 
         File incrementalDir = temporaryFolder.newFolder("test-incremental");
 
@@ -123,6 +133,7 @@ public class InstantRunResourcesApkBuilderTest {
         when(artifacts.getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES))
                 .thenReturn(buildableArtifact);
         when(buildableArtifact.getFiles()).thenReturn(ImmutableSet.of());
+        when(variantScope.getSigningConfigFileCollection()).thenReturn(signingConfig);
     }
 
     @After
@@ -254,7 +265,7 @@ public class InstantRunResourcesApkBuilderTest {
                     .packageCodeSplitApk(
                             eq(resourcesFiles.get(i)),
                             eq(ImmutableSet.of()),
-                            eq(signingConfig),
+                            eq(null),
                             eq(expectedOutputFile),
                             any(File.class),
                             any(ApkCreatorFactory.class));

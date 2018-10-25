@@ -159,7 +159,6 @@ public class DefaultSigningConfig implements SigningConfig {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
 
         DefaultSigningConfig that = (DefaultSigningConfig) o;
 
@@ -183,6 +182,8 @@ public class DefaultSigningConfig implements SigningConfig {
                 !mStoreType.equals(that.mStoreType) :
                 that.mStoreType != null)
             return false;
+        if (mV1SigningEnabled != that.mV1SigningEnabled) return false;
+        if (mV2SigningEnabled != that.mV2SigningEnabled) return false;
 
         return true;
     }

@@ -71,10 +71,6 @@ open class FakeFileCollection(vararg collection : Any?) : FileCollection {
         TODO("not implemented")
     }
 
-    override fun asType(type : Class<*>?) : Any {
-        TODO("not implemented")
-    }
-
     override fun isEmpty() : Boolean {
         return files.isEmpty()
     }
@@ -92,19 +88,11 @@ open class FakeFileCollection(vararg collection : Any?) : FileCollection {
         throw UnsupportedOperationException("Not implemented")
     }
 
-    override fun stopExecutionIfEmpty() : FileCollection {
-        throw UnsupportedOperationException("Not implemented")
-    }
-
     override fun minus(collection : FileCollection?) : FileCollection {
         TODO("not implemented")
     }
 
     override fun getAsPath() : String {
-        TODO("not implemented")
-    }
-
-    override fun add(collection : FileCollection?): FileCollection {
         TODO("not implemented")
     }
 

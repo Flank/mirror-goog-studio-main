@@ -29,6 +29,7 @@ namespace deploy {
 class MessagePipeWrapper {
  public:
   MessagePipeWrapper(int fd) : fd_(fd) {}
+  MessagePipeWrapper(const MessagePipeWrapper&) = delete;
   virtual ~MessagePipeWrapper() {}
 
   MessagePipeWrapper(MessagePipeWrapper&& other)
@@ -62,7 +63,6 @@ class MessagePipeWrapper {
   int fd_;
 
  private:
-  MessagePipeWrapper(const MessagePipeWrapper&) = delete;
   MessagePipeWrapper& operator=(const MessagePipeWrapper&) = delete;
 
   template <typename T>
@@ -70,6 +70,16 @@ class MessagePipeWrapper {
 
   template <typename T>
   bool WriteBytes(T* array, size_t size) const;
+};
+
+// A derived class that owns the fd passed in the constructor and will therefore
+// close it when it is destructed.
+class OwnedMessagePipeWrapper: public MessagePipeWrapper {
+ public:
+  OwnedMessagePipeWrapper(int fd) : MessagePipeWrapper(fd) {}
+  virtual ~OwnedMessagePipeWrapper() {
+    Close();
+  }
 };
 }  // namespace deploy
 

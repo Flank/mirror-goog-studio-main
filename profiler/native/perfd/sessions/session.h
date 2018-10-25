@@ -18,18 +18,29 @@
 
 #include "proto/common.pb.h"
 
+#include <vector>
+
 namespace profiler {
+
+class Daemon;
+class Sampler;
 
 // A profiling session on a specific process on a specific device.
 class Session final {
  public:
-  Session(int64_t device_id, int32_t pid, int64_t start_timestamp);
+  Session(int64_t device_id, int32_t pid, int64_t start_timestamp,
+          Daemon* daemon);
 
-  bool IsActive();
+  bool IsActive() const;
 
   bool End(int64_t timestamp);
 
-  proto::Session info;
+  const proto::Session& info() const { return info_; }
+
+ private:
+  proto::Session info_;
+  // Samplers used for the unified data pipeline.
+  std::vector<Sampler*> samplers_;
 };
 
 }  // namespace profiler

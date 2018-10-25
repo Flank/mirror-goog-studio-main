@@ -190,13 +190,15 @@ public class ManifestDetectorTest extends AbstractCheckTest {
     }
 
     public void testOldTargetSdk() {
+        String expectedTarget = Integer.toString(createClient().getHighestKnownApiLevel());
+
         String expected =
                 ""
                         + "AndroidManifest.xml:7: Warning: Not targeting the latest versions of Android; compatibility modes apply. Consider testing and updating this version. Consult the android.os.Build.VERSION_CODES javadoc for details. [OldTargetApi]\n"
                         + "    <uses-sdk android:minSdkVersion=\"10\" android:targetSdkVersion=\"14\" />\n"
                         + "                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings\n";
-        //noinspection all // Sample code
+
         lint().files(
                         manifest(
                                 ""
@@ -229,10 +231,14 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expect(expected)
                 .expectFixDiffs(
                         ""
-                                + "Fix for AndroidManifest.xml line 6: Update targetSdkVersion to 27:\n"
+                                + "Fix for AndroidManifest.xml line 7: Update targetSdkVersion to "
+                                + expectedTarget
+                                + ":\n"
                                 + "@@ -7 +7\n"
                                 + "-     <uses-sdk android:minSdkVersion=\"10\" android:targetSdkVersion=\"14\" />\n"
-                                + "+     <uses-sdk android:minSdkVersion=\"10\" android:targetSdkVersion=\"27\" />\n");
+                                + "+     <uses-sdk android:minSdkVersion=\"10\" android:targetSdkVersion=\""
+                                + expectedTarget
+                                + "\" />");
     }
 
     public void testMultipleSdk() throws Exception {

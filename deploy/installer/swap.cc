@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "swap.h"
+#include "tools/base/deploy/installer/swap.h"
 
 #include <algorithm>
 #include <fstream>
@@ -25,16 +25,19 @@
 #include <vector>
 
 #include <fcntl.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
-#include "command_cmd.h"
-#include "shell_command.h"
 #include "tools/base/deploy/common/log.h"
+#include "tools/base/deploy/common/message_pipe_wrapper.h"
 #include "tools/base/deploy/common/socket.h"
 #include "tools/base/deploy/common/trace.h"
 #include "tools/base/deploy/common/utils.h"
+#include "tools/base/deploy/installer/command_cmd.h"
+#include "tools/base/deploy/installer/executor.h"
 
-#include "agent.so.h"
-#include "agent_server.h"
+#include "tools/base/deploy/installer/agent.so.h"
+#include "tools/base/deploy/installer/agent_server.h"
 
 namespace deploy {
 
@@ -91,30 +94,27 @@ void SwapCommand::Run(Workspace& workspace) {
   std::string agent_count = os.str();
 
   std::string command = target_dir_ + kServerFilename;
-  ShellCommandRunner runner(command);
-
   std::vector<std::string> parameters;
   parameters.push_back(agent_count);
   parameters.push_back(Socket::kDefaultAddress);
-
   int read_fd, write_fd, err_fd;
-  if (!runner.RunAs(request_.package_name(), parameters, &write_fd, &read_fd,
-                    &err_fd)) {
-    response_->set_status(proto::SwapResponse::ERROR);
+  int agent_server_pid;
+  if (!Executor::ForkAndExecAs(command, request_.package_name(), parameters,
+                               &write_fd, &read_fd, &err_fd,
+                               &agent_server_pid)) {
     ErrEvent("Unable to start server");
+    response_->set_status(proto::SwapResponse::ERROR);
     return;
   }
   close(err_fd);
+  OwnedMessagePipeWrapper server_input(write_fd);
+  OwnedMessagePipeWrapper server_output(read_fd);
 
   if (!AttachAgents(process_ids)) {
     response_->set_status(proto::SwapResponse::ERROR);
     ErrEvent("One or more agents failed to attach");
     return;
   }
-
-  // Both these wrappers will close the fds when they go out of scope.
-  MessagePipeWrapper server_input(write_fd);
-  MessagePipeWrapper server_output(read_fd);
 
   if (!server_input.Write(request_bytes_)) {
     response_->set_status(proto::SwapResponse::ERROR);
@@ -144,7 +144,7 @@ void SwapCommand::Run(Workspace& workspace) {
     proto::AgentSwapResponse agent_response;
     if (!agent_response.ParseFromString(response_bytes)) {
       response_->set_status(proto::SwapResponse::ERROR);
-      ErrEvent( "Received unparseable response from agent");
+      ErrEvent("Received unparseable response from agent");
       return;
     }
 
@@ -157,7 +157,7 @@ void SwapCommand::Run(Workspace& workspace) {
     agent_responses.emplace(agent_response.pid(), agent_response);
 
     // Convert proto events to events.
-    for (int i = 0 ; i < agent_response.events_size() ; i ++) {
+    for (int i = 0; i < agent_response.events_size(); i++) {
       const proto::Event& event = agent_response.events(i);
       AddRawEvent(ConvertProtoEventToEvent(event));
     }
@@ -177,25 +177,9 @@ void SwapCommand::Run(Workspace& workspace) {
 
   cmd.CommitInstall(install_session, &output);
 
-  // Because we need to restart the activity, the app is now blocked
-  // on read waitng for the ResumeRequest to be sent. We first
-  // ask to update the app info, and then we resume the app.
-  if (request_.restart_activity()) {
-    CmdCommand cmd;
-    cmd.UpdateAppInfo("all", request_.package_name(), nullptr);
-    LogEvent("Activity restart requested.");
-
-    proto::ResumeRequest resume;
-    std::string resume_bytes;
-    resume.SerializeToString(&resume_bytes);
-
-    // Tell all agents to resume; if that fails, assume the swap failed.
-    if (!server_input.Write(resume_bytes)) {
-      response_->set_status(proto::SwapResponse::ERROR);
-      ErrEvent("Could not write to agent proxy server");
-      return;
-    }
-  }
+  // Cleanup zombi agent-server status from the kernel.
+  int status;
+  waitpid(agent_server_pid, &status, 0);
 
   response_->set_status(proto::SwapResponse::OK);
   LogEvent("Swapped");
@@ -330,7 +314,8 @@ bool SwapCommand::AttachAgents(const std::vector<int>& process_ids) const {
   CmdCommand cmd;
   for (int pid : process_ids) {
     std::string output;
-    if (!cmd.AttachAgent(pid, target_dir_ + kAgentFilename, {Socket::kDefaultAddress}, &output)) {
+    if (!cmd.AttachAgent(pid, target_dir_ + kAgentFilename,
+                         {Socket::kDefaultAddress}, &output)) {
       ErrEvent("Could not attach agent to process: "_s + output);
       return false;
     }
@@ -342,20 +327,13 @@ bool SwapCommand::AttachAgents(const std::vector<int>& process_ids) const {
 bool SwapCommand::RunCmd(const std::string& shell_cmd, User run_as,
                          const std::vector<std::string>& args,
                          std::string* output) const {
-  ShellCommandRunner cmd(shell_cmd);
-
-  std::string params;
-  for (auto& arg : args) {
-    params.append(arg);
-    params.append(" ");
-  }
+  std::string err;
   if (run_as == User::APP_PACKAGE) {
-    return cmd.RunAs(request_.package_name(), params, output);
+    return Executor::RunAs(shell_cmd, request_.package_name(), args,
+                           output, &err);
   } else {
-    return cmd.Run(params, output);
+    return Executor::Run(shell_cmd, args, output, &err);
   }
-
-  return true;
 }
 
 }  // namespace deploy

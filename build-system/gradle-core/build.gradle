@@ -58,6 +58,7 @@ dependencies {
     compile libs.bundle_tool
     compile libs.jetifier_core
     compile libs.jetifier_processor
+    compile libs.protobuf_util
 
     compileOnly libs.jacoco_core
     compileOnly libs.jacoco_report

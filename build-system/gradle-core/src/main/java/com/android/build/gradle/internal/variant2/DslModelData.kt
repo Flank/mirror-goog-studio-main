@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.api.dsl.model.ProductFlavorImpl
 import com.android.build.gradle.internal.api.dsl.options.SigningConfigFactory
 import com.android.build.gradle.internal.api.dsl.options.SigningConfigImpl
 import com.android.build.gradle.internal.api.dsl.sealing.Sealable
-import com.android.build.gradle.internal.api.dsl.sealing.SealableNamedDomainObjectContainer
 import com.android.build.gradle.internal.api.sourcesets.AndroidSourceSetFactory
 import com.android.build.gradle.internal.api.sourcesets.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.api.sourcesets.FilesProvider
@@ -57,7 +56,7 @@ import java.util.function.BinaryOperator
  */
 interface DslModelData {
     val defaultConfig: DefaultConfig
-    val sourceSets: NamedDomainObjectContainer<AndroidSourceSet>
+    val sourceSets: NamedDomainObjectContainer<out AndroidSourceSet>
     val productFlavors: NamedDomainObjectContainer<ProductFlavor>
     val buildTypes: NamedDomainObjectContainer<BuildType>
     val signingConfigs: NamedDomainObjectContainer<SigningConfig>
@@ -75,7 +74,7 @@ interface ContainerFactory {
      * @param itemClass the class of the items.
      * @param factory a factory to create items.
      */
-    fun <T> createContainer(itemClass: Class<T>,
+    fun <T, U : T> createContainer(itemClass: Class<U>,
             factory: NamedDomainObjectFactory<T>): NamedDomainObjectContainer<T>
 }
 
@@ -92,66 +91,39 @@ class DslModelDataImpl<in E: BaseExtension2>(
         private val logger: Logger): DslModelData, Sealable {
 
     // wrapped container for source sets.
-    @Suppress("PropertyName")
-    internal val _sourceSets: NamedDomainObjectContainer<DefaultAndroidSourceSet>
-
-    // sealable container for source set.
-    override val sourceSets: SealableNamedDomainObjectContainer<AndroidSourceSet, DefaultAndroidSourceSet>
+    override val sourceSets: NamedDomainObjectContainer<DefaultAndroidSourceSet>
 
     // wrapped container for product flavors
-    @Suppress("PropertyName")
-    internal val _productFlavors: NamedDomainObjectContainer<ProductFlavorImpl> =
+    override val productFlavors: NamedDomainObjectContainer<ProductFlavor> =
             containerFactory.createContainer(
                     ProductFlavorImpl::class.java,
                     ProductFlavorFactory(dslScope))
 
-    // sealable container for product flavors
-    override val productFlavors: SealableNamedDomainObjectContainer<ProductFlavor, ProductFlavorImpl> =
-            createSealableContainer(
-                    ProductFlavor::class.java,
-                    ProductFlavorImpl::class.java,
-                    _productFlavors)
-
     // wrapped container for build type
-    @Suppress("PropertyName")
-    internal val _buildTypes: NamedDomainObjectContainer<BuildTypeImpl> =
+    override val buildTypes: NamedDomainObjectContainer<BuildType> =
             containerFactory.createContainer(
                     BuildTypeImpl::class.java,
                     BuildTypeFactory(dslScope))
 
-    // sealable container for build type
-    override val buildTypes: SealableNamedDomainObjectContainer<BuildType, BuildTypeImpl> =
-            createSealableContainer(
-                    BuildType::class.java,
-                    BuildTypeImpl::class.java,
-                    _buildTypes)
-
     // wrapped container for signing config
-    private val _signingConfigs: NamedDomainObjectContainer<SigningConfigImpl> =
+    override val signingConfigs: NamedDomainObjectContainer<SigningConfig> =
             containerFactory.createContainer(
                     SigningConfigImpl::class.java,
                     SigningConfigFactory(
                             dslScope,
                             getDefaultDebugKeystoreLocation()))
 
-    // sealable container for signing config
-    override val signingConfigs: SealableNamedDomainObjectContainer<SigningConfig, SigningConfigImpl> =
-            createSealableContainer(
-                    SigningConfig::class.java,
-                    SigningConfigImpl::class.java,
-                    _signingConfigs)
-
-    private val _flavorData: MutableMap<String, DimensionData<ProductFlavorImpl>> = mutableMapOf()
-    private val _buildTypeData: MutableMap<String, DimensionData<BuildTypeImpl>> = mutableMapOf()
+    private val _flavorData: MutableMap<String, DimensionData<ProductFlavor>> = mutableMapOf()
+    private val _buildTypeData: MutableMap<String, DimensionData<BuildType>> = mutableMapOf()
 
     private var afterEvaluatedComputation = false
 
-    val flavorData: Map<String, DimensionData<ProductFlavorImpl>>
+    val flavorData: Map<String, DimensionData<ProductFlavor>>
         get() {
             if (!afterEvaluatedComputation) throw RuntimeException("Called before afterEvaluateCompute")
             return _flavorData
         }
-    val buildTypeData: Map<String, DimensionData<BuildTypeImpl>>
+    val buildTypeData: Map<String, DimensionData<BuildType>>
         get() {
             if (!afterEvaluatedComputation) throw RuntimeException("Called before afterEvaluateCompute")
             return _buildTypeData
@@ -173,33 +145,28 @@ class DslModelDataImpl<in E: BaseExtension2>(
                 .reduce(toSingleItem())
                 .orElseThrow { RuntimeException("No main variant type") }
 
-        _sourceSets = containerFactory.createContainer(
+        sourceSets = containerFactory.createContainer(
                 DefaultAndroidSourceSet::class.java,
                 AndroidSourceSetFactory(
                         filesProvider,
                         mainVariantType.isAar,
                         dslScope))
 
-        sourceSets = createSealableContainer(
-                AndroidSourceSet::class.java,
-                DefaultAndroidSourceSet::class.java,
-                _sourceSets)
-
         hasAndroidTests = variantTypes.contains(VariantTypeImpl.ANDROID_TEST)
         hasUnitTests = variantTypes.contains(VariantTypeImpl.UNIT_TEST)
 
         // setup callback to generate source sets on the fly, as well as the associated
         // configurations
-        _productFlavors.whenObjectAdded { checkNewFlavor(it) }
-        _buildTypes.whenObjectAdded { checkNewBuildType(it) }
-        _sourceSets.whenObjectAdded { handleNewSourceSet(it) }
+        productFlavors.whenObjectAdded { checkNewFlavor(it) }
+        buildTypes.whenObjectAdded { checkNewBuildType(it) }
+        sourceSets.whenObjectAdded { handleNewSourceSet(it as DefaultAndroidSourceSet) }
 
         // map whenObjectRemoved on the containers to throw an exception.
         val lambda: (Any) -> Unit = { UnsupportedOperationException("Removing objects is not supported.") }
-        _sourceSets.whenObjectRemoved(lambda)
-        _signingConfigs.whenObjectRemoved(lambda)
-        _buildTypes.whenObjectRemoved(lambda)
-        _productFlavors.whenObjectRemoved(lambda)
+        sourceSets.whenObjectRemoved(lambda)
+        signingConfigs.whenObjectRemoved(lambda)
+        buildTypes.whenObjectRemoved(lambda)
+        productFlavors.whenObjectRemoved(lambda)
 
         // and now create source set and dimension data for the default config
         createSourceSets(BuilderConstants.MAIN)
@@ -211,11 +178,11 @@ class DslModelDataImpl<in E: BaseExtension2>(
      */
     fun afterEvaluateCompute() {
         // loop on flavors and build types.
-        _productFlavors.forEach { flavor ->
+        productFlavors.forEach { flavor ->
             _flavorData[flavor.name] = createDimensionData(flavor, { it.name })
         }
 
-        _buildTypes.forEach { buildType ->
+        buildTypes.forEach { buildType ->
             _buildTypeData[buildType.name] = createDimensionData(buildType, { it.name})
         }
 
@@ -224,21 +191,6 @@ class DslModelDataImpl<in E: BaseExtension2>(
 
     override fun seal() {
         defaultConfig.seal()
-        sourceSets.seal()
-        productFlavors.seal()
-        signingConfigs.seal()
-    }
-
-    private fun <I, T: I> createSealableContainer(
-            interfaceClass: Class<I>,
-            itemClass: Class<T>,
-            container: NamedDomainObjectContainer<T>
-    ): SealableNamedDomainObjectContainer<I, T> {
-        @Suppress("UNCHECKED_CAST")
-        return dslScope.objectFactory.newInstance(
-                SealableNamedDomainObjectContainer::class.java,
-                container, itemClass,
-                dslScope) as SealableNamedDomainObjectContainer<I, T>
     }
 
     private fun <T> createDimensionData(data: T, nameFun: (T) -> String): DimensionData<T> {
@@ -257,7 +209,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
      *
      * Checks its for correctness and creates its associated source sets.
      */
-    private fun checkNewFlavor(productFlavor: ProductFlavorImpl) {
+    private fun checkNewFlavor(productFlavor: ProductFlavor) {
         val name = productFlavor.name
 
         if (!checkName(name, "ProductFlavor")) {
@@ -265,7 +217,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
             return
         }
 
-        if (_buildTypes.any { it.name == name }) {
+        if (buildTypes.any { it.name == name }) {
             dslScope.issueReporter.reportError(Type.GENERIC,
                 EvalIssueException("ProductFlavor names cannot collide with BuildType names: $name"))
 
@@ -282,7 +234,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
      *
      * Checks its for correctness and creates its associated source sets.
      */
-    private fun checkNewBuildType(buildType: BuildTypeImpl) {
+    private fun checkNewBuildType(buildType: BuildType) {
         val name = buildType.name
 
         if (!checkName(name, "BuildType")) {
@@ -290,7 +242,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
             return
         }
 
-        if (_productFlavors.any { it.name == name }) {
+        if (productFlavors.any { it.name == name }) {
             dslScope.issueReporter.reportError(Type.GENERIC,
                 EvalIssueException("BuildType names cannot collide with ProductFlavor names: $name"))
 
@@ -306,14 +258,14 @@ class DslModelDataImpl<in E: BaseExtension2>(
     private fun createSourceSets(name: String) {
         // safe to use the backing container directly since this is called on new flavor
         // or build type.
-        _sourceSets.maybeCreate(name)
+        sourceSets.maybeCreate(name)
 
         if (hasAndroidTests) {
-            _sourceSets.maybeCreate(computeSourceSetName(name, VariantTypeImpl.ANDROID_TEST))
+            sourceSets.maybeCreate(computeSourceSetName(name, VariantTypeImpl.ANDROID_TEST))
         }
 
         if (hasUnitTests) {
-            _sourceSets.maybeCreate(computeSourceSetName(name, VariantTypeImpl.UNIT_TEST))
+            sourceSets.maybeCreate(computeSourceSetName(name, VariantTypeImpl.UNIT_TEST))
         }
     }
 
@@ -528,7 +480,7 @@ class RenamedConfigurationAction(
  * @see .searchForSingleItemInList
  */
 private fun <T> toSingleItem(): BinaryOperator<T> {
-    return BinaryOperator { name1, _ -> throw IllegalArgumentException("Duplicate objects with name: " + name1) }
+    return BinaryOperator { name1, _ -> throw IllegalArgumentException("Duplicate objects with name: $name1") }
 }
 
 

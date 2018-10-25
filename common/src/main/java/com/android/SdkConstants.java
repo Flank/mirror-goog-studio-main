@@ -98,6 +98,8 @@ public final class SdkConstants {
             "SharedLibraryAndroidManifest.xml"; // $NON-NLS-1$
     /** pre-dex jar filename. i.e. "classes.jar" */
     public static final String FN_CLASSES_JAR = "classes.jar"; //$NON-NLS-1$
+    /** api.jar filename */
+    public static final String FN_API_JAR = "api.jar"; //$NON-NLS-1$
     /** Dex filename inside the APK. i.e. "classes.dex" */
     public static final String FN_APK_CLASSES_DEX = "classes.dex"; //$NON-NLS-1$
     /** Dex filename inside the APK. i.e. "classes.dex" */
@@ -2478,7 +2480,7 @@ public final class SdkConstants {
     public static final String GRADLE_PLUGIN_NAME = "com.android.tools.build:gradle:";
     public static final String GRADLE_EXPERIMENTAL_PLUGIN_NAME =
             "com.android.tools.build:gradle-experimental:";
-    public static final String GRADLE_MINIMUM_VERSION = "4.10.1";
+    public static final String GRADLE_MINIMUM_VERSION = "5.0-milestone-1";
     public static final String GRADLE_LATEST_VERSION = GRADLE_MINIMUM_VERSION;
     public static final String GRADLE_PLUGIN_MINIMUM_VERSION = "1.0.0";
     public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "3.1.0";

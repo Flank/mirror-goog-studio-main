@@ -36,7 +36,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.Collection;
 import org.gradle.api.NamedDomainObjectContainer;
 
-public class FeatureVariantFactory extends BaseVariantFactory {
+public class FeatureVariantFactory extends ApplicationVariantFactory {
 
     @NonNull private final VariantType variantType;
 
@@ -54,12 +54,12 @@ public class FeatureVariantFactory extends BaseVariantFactory {
             @NonNull GradleVariantConfiguration variantConfiguration,
             @NonNull TaskManager taskManager,
             @NonNull Recorder recorder) {
-        return new FeatureVariantData(
-                globalScope,
-                extension,
-                taskManager,
-                variantConfiguration,
-                recorder);
+        FeatureVariantData variant =
+                new FeatureVariantData(
+                        globalScope, extension, taskManager, variantConfiguration, recorder);
+        computeOutputs(variantConfiguration, variant, false);
+
+        return variant;
     }
 
     @Override

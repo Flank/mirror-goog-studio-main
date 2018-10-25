@@ -39,16 +39,16 @@ public interface AndroidArtifact extends BaseArtifact {
     Collection<AndroidArtifactOutput> getOutputs();
 
     /**
-     * Returns whether the output file is signed. This is always false for the main artifact
-     * of a library project.
+     * Returns whether the output file is signed. This can only be true for the main apk of an
+     * application project.
      *
      * @return true if the app is signed.
      */
     boolean isSigned();
 
     /**
-     * Returns the name of the {@link SigningConfig} used for the signing. If none are setup or
-     * if this is the main artifact of a library project, then this is null.
+     * Returns the name of the {@link SigningConfig} used for the signing. If none are setup or if
+     * this is not the main artifact of an application project, then this is null.
      *
      * @return the name of the setup signing config.
      */

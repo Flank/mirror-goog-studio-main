@@ -66,6 +66,11 @@ public class SystraceConsumer implements Trace.TraceConsumer {
     }
 
     @Override
+    public void onInfo(Trace.Event event) {
+        Logger.getLogger().info(event.text);
+    }
+
+    @Override
     public void onFinish() {
         writer.println("]");
         writer.close();

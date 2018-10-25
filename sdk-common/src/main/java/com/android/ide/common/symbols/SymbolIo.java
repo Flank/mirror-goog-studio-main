@@ -850,7 +850,8 @@ public final class SymbolIo {
         try (InputStream is = new BufferedInputStream(Files.newInputStream(manifest))) {
             packageName = AndroidManifestParser.parse(is).getPackage();
         } catch (SAXException | ParserConfigurationException e) {
-            throw new IOException(e);
+            throw new IOException(
+                    "Failed to get package name from manifest " + manifest.toAbsolutePath(), e);
         }
         writeSymbolListWithPackageName(symbolTable, packageName, outputFile);
     }

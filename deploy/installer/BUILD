@@ -20,8 +20,8 @@ cc_library(
         "command_cmd.cc",
         "dump.cc",
         "dump.h",
+        "executor.cc",
         "package_manager.cc",
-        "shell_command.cc",
         "swap.cc",
         "workspace.cc",
     ],
@@ -31,8 +31,8 @@ cc_library(
         "command.h",
         "command_cmd.h",
         "dump.h",
+        "executor.h",
         "package_manager.h",
-        "shell_command.h",
         "swap.h",
         "workspace.h",
     ],
@@ -206,13 +206,13 @@ cc_test(
     name = "installer_tests",
     size = "small",
     srcs = [
-        "shell_command_test.cc",
+        "executor_test.cc",
     ],
     args = [
-        "$(location :shell_command_test_helper)",
+        "$(location :executor_test_helper)",
     ],
     data = [
-        ":shell_command_test_helper",
+        ":executor_test_helper",
     ],
     linkstatic = 1,
     tags = ["no_windows"],
@@ -223,8 +223,8 @@ cc_test(
 )
 
 cc_binary(
-    name = "shell_command_test_helper",
-    srcs = ["shell_command_test_helper.cc"],
+    name = "executor_test_helper",
+    srcs = ["executor_test_helper.cc"],
 )
 
 sh_test(

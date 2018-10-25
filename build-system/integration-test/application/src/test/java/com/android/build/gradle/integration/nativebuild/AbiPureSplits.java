@@ -128,8 +128,7 @@ public class AbiPureSplits {
                             "include 'x86', 'armeabi-v7a', 'mips'",
                             "include 'x86', 'armeabi-v7a', 'mips', 'armeabi'");
                     ProjectBuildOutput incrementalModel =
-                            project.executeAndReturnModel(
-                                    ProjectBuildOutput.class, "assembleDebug");
+                            project.executeAndReturnOutputModel("assembleDebug");
 
                     List<? extends OutputFile> outputs = getOutputs(incrementalModel);
                     for (OutputFile output : outputs) {
@@ -180,8 +179,7 @@ public class AbiPureSplits {
                             "include 'x86', 'armeabi-v7a', 'mips'",
                             "include 'x86', 'armeabi-v7a'");
                     ProjectBuildOutput incrementalModel =
-                            project.executeAndReturnModel(
-                                    ProjectBuildOutput.class, "assembleDebug");
+                            project.executeAndReturnOutputModel("assembleDebug");
 
                     List<? extends OutputFile> outputs = getOutputs(incrementalModel);
                     assertThat(outputs).hasSize(3);

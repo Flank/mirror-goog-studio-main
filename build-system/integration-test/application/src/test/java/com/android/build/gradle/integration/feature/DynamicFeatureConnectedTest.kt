@@ -73,12 +73,19 @@ class DynamicFeatureConnectedTest {
                     |    </dist:module>
                     |    <application />
                     |</manifest>""".trimMargin()))}
+            .withFile("src/main/java/com/example/dynamic/feature/FeatureProductionClass.java",
+                """package com.example.dynamic.feature;
+                    |
+                    |public class FeatureProductionClass {
+                    |    public static int getFour() { return 4; }
+                    |}""".trimMargin())
             .withFile(
                 "src/androidTest/java/com/example/dynamic/feature/test/MyTest.java",
                 """package com.example.dynamic.feature.test;
                     |
                     |import android.support.test.runner.AndroidJUnit4;
                     |import com.example.app.MyProductionClass;
+                    |import com.example.dynamic.feature.FeatureProductionClass;
                     |import org.junit.Assert;
                     |import org.junit.Test;
                     |import org.junit.internal.runners.JUnit4ClassRunner;
@@ -88,10 +95,17 @@ class DynamicFeatureConnectedTest {
                     |@RunWith(AndroidJUnit4.class)
                     |public class MyTest {
                     |    @Test
-                    |    public void doTest() {
+                    |    public void useBaseClass() {
                     |        // Check both compiles and runs against a production class in
                     |        // the base feature
                     |        Assert.assertEquals(3, MyProductionClass.getThree());
+                    |    }
+                    |
+                    |    @Test
+                    |    public void useFeatureClass() {
+                    |        // Check both compiles and runs against a production class in
+                    |        // this dynamic feature
+                    |        Assert.assertEquals(4, FeatureProductionClass.getFour());
                     |    }
                     |}
                 """.trimMargin())

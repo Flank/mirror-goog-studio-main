@@ -170,15 +170,15 @@ constructor(
 
         /** Issues around interoperability between Java, Kotlin, etc */
         @JvmField
-        val INTEROPERABILITY = create("Interoperability", 48)
+        val INTEROPERABILITY = create("Interoperability", 46)
 
         /** Issues around interoperability calling Java from Kotlin */
         @JvmField
-        val INTEROPERABILITY_KOTLIN = create(INTEROPERABILITY, "Kotlin Interoperability", 46)
+        val INTEROPERABILITY_KOTLIN = create(INTEROPERABILITY, "Kotlin Interoperability", 44)
 
         /** Issues around interoperability calling Kotlin from Java */
         @JvmField
-        val INTEROPERABILITY_JAVA = create(INTEROPERABILITY, "Java Interoperability", 44)
+        val INTEROPERABILITY_JAVA = create(INTEROPERABILITY, "Java Interoperability", 42)
 
         /** Issues related to Chrome OS devices  */
         @JvmField
@@ -186,7 +186,11 @@ constructor(
 
         /** Issues related to right to left and bidirectional text support  */
         @JvmField
-        val RTL = create(I18N, "Bidirectional Text", 40)
+        val RTL = create(I18N, "Bidirectional Text", 49)
+
+        /** Issues related to writing correct tests  */
+        @JvmField
+        val TESTING = create(null, "Testing", 48)
 
         /** Issues related to increased application size  */
         @JvmField

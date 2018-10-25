@@ -144,6 +144,8 @@ Attribute        | Description
 `test_srcs`      | A list of directories with the test sources.
 `test_resources` | A list of directories with the test resources.
 `test_data`      | A list of files needed to run the test.
+`exclude`        | A list of files to be excluded from both src and test_srcs. This requires a change to tools/idea/.idea/compiler.xml
+`test_timeout`   | The timeout value of the test, see: [blaze timeout](https://docs.bazel.build/versions/master/test-encyclopedia.html#timeout)
 
 > A major difference with actual iml modules is that in bazel we must specify
 > the files needed to run the tests. These files are known as _runfiles_ and are

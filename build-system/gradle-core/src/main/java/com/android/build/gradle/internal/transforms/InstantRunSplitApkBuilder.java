@@ -25,13 +25,13 @@ import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.transform.SecondaryFile;
 import com.android.build.api.transform.Transform;
 import com.android.build.api.transform.TransformException;
-import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.internal.packaging.ApkCreatorFactories;
 import com.android.build.gradle.internal.res.namespaced.Aapt2DaemonManagerService;
 import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey;
+import com.android.build.gradle.internal.tasks.SigningConfigMetadata;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.internal.aapt.AaptOptions;
@@ -75,7 +75,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
     @NonNull protected final InstantRunBuildContext buildContext;
     @NonNull
     protected final File outputDirectory;
-    @Nullable protected final CoreSigningConfig signingConf;
+    @Nullable protected final FileCollection signingConf;
     @NonNull private final Supplier<String> applicationIdSupplier;
     @NonNull
     private final AaptOptions aaptOptions;
@@ -101,7 +101,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
             @NonNull AndroidBuilder androidBuilder,
             @Nullable FileCollection aapt2FromMaven,
             @NonNull Supplier<String> applicationIdSupplier,
-            @Nullable CoreSigningConfig signingConf,
+            @Nullable FileCollection signingConf,
             @NonNull AaptOptions aaptOptions,
             @NonNull File outputDirectory,
             @NonNull File supportDirectory,
@@ -131,6 +131,9 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
         ImmutableList.Builder<SecondaryFile> list = ImmutableList.builder();
         if (aapt2FromMaven != null) {
             list.add(SecondaryFile.nonIncremental(aapt2FromMaven));
+        }
+        if (signingConf != null) {
+            list.add(SecondaryFile.nonIncremental(signingConf));
         }
         resourcesWithMainManifest
                 .get()
@@ -239,7 +242,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
             androidBuilder.packageCodeSplitApk(
                     resPackageFile,
                     dexFiles.dexFiles,
-                    signingConf,
+                    SigningConfigMetadata.Companion.load(signingConf),
                     alignedOutput,
                     tempDir,
                     ApkCreatorFactories.fromProjectProperties(project, true));

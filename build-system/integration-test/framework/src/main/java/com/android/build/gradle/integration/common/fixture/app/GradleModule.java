@@ -78,7 +78,7 @@ public abstract class GradleModule {
 
         content += "dependencies {\n";
         for (GradleModule dep : projectDeps) {
-            content += "  compile project('" + dep.getGradlePath() + "')\n";
+            content += "  api project('" + dep.getGradlePath() + "')\n";
         }
         content += "}\n";
 

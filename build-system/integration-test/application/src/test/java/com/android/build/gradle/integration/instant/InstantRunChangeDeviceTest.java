@@ -97,7 +97,7 @@ public class InstantRunChangeDeviceTest {
 
         if (firstBuild == BuildTarget.NO_INSTANT_RUN) {
             ProjectBuildOutput projectBuildOutput =
-                    mProject.executeAndReturnModel(ProjectBuildOutput.class, "assembleDebug");
+                    mProject.executeAndReturnOutputModel("assembleDebug");
             VariantBuildOutput debugOutput =
                     ProjectBuildOutputUtils.getDebugVariantBuildOutput(projectBuildOutput);
             File apk = VariantBuildOutputUtils.getMainOutputFile(debugOutput).getOutputFile();
@@ -117,7 +117,7 @@ public class InstantRunChangeDeviceTest {
 
         if (secondBuild == BuildTarget.NO_INSTANT_RUN) {
             ProjectBuildOutput projectBuildOutput =
-                    mProject.executeAndReturnModel(ProjectBuildOutput.class, "assembleDebug");
+                    mProject.executeAndReturnOutputModel("assembleDebug");
             VariantBuildOutput debugOutput =
                     ProjectBuildOutputUtils.getDebugVariantBuildOutput(projectBuildOutput);
             File apk = VariantBuildOutputUtils.getMainOutputFile(debugOutput).getOutputFile();

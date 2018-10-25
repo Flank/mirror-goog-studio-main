@@ -204,10 +204,10 @@ class ProjectWrapper(private val project: Project) : FilesProvider, ContainerFac
 
     // --- ContainerFactory
 
-    override fun <T> createContainer(
-        itemClass: Class<T>,
+    override fun <T, U : T> createContainer(
+        itemClass: Class<U>,
         factory: NamedDomainObjectFactory<T>
     ): NamedDomainObjectContainer<T> {
-        return project.container(itemClass, factory)
+        return project.container(itemClass as Class<T>, factory)
     }
 }

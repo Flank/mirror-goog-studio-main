@@ -17,8 +17,8 @@ package com.android.tools.deploy.swapper;
 
 import com.android.tools.deploy.proto.Deploy;
 import org.junit.Assert;
-import org.junit.Test;
 import org.junit.Ignore;
+import org.junit.Test;
 
 /** Test very simple cases on class redefinitions. */
 public class AgentBasedClassRedefinerSimpleTest extends AgentBasedClassRedefinerTestBase {
@@ -30,11 +30,7 @@ public class AgentBasedClassRedefinerSimpleTest extends AgentBasedClassRedefiner
         android.triggerMethod(ACTIVITY_CLASS, "getStatus");
         Assert.assertTrue(android.waitForInput("NOT SWAPPED", RETURN_VALUE_TIMEOUT));
 
-        Deploy.SwapRequest request =
-                createRequest(
-                        "com.android.tools.deploy.swapper.testapp.Target",
-                        "com/android/tools/deploy/swapper/testapp/Target.dex",
-                        false);
+        Deploy.SwapRequest request = createRequest("app.Target", "app/Target.dex", false);
         redefiner.redefine(request);
 
         Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
@@ -53,11 +49,7 @@ public class AgentBasedClassRedefinerSimpleTest extends AgentBasedClassRedefiner
         android.triggerMethod(ACTIVITY_CLASS, "getStatus");
         Assert.assertTrue(android.waitForInput("NOT SWAPPED", RETURN_VALUE_TIMEOUT));
 
-        Deploy.SwapRequest request =
-                createRequest(
-                        "com.android.tools.deploy.swapper.testapp.Target",
-                        "com/android/tools/deploy/swapper/testapp/Target.dex",
-                        true);
+        Deploy.SwapRequest request = createRequest("app.Target", "app/Target.dex", true);
         redefiner.redefine(request);
 
         // Agent should request an activity restart.
@@ -88,10 +80,7 @@ public class AgentBasedClassRedefinerSimpleTest extends AgentBasedClassRedefiner
         android.launchActivity(ACTIVITY_CLASS);
 
         Deploy.SwapRequest request =
-                createRequest(
-                        "com.android.tools.deploy.swapper.testapp.ClinitTarget",
-                        "com/android/tools/deploy/swapper/testapp/ClinitTarget.dex",
-                        false);
+                createRequest("app.ClinitTarget", "app/ClinitTarget.dex", false);
         redefiner.redefine(request);
 
         Deploy.AgentSwapResponse response = redefiner.getAgentResponse();

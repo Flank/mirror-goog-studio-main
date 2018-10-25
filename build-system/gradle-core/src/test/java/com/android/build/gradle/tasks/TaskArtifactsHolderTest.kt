@@ -223,13 +223,14 @@ class TaskArtifactsHolderTest {
         vararg parameters: Any) {
         val taskProvider = project.tasks.register<T>(
             configAction.name,
-            configAction.type)
+            configAction.type) {
+            configAction.configure(it)
+        }
 
         setupMock(taskProvider)
 
         configAction.preConfigure(taskProvider.name)
         val task = taskProvider.get()
-        configAction.configure(task)
 
         task.executeTask(*parameters)
     }

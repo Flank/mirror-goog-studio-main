@@ -32,6 +32,7 @@ public class AndroidBundleStub extends LibraryStub implements AndroidBundle {
     @NonNull private final Collection<JavaLibrary> myJavaDependencies;
     @NonNull private final File myManifest;
     @NonNull private final File myJarFile;
+    @NonNull private final File myApiJarFile;
     @NonNull private final File myResFolder;
     @Nullable private final File myResStaticLibrary;
     @NonNull private final File myAssetsFolder;
@@ -45,6 +46,7 @@ public class AndroidBundleStub extends LibraryStub implements AndroidBundle {
                 Lists.newArrayList(new JavaLibraryStub()),
                 new File("manifest"),
                 new File("jarFile"),
+                new File("apiJarFile"),
                 new File("resFolder"),
                 new File("resStaticLibrary"),
                 new File("assetsFolder"),
@@ -58,6 +60,7 @@ public class AndroidBundleStub extends LibraryStub implements AndroidBundle {
             @NonNull Collection<JavaLibrary> javaDependencies,
             @NonNull File manifest,
             @NonNull File jarFile,
+            @NonNull File apiJarFile,
             @NonNull File resFolder,
             @Nullable File resStaticLibrary,
             @NonNull File assetsFolder,
@@ -68,6 +71,7 @@ public class AndroidBundleStub extends LibraryStub implements AndroidBundle {
         myJavaDependencies = javaDependencies;
         myManifest = manifest;
         myJarFile = jarFile;
+        myApiJarFile = apiJarFile;
         myResFolder = resFolder;
         myResStaticLibrary = resStaticLibrary;
         myAssetsFolder = assetsFolder;
@@ -112,6 +116,12 @@ public class AndroidBundleStub extends LibraryStub implements AndroidBundle {
 
     @Override
     @NonNull
+    public File getApiJarFile() {
+        return myApiJarFile;
+    }
+
+    @Override
+    @NonNull
     public File getResFolder() {
         return myResFolder;
     }
@@ -151,6 +161,8 @@ public class AndroidBundleStub extends LibraryStub implements AndroidBundle {
                 + myManifest
                 + ", myJarFile="
                 + myJarFile
+                + ", myApiJarFile="
+                + myApiJarFile
                 + ", myResFolder="
                 + myResFolder
                 + ", myAssetsFolder="

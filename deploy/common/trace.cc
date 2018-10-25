@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-#include "trace.h"
+#include "tools/base/deploy/common/trace.h"
+
+#include <iostream>
 
 #include <fcntl.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <iostream>
 
 namespace deploy {
 

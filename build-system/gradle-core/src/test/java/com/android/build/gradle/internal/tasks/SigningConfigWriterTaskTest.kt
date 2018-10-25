@@ -65,19 +65,16 @@ class SigningConfigWriterTaskTest {
     @Test
     @Throws(IOException::class)
     fun testTask() {
-        task.signingConfig = SigningConfig("signingConfig_name")
+        val signingConfig = SigningConfig("signingConfig_name")
+        signingConfig.storePassword = "foobar"
+        signingConfig.isV1SigningEnabled = true
+        task.signingConfig = signingConfig
+
         task.fullTaskAction()
         val files = outputDirectory.listFiles()
         assertThat(files).hasLength(1)
 
-        val gsonBuilder = GsonBuilder()
-        val gson = gsonBuilder.create()
-        FileReader(files[0]).use({ fileReader ->
-            var config = gson.fromJson<SigningConfig>(
-                fileReader,
-                SigningConfig::class.java
-            )
-            assertThat(config.name).isEqualTo("signingConfig_name")
-        })
+        val config = SigningConfigMetadata.load(files[0])
+        assertThat(config).isEqualTo(task.signingConfig)
     }
 }

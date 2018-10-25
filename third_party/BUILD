@@ -19,7 +19,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.android.tools.build.jetifier_jetifier-core",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/jetifier/jetifier-core/1.0.0-alpha10:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/jetifier/jetifier-core/1.0.0-beta02:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":com.google.code.gson_gson",
@@ -30,7 +30,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.android.tools.build.jetifier_jetifier-processor",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/jetifier/jetifier-processor/1.0.0-alpha10:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/jetifier/jetifier-processor/1.0.0-beta02:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":com.android.tools.build.jetifier_jetifier-core",
@@ -53,7 +53,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.android.tools.build_bundletool",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/bundletool/0.6.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/bundletool/0.6.1:jar",
     visibility = ["//visibility:public"],
     exports = [],
     runtime_deps = [
@@ -1070,7 +1070,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.gradle_gradle-tooling-api",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/4.10.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/5.0-milestone-1:jar",
     visibility = ["//visibility:public"],
     exports = [],
     runtime_deps = [":org.slf4j_slf4j-api"],

@@ -38,10 +38,10 @@ void SessionsManager::BeginSession(int64_t device_id,
     DoEndSession(sessions_.back().get(), now);
   }
 
-  std::unique_ptr<Session> session(new Session(device_id, pid, now));
+  std::unique_ptr<Session> session(new Session(device_id, pid, now, daemon_));
   proto::Event event;
-  event.set_event_id(session->info.session_id());
-  event.set_session_id(session->info.session_id());
+  event.set_event_id(session->info().session_id());
+  event.set_session_id(session->info().session_id());
   event.set_timestamp(now);
   event.set_kind(proto::Event::SESSION);
   event.set_type(proto::Event::SESSION_STARTED);
@@ -69,7 +69,7 @@ profiler::Session* SessionsManager::GetLastSession() {
 void SessionsManager::EndSession(int64_t session_id) {
   auto now = daemon_->clock()->GetCurrentTime();
   if (sessions_.size() > 0) {
-    if (sessions_.back()->info.session_id() == session_id) {
+    if (sessions_.back()->info().session_id() == session_id) {
       DoEndSession(sessions_.back().get(), now);
     }
   }
@@ -82,8 +82,8 @@ void SessionsManager::DoEndSession(profiler::Session* session, int64_t time) {
   if (session->End(time)) {
     proto::Event event;
     event.set_timestamp(time);
-    event.set_event_id(session->info.session_id());
-    event.set_session_id(session->info.session_id());
+    event.set_event_id(session->info().session_id());
+    event.set_session_id(session->info().session_id());
     event.set_kind(proto::Event::SESSION);
     event.set_type(proto::Event::SESSION_ENDED);
     event.mutable_session_ended();

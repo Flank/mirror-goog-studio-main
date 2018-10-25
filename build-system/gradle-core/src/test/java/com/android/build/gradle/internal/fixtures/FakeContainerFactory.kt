@@ -25,7 +25,7 @@ import org.gradle.api.artifacts.Configuration
 /** fake [ContainerFactory] for tests */
 class FakeContainerFactory: ContainerFactory {
 
-    override fun <T> createContainer(itemClass: Class<T>,
+    override fun <T, U : T> createContainer(itemClass: Class<U>,
             factory: NamedDomainObjectFactory<T>): NamedDomainObjectContainer<T> {
 
         // Configuration does not implements Named so we cannot make our fake named container

@@ -315,6 +315,8 @@ public class ModelBuilder<Extension extends AndroidConfig>
                     "This Gradle plugin requires a newer IDE able to request IDE model level 3. For Android Studio this means version 3.0+");
         }
 
+        StudioVersions.verifyStudioIsNotOld(projectOptions);
+
         modelWithFullDependency =
                 projectOptions.get(BooleanOption.IDE_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES);
 
@@ -463,8 +465,11 @@ public class ModelBuilder<Extension extends AndroidConfig>
                         new SyncIssueImpl(
                                 Type.GENERIC,
                                 EvalIssueReporter.Severity.ERROR,
-                                "Failed to parse XML in " + manifest.getPath(),
-                                e.getMessage()));
+                                null,
+                                "Failed to parse XML in "
+                                        + manifest.getPath()
+                                        + "\n"
+                                        + e.getMessage()));
             }
         }
         return false;

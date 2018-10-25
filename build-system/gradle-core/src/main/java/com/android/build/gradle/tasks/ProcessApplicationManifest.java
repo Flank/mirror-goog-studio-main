@@ -78,7 +78,9 @@ import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
@@ -559,6 +561,7 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
         private File featureManifestOutputDirectory;
         private File bundleManifestOutputDirectory;
         private File instantAppManifestOutputDirectory;
+        private Provider<Directory> manifestOutputDirectory;
 
         public CreationAction(
                 @NonNull VariantScope scope,
@@ -601,6 +604,13 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
                     InternalArtifactType.MANIFEST_METADATA,
                     BuildArtifactsHolder.OperationType.INITIAL,
                     artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS));
+
+            manifestOutputDirectory =
+                    artifacts.createDirectory(
+                            InternalArtifactType.MERGED_MANIFESTS,
+                            BuildArtifactsHolder.OperationType.INITIAL,
+                            taskName,
+                            "");
 
             instantRunManifestOutputDirectory =
                     artifacts.appendArtifact(
@@ -698,6 +708,7 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
             task.maxSdkVersion =
                     TaskInputHelper.memoize(config.getMergedFlavor()::getMaxSdkVersion);
 
+            task.setManifestOutputDirectory(manifestOutputDirectory);
             task.setInstantRunManifestOutputDirectory(instantRunManifestOutputDirectory);
             task.setMetadataFeatureManifestOutputDirectory(featureManifestOutputDirectory);
             task.setBundleManifestOutputDirectory(bundleManifestOutputDirectory);

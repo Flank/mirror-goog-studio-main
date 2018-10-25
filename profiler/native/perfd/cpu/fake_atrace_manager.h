@@ -59,11 +59,21 @@ class FakeAtraceManager final : public AtraceManager {
 
     // Each time we get a new command verify the state is the expected state.
     if (command.compare("--async_start") == 0) {
-      EXPECT_FALSE(start_profiling_captured_);
-      EXPECT_FALSE(stop_profiling_captured_);
-      EXPECT_FALSE(clock_sync_write_);
-      EXPECT_THAT(profiling_dumps_captured_, 0);
-      EXPECT_THAT(additional_args, testing::Eq("-b 8192"));
+      // If we are testing the buffer downsampling we expecte the first call to
+      // have proper state. However we also expect a retry call which has
+      // slightly different state.
+      if (is_buffer_test_ && start_profiling_captured_) {
+        EXPECT_FALSE(stop_profiling_captured_);
+        EXPECT_FALSE(clock_sync_write_);
+        EXPECT_THAT(profiling_dumps_captured_, 0);
+        EXPECT_THAT(additional_args, testing::Eq("-b 4096"));
+      } else {
+        EXPECT_FALSE(start_profiling_captured_);
+        EXPECT_FALSE(stop_profiling_captured_);
+        EXPECT_FALSE(clock_sync_write_);
+        EXPECT_THAT(profiling_dumps_captured_, 0);
+        EXPECT_THAT(additional_args, testing::Eq("-b 8192"));
+      }
       start_profiling_captured_ = true;
     } else if (command.compare("--async_stop") == 0) {
       EXPECT_TRUE(start_profiling_captured_);
@@ -76,7 +86,11 @@ class FakeAtraceManager final : public AtraceManager {
     } else if (command.compare("--async_dump") == 0) {
       EXPECT_TRUE(start_profiling_captured_);
       EXPECT_FALSE(stop_profiling_captured_);
-      EXPECT_THAT(additional_args, testing::Eq("-b 8192"));
+
+      char buffer_expected[64];
+      sprintf(buffer_expected, "-b %d", buffer_size_kb_);
+      EXPECT_THAT(additional_args, testing::Eq(buffer_expected));
+
       ValidatePath(path);
       write_data_callback_(path, profiling_dumps_captured_);
       profiling_dumps_captured_++;
@@ -91,6 +105,18 @@ class FakeAtraceManager final : public AtraceManager {
     }
     return forced_running_state_;
   }
+
+  virtual bool ValidateBuffer(int expected_buffer_size_kb) override {
+    return buffer_size_kb_ == expected_buffer_size_kb;
+  }
+
+  // Sets the buffer size that atrace succeeds at creating.
+  void SetAvailableBufferSizeKb(int size_kb) { buffer_size_kb_ = size_kb; }
+
+  // Testing the buffer requires a few retry attempts as such we check for
+  // a different set of asserts in RunAtrace. Putting the test in this mode
+  // signals the test what asserts should be checked for.
+  void SetBufferTest(bool is_buffer_test) { is_buffer_test_ = is_buffer_test; }
 
   virtual std::string BuildSupportedCategoriesString() override {
     std::string atrace_output(
@@ -139,6 +165,8 @@ class FakeAtraceManager final : public AtraceManager {
     clock_sync_write_ = false;
     profiling_dumps_captured_ = 0;
     forced_running_state_ = -1;
+    buffer_size_kb_ = 8192;
+    is_buffer_test_ = false;
   }
 
   void ForceRunningState(bool isRunning) {
@@ -155,6 +183,8 @@ class FakeAtraceManager final : public AtraceManager {
   int forced_running_state_;
   int profiling_dumps_captured_;
   bool clock_sync_write_;
+  int buffer_size_kb_;
+  bool is_buffer_test_;
 };
 
 }  // namespace profiler

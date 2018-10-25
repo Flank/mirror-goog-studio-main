@@ -37,6 +37,7 @@ import java.io.File
 class BundleTestDataImpl(
     private val testVariantData: TestVariantData,
     testApkDir: BuildableArtifact,
+    private val moduleName: String?,
     private val apkBundle: FileCollection
 ) : AbstractTestDataImpl(testVariantData.variantConfiguration, testApkDir, null) {
 
@@ -58,7 +59,7 @@ class BundleTestDataImpl(
         deviceConfigProvider: DeviceConfigProvider,
         logger: ILogger
     ): ImmutableList<File> {
-        return getApkFiles(apkBundle.singleFile.toPath(), deviceConfigProvider).map{it.toFile()}.toImmutableList()
+        return getApkFiles(apkBundle.singleFile.toPath(), deviceConfigProvider, moduleName).map{it.toFile()}.toImmutableList()
     }
 
     override fun getTestedApksFromBundle(): FileCollection? = apkBundle

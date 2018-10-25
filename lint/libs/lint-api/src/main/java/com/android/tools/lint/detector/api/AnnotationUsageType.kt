@@ -51,6 +51,9 @@ enum class AnnotationUsageType {
     /** An annotated element is compared for equality or not equality */
     EQUALITY,
 
+    /** A class extends or implements an annotated element */
+    EXTENDS,
+
     /** An annotated field is referenced */
     FIELD_REFERENCE;
 }

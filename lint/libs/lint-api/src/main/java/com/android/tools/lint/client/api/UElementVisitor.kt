@@ -1112,6 +1112,12 @@ internal class UElementVisitor constructor(
 
             return super.visitVariable(node)
         }
+
+        override fun visitClass(node: UClass): Boolean {
+            annotationHandler?.visitClass(mContext, node)
+
+            return super.visitClass(node)
+        }
     }
 
     companion object {

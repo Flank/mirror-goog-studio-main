@@ -62,6 +62,8 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.intellij.openapi.project.Project;
+import com.intellij.psi.JavaPsiFacade;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiArrayType;
 import com.intellij.psi.PsiClass;
@@ -77,6 +79,7 @@ import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiModifierListOwner;
 import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.PsiType;
+import com.intellij.psi.search.GlobalSearchScope;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -451,6 +454,28 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                 } else if (type.endsWith(RES_SUFFIX)) {
                     // Check that resource type annotations are on ints
                     checkTargetType(annotation, TYPE_INT, TYPE_LONG, true);
+                } else if (RESTRICT_TO_ANNOTATION.isEquals(type)) {
+                    UExpression attributeValue = annotation.findDeclaredAttributeValue(ATTR_VALUE);
+                    if (attributeValue == null) {
+                        attributeValue = annotation.findDeclaredAttributeValue(null);
+                    }
+                    if (attributeValue == null) {
+                        mContext.report(
+                                ANNOTATION_USAGE,
+                                annotation,
+                                mContext.getLocation(annotation),
+                                "Restrict to what? Expected at least one `RestrictTo.Scope` arguments.");
+                    } else {
+                        String values = attributeValue.asSourceString();
+                        if (values.contains("SUBCLASSES")
+                                && annotation.getUastParent() instanceof UClass) {
+                            mContext.report(
+                                    ANNOTATION_USAGE,
+                                    annotation,
+                                    mContext.getLocation(annotation),
+                                    "`RestrictTo.Scope.SUBCLASSES` should only be specified on methods and fields");
+                        }
+                    }
                 }
             } else {
                 // Look for typedefs (and make sure they're specified on the right type)
@@ -850,6 +875,8 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
 
                 List<UExpression> caseValues = node.getCaseValues();
                 if (caseValues.isEmpty()) {
+                    // We had an else clause: don't report any as missing
+                    mFields.clear();
                     return true;
                 }
 
@@ -1109,15 +1136,21 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
             // annotate it with @IntDef, and then use @foo.bar.Baz in your signatures.
             // Here we want to map from @foo.bar.Baz to the corresponding int def.
             // Don't need to compute this if performing @IntDef or @StringDef lookup
+            PsiClass cls = null;
             PsiJavaCodeReferenceElement ref = annotation.getNameReferenceElement();
-            if (ref == null) {
+            if (ref != null) {
+                PsiElement resolved = ref.resolve();
+                if (resolved instanceof PsiClass) {
+                    cls = (PsiClass) resolved;
+                }
+            } else {
+                Project project = annotation.getProject();
+                GlobalSearchScope scope = GlobalSearchScope.projectScope(project);
+                cls = JavaPsiFacade.getInstance(project).findClass(signature, scope);
+            }
+            if (cls == null || !cls.isAnnotationType()) {
                 continue;
             }
-            PsiElement resolved = ref.resolve();
-            if (!(resolved instanceof PsiClass) || !((PsiClass) resolved).isAnnotationType()) {
-                continue;
-            }
-            PsiClass cls = (PsiClass) resolved;
             PsiAnnotation[] innerAnnotations = evaluator.getAllAnnotations(cls, false);
             for (int j = 0; j < innerAnnotations.length; j++) {
                 PsiAnnotation inner = innerAnnotations[j];

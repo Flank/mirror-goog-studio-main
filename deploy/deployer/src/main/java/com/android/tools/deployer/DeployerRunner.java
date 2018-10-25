@@ -70,6 +70,7 @@ public class DeployerRunner {
     // Run it from bazel with the following command:
     // bazel run :deployer.runner org.wikipedia.alpha PATH_TO_APK1 PATH_TO_APK2
     public static void main(String[] args) throws IOException {
+        Trace.start();
         Trace.begin("main");
         tracedMain(args);
         Trace.end();

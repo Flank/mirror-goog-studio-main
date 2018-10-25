@@ -16,28 +16,46 @@
 #ifndef PERFD_EVENT_BUFFER_H_
 #define PERFD_EVENT_BUFFER_H_
 
+#include <condition_variable>
 #include <mutex>
+#include <queue>
 
 #include "proto/profiler.grpc.pb.h"
 #include "utils/circular_buffer.h"
+#include "utils/clock.h"
 
 namespace profiler {
 
 // This class is thread safe
 class EventBuffer {
  public:
-  EventBuffer() : events_(500), groups_(100) {}
+  EventBuffer(Clock* clock)
+      : clock_(clock),
+        interrupt_write_(false),
+        events_added_(0),
+        events_(500),
+        groups_(100) {}
 
   // Visible for testing
-  EventBuffer(size_t event_capacity, size_t group_capacity)
-      : events_(event_capacity), groups_(group_capacity) {}
+  EventBuffer(Clock* clock, size_t events_capacity, size_t group_capacity)
+      : clock_(clock),
+        interrupt_write_(false),
+        events_added_(0),
+        events_(events_capacity),
+        groups_(group_capacity) {}
 
-  // Currently events are assumed to be added in timestamp order.
-  // TODO: Manage timing inside the event buffer to ensure correct ordering.
+  // Note that the |EventBuffer| will generate/overwrite the event's timestamp
+  // based on the time it is added. This ensure that the events stored in the
+  // buffer is in order.
   void Add(proto::Event& event);
 
-  // Returns all the events timed between |from| and |to| (inclusive)
-  std::vector<proto::Event> Get(int64_t from, int64_t to);
+  // All events are written to the |consumer| then cleared from the queue.
+  // This call is blocking and will not return until InterruptWriteEvents is
+  // called.
+  void WriteEventsTo(grpc::ServerWriter<proto::Event>* consumer);
+
+  // Interrupts the WriteEventsTo.
+  void InterruptWriteEvents();
 
   // Returns all the event groups (events that share the same event_id)
   // that intersect the |from| and |to| range.
@@ -53,10 +71,12 @@ class EventBuffer {
   bool GetGroup(int64_t event_id, proto::EventGroup* group);
 
  private:
+  Clock* clock_;
   std::mutex mutex_;
-
+  bool interrupt_write_;
+  int events_added_;  // Guarded by mutex_
+  std::condition_variable events_cv_;
   CircularBuffer<proto::Event> events_;
-
   CircularBuffer<proto::EventGroup> groups_;
 };
 

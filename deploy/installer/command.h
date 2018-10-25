@@ -19,7 +19,7 @@
 
 #include <memory>
 
-#include "workspace.h"
+#include "tools/base/deploy/installer/workspace.h"
 
 namespace deploy {
 
@@ -27,7 +27,7 @@ namespace deploy {
 // should extend.
 class Command {
  public:
-  ~Command() = default;
+  virtual ~Command() = default;
   // Parse parameters and set readyToRun to true if no error was encountered.
   virtual void ParseParameters(int argc, char** argv) = 0;
 

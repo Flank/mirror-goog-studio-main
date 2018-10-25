@@ -23,15 +23,13 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-#include "message_pipe_wrapper.h"
+#include "tools/base/deploy/common/message_pipe_wrapper.h"
 
 namespace deploy {
 class Socket : public MessagePipeWrapper {
  public:
   Socket() : MessagePipeWrapper(-1) {}
-  virtual ~Socket() {
-    Close();
-  }
+  virtual ~Socket() { Close(); }
 
   Socket(Socket&& other) : MessagePipeWrapper(std::move(other)) {}
 
@@ -51,6 +49,11 @@ class Socket : public MessagePipeWrapper {
 
   // Default socket binding address.
   static constexpr auto kDefaultAddress = "irsocket";
+
+  // Default socket connection timeout, in milliseconds. Five seconds is the
+  // "Application Not Responding" timeout, so this value should be less than
+  // that.
+  static constexpr auto kConnectionTimeoutMs = 3000;
 
  private:
   Socket(const Socket&) = delete;

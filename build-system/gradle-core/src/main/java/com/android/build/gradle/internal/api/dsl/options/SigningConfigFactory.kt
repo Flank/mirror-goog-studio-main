@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.api.dsl.options
 
+import com.android.build.api.dsl.options.SigningConfig
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.builder.core.BuilderConstants
 import org.gradle.api.NamedDomainObjectFactory
@@ -27,9 +28,9 @@ private const val DEFAULT_ALIAS = "AndroidDebugKey"
 class SigningConfigFactory(
             private val dslScope: DslScope,
             private val defaultDebugKeystoreLocation: File)
-        : NamedDomainObjectFactory<SigningConfigImpl> {
+        : NamedDomainObjectFactory<SigningConfig> {
 
-    override fun create(name: String): SigningConfigImpl {
+    override fun create(name: String): SigningConfig {
         val newInstance = dslScope.objectFactory.newInstance(SigningConfigImpl::class.java,
                 name, dslScope)
 

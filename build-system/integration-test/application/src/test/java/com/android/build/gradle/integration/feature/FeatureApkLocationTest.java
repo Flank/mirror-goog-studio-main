@@ -59,7 +59,7 @@ public class FeatureApkLocationTest {
                                         sTempFolder.getRoot(), "release", "bundle-release.zip")))) {
             instantAppBundle.exists();
             instantAppBundle.contains("baseFeature-release-unsigned.apk");
-            instantAppBundle.contains("feature-release-unsigned.apk");
+            instantAppBundle.contains("feature-release.apk");
         }
     }
 }

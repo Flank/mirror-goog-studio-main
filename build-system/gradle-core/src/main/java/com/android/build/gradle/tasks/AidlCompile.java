@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
+import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.compiling.DependencyFileProcessor;
 import com.android.builder.internal.compiler.AidlProcessor;
@@ -35,16 +36,19 @@ import com.android.builder.internal.incremental.DependencyData;
 import com.android.builder.sdk.TargetInfo;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessExecutor;
+import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
+import javax.inject.Inject;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.tasks.CacheableTask;
@@ -58,6 +62,7 @@ import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.util.PatternSet;
+import org.gradle.workers.WorkerExecutor;
 
 /** Task to compile aidl files. Supports incremental update. */
 @CacheableTask
@@ -78,6 +83,13 @@ public class AidlCompile extends AndroidVariantTask {
 
     private TargetInfo targetInfo;
     private ProcessExecutor processExecutor;
+
+    private WorkerExecutorFacade workers;
+
+    @Inject
+    public AidlCompile(WorkerExecutor workerExecutor) {
+        this.workers = Workers.INSTANCE.getWorker(workerExecutor);
+    }
 
     @Input
     public String getBuildToolsVersion() {
@@ -140,13 +152,9 @@ public class AidlCompile extends AndroidVariantTask {
                             new LoggedProcessOutputHandler(new LoggerWrapper(getLogger())));
 
             for (File dir : sourceFolders) {
-                DirectoryWalker.builder()
-                        .root(dir.toPath())
-                        .extensions("aidl")
-                        .action(processor)
-                        .build()
-                        .walk();
+                workers.submit(AidlCompileRunnable.class, new AidlCompileParams(dir, processor));
             }
+            workers.close();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -257,6 +265,39 @@ public class AidlCompile extends AndroidVariantTask {
                         scope.getGlobalScope().getExtension().getAidlPackageWhiteList());
             }
 
+        }
+    }
+
+    static class AidlCompileRunnable implements Runnable {
+        private final AidlCompileParams params;
+
+        @Inject
+        AidlCompileRunnable(AidlCompileParams params) {
+            this.params = params;
+        }
+
+        @Override
+        public void run() {
+            try {
+                DirectoryWalker.builder()
+                        .root(params.dir.toPath())
+                        .extensions("aidl")
+                        .action(params.processor)
+                        .build()
+                        .walk();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    static class AidlCompileParams implements Serializable {
+        private final File dir;
+        private final AidlProcessor processor;
+
+        AidlCompileParams(File dir, AidlProcessor processor) {
+            this.dir = dir;
+            this.processor = processor;
         }
     }
 }

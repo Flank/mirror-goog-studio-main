@@ -43,12 +43,17 @@ public class MetricTest {
         assertThat(outputDir.listFiles()).asList().isEmpty();
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testMetricNameException() {
+        String name = "All the \"!valid\" [characters],&\\'<>`";
+        new Metric(name);
+    }
+
     @Test
-    public void testMetricNameRenamed() throws Exception {
-        Metric metric = new Metric("DEAD[BEEF]");
-        assertThat(metric.getMetricName()).isEqualTo("DEAD-BEEF-");
-        metric = new Metric("DEAD BEEF");
-        assertThat(metric.getMetricName()).isEqualTo("DEAD-BEEF");
+    public void testMetricNameValid() {
+        String name = "ABCDEFGHIJKlmnopqrstuvwxyz1234567890-_.";
+        Metric logger = new Metric(name);
+        assertThat(logger.getMetricName()).isEqualTo(name);
     }
 
     @Test

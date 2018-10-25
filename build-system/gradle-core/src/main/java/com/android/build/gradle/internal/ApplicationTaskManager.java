@@ -51,6 +51,7 @@ import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesTask;
 import com.android.build.gradle.internal.tasks.ModuleMetadataWriterTask;
 import com.android.build.gradle.internal.tasks.PackageBundleTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTask;
+import com.android.build.gradle.internal.tasks.SigningConfigWriterTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureApplicationIdsTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureInfoTask;
@@ -67,7 +68,6 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.MainApkListPersistence;
 import com.android.build.gradle.tasks.MergeResources;
-import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
 import com.google.common.collect.Sets;
@@ -173,6 +173,14 @@ public class ApplicationTaskManager extends TaskManager {
         if (variantScope.getType().isBaseModule()) {
             // Base feature specific tasks.
             taskFactory.register(new FeatureSetMetadataWriterTask.CreationAction(variantScope));
+            TaskProvider<SigningConfigWriterTask> signingConfigWriterTask =
+                    taskFactory.register(new SigningConfigWriterTask.CreationAction(variantScope));
+            // make the signingConfigWriterTask depend on the validate signing task to ensure that
+            // the keystore is created if it's a debug one.
+            if (variantScope.getVariantConfiguration().getSigningConfig() != null) {
+                TaskFactoryUtils.dependsOn(
+                        signingConfigWriterTask, getValidateSigningTask(variantScope));
+            }
 
             if (extension.getDataBinding().isEnabled()) {
                 // Create a task that will package the manifest ids(the R file packages) of all
@@ -288,7 +296,7 @@ public class ApplicationTaskManager extends TaskManager {
                         variantScope.getGlobalScope().getAndroidBuilder(),
                         Aapt2MavenUtils.getAapt2FromMaven(globalScope),
                         variantScope.getVariantConfiguration()::getApplicationId,
-                        variantScope.getVariantConfiguration().getSigningConfig(),
+                        variantScope.getSigningConfigFileCollection(),
                         DslAdaptersKt.convert(globalScope.getExtension().getAaptOptions()),
                         new File(variantScope.getInstantRunSplitApkOutputFolder(), "dep"),
                         new File(
@@ -301,13 +309,7 @@ public class ApplicationTaskManager extends TaskManager {
 
         variantScope
                 .getTransformManager()
-                .addTransform(
-                        taskFactory,
-                        variantScope,
-                        dependenciesApkBuilder,
-                        null,
-                        task -> task.dependsOn(getValidateSigningTask(variantScope)),
-                        null);
+                .addTransform(taskFactory, variantScope, dependenciesApkBuilder, null, null, null);
 
 
         taskFactory.register(new InstantRunSplitApkResourcesBuilder.CreationAction(variantScope));
@@ -321,7 +323,7 @@ public class ApplicationTaskManager extends TaskManager {
                         variantScope.getGlobalScope().getAndroidBuilder(),
                         Aapt2MavenUtils.getAapt2FromMaven(globalScope),
                         variantScope.getVariantConfiguration()::getApplicationId,
-                        variantScope.getVariantConfiguration().getSigningConfig(),
+                        variantScope.getSigningConfigFileCollection(),
                         DslAdaptersKt.convert(globalScope.getExtension().getAaptOptions()),
                         new File(variantScope.getInstantRunSplitApkOutputFolder(), "slices"),
                         getIncrementalFolder(variantScope, "ir_slices"),
@@ -339,7 +341,7 @@ public class ApplicationTaskManager extends TaskManager {
                         variantScope,
                         slicesApkBuilder,
                         null,
-                        task -> task.dependsOn(getValidateSigningTask(variantScope)),
+                        null,
                         taskProvider -> {
                             TaskFactoryUtils.dependsOn(
                                     variantScope.getTaskContainer().getAssembleTask(),
@@ -488,14 +490,6 @@ public class ApplicationTaskManager extends TaskManager {
                     taskFactory.register(new BundleToApkTask.CreationAction(scope));
             TaskProvider<BundleToStandaloneApkTask> universalApkTask =
                     taskFactory.register(new BundleToStandaloneApkTask.CreationAction(scope));
-            // make the tasks depend on the validate signing task to ensure that the keystore
-            // is created if it's a debug one.
-            if (scope.getVariantConfiguration().getSigningConfig() != null) {
-                TaskProvider<? extends Task> validateSigningTask = getValidateSigningTask(scope);
-                TaskFactoryUtils.dependsOn(splitAndMultiApkTask, validateSigningTask);
-                TaskFactoryUtils.dependsOn(packageBundleTask, validateSigningTask);
-                TaskFactoryUtils.dependsOn(universalApkTask, validateSigningTask);
-            }
 
             taskFactory.register(new ExtractApksTask.CreationAction(scope));
         }
