@@ -38,12 +38,10 @@ public abstract class EnumBasedResourceQualifier extends ResourceQualifier {
     }
 
     @Override
-    public boolean equals(Object qualifier) {
-        if (qualifier instanceof EnumBasedResourceQualifier) {
-            return getEnumValue() == ((EnumBasedResourceQualifier)qualifier).getEnumValue();
-        }
-
-        return false;
+    public boolean equals(@Nullable Object qualifier) {
+        return qualifier != null
+                && qualifier.getClass() == getClass()
+                && getEnumValue() == ((EnumBasedResourceQualifier) qualifier).getEnumValue();
     }
 
     @Override
