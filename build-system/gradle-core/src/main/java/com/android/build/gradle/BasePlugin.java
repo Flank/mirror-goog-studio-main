@@ -449,6 +449,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                         if (buildResult.getGradle().getParent() != null) {
                             return;
                         }
+                        ModelBuilder.clearCaches();
                         sdkHandler.unload();
                         threadRecorder.record(
                                 ExecutionType.BASE_PLUGIN_BUILD_FINISHED,
@@ -590,10 +591,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
             @NonNull VariantManager variantManager,
             @NonNull AndroidConfig config,
             @NonNull ExtraModelInfo extraModelInfo) {
-        // The call to ModelBuilder to clear caches should take place after the Gradle version check
-        // (https://issuetracker.google.com/73383831) but before the builder is used.
-        ModelBuilder.clearCaches();
-
         // Register a builder for the custom tooling model
         registerModelBuilder(registry, globalScope, variantManager, config, extraModelInfo);
 
