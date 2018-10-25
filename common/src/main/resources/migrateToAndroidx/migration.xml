@@ -446,22 +446,22 @@
   <migrate-dependency old-group-name="com.android.support.constraint" old-artifact-name="constraint-layout" new-group-name="androidx.constraintlayout" new-artifact-name="constraintlayout" base-version="1.1.2"/>
   <migrate-dependency old-group-name="com.android.support.constraint" old-artifact-name="constraint-layout-solver" new-group-name="androidx.constraintlayout" new-artifact-name="constraintlayout-solver" base-version="1.1.2"/>
   <!-- Testing Support Library -->
-  <migrate-dependency old-group-name="com.android.support.test" old-artifact-name="monitor" new-group-name="androidx.test" new-artifact-name="monitor" base-version="1.1.0-alpha4"/>
-  <migrate-dependency old-group-name="com.android.support.test" old-artifact-name="orchestrator" new-group-name="androidx.test" new-artifact-name="orchestrator" base-version="1.1.0-alpha4"/>
-  <migrate-dependency old-group-name="com.android.support.test" old-artifact-name="rules" new-group-name="androidx.test" new-artifact-name="rules" base-version="1.1.0-alpha4"/>
-  <migrate-dependency old-group-name="com.android.support.test" old-artifact-name="runner" new-group-name="androidx.test" new-artifact-name="runner" base-version="1.1.0-alpha4"/>
-  <migrate-dependency old-group-name="com.android.support.test.espresso" old-artifact-name="espresso-accessibility" new-group-name="androidx.test.espresso" new-artifact-name="espresso-accessibility" base-version="3.1.0-alpha4"/>
-  <migrate-dependency old-group-name="com.android.support.test.espresso" old-artifact-name="espresso-contrib" new-group-name="androidx.test.espresso" new-artifact-name="espresso-contrib" base-version="3.1.0-alpha4"/>
-  <migrate-dependency old-group-name="com.android.support.test.espresso" old-artifact-name="espresso-core" new-group-name="androidx.test.espresso" new-artifact-name="espresso-core" base-version="3.1.0-alpha4"/>
-  <migrate-dependency old-group-name="com.android.support.test.espresso" old-artifact-name="espresso-idling-resource" new-group-name="androidx.test.espresso" new-artifact-name="espresso-idling-resource" base-version="3.1.0-alpha4"/>
-  <migrate-dependency old-group-name="com.android.support.test.espresso" old-artifact-name="espresso-intents" new-group-name="androidx.test.espresso" new-artifact-name="espresso-intents" base-version="3.1.0-alpha4"/>
-  <migrate-dependency old-group-name="com.android.support.test.espresso" old-artifact-name="espresso-remote" new-group-name="androidx.test.espresso" new-artifact-name="espresso-remote" base-version="3.1.0-alpha4"/>
-  <migrate-dependency old-group-name="com.android.support.test.espresso" old-artifact-name="espresso-web" new-group-name="androidx.test.espresso" new-artifact-name="espresso-web" base-version="3.1.0-alpha4"/>
-  <migrate-dependency old-group-name="com.android.support.test.espresso.idling" old-artifact-name="idling-concurrent" new-group-name="androidx.test.espresso.idling" new-artifact-name="idling-concurrent" base-version="3.1.0-alpha4"/>
-  <migrate-dependency old-group-name="com.android.support.test.espresso.idling" old-artifact-name="idling-net" new-group-name="androidx.test.espresso.idling" new-artifact-name="idling-net" base-version="3.1.0-alpha4"/>
-  <migrate-dependency old-group-name="com.android.support.test.janktesthelper" old-artifact-name="janktesthelper-v23" new-group-name="androidx.test.jank" new-artifact-name="janktesthelper" base-version="1.1.0-alpha4"/>
-  <migrate-dependency old-group-name="com.android.support.test.services" old-artifact-name="test-services" new-group-name="androidx.test" new-artifact-name="test-services" base-version="1.1.0-alpha1"/>
-  <migrate-dependency old-group-name="com.android.support.test.uiautomator" old-artifact-name="uiautomator-v18" new-group-name="androidx.test.uiautomator" new-artifact-name="uiautomator" base-version="2.2.0-alpha4"/>
+  <migrate-dependency old-group-name="com.android.support.test" old-artifact-name="monitor" new-group-name="androidx.test" new-artifact-name="monitor" base-version="1.1.0"/>
+  <migrate-dependency old-group-name="com.android.support.test" old-artifact-name="orchestrator" new-group-name="androidx.test" new-artifact-name="orchestrator" base-version="1.1.0"/>
+  <migrate-dependency old-group-name="com.android.support.test" old-artifact-name="rules" new-group-name="androidx.test" new-artifact-name="rules" base-version="1.1.0"/>
+  <migrate-dependency old-group-name="com.android.support.test" old-artifact-name="runner" new-group-name="androidx.test" new-artifact-name="runner" base-version="1.1.0"/>
+  <migrate-dependency old-group-name="com.android.support.test.espresso" old-artifact-name="espresso-accessibility" new-group-name="androidx.test.espresso" new-artifact-name="espresso-accessibility" base-version="3.1.0"/>
+  <migrate-dependency old-group-name="com.android.support.test.espresso" old-artifact-name="espresso-contrib" new-group-name="androidx.test.espresso" new-artifact-name="espresso-contrib" base-version="3.1.0"/>
+  <migrate-dependency old-group-name="com.android.support.test.espresso" old-artifact-name="espresso-core" new-group-name="androidx.test.espresso" new-artifact-name="espresso-core" base-version="3.1.0"/>
+  <migrate-dependency old-group-name="com.android.support.test.espresso" old-artifact-name="espresso-idling-resource" new-group-name="androidx.test.espresso" new-artifact-name="espresso-idling-resource" base-version="3.1.0"/>
+  <migrate-dependency old-group-name="com.android.support.test.espresso" old-artifact-name="espresso-intents" new-group-name="androidx.test.espresso" new-artifact-name="espresso-intents" base-version="3.1.0"/>
+  <migrate-dependency old-group-name="com.android.support.test.espresso" old-artifact-name="espresso-remote" new-group-name="androidx.test.espresso" new-artifact-name="espresso-remote" base-version="3.1.0"/>
+  <migrate-dependency old-group-name="com.android.support.test.espresso" old-artifact-name="espresso-web" new-group-name="androidx.test.espresso" new-artifact-name="espresso-web" base-version="3.1.0"/>
+  <migrate-dependency old-group-name="com.android.support.test.espresso.idling" old-artifact-name="idling-concurrent" new-group-name="androidx.test.espresso.idling" new-artifact-name="idling-concurrent" base-version="3.1.0"/>
+  <migrate-dependency old-group-name="com.android.support.test.espresso.idling" old-artifact-name="idling-net" new-group-name="androidx.test.espresso.idling" new-artifact-name="idling-net" base-version="3.1.0"/>
+  <migrate-dependency old-group-name="com.android.support.test.janktesthelper" old-artifact-name="janktesthelper-v23" new-group-name="androidx.test.jank" new-artifact-name="janktesthelper" base-version="1.1.0"/>
+  <migrate-dependency old-group-name="com.android.support.test.services" old-artifact-name="test-services" new-group-name="androidx.test" new-artifact-name="test-services" base-version="1.1.0"/>
+  <migrate-dependency old-group-name="com.android.support.test.uiautomator" old-artifact-name="uiautomator-v18" new-group-name="androidx.test.uiautomator" new-artifact-name="uiautomator" base-version="2.2.0"/>
   <!-- Material Design Gradle Artifacts -->
   <migrate-dependency old-group-name="com.android.support.design" old-artifact-name="design" new-group-name="com.google.android.material" new-artifact-name="material" base-version="1.0.0-beta01"/>
   <migrate-dependency old-group-name="com.android.support.design.animation" old-artifact-name="design-animation" new-group-name="com.google.android.material.animation" new-artifact-name="material-animation" base-version="1.0.0-beta01"/>
