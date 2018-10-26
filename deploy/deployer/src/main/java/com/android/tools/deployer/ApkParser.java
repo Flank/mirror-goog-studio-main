@@ -67,7 +67,19 @@ public class ApkParser {
     /** A class to manipulate .apk files. */
     public ApkParser() {}
 
-    public List<ApkEntry> parse(String apkPath) throws IOException {
+    public List<ApkEntry> parsePaths(List<String> paths) throws DeployerException {
+        try (Trace ignored = Trace.begin("parseApks")) {
+            List<ApkEntry> newFiles = new ArrayList<>();
+            for (String apkPath : paths) {
+                newFiles.addAll(parse(apkPath));
+            }
+            return newFiles;
+        } catch (IOException e) {
+            throw new DeployerException(DeployerException.Error.INVALID_APK, "Error reading APK");
+        }
+    }
+
+    private List<ApkEntry> parse(String apkPath) throws IOException {
         File file = new File(apkPath);
         MappedByteBuffer mmap;
         String absolutePath = file.getAbsolutePath();
@@ -95,7 +107,7 @@ public class ApkParser {
         return files;
     }
 
-    List<ApkEntry> parse(List<Deploy.ApkDump> protoDumps) {
+    List<ApkEntry> parseDumps(List<Deploy.ApkDump> protoDumps) {
         List<ApkEntry> dumps = new ArrayList<>();
         for (Deploy.ApkDump dump : protoDumps) {
             ByteBuffer cd = dump.getCd().asReadOnlyByteBuffer();

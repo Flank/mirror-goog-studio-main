@@ -22,6 +22,7 @@ import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.DexClass;
 import com.android.tools.deployer.model.FileDiff;
 import com.android.tools.deployer.tasks.TaskRunner;
+import com.android.tools.deployer.tasks.TaskRunner.Task;
 import com.google.common.io.ByteStreams;
 import com.google.protobuf.ByteString;
 import java.io.IOException;
@@ -71,14 +72,13 @@ public class Deployer {
             // Run installation on the current thread.
             adb.installMultiple(apks, true);
 
-            // Run the update on a separate thread.
-            runner.create("update", this::cache, runner.create(apks));
-        }
-    }
+            // Parse the apks
+            Task<List<ApkEntry>> entries =
+                    runner.create("parsePaths", new ApkParser()::parsePaths, runner.create(apks));
 
-    private boolean cache(List<String> paths) throws DeployerException {
-        computeClassChecksums(readApks(paths));
-        return true;
+            // Update the database
+            runner.create("computeClassChecksums", this::computeClassChecksums, entries);
+        }
     }
 
     public void codeSwap(String packageName, List<String> apks) throws DeployerException {
@@ -96,7 +96,7 @@ public class Deployer {
     private void swap(String packageName, List<String> paths, boolean restart)
             throws DeployerException {
         // Get the list of files from the local apks
-        List<ApkEntry> newFiles = readApks(paths);
+        List<ApkEntry> newFiles = new ApkParser().parsePaths(paths);
 
         // Get the list of files from the installed app
         List<ApkEntry> dumps = dump(packageName);
@@ -127,18 +127,6 @@ public class Deployer {
 
     private List<FileDiff> verify(List<FileDiff> diffs, boolean restart) throws DeployerException {
         return new SwapVerifier().verify(diffs, restart);
-    }
-
-    private List<ApkEntry> readApks(List<String> paths) throws DeployerException {
-        try (Trace ignored = Trace.begin("parseApks")) {
-            List<ApkEntry> newFiles = new ArrayList<>();
-            for (String apkPath : paths) {
-                newFiles.addAll(new ApkParser().parse(apkPath));
-            }
-            return newFiles;
-        } catch (IOException e) {
-            throw new DeployerException(DeployerException.Error.INVALID_APK, "Error reading APK");
-        }
     }
 
     private boolean computeClassChecksums(List<ApkEntry> newFiles) throws DeployerException {
@@ -279,7 +267,7 @@ public class Deployer {
                         "Cannot list apks for package " + packageName + ". Is the app installed?");
             }
 
-            return new ApkParser().parse(response.getDumpsList());
+            return new ApkParser().parseDumps(response.getDumpsList());
         } catch (IOException e) {
             throw new DeployerException(DeployerException.Error.DUMP_FAILED, e);
         }

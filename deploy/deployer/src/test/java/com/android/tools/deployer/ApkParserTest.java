@@ -53,7 +53,7 @@ public class ApkParserTest {
     @Test
     public void testApkId() throws Exception {
         File file = TestUtils.getWorkspaceFile(BASE + "sample.apk");
-        List<ApkEntry> files = new ApkParser().parse(file.getPath());
+        List<ApkEntry> files = new ApkParser().parsePaths(ImmutableList.of(file.getPath()));
         String apk = "74eaa38f4d4d8619c7bb886289f84efe1fce7ce3";
         assertEquals(7, files.size());
         assertApkFileEquals(apk, "META-INF/CERT.SF", 0x45E32198L, files.get(0));
@@ -68,7 +68,7 @@ public class ApkParserTest {
     @Test
     public void testApkArchiveV2Map() throws Exception {
         File file = TestUtils.getWorkspaceFile(BASE + "v2_signed.apk");
-        List<ApkEntry> files = new ApkParser().parse(file.getAbsolutePath());
+        List<ApkEntry> files = new ApkParser().parsePaths(ImmutableList.of(file.getAbsolutePath()));
         String apk = "6b1dc4b97ab0dbb66afc33868c700d6f665eeb13";
         assertEquals(494, files.size());
         // Check a few files
@@ -86,7 +86,7 @@ public class ApkParserTest {
     }
 
     @Test
-    public void testApkArchiveApkDumpdMatchCrcs() throws IOException {
+    public void testApkArchiveApkDumpdMatchCrcs() throws Exception {
         File file = TestUtils.getWorkspaceFile(BASE + "signed_app/base.apk");
         File cd = TestUtils.getWorkspaceFile(BASE + "signed_app/base.apk.remotecd");
         File sig = TestUtils.getWorkspaceFile(BASE + "signed_app/base.apk.remoteblock");
@@ -97,8 +97,8 @@ public class ApkParserTest {
                         .setSignature(ByteString.copyFrom(Files.readAllBytes(sig.toPath())))
                         .build();
 
-        List<ApkEntry> files_dump = new ApkParser().parse(ImmutableList.of(dump));
-        List<ApkEntry> files_apk = new ApkParser().parse(file.getPath());
+        List<ApkEntry> files_dump = new ApkParser().parseDumps(ImmutableList.of(dump));
+        List<ApkEntry> files_apk = new ApkParser().parsePaths(ImmutableList.of(file.getPath()));
 
         String apk = "b236acae47f2b2163e9617021c4e1adc7a0c197b";
         for (List<ApkEntry> files : ImmutableList.of(files_apk, files_dump)) {
@@ -116,7 +116,7 @@ public class ApkParserTest {
     }
 
     @Test
-    public void testApkArchiveApkNonV2SignedDumpdMatchDigest() throws IOException {
+    public void testApkArchiveApkNonV2SignedDumpdMatchDigest() throws Exception {
         File file = TestUtils.getWorkspaceFile(BASE + "nonsigned_app/base.apk");
         File cd = TestUtils.getWorkspaceFile(BASE + "nonsigned_app/base.apk.remotecd");
 
@@ -125,8 +125,8 @@ public class ApkParserTest {
                         .setCd(ByteString.copyFrom(Files.readAllBytes(cd.toPath())))
                         .build();
 
-        List<ApkEntry> files_dump = new ApkParser().parse(ImmutableList.of(dump));
-        List<ApkEntry> files_apk = new ApkParser().parse(file.getPath());
+        List<ApkEntry> files_dump = new ApkParser().parseDumps(ImmutableList.of(dump));
+        List<ApkEntry> files_apk = new ApkParser().parsePaths(ImmutableList.of(file.getPath()));
 
         String apk = "e5c64a6b8f51198331aefcb7ff695e7faebbd80a";
         for (List<ApkEntry> files : ImmutableList.of(files_apk, files_dump)) {
@@ -147,9 +147,9 @@ public class ApkParserTest {
     }
 
     @Test
-    public void testGetApkDetails() throws IOException {
+    public void testGetApkDetails() throws Exception {
         File file = TestUtils.getWorkspaceFile(BASE + "multiprocess.apk");
-        List<ApkEntry> files = new ApkParser().parse(file.getAbsolutePath());
+        List<ApkEntry> files = new ApkParser().parsePaths(ImmutableList.of(file.getAbsolutePath()));
         Apk apk = files.get(0).apk;
         assertEquals("base.apk", apk.name);
         assertEquals(5, apk.processes.size());
