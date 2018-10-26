@@ -18,8 +18,6 @@ package com.android.tools.deployer;
 
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
-import com.android.tools.deploy.swapper.ApkFileDatabase;
-import com.android.tools.deploy.swapper.SqlApkFileDatabase;
 import com.android.tools.deployer.tasks.TaskRunner;
 import com.android.utils.ILogger;
 import java.io.*;

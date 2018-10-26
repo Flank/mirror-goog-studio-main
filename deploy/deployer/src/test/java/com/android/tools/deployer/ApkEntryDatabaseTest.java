@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.deploy.swapper;
+package com.android.tools.deployer;
 
 import static com.android.tools.deployer.ApkTestUtils.*;
 

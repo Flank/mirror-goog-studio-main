@@ -13,13 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.deploy.swapper;
+package com.android.tools.deployer;
 
-import com.android.tools.deploy.proto.Deploy;
-import com.android.tools.deployer.DeployerException;
+import com.android.annotations.VisibleForTesting;
+import com.android.tools.deployer.model.ApkEntry;
+import com.android.tools.deployer.model.DexClass;
+import java.util.List;
 
-/** Responsible for invoking the corresponding API to redefine a class in ART. */
-public abstract class ClassRedefiner {
-    public abstract Deploy.SwapResponse redefine(Deploy.SwapRequest request)
-            throws DeployerException;
+public interface ApkFileDatabase {
+    void addClasses(List<DexClass> allClasses);
+
+    List<DexClass> getClasses(ApkEntry dex);
+
+    void close();
+
+    @VisibleForTesting
+    List<DexClass> dump();
 }

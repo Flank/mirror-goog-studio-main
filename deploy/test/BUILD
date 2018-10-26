@@ -6,27 +6,27 @@ package(default_testonly = True)
 
 swap_test(
     name = "AgentBasedClassRedefinerDesugarTest",
-    srcs = ["java/com/android/tools/deploy/swapper/AgentBasedClassRedefinerDesugarTest.java"],
+    srcs = ["java/com/android/tools/deployer/AgentBasedClassRedefinerDesugarTest.java"],
 )
 
 swap_test(
     name = "AgentBasedClassRedefinerFailureTest",
-    srcs = ["java/com/android/tools/deploy/swapper/AgentBasedClassRedefinerFailureTest.java"],
+    srcs = ["java/com/android/tools/deployer/AgentBasedClassRedefinerFailureTest.java"],
 )
 
 swap_test(
     name = "AgentBasedClassRedefinerKotlinTest",
-    srcs = ["java/com/android/tools/deploy/swapper/AgentBasedClassRedefinerKotlinTest.java"],
+    srcs = ["java/com/android/tools/deployer/AgentBasedClassRedefinerKotlinTest.java"],
 )
 
 swap_test(
     name = "AgentBasedClassRedefinerSimpleTest",
-    srcs = ["java/com/android/tools/deploy/swapper/AgentBasedClassRedefinerSimpleTest.java"],
+    srcs = ["java/com/android/tools/deployer/AgentBasedClassRedefinerSimpleTest.java"],
 )
 
 swap_test(
     name = "JdiBasedClassRedefinerTest",
-    srcs = ["java/com/android/tools/deploy/swapper/JdiBasedClassRedefinerTest.java"],
+    srcs = ["java/com/android/tools/deployer/JdiBasedClassRedefinerTest.java"],
 )
 
 dex_library(

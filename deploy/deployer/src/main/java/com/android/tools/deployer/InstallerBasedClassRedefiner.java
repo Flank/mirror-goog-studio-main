@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.deploy.swapper;
+package com.android.tools.deployer;
 
 import com.android.tools.deploy.proto.Deploy.SwapRequest;
 import com.android.tools.deploy.proto.Deploy.SwapResponse;
-import com.android.tools.deployer.DeployerException;
-import com.android.tools.deployer.Installer;
 import java.io.IOException;
 
 public class InstallerBasedClassRedefiner extends ClassRedefiner {
