@@ -19,6 +19,8 @@ package com.android.build.gradle.internal.tasks;
 import com.android.annotations.NonNull;
 import com.google.common.base.Suppliers;
 import java.util.function.Supplier;
+import org.gradle.api.Project;
+import org.gradle.api.provider.Provider;
 
 /**
  * A wrapper around a file supplier that allows to recall the last value queried from it.
@@ -36,5 +38,21 @@ public class TaskInputHelper {
     @NonNull
     public static <T> Supplier<T> memoize(@NonNull Supplier<T> supplier) {
         return Suppliers.memoize(supplier::get);
+    }
+
+    /**
+     * Returns a new provider wrapping the provided supplier that cache the result of the supplier
+     * to only run it once.
+     *
+     * @param supplier the supplier to wrap.
+     * @param project the gradle project to create the provider for.
+     * @param <T> the return type for the provider.
+     * @return a new provider.
+     */
+    @NonNull
+    public static <T> Provider<T> memoizeToProvider(
+            @NonNull Project project, @NonNull Supplier<T> supplier) {
+        Supplier<T> memoize = memoize(supplier);
+        return project.provider(memoize::get);
     }
 }
