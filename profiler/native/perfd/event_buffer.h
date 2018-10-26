@@ -75,9 +75,12 @@ class EventBuffer {
   Clock* clock_;
   std::mutex mutex_;
   bool interrupt_write_;
-  int events_added_;  // Guarded by mutex_
+  // Guarded by mutex_
+  int events_added_;
   std::condition_variable events_cv_;
+  // Guarded by mutex_
   CircularBuffer<proto::Event> events_;
+  // Guarded by mutex_
   CircularBuffer<proto::EventGroup> groups_;
 };
 

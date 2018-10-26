@@ -25,8 +25,6 @@ void EventBuffer::Add(proto::Event& event) {
   events_added_++;
   event.set_timestamp(clock_->GetCurrentTime());
   events_.Add(event);
-  lock.unlock();
-  events_cv_.notify_all();
   // TODO(b/73538507): optimize this:
   proto::EventGroup* group = nullptr;
   for (size_t i = 0; i < groups_.size(); i++) {
@@ -42,6 +40,7 @@ void EventBuffer::Add(proto::Event& event) {
     group->set_event_id(event.event_id());
   }
   group->add_events()->CopyFrom(event);
+  events_cv_.notify_all();
 }
 
 void EventBuffer::WriteEventsTo(EventWriter* writer) {

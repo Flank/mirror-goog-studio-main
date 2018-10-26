@@ -16,6 +16,7 @@
 #include "perfd/event_buffer.h"
 #include "perfd/event_writer.h"
 #include "proto/profiler.grpc.pb.h"
+#include "utils/count_down_latch.h"
 #include "utils/fake_clock.h"
 
 #include <gtest/gtest.h>
@@ -23,6 +24,7 @@
 #include <list>
 #include <mutex>
 #include <thread>
+#include <vector>
 
 namespace profiler {
 using proto::Event;
@@ -155,5 +157,38 @@ TEST(EventBuffer, BufferOverflowOfEvents) {
   // Kill read thread to cleanly exit test.
   buffer.InterruptWriteEvents();
   readThread.join();
+}
+
+TEST(EventBuffer, ConcurrentWrite) {
+  int thread_count = 5;
+  FakeClock clock;
+  EventBuffer buffer(&clock);
+  CountDownLatch latch(thread_count);
+
+  std::vector<std::thread*> data_writers;
+  for (int i = 0; i < thread_count; i++) {
+    data_writers.push_back(new std::thread([&clock, &buffer, &latch] {
+      CreateTestData(clock, buffer);
+      latch.CountDown();
+    }));
+  }
+
+  latch.Await();
+  for (auto writer : data_writers) {
+    if (writer->joinable()) {
+      writer->join();
+    }
+  }
+
+  // We should expect 10 events in group 1, and 5 events in group 2
+  // Get 2 element group.
+  EventGroup group1;
+  EventGroup group2;
+  buffer.GetGroup(1, &group1);
+  buffer.GetGroup(2, &group2);
+  EXPECT_EQ(1, group1.event_id());
+  EXPECT_EQ(10, group1.events_size());
+  EXPECT_EQ(2, group2.event_id());
+  EXPECT_EQ(5, group2.events_size());
 }
 }  // namespace profiler
