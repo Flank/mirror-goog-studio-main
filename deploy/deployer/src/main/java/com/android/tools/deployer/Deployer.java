@@ -74,10 +74,10 @@ public class Deployer {
 
             // Parse the apks
             Task<List<ApkEntry>> entries =
-                    runner.create("parsePaths", new ApkParser()::parsePaths, runner.create(apks));
+                    runner.submit("parsePaths", new ApkParser()::parsePaths, runner.submit(apks));
 
             // Update the database
-            runner.create("computeClassChecksums", this::computeClassChecksums, entries);
+            runner.submit("computeClassChecksums", this::computeClassChecksums, entries);
         }
     }
 

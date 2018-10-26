@@ -38,13 +38,13 @@ public class TaskRunner {
         this.phaser = new Phaser(1);
     }
 
-    public <T> Task<T> create(T value) {
+    public <T> Task<T> submit(T value) {
         SettableFuture<T> future = SettableFuture.create();
         future.set(value);
         return new Task<>(future);
     }
 
-    public <I, O> Task<O> create(String name, ThrowingFunction<I, O> task, Task<I> input) {
+    public <I, O> Task<O> submit(String name, ThrowingFunction<I, O> task, Task<I> input) {
         ListenableFuture<O> future =
                 Futures.whenAllSucceed(ImmutableList.of(input.future))
                         .call(
@@ -64,7 +64,7 @@ public class TaskRunner {
         return new Task<>(future);
     }
 
-    public <T, U, O> Task<O> create(
+    public <T, U, O> Task<O> submit(
             String name, BiFunction<T, U, O> task, Task<T> input1, Task<U> input2) {
         ListenableFuture<O> future =
                 Futures.whenAllSucceed(ImmutableList.of(input1.future, input2.future))
