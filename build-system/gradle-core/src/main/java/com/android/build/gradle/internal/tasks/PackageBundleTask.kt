@@ -96,7 +96,8 @@ open class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecutor)
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.ABSOLUTE)
-    lateinit var signingConfig: FileCollection
+    @get:Optional
+    var signingConfig: FileCollection? = null
         private set
 
     @get:OutputDirectory
@@ -307,7 +308,10 @@ open class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecutor)
                         variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.APK_MAPPING)
             }
 
-            task.signingConfig = variantScope.signingConfigFileCollection
+            // Don't sign debuggable bundles.
+            if (!variantScope.variantConfiguration.buildType.isDebuggable) {
+                task.signingConfig = variantScope.signingConfigFileCollection
+            }
         }
     }
 }

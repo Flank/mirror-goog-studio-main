@@ -19,21 +19,14 @@ package com.android.build.gradle.integration.bundle
 import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.integration.common.utils.getOutputByName
 import com.android.build.gradle.integration.common.utils.getVariantByName
-import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.builder.model.AndroidProject
-import com.android.builder.model.AppBundleProjectBuildOutput
-import com.android.builder.model.AppBundleVariantBuildOutput
-import com.android.testutils.apk.Dex
 import com.android.testutils.apk.Zip
-import com.android.testutils.truth.DexSubject.assertThat
 import com.android.testutils.truth.FileSubject
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
-import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -69,11 +62,10 @@ class InstantAppBundleTest {
         "/feature2/res/layout/activity_main.xml",
         "/feature2/resources.pb")
 
-    private val debugSignedContent: Array<String> = bundleContent.plus(arrayOf(
-        "/base/dex/classes2.dex", // Legacy multidex has minimal main dex in debug mode.
-        "/META-INF/ANDROIDD.RSA",
-        "/META-INF/ANDROIDD.SF",
-        "/META-INF/MANIFEST.MF"))
+    // Debuggable Bundles are always unsigned.
+    private val debugUnsignedContent: Array<String> = bundleContent.plus(arrayOf(
+        "/base/dex/classes2.dex" // Legacy multidex has minimal main dex in debug mode.
+    ))
 
     @Test
     @Throws(IOException::class)
@@ -104,7 +96,7 @@ class InstantAppBundleTest {
         FileSubject.assertThat(bundleFile).exists()
 
         Zip(bundleFile).use {
-            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*debugSignedContent)
+            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*debugUnsignedContent)
         }
 
         // also test that the feature manifest contains the feature name.
@@ -158,7 +150,7 @@ class InstantAppBundleTest {
         FileSubject.assertThat(bundleFile).exists()
 
         Zip(bundleFile).use {
-            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*debugSignedContent)
+            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*debugUnsignedContent)
         }
     }
 
@@ -192,7 +184,7 @@ class InstantAppBundleTest {
         val bundleFile = getBundleFile("debug")
         FileSubject.assertThat(bundleFile).exists()
 
-        val bundleContentWithAbis = debugSignedContent.plus(listOf(
+        val bundleContentWithAbis = debugUnsignedContent.plus(listOf(
                 "/base/native.pb",
                 "/base/lib/${SdkConstants.ABI_ARMEABI_V7A}/libbase.so",
                 "/feature1/native.pb",

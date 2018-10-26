@@ -73,11 +73,10 @@ class DynamicAppTest {
         "/feature2/res/layout/feature2_layout.xml",
         "/feature2/resources.pb")
 
-    private val debugSignedContent: Array<String> = bundleContent.plus(arrayOf(
-        "/base/dex/classes2.dex", // Legacy multidex has minimal main dex in debug mode.
-        "/META-INF/ANDROIDD.RSA",
-        "/META-INF/ANDROIDD.SF",
-        "/META-INF/MANIFEST.MF"))
+    // Debuggable Bundles are always unsigned.
+    private val debugUnsignedContent: Array<String> = bundleContent.plus(arrayOf(
+        "/base/dex/classes2.dex" // Legacy multidex has minimal main dex in debug mode
+    ))
 
     private val releaseUnsignedContent: Array<String> = bundleContent.plus(arrayOf(
         // Only the release variant is shrunk, so only it will contain a proguard mapping file.
@@ -207,7 +206,7 @@ class DynamicAppTest {
         FileSubject.assertThat(bundleFile).exists()
 
         Zip(bundleFile).use {
-            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*debugSignedContent)
+            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*debugUnsignedContent)
             val dex = Dex(it.getEntry("base/dex/classes.dex")!!)
             // Legacy multidex is applied to the dex of the base directly for the case
             // when the build author has excluded all the features from fusing.
@@ -342,7 +341,7 @@ class DynamicAppTest {
         FileSubject.assertThat(bundleFile).exists()
 
         Zip(bundleFile).use {
-            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*debugSignedContent)
+            Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*debugUnsignedContent)
         }
     }
 
@@ -376,7 +375,7 @@ class DynamicAppTest {
         val bundleFile = getApkFolderOutput("debug").bundleFile
         FileSubject.assertThat(bundleFile).exists()
 
-        val bundleContentWithAbis = debugSignedContent.plus(listOf(
+        val bundleContentWithAbis = debugUnsignedContent.plus(listOf(
                 "/base/native.pb",
                 "/base/lib/${SdkConstants.ABI_ARMEABI_V7A}/libbase.so",
                 "/feature1/native.pb",
