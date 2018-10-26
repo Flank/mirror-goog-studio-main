@@ -25,6 +25,7 @@ iml_module(
         "//prebuilts/r8:d8-master",
         "//tools/base/deploy/deployer:java_version",
         "//tools/idea/.idea/libraries:sqlite",
+        "//tools/idea/.idea/libraries:mockito[test]",
     ],
 )
 
@@ -99,5 +100,6 @@ java_test(
         "//tools/base/deploy/proto:deploy_java_proto",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:junit_junit",
+        "//tools/base/third_party:org.mockito_mockito-core",
     ],
 )

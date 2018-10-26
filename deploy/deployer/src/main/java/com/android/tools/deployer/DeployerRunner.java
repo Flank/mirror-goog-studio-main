@@ -79,7 +79,7 @@ public class DeployerRunner {
 
         // Run
         AdbClient adb = new AdbClient(device, LOGGER);
-        Installer installer = new Installer(adb, LOGGER);
+        Installer installer = new AdbInstaller(adb, LOGGER);
         ExecutorService service = Executors.newFixedThreadPool(5);
         Deployer deployer = new Deployer(adb, db, new TaskRunner(service), installer);
         if (command.equals("install")) {

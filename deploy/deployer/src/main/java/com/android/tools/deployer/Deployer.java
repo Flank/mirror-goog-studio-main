@@ -104,7 +104,7 @@ public class Deployer {
         List<ApkEntry> newFiles = new ApkParser().parsePaths(paths);
 
         // Get the list of files from the installed app
-        List<ApkEntry> dumps = dump(packageName);
+        List<ApkEntry> dumps = new ApkDumper(installer).dump(packageName);
 
         // Calculate the difference between them
         List<FileDiff> diffs = diff(dumps, newFiles);
@@ -295,20 +295,6 @@ public class Deployer {
         }
     }
 
-    private List<ApkEntry> dump(String packageName) throws DeployerException {
-        try {
-            Deploy.DumpResponse response = installer.dump(packageName);
-            if (response.getStatus() == Deploy.DumpResponse.Status.ERROR_PACKAGE_NOT_FOUND) {
-                throw new DeployerException(
-                        DeployerException.Error.DUMP_UNKNOWN_PACKAGE,
-                        "Cannot list apks for package " + packageName + ". Is the app installed?");
-            }
-
-            return new ApkParser().parseDumps(response.getDumpsList());
-        } catch (IOException e) {
-            throw new DeployerException(DeployerException.Error.DUMP_FAILED, e);
-        }
-    }
 
     /** Calculates the different files between two sets of apks. */
     private List<FileDiff> diff(List<ApkEntry> oldFiles, List<ApkEntry> newFiles)

@@ -45,5 +45,6 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="sqlite" level="project" />
+    <orderEntry type="library" scope="TEST" name="mockito" level="project" />
   </component>
 </module>
