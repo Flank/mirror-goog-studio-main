@@ -107,7 +107,7 @@ public class Deployer {
         List<ApkEntry> dumps = new ApkDumper(installer).dump(packageName);
 
         // Calculate the difference between them
-        List<FileDiff> diffs = diff(dumps, newFiles);
+        List<FileDiff> diffs = new ApkDiffer().diff(dumps, newFiles);
 
         // Push the apks to device and get the remote paths
         List<String> apkPaths = pushApks(newFiles);
@@ -292,15 +292,6 @@ public class Deployer {
             return apkPaths;
         } catch (IOException e) {
             throw new DeployerException(DeployerException.Error.ERROR_PUSHING_APK, e);
-        }
-    }
-
-
-    /** Calculates the different files between two sets of apks. */
-    private List<FileDiff> diff(List<ApkEntry> oldFiles, List<ApkEntry> newFiles)
-            throws DeployerException {
-        try (Trace ignored = Trace.begin("diff")) {
-            return new ApkDiffer().diff(oldFiles, newFiles);
         }
     }
 

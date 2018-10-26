@@ -16,7 +16,7 @@
 
 package com.android.tools.deployer;
 
-import static com.android.tools.deployer.ApkTestUtils.assertApkFileEquals;
+import static com.android.tools.deployer.ApkTestUtils.assertApkEntryEquals;
 import static org.junit.Assert.assertEquals;
 
 import com.android.testutils.TestUtils;
@@ -54,13 +54,13 @@ public class ApkParserTest {
         List<ApkEntry> files = new ApkParser().parsePaths(ImmutableList.of(file.getPath()));
         String apk = "74eaa38f4d4d8619c7bb886289f84efe1fce7ce3";
         assertEquals(7, files.size());
-        assertApkFileEquals(apk, "META-INF/CERT.SF", 0x45E32198L, files.get(0));
-        assertApkFileEquals(apk, "AndroidManifest.xml", 0x7BF3141DL, files.get(1));
-        assertApkFileEquals(apk, "res/layout/main.xml", 0x45FED99AL, files.get(2));
-        assertApkFileEquals(apk, "META-INF/CERT.RSA", 0x4A3142E9L, files.get(3));
-        assertApkFileEquals(apk, "resources.arsc", 0x332A4621L, files.get(4));
-        assertApkFileEquals(apk, "classes.dex", 0x9AC9ECA1L, files.get(5));
-        assertApkFileEquals(apk, "META-INF/MANIFEST.MF", 0xA93C1C7FL, files.get(6));
+        assertApkEntryEquals(apk, "META-INF/CERT.SF", 0x45E32198L, files.get(0));
+        assertApkEntryEquals(apk, "AndroidManifest.xml", 0x7BF3141DL, files.get(1));
+        assertApkEntryEquals(apk, "res/layout/main.xml", 0x45FED99AL, files.get(2));
+        assertApkEntryEquals(apk, "META-INF/CERT.RSA", 0x4A3142E9L, files.get(3));
+        assertApkEntryEquals(apk, "resources.arsc", 0x332A4621L, files.get(4));
+        assertApkEntryEquals(apk, "classes.dex", 0x9AC9ECA1L, files.get(5));
+        assertApkEntryEquals(apk, "META-INF/MANIFEST.MF", 0xA93C1C7FL, files.get(6));
     }
 
     @Test
@@ -70,17 +70,17 @@ public class ApkParserTest {
         String apk = "6b1dc4b97ab0dbb66afc33868c700d6f665eeb13";
         assertEquals(494, files.size());
         // Check a few files
-        assertApkFileEquals(
+        assertApkEntryEquals(
                 apk,
                 "res/drawable/abc_list_selector_background_transition_holo_light.xml",
                 0x29EE1C29L,
                 files.get(10));
-        assertApkFileEquals(
+        assertApkEntryEquals(
                 apk,
                 "res/drawable-xxxhdpi-v4/abc_ic_menu_cut_mtrl_alpha.png",
                 0x566244DBL,
                 files.get(20));
-        assertApkFileEquals(apk, "res/color/abc_tint_spinner.xml", 0xD7611BC4L, files.get(30));
+        assertApkEntryEquals(apk, "res/color/abc_tint_spinner.xml", 0xD7611BC4L, files.get(30));
     }
 
     @Test
@@ -91,13 +91,13 @@ public class ApkParserTest {
         String apk = "b236acae47f2b2163e9617021c4e1adc7a0c197b";
         assertEquals(277, files.size());
         // Check a few files
-        assertApkFileEquals(apk, "res/drawable-nodpi-v4/frantic.jpg", 0x492381F1L, files.get(10));
-        assertApkFileEquals(
+        assertApkEntryEquals(apk, "res/drawable-nodpi-v4/frantic.jpg", 0x492381F1L, files.get(10));
+        assertApkEntryEquals(
                 apk,
                 "res/drawable-xxhdpi-v4/abc_textfield_search_default_mtrl_alpha.9.png",
                 0x4034A6D4L,
                 files.get(20));
-        assertApkFileEquals(apk, "resources.arsc", 0xFCD1856L, files.get(30));
+        assertApkEntryEquals(apk, "resources.arsc", 0xFCD1856L, files.get(30));
     }
 
     @Test
@@ -108,17 +108,17 @@ public class ApkParserTest {
         String apk = "e5c64a6b8f51198331aefcb7ff695e7faebbd80a";
         assertEquals(494, files.size());
         // Check a few files
-        assertApkFileEquals(
+        assertApkEntryEquals(
                 apk,
                 "res/drawable/abc_list_selector_background_transition_holo_light.xml",
                 0x29EE1C29L,
                 files.get(10));
-        assertApkFileEquals(
+        assertApkEntryEquals(
                 apk,
                 "res/drawable-xxxhdpi-v4/abc_ic_menu_cut_mtrl_alpha.png",
                 0x566244DBL,
                 files.get(20));
-        assertApkFileEquals(apk, "res/color/abc_tint_spinner.xml", 0xD7611BC4L, files.get(30));
+        assertApkEntryEquals(apk, "res/color/abc_tint_spinner.xml", 0xD7611BC4L, files.get(30));
     }
 
     @Test

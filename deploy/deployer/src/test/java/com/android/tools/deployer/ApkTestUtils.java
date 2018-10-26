@@ -28,12 +28,12 @@ public class ApkTestUtils {
             String name,
             long checksum,
             DexClass clazz) {
-        assertApkFileEquals(apkChecksum, dexName, dexChecksum, clazz.dex);
+        assertApkEntryEquals(apkChecksum, dexName, dexChecksum, clazz.dex);
         Assert.assertEquals(name, clazz.name);
         Assert.assertEquals(checksum, clazz.checksum);
     }
 
-    public static void assertApkFileEquals(
+    public static void assertApkEntryEquals(
             String apkChecksum, String fileName, long fileChecksum, ApkEntry file) {
         Assert.assertEquals(apkChecksum, file.apk.checksum);
         Assert.assertEquals(fileName, file.name);
