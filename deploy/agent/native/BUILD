@@ -95,6 +95,20 @@ cc_binary(
     ],
 )
 
+cc_test(
+    name = "agent_server_test",
+    size = "small",
+    srcs = ["agent_server_test.cc"],
+    args = ["$(location :agent_server)"],
+    data = [":agent_server"],
+    linkstatic = 1,
+    tags = ["no_windows"],
+    deps = [
+        "//external:gmock_main",
+        "//tools/base/deploy/test/fakes:fakes_lib",
+    ],
+)
+
 android_cc_binary(
     name = "agent_server_android",
     abis = [

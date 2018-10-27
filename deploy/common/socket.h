@@ -45,15 +45,14 @@ class Socket : public MessagePipeWrapper {
   bool Accept(Socket* socket, int timeout_ms);
 
   // Connects this socket to the socket at the specified address.
-  bool Connect(const std::string& socket_name, int timeout_ms);
+  bool Connect(const std::string& socket_name);
 
   // Default socket binding address.
   static constexpr auto kDefaultAddress = "irsocket";
 
-  // Default socket connection timeout, in milliseconds. Five seconds is the
-  // "Application Not Responding" timeout, so this value should be less than
-  // that.
-  static constexpr auto kConnectionTimeoutMs = 3000;
+  static constexpr size_t kAcceptTimeoutMs = 3000;
+  static constexpr size_t kConnectRetryMs = 100;
+  static constexpr size_t kConnectRetries = 5;
 
  private:
   Socket(const Socket&) = delete;

@@ -151,7 +151,7 @@ int main(int argc, char** argv) {
   // Accept socket connections from the agents.
   for (int i = 0; i < socket_count; ++i) {
     Socket* socket = new Socket();
-    if (!server.Accept(socket, Socket::kConnectionTimeoutMs)) {
+    if (!server.Accept(socket, Socket::kAcceptTimeoutMs)) {
       Cleanup();
       return EXIT_FAILURE;
     }
