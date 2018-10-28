@@ -70,9 +70,27 @@ class AgentServerTest : public ::testing::Test {
     output_ = new MessagePipeWrapper(output_pipe[0]);
   }
 
+  bool IsServerShutdown() {
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set, SIGCHLD);
+
+    timespec wait_time;
+    wait_time.tv_sec = 1;
+    wait_time.tv_nsec = 0;
+
+    pthread_sigmask(SIG_BLOCK, &set, nullptr);
+    int result = sigtimedwait(&set, nullptr, &wait_time);
+    pthread_sigmask(SIG_UNBLOCK, &set, nullptr);
+    return result == SIGCHLD;
+  }
+
   void TearDown() override {
     int status;
-    wait(&status);
+    ASSERT_EQ(pid_, waitpid(pid_, &status, 0));
+
+    input_->Close();
+    output_->Close();
 
     delete input_;
     delete output_;
@@ -138,6 +156,30 @@ TEST_F(AgentServerTest, ForwardManyAgents) {
   }
 
   ASSERT_EQ(pids.size(), MANY);
+}
+
+// Test server shutdown if installer exits after agent connection.
+TEST_F(AgentServerTest, InstallerExit) {
+  StartServer(1, "InstallerExit");
+  FakeAgent agent(0 /* pid */);
+  ASSERT_TRUE(agent.Connect("InstallerExit"));
+  input_->Close();
+  output_->Close();
+  ASSERT_TRUE(IsServerShutdown());
+}
+
+// Test server shutdown if installer exits after agent sends a message and the
+// message is read.
+TEST_F(AgentServerTest, InstallerExitAfterResponse) {
+  StartServer(1, "InstallerExitAfterResponse");
+  FakeAgent agent(0 /* pid */);
+  ASSERT_TRUE(agent.Connect("InstallerExitAfterResponse"));
+  ASSERT_TRUE(agent.RespondSuccess());
+  std::string message;
+  ASSERT_TRUE(output_->Read(&message));
+  input_->Close();
+  output_->Close();
+  ASSERT_TRUE(IsServerShutdown());
 }
 
 }  // namespace deploy

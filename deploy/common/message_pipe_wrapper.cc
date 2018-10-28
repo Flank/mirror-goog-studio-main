@@ -76,8 +76,11 @@ std::vector<size_t> MessagePipeWrapper::Poll(
     return ready;
   }
 
+  // We want to report any possible error condition on the file descriptor.
+  // TODO(noahz): Make this more granular when refactoring.
+  constexpr short mask = POLLIN | POLLHUP | POLLERR | POLLNVAL;
   for (size_t i = 0; i < fds.size(); ++i) {
-    if (fds[i].revents & POLLIN) {
+    if (fds[i].revents & mask) {
       ready.emplace_back(i);
     }
   }
