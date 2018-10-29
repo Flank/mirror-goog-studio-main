@@ -457,6 +457,7 @@ public final class SdkConstants {
     public static final String FD_NDK = "ndk-bundle"; //$NON-NLS-1$
     public static final String FD_LLDB = "lldb"; //$NON-NLS-1$
     public static final String FD_CMAKE = "cmake"; //$NON-NLS-1$
+    public static final String FD_NDK_SIDE_BY_SIDE = "ndk"; //$NON-NLS-1$
     public static final String FD_GAPID = "gapid"; //$NON-NLS-1$
     /** Sample data for the project sample data */
     public static final String FD_SAMPLE_DATA = "sampledata";

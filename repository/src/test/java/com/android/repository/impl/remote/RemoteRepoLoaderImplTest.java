@@ -17,6 +17,7 @@
 package com.android.repository.impl.remote;
 
 import static com.android.repository.testframework.FakePackage.FakeRemotePackage;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -26,10 +27,12 @@ import com.android.repository.impl.manager.RemoteRepoLoader;
 import com.android.repository.impl.manager.RemoteRepoLoaderImpl;
 import com.android.repository.impl.meta.Archive;
 import com.android.repository.impl.meta.RemotePackageImpl;
+import com.android.repository.impl.meta.RepositoryPackages;
 import com.android.repository.impl.meta.TypeDetails;
 import com.android.repository.testframework.FakeDownloader;
 import com.android.repository.testframework.FakePackage;
 import com.android.repository.testframework.FakeProgressIndicator;
+import com.android.repository.testframework.FakeRepoManager;
 import com.android.repository.testframework.FakeRepositorySourceProvider;
 import com.android.repository.testframework.FakeSettingsController;
 import com.android.repository.testframework.MockFileOp;
@@ -38,6 +41,7 @@ import com.google.common.collect.ImmutableSet;
 import java.io.*;
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -391,5 +395,54 @@ public class RemoteRepoLoaderImplTest extends TestCase {
         mainFetchThread.join(60000);
         assertFalse(mainFetchThread.isAlive());
         assertFalse(mainFetchThread.isInterrupted());
+    }
+
+    public void testLegacyNdk() throws Exception {
+        RepositorySource source =
+                new SimpleRepositorySource(
+                        "http://www.example.com",
+                        "Source UI Name",
+                        true,
+                        ImmutableSet.of(RepoManager.getGenericModule()),
+                        null);
+        FakeDownloader downloader = new FakeDownloader(new MockFileOp());
+        downloader.registerUrl(
+                new URL("http://www.example.com"),
+                getClass().getResourceAsStream("/testRepoLegacyNdk.xml"));
+        FakeProgressIndicator progress = new FakeProgressIndicator(true);
+        RemoteRepoLoader loader =
+                new RemoteRepoLoaderImpl(
+                        ImmutableList.of(
+                                new FakeRepositorySourceProvider(ImmutableList.of(source))),
+                        null,
+                        null);
+        Map<String, RemotePackage> pkgs =
+                loader.fetchPackages(progress, downloader, new FakeSettingsController(false));
+        RepositoryPackages packages =
+                new RepositoryPackages(ImmutableList.of(), new ArrayList<>(pkgs.values()));
+        RepoManager repoManager = new FakeRepoManager(new File("./local-dir"), packages);
+        progress.assertNoErrorsOrWarnings();
+        assertEquals(5, pkgs.size());
+
+        RemotePackage legacy = pkgs.get("ndk-bundle");
+        assertEquals(new Revision(18, 1, 5063045), legacy.getVersion());
+        assertThat(legacy.obsolete()).isTrue();
+        assertThat(legacy.getDisplayName()).isEqualTo("NDK");
+        assertThat(legacy.getInstallDir(repoManager, progress))
+                .isEqualTo(new File("./local-dir/ndk-bundle"));
+
+        RemotePackage r18 = pkgs.get("ndk;18.1.5063045");
+        assertEquals(new Revision(18, 1, 5063045), r18.getVersion());
+        assertThat(r18.obsolete()).isFalse();
+        assertThat(r18.getDisplayName()).isEqualTo("NDK (Side by side) 18.1.5063045");
+        assertThat(r18.getInstallDir(repoManager, progress))
+                .isEqualTo(new File("./local-dir/ndk/18.1.5063045"));
+
+        RemotePackage r17 = pkgs.get("ndk;17.2.4988734");
+        assertEquals(new Revision(17, 2, 4988734), r17.getVersion());
+        assertThat(r17.obsolete()).isFalse();
+        assertThat(r17.getDisplayName()).isEqualTo("NDK (Side by side) 17.2.4988734");
+        assertThat(r17.getInstallDir(repoManager, progress))
+                .isEqualTo(new File("./local-dir/ndk/17.2.4988734"));
     }
 }

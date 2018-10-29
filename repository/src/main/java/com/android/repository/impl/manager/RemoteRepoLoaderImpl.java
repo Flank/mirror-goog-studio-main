@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -53,6 +54,14 @@ public class RemoteRepoLoaderImpl implements RemoteRepoLoader {
 
     private static final String FETCH_PACKAGES_WAITING_MESSAGE =
             "Still waiting for package manifests to be fetched remotely.";
+
+    /** Whether or not NDK side by side redirection is enabled. */
+    private static final boolean ENABLE_SIDE_BY_SIDE_NDK = true;
+
+    /**
+     * The name of NDK packages that should be redirected if ENABLE_SIDE_BY_SIDE_NDK is set to true.
+     */
+    private static final String NDK_BUNDLE_PACKAGE_NAME = "ndk-bundle";
 
     /**
      * Resource resolver to use for finding imported XSDs.
@@ -264,7 +273,22 @@ public class RemoteRepoLoaderImpl implements RemoteRepoLoader {
         }
 
         if (parsedPackages != null && !parsedPackages.isEmpty()) {
-            for (RemotePackage pkg : parsedPackages) {
+            // Synthesize NDK packages
+            Collection<RemotePackage> packages = new ArrayList<>();
+            if (ENABLE_SIDE_BY_SIDE_NDK) {
+                for (RemotePackage pkg : parsedPackages) {
+                    if (pkg.getPath().equals(NDK_BUNDLE_PACKAGE_NAME)) {
+                        packages.add(new NdkLegacyPackage(pkg));
+                        packages.add(new NdkSideBySidePackage(pkg));
+                    } else {
+                        packages.add(pkg);
+                    }
+                }
+            } else {
+                packages.addAll(parsedPackages);
+            }
+
+            for (RemotePackage pkg : packages) {
                 RemotePackage existing = result.get(pkg.getPath());
                 if (existing != null) {
                     int compare = existing.getVersion().compareTo(pkg.getVersion());
