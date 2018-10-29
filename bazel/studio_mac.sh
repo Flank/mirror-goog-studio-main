@@ -24,7 +24,7 @@ if [[ -d "${dist_dir}" ]]; then
   echo "The testlogs_dir is $testlogs_dir"
   mkdir "${dist_dir}"/gtest
   # This does not handle spaces in file names.
-  for source_xml in $(cd "${testlogs_dir}" && find -name '*.xml' -printf '%P\n'); do
+  for source_xml in $(cd "${testlogs_dir}" && find . -name '*.xml' -exec stat -f "%N" {} \; | sed "s|^\./||"); do
     target_xml="$(echo "${source_xml}" | tr '/' '_')"
     cp -pv "${testlogs_dir}/${source_xml}" "${dist_dir}/gtest/${target_xml}"
     # GTestXmlResultParser requires the testsuites element to have tests and time attributes.
