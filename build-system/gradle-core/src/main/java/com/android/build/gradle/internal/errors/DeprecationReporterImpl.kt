@@ -115,7 +115,7 @@ class DeprecationReporterImpl(
 
                 } + "\nWARNING: Debugging obsolete API calls can take time during configuration. It's recommended to not keep it on at all times."
             } else {
-                messageEnd = "To determine what is calling $oldApiElement, use -P${BooleanOption.DEBUG_OBSOLETE_API.propertyName}=true on the command line to display a stack trace."
+                messageEnd = "To determine what is calling $oldApiElement, use -P${BooleanOption.DEBUG_OBSOLETE_API.propertyName}=true on the command line to display more information."
             }
 
             issueReporter.reportIssue(
