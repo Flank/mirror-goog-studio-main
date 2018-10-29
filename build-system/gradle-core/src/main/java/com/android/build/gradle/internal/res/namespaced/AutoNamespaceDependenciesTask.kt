@@ -25,13 +25,14 @@ import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
+import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.internal.utils.toImmutableMap
-import com.android.builder.symbols.exportToCompiledJava
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
+import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.sdklib.IAndroidTarget
 import com.android.tools.build.apkzlib.zip.StoredEntryType
 import com.android.tools.build.apkzlib.zip.ZFile
@@ -48,6 +49,7 @@ import org.gradle.api.artifacts.ResolvableDependencies
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
@@ -55,11 +57,12 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.IOException
+import java.io.Serializable
 import java.nio.file.Files
-import java.util.concurrent.ForkJoinPool
-import java.util.concurrent.ForkJoinTask
+import javax.inject.Inject
 
 /**
  * Rewrites the non-namespaced AAR dependencies of this module to be namespaced.
@@ -71,7 +74,8 @@ import java.util.concurrent.ForkJoinTask
  *    them in to a static library.
  */
 @CacheableTask
-open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
+open class AutoNamespaceDependenciesTask @Inject constructor(workerExecutor: WorkerExecutor) :
+    AndroidBuilderTask() {
 
     lateinit var rFiles: ArtifactCollection private set
     lateinit var nonNamespacedManifests: ArtifactCollection private set
@@ -98,7 +102,7 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
     lateinit var aapt2FromMaven: FileCollection
         private set
 
-    @VisibleForTesting internal var log: Logger? = null
+    private val workers: WorkerExecutorFacade = Workers.getWorker(workerExecutor)
 
     /**
      * Reading the R files and building symbol tables is costly, and is wasteful to repeat,
@@ -126,7 +130,6 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
     fun taskAction() = autoNamespaceDependencies()
 
     private fun autoNamespaceDependencies(
-        forkJoinPool: ForkJoinPool = sharedForkJoinPool,
         aapt2FromMaven: FileCollection = this.aapt2FromMaven,
         dependencies: ResolvableDependencies = this.dependencies,
         rFiles: ArtifactCollection = this.rFiles,
@@ -164,7 +167,6 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
 
             val rewrittenResourcesMap = namespaceDependencies(
                 graph = graph,
-                forkJoinPool = forkJoinPool,
                 outputRewrittenClasses = rewrittenClasses,
                 outputRClasses = rewrittenRClasses,
                 outputManifests = outputManifests,
@@ -183,7 +185,6 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
                 compile(
                     rewrittenResourcesMap = rewrittenResourcesMap,
                     aapt2ServiceKey = aapt2ServiceKey,
-                    forkJoinPool = forkJoinPool,
                     outputDirectory = outputCompiledResources
                 )
 
@@ -193,7 +194,6 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
                 compiled = compileMap,
                 outputStaticLibrariesDirectory = outputStaticLibraries,
                 intermediateDirectory = intermediateDirectory,
-                pool = forkJoinPool,
                 aapt2ServiceKey = aapt2ServiceKey,
                 androidJarPath = builder.target.getPath(IAndroidTarget.ANDROID_JAR)
             )
@@ -206,7 +206,6 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
     @VisibleForTesting
     internal fun namespaceDependencies(
         graph: DependenciesGraph,
-        forkJoinPool: ForkJoinPool,
         outputRewrittenClasses: File,
         outputRClasses: File,
         outputManifests: File,
@@ -224,7 +223,6 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
         // TODO: do this all as one action to interleave work.
         val rewrittenResources = ImmutableMap.builder<DependenciesGraph.Node, File>()
 
-        val tasks = mutableListOf<ForkJoinTask<*>>()
         for (dependency in graph.allNodes) {
             val outputResources = if (dependency.getFile(ArtifactType.ANDROID_RES) != null) {
                 File(
@@ -235,17 +233,25 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
                 null
             }
             outputResources?.apply { rewrittenResources.put(dependency, outputResources) }
-            tasks.add(forkJoinPool.submit {
-                namespaceDependency(
-                    dependency,
-                    outputRewrittenClasses, outputRClasses, outputManifests, outputResources
+
+            // Only convert external nodes and non-namespaced libraries. Already namespaced libraries
+            // and JAR files can be present in the graph, but they will not contain the
+            // NON_NAMESPACED_CLASSES artifacts. Only try to rewrite non-namespaced libraries' classes.
+            if (dependency.id !is ProjectComponentIdentifier && dependency.getFiles(ArtifactType.NON_NAMESPACED_CLASSES) != null) {
+                workers.submit(
+                    NamespaceDependencyRunnable::class.java, NamespaceDependencyParams(
+                        dependency,
+                        outputRewrittenClasses,
+                        outputRClasses,
+                        outputManifests,
+                        outputResources,
+                        getSymbolTables(dependency)
+                    )
                 )
-            })
+            }
         }
-        for (task in tasks) {
-            task.get()
-        }
-        tasks.clear()
+
+        workers.await()
         return rewrittenResources.build()
     }
 
@@ -266,78 +272,12 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
         }
     }
 
-    private fun namespaceDependency(
-        dependency: DependenciesGraph.Node,
-        outputClassesDirectory: File,
-        outputRClassesDirectory: File,
-        outputManifests: File,
-        outputResourcesDirectory: File?
-    ) {
-        val inputClasses = dependency.getFiles(ArtifactType.NON_NAMESPACED_CLASSES)
-        val manifest = dependency.getFile(ArtifactType.NON_NAMESPACED_MANIFEST)
-        val resources = dependency.getFile(ArtifactType.ANDROID_RES)
-        val publicTxt = dependency.getFile(ArtifactType.PUBLIC_RES)
-
-        // Only convert external nodes and non-namespaced libraries. Already namespaced libraries
-        // and JAR files can be present in the graph, but they will not contain the
-        // NON_NAMESPACED_CLASSES artifacts. Only try to rewrite non-namespaced libraries' classes.
-        if (dependency.id !is ProjectComponentIdentifier && inputClasses != null) {
-            Preconditions.checkNotNull(
-                    manifest,
-                    "Manifest missing for library $dependency")
-
-            // The rewriting algorithm uses ordered symbol tables, with this library's table at the
-            // top of the list. It looks up resources starting from the top of the list, trying to
-            // find where the references resource was defined (or overridden), closest to the root
-            // (this node) in the dependency graph.
-            val symbolTables = getSymbolTables(dependency)
-            logger.info("Started rewriting $dependency")
-            val rewriter = NamespaceRewriter(symbolTables, log ?: logger)
-
-            // Brittle, relies on the AAR expansion logic that makes sure all jars have unique names
-            try {
-            inputClasses.forEach {
-                val out = File(
-                    outputClassesDirectory,
-                    "namespaced-${dependency.sanitizedName}-${it.name}"
-                )
-                rewriter.rewriteJar(it, out)
-            }
-            } catch (e: Exception) {
-                throw IOException("Failed to transform jar + ${dependency.getTransitiveFiles(ArtifactType.DEFINED_ONLY_SYMBOL_LIST)}", e)
-            }
-            rewriter.rewriteManifest(
-                    manifest!!.toPath(),
-                    outputManifests.toPath().resolve("${dependency.sanitizedName}_AndroidManifest.xml"))
-            if (resources != null) {
-                rewriter.rewriteAarResources(
-                    resources.toPath(),
-                    outputResourcesDirectory!!.toPath()
-                )
-
-                rewriter.generatePublicFile(publicTxt, outputResourcesDirectory.toPath())
-            }
-
-            logger.info("Finished rewriting $dependency")
-
-            // Also generate fake R classes for compilation.
-            rewriter.writeRClass(
-                    File(
-                            outputRClassesDirectory,
-                            "namespaced-${dependency.sanitizedName}-R.jar"
-                    ).toPath()
-            )
-        }
-    }
-
     private fun compile(
         rewrittenResourcesMap: Map<DependenciesGraph.Node, File>,
         aapt2ServiceKey: Aapt2ServiceKey,
-        forkJoinPool: ForkJoinPool,
         outputDirectory: File
     ): Map<DependenciesGraph.Node, File> {
         val compiled = ImmutableMap.builder<DependenciesGraph.Node, File>()
-        val tasks = mutableListOf<ForkJoinTask<*>>()
 
         rewrittenResourcesMap.forEach { node, rewrittenResources ->
             val nodeOutputDirectory = File(outputDirectory, node.sanitizedName)
@@ -349,15 +289,14 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
                         inputFile = resourceFile,
                         outputDirectory = nodeOutputDirectory
                     )
-                    val params =
+                    workers.submit(
+                        Aapt2CompileRunnable::class.java,
                         Aapt2CompileRunnable.Params(aapt2ServiceKey, listOf(request))
-                    tasks.add(forkJoinPool.submit(Aapt2CompileRunnable(params)))
+                    )
                 }
             }
         }
-        for (task in tasks) {
-            task.get()
-        }
+        workers.await()
         return compiled.build()
     }
 
@@ -468,13 +407,88 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
     }
 
     companion object {
-        val sharedForkJoinPool: ForkJoinPool by lazy {
-            ForkJoinPool(
-                Math.max(
-                    1,
-                    Math.min(8, Runtime.getRuntime().availableProcessors() / 2)
+        @VisibleForTesting
+        internal var log: Logger? = null
+    }
+}
+
+private class NamespaceDependencyRunnable @Inject constructor(val params: NamespaceDependencyParams) :
+    Runnable {
+
+    override fun run() {
+        val logger = Logging.getLogger(AutoNamespaceDependenciesTask::class.java)
+
+        Preconditions.checkNotNull(
+            params.manifest,
+            "Manifest missing for library ${params.dependencyName}"
+        )
+
+        // The rewriting algorithm uses ordered symbol tables, with this library's table at the
+        // top of the list. It looks up resources starting from the top of the list, trying to
+        // find where the references resource was defined (or overridden), closest to the root
+        // (this node) in the dependency graph.
+        logger.info("Started rewriting ${params.dependencyName}")
+        val rewriter =
+            NamespaceRewriter(params.symbolTables, AutoNamespaceDependenciesTask.log ?: logger)
+
+        // Brittle, relies on the AAR expansion logic that makes sure all jars have unique names
+        try {
+            params.inputClasses!!.forEach {
+                val out = File(
+                    params.outputClassesDirectory,
+                    "namespaced-${params.dependencySanitizedName}-${it.name}"
                 )
+                rewriter.rewriteJar(it, out)
+            }
+        } catch (e: Exception) {
+            throw IOException(
+                "Failed to transform jar + ${params.transitiveFiles}", e
             )
         }
+        rewriter.rewriteManifest(
+            params.manifest!!.toPath(),
+            params.outputManifests.toPath().resolve("${params.dependencySanitizedName}_AndroidManifest.xml")
+        )
+        if (params.resources != null) {
+            rewriter.rewriteAarResources(
+                params.resources.toPath(),
+                params.outputResourcesDirectory!!.toPath()
+            )
+
+            rewriter.generatePublicFile(
+                params.publicTxt,
+                params.outputResourcesDirectory.toPath()
+            )
+        }
+
+        logger.info("Finished rewriting ${params.dependencyName}")
+
+        // Also generate fake R classes for compilation.
+        rewriter.writeRClass(
+            File(
+                params.outputRClassesDirectory,
+                "namespaced-${params.dependencySanitizedName}-R.jar"
+            ).toPath()
+        )
     }
+}
+
+private class NamespaceDependencyParams(
+    dependency: DependenciesGraph.Node,
+    val outputClassesDirectory: File,
+    val outputRClassesDirectory: File,
+    val outputManifests: File,
+    val outputResourcesDirectory: File?,
+    val symbolTables: ImmutableList<SymbolTable>
+) : Serializable {
+    val inputClasses: ImmutableCollection<File>? =
+        dependency.getFiles(ArtifactType.NON_NAMESPACED_CLASSES)
+    val manifest: File? = dependency.getFile(ArtifactType.NON_NAMESPACED_MANIFEST)
+    val resources: File? = dependency.getFile(ArtifactType.ANDROID_RES)
+    val publicTxt: File? = dependency.getFile(ArtifactType.PUBLIC_RES)
+    val dependencyName: String = dependency.toString()
+    val dependencySanitizedName: String = dependency.sanitizedName
+    val transitiveFiles: ImmutableList<File> =
+        dependency.getTransitiveFiles(ArtifactType.DEFINED_ONLY_SYMBOL_LIST)
+
 }
