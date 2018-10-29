@@ -74,7 +74,7 @@ void SwapCommand::ParseParameters(int argc, char** argv) {
 
 inline void FilterPids(std::vector<int>& process_ids, proto::SwapRequest request) {
   process_ids.erase(remove_if(process_ids.begin(), process_ids.end(),
-                              [&](bool x) {
+                              [&](int x) {
                                 return std::find(request.skip_process_ids().begin(),
                                             request.skip_process_ids().end(),
                                             x) !=
