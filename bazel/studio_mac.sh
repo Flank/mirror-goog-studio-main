@@ -9,7 +9,7 @@ readonly build_number="$3"
 readonly script_dir="$(dirname "$0")"
 
 # Grab the location of the command_log file for bazel daemon so we can search it later.
-readonly command_log="$(${script_dir}/bazel info command_log --config=postsubmit --config=local --config=mac-experimental)"
+readonly command_log="$(${script_dir}/bazel info command_log --config=postsubmit --config=local --config=mac-experimental --auth_credentials=/buildbot/android-studio-alphasource.json)"
 
 # Run Bazel
 "${script_dir}/bazel" --max_idle_secs=60 --bazelrc=/dev/null test --config=postsubmit --config=local --config=mac-experimental --build_tag_filters=-no_mac --test_tag_filters=-no_mac,-no_test_mac,-qa_sanity,-qa_fast,-qa_unreliable --auth_credentials=/buildbot/android-studio-alphasource.json -- @blaze//:aswb_tests //prebuilts/studio/... //prebuilts/tools/... //tools/...
@@ -20,7 +20,7 @@ if [[ -d "${dist_dir}" ]]; then
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/$upsalite_id\" />" > "${dist_dir}"/upsalite_test_results.html
 
   # follow conventions to use gtest-testlog-forwarding on ATP
-  readonly testlogs_dir="$(${script_dir}/bazel info bazel-testlogs --config=postsubmit --config=local --config=mac-experimental)"
+  readonly testlogs_dir="$(${script_dir}/bazel info bazel-testlogs --config=postsubmit --config=local --config=mac-experimental --auth_credentials=/buildbot/android-studio-alphasource.json)"
   echo "The testlogs_dir is $testlogs_dir"
   mkdir "${dist_dir}"/gtest
   # This does not handle spaces in file names.
