@@ -27,7 +27,7 @@ import java.util.Objects;
 /** Creates a deep copy of {@link Library} of type LIBRARY_ANDROID. */
 public final class IdeAndroidLibrary extends IdeModel implements Library {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     @NonNull private final String myArtifactAddress;
     @NonNull private final File myFolder;
