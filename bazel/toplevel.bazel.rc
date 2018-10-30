@@ -17,6 +17,7 @@ test --verbose_failures
 # Local runs require longer timeouts.
 build:local --test_timeout=120,600,1800,7200
 build:windows --config=local
+build:windows --config=results-local
 
 # Test results caching is on by default. This is here so we have a presubmit
 # config as bazel rules can use the config to determine presubmit invocation.
