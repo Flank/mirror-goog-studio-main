@@ -1638,17 +1638,4 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         ? InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS
                         : InternalArtifactType.MERGED_MANIFESTS;
     }
-
-    @NonNull
-    @Override
-    public FileCollection getSigningConfigFileCollection() {
-        return getType().isBaseModule()
-                ? getArtifacts()
-                        .getFinalArtifactFiles(InternalArtifactType.FEATURE_SIGNING_CONFIG)
-                        .get()
-                : getArtifactFileCollection(
-                        ConsumedConfigType.COMPILE_CLASSPATH,
-                        AndroidArtifacts.ArtifactScope.MODULE,
-                        AndroidArtifacts.ArtifactType.FEATURE_SIGNING_CONFIG);
-    }
 }

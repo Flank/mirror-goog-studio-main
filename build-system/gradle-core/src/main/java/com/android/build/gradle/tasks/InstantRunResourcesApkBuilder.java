@@ -20,6 +20,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.api.artifact.BuildableArtifact;
+import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
@@ -29,7 +30,6 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
-import com.android.build.gradle.internal.tasks.SigningConfigMetadata;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.packaging.PackagerException;
@@ -40,9 +40,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Nested;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.tooling.BuildException;
@@ -60,15 +61,16 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
     private AndroidBuilder androidBuilder;
     private InstantRunBuildContext instantRunBuildContext;
     private File outputDirectory;
-    private FileCollection signingConf;
+    private CoreSigningConfig signingConf;
     private File supportDirectory;
 
     private BuildableArtifact resources;
 
     private InternalArtifactType resInputType;
 
-    @InputFiles
-    public FileCollection getSigningConf() {
+    @Nested
+    @Optional
+    public CoreSigningConfig getSigningConf() {
         return signingConf;
     }
 
@@ -145,7 +147,7 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
                                 androidBuilder.packageCodeSplitApk(
                                         input,
                                         ImmutableSet.of(),
-                                        SigningConfigMetadata.Companion.load(signingConf),
+                                        signingConf,
                                         outputFile,
                                         tempDir,
                                         ApkCreatorFactories.fromProjectProperties(
@@ -199,7 +201,8 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
             resourcesApkBuilder.resInputType = resInputType;
             resourcesApkBuilder.supportDirectory = variantScope.getIncrementalDir(getName());
             resourcesApkBuilder.androidBuilder = variantScope.getGlobalScope().getAndroidBuilder();
-            resourcesApkBuilder.signingConf = variantScope.getSigningConfigFileCollection();
+            resourcesApkBuilder.signingConf =
+                    variantScope.getVariantConfiguration().getSigningConfig();
             resourcesApkBuilder.instantRunBuildContext = variantScope.getInstantRunBuildContext();
             resourcesApkBuilder.resources =
                     variantScope.getArtifacts().getFinalArtifactFiles(resInputType);

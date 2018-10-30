@@ -21,7 +21,6 @@ import com.android.build.OutputFile
 import com.android.build.VariantOutput
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.scope.InternalArtifactType.*
-import com.android.builder.core.VariantTypeImpl
 import com.android.ide.common.build.ApkInfo
 import com.android.utils.Pair
 import com.google.common.base.Charsets
@@ -57,7 +56,6 @@ class BuildElementsTest {
     @Before
     fun setUp() {
         MockitoAnnotations.initMocks(this)
-        `when`(variantConfiguration!!.type).thenReturn(VariantTypeImpl.BASE_APK)
     }
 
     @Test

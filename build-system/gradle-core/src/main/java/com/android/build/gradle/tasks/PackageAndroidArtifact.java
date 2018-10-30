@@ -29,6 +29,7 @@ import com.android.build.VariantOutput;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
+import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
@@ -45,7 +46,6 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.KnownFilesSaveData;
 import com.android.build.gradle.internal.tasks.KnownFilesSaveData.InputSet;
-import com.android.build.gradle.internal.tasks.SigningConfigMetadata;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
@@ -97,6 +97,7 @@ import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
@@ -200,7 +201,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     private boolean debugBuild;
     private boolean jniDebugBuild;
 
-    private FileCollection signingConfig;
+    private CoreSigningConfig signingConfig;
 
     protected Supplier<AndroidVersion> minSdkVersion;
 
@@ -265,17 +266,13 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         this.debugBuild = debugBuild;
     }
 
-    /**
-     * Retrieves the signing config file collection. It is necessary to make this an optional input
-     * for instant run packaging, which explicitly sets this to a null file collection.
-     */
-    @InputFiles
+    @Nested
     @Optional
-    public FileCollection getSigningConfig() {
+    public CoreSigningConfig getSigningConfig() {
         return signingConfig;
     }
 
-    public void setSigningConfig(FileCollection signingConfig) {
+    public void setSigningConfig(CoreSigningConfig signingConfig) {
         this.signingConfig = signingConfig;
     }
 
@@ -663,7 +660,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         try (IncrementalPackager packager =
                 new IncrementalPackagerBuilder(apkFormat)
                         .withOutputFile(outputFile)
-                        .withSigning(SigningConfigMetadata.Companion.load(signingConfig))
+                        .withSigning(signingConfig)
                         .withCreatedBy(getBuilder().getCreatedBy())
                         .withMinSdk(getMinSdkVersion())
                         // TODO: allow extra metadata to be saved in the split scope to avoid
@@ -1015,7 +1012,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                             .getArtifacts()
                             .getFinalArtifactFiles(InternalArtifactType.APK_LIST);
 
-            task.setSigningConfig(variantScope.getSigningConfigFileCollection());
+            // Don't sign.
+            task.setSigningConfig(variantConfiguration.getSigningConfig());
         }
 
         @NonNull

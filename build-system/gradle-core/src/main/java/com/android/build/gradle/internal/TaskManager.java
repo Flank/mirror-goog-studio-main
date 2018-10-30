@@ -78,6 +78,7 @@ import com.android.build.gradle.internal.coverage.JacocoReportTask;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
+import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.DataBindingOptions;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.incremental.BuildInfoLoaderTask;
@@ -1192,6 +1193,10 @@ public abstract class TaskManager {
 
         TaskProvider<PackageSplitRes> task =
                 taskFactory.register(new PackageSplitRes.CreationAction(scope));
+
+        if (scope.getVariantConfiguration().getSigningConfig() != null) {
+            TaskFactoryUtils.dependsOn(task, getValidateSigningTask(scope));
+        }
     }
 
     @Nullable
@@ -1224,6 +1229,11 @@ public abstract class TaskManager {
         // then package those resources with the appropriate JNI libraries.
         TaskProvider<PackageSplitAbi> packageSplitAbiTask =
                 taskFactory.register(new PackageSplitAbi.CreationAction(scope));
+
+        if (scope.getVariantConfiguration().getSigningConfig() != null) {
+            TaskFactoryUtils.dependsOn(
+                    packageSplitAbiTask, getValidateSigningTask(variantData.getScope()));
+        }
 
         return packageSplitAbiTask;
     }
@@ -2759,6 +2769,8 @@ public abstract class TaskManager {
                         ? InternalArtifactType.SHRUNK_PROCESSED_RES
                         : InternalArtifactType.PROCESSED_RES;
 
+        CoreSigningConfig signingConfig = variantScope.getVariantConfiguration().getSigningConfig();
+
         // Common code for both packaging tasks.
         Action<Task> configureResourcesAndAssetsDependencies =
                 task -> {
@@ -2767,6 +2779,9 @@ public abstract class TaskManager {
                         task.dependsOn(taskContainer.getProcessAndroidResTask());
                     }
                 };
+
+        TaskProvider<? extends Task> validateSigningTask =
+                signingConfig != null ? getValidateSigningTask(variantScope) : null;
 
         TaskProvider<PackageApplication> packageApp =
                 taskFactory.register(
@@ -2784,6 +2799,9 @@ public abstract class TaskManager {
                         null,
                         task -> {
                             //noinspection VariableNotUsedInsideIf - we use the whole packaging scope below.
+                            if (validateSigningTask != null) {
+                                task.dependsOn(validateSigningTask);
+                            }
 
                             task.dependsOn(taskContainer.getJavacTask());
 
@@ -2810,6 +2828,7 @@ public abstract class TaskManager {
                     taskFactory.register(
                             new InstantRunResourcesApkBuilder.CreationAction(
                                     resourceFilesInputType, variantScope));
+            TaskFactoryUtils.dependsOn(packageInstantRunResources, validateSigningTask);
 
             // make sure the task run even if none of the files we consume are available,
             // this is necessary so we can clean up output.
@@ -3694,26 +3713,14 @@ public abstract class TaskManager {
                     task.setGroup(ANDROID_GROUP);
                 });
 
-
-        List<VariantScope> signingReportScopes =
-                variantScopes
-                        .stream()
-                        .filter(
-                                variantScope ->
-                                        variantScope.getType().isForTesting()
-                                                || variantScope.getType().isBaseModule())
-                        .collect(Collectors.toList());
-        if (!signingReportScopes.isEmpty()) {
-            taskFactory.register(
-                    "signingReport",
-                    SigningReportTask.class,
-                    task -> {
-                        task.setDescription(
-                                "Displays the signing info for the base and test modules");
-                        task.setVariants(signingReportScopes);
-                        task.setGroup(ANDROID_GROUP);
-                    });
-        }
+        taskFactory.register(
+                "signingReport",
+                SigningReportTask.class,
+                task -> {
+                    task.setDescription("Displays the signing info for each variant.");
+                    task.setVariants(variantScopes);
+                    task.setGroup(ANDROID_GROUP);
+                });
     }
 
     public void createAnchorTasks(@NonNull VariantScope scope) {

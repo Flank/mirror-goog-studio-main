@@ -25,18 +25,19 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
-import com.android.build.gradle.internal.tasks.SigningConfigMetadata;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.internal.packaging.IncrementalPackager;
+import com.android.builder.model.SigningConfig;
 import com.android.ide.common.build.ApkInfo;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Nested;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
@@ -44,7 +45,7 @@ import org.gradle.api.tasks.TaskProvider;
 /** Package each split resources into a specific signed apk file. */
 public class PackageSplitRes extends AndroidBuilderTask {
 
-    private FileCollection signingConfig;
+    private SigningConfig signingConfig;
     private File incrementalDir;
     public BuildableArtifact processedResources;
     public File splitResApkOutputDirectory;
@@ -59,8 +60,9 @@ public class PackageSplitRes extends AndroidBuilderTask {
         return splitResApkOutputDirectory;
     }
 
-    @InputFiles
-    public FileCollection getSigningConfig() {
+    @Nested
+    @Optional
+    public SigningConfig getSigningConfig() {
         return signingConfig;
     }
 
@@ -94,9 +96,7 @@ public class PackageSplitRes extends AndroidBuilderTask {
                             try (IncrementalPackager pkg =
                                     new IncrementalPackagerBuilder(
                                                     IncrementalPackagerBuilder.ApkFormat.FILE)
-                                            .withSigning(
-                                                    SigningConfigMetadata.Companion.load(
-                                                            signingConfig))
+                                            .withSigning(signingConfig)
                                             .withOutputFile(outFile)
                                             .withProject(PackageSplitRes.this.getProject())
                                             .withIntermediateDir(intDir)
@@ -169,7 +169,7 @@ public class PackageSplitRes extends AndroidBuilderTask {
 
             task.processedResources =
                     scope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES);
-            task.signingConfig = scope.getSigningConfigFileCollection();
+            task.signingConfig = config.getSigningConfig();
             task.splitResApkOutputDirectory = splitResApkOutputDirectory;
             task.incrementalDir = scope.getIncrementalDir(getName());
         }
