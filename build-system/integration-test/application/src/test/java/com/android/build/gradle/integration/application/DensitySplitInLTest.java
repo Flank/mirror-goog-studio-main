@@ -2,7 +2,6 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertWithMessage;
-import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
@@ -15,7 +14,6 @@ import com.android.builder.model.VariantBuildOutput;
 import com.android.testutils.TestUtils;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -44,7 +42,7 @@ public class DensitySplitInLTest {
     }
 
     @Test
-    public void checkSplitOutputs() throws Exception {
+    public void checkSplitOutputs() {
         // build a set of expected outputs
         Set<String> expected = Sets.newHashSetWithExpectedSize(5);
         expected.add(null);
@@ -99,7 +97,7 @@ public class DensitySplitInLTest {
                             foundAddedAPK = true;
                         } else {
                             // check that the APK was not rebuilt.
-                            String key = output.getOutputType() + filter;
+                            String key = getArtifactKeyName(output);
                             Long initialApkModifiedTime = lastModifiedTimePerDensity.get(key);
                             assertThat(initialApkModifiedTime).isNotNull();
                             assertWithMessage("output has changed " + output.getOutputFile())
@@ -141,27 +139,24 @@ public class DensitySplitInLTest {
                         assertThat(filter).doesNotMatch("^xxhdpi$");
 
                         // check that the APK was not rebuilt.
-                        String key = output.getOutputType() + filter;
+                        String key = getArtifactKeyName(output);
                         Long initialApkModifiedTime = lastModifiedTimePerDensity.get(key);
                         assertThat(initialApkModifiedTime).isNotNull();
-                        assertThat(initialApkModifiedTime)
+                        assertWithMessage("output has changed " + output.getOutputFile())
+                                .that(initialApkModifiedTime)
                                 .isEqualTo(output.getOutputFile().lastModified());
                     }
                 });
     }
 
-    private static Collection<? extends OutputFile> getOutputs(ProjectBuildOutput outputModel)
-            throws IOException {
+    private static Collection<? extends OutputFile> getOutputs(ProjectBuildOutput outputModel) {
         VariantBuildOutput debugOutput =
                 ProjectBuildOutputUtils.getDebugVariantBuildOutput(outputModel);
 
         Collection<OutputFile> outputFiles = debugOutput.getOutputs();
 
         // with pure splits, all split have the same version code.
-        outputFiles.forEach(
-                output -> {
-                    assertThat(output.getVersionCode()).isEqualTo(12);
-                });
+        outputFiles.forEach(output -> assertThat(output.getVersionCode()).isEqualTo(12));
 
         return outputFiles;
     }
@@ -169,15 +164,17 @@ public class DensitySplitInLTest {
     @NonNull
     private static Map<String, Long> getApkModifiedTimePerDensity(
             Collection<? extends OutputFile> outputs) {
-        ImmutableMap.Builder<String, Long> builder = ImmutableMap.builder();
-        for (OutputFile output : outputs) {
-            String key =
-                    output.getOutputType()
-                            + VariantOutputUtils.getFilter(output, OutputFile.DENSITY);
-            builder.put(key, output.getOutputFile().lastModified());
-        }
+        return outputs.stream()
+                .collect(
+                        ImmutableMap.toImmutableMap(
+                                o -> getArtifactKeyName(o), o -> o.getOutputFile().lastModified()));
+    }
 
-        return builder.build();
+    @NonNull
+    private static String getArtifactKeyName(OutputFile outputFile) {
+        return outputFile.getOutputType()
+                + VariantOutputUtils.getFilter(outputFile, OutputFile.DENSITY);
+
     }
 
     // b/113323972 - Let's wait for a few more system ticks before trying to read the files
