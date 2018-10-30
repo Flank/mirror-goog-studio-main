@@ -38,6 +38,11 @@ struct AtraceProfilingMetadata {
 
 class AtraceManager {
  public:
+  // Number of times we attempt to start atrace, this is high because we reduce
+  // the allocated memory requested each attempt.
+  // Visible for testing.
+  static const int kRetryStartAttempts = 20;
+
   explicit AtraceManager(std::unique_ptr<FileSystem> file_system, Clock *clock,
                          int dump_data_interval_ms)
       : AtraceManager(std::move(file_system), clock, dump_data_interval_ms,
@@ -51,12 +56,15 @@ class AtraceManager {
   // |trace_path| is also set to where the trace file will be made available
   // once profiling of this app is stopped. To call this method on an already
   // profiled app is a noop and returns false.
+  // |acquired_buffer_size_kb| is an out parameter of the buffer size Atrace was
+  // able to allocate. If start profiling was unsucessful this parameter is 0 or
+  // the last buffer size attempted.
   // Only one instance of Atrace should be running at a time.
   // TODO: Investigate if running atrace with two different application
   // names keeps the profiling unique.
   bool StartProfiling(const std::string &app_name, int sampling_interval_us,
-                      int buffer_size_in_mb, std::string *trace_path,
-                      std::string *error);
+                      int buffer_size_in_mb, int *acquired_buffer_size_kb,
+                      std::string *trace_path, std::string *error);
   bool StopProfiling(const std::string &app_name, bool need_result,
                      std::string *error);
   void Shutdown();
@@ -69,7 +77,6 @@ class AtraceManager {
  private:
   std::unique_ptr<FileSystem> file_system_;
   Clock *clock_;
-  static const char *kArguments;
   AtraceProfilingMetadata profiled_app_;
   // Protects atrace start/stop
   std::mutex start_stop_mutex_;
