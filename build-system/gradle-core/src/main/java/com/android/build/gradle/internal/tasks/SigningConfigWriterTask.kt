@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.tasks.AnnotationProcessingTaskCreationAction
+import org.gradle.api.Task
 import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
 import java.io.IOException
@@ -27,6 +28,7 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.TaskProvider
 
 /**
  * Task that writes the SigningConfig information and publish it for dynamic-feature modules.
@@ -50,19 +52,24 @@ open class SigningConfigWriterTask : AndroidVariantTask() {
         SigningConfigMetadata.save(out.get().asFile, signingConfig)
     }
 
-    class CreationAction(variantScope: VariantScope) :
+    class CreationAction(
+        variantScope: VariantScope,
+        private val validateSigningTask: TaskProvider<out Task>?
+    ) :
         AnnotationProcessingTaskCreationAction<SigningConfigWriterTask>(
             variantScope,
             variantScope.getTaskName("signingConfigWriter"),
-            SigningConfigWriterTask::class.java) {
+            SigningConfigWriterTask::class.java
+        ) {
 
         private var outputDirectory: Provider<Directory>? = null
 
         override fun preConfigure(taskName: String) {
             super.preConfigure(taskName)
             outputDirectory = variantScope.artifacts.createDirectory(
-                InternalArtifactType.FEATURE_SIGNING_CONFIG,
-                taskName)
+                InternalArtifactType.SIGNING_CONFIG,
+                taskName
+            )
         }
 
         override fun configure(task: SigningConfigWriterTask) {
@@ -72,6 +79,12 @@ open class SigningConfigWriterTask : AndroidVariantTask() {
             // convert to a serializable signing config. Objects from DSL are not serializable.
             task.signingConfig = variantScope.variantConfiguration.signingConfig?.let {
                 SigningConfig(it.name).initWith(it)
+            }
+
+            // make the signingConfigWriterTask depend on the validate signing task to ensure that
+            // the keystore is created if it's a debug one.
+            if (validateSigningTask != null) {
+                task.dependsOn(validateSigningTask)
             }
         }
     }

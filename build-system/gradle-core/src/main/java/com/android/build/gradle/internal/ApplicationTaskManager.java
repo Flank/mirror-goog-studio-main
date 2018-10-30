@@ -173,14 +173,11 @@ public class ApplicationTaskManager extends TaskManager {
         if (variantScope.getType().isBaseModule()) {
             // Base feature specific tasks.
             taskFactory.register(new FeatureSetMetadataWriterTask.CreationAction(variantScope));
-            TaskProvider<SigningConfigWriterTask> signingConfigWriterTask =
-                    taskFactory.register(new SigningConfigWriterTask.CreationAction(variantScope));
-            // make the signingConfigWriterTask depend on the validate signing task to ensure that
-            // the keystore is created if it's a debug one.
-            if (variantScope.getVariantConfiguration().getSigningConfig() != null) {
-                TaskFactoryUtils.dependsOn(
-                        signingConfigWriterTask, getValidateSigningTask(variantScope));
-            }
+
+            // Add a task to produce the signing config file
+            taskFactory.register(
+                    new SigningConfigWriterTask.CreationAction(
+                            variantScope, getValidateSigningTask(variantScope)));
 
             if (extension.getDataBinding().isEnabled()) {
                 // Create a task that will package the manifest ids(the R file packages) of all
