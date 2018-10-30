@@ -26,7 +26,7 @@ proto::ConnectivityData::NetworkType
 IoNetworkTypeProvider::GetDefaultNetworkType() {
   proto::ConnectivityData::NetworkType type = proto::ConnectivityData::INVALID;
   int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-  if(sockfd < 0) {
+  if (sockfd < 0) {
     return type;
   }
 
@@ -37,7 +37,7 @@ IoNetworkTypeProvider::GetDefaultNetworkType() {
   ifc.ifc_buf = buf;
 
   struct ifreq *ifr = nullptr;
-  if(ioctl(sockfd, SIOCGIFCONF, &ifc) >= 0) {
+  if (ioctl(sockfd, SIOCGIFCONF, &ifc) >= 0) {
     ifr = ifc.ifc_req;
   }
   int interfaces = ifr != nullptr ? ifc.ifc_len / sizeof(struct ifreq) : 0;
@@ -58,4 +58,4 @@ IoNetworkTypeProvider::GetDefaultNetworkType() {
   return type;
 }
 
-} // namespace profiler
+}  // namespace profiler

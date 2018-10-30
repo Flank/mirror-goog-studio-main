@@ -32,7 +32,7 @@ CurrentProcess* CurrentProcess::Instance() {
   return instance;
 }
 
-string CurrentProcess::GetResolvedPath(const char *unresolved_path) {
+string CurrentProcess::GetResolvedPath(const char* unresolved_path) {
   // It's understood that PATH_MAX doesn't guarantee that the path will fit the
   // buffer. However, it's a fairly high value. The buffer can be increased in
   // the future if it's necessary .
@@ -40,7 +40,7 @@ string CurrentProcess::GetResolvedPath(const char *unresolved_path) {
   // realpath() returns the canonicalized absolute pathname.
   char* real = realpath(unresolved_path, buffer);
   if (real == nullptr) {
-    return std::string{}; // Returns an empty string on failure.
+    return std::string{};  // Returns an empty string on failure.
   }
   return std::string{dirname(buffer)} + "/";
 }

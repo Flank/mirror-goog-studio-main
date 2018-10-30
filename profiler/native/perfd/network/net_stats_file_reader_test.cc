@@ -23,7 +23,7 @@ using profiler::TestUtils;
 
 TEST(NetStatsFileReader, NewReaderReturnsZeros) {
   std::string file_name(
-    TestUtils::getNetworkTestData("traffic_uid_matched_single_entry.txt"));
+      TestUtils::getNetworkTestData("traffic_uid_matched_single_entry.txt"));
   NetStatsFileReader statsReader(file_name);
   EXPECT_EQ(0, statsReader.bytes_rx(12345));
   EXPECT_EQ(0, statsReader.bytes_tx(12345));
@@ -34,7 +34,7 @@ TEST(NetStatsFileReader, NewReaderReturnsZeros) {
 
 TEST(NetStatsFileReader, OutputIsFromSingleLineEntry) {
   std::string file_name(
-    TestUtils::getNetworkTestData("traffic_uid_matched_single_entry.txt"));
+      TestUtils::getNetworkTestData("traffic_uid_matched_single_entry.txt"));
   NetStatsFileReader statsReader(file_name);
   statsReader.Refresh();
   EXPECT_EQ(1111, statsReader.bytes_rx(12345));
@@ -42,8 +42,8 @@ TEST(NetStatsFileReader, OutputIsFromSingleLineEntry) {
 }
 
 TEST(NetStatsFileReader, OutputIsSumOfMultiLineEntries) {
-  std::string file_name(
-    TestUtils::getNetworkTestData("traffic_uid_matched_multiple_entries.txt"));
+  std::string file_name(TestUtils::getNetworkTestData(
+      "traffic_uid_matched_multiple_entries.txt"));
   NetStatsFileReader statsReader(file_name);
   statsReader.Refresh();
   EXPECT_EQ(3333, statsReader.bytes_rx(12345));
@@ -52,7 +52,7 @@ TEST(NetStatsFileReader, OutputIsSumOfMultiLineEntries) {
 
 TEST(NetStatsFileReader, OutputIsZeroAsUnmatchUidEntryIsFilteredOut) {
   std::string file_name(
-    TestUtils::getNetworkTestData("traffic_uid_unmatched.txt"));
+      TestUtils::getNetworkTestData("traffic_uid_unmatched.txt"));
   NetStatsFileReader statsReader(file_name);
   statsReader.Refresh();
   EXPECT_EQ(0, statsReader.bytes_rx(12345));
@@ -61,7 +61,7 @@ TEST(NetStatsFileReader, OutputIsZeroAsUnmatchUidEntryIsFilteredOut) {
 
 TEST(NetStatsFileReader, OutputFiltersOutLoopbackTraffic) {
   std::string file_name(
-    TestUtils::getNetworkTestData("traffic_filter_out_loopback_traffic.txt"));
+      TestUtils::getNetworkTestData("traffic_filter_out_loopback_traffic.txt"));
   NetStatsFileReader statsReader(file_name);
   statsReader.Refresh();
   EXPECT_EQ(0, statsReader.bytes_rx(12345));
@@ -69,9 +69,8 @@ TEST(NetStatsFileReader, OutputFiltersOutLoopbackTraffic) {
 }
 
 TEST(NetStatsFileReader, OutputFiltersOutLoopbackAndKeepNonLoopbackTraffic) {
-  std::string file_name(
-    TestUtils::getNetworkTestData(
-        "traffic_having_loopback_and_nonloopback_traffic.txt"));
+  std::string file_name(TestUtils::getNetworkTestData(
+      "traffic_having_loopback_and_nonloopback_traffic.txt"));
   NetStatsFileReader statsReader(file_name);
   statsReader.Refresh();
   EXPECT_EQ(2222, statsReader.bytes_rx(12345));
@@ -80,7 +79,7 @@ TEST(NetStatsFileReader, OutputFiltersOutLoopbackAndKeepNonLoopbackTraffic) {
 
 TEST(NetStatsFileReader, ThreeUidsData) {
   std::string file_name(
-    TestUtils::getNetworkTestData("traffic_three_uids_data.txt"));
+      TestUtils::getNetworkTestData("traffic_three_uids_data.txt"));
   NetStatsFileReader statsReader(file_name);
   statsReader.Refresh();
   EXPECT_EQ(1110, statsReader.bytes_rx(12340));

@@ -19,11 +19,11 @@
 
 #include <gtest/gtest.h>
 
-using profiler::FileSystem;
 using profiler::FileCache;
+using profiler::FileSystem;
 using profiler::MemoryFileSystem;
-using std::unique_ptr;
 using std::string;
+using std::unique_ptr;
 
 TEST(FileCache, CanAddCacheByChunks) {
   FileCache cache(unique_ptr<FileSystem>(new MemoryFileSystem()), "/");

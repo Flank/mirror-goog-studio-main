@@ -74,12 +74,10 @@ class MessagePipeWrapper {
 
 // A derived class that owns the fd passed in the constructor and will therefore
 // close it when it is destructed.
-class OwnedMessagePipeWrapper: public MessagePipeWrapper {
+class OwnedMessagePipeWrapper : public MessagePipeWrapper {
  public:
   OwnedMessagePipeWrapper(int fd) : MessagePipeWrapper(fd) {}
-  virtual ~OwnedMessagePipeWrapper() {
-    Close();
-  }
+  virtual ~OwnedMessagePipeWrapper() { Close(); }
 };
 }  // namespace deploy
 

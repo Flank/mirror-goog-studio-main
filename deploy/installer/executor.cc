@@ -107,12 +107,12 @@ static void Pump(int stdin_source, int child_stdin, int child_stdout,
 }
 
 static bool PrivateRun(const std::string& executable_path,
-                            const std::vector<std::string>& args,
-                            std::string* output, std::string* error,
-                            int input_file_fd) {
+                       const std::vector<std::string>& args,
+                       std::string* output, std::string* error,
+                       int input_file_fd) {
   int child_stdout, child_stdin, child_stderr, child_pid, status;
-  bool ok = Executor::ForkAndExec(executable_path, args, &child_stdin, &child_stdout,
-                        &child_stderr, &child_pid);
+  bool ok = Executor::ForkAndExec(executable_path, args, &child_stdin,
+                                  &child_stdout, &child_stderr, &child_pid);
   if (!ok) {
     *error = "Unable to ForkAndExec";
     return false;
@@ -129,7 +129,7 @@ static bool PrivateRun(const std::string& executable_path,
   bool result = (pid == child_pid);
   if (!result) {
     ErrEvent("waitpid returned " + to_string(pid) +
-        " but expected:" + to_string(child_pid));
+             " but expected:" + to_string(child_pid));
     return false;
   }
   return WIFEXITED(status) && (WEXITSTATUS(status) == 0);
@@ -139,7 +139,6 @@ bool Executor::RunWithInput(const std::string& executable_path,
                             const std::vector<std::string>& args,
                             std::string* output, std::string* error,
                             const std::string& input_file) noexcept {
-
   int stdin_source = open(input_file.c_str(), O_RDONLY, 0);
   bool result = PrivateRun(executable_path, args, output, error, stdin_source);
   close(stdin_source);

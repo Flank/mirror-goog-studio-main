@@ -23,8 +23,8 @@
 
 #include "utils/count_down_latch.h"
 
-using profiler::ProducerConsumerQueue;
 using profiler::CountDownLatch;
+using profiler::ProducerConsumerQueue;
 using std::thread;
 using std::vector;
 

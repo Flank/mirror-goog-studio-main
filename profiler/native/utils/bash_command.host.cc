@@ -34,8 +34,6 @@ bool BashCommandRunner::RunAs(const string &parameters,
   return Run(parameters, output);
 }
 
-bool BashCommandRunner::IsRunAsCapable() {
-  return true;
-}
+bool BashCommandRunner::IsRunAsCapable() { return true; }
 
 }  // namespace profiler

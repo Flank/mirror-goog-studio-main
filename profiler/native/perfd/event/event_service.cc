@@ -23,13 +23,13 @@
 
 using grpc::ServerContext;
 using grpc::Status;
-using profiler::proto::EventDataRequest;
 using profiler::proto::ActivityDataResponse;
-using profiler::proto::SystemDataResponse;
+using profiler::proto::EventDataRequest;
 using profiler::proto::EventStartRequest;
 using profiler::proto::EventStartResponse;
 using profiler::proto::EventStopRequest;
 using profiler::proto::EventStopResponse;
+using profiler::proto::SystemDataResponse;
 
 namespace profiler {
 EventServiceImpl::EventServiceImpl(EventCache* cache) : cache_(*cache) {}

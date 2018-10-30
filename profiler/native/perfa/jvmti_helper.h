@@ -37,7 +37,7 @@ jvmtiEnv* CreateJvmtiEnv(JavaVM* vm);
  * Returns true if there is an error, false otherwise.
  */
 bool CheckJvmtiError(jvmtiEnv* jvmti, jvmtiError err_num,
-                     const std::string &message = kEmpty);
+                     const std::string& message = kEmpty);
 
 /**
  * Sets all available capabilities on the given JVMTI environment.

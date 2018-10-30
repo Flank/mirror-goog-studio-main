@@ -15,8 +15,8 @@
  */
 #include "utils/tokenizer.h"
 
-using std::vector;
 using std::string;
+using std::vector;
 
 namespace profiler {
 

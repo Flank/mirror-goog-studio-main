@@ -32,7 +32,7 @@ const char* const kAmExecutable = "/aaaaa/system/bin/am";
 const char* const kProfileStart = "profile start";
 const char* const kTestPackageName = "TestPackageName";
 const char* const kMockOutputString = "MockOutputString";
-}
+}  // namespace
 
 namespace profiler {
 
@@ -120,4 +120,4 @@ TEST(ActivityManagerTest, InstrumentSystemServerStart) {
   EXPECT_THAT(output_string, StrEq(kMockOutputString));
 }
 
-}  // nampespace profiler
+}  // namespace profiler

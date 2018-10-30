@@ -21,9 +21,9 @@
 #include <vector>
 
 #include <gtest/gtest.h>
-#define DONT_OPTIMIZE __attribute__((noinline))\
-                      __attribute__((optimize("-O0")))\
-                      __attribute__((optnone))
+#define DONT_OPTIMIZE                                        \
+  __attribute__((noinline)) __attribute__((optimize("-O0"))) \
+      __attribute__((optnone))
 
 using profiler::GetBacktrace;
 using std::uintptr_t;

@@ -42,21 +42,15 @@ class CircularBuffer {
 
   // Get the item at the specified |index|. This method will return an undefined
   // value if the index is out of bounds.
-  T& Get(size_t index) {
-    return values_[(start_ + index) % capacity_];
-  }
+  T& Get(size_t index) { return values_[(start_ + index) % capacity_]; }
   const T& Get(size_t index) const {
     return values_[(start_ + index) % capacity_];
   }
 
   // Get the last item in the buffer. This method will return an undefined value
   // if this buffer is empty.
-  T& back() {
-    return Get(size() - 1);
-  }
-  const T& back() const {
-    return Get(size() - 1);
-  }
+  T& back() { return Get(size() - 1); }
+  const T& back() const { return Get(size() - 1); }
 
   size_t size() const { return size_; }
 

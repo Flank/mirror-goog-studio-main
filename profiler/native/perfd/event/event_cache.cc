@@ -22,12 +22,12 @@
 #include "utils/clock.h"
 #include "utils/log.h"
 
-using profiler::proto::SystemData;
-using profiler::proto::ActivityDataResponse;
-using profiler::proto::SystemDataResponse;
 using profiler::proto::ActivityData;
+using profiler::proto::ActivityDataResponse;
 using profiler::proto::ActivityStateData;
 using profiler::proto::ActivityStateData_ActivityState;
+using profiler::proto::SystemData;
+using profiler::proto::SystemDataResponse;
 using std::lock_guard;
 
 namespace profiler {

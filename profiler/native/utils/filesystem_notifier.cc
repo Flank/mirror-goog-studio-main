@@ -26,10 +26,11 @@ namespace profiler {
 
 // This array must be kep in sync with notifier.h enum "events".
 int event_translation_table[] = {
-    IN_CLOSE, // CLOSE
+    IN_CLOSE,  // CLOSE
 };
 
-FileSystemNotifier::FileSystemNotifier(const std::string &path, uint32_t event_mask)
+FileSystemNotifier::FileSystemNotifier(const std::string &path,
+                                       uint32_t event_mask)
     : path_(path), file_descriptor_(-1), watch_descriptor_(-1) {
   file_descriptor_ = inotify_init();
 
@@ -37,7 +38,8 @@ FileSystemNotifier::FileSystemNotifier(const std::string &path, uint32_t event_m
   event_mask_ = TranslateMask(event_mask);
 
   // Start watching for events contained in the event_mask_.
-  watch_descriptor_ = inotify_add_watch(file_descriptor_, path_.c_str(), event_mask_ );
+  watch_descriptor_ =
+      inotify_add_watch(file_descriptor_, path_.c_str(), event_mask_);
 }
 
 uint32_t FileSystemNotifier::TranslateMask(uint32_t event_mask) {
@@ -60,9 +62,7 @@ uint32_t FileSystemNotifier::GetDstValue(Event e) {
   return 0;
 }
 
-bool FileSystemNotifier::IsReadyToNotify() {
-  return watch_descriptor_ != -1;
-}
+bool FileSystemNotifier::IsReadyToNotify() { return watch_descriptor_ != -1; }
 
 FileSystemNotifier::~FileSystemNotifier() {
   inotify_rm_watch(file_descriptor_, watch_descriptor_);
@@ -84,14 +84,15 @@ bool FileSystemNotifier::WaitUntilEventOccurs(int64_t timeout_ms) {
   int num_events = available_bytes / sizeof(struct inotify_event);
 
   struct inotify_event events[num_events];
-  int length = read(file_descriptor_, reinterpret_cast<char*>(events), sizeof(events));
+  int length =
+      read(file_descriptor_, reinterpret_cast<char *>(events), sizeof(events));
 
   if (length < 0) {
     return false;
   }
 
   // Parse events.
-  for (int i=0 ; i < num_events ; i++) {
+  for (int i = 0; i < num_events; i++) {
     if (events[i].mask & event_mask_) {
       // Found one of the expected events.
       return true;

@@ -673,10 +673,10 @@ void MemoryTrackingEnv::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
 
     int32_t class_tag = -1;
     {
-        std::lock_guard<std::mutex> lock(g_env->class_data_mutex_);
-        auto itr = g_env->class_tag_map_.find(klass_info);
-        assert(itr != g_env->class_tag_map_.end());
-        class_tag = itr->second;
+      std::lock_guard<std::mutex> lock(g_env->class_data_mutex_);
+      auto itr = g_env->class_tag_map_.find(klass_info);
+      assert(itr != g_env->class_tag_map_.end());
+      class_tag = itr->second;
     }
 
     AllocationEvent event;

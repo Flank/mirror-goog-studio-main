@@ -72,15 +72,16 @@ void SwapCommand::ParseParameters(int argc, char** argv) {
   ready_to_run_ = true;
 }
 
-inline void FilterPids(std::vector<int>& process_ids, proto::SwapRequest request) {
-  process_ids.erase(remove_if(process_ids.begin(), process_ids.end(),
-                              [&](int x) {
-                                return std::find(request.skip_process_ids().begin(),
-                                            request.skip_process_ids().end(),
-                                            x) !=
-                                       request.skip_process_ids().end();
-                              }),
-                    process_ids.end());
+inline void FilterPids(std::vector<int>& process_ids,
+                       proto::SwapRequest request) {
+  process_ids.erase(
+      remove_if(process_ids.begin(), process_ids.end(),
+                [&](int x) {
+                  return std::find(request.skip_process_ids().begin(),
+                                   request.skip_process_ids().end(),
+                                   x) != request.skip_process_ids().end();
+                }),
+      process_ids.end());
 }
 
 void SwapCommand::Run(Workspace& workspace) {
@@ -355,8 +356,8 @@ bool SwapCommand::RunCmd(const std::string& shell_cmd, User run_as,
                          std::string* output) const {
   std::string err;
   if (run_as == User::APP_PACKAGE) {
-    return Executor::RunAs(shell_cmd, request_.package_name(), args,
-                           output, &err);
+    return Executor::RunAs(shell_cmd, request_.package_name(), args, output,
+                           &err);
   } else {
     return Executor::Run(shell_cmd, args, output, &err);
   }

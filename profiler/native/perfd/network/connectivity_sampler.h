@@ -31,7 +31,8 @@ class ConnectivitySampler final : public NetworkSampler {
       : ConnectivitySampler(std::make_shared<IoNetworkTypeProvider>()) {}
 
   // Constructor that takes a given network type provider, use for testing.
-  explicit ConnectivitySampler(const std::shared_ptr<NetworkTypeProvider>& network_type_provider)
+  explicit ConnectivitySampler(
+      const std::shared_ptr<NetworkTypeProvider>& network_type_provider)
       : network_type_provider_(network_type_provider) {}
 
   // Read device's connectivity information like selected network type.

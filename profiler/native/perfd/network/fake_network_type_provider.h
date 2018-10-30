@@ -28,10 +28,11 @@ class FakeNetworkTypeProvider final : public NetworkTypeProvider {
   proto::ConnectivityData::NetworkType GetDefaultNetworkType() override {
     return type_;
   }
+
  private:
   proto::ConnectivityData::NetworkType type_;
 };
 
-} // namespace profiler
+}  // namespace profiler
 
 #endif  // PERFD_NETWORK_FAKE_NETWORK_TYPE_H_

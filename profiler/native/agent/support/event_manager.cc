@@ -25,11 +25,11 @@ using std::mutex;
 using grpc::ClientContext;
 using grpc::Status;
 using profiler::Agent;
+using profiler::JStringWrapper;
 using profiler::proto::ActivityData;
 using profiler::proto::ActivityStateData;
-using profiler::proto::InternalEventService;
 using profiler::proto::EmptyEventResponse;
-using profiler::JStringWrapper;
+using profiler::proto::InternalEventService;
 using std::lock_guard;
 
 namespace profiler {

@@ -18,8 +18,8 @@
 #include "test/utils.h"
 #include "utils/bash_command.h"
 
-#include <memory>
 #include <gtest/gtest.h>
+#include <memory>
 
 using profiler::ConnectivitySampler;
 using profiler::FakeNetworkTypeProvider;

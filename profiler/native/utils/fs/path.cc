@@ -20,9 +20,9 @@
 
 namespace profiler {
 
+using std::shared_ptr;
 using std::size_t;
 using std::string;
-using std::shared_ptr;
 
 string Path::Standardize(const string &path) {
   string path_final = path;

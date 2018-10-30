@@ -23,28 +23,28 @@ using profiler::TestUtils;
 
 TEST(Read, FileSizeIsSmallerThanPageSize) {
   std::string content;
-  FileReader::Read(
-    TestUtils::getUtilsTestData("file_reader_small.txt"), &content);
+  FileReader::Read(TestUtils::getUtilsTestData("file_reader_small.txt"),
+                   &content);
   EXPECT_EQ(37u, content.size());
 }
 
 TEST(Read, ReadFileSizeLargerThanBufferSize) {
   std::string content;
-  FileReader::Read(
-    TestUtils::getUtilsTestData("file_reader_large.txt"), &content);
+  FileReader::Read(TestUtils::getUtilsTestData("file_reader_large.txt"),
+                   &content);
   EXPECT_EQ(5264u, content.size());
 }
 
 TEST(Read, ReadFileAbsent) {
   std::string content;
   EXPECT_FALSE(FileReader::Read(
-    TestUtils::getUtilsTestData("file_reader_absent.txt"), &content));
+      TestUtils::getUtilsTestData("file_reader_absent.txt"), &content));
 }
 
 TEST(ReadToLines, MultipleLineBreakChars) {
   std::vector<std::string> lines;
   FileReader::Read(
-    TestUtils::getUtilsTestData("file_reader_multiple_lines.txt"), &lines);
+      TestUtils::getUtilsTestData("file_reader_multiple_lines.txt"), &lines);
   EXPECT_EQ(2u, lines.size());
   EXPECT_EQ("It contains two lines.", lines.at(0));
   EXPECT_EQ("This is the second line.", lines.at(1));

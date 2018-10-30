@@ -23,7 +23,7 @@ bool Exists(const string &who_runs_the_check, const string &path) {
   string output;
   return existsCmd.RunAs(parameters.str(), who_runs_the_check, &output);
 }
-}
+}  // namespace
 namespace profiler {
 Installer::Installer(const char *app_package_name)
     : app_package_name_(app_package_name) {}

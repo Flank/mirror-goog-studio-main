@@ -36,7 +36,7 @@ class InternalEnergyServiceImpl final
 
  private:
   EnergyCache& energy_cache_;
-  FileCache &file_cache_;
+  FileCache& file_cache_;
 };
 
 }  // namespace profiler

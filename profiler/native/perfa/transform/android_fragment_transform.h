@@ -48,7 +48,8 @@ class AndroidFragmentTransform : public Transform {
         true);
     if (!mi_stop.InstrumentMethod(
             ir::MethodId(GetClassName(), "performPause", "()V"))) {
-      Log::E("Error instrumenting android.support.v4.app.Fragment.performPause");
+      Log::E(
+          "Error instrumenting android.support.v4.app.Fragment.performPause");
     }
   }
 };

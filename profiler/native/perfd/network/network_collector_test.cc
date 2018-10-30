@@ -35,4 +35,4 @@ TEST(NetworkCollector, SamplersEmptyForNewPipeline) {
   EXPECT_EQ(collector2.samplers().size(), 0);
 }
 
-}  // namespace profile
+}  // namespace profiler

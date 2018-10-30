@@ -30,8 +30,8 @@
 namespace profiler {
 
 using grpc::Status;
-using proto::MemoryControlRequest;
 using proto::InternalMemoryService;
+using proto::MemoryControlRequest;
 using proto::RegisterMemoryAgentRequest;
 
 using MemoryControlHandler = std::function<void(const MemoryControlRequest*)>;

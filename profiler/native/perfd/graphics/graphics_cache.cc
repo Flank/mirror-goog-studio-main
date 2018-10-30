@@ -17,12 +17,12 @@
 
 #include "utils/log.h"
 
-using profiler::proto::GraphicsDataResponse;
 using profiler::proto::GraphicsData;
+using profiler::proto::GraphicsDataResponse;
 
 namespace profiler {
 
-GraphicsCache::GraphicsCache(Clock* clock, int32_t samples_capacity)
+GraphicsCache::GraphicsCache(Clock *clock, int32_t samples_capacity)
     : clock_(clock), graphics_samples_(samples_capacity) {}
 
 void GraphicsCache::SaveGraphicsDataVector(

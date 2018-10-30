@@ -22,13 +22,13 @@ namespace profiler {
 
 using grpc::ServerContext;
 using grpc::Status;
+using profiler::Log;
 using profiler::proto::HttpConnectionData;
 using profiler::proto::HttpDetailsRequest;
 using profiler::proto::HttpDetailsResponse;
 using profiler::proto::HttpRangeRequest;
 using profiler::proto::HttpRangeResponse;
 using profiler::proto::NetworkDataRequest;
-using profiler::Log;
 using std::string;
 
 grpc::Status NetworkServiceImpl::GetData(

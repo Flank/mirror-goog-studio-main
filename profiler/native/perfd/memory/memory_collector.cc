@@ -89,7 +89,7 @@ bool WaitForHeapDumpFinishInOPlus(std::string file_path) {
 
   return result;
 }
-}
+}  // namespace
 
 namespace profiler {
 

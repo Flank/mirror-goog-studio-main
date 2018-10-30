@@ -18,12 +18,12 @@
 
 #include <gtest/gtest.h>
 
-using profiler::UidFetcher;
 using profiler::TestUtils;
+using profiler::UidFetcher;
 
 TEST(GetUidStringFromPidFile, UidFoundAfterPrefix) {
   std::string file_name(
-    TestUtils::getUtilsTestData("uid_found_after_prefix.txt"));
+      TestUtils::getUtilsTestData("uid_found_after_prefix.txt"));
   std::string content;
   EXPECT_TRUE(UidFetcher::GetUidStringFromPidFile(file_name, &content));
   EXPECT_EQ("10023", content);
@@ -31,7 +31,7 @@ TEST(GetUidStringFromPidFile, UidFoundAfterPrefix) {
 
 TEST(GetUidStringFromPidFile, UidFoundAfterPrefixAndEmptySpaces) {
   std::string file_name(
-    TestUtils::getUtilsTestData("uid_found_after_prefix_and_spaces.txt"));
+      TestUtils::getUtilsTestData("uid_found_after_prefix_and_spaces.txt"));
   std::string content;
   EXPECT_TRUE(UidFetcher::GetUidStringFromPidFile(file_name, &content));
   EXPECT_EQ("10023", content);
