@@ -83,7 +83,11 @@ public class DeployerRunner {
         ExecutorService service = Executors.newFixedThreadPool(5);
         Deployer deployer = new Deployer(adb, db, new TaskRunner(service), installer);
         if (command.equals("install")) {
-            deployer.install(apks);
+            InstallOptions.Builder options = InstallOptions.builder().setAllowDebuggable();
+            if (device.supportsFeature(IDevice.HardwareFeature.EMBEDDED)) {
+                options.setGrantAllPermissions();
+            }
+            deployer.install(apks, options.build());
         } else {
             try {
                 if (command.equals("fullswap")) {

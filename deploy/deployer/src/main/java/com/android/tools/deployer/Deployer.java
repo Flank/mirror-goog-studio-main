@@ -62,7 +62,7 @@ public class Deployer {
      * Installs the given apks. This method will register the APKs in the database for subsequent
      * swaps
      */
-    public void install(List<String> apks) throws IOException {
+    public void install(List<String> apks, InstallOptions options) throws IOException {
         try (Trace ignored = Trace.begin("install")) {
             // There could be tasks running from the previous cycle that were
             // left to complete in the background. We wait for them to finish
@@ -70,7 +70,7 @@ public class Deployer {
             runner.join();
 
             // Run installation on the current thread.
-            adb.installMultiple(apks, true);
+            adb.installMultiple(apks, options.getFlags());
 
             // Parse the apks
             Task<List<ApkEntry>> entries =
