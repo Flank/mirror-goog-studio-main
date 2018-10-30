@@ -166,6 +166,7 @@ import org.jetbrains.uast.UTryExpression;
 import org.jetbrains.uast.UTypeReferenceExpression;
 import org.jetbrains.uast.UVariable;
 import org.jetbrains.uast.UastBinaryOperator;
+import org.jetbrains.uast.UastCallKind;
 import org.jetbrains.uast.UastUtils;
 import org.jetbrains.uast.java.JavaUAnnotation;
 import org.jetbrains.uast.util.UastExpressionUtils;
@@ -1639,9 +1640,7 @@ public class ApiDetector extends ResourceXmlDetector
                     if (resolved instanceof PsiClass) {
                         PsiClass containingClass = (PsiClass) resolved;
                         PsiModifierList modifierList = containingClass.getModifierList();
-                        if (modifierList != null) {
-                            checkRequiresApi(expression, method, modifierList);
-                        }
+                        checkRequiresApi(expression, containingClass, modifierList);
                     }
                 }
 
@@ -1664,10 +1663,7 @@ public class ApiDetector extends ResourceXmlDetector
             // Enforce @RequiresApi
             PsiModifierList modifierList = method.getModifierList();
             if (!checkRequiresApi(reference, method, modifierList)) {
-                modifierList = containingClass.getModifierList();
-                if (modifierList != null) {
-                    checkRequiresApi(reference, method, modifierList);
-                }
+                checkRequiresApi(reference, method, containingClass.getModifierList());
             }
 
             PsiParameterList parameterList = method.getParameterList();
@@ -2074,8 +2070,11 @@ public class ApiDetector extends ResourceXmlDetector
         // Look for @RequiresApi in modifier lists
         private boolean checkRequiresApi(
                 @NonNull UElement expression,
-                @Nullable PsiMember member,
-                @NonNull PsiModifierList modifierList) {
+                @NonNull PsiMember member,
+                @Nullable PsiModifierList modifierList) {
+            if (modifierList == null) {
+                return false;
+            }
             int api = getRequiresApiFromAnnotations(modifierList);
             if (api != -1) {
                 int minSdk = getMinSdk(mContext);
@@ -2092,13 +2091,18 @@ public class ApiDetector extends ResourceXmlDetector
 
                         Location location;
                         String fqcn;
-                        if (UastExpressionUtils.isConstructorCall(expression)
+                        if (expression instanceof UCallExpression
+                                && ((UCallExpression) expression).getKind()
+                                        != UastCallKind.METHOD_CALL
                                 && ((UCallExpression) expression).getClassReference() != null) {
                             UReferenceExpression classReference =
                                     ((UCallExpression) expression).getClassReference();
                             assert classReference != null; // checked above
                             location = mContext.getRangeLocation(expression, 0, classReference, 0);
                             fqcn = classReference.getResolvedName();
+                            if (fqcn == null) {
+                                fqcn = member.getName();
+                            }
                         } else {
                             location = mContext.getNameLocation(expression);
                             fqcn = member.getName();
@@ -2307,10 +2311,7 @@ public class ApiDetector extends ResourceXmlDetector
             // Enforce @RequiresApi
             PsiModifierList modifierList = field.getModifierList();
             if (!checkRequiresApi(node, field, modifierList)) {
-                modifierList = containingClass.getModifierList();
-                if (modifierList != null) {
-                    checkRequiresApi(node, field, modifierList);
-                }
+                checkRequiresApi(node, field, containingClass.getModifierList());
             }
 
             int api = mApiDatabase.getFieldVersion(owner, name);

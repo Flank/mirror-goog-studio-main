@@ -5599,6 +5599,44 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "1 errors, 0 warnings");
     }
 
+    public void test118555413() {
+        // Regression test for issue 118555413: NPE enforcing @RequiresApi on classes
+        //noinspection all // Sample code
+        lint().files(
+                        manifest().minSdk(15),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.os.Build;\n"
+                                        + "\n"
+                                        + "@SuppressWarnings(\"unused\")\n"
+                                        + "public class WorkManagerTest {\n"
+                                        + "\n"
+                                        + "    public void test() {\n"
+                                        + "        SystemJobScheduler[] schedulers = new SystemJobScheduler[100]; // ERROR\n"
+                                        + "    }\n"
+                                        + "}"),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.support.annotation.RequiresApi;\n"
+                                        + "\n"
+                                        + "@RequiresApi(23)\n"
+                                        + "public class SystemJobScheduler {\n"
+                                        + "}\n"),
+                        mSupportClasspath,
+                        mSupportJar)
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/WorkManagerTest.java:9: Error: Call requires API level 23 (current min is 15): SystemJobScheduler [NewApi]\n"
+                                + "        SystemJobScheduler[] schedulers = new SystemJobScheduler[100]; // ERROR\n"
+                                + "                                          ~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "1 errors, 0 warnings");
+    }
+
     public void testIgnoreAttributesWithinVector() {
         lint().files(
                         xml(
