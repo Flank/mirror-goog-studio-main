@@ -946,6 +946,8 @@ public class LintCliClient extends LintClient {
             project.setBuildTargetHash(compileSdkVersion);
         }
 
+        project.setIdeaProject(ideaProject);
+
         return project;
     }
 
@@ -1338,6 +1340,10 @@ public class LintCliClient extends LintClient {
                 Collections.emptyList(),
                 new SingleJavaFileRootsIndex(Collections.emptyList()),
                 false);
+
+        for (Project project : allProjects) {
+            project.setIdeaProject(ideaProject);
+        }
 
         super.initializeProjects(knownProjects);
     }

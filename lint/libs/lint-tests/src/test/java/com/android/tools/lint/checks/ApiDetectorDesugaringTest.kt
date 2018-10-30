@@ -16,8 +16,10 @@
 
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.detector.api.Desugaring
 import com.android.tools.lint.detector.api.Detector
 
+@Suppress("PrivatePropertyName")
 class ApiDetectorDesugaringTest : AbstractCheckTest() {
     fun testTryWithResources() {
         // No desugaring
@@ -207,6 +209,163 @@ class ApiDetectorDesugaringTest : AbstractCheckTest() {
             ).indented(),
             gradleVersion24_language18
         ).run().expectClean()
+    }
+
+    fun testDesugarJava8LibsKotlin() {
+        lint().files(
+            manifest().minSdk(1),
+            kotlin(
+                """
+                @file:Suppress("unused", "UNUSED_VARIABLE")
+
+                package test.pkg
+
+                import java.time.Duration
+                import java.util.*
+                import java.util.function.Consumer
+                import java.util.function.Function
+
+                class Test {
+                    fun time(duration: java.time.Duration) {
+                        val negative = duration.isNegative
+                        val duration2 = Duration.ofMillis(1000L)
+                   }
+
+                    fun streams(list: ArrayList<String>) {
+                        list.stream().forEach { it -> Consumer<String> { println(it) }  }
+                    }
+
+                    fun functions(func: Function<String, String>) {
+                        func.apply("hello")
+                    }
+
+
+                    // Type use annotations
+                    @Target(AnnotationTarget.TYPE, AnnotationTarget.TYPE_PARAMETER)
+                    annotation class MyTypeUse
+                }
+                """
+            ).indented()
+        ).desugaring(Desugaring.FULL).run().expectClean()
+    }
+
+    fun testDesugarJava8LibsJavaAndroid() {
+        lint().files(
+            manifest().minSdk(1),
+            java(
+                """
+                package test.pkg;
+
+                import java.lang.annotation.ElementType;
+                import java.lang.annotation.Repeatable;
+                import java.lang.annotation.Target;
+                import java.util.ArrayList;
+                import java.util.Arrays;
+                import java.util.Iterator;
+                import java.util.Optional;
+                import java.util.stream.BaseStream;
+                import java.util.stream.Stream;
+
+                @SuppressWarnings({"unused", "SimplifyStreamApiCallChains", "OptionalGetWithoutIsPresent", "OptionalUsedAsFieldOrParameterType", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class Test {
+
+                    public void utils(java.util.Collection<String> collection) {
+                        collection.removeIf(s -> s.length() > 5);
+                    }
+
+                    public void streams(ArrayList<String> list, String[] array) {
+                        list.stream().forEach(s -> System.out.println(s.length()));
+                        Stream<String> stream = Arrays.stream(array);
+                    }
+
+                    public void otherUtils(Optional<String> optional, Iterator<String> iterator,
+                                           java.util.concurrent.atomic.AtomicInteger integer) {
+                        double max = java.lang.Double.max(5, 6);
+                        int exact = java.lang.Math.toIntExact(5L);
+                        String got = optional.get();
+                        iterator.forEachRemaining(s -> System.out.println(s.length()));
+                        integer.addAndGet(5);
+                    }
+
+                    public void bannedMembers(java.util.Collection collection, java.util.stream.BaseStream<String> base) {
+                        Stream stream = collection.parallelStream();
+                        BaseStream parallel = base.parallel();
+                    }
+
+                    // Type use annotations
+
+                    @Target({ElementType.TYPE_PARAMETER, ElementType.TYPE_USE})
+                    @interface MyInner {
+                    }
+
+                    // Repeatable annotations
+
+                    public @interface Schedules {
+                        Schedule[] value();
+                    }
+
+                    @Repeatable(Schedules.class)
+                    public @interface Schedule {
+                        String dayOfMonth() default "first";
+                        String dayOfWeek() default "Mon";
+                        int hour() default 12;
+                    }
+                }
+                """
+            ).indented()
+        ).desugaring(Desugaring.FULL).run().expect(
+            """
+            src/test/pkg/Test.java:35: Error: Call requires API level 24 (current min is 1): java.util.Collection#parallelStream [NewApi]
+                    Stream stream = collection.parallelStream();
+                                               ~~~~~~~~~~~~~~
+            src/test/pkg/Test.java:36: Error: Call requires API level 24 (current min is 1): java.util.stream.BaseStream#parallel [NewApi]
+                    BaseStream parallel = base.parallel();
+                                               ~~~~~~~~
+            2 errors, 0 warnings
+            """
+        )
+    }
+
+    fun testDesugarJava8LibsJavaLib() {
+        val lib = project(
+            java(
+                """
+                package test.pkg.lib;
+
+                import java.util.ArrayList;
+                import java.util.function.IntBinaryOperator;
+
+                @SuppressWarnings({"unused", "SimplifyStreamApiCallChains", "OptionalGetWithoutIsPresent", "OptionalUsedAsFieldOrParameterType", "Convert2MethodRef", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class Test {
+                    public @interface Something {
+                        javax.lang.model.type.TypeKind value();
+                    }
+
+                    @Something(javax.lang.model.type.TypeKind.PACKAGE)
+                    public void usingTypeKind() {
+                    }
+
+                    public void otherUtils(java.util.concurrent.atomic.AtomicInteger integer, IntBinaryOperator operator) {
+                        new ArrayList<String>().stream().forEach(s -> System.out.println(s.length()));
+                        integer.addAndGet(5);
+                        integer.accumulateAndGet(5, operator);
+                    }
+                }
+                """
+            ).indented(),
+            // Make sure it's treated as a plain library
+            gradle(
+                """
+                apply plugin: 'java'
+                """
+            ).indented()
+        )
+
+        val main = project(
+            manifest().minSdk(1)
+        ).dependsOn(lib)
+
+        lint().projects(lib, main).desugaring(Desugaring.FULL).run().expectClean()
     }
 
     private val gradleVersion24_language18 = gradle(

@@ -36,6 +36,7 @@ import com.android.sdklib.AndroidTargetHash.PLATFORM_HASH_PREFIX
 import com.android.sdklib.SdkVersionInfo
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.LintClient
+import com.android.tools.lint.detector.api.Desugaring
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Platform
 import com.android.tools.lint.detector.api.Project
@@ -90,6 +91,8 @@ private const val ATTR_ANDROID = "android"
 private const val ATTR_LIBRARY = "library"
 private const val ATTR_MODULE = "module"
 private const val ATTR_INCOMPLETE = "incomplete"
+private const val ATTR_JAVA8_LIBS = "android_java8_libs"
+private const val ATTR_DESUGAR = "desugar"
 private const val DOT_SRCJAR = ".srcjar"
 
 /**
@@ -191,6 +194,9 @@ private class ProjectInitializer(
     /** Whether we're analyzing an Android project */
     private var android: Boolean = false
 
+    /** Desugaring operations to enable */
+    private var desugaring: EnumSet<Desugaring>? = null
+
     /** Compute a list of lint [Project] instances from the given XML descriptor */
     fun computeMetadata(): ProjectMetadata {
         assert(file.isFile) // should already have been enforced by the driver
@@ -234,6 +240,7 @@ private class ProjectInitializer(
 
         val incomplete = projectElement.getAttribute(ATTR_INCOMPLETE) == VALUE_TRUE
         android = projectElement.getAttribute(ATTR_ANDROID) == VALUE_TRUE
+        desugaring = handleDesugaring(projectElement)
 
         val globalLintChecks = mutableListOf<File>()
 
@@ -348,6 +355,50 @@ private class ProjectInitializer(
         )
     }
 
+    private fun handleDesugaring(element: Element): EnumSet<Desugaring>? {
+        var desugaring: EnumSet<Desugaring>? = null
+
+        if (VALUE_TRUE == element.getAttribute(ATTR_JAVA8_LIBS)) {
+            desugaring = EnumSet.of(Desugaring.JAVA_8_LIBRARY)
+        }
+
+        val s = element.getAttribute(ATTR_DESUGAR)
+        if (!s.isEmpty()) {
+            for (option in s.split(",")) {
+                var found = false
+                for (v in Desugaring.values()) {
+                    if (option.equals(other = v.name, ignoreCase = true)) {
+                        if (desugaring == null) {
+                            desugaring = EnumSet.of(v)
+                        } else {
+                            desugaring.add(v)
+                        }
+                        found = true
+                        break
+                    }
+                }
+                if (!found) {
+                    // One of the built-in constants? Desugaring.FULL etc
+                    try {
+                        val fieldName = option.toUpperCase()
+                        val instance = Desugaring.Companion
+                        val cls = Desugaring::class.java
+                        @Suppress("UNCHECKED_CAST")
+                        val v =
+                            cls.getField(fieldName).get(null) as? EnumSet<Desugaring> ?: continue
+                        if (desugaring == null) {
+                            desugaring = EnumSet.noneOf(Desugaring::class.java)
+                        }
+                        desugaring?.addAll(v)
+                    } catch (ignore: Throwable) {
+                    }
+                }
+            }
+        }
+
+        return desugaring
+    }
+
     private fun computeResourceVisibility() {
         // TODO: We don't have dependency information from one AAR to another; we'll
         // need to assume that all of them are in a flat hierarchy
@@ -377,6 +428,7 @@ private class ProjectInitializer(
         val library = moduleElement.getAttribute(ATTR_LIBRARY) == VALUE_TRUE
         val android = moduleElement.getAttribute(ATTR_ANDROID) != VALUE_FALSE
         val buildApi: String = moduleElement.getAttribute(ATTR_COMPILE_SDK_VERSION)
+        val desugaring = handleDesugaring(moduleElement) ?: this.desugaring
 
         if (android) {
             this.android = true
@@ -500,6 +552,7 @@ private class ProjectInitializer(
         module.setSources(sourceRoots, sources)
         module.setClasspath(classes, true)
         module.setClasspath(classpath, false)
+        module.desugaring = desugaring
 
         module.setCompileSdkVersion(buildApi)
 
@@ -955,6 +1008,10 @@ constructor(
                 )
             }
         }
+    }
+
+    fun setDesugaring(desugaring: Set<Desugaring>?) {
+        this.desugaring = desugaring
     }
 
     private var resourceVisibility: ResourceVisibilityLookup? = null

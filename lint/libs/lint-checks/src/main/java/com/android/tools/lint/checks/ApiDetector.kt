@@ -75,6 +75,7 @@ import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ClassContext.Companion.getFqcn
 import com.android.tools.lint.detector.api.ConstantEvaluator
 import com.android.tools.lint.detector.api.Context
+import com.android.tools.lint.detector.api.Desugaring
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
@@ -92,14 +93,11 @@ import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.XmlScannerConstants
 import com.android.tools.lint.detector.api.getChildren
 import com.android.tools.lint.detector.api.getInternalMethodName
-import com.android.tools.lint.detector.api.getLanguageLevel
 import com.android.tools.lint.detector.api.isKotlin
 import com.android.tools.lint.detector.api.isString
 import com.android.tools.lint.detector.api.skipParentheses
 import com.android.utils.SdkUtils.getResourceFieldName
 import com.android.utils.XmlUtils
-import com.intellij.pom.java.LanguageLevel.JDK_1_7
-import com.intellij.pom.java.LanguageLevel.JDK_1_8
 import com.intellij.psi.CommonClassNames
 import com.intellij.psi.PsiAnnotationMemberValue
 import com.intellij.psi.PsiAnonymousClass
@@ -670,6 +668,27 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
     }
 
     private inner class ApiVisitor(private val context: JavaContext) : UElementHandler() {
+        private fun report(
+            issue: Issue,
+            node: UElement,
+            location: Location,
+            message: String,
+            fix: LintFix? = null,
+            owner: String? = null,
+            name: String? = null,
+            @Suppress("UNUSED_PARAMETER")
+            desc: String? = null
+        ) {
+            // Java 8 API desugaring?
+            if (owner != null && (owner.startsWith("java/") || owner.startsWith("java.")) &&
+                context.mainProject.isDesugaring(Desugaring.JAVA_8_LIBRARY) &&
+                isApiDesugared(context, owner.replace('/', '.'), name)
+            ) {
+                return
+            }
+
+            context.report(issue, node, location, message, fix)
+        }
 
         override fun visitSimpleNameReferenceExpression(
             node: USimpleNameReferenceExpression
@@ -723,7 +742,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             val min = Math.max(minSdk, getTargetApi(expression))
             val message =
                 "Method reference requires API level $api (current min is $min): `$signature`"
-            context.report(UNSUPPORTED, expression, location, message, apiLevelFix(api))
+            report(UNSUPPORTED, expression, location, message, apiLevelFix(api), owner, name, desc)
         }
 
         override fun visitBinaryExpressionWithType(node: UBinaryExpressionWithType) {
@@ -787,7 +806,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 "Class requires API level $api (current min is $min): `$expressionOwner`"
 
             val location = context.getLocation(node)
-            context.report(UNSUPPORTED, node, location, message, apiLevelFix(api))
+            report(UNSUPPORTED, node, location, message, apiLevelFix(api), expressionOwner)
             return false
         }
 
@@ -835,7 +854,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 "Cast from `$from` to `$to` requires API level $api (current min is $min)"
             }
 
-            context.report(UNSUPPORTED, node, location, message, apiLevelFix(api))
+            report(UNSUPPORTED, node, location, message, apiLevelFix(api), classTypeInternal)
         }
 
         override fun visitMethod(node: UMethod) {
@@ -846,7 +865,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             if (containingClass != null &&
                 containingClass.isInterface &&
                 // (unless using desugar which supports this for all API levels)
-                !isUsingDesugar(context, node)
+                !context.mainProject.isDesugaring(Desugaring.INTERFACE_METHODS)
             ) {
                 val methodModifierList = node.modifierList
                 if (methodModifierList.hasExplicitModifier(PsiModifier.DEFAULT) || methodModifierList.hasExplicitModifier(
@@ -865,7 +884,14 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                         val min = Math.max(minSdk, getTargetApi(node))
                         val message =
                             "$desc method requires API level $api (current min is $min)"
-                        context.report(UNSUPPORTED, node, location, message, apiLevelFix(api))
+                        report(
+                            UNSUPPORTED,
+                            node,
+                            location,
+                            message,
+                            apiLevelFix(api),
+                            containingClass.qualifiedName
+                        )
                     }
                 }
             }
@@ -914,7 +940,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                                 locationNode = node
                             }
                             val location = context.getLocation(locationNode)
-                            context.report(OVERRIDE, node, location, message)
+                            report(OVERRIDE, node, location, message)
                         }
                     }
                 } else {
@@ -929,7 +955,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             // Check for repeatable and type annotations
             if (node.isAnnotationType &&
                 // Desugar adds support for type annotations
-                !isUsingDesugar(context, node)
+                !context.mainProject.isDesugaring(Desugaring.TYPE_ANNOTATIONS)
             ) {
                 val modifierList = node.modifierList
                 if (modifierList != null) {
@@ -1034,7 +1060,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             val min = Math.max(minSdk, getTargetApi(element))
             val message =
                 "${descriptor ?: "Class"} requires API level $api (current min is $min): `$fqcn`"
-            context.report(UNSUPPORTED, element, location, message, apiLevelFix(api))
+            report(UNSUPPORTED, element, location, message, apiLevelFix(api), owner)
         }
 
         private fun checkAnnotationTarget(
@@ -1049,7 +1075,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                         val location = context.getLocation(element as UElement)
                         val message =
                             "Type annotations are not supported in Android: `$referenceName`"
-                        context.report(UNSUPPORTED, element as UElement, location, message)
+                        report(UNSUPPORTED, element as UElement, location, message)
                     }
                 }
             }
@@ -1093,13 +1119,14 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                         if (keySet is PsiMethod) {
                             val containingClass = keySet.containingClass
                             if (containingClass != null &&
-                                "java.util.concurrent.ConcurrentHashMap" == containingClass.qualifiedName) {
+                                "java.util.concurrent.ConcurrentHashMap" == containingClass.qualifiedName
+                            ) {
                                 message += "; to work around this, add an explicit cast to `(Map)` before the `keySet` call."
                             }
                         }
                     }
                 }
-                context.report(UNSUPPORTED, node, location, message, apiLevelFix(api))
+                report(UNSUPPORTED, node, location, message, apiLevelFix(api), expressionOwner)
             }
         }
 
@@ -1438,7 +1465,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 api == 19 &&
                 startsWithEquivalentPrefix(owner, "java/lang/") &&
                 desc.length == 4 &&
-                isUsingDesugar(context, reference) &&
+                context.mainProject.isDesugaring(Desugaring.LONG_COMPARE) &&
                 (desc == "(JJ)" ||
                         desc == "(ZZ)" ||
                         desc == "(BB)" ||
@@ -1454,7 +1481,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 api == 19 &&
                 owner == "java.util.Objects" &&
                 desc == "(Ljava.lang.Object;)" &&
-                isUsingDesugar(context, reference)
+                context.mainProject.isDesugaring(Desugaring.OBJECTS_REQUIRE_NON_NULL)
             ) {
                 return
             }
@@ -1463,7 +1490,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 api == 19 &&
                 owner == "java.lang.Throwable" &&
                 desc == "(Ljava.lang.Throwable;)" &&
-                isUsingDesugar(context, reference)
+                context.mainProject.isDesugaring(Desugaring.TRY_WITH_RESOURCES)
             ) {
                 return
             }
@@ -1498,7 +1525,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             val message =
                 "Call requires API level $api (current min is $min): `$signature`"
 
-            context.report(UNSUPPORTED, reference, location, message, apiLevelFix(api))
+            report(UNSUPPORTED, reference, location, message, apiLevelFix(api), owner, name, desc)
         }
 
         private fun getRequiresApiFromAnnotations(modifierList: PsiModifierList): Int {
@@ -1567,10 +1594,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 if (api > minSdk) {
                     val target = getTargetApi(expression)
                     if (target == -1 || api > target) {
-                        if (isWithinVersionCheckConditional(
-                                context.evaluator, expression, api
-                            )
-                        ) {
+                        if (isWithinVersionCheckConditional(context.evaluator, expression, api)) {
                             return true
                         }
                         if (isPrecededByVersionCheckExit(expression, api)) {
@@ -1581,7 +1605,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                         val fqcn: String?
                         if (expression is UCallExpression &&
                             expression.kind != UastCallKind.METHOD_CALL &&
-                            expression.classReference != null) {
+                            expression.classReference != null
+                        ) {
                             val classReference = expression.classReference!!
                             location = context.getRangeLocation(expression, 0, classReference, 0)
                             fqcn = classReference.resolvedName ?: member.name ?: ""
@@ -1593,9 +1618,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                         val min = Math.max(minSdk, getTargetApi(expression))
                         val message =
                             "Call requires API level $api (current min is $min): `$fqcn`"
-                        context.report(
-                            UNSUPPORTED, expression, location, message, apiLevelFix(api)
-                        )
+                        report(UNSUPPORTED, expression, location, message, apiLevelFix(api))
                     }
                 }
 
@@ -1651,7 +1674,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
             if (!resourceList.isEmpty() &&
                 // (unless using desugar which supports this for all API levels)
-                !isUsingDesugar(context, node)
+                !context.mainProject.isDesugaring(Desugaring.TRY_WITH_RESOURCES)
             ) {
 
                 val api = 19 // minSdk for try with resources
@@ -1670,7 +1693,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                     val min = Math.max(minSdk, getTargetApi(node))
                     val message =
                         "Try-with-resources requires API level $api (current min is $min)"
-                    context.report(UNSUPPORTED, node, location, message, apiLevelFix(api))
+                    report(UNSUPPORTED, node, location, message, apiLevelFix(api))
                 }
             }
 
@@ -1688,7 +1711,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                                 "because they get compiled to the common but new super type `ReflectiveOperationException`. " +
                                 "As a workaround either create individual catch statements, or catch `Exception`."
 
-                    context.report(
+                    report(
                         UNSUPPORTED,
                         node,
                         getCatchParametersLocation(context, catchClause),
@@ -1737,7 +1760,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 val fqcn = resolved.qualifiedName
                 val message =
                     "Class requires API level $api (current min is $minSdk): `$fqcn`"
-                context.report(UNSUPPORTED, location, message, apiLevelFix(api))
+                report(UNSUPPORTED, typeReference, location, message, apiLevelFix(api), signature)
             }
         }
 
@@ -1822,7 +1845,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                     }
 
                     val location = context.getLocation(locationNode)
-                    context.report(issue, node, location, message, apiLevelFix(api))
+                    report(issue, node, location, message, apiLevelFix(api), owner, name)
                 }
             }
         }
@@ -2384,21 +2407,6 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                     driver.isSuppressed(context, INLINED, element) ||
                     isWithinVersionCheckConditional(context.evaluator, element, api) ||
                     isPrecededByVersionCheckExit(element, api))
-        }
-
-        private fun isUsingDesugar(context: Context, element: UElement): Boolean {
-            // Desugar runs if the Gradle plugin is 2.4.0 alpha 8 or higher...
-            val version =
-                context.project.gradleModelVersion // We don't really know if you're using desugar if it's some other
-                // build system invoked from the command line, but might as well
-                // return true here since the main clients I'm aware of are
-                // already using desugar.
-                    ?: return true
-            return if (!version.isAtLeast(2, 4, 0, "alpha", 8, true)) {
-                false
-            } else getLanguageLevel(element, JDK_1_7).isAtLeast(JDK_1_8)
-
-            // ... *and* the language level is at least 1.8
         }
 
         @JvmStatic

@@ -850,6 +850,77 @@ class ProjectInitializerTest {
         )
     }
 
+    @Test
+    fun testJava8Libraries() {
+        val root = temp.newFolder()
+        val projects = lint().files(
+            java(
+                "C.java", """
+                    import java.util.ArrayList;
+                    import java.util.Arrays;
+                    import java.util.Iterator;
+                    import java.util.stream.Stream;
+
+                    @SuppressWarnings({"unused", "SimplifyStreamApiCallChains",
+                        "OptionalGetWithoutIsPresent", "OptionalUsedAsFieldOrParameterType",
+                        "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                    public class C {
+                        public void utils(java.util.Collection<String> collection) {
+                            collection.removeIf(s -> s.length() > 5);
+                        }
+
+                        public void streams(ArrayList<String> list, String[] array) {
+                            list.stream().forEach(s -> System.out.println(s.length()));
+                            Stream<String> stream = Arrays.stream(array);
+                        }
+
+                        public void bannedMembers(java.util.Collection collection) {
+                            Stream stream = collection.parallelStream(); // ERROR
+                        }
+                    }
+                    """
+            ).indented()
+        ).createProjects(root)
+        val projectDir = projects[0]
+
+        @Language("XML")
+        val descriptor = """
+            <project>
+            <sdk dir='${TestUtils.getSdk()}'/>
+            <root dir="$projectDir" />
+            <!-- We could have specified desugar="full" instead of specifying android_java8_libs -->
+            <module desugar="default" android_java8_libs="true" name="M" android="true" library="false">
+                <src file="C.java" />
+            </module>
+            </project>""".trimIndent()
+        val descriptorFile = File(root, "project.xml")
+        Files.asCharSink(descriptorFile, Charsets.UTF_8).write(descriptor)
+
+        MainTest.checkDriver(
+            """
+            C.java:20: Error: Call requires API level 24 (current min is 1): java.util.Collection#parallelStream [NewApi]
+                    Stream stream = collection.parallelStream(); // ERROR
+                                               ~~~~~~~~~~~~~~
+            1 errors, 0 warnings
+            """,
+            "",
+
+            // Expected exit code
+            ERRNO_SUCCESS,
+
+            // Args
+            arrayOf(
+                "--quiet",
+                "--check",
+                "NewApi",
+                "--project",
+                descriptorFile.path
+            ),
+
+            null, null
+        )
+    }
+
     companion object {
         @ClassRule
         @JvmField
