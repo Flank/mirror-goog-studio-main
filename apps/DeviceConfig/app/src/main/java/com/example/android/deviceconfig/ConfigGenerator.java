@@ -27,10 +27,13 @@ import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Point;
 import android.hardware.Camera;
-import android.hardware.Camera.CameraInfo;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CameraMetadata;
 import android.os.Build;
 import android.os.Environment;
 import android.os.StatFs;
+import android.support.annotation.NonNull;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
@@ -48,9 +51,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -68,11 +68,16 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-public class ConfigGenerator {
-    private Activity mCtx;
-    private String mExtensions;
+import static android.hardware.camera2.CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES;
+import static android.hardware.camera2.CameraCharacteristics.FLASH_INFO_AVAILABLE;
+import static android.hardware.camera2.CameraCharacteristics.LENS_FACING;
 
-    public static final String NS_DEVICES_XSD = "http://schemas.android.com/sdk/devices/1";
+class ConfigGenerator {
+    private Activity mCtx;
+    private final String mExtensions;
+    private final String mGpuInfo;
+
+    private static final String NS_DEVICES_XSD = "http://schemas.android.com/sdk/devices/1";
 
     /**
      * The "devices" element is the root element of this schema.
@@ -80,26 +85,26 @@ public class ConfigGenerator {
      * It must contain one or more "device" elements that each define the
      * hardware, software, and states for a given device.
      */
-    public static final String NODE_DEVICES = "devices";
+    private static final String NODE_DEVICES = "devices";
 
     /**
      * A "device" element contains a "hardware" element, a "software" element
      * for each API version it supports, and a "state" element for each possible
      * state the device could be in.
      */
-    public static final String NODE_DEVICE = "device";
+    private static final String NODE_DEVICE = "device";
 
     /**
      * The "hardware" element contains all of the hardware information for a
      * given device.
      */
-    public static final String NODE_HARDWARE = "hardware";
+    private static final String NODE_HARDWARE = "hardware";
 
     /**
      * The "software" element contains all of the software information for an
      * API version of the given device.
      */
-    public static final String NODE_SOFTWARE = "software";
+    private static final String NODE_SOFTWARE = "software";
 
     /**
      * The "state" element contains all of the parameters for a given state of
@@ -107,72 +112,73 @@ public class ConfigGenerator {
      * they change based on state.
      */
 
-    public static final String NODE_STATE = "state";
+    private static final String NODE_STATE = "state";
 
-    public static final String NODE_KEYBOARD = "keyboard";
-    public static final String NODE_TOUCH = "touch";
-    public static final String NODE_GL_EXTENSIONS = "gl-extensions";
-    public static final String NODE_GL_VERSION = "gl-version";
-    public static final String NODE_NETWORKING = "networking";
-    public static final String NODE_REMOVABLE_STORAGE = "removable-storage";
-    public static final String NODE_FLASH = "flash";
-    public static final String NODE_LIVE_WALLPAPER_SUPPORT = "live-wallpaper-support";
-    public static final String NODE_BUTTONS = "buttons";
-    public static final String NODE_CAMERA = "camera";
-    public static final String NODE_LOCATION = "location";
-    public static final String NODE_GPU = "gpu";
-    public static final String NODE_DOCK = "dock";
-    public static final String NODE_YDPI = "ydpi";
-    public static final String NODE_POWER_TYPE = "power-type";
-    public static final String NODE_Y_DIMENSION = "y-dimension";
-    public static final String NODE_SCREEN_RATIO = "screen-ratio";
-    public static final String NODE_NAV_STATE = "nav-state";
-    public static final String NODE_MIC = "mic";
-    public static final String NODE_RAM = "ram";
-    public static final String NODE_XDPI = "xdpi";
-    public static final String NODE_DIMENSIONS = "dimensions";
-    public static final String NODE_ABI = "abi";
-    public static final String NODE_MECHANISM = "mechanism";
-    public static final String NODE_MULTITOUCH = "multitouch";
-    public static final String NODE_NAV = "nav";
-    public static final String NODE_PIXEL_DENSITY = "pixel-density";
-    public static final String NODE_SCREEN_ORIENTATION = "screen-orientation";
-    public static final String NODE_AUTOFOCUS = "autofocus";
-    public static final String NODE_SCREEN_SIZE = "screen-size";
-    public static final String NODE_DESCRIPTION = "description";
-    public static final String NODE_BLUETOOTH_PROFILES = "bluetooth-profiles";
-    public static final String NODE_SCREEN = "screen";
-    public static final String NODE_SENSORS = "sensors";
-    public static final String NODE_STATUS_BAR = "status-bar";
-    public static final String NODE_DIAGONAL_LENGTH = "diagonal-length";
-    public static final String NODE_SCREEN_TYPE = "screen-type";
-    public static final String NODE_KEYBOARD_STATE = "keyboard-state";
-    public static final String NODE_X_DIMENSION = "x-dimension";
-    public static final String NODE_CPU = "cpu";
-    public static final String NODE_INTERNAL_STORAGE = "internal-storage";
-    public static final String NODE_NAME = "name";
-    public static final String NODE_ID = "id";
-    public static final String NODE_SKIN = "skin";
-    public static final String NODE_MANUFACTURER = "manufacturer";
-    public static final String NODE_API_LEVEL = "api-level";
-    public static final String ATTR_DEFAULT = "default";
-    public static final String ATTR_UNIT = "unit";
-    public static final String UNIT_BYTES = "B";
-    public static final String UNIT_KIBIBYTES = "KiB";
-    public static final String UNIT_MEBIBYTES = "MiB";
-    public static final String UNIT_GIBIBYTES = "GiB";
-    public static final String UNIT_TEBIBYTES = "TiB";
-    public static final String LOCAL_NS = "d";
-    public static final String PREFIX = LOCAL_NS + ":";
+    private static final String NODE_KEYBOARD = "keyboard";
+    private static final String NODE_TOUCH = "touch";
+    private static final String NODE_GL_EXTENSIONS = "gl-extensions";
+    private static final String NODE_GL_VERSION = "gl-version";
+    private static final String NODE_NETWORKING = "networking";
+    private static final String NODE_REMOVABLE_STORAGE = "removable-storage";
+    private static final String NODE_FLASH = "flash";
+    private static final String NODE_LIVE_WALLPAPER_SUPPORT = "live-wallpaper-support";
+    private static final String NODE_BUTTONS = "buttons";
+    private static final String NODE_CAMERA = "camera";
+    private static final String NODE_LOCATION = "location";
+    private static final String NODE_GPU = "gpu";
+    private static final String NODE_DOCK = "dock";
+    private static final String NODE_YDPI = "ydpi";
+    private static final String NODE_POWER_TYPE = "power-type";
+    private static final String NODE_Y_DIMENSION = "y-dimension";
+    private static final String NODE_SCREEN_RATIO = "screen-ratio";
+    private static final String NODE_NAV_STATE = "nav-state";
+    private static final String NODE_MIC = "mic";
+    private static final String NODE_RAM = "ram";
+    private static final String NODE_XDPI = "xdpi";
+    private static final String NODE_DIMENSIONS = "dimensions";
+    private static final String NODE_ABI = "abi";
+    private static final String NODE_MECHANISM = "mechanism";
+    private static final String NODE_MULTITOUCH = "multitouch";
+    private static final String NODE_NAV = "nav";
+    private static final String NODE_PIXEL_DENSITY = "pixel-density";
+    private static final String NODE_SCREEN_ORIENTATION = "screen-orientation";
+    private static final String NODE_AUTOFOCUS = "autofocus";
+    private static final String NODE_SCREEN_SIZE = "screen-size";
+    private static final String NODE_DESCRIPTION = "description";
+    private static final String NODE_BLUETOOTH_PROFILES = "bluetooth-profiles";
+    private static final String NODE_SCREEN = "screen";
+    private static final String NODE_SENSORS = "sensors";
+    private static final String NODE_STATUS_BAR = "status-bar";
+    private static final String NODE_DIAGONAL_LENGTH = "diagonal-length";
+    private static final String NODE_SCREEN_TYPE = "screen-type";
+    private static final String NODE_KEYBOARD_STATE = "keyboard-state";
+    private static final String NODE_X_DIMENSION = "x-dimension";
+    private static final String NODE_CPU = "cpu";
+    private static final String NODE_INTERNAL_STORAGE = "internal-storage";
+    private static final String NODE_NAME = "name";
+    private static final String NODE_ID = "id";
+    private static final String NODE_SKIN = "skin";
+    private static final String NODE_MANUFACTURER = "manufacturer";
+    private static final String NODE_API_LEVEL = "api-level";
+    private static final String ATTR_DEFAULT = "default";
+    private static final String ATTR_UNIT = "unit";
+    private static final String UNIT_BYTES = "B";
+    private static final String UNIT_KIBIBYTES = "KiB";
+    private static final String UNIT_MEBIBYTES = "MiB";
+    private static final String UNIT_GIBIBYTES = "GiB";
+//    private static final String UNIT_TEBIBYTES = "TiB";
+    private static final String LOCAL_NS = "d";
+    private static final String PREFIX = LOCAL_NS + ":";
 
     private static final String TAG = "ConfigGenerator";
 
-    public ConfigGenerator(Activity context, String extensions) {
+    ConfigGenerator(@NonNull Activity context, @NonNull String extensions, @NonNull String gpuInfo) {
         mCtx = context;
         mExtensions = extensions;
+        mGpuInfo = gpuInfo;
     }
 
-    public static DisplayMetrics getDisplayMetrics(Activity context) {
+    static DisplayMetrics getDisplayMetrics(Activity context) {
         if (Build.VERSION.SDK_INT >= 17) {
             try {
                 Display display = context.getWindowManager().getDefaultDisplay();
@@ -187,14 +193,9 @@ public class ConfigGenerator {
     }
 
 
-    public static int getScreenWidth(WindowManager windowManager, DisplayMetrics metrics) {
+    static int getScreenWidth(WindowManager windowManager, DisplayMetrics metrics) {
         Display display = windowManager.getDefaultDisplay();
-        if (Build.VERSION.SDK_INT >= 14 && Build.VERSION.SDK_INT < 17) {
-            try {
-                return (Integer) Display.class.getMethod("getRawWidth").invoke(display);
-            } catch (Exception ignored) {
-            }
-        } else if (Build.VERSION.SDK_INT >= 17) {
+        if (Build.VERSION.SDK_INT >= 17) {
             try {
                 Point realSize = new Point();
                 Display.class.getMethod("getRealSize", Point.class).invoke(display, realSize);
@@ -208,14 +209,9 @@ public class ConfigGenerator {
     }
 
 
-    public static int getScreenHeight(WindowManager windowManager, DisplayMetrics metrics) {
+    static int getScreenHeight(WindowManager windowManager, DisplayMetrics metrics) {
         Display display = windowManager.getDefaultDisplay();
-        if (Build.VERSION.SDK_INT >= 14 && Build.VERSION.SDK_INT < 17) {
-            try {
-                return (Integer) Display.class.getMethod("getRawHeight").invoke(display);
-            } catch (Exception ignored) {
-            }
-        } else if (Build.VERSION.SDK_INT >= 17) {
+        if (Build.VERSION.SDK_INT >= 17) {
             try {
                 Point realSize = new Point();
                 Display.class.getMethod("getRealSize", Point.class).invoke(display, realSize);
@@ -229,15 +225,21 @@ public class ConfigGenerator {
     }
 
     @SuppressLint("WorldReadableFiles")
-    public String generateConfig() {
+    String generateConfig() {
         Resources resources = mCtx.getResources();
         PackageManager packageMgr = mCtx.getPackageManager();
         DisplayMetrics metrics = getDisplayMetrics(mCtx);
         Configuration config = resources.getConfiguration();
 
+        int screenWidth = 0;
+        int screenHeight = 0;
         WindowManager wm = (WindowManager) mCtx.getSystemService(Context.WINDOW_SERVICE);
-        int screenWidth = getScreenWidth(wm, metrics);
-        int screenHeight = getScreenHeight(wm, metrics);
+        if (wm != null) {
+            // These sizes are not always accurate, so values derived
+            // from them are marked as "TODO: approx "
+            screenWidth = getScreenWidth(wm, metrics);
+            screenHeight = getScreenHeight(wm, metrics);
+        }
 
         try {
             Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
@@ -298,7 +300,7 @@ public class ConfigGenerator {
 
             double diag = Math.sqrt(Math.pow(xin, 2) + Math.pow(yin, 2));
             diagonalLength.appendChild(doc.createTextNode(
-                  String.format(Locale.US, "%1$.2f", diag)));
+                  String.format(Locale.US, "TODO: approx %1$.2f", diag)));
 
             Element pixelDensity = doc.createElement(PREFIX + NODE_PIXEL_DENSITY);
             screen.appendChild(pixelDensity);
@@ -346,11 +348,14 @@ public class ConfigGenerator {
             case DisplayMetrics.DENSITY_420:
                 pixelDensityText = doc.createTextNode("420dpi");
                 break;
+            case DisplayMetrics.DENSITY_440:
+                pixelDensityText = doc.createTextNode("440dpi");
+                break;
             case DisplayMetrics.DENSITY_560:
                 pixelDensityText = doc.createTextNode("560dpi");
                 break;
             default:
-                pixelDensityText = doc.createTextNode(" ");
+                pixelDensityText = doc.createTextNode("TODO: unknown");
             }
             pixelDensity.appendChild(pixelDensityText);
 
@@ -383,11 +388,11 @@ public class ConfigGenerator {
 
             Element xdpi = doc.createElement(PREFIX + NODE_XDPI);
             screen.appendChild(xdpi);
-            xdpi.appendChild(doc.createTextNode(Double.toString(metrics.xdpi)));
+            xdpi.appendChild(doc.createTextNode("TODO: approx " + Double.toString(metrics.xdpi)));
 
             Element ydpi = doc.createElement(PREFIX + NODE_YDPI);
             screen.appendChild(ydpi);
-            ydpi.appendChild(doc.createTextNode(Double.toString(metrics.ydpi)));
+            ydpi.appendChild(doc.createTextNode("TODO: approx " + Double.toString(metrics.ydpi)));
 
             Element touch = doc.createElement(PREFIX + NODE_TOUCH);
             screen.appendChild(touch);
@@ -414,12 +419,15 @@ public class ConfigGenerator {
             switch (config.touchscreen) {
             case Configuration.TOUCHSCREEN_STYLUS:
                 mechanismText = doc.createTextNode("stylus");
+                break;
             case Configuration.TOUCHSCREEN_FINGER:
                 mechanismText = doc.createTextNode("finger");
+                break;
             case Configuration.TOUCHSCREEN_NOTOUCH:
                 mechanismText = doc.createTextNode("notouch");
+                break;
             default:
-                mechanismText = doc.createTextNode("TODO:typically \"finger\"");
+                mechanismText = doc.createTextNode("TODO: typically \"finger\"");
             }
             mechanism.appendChild(mechanismText);
 
@@ -500,42 +508,15 @@ public class ConfigGenerator {
             }
             mic.appendChild(micText);
 
-            if (android.os.Build.VERSION.SDK_INT >= 9){
-                List<Element> cameras = getCameraElements(doc);
-                for (Element cam : cameras){
-                    hardware.appendChild(cam);
-                }
+            List<Element> cameras;
+            if (android.os.Build.VERSION.SDK_INT < 23) {
+                cameras = getCameraElements(doc);
             } else {
-                Camera c = Camera.open();
-                Element camera = doc.createElement(PREFIX + NODE_CAMERA);
-                hardware.appendChild(camera);
-                Element location = doc.createElement(PREFIX + NODE_LOCATION);
-                camera.appendChild(location);
-                // All camera's before API 9 were on the back
-                location.appendChild(doc.createTextNode("back"));
-                Camera.Parameters cParams = c.getParameters();
-                Element autofocus = doc.createElement(PREFIX + NODE_AUTOFOCUS);
-                camera.appendChild(autofocus);
-                List<String> foci = cParams.getSupportedFocusModes();
-                if (foci == null) {
-                    autofocus.appendChild(doc.createTextNode(" "));
-                } else if (foci.contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
-                    autofocus.appendChild(doc.createTextNode("true"));
-                } else {
-                    autofocus.appendChild(doc.createTextNode("false"));
-                }
-
-                Element flash = doc.createElement(PREFIX + NODE_FLASH);
-                camera.appendChild(flash);
-                List<String> flashes = cParams.getSupportedFlashModes();
-                if (flashes == null || !flashes.contains(Camera.Parameters.FLASH_MODE_ON)) {
-                    flash.appendChild(doc.createTextNode("false"));
-                } else {
-                    flash.appendChild(doc.createTextNode("true"));
-                }
-                c.release();
+                cameras = getCamera2Elements(doc);
             }
-
+            for (Element cam : cameras) {
+                hardware.appendChild(cam);
+            }
 
             Element keyboard = doc.createElement(PREFIX + NODE_KEYBOARD);
             hardware.appendChild(keyboard);
@@ -561,12 +542,16 @@ public class ConfigGenerator {
             switch (config.navigation) {
             case Configuration.NAVIGATION_DPAD:
                 navText = doc.createTextNode("dpad");
+                break;
             case Configuration.NAVIGATION_TRACKBALL:
                 navText = doc.createTextNode("trackball");
+                break;
             case Configuration.NAVIGATION_WHEEL:
                 navText = doc.createTextNode("wheel");
+                break;
             case Configuration.NAVIGATION_NONAV:
                 navText = doc.createTextNode("nonav");
+                break;
             default:
                 navText = doc.createTextNode("TODO:typically \"nonav\"");
             }
@@ -577,7 +562,9 @@ public class ConfigGenerator {
 
             ActivityManager actManager = (ActivityManager) mCtx.getSystemService(Context.ACTIVITY_SERVICE);
             ActivityManager.MemoryInfo memInfo = new ActivityManager.MemoryInfo();
-            actManager.getMemoryInfo(memInfo);
+            if (actManager != null) {
+                actManager.getMemoryInfo(memInfo);
+            }
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
                 long totalMemory = memInfo.totalMem;
                 long ramAmount = totalMemory / (1024 * 1024);
@@ -612,16 +599,12 @@ public class ConfigGenerator {
                     // Ignore
                 }
                 if (ramAmount > 0) {
-                    if (unit.equals("B")) {
-                        unit = UNIT_BYTES;
-                    } else if (unit.equals("kB")) {
-                        unit = UNIT_KIBIBYTES;
-                    } else if (unit.equals("MB")) {
-                        unit = UNIT_MEBIBYTES;
-                    } else if (unit.equals("GB")) {
-                        unit = UNIT_GIBIBYTES;
-                    } else {
-                        unit = " ";
+                    switch (unit) {
+                        case "B":  unit = UNIT_BYTES;      break;
+                        case "kB": unit = UNIT_KIBIBYTES;  break;
+                        case "MB": unit = UNIT_MEBIBYTES;  break;
+                        case "GB": unit = UNIT_GIBIBYTES;  break;
+                        default:   unit = " ";
                     }
                 }
                 ram.setAttribute(ATTR_UNIT, unit);
@@ -631,16 +614,8 @@ public class ConfigGenerator {
             Element buttons = doc.createElement(PREFIX + NODE_BUTTONS);
             hardware.appendChild(buttons);
             Text buttonsText;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-                buttonsText = doc.createTextNode(getButtonsType());
-            } else {
-                buttonsText = doc.createTextNode("hard");
-            }
+            buttonsText = doc.createTextNode(getButtonsType());
             buttons.appendChild(buttonsText);
-
-
-
-
 
             long externalTotal;
             long internalTotal;
@@ -696,36 +671,8 @@ public class ConfigGenerator {
 
             Element gpu = doc.createElement(PREFIX + NODE_GPU);
             hardware.appendChild(gpu);
+            gpu.appendChild(doc.createTextNode(mGpuInfo.isEmpty() ? "TODO" : mGpuInfo));
 
-            String gpuName = null;
-            try {
-                String line;
-                // This doesn't work; presumably because apps can't hold the dump
-                // permission.
-                ProcessBuilder processBuilder = new ProcessBuilder("/system/bin/dumpsys");
-                Process process = processBuilder.start();
-                process.waitFor();
-                InputStream inputStream = process.getInputStream();
-                BufferedReader gpuInfo = new BufferedReader(new InputStreamReader(inputStream,
-                        Charset.forName("UTF-8")));
-                while ((line = gpuInfo.readLine()) != null) {
-                    if (line.startsWith("GLES:")) {
-                        int index = line.indexOf(':');
-                        if (index != -1) {
-                            gpuName = line.substring(index + 1).trim();
-                            break;
-                        }
-                    }
-                }
-                gpuInfo.close();
-            } catch (FileNotFoundException | InterruptedException ignore) {
-                // Ignore
-            }
-            if (gpuName != null) {
-                gpu.appendChild(doc.createTextNode(gpuName));
-            } else {
-                gpu.appendChild(doc.createTextNode("TODO"));
-            }
 
             Element abi = doc.createElement(PREFIX + NODE_ABI);
             hardware.appendChild(abi);
@@ -791,7 +738,7 @@ public class ConfigGenerator {
 
             Element glExtensions = doc.createElement(PREFIX + NODE_GL_EXTENSIONS);
             software.appendChild(glExtensions);
-            if (mExtensions != null && !mExtensions.trim().equals("")) {
+            if (!mExtensions.trim().equals("")) {
                 glExtensions.appendChild(doc.createTextNode(mExtensions));
             } else {
                 glExtensions.appendChild(doc.createTextNode(" "));
@@ -845,8 +792,8 @@ public class ConfigGenerator {
             tf.setOutputProperty(OutputKeys.INDENT, "yes");
             tf.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
             DOMSource source = new DOMSource(doc);
-            String filename = String.format("devices_%1$tm_%1$td_%1$ty.xml", Calendar.getInstance()
-                    .getTime());
+            String filename = String.format(Locale.US, "devices_%1$tm_%1$td_%1$ty.xml",
+                                            Calendar.getInstance().getTime());
             //File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
             File dir = mCtx.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
             File outFile = new File(dir, filename);
@@ -870,9 +817,67 @@ public class ConfigGenerator {
         return null;
     }
 
+    // For API 23 and higher, use the Camera 2 HAL
+    @TargetApi(23)
+    private List<Element> getCamera2Elements(Document doc) {
+        List<Element> cList = new ArrayList<>();
+        CameraManager cameraManager = (CameraManager)mCtx.getSystemService(Context.CAMERA_SERVICE);
+        if (cameraManager == null) {
+            return cList; // Empty
+        }
+        String[] cameraList;
+        try {
+            cameraList = cameraManager.getCameraIdList();
+        } catch (android.hardware.camera2.CameraAccessException cae) {
+            return cList; // Empty
+        }
+        for (String aCamera : cameraList) {
+            CameraCharacteristics characteristics;
+            try {
+                characteristics = cameraManager.getCameraCharacteristics(aCamera);
+            } catch (android.hardware.camera2.CameraAccessException cae) {
+                continue;
+            }
+
+            Element camera = doc.createElement(PREFIX + NODE_CAMERA);
+            cList.add(camera);
+
+            Element location = doc.createElement(PREFIX + NODE_LOCATION);
+            camera.appendChild(location);
+            Text locationText;
+            Integer facing = characteristics.get(LENS_FACING);
+            if (facing != null && facing == CameraMetadata.LENS_FACING_FRONT) {
+                locationText = doc.createTextNode("front");
+            } else if (facing != null && facing == CameraMetadata.LENS_FACING_BACK) {
+                locationText = doc.createTextNode("back");
+            } else {
+                locationText = doc.createTextNode(" ");
+            }
+            location.appendChild(locationText);
+
+            Element autoFocus = doc.createElement(PREFIX + NODE_AUTOFOCUS);
+            camera.appendChild(autoFocus);
+            int[] autoFocusModes = characteristics.get(CONTROL_AF_AVAILABLE_MODES);
+            Text autoFocusText = doc.createTextNode(
+                    (autoFocusModes != null && autoFocusModes.length > 0) ? "true" : "false");
+            autoFocus.appendChild(autoFocusText);
+
+            Element flash = doc.createElement(PREFIX + NODE_FLASH);
+            camera.appendChild(flash);
+            Boolean flashInfoAvailable = characteristics.get(FLASH_INFO_AVAILABLE);
+            Text flashText = doc.createTextNode(
+                    (flashInfoAvailable != null && flashInfoAvailable) ? "true" : "false");
+            flash.appendChild(flashText);
+        }
+        return cList;
+    }
+
+
+
+    // For API 9..22, use the Camera 1 HAL
     @TargetApi(9)
     private List<Element> getCameraElements(Document doc) {
-        List<Element> cList = new ArrayList<Element>();
+        List<Element> cList = new ArrayList<>();
         for (int i = 0; i < Camera.getNumberOfCameras(); i++) {
             Element camera = doc.createElement(PREFIX + NODE_CAMERA);
             cList.add(camera);
@@ -883,7 +888,7 @@ public class ConfigGenerator {
             Camera.getCameraInfo(i, cInfo);
             if (cInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
                 locationText = doc.createTextNode("front");
-            } else if (cInfo.facing == CameraInfo.CAMERA_FACING_BACK) {
+            } else if (cInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
                 locationText = doc.createTextNode("back");
             } else {
                 locationText = doc.createTextNode(" ");

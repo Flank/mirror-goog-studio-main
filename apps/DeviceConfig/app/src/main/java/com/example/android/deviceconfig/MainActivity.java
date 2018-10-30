@@ -16,6 +16,8 @@
 
 package com.example.android.deviceconfig;
 
+import android.os.Bundle;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
@@ -23,7 +25,6 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.opengl.GLSurfaceView;
-import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -34,11 +35,12 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.io.File;
+import java.util.Locale;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-public class MyActivity extends Activity implements OnClickListener {
+public class MainActivity extends Activity implements OnClickListener {
 
     private static GLView mGl;
 
@@ -117,26 +119,26 @@ public class MyActivity extends Activity implements OnClickListener {
 
         tv = findViewById(R.id.xdpi);
         if (tv != null) {
-            tv.setText(String.format("%f", metrics.xdpi));
+            tv.setText(String.format(Locale.US, "%f", metrics.xdpi));
         }
         tv = findViewById(R.id.ydpi);
         if (tv != null) {
-            tv.setText(String.format("%f", metrics.ydpi));
+            tv.setText(String.format(Locale.US, "%f", metrics.ydpi));
         }
 
         tv = findViewById(R.id.scaled_density);
         if (tv != null) {
-            tv.setText(String.format("%f", metrics.scaledDensity));
+            tv.setText(String.format(Locale.US, "%f", metrics.scaledDensity));
         }
 
         tv = findViewById(R.id.font_scale);
         if (tv != null) {
-            tv.setText(String.format("%f", config.fontScale));
+            tv.setText(String.format(Locale.US, "%f", config.fontScale));
         }
     }
 
     public void onClick(View v) {
-        ConfigGenerator configGen = new ConfigGenerator(this, mGl.getExtensions());
+        ConfigGenerator configGen = new ConfigGenerator(this, mGl.getExtensions(), mGl.getGpuInfo());
         final String filename = configGen.generateConfig();
         if (filename != null) {
             Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
@@ -166,11 +168,15 @@ public class MyActivity extends Activity implements OnClickListener {
         public String getExtensions() {
             return mRenderer.extensions;
         }
+        public String getGpuInfo() {
+            return mRenderer.gpuInfo;
+        }
 
     }
 
     private static class GlRenderer implements GLSurfaceView.Renderer {
-        public String extensions = "";
+        String extensions = "";
+        String gpuInfo = "";
 
         public void onDrawFrame(GL10 gl) {
         }
@@ -180,9 +186,20 @@ public class MyActivity extends Activity implements OnClickListener {
         }
 
         public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-            if (extensions.equals("")) {
+            if (gpuInfo.isEmpty()) {
+                String vendor   = gl.glGetString(GL10.GL_VENDOR);
+                String renderer = gl.glGetString(GL10.GL_RENDERER);
+                String version  = gl.glGetString(GL10.GL_VERSION);
+
+                if (vendor != null) gpuInfo += vendor;
+                gpuInfo += ", ";
+                if (renderer != null) gpuInfo += renderer;
+                gpuInfo += ", ";
+                if (version != null) gpuInfo += version;
+            }
+            if (extensions.isEmpty()) {
                 String extensions10 = gl.glGetString(GL10.GL_EXTENSIONS);
-                if(extensions10 != null) {
+                if (extensions10 != null) {
                     extensions += extensions10;
                 }
             }
