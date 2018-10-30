@@ -29,7 +29,7 @@ def main():
 
   bazel = os.path.join(workspace, 'prebuilts', 'tools', platform, 'bazel',
                        'bazel-real')
-  args = sys.argv[1:]
+  args = ['--bazelrc=%s' % os.path.join(workspace, 'tools/base/bazel/toplevel.bazel.rc')] + sys.argv[1:]
 
   env = {}
   env['JAVA_HOME'] = os.path.join(workspace, 'prebuilts', 'studio', 'jdk', jdk_subdir)
