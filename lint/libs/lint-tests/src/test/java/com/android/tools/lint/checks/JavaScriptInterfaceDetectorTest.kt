@@ -32,6 +32,44 @@ class JavaScriptInterfaceDetectorTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
+    fun testNotPublic() {
+        // Regression test for issue 118464831
+        lint().files(
+            classpath(),
+            projectProperties().compileSdk(19),
+            manifest().minSdk(10),
+            java(
+                """
+                package test.pkg;
+
+                import android.webkit.JavascriptInterface;
+
+                @SuppressWarnings("ClassNameDiffersFromFileName")
+                @JavascriptInterface
+                class AnnotatedObject {
+                    @JavascriptInterface
+                    void test1() {
+                    }
+
+                    @JavascriptInterface
+                    public void test2() {
+                    }
+                }
+                """
+            ).indented()
+        ).run().expect(
+            """
+            src/test/pkg/AnnotatedObject.java:7: Error: Must be public when using @JavascriptInterface [JavascriptInterface]
+            class AnnotatedObject {
+                  ~~~~~~~~~~~~~~~
+            src/test/pkg/AnnotatedObject.java:9: Error: Must be public when using @JavascriptInterface [JavascriptInterface]
+                void test1() {
+                     ~~~~~
+            2 errors, 0 warnings
+            """
+        )
+    }
+
     fun test() {
         val expected = """
             src/test/pkg/JavaScriptTest.java:11: Error: None of the methods in the added interface (NonAnnotatedObject) have been annotated with @android.webkit.JavascriptInterface; they will not be visible in API 17 [JavascriptInterface]

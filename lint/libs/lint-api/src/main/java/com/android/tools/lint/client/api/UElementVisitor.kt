@@ -54,10 +54,12 @@ import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UClassInitializer
 import org.jetbrains.uast.UClassLiteralExpression
 import org.jetbrains.uast.UContinueExpression
+import org.jetbrains.uast.UDeclaration
 import org.jetbrains.uast.UDeclarationsExpression
 import org.jetbrains.uast.UDoWhileExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UEnumConstant
+import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UExpressionList
 import org.jetbrains.uast.UField
 import org.jetbrains.uast.UFile
@@ -621,6 +623,16 @@ internal class UElementVisitor constructor(
             return super.visitContinueExpression(node)
         }
 
+        override fun visitDeclaration(node: UDeclaration): Boolean {
+            val list = nodePsiTypeDetectors[UDeclaration::class.java]
+            if (list != null) {
+                for (v in list) {
+                    v.visitor.visitDeclaration(node)
+                }
+            }
+            return super.visitDeclaration(node)
+        }
+
         override fun visitDeclarationsExpression(node: UDeclarationsExpression): Boolean {
             val list = nodePsiTypeDetectors[UDeclarationsExpression::class.java]
             if (list != null) {
@@ -659,6 +671,16 @@ internal class UElementVisitor constructor(
                 }
             }
             return super.visitEnumConstant(node)
+        }
+
+        override fun visitExpression(node: UExpression): Boolean {
+            val list = nodePsiTypeDetectors[UExpression::class.java]
+            if (list != null) {
+                for (v in list) {
+                    v.visitor.visitExpression(node)
+                }
+            }
+            return super.visitExpression(node)
         }
 
         override fun visitExpressionList(node: UExpressionList): Boolean {

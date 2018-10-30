@@ -207,23 +207,10 @@ open class JavaContext(
      *
      * @return a location for the given element
      */
+    fun getNameLocation(cls: UDeclaration): Location = getNameLocation(cls as UElement)
+
     fun getNameLocation(cls: UClass): Location = getNameLocation(cls as UElement)
 
-    /**
-     * Returns a [Location] for the given element. This attempts to pick a shorter
-     * location range than the entire element; for a class or method for example, it picks
-     * the name element (if found). For statement constructs such as a `switch` statement
-     * it will highlight the keyword, etc.
-     *
-     *
-     * [UMethod] is both a [PsiElement] and a [UElement] so this method
-     * is here to make calling getNameLocation(UMethod) easier without having to make an
-     * explicit cast.
-     *
-     * @param cls the AST class element to create a location for
-     *
-     * @return a location for the given element
-     */
     fun getNameLocation(cls: UMethod): Location = getNameLocation(cls as UElement)
 
     fun getLocation(node: PsiElement): Location = uastParser.getLocation(this, node)

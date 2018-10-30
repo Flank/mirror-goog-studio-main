@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
@@ -28,7 +29,10 @@ import com.android.tools.lint.detector.api.TypeEvaluator
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.PsiModifier
 import org.jetbrains.uast.UCallExpression
+import org.jetbrains.uast.UDeclaration
+import org.jetbrains.uast.UElement
 
 /**
  * Looks for addJavascriptInterface calls on interfaces have been properly annotated with
@@ -74,6 +78,30 @@ class JavaScriptInterfaceDetector : Detector(), SourceCodeScanner {
                     "been annotated with `@android.webkit.JavascriptInterface`; they will not " +
                     "be visible in API 17"
             context.report(ISSUE, node, location, message)
+        }
+    }
+
+    override fun getApplicableUastTypes(): List<Class<out UElement>>? =
+        listOf(UDeclaration::class.java)
+
+    override fun createUastHandler(context: JavaContext): UElementHandler? {
+        if (!context.mainProject.isAndroidProject) {
+            return null
+        }
+
+        return object : UElementHandler() {
+            override fun visitDeclaration(node: UDeclaration) {
+                val modifierList = node.modifierList ?: return
+                if (modifierList.hasModifierProperty(PsiModifier.PUBLIC)) {
+                    return
+                }
+                for (annotation in node.annotations) {
+                    if (annotation.qualifiedName == JAVASCRIPT_INTERFACE_CLS) {
+                        context.report(ISSUE, node as UElement, context.getNameLocation(node),
+                            "Must be public when using `@JavascriptInterface`")
+                    }
+                }
+            }
         }
     }
 
