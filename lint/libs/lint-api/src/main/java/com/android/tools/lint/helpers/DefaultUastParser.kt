@@ -232,17 +232,16 @@ open class DefaultUastParser(
             .setSource(element)
     }
 
-    override // subclasses may want to override/optimize
-    fun getLocation(context: JavaContext, element: UElement): Location {
+    override fun getLocation(context: JavaContext, element: UElement): Location {
         if (element is UElementWithLocation) {
             val file = element.getContainingUFile() ?: return Location.NONE
             val ioFile = file.getIoFile() ?: return Location.NONE
-            val text = file.psi.text
+            val text = file.sourcePsi?.text ?: file.javaPsi?.text ?: ""
             val location = Location.create(ioFile, text, element.startOffset, element.endOffset)
             location.setSource(element)
             return location
         } else {
-            val psiElement = element.psi
+            val psiElement = element.sourcePsi
             if (psiElement != null) {
                 return getLocation(context, psiElement).withSource(element)
             }
