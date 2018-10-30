@@ -2554,81 +2554,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testTryWithResources() {
-        String expected =
-                ""
-                        + "src/main/java/test/pkg/MultiCatch.java:10: Error: Multi-catch with these reflection exceptions requires API level 19 (current min is 1) because they get compiled to the common but new super type ReflectiveOperationException. As a workaround either create individual catch statements, or catch Exception. [NewApi]\n"
-                        + "        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {\n"
-                        + "                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/main/java/test/pkg/TryWithResources.java:9: Error: Try-with-resources requires API level 19 (current min is 1) [NewApi]\n"
-                        + "        try (BufferedReader br = new BufferedReader(new FileReader(path))) {\n"
-                        + "             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "2 errors, 0 warnings\n";
-        lint().files(manifest().minSdk(1), tryWithResources, multiCatch, gradleVersion231)
-                .checkMessage(this::checkReportedError)
-                .run()
-                .expect(expected);
-    }
-
-    public void testTryWithResourcesOkDueToCompileSdk() {
-        lint().files(manifest().minSdk(19), tryWithResources, multiCatch, gradleVersion231)
-                .run()
-                .expectClean();
-    }
-
-    public void testTryWithResourcesOkDueToDesugar() {
-        lint().files(
-                        manifest().minSdk(19),
-                        tryWithResources,
-                        multiCatch,
-                        gradleVersion24_language18)
-                .run()
-                .expectClean();
-    }
-
-    public void testTryWithResourcesOutsideAndroid() {
-        lint().files(
-                        manifest().minSdk(1),
-                        tryWithResources,
-                        multiCatch,
-                        gradle("apply plugin: 'java'\n"))
-                .checkMessage(this::checkReportedError)
-                .run()
-                .expectClean();
-    }
-
-    public void testTryWithResourcesOldGradlePlugin() {
-        String expected =
-                ""
-                        + "src/main/java/test/pkg/TryWithResources.java:9: Error: Try-with-resources requires API level 19 (current min is 1) [NewApi]\n"
-                        + "        try (BufferedReader br = new BufferedReader(new FileReader(path))) {\n"
-                        + "             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n";
-        lint().files(manifest().minSdk(1), gradleVersion231, tryWithResources)
-                .checkMessage(this::checkReportedError)
-                .run()
-                .expect(expected);
-    }
-
-    public void testTryWithResourcesNewPluginLanguage17() {
-        String expected =
-                ""
-                        + "src/main/java/test/pkg/TryWithResources.java:9: Error: Try-with-resources requires API level 19 (current min is 1) [NewApi]\n"
-                        + "        try (BufferedReader br = new BufferedReader(new FileReader(path))) {\n"
-                        + "             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n";
-        lint().files(manifest().minSdk(1), gradleVersion24_language17, tryWithResources)
-                .checkMessage(this::checkReportedError)
-                .run()
-                .expect(expected);
-    }
-
-    public void testTryWithResourcesDesugar() {
-        lint().files(manifest().minSdk(1), gradleVersion24_language18, tryWithResources)
-                .run()
-                .expectClean();
-    }
-
     public void testDefaultMethods() {
         if (createClient().getHighestKnownApiLevel() < 24) {
             // This test only works if you have at least Android N installed
@@ -2690,62 +2615,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "        System.out.println(\"test\");\n"
                                         + "    }\n"
                                         + "}"))
-                .run()
-                .expectClean();
-    }
-
-    public void testDesugarMethods() {
-        // Desugar inlines Objects.requireNonNull(foo) so don't flag this if using Desugar
-        // Ditto for Throwable.addSuppressed.
-
-        //noinspection all // Sample code
-        lint().files(
-                        java(
-                                ""
-                                        + "package test.pkg;\n"
-                                        + "\n"
-                                        + "import java.util.Objects;\n"
-                                        + "\n"
-                                        + "public class DesugarTest {\n"
-                                        + "    public void testRequireNull(Object foo) {\n"
-                                        + "        Objects.requireNonNull(foo); // Desugared, should not generate warning\n"
-                                        + "        Objects.requireNonNull(foo, \"message\"); // Should generate API warning\n"
-                                        + "    }\n"
-                                        + "\n"
-                                        + "    public void addThrowable(Throwable t1, Throwable t2) {\n"
-                                        + "        t1.addSuppressed(t2); // Desugared, should not generate warning\n"
-                                        + "    }\n"
-                                        + "}\n"),
-                        gradleVersion24_language18)
-                .run()
-                .expect(
-                        "src/main/java/test/pkg/DesugarTest.java:8: Error: Call requires API level 19 (current min is 1): java.util.Objects#requireNonNull [NewApi]\n"
-                                + "        Objects.requireNonNull(foo, \"message\"); // Should generate API warning\n"
-                                + "                ~~~~~~~~~~~~~~\n"
-                                + "1 errors, 0 warnings\n");
-    }
-
-    public void testDefaultMethodsDesugar() {
-        // Default methods require minSdkVersion=N
-        //noinspection all // Sample code
-        lint().files(
-                        manifest().minSdk(15),
-                        java(
-                                "src/test/pkg/InterfaceMethodTest.java",
-                                ""
-                                        + "package test.pkg;\n"
-                                        + "\n"
-                                        + "@SuppressWarnings(\"unused\")\n"
-                                        + "public interface InterfaceMethodTest {\n"
-                                        + "    void someMethod();\n"
-                                        + "    default void method2() {\n"
-                                        + "        System.out.println(\"test\");\n"
-                                        + "    }\n"
-                                        + "    static void method3() {\n"
-                                        + "        System.out.println(\"test\");\n"
-                                        + "    }\n"
-                                        + "}"),
-                        gradleVersion24_language18)
                 .run()
                 .expectClean();
     }
@@ -2872,53 +2741,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(expected);
-    }
-
-    public void testDesugarCompare() {
-        //noinspection all // Sample code
-        lint().files(
-                        manifest().minSdk(1),
-                        java(
-                                ""
-                                        + "package test.pkg;\n"
-                                        + "\n"
-                                        + "// Desugar rewrites these\n"
-                                        + "public class CompareTest {\n"
-                                        + "    public void testLong(long value1, long value2) {\n"
-                                        + "        int result3 = Long.compare(value1, value2);\n"
-                                        + "    }\n"
-                                        + "\n"
-                                        + "    public int testFloat(float value1, float value2) {\n"
-                                        + "        return Float.compare(value1, value2); // OK\n"
-                                        + "    }\n"
-                                        + "\n"
-                                        + "    public int testBoolean(boolean value1, boolean value2) {\n"
-                                        + "        return Boolean.compare(value1, value2);\n"
-                                        + "    }\n"
-                                        + "\n"
-                                        + "    public int testDouble(double value1, double value2) {\n"
-                                        + "        return Double.compare(value1, value2); // OK\n"
-                                        + "    }\n"
-                                        + "\n"
-                                        + "    public int testByte(byte value1, byte value2) {\n"
-                                        + "        return Byte.compare(value1, value2);\n"
-                                        + "    }\n"
-                                        + "\n"
-                                        + "    public int testChar(char value1, char value2) {\n"
-                                        + "        return Character.compare(value1, value2);\n"
-                                        + "    }\n"
-                                        + "\n"
-                                        + "    public int testInt(int value1, int value2) {\n"
-                                        + "        return Integer.compare(value1, value2);\n"
-                                        + "    }\n"
-                                        + "\n"
-                                        + "    public int testShort(short value1, short value2) {\n"
-                                        + "        return Short.compare(value1, value2);\n"
-                                        + "    }\n"
-                                        + "}\n"),
-                        gradleVersion24_language18)
-                .run()
-                .expectClean();
     }
 
     public void testAnonymousInherited() {
@@ -6974,42 +6796,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
                             + "        android:viewportWidth=\"24\" />\n"
                             + "\n"
                             + "</vector>\n");
-
-    private TestFile gradleVersion24_language18 =
-            gradle(
-                    ""
-                            + "buildscript {\n"
-                            + "    repositories {\n"
-                            + "        jcenter()\n"
-                            + "    }\n"
-                            + "    dependencies {\n"
-                            + "        classpath 'com.android.tools.build:gradle:2.4.0-alpha8'\n"
-                            + "    }\n"
-                            + "}\n"
-                            + "android {\n"
-                            + "    compileOptions {\n"
-                            + "        sourceCompatibility JavaVersion.VERSION_1_8\n"
-                            + "        targetCompatibility JavaVersion.VERSION_1_8\n"
-                            + "    }\n"
-                            + "}");
-
-    private TestFile gradleVersion24_language17 =
-            gradle(
-                    ""
-                            + "buildscript {\n"
-                            + "    repositories {\n"
-                            + "        jcenter()\n"
-                            + "    }\n"
-                            + "    dependencies {\n"
-                            + "        classpath 'com.android.tools.build:gradle:2.4.0-alpha8'\n"
-                            + "    }\n"
-                            + "}\n"
-                            + "android {\n"
-                            + "    compileOptions {\n"
-                            + "        sourceCompatibility JavaVersion.VERSION_1_7\n"
-                            + "        targetCompatibility JavaVersion.VERSION_1_7\n"
-                            + "    }\n"
-                            + "}");
 
     private TestFile gradleVersion231 =
             gradle(
