@@ -12,6 +12,7 @@ import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils
 import com.android.build.gradle.integration.common.utils.VariantOutputUtils;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.VariantBuildOutput;
+import com.android.testutils.TestUtils;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import java.io.IOException;
@@ -72,6 +73,7 @@ public class DensitySplitInLTest {
     public void checkAddingDensityIncrementally() throws Exception {
         // get the last modified time of the initial APKs so we can make sure incremental build
         // does not rebuild things unnecessarily.
+        waitForSystemTicks();
         final Map<String, Long> lastModifiedTimePerDensity =
                 getApkModifiedTimePerDensity(getOutputs(outputModel));
 
@@ -85,6 +87,7 @@ public class DensitySplitInLTest {
                     ProjectBuildOutput incrementalModel =
                             project.executeAndReturnOutputModel("assembleDebug");
 
+                    waitForSystemTicks();
                     Collection<? extends OutputFile> outputs = getOutputs(incrementalModel);
                     assertThat(outputs).hasSize(6);
                     boolean foundAddedAPK = false;
@@ -113,6 +116,7 @@ public class DensitySplitInLTest {
     public void checkDeletingDensityIncrementally() throws Exception {
         // get the last modified time of the initial APKs so we can make sure incremental build
         // does not rebuild things unnecessarily.
+        waitForSystemTicks();
         final Map<String, Long> lastModifiedTimePerDensity =
                 getApkModifiedTimePerDensity(getOutputs(outputModel));
 
@@ -126,6 +130,7 @@ public class DensitySplitInLTest {
                     ProjectBuildOutput incrementalModel =
                             project.executeAndReturnOutputModel("assembleDebug");
 
+                    waitForSystemTicks();
                     Collection<? extends OutputFile> outputs = getOutputs(incrementalModel);
                     assertThat(outputs).hasSize(4);
                     for (OutputFile output : outputs) {
@@ -173,5 +178,17 @@ public class DensitySplitInLTest {
         }
 
         return builder.build();
+    }
+
+    // b/113323972 - Let's wait for a few more system ticks before trying to read the files
+    // metadata. See if this helps with the flakiness of last modified times.
+    private static void waitForSystemTicks() {
+        for (int i = 0; i < 5; i++) {
+            try {
+                TestUtils.waitForFileSystemTick();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }
