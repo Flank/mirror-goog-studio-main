@@ -17,6 +17,8 @@
 package com.android.tools.lint.checks
 
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry
+import com.android.tools.lint.checks.infrastructure.TestLintClient
+import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Scope
 import junit.framework.TestCase
@@ -76,6 +78,21 @@ class BuiltinIssueRegistryTest : TestCase() {
             if (ids.contains(id)) {
                 TestCase.assertTrue("Duplicate category name $id", !ids.contains(id))
             }
+        }
+    }
+
+    fun testCacheable() {
+        val registry = object : BuiltinIssueRegistry() {
+            fun isCacheable() = cacheable()
+        }
+        val old = LintClient.clientName
+        try {
+            TestLintClient(LintClient.CLIENT_STUDIO); // side effect: sets client name
+            assertTrue(registry.isCacheable())
+            TestLintClient(LintClient.CLIENT_GRADLE)
+            assertFalse(registry.isCacheable())
+        } finally {
+            TestLintClient(old)
         }
     }
 
