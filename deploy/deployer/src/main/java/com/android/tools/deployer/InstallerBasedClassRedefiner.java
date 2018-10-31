@@ -19,7 +19,7 @@ import com.android.tools.deploy.proto.Deploy.SwapRequest;
 import com.android.tools.deploy.proto.Deploy.SwapResponse;
 import java.io.IOException;
 
-public class InstallerBasedClassRedefiner extends ClassRedefiner {
+public class InstallerBasedClassRedefiner implements ClassRedefiner {
     private final Installer installer;
 
     public InstallerBasedClassRedefiner(Installer installer) {

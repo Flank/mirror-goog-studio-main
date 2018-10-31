@@ -23,12 +23,14 @@ import com.android.tools.deployer.model.DexClass;
 import com.android.tools.deployer.model.FileDiff;
 import com.android.tools.deployer.tasks.TaskRunner;
 import com.android.tools.deployer.tasks.TaskRunner.Task;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
 import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -81,16 +83,17 @@ public class Deployer {
         }
     }
 
-    public void codeSwap(String packageName, List<String> apks, DebuggerCodeSwapAdapter adapter)
+    public void codeSwap(
+            String packageName, List<String> apks, Map<Integer, ClassRedefiner> redefiners)
             throws DeployerException {
         Trace.begin("codeSwap");
-        swap(packageName, apks, false /* Restart Activity */, adapter);
+        swap(packageName, apks, false /* Restart Activity */, redefiners);
         Trace.end();
     }
 
     public void fullSwap(String packageName, List<String> apks) throws DeployerException {
         Trace.begin("fullSwap");
-        swap(packageName, apks, true /* Restart Activity */, null);
+        swap(packageName, apks, true /* Restart Activity */, ImmutableMap.of());
         Trace.end();
     }
 
@@ -98,7 +101,7 @@ public class Deployer {
             String packageName,
             List<String> paths,
             boolean restart,
-            DebuggerCodeSwapAdapter adapter)
+            Map<Integer, ClassRedefiner> redefiners)
             throws DeployerException {
         // Get the list of files from the local apks
         List<ApkEntry> newFiles = new ApkParser().parsePaths(paths);
@@ -126,21 +129,19 @@ public class Deployer {
         // However if the compare task doesn't get to execute we still update the database.
         computeClassChecksums(newFiles);
 
-        // Temporary disables all the breakpoints if debuggers are attached.
-        disableBreakPoints(adapter);
-
         // Builds the Request Protocol Buffer.
         Deploy.SwapRequest request =
-                buildSwapRequest(packageName, restart, apkPaths, processNames, toSwap, adapter);
+                buildSwapRequest(
+                        packageName, restart, apkPaths, processNames, toSwap, redefiners.keySet());
 
         // Send Request to agent
-        sendAgentSwapRequest(request);
+        ClassRedefiner redefiner = new InstallerBasedClassRedefiner(installer);
+        sendSwapRequest(request, redefiner);
 
-        // Send Request to debugger
-        sendDebuggerSwapRequest(request, adapter);
-
-        // Restores all breakpoints if debuggers are attached.
-        enableBreakPoints(adapter);
+        // Send requests to the alternative redefiners
+        for (ClassRedefiner r : redefiners.values()) {
+            sendSwapRequest(request, r);
+        }
     }
 
     private List<FileDiff> verify(List<FileDiff> diffs, boolean restart) throws DeployerException {
@@ -205,7 +206,7 @@ public class Deployer {
             List<String> apkPaths,
             Set<String> processNames,
             List<DexClass> classes,
-            DebuggerCodeSwapAdapter adapter) {
+            Collection<Integer> pids) {
         Deploy.SwapRequest.Builder request = Deploy.SwapRequest.newBuilder();
         request.setPackageName(packageName);
         request.setRestartActivity(restart);
@@ -218,31 +219,18 @@ public class Deployer {
 
         request.addAllApks(apkPaths);
         request.addAllProcessNames(processNames);
-
-        if (adapter != null) {
-            for (int pid : adapter.getPids()) {
-                request.addSkipProcessIds(pid);
-            }
-        }
-
+        request.addAllSkipProcessIds(pids);
         return request.build();
     }
 
-    private void sendAgentSwapRequest(Deploy.SwapRequest request) throws DeployerException {
-        ClassRedefiner redefiner = new InstallerBasedClassRedefiner(installer);
+    private void sendSwapRequest(Deploy.SwapRequest request, ClassRedefiner redefiner)
+            throws DeployerException {
         Deploy.SwapResponse swapResponse = redefiner.redefine(request);
         if (swapResponse.getStatus() != Deploy.SwapResponse.Status.OK) {
             throw new DeployerException(DeployerException.Error.REDEFINER_ERROR, "Swap failed");
         }
     }
 
-    private void sendDebuggerSwapRequest(
-            Deploy.SwapRequest request, DebuggerCodeSwapAdapter adapter) {
-        if (adapter != null) {
-            adapter.setRequest(request);
-            adapter.performSwap();
-        }
-    }
 
     private Set<String> extractProcessNames(List<ApkEntry> newFiles) {
         Set<String> processNames = new HashSet<>();
@@ -292,19 +280,6 @@ public class Deployer {
             return apkPaths;
         } catch (IOException e) {
             throw new DeployerException(DeployerException.Error.ERROR_PUSHING_APK, e);
-        }
-    }
-
-    private void disableBreakPoints(DebuggerCodeSwapAdapter adapter) {
-        if (adapter != null) {
-            adapter.disableBreakPoints();
-        }
-    }
-
-    /** Re-enables breakpoint. Should depend on code swap to be completely finished */
-    private void enableBreakPoints(DebuggerCodeSwapAdapter adapter) {
-        if (adapter != null) {
-            adapter.enableBreakPoints();
         }
     }
 }
