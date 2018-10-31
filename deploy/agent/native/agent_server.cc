@@ -65,7 +65,7 @@ Status ForwardInstallerToAgents() {
   auto agent = std::begin(agent_sockets);
   while (agent != std::end(agent_sockets)) {
     if (!(*agent)->Write(message)) {
-      LogError("Failed to write to agent");
+      LogInfo("Agent disconnected (write)");
       agent = agent_sockets.erase(agent);
     } else {
       ++agent;
@@ -81,14 +81,14 @@ Status ForwardAgentToInstaller(MessagePipeWrapper* agent) {
   // Failure to read from an agent prevents the installer from trying to read or
   // write any messages to/from that agent.
   if (!agent->Read(&message)) {
-    LogError("Failed to read from agent");
+    LogInfo("Agent disconnected (read)");
     agent_sockets.erase(agent);
     return SERVER_OK;
   }
 
   // Failure to write to the installer kills the server.
   if (!installer_input.Write(message)) {
-    LogError("Could not write to installer");
+    LogError("Failed to write to installer");
     return SERVER_EXIT;
   }
 
