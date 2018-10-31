@@ -102,7 +102,10 @@ cc_test(
     args = ["$(location :agent_server)"],
     data = [":agent_server"],
     linkstatic = 1,
-    tags = ["no_windows"],
+    tags = [
+        "no_mac",
+        "no_windows",
+    ],
     deps = [
         "//external:gmock_main",
         "//tools/base/deploy/test/fakes:fakes_lib",
