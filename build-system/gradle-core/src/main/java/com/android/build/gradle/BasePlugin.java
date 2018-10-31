@@ -564,14 +564,9 @@ public abstract class BasePlugin<E extends BaseExtension2>
 
         buildTypeContainer.whenObjectAdded(
                 buildType -> {
-                    if (!this.getClass().isAssignableFrom(DynamicFeaturePlugin.class)) {
-                        SigningConfig signingConfig =
-                                signingConfigContainer.findByName(BuilderConstants.DEBUG);
-                        buildType.init(signingConfig);
-                    } else {
-                        // initialize it without the signingConfig for dynamic-features.
-                        buildType.init();
-                    }
+                    SigningConfig signingConfig =
+                            signingConfigContainer.findByName(BuilderConstants.DEBUG);
+                    buildType.init(signingConfig);
                     variantManager.addBuildType(buildType);
                 });
 

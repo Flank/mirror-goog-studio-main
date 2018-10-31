@@ -172,13 +172,6 @@ public interface SyncIssue {
      */
     int TYPE_THIRD_PARTY_GRADLE_PLUGIN_TOO_OLD = 34;
 
-    /**
-     * Indicates that the signing configuration is declared in the dynamic-feature gradle file. This
-     * should only be declared in the application module, as dynamic-features use the base module's
-     * signing configuration, and this will be ignored.
-     */
-    int TYPE_SIGNING_CONFIG_DECLARED_IN_DYNAMIC_FEATURE = 35;
-
     // ATTENTION: When adding new values here, update EvalIssueReporter.Type and TYPE_MAX below.
 
     /**
@@ -186,7 +179,7 @@ public interface SyncIssue {
      *
      * <p>TODO: Why is it needed even when there are no usages in the code?
      */
-    int TYPE_MAX = 36; // increment when adding new types.
+    int TYPE_MAX = 35; // increment when adding new types.
 
     /** Returns the severity of the issue. */
     int getSeverity();

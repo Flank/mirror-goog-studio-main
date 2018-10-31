@@ -227,26 +227,16 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     }
 
     /**
-     * Initialize the DSL object with the debug signingConfig. Not meant to be used from the build
-     * scripts.
+     * Initialize the DSL object. Not meant to be used from the build scripts.
      */
     public void init(SigningConfig debugSigningConfig) {
-        init();
-        if (BuilderConstants.DEBUG.equals(getName())) {
-            assert debugSigningConfig != null;
-            setSigningConfig(debugSigningConfig);
-        }
-    }
-
-    /**
-     * Initialize the DSL object without the signingConfig. Not meant to be used from the build
-     * scripts.
-     */
-    public void init() {
         if (BuilderConstants.DEBUG.equals(getName())) {
             setDebuggable(true);
             setEmbedMicroApp(false);
             isCrunchPngsDefault = false;
+
+            assert debugSigningConfig != null;
+            setSigningConfig(debugSigningConfig);
         }
     }
 
