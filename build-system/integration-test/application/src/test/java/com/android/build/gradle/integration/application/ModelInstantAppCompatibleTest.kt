@@ -119,6 +119,57 @@ class ModelInstantAppCompatibleTest {
     }
 
     @Test
+    fun testBuildModelForInstantAppWithCommentsOutsideManifest() {
+        TestFileUtils.searchAndReplace(
+            File(project.getSubproject(":app").mainSrcDir.parent, "/AndroidManifest.xml"),
+            "<manifest",
+            "<!-- This is a comment. -->\n<manifest"
+        )
+        TestFileUtils.searchAndReplace(
+            File(project.getSubproject(":app").mainSrcDir.parent, "/AndroidManifest.xml"),
+            "</manifest>",
+            "</manifest>\n<!-- This is a comment. -->"
+        )
+        TestFileUtils.searchAndReplace(
+            File(project.getSubproject(":app").mainSrcDir.parent, "/AndroidManifest.xml"),
+            "package=",
+            "xmlns:dist=\"http://schemas.android.com/apk/distribution\" package="
+        )
+        TestFileUtils.searchAndReplace(
+            File(project.getSubproject(":app").mainSrcDir.parent, "AndroidManifest.xml"),
+            "<application>",
+            "<dist:module dist:instant=\"true\" /> <application>"
+        )
+        TestFileUtils.searchAndReplace(
+            File(project.getSubproject(":feature1").mainSrcDir.parent, "AndroidManifest.xml"),
+            "dist:title=",
+            "dist:instant=\"false\" dist:title="
+        )
+        TestFileUtils.searchAndReplace(
+            File(project.getSubproject(":feature2").mainSrcDir.parent, "AndroidManifest.xml"),
+            "dist:onDemand=\"true\"",
+            "dist:onDemand=\"false\" dist:instant=\"true\""
+        )
+        val issues =
+            project.model().ignoreSyncIssues().fetchAndroidProjects().onlyModelMap[":app"]!!.syncIssues
+        Truth.assertThat(issues).isEmpty()
+        var models = project.model().ignoreSyncIssues().fetchAndroidProjects().onlyModelMap
+        for ((_, model) in models) {
+            for (variant in model.variants) {
+                if (model.name == "feature1") {
+                    Truth.assertThat(variant.isInstantAppCompatible)
+                        .named("Project ${model.name} isInstantAppCompatible property populated from manifest")
+                        .isFalse()
+                } else {
+                    Truth.assertThat(variant.isInstantAppCompatible)
+                        .named("Project ${model.name} isInstantAppCompatible property populated from manifest")
+                        .isTrue()
+                }
+            }
+        }
+    }
+
+    @Test
     fun testBuildModelForInstantAppWithDynamicFeaturesAndBuildTypeManifestOverlay() {
         TestFileUtils.searchAndReplace(
             File(buildTypeProject.mainSrcDir.parent, "/AndroidManifest.xml"),
