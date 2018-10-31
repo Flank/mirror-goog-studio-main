@@ -16,6 +16,11 @@
 
 package com.android.repository.impl.installer;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.Revision;
@@ -197,6 +202,90 @@ public class BasicInstallerTest extends TestCase {
         assertEquals("license text 2", newPkg.getLicense().getValue().trim());
         assertEquals(new Revision(4, 5, 6), newPkg.getVersion());
     }
+
+    // Test cancellation along the way - the partial installation should be cleaned up.
+    public void testCleanupWhenCancelled() throws Exception {
+        MockFileOp fop = new MockFileOp();
+        // We have a different package installed already.
+        fop.recordExistingFile("/repo/dummy/foo/package.xml", ByteStreams
+          .toByteArray(getClass().getResourceAsStream("/testPackage.xml")));
+        RepoManager mgr = new RepoManagerImpl(fop);
+        File root = new File("/repo");
+        mgr.setLocalPath(root);
+        FakeDownloader downloader = new FakeDownloader(fop);
+        URL repoUrl = new URL("http://example.com/dummy.xml");
+
+        // The repo we're going to download
+        downloader.registerUrl(repoUrl, getClass().getResourceAsStream("/testRepo.xml"));
+
+        // Create the archive and register the URL
+        URL archiveUrl = new URL("http://example.com/2/arch1");
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(1000);
+        ZipOutputStream zos = new ZipOutputStream(baos);
+        zos.putNextEntry(new ZipEntry("top-level/a"));
+        zos.write("contents1".getBytes());
+        zos.closeEntry();
+        zos.putNextEntry(new ZipEntry("top-level/dir/b"));
+        zos.write("contents2".getBytes());
+        zos.closeEntry();
+        zos.close();
+        ByteArrayInputStream is = new ByteArrayInputStream(baos.toByteArray());
+        downloader.registerUrl(archiveUrl, is);
+
+        // Register a source provider to get the repo
+        mgr.registerSourceProvider(new ConstantSourceProvider(repoUrl.toString(), "dummy",
+                                                              ImmutableList.of(RepoManager.getGenericModule())));
+        FakeProgressRunner runner = new FakeProgressRunner();
+
+        // Load
+        mgr.load(RepoManager.DEFAULT_EXPIRATION_PERIOD_MS,
+                 ImmutableList.<RepoManager.RepoLoadedCallback>of(),
+                 ImmutableList.<RepoManager.RepoLoadedCallback>of(), ImmutableList.<Runnable>of(),
+                 runner, downloader, new FakeSettingsController(false), true);
+
+        // Ensure we picked up the local package.
+        RepositoryPackages pkgs = mgr.getPackages();
+        runner.getProgressIndicator().assertNoErrorsOrWarnings();
+        assertEquals(1, pkgs.getLocalPackages().size());
+        assertEquals(2, pkgs.getRemotePackages().size());
+
+        FakeProgressIndicator progress = new FakeProgressIndicator(true) {
+            @Override
+            public void setFraction(double fraction) {
+                // Cancel somewhere in the middle during unzipping.
+                if (!isCanceled() && fraction > 0.3) {
+                    cancel();
+                }
+                super.setFraction(fraction);
+            }
+        };
+        // Install one of the packages.
+        RemotePackage p = pkgs.getRemotePackages().get("dummy;bar");
+        Installer basicInstaller =
+          spy(new BasicInstallerFactory().createInstaller(p, mgr, downloader, fop));
+        basicInstaller.prepare(progress.createSubProgress(0.5));
+        basicInstaller.complete(progress.createSubProgress(1));
+        progress.assertNoErrorsOrWarnings();
+        verify((BasicInstaller)basicInstaller, times(1)).cleanup(any());
+
+        runner = new FakeProgressRunner();
+        // Reload the packages.
+        mgr.load(0, ImmutableList.<RepoManager.RepoLoadedCallback>of(),
+                 ImmutableList.<RepoManager.RepoLoadedCallback>of(), ImmutableList.<Runnable>of(),
+                 runner, downloader, new FakeSettingsController(false), true);
+        runner.getProgressIndicator().assertNoErrorsOrWarnings();
+        File[] contents = fop.listFiles(new File(root, "dummy"));
+
+        // Ensure it is not on the filesystem
+        assertEquals(1, contents.length);
+        assertEquals(new File(root, "dummy/foo"), contents[0]);
+
+        // Ensure it was not recognized as a package.
+        Map<String, ? extends LocalPackage> locals = mgr.getPackages().getLocalPackages();
+        assertEquals(1, locals.size());
+        assertTrue(!locals.containsKey("dummy;bar"));
+    }
+
 
     // Test installing an upgrade to an existing package.
     public void testInstallUpgrade() throws Exception {
