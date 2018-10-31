@@ -101,7 +101,18 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
             try {
                 // Start a new agent server that will connect to a single agent.
                 System.out.println("Starting agent server");
-                server = new ProcessBuilder(SERVER_LOCATION, "1", socketName).start();
+
+                String agentCount = "1";
+                // Use stderr as the sync file descriptor.
+                String syncFd = "2";
+                server =
+                        new ProcessBuilder(SERVER_LOCATION, agentCount, socketName, syncFd).start();
+
+                int sync = server.getErrorStream().read();
+                if (sync != -1) {
+                    // Not an error per se, but we probably want to see it in logs.
+                    System.err.println("Sync received unexpected response");
+                }
 
                 // Convert the request into bytes prepended by the request size.
                 byte[] message = request.toByteArray();

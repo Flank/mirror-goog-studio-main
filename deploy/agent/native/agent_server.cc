@@ -128,18 +128,30 @@ void Cleanup() {
   }
 }
 
+// The server expects exactly three arguments on startup:
+//  agent_count : the number of socket connections the server will wait for.
+//  socket_name : the name of the unix domain socket to which the server binds.
+//  sync_fd     : the write end of a pipe opened by the parent process which the
+//                server will close when it is ready to receive connections. The
+//                parent process MUST block until reading EOF from the pipe.
 int main(int argc, char** argv) {
   LogInfo("Agent server online");
   // Prevent SIGPIPE from hard-crashing the server.
   signal(SIGPIPE, SIG_IGN);
 
-  if (argc < 3) {
-    LogError("Expecting number of agents in parameter");
+  if (argc < 4) {
+    LogError("Expected arguments: <agent_count>, <socket_name>, <sync_fd>");
     return EXIT_FAILURE;
   }
 
   int socket_count = atoi(argv[1]);
   char* socket_name = argv[2];
+
+  // The write end of a pipe opened by the parent process. When the server is
+  // ready to receive connections, it MUST close this file descriptor to notify
+  // the parent process, which MUST block until reading EOF on this pipe to
+  // avoid race conditions.
+  int sync_fd = atoi(argv[3]);
 
   // Start a server bound to an abstract socket.
   Socket server;
@@ -147,6 +159,9 @@ int main(int argc, char** argv) {
     LogError("Could not bind to socket");
     return EXIT_FAILURE;
   }
+
+  // Let the parent process know that it can safely attach agents.
+  close(sync_fd);
 
   // Accept socket connections from the agents.
   for (int i = 0; i < socket_count; ++i) {

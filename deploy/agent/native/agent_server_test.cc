@@ -47,10 +47,14 @@ class AgentServerTest : public ::testing::Test {
     int output_pipe[2];
     ASSERT_EQ(pipe(output_pipe), 0);
 
+    int sync_pipe[2];
+    ASSERT_EQ(pipe(sync_pipe), 0);
+
     pid_ = fork();
     if (pid_ == 0) {
       close(input_pipe[1]);
       close(output_pipe[0]);
+      close(sync_pipe[0]);
 
       dup2(input_pipe[0], STDIN_FILENO);
       dup2(output_pipe[1], STDOUT_FILENO);
@@ -59,12 +63,18 @@ class AgentServerTest : public ::testing::Test {
       close(output_pipe[1]);
 
       execlp(server_path.c_str(), "agent_server",
-             to_string(agent_count).c_str(), socket_name, (char*)nullptr);
+             to_string(agent_count).c_str(), socket_name,
+             to_string(sync_pipe[1]).c_str(), (char*)nullptr);
       return;
     }
 
     close(input_pipe[0]);
     close(output_pipe[1]);
+    close(sync_pipe[1]);
+
+    // Sync with the server.
+    char unused;
+    ASSERT_EQ(read(sync_pipe[0], &unused, 1), 0);
 
     input_ = new MessagePipeWrapper(input_pipe[1]);
     output_ = new MessagePipeWrapper(output_pipe[0]);

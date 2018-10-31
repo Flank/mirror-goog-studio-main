@@ -115,25 +115,16 @@ void SwapCommand::Run(Workspace& workspace) {
     return;
   }
 
-  // TODO: Use std::to_string. NDK doesn't currently support it.
-  std::ostringstream os;
-  os << process_ids.size();
-  std::string agent_count = os.str();
-
-  std::string command = target_dir_ + kServerFilename;
-  std::vector<std::string> parameters;
-  parameters.push_back(agent_count);
-  parameters.push_back(Socket::kDefaultAddress);
-  int read_fd, write_fd, err_fd;
+  // Start the server and wait for it to begin listening for connections.
+  int read_fd, write_fd;
   int agent_server_pid;
-  if (!Executor::ForkAndExecAs(command, request_.package_name(), parameters,
-                               &write_fd, &read_fd, &err_fd,
-                               &agent_server_pid)) {
+  if (!WaitForServer(process_ids.size(), &agent_server_pid, &read_fd,
+                     &write_fd)) {
     ErrEvent("Unable to start server");
     response_->set_status(proto::SwapResponse::ERROR);
     return;
   }
-  close(err_fd);
+
   OwnedMessagePipeWrapper server_input(write_fd);
   OwnedMessagePipeWrapper server_output(read_fd);
 
@@ -334,6 +325,56 @@ std::vector<int> SwapCommand::GetApplicationPids() const {
   }
 
   return process_ids;
+}
+
+bool SwapCommand::WaitForServer(int agent_count, int* server_pid, int* read_fd,
+                                int* write_fd) const {
+  Phase p("WaitForServer");
+
+  int sync_pipe[2];
+  if (pipe(sync_pipe) != 0) {
+    ErrEvent("Could not create sync pipe");
+    return false;
+  }
+
+  const int sync_read_fd = sync_pipe[0];
+  const int sync_write_fd = sync_pipe[1];
+
+  // The server doesn't know about the read end of the pipe, so set it to
+  // close-on-exec. Not a big deal if this fails, but we should still log.
+  if (fcntl(sync_read_fd, F_SETFD, FD_CLOEXEC) == -1) {
+    LogEvent("Could not set sync pipe read end to close-on-exec");
+  }
+
+  std::string command = target_dir_ + kServerFilename;
+
+  std::vector<std::string> parameters;
+  parameters.push_back(to_string(agent_count));
+  parameters.push_back(Socket::kDefaultAddress);
+
+  // Pass the write end of the sync pipe to the server. The server will close
+  // the pipe to indicate that it is ready to receive connections.
+  parameters.push_back(to_string(sync_write_fd));
+  LogEvent(parameters.back());
+
+  int err_fd = -1;
+  bool success =
+      Executor::ForkAndExecAs(command, request_.package_name(), parameters,
+                              write_fd, read_fd, &err_fd, server_pid);
+  close(sync_write_fd);
+  close(err_fd);
+
+  if (success) {
+    // This branch is only possible in the parent process; we only reach this
+    // conditional in the child if success is false (the server failed to run).
+    char unused;
+    if (read(sync_read_fd, &unused, 1) != 0) {
+      ErrEvent("Unexpected response received on sync pipe");
+    }
+  }
+
+  close(sync_read_fd);
+  return success;
 }
 
 bool SwapCommand::AttachAgents(const std::vector<int>& process_ids) const {
