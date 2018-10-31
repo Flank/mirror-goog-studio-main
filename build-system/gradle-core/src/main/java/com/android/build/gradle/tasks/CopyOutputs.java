@@ -20,6 +20,8 @@ import com.android.annotations.NonNull;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildElements;
+import com.android.build.gradle.internal.scope.BuildElementsCopyParams;
+import com.android.build.gradle.internal.scope.BuildElementsCopyRunnable;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -32,17 +34,16 @@ import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import javax.inject.Inject;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
-import org.gradle.tooling.BuildException;
 import org.gradle.workers.WorkerExecutor;
 
 /**
@@ -53,15 +54,15 @@ import org.gradle.workers.WorkerExecutor;
  */
 public class CopyOutputs extends AndroidVariantTask {
 
-    BuildableArtifact fullApks;
-    BuildableArtifact abiSplits;
-    BuildableArtifact resourcesSplits;
-    File destinationDir;
-    WorkerExecutorFacade workerExecutorFacade;
+    private BuildableArtifact fullApks;
+    private BuildableArtifact abiSplits;
+    private BuildableArtifact resourcesSplits;
+    private File destinationDir;
+    private final WorkerExecutorFacade workers;
 
     @Inject
     public CopyOutputs(WorkerExecutor workerExecutor) {
-        this.workerExecutorFacade = Workers.INSTANCE.getWorker(workerExecutor);
+        this.workers = Workers.INSTANCE.getWorker(workerExecutor);
     }
 
     @OutputDirectory
@@ -88,27 +89,41 @@ public class CopyOutputs extends AndroidVariantTask {
 
     // FIX ME : add incrementality
     @TaskAction
-    protected void copy() throws IOException {
+    protected void copy() throws IOException, ExecutionException {
         FileUtils.cleanOutputDir(getDestinationDir());
 
-        workerExecutorFacade.submit(
-                CopyOutputsRunnable.class,
-                new CopyOutputsParams(
-                        InternalArtifactType.FULL_APK, fullApks.get(), getDestinationDir()));
-        workerExecutorFacade.submit(
-                CopyOutputsRunnable.class,
-                new CopyOutputsParams(
-                        InternalArtifactType.ABI_PACKAGED_SPLIT,
-                        abiSplits.get(),
-                        getDestinationDir()));
-        workerExecutorFacade.submit(
-                CopyOutputsRunnable.class,
-                new CopyOutputsParams(
-                        InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
-                        resourcesSplits.get(),
-                        getDestinationDir()));
+        List<Callable<BuildElements>> buildElementsCallables = new ArrayList<>();
 
-        workerExecutorFacade.close();
+        buildElementsCallables.add(copy(InternalArtifactType.FULL_APK, fullApks.get()));
+        buildElementsCallables.add(copy(InternalArtifactType.ABI_PACKAGED_SPLIT, abiSplits.get()));
+        buildElementsCallables.add(
+                copy(
+                        InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
+                        resourcesSplits.get()));
+
+        ImmutableList.Builder<BuildOutput> buildOutputs = ImmutableList.builder();
+
+        for (Callable<BuildElements> buildElementsCallable : buildElementsCallables) {
+            try {
+                buildOutputs.addAll(buildElementsCallable.call());
+            } catch (Exception e) {
+                throw new ExecutionException(e);
+            }
+        }
+
+        new BuildElements(buildOutputs.build()).save(getDestinationDir());
+    }
+
+    private Callable<BuildElements> copy(InternalArtifactType inputType, FileCollection inputs) {
+        return ExistingBuildElements.from(inputType, inputs)
+                .transform(
+                        workers,
+                        BuildElementsCopyRunnable.class,
+                        (apkInfo, inputFile) ->
+                                new BuildElementsCopyParams(
+                                        inputFile,
+                                        new File(getDestinationDir(), inputFile.getName())))
+                .intoCallable(InternalArtifactType.APK);
     }
 
     public static class CreationAction extends VariantTaskCreationAction<CopyOutputs> {
@@ -150,65 +165,10 @@ public class CopyOutputs extends AndroidVariantTask {
                     InternalArtifactType.FULL_APK);
             task.abiSplits = artifacts.getFinalArtifactFiles(
                     InternalArtifactType.ABI_PACKAGED_SPLIT);
-            task.resourcesSplits = artifacts.getFinalArtifactFiles(
-                                    InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT);
+            task.resourcesSplits =
+                    artifacts.getFinalArtifactFiles(
+                            InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT);
             task.destinationDir = destinationDir;
-        }
-    }
-
-    static class CopyOutputsRunnable implements Runnable {
-        private final CopyOutputsParams params;
-
-        @Inject
-        CopyOutputsRunnable(CopyOutputsParams params) {
-            this.params = params;
-        }
-
-        private static synchronized void appendOutput(
-                Collection<BuildOutput> outputs, File destinationDir) throws IOException {
-            List<BuildOutput> buildOutputs = new ArrayList<>(outputs);
-            buildOutputs.addAll(ExistingBuildElements.from(destinationDir).getElements());
-            new BuildElements(buildOutputs).save(destinationDir);
-        }
-
-        @Override
-        public void run() {
-            try {
-                appendOutput(
-                        copy(params.inputType, params.inputs, params.destinationDir).getElements(),
-                        params.destinationDir);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        private static BuildElements copy(
-                InternalArtifactType inputType, FileCollection inputs, File destinationDir) {
-            return ExistingBuildElements.from(inputType, inputs)
-                    .transform(
-                            (apkInfo, inputFile) -> {
-                                File destination = new File(destinationDir, inputFile.getName());
-                                try {
-                                    FileUtils.copyFile(inputFile, destination);
-                                } catch (IOException e) {
-                                    throw new BuildException(e.getMessage(), e);
-                                }
-                                return destination;
-                            })
-                    .into(InternalArtifactType.APK);
-        }
-    }
-
-    static class CopyOutputsParams implements Serializable {
-        private final InternalArtifactType inputType;
-        private final FileCollection inputs;
-        private final File destinationDir;
-
-        CopyOutputsParams(
-                InternalArtifactType inputType, FileCollection inputs, File destinationDir) {
-            this.inputType = inputType;
-            this.inputs = inputs;
-            this.destinationDir = destinationDir;
         }
     }
 }
