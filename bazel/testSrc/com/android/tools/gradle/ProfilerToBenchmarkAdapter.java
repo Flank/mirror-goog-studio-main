@@ -66,14 +66,24 @@ public class ProfilerToBenchmarkAdapter {
                     .setMetricAggregate(Analyzer.MetricAggregate.MEDIAN)
                     .setRunInfoQueryLimit(50)
                     .setRecentWindowSize(25)
-                    .addMedianTolerance(new WindowDeviationAnalyzer.MedianToleranceParams.Builder()
-                            // constant term of 10.0 ms to ignore regressions in trivial tasks
-                            .setConstTerm(10.0)
-                            // recommended value
-                            .setMadCoeff(1.0)
-                            // flag 10% regressions
-                            .setMedianCoeff(0.10)
-                            .build())
+                    .addMedianTolerance(
+                            new WindowDeviationAnalyzer.MedianToleranceParams.Builder()
+                                    // const term of 10.0 ms to ignore regressions in trivial tasks
+                                    .setConstTerm(10.0)
+                                    // recommended value
+                                    .setMadCoeff(1.0)
+                                    // flag 10% regressions
+                                    .setMedianCoeff(0.10)
+                                    .build())
+                    .addMeanTolerance(
+                            new WindowDeviationAnalyzer.MeanToleranceParams.Builder()
+                                    // const term of 10.0 ms to ignore regressions in trivial tasks
+                                    .setConstTerm(10.0)
+                                    // recommended value
+                                    .setStddevCoeff(1.0)
+                                    // flag 10% regressions
+                                    .setMeanCoeff(0.10)
+                                    .build())
                     .build();
 
     @NonNull
