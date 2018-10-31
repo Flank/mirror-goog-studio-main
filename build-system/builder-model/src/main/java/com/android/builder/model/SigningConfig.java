@@ -19,11 +19,10 @@ package com.android.builder.model;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import java.io.File;
+import java.io.Serializable;
 
-/**
- * A Signing Configuration
- */
-public interface SigningConfig {
+/** A Signing Configuration */
+public interface SigningConfig extends Serializable {
 
     /**
      * Returns the name of the Signing config
