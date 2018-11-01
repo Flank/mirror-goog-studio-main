@@ -23,9 +23,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.res.namespaced.JarRequest
 import com.android.build.gradle.internal.res.namespaced.JarWorkerRunnable
 import com.android.build.gradle.internal.tasks.Workers
-import com.android.builder.packaging.JarMerger.MODULE_PATH
 import java.io.File
-import java.util.function.Predicate
 import java.util.regex.Pattern
 
 /**
@@ -69,10 +67,8 @@ class MergeClassesTransform(
             invocation.referencedInputs.flatMap { it.directoryInputs }.map { it.file }
 
         // Filter out everything but the .class and .kotlin_module files.
-        val classFilter =
-            Predicate<String> {
-                CLASS_PATTERN.matcher(it).matches() || KOTLIN_MODULE_PATTERN.matcher(it).matches()
-            }
+        val classFilter: (className: String) -> Boolean =
+            { it -> CLASS_PATTERN.matcher(it).matches() || KOTLIN_MODULE_PATTERN.matcher(it).matches() }
 
         val workers = Workers.getWorker(invocation.context.workerExecutor)
 
