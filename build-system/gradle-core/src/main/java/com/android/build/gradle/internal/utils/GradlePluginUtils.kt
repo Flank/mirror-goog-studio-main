@@ -46,12 +46,12 @@ private val pluginList = listOf(
         GradleVersion.parse("0.8.6")
     ),
 
-    // https://issuetracker.google.com/69243050
+    // https://issuetracker.google.com/118644551
     DependencyInfo(
         "Kotlin",
         "org.jetbrains.kotlin",
         "kotlin-gradle-plugin",
-        GradleVersion.parse("1.2.51")
+        GradleVersion.parse("1.3.0")
     )
 )
 
