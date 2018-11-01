@@ -37,7 +37,7 @@ SET UPSALITEID=%%F
 )
 echo "<meta http-equiv="refresh" content="0; URL='https://source.cloud.google.com/results/invocations/%UPSALITEID%" />" > %DISTDIR%\upsalite_test_results.html
 
-FOR /F "tokens=*" %%F IN ('%SCRIPTDIR%bazel.cmd info bazel-testlogs --config=postsubmit --config=local --config=remote_common --auth_credentials=C:\buildbot\android-studio-alphasource.json') DO (
+FOR /F "tokens=*" %%F IN ('%SCRIPTDIR%bazel.cmd --bazelrc=%SCRIPTDIR%toplevel.bazel.rc info bazel-testlogs --config=postsubmit --config=local --config=remote_common --auth_credentials=C:\buildbot\android-studio-alphasource.json') DO (
   SET BAZEL_TESTLOGS=%%F
 )
 
