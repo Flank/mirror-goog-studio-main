@@ -32,8 +32,7 @@ import java.util.zip.CRC32;
 
 public class DexSplitter {
     public List<DexClass> split(ApkEntry dex, byte[] code, Predicate<DexClass> needsCode) {
-        try {
-            Trace.begin("split " + dex.name);
+        try (Trace ignored = Trace.begin("split " + dex.name)) {
             List<DexClass> classes = new ArrayList<>();
             DexConsumer consumer = new DexConsumer(dex, classes, needsCode);
             D8Command.Builder newBuilder = D8Command.builder();
@@ -45,8 +44,6 @@ public class DexSplitter {
             return classes;
         } catch (InterruptedException | CompilationFailedException e) {
             throw new RuntimeException(e);
-        } finally {
-            Trace.end();
         }
     }
 

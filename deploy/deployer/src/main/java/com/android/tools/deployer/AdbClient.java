@@ -43,8 +43,7 @@ public class AdbClient {
     public byte[] shell(String[] parameters, InputStream input) throws IOException {
         logger.info("SHELL: " + String.join(" ", parameters));
         ByteArrayOutputReceiver receiver;
-        try {
-            Trace.begin("adb shell" + Arrays.toString(parameters));
+        try (Trace ignored = Trace.begin("adb shell" + Arrays.toString(parameters))) {
             receiver = new ByteArrayOutputReceiver();
             device.executeShellCommand(
                     String.join(" ", parameters),
@@ -57,8 +56,6 @@ public class AdbClient {
                 | ShellCommandUnresponsiveException
                 | TimeoutException e) {
             throw new IOException(e);
-        } finally {
-            Trace.end();
         }
     }
 
@@ -83,13 +80,10 @@ public class AdbClient {
     }
 
     public void push(String from, String to) throws IOException {
-        try {
-            Trace.begin("adb push");
+        try (Trace ignored = Trace.begin("adb push")) {
             device.pushFile(from, to);
         } catch (SyncException | TimeoutException | AdbCommandRejectedException e) {
             throw new IOException(e);
-        } finally {
-            Trace.end();
         }
     }
 
