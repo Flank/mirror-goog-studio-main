@@ -453,4 +453,21 @@ class SyntheticAccessorDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expectClean()
     }
+
+    fun testSyntheticKotlin() {
+        // Regression test for
+        // 118790640: Invalid synthetic accessor check for sealed classes
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                private sealed class SettingsConsentAdapterItem(val id: String) {
+                    class Header(id: String, val name: String) : SettingsConsentAdapterItem(id)
+                    class Item(val groupId: String, id: String, val name: String, val checked: Boolean) : SettingsConsentAdapterItem(id)
+                }
+                """
+            ).indented()
+        ).run().expectClean()
+    }
 }
