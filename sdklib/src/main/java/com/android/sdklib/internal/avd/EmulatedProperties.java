@@ -92,7 +92,7 @@ public class EmulatedProperties {
      */
     @NonNull
     public static Storage calculateDefaultVmHeapSize(@NonNull ScreenSize screenSize, @NonNull Density screenDensity, boolean isWear) {
-        int vmHeapSize = 32;
+        int vmHeapSize;
 
         // These values are taken from Android 8.1 Compatibility Definition,
         // dated December 5, 2017, section 3.7, "Runtime Compatibility."
@@ -100,6 +100,7 @@ public class EmulatedProperties {
 
         if (isWear) {
             switch(screenDensity) {
+                default:
                 case LOW:
                 case ANYDPI:
                 case NODPI:
@@ -113,16 +114,19 @@ public class EmulatedProperties {
                 case DPI_340:
                 case DPI_360:   vmHeapSize =  48; break;
                 case DPI_400:   vmHeapSize =  56; break;
-                case DPI_420:   vmHeapSize =  64; break;
+                case DPI_420:
+                case DPI_440:   vmHeapSize =  64; break;
                 case XXHIGH:    vmHeapSize =  88; break;
                 case DPI_560:   vmHeapSize = 112; break;
                 case XXXHIGH:   vmHeapSize = 154; break;
             }
         } else {
             switch(screenSize) {
+                default:
                 case SMALL:
                 case NORMAL:
                     switch(screenDensity) {
+                        default:
                         case LOW:
                         case ANYDPI:
                         case NODPI:
@@ -136,7 +140,8 @@ public class EmulatedProperties {
                         case DPI_340:
                         case DPI_360:   vmHeapSize =  80; break;
                         case DPI_400:   vmHeapSize =  96; break;
-                        case DPI_420:   vmHeapSize = 112; break;
+                        case DPI_420:
+                        case DPI_440:   vmHeapSize = 112; break;
                         case XXHIGH:    vmHeapSize = 128; break;
                         case DPI_560:   vmHeapSize = 192; break;
                         case XXXHIGH:   vmHeapSize = 256; break;
@@ -144,6 +149,7 @@ public class EmulatedProperties {
                     break;
                 case LARGE:
                     switch(screenDensity) {
+                        default:
                         case LOW:       vmHeapSize =  32; break;
                         case ANYDPI:
                         case NODPI:
@@ -157,7 +163,8 @@ public class EmulatedProperties {
                         case DPI_340:
                         case DPI_360:   vmHeapSize = 160; break;
                         case DPI_400:   vmHeapSize = 192; break;
-                        case DPI_420:   vmHeapSize = 228; break;
+                        case DPI_420:
+                        case DPI_440:   vmHeapSize = 228; break;
                         case XXHIGH:    vmHeapSize = 256; break;
                         case DPI_560:   vmHeapSize = 384; break;
                         case XXXHIGH:   vmHeapSize = 512; break;
@@ -165,6 +172,7 @@ public class EmulatedProperties {
                     break;
                 case XLARGE:
                     switch(screenDensity) {
+                        default:
                         case LOW:       vmHeapSize =  48; break;
                         case ANYDPI:
                         case NODPI:
@@ -178,7 +186,8 @@ public class EmulatedProperties {
                         case DPI_340:
                         case DPI_360:   vmHeapSize = 240; break;
                         case DPI_400:   vmHeapSize = 288; break;
-                        case DPI_420:   vmHeapSize = 336; break;
+                        case DPI_420:
+                        case DPI_440:   vmHeapSize = 336; break;
                         case XXHIGH:    vmHeapSize = 384; break;
                         case DPI_560:   vmHeapSize = 576; break;
                         case XXXHIGH:   vmHeapSize = 768; break;

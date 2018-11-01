@@ -32,6 +32,7 @@ public enum Density implements ResourceEnum {
     XXXHIGH("xxxhdpi", "XXX-High Density", 640, 18), //$NON-NLS-1$
     DPI_560("560dpi",  "560 DPI Density",  560,  1), //$NON-NLS-1$
     XXHIGH( "xxhdpi",  "XX-High Density",  480, 16), //$NON-NLS-1$
+    DPI_440("440dpi",  "440 DPI Density",  440, 28),
     DPI_420("420dpi",  "420 DPI Density",  420, 23), //$NON-NLS-1$
     DPI_400("400dpi",  "400 DPI Density",  400,  1), //$NON-NLS-1$
     DPI_360("360dpi",  "360 DPI Density",  360, 23), //$NON-NLS-1$
@@ -168,6 +169,7 @@ public enum Density implements ResourceEnum {
             case DPI_360:
             case DPI_400:
             case DPI_420:
+            case DPI_440:
             case DPI_560:
                 return false;
             default:

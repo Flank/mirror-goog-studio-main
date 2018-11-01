@@ -122,7 +122,9 @@ public class DeviceManagerTest {
                 "Pixel",
                 "Pixel XL",
                 "Pixel 2",
-                "Pixel 2 XL");
+                "Pixel 2 XL",
+                "Pixel 3",
+                "Pixel 3 XL");
 
         assertThat(dm.getDevice("Nexus One", "Google").getDisplayName()).isEqualTo("Nexus One");
 
@@ -163,7 +165,9 @@ public class DeviceManagerTest {
                 "Pixel",
                 "Pixel XL",
                 "Pixel 2",
-                "Pixel 2 XL");
+                "Pixel 2 XL",
+                "Pixel 3",
+                "Pixel 3 XL");
     }
 
     @Test
@@ -241,7 +245,9 @@ public class DeviceManagerTest {
                 "Pixel",
                 "Pixel XL",
                 "Pixel 2",
-                "Pixel 2 XL");
+                "Pixel 2 XL",
+                "Pixel 3",
+                "Pixel 3 XL");
 
         assertThat(listDisplayNames(dm2.getDevices(DeviceManager.ALL_DEVICES))).containsExactly(
                 "10.1\" WXGA (Tablet)",
@@ -280,7 +286,9 @@ public class DeviceManagerTest {
                 "Pixel",
                 "Pixel XL",
                 "Pixel 2",
-                "Pixel 2 XL");
+                "Pixel 2 XL",
+                "Pixel 3",
+                "Pixel 3 XL");
     }
 
     @Test
@@ -347,7 +355,9 @@ public class DeviceManagerTest {
                 "Pixel",
                 "Pixel XL",
                 "Pixel 2",
-                "Pixel 2 XL");
+                "Pixel 2 XL",
+                "Pixel 3",
+                "Pixel 3 XL");
 
         assertThat(listDisplayNames(dm.getDevices(DeviceManager.ALL_DEVICES))).containsExactly(
                 "10.1\" WXGA (Tablet)",
@@ -387,7 +397,9 @@ public class DeviceManagerTest {
                 "Pixel",
                 "Pixel XL",
                 "Pixel 2",
-                "Pixel 2 XL");
+                "Pixel 2 XL",
+                "Pixel 3",
+                "Pixel 3 XL");
     }
 
     @Test
