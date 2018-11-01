@@ -147,7 +147,6 @@ public class ResourceValueImpl implements ResourceValue {
      * <p>This method is meant to be called by the XML parser that created this {@link
      * ResourceValue}.
      */
-    @Override
     public void setNamespaceResolver(@NonNull ResourceNamespace.Resolver resolver) {
         this.mNamespaceResolver = resolver;
     }

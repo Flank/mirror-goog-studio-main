@@ -45,7 +45,6 @@ import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.ResourceValueImpl;
-import com.android.ide.common.rendering.api.StyleItemResourceValue;
 import com.android.ide.common.rendering.api.StyleItemResourceValueImpl;
 import com.android.ide.common.rendering.api.StyleResourceValueImpl;
 import com.android.ide.common.rendering.api.StyleableResourceValueImpl;
@@ -405,7 +404,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
     private ResourceValue parseXmlToResourceValue() {
         assert mValue != null;
 
-        ResourceValue value;
+        ResourceValueImpl value;
 
         Document document = mValue.getOwnerDocument();
         // XML nodes used by FrameworkResourceRepository don't maintain document references
@@ -425,7 +424,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
     }
 
     @NonNull
-    private ResourceValue doParseXmlToResourceValue() {
+    private ResourceValueImpl doParseXmlToResourceValue() {
         NamedNodeMap attributes = mValue.getAttributes();
 
         switch (mType) {
@@ -578,7 +577,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
                 NamedNodeMap attributes = child.getAttributes();
                 String attributeUrl = getAttributeValue(attributes, ATTR_NAME);
                 if (!Strings.isNullOrEmpty(attributeUrl)) {
-                    StyleItemResourceValue resValue =
+                    StyleItemResourceValueImpl resValue =
                             new StyleItemResourceValueImpl(
                                     styleValue.getNamespace(),
                                     attributeUrl,

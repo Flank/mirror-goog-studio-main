@@ -16,7 +16,6 @@
 package com.android.ide.common.resources
 
 import com.android.ide.common.rendering.api.AttrResourceValueImpl
-import com.android.ide.common.rendering.api.StyleItemResourceValue
 import com.android.ide.common.rendering.api.StyleItemResourceValueImpl
 import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.ide.common.rendering.api.ResourceNamespace.ANDROID
@@ -124,7 +123,7 @@ class ResourceResolverNamespacesTest {
               appPrefixes,
               StyleItemResourceValueImpl(app, "android:colorPrimary", "@android:color/white", null),
               StyleItemResourceValueImpl(app, "support:fabColor", "@color/image_color", null)
-            )
+            ) as ResourceValueImpl
         )
         appRes.forEach { it.setNamespaceResolver(appPrefixes) }
 
