@@ -20,7 +20,7 @@ readonly script_dir="$(dirname "$0")"
 readonly command_log="$(${script_dir}/bazel info command_log --config=remote)"
 
 # Run Bazel
-"${script_dir}/bazel" --max_idle_secs=60 --bazelrc=/dev/null test --keep_going --nobuild_runfile_links --bes_backend=buildeventservice.googleapis.com --auth_credentials="$HOME"/.android-studio-alphasource.json --auth_scope=https://www.googleapis.com/auth/cloud-source-tools --project_id=908081808034 --config=remote --cache_test_results=no --build_tag_filters=-no_linux --test_tag_filters=-no_linux,-no_test_linux,-qa_sanity,-qa_fast,-qa_unreliable,-slow -- $(< "${script_dir}/targets")
+"${script_dir}/bazel" --max_idle_secs=60 --bazelrc=${script_dir}/toplevel.bazel.rc test --keep_going --nobuild_runfile_links --bes_backend=buildeventservice.googleapis.com --auth_credentials="$HOME"/.android-studio-alphasource.json --auth_scope=https://www.googleapis.com/auth/cloud-source-tools --project_id=908081808034 --config=remote --cache_test_results=no --build_tag_filters=-no_linux --test_tag_filters=-no_linux,-no_test_linux,-qa_sanity,-qa_fast,-qa_unreliable,-slow -- $(< "${script_dir}/targets")
 
 if [[ -d "${dist_dir}" ]]; then
   # Grab the upsalite_id from the stdout of the bazel command.  This is captured in command.log
