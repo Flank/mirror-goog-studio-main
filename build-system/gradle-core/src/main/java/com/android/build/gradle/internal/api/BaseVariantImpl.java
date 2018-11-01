@@ -214,7 +214,24 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @NonNull
     public String getApplicationId() {
-        return getVariantData().getApplicationId();
+        BaseVariantData variantData = getVariantData();
+
+        // this getter cannot work for dynamic features or for feature plugins (both base
+        // and non base) as the applicationId comes from somewhere else and cannot be known
+        // at config time.
+        if (variantData.getType().isDynamicFeature() || variantData.getType().isHybrid()) {
+            variantData
+                    .getScope()
+                    .getGlobalScope()
+                    .getDslScope()
+                    .getIssueReporter()
+                    .reportError(
+                            EvalIssueReporter.Type.GENERIC,
+                            new EvalIssueException(
+                                    "variant.getApplicationId() is not supported by feature plugins as it cannot handle delayed setting of the application ID. Please use getApplicationIdTextResource() instead."));
+        }
+
+        return variantData.getApplicationId();
     }
 
     @Override
