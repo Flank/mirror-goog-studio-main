@@ -6,15 +6,10 @@ DATA = [
     "//prebuilts/studio/sdk:add-ons/addon-google_apis-google-latest",
     "//prebuilts/studio/sdk:build-tools/latest",
     "//prebuilts/studio/sdk:constraint-layout_latest",
-    "//prebuilts/studio/sdk:espresso_latest",
-    "//prebuilts/studio/sdk:gms_latest",
-    "//prebuilts/studio/sdk:multidex",
     "//prebuilts/studio/sdk:ndk-bundle",
     "//prebuilts/studio/sdk:platform-tools",
     "//prebuilts/studio/sdk:platforms/latest",
     "//prebuilts/studio/sdk:platforms/latest-preview",
-    "//prebuilts/studio/sdk:test-runner_latest",
-    "//prebuilts/studio/sdk:uiautomator_latest",
     "//prebuilts/tools/common/kotlin-plugin:Kotlin/kotlinc/build.txt",
     "//tools/base/build-system:gradle-distrib",
     "//tools/base/build-system/aapt2:aapt2_for_tests",
@@ -283,7 +278,9 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "RsEnabledAnnotationTest",
     data = DATA + CMAKE,
-    maven_repos = MAVEN_REPOS,
+    maven_repos = MAVEN_REPOS + [
+        "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/nativebuild:RsEnabledAnnotationTest_prebuilts",
+    ],
     tags = TAGS,
     deps = DEPS,
 )
@@ -309,11 +306,20 @@ single_gradle_integration_test(
 )
 
 maven_repo(
+    name = "RsEnabledAnnotationTest_prebuilts",
+    # keep sorted
+    artifacts = [
+        "//prebuilts/tools/common/m2/repository/com/android/support/support-annotations/27.1.1:jar",
+    ],
+)
+
+maven_repo(
     name = "RsSupportModeTest_prebuilts",
     # keep sorted
     artifacts = [
-        "//prebuilts/tools/common/m2/repository/com/android/support/support-annotations/25.4.0:jar",
-        "//prebuilts/tools/common/m2/repository/com/android/support/test/runner/1.0.0:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/support-annotations/27.1.1:jar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/test/monitor/1.0.2:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/test/runner/1.0.2:aar",
         "//prebuilts/tools/common/m2/repository/junit/junit/4.12:jar",
         "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-core/1.3:jar",
     ],

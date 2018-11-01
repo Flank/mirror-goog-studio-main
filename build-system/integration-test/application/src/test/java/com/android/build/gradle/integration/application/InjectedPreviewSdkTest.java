@@ -52,7 +52,7 @@ public class InjectedPreviewSdkTest {
                         + "}\n"
                         + "\n"
                         + "dependencies {\n"
-                        + "    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {\n"
+                        + "    androidTestCompile('com.android.support.test.espresso:espresso-core:3.0.2', {\n"
                         + "        exclude group: 'com.android.support', module: 'support-annotations'\n"
                         + "    })\n"
                         + "}\n"

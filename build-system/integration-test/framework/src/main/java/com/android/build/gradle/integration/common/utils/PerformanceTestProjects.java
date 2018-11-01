@@ -510,6 +510,11 @@ public class PerformanceTestProjects {
 
         TestFileUtils.searchRegexAndReplace(
                 project.file("dependencies.gradle"),
+                "(\"com.android.support.test.espresso:espresso-core):[^\"]*\"",
+                "$1:3.0.2\"");
+
+        TestFileUtils.searchRegexAndReplace(
+                project.file("dependencies.gradle"),
                 "('com.squareup.okio:okio):[^']*'",
                 "$1:1.9.0'");
 
