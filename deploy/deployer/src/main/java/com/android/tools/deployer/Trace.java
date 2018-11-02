@@ -135,10 +135,10 @@ public class Trace implements AutoCloseable {
             return;
         }
 
-        Event matchingBegin = getCurrentThreadBeginStack().peek();
-
-        if (matchingBegin == null) {
-            // This is an error.
+        Stack<Event> eventsStack = getCurrentThreadBeginStack();
+        if (eventsStack.isEmpty()) {
+            // This is an error, this method was called on this Thread without a call to
+            // begin() first.
             return;
         }
 
@@ -146,6 +146,7 @@ public class Trace implements AutoCloseable {
         // use the first remote even timestamp as remote t=0 and generate deltas
         // from each remote timetamps. All event are added to the local timeline,
         // floated within the phase they were contained into.
+        Event matchingBegin = eventsStack.peek();
         long duration = System.nanoTime() - matchingBegin.timestamp_ns;
 
         long startRemoteNs = Long.MAX_VALUE;
