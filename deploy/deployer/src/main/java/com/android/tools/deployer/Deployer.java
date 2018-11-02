@@ -28,7 +28,6 @@ import com.google.common.io.ByteStreams;
 import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -45,7 +44,6 @@ import java.util.zip.ZipFile;
 public class Deployer {
 
     public static final String BASE_DIRECTORY = "/data/local/tmp/.studio";
-    public static final String APK_DIRECTORY = BASE_DIRECTORY + "/apks";
     public static final String INSTALLER_DIRECTORY = BASE_DIRECTORY + "/bin";
 
     private final AdbClient adb;
@@ -113,7 +111,7 @@ public class Deployer {
         List<FileDiff> diffs = new ApkDiffer().diff(dumps, newFiles);
 
         // Push the apks to device and get the remote paths
-        List<String> apkPaths = pushApks(newFiles);
+        List<String> apkPaths = new ApkPusher(adb).push(newFiles);
 
         // Obtain the process names from the local apks
         Set<String> processNames = extractProcessNames(newFiles);
@@ -260,26 +258,5 @@ public class Deployer {
             db.addClasses(classes);
         }
         return classes;
-    }
-
-    private List<String> pushApks(List<ApkEntry> fullApks) throws DeployerException {
-        try {
-            List<String> apkPaths = new ArrayList<>();
-            adb.shell(
-                    new String[] {"rm", "-r", APK_DIRECTORY, ";", "mkdir", "-p", APK_DIRECTORY},
-                    null);
-            Set<Apk> apks = new HashSet<>();
-            for (ApkEntry file : fullApks) {
-                apks.add(file.apk);
-            }
-            for (Apk apk : apks) {
-                String target = APK_DIRECTORY + "/" + Paths.get(apk.path).getFileName();
-                adb.push(apk.path, target);
-                apkPaths.add(target);
-            }
-            return apkPaths;
-        } catch (IOException e) {
-            throw new DeployerException(DeployerException.Error.ERROR_PUSHING_APK, e);
-        }
     }
 }
