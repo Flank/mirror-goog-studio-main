@@ -52,6 +52,7 @@ class MemoryFileSystem final : public FileSystem {
   bool IsOpenForWrite(const std::string &path) const override;
   void OpenForWrite(const std::string &path) override;
   bool Append(const std::string &path, const std::string &str) override;
+  bool AppendFile(const std::string &dpath, const std::string &spath) override;
   void Close(const std::string &path) override;
   bool DeleteDir(const std::string &path) override;
   bool DeleteFile(const std::string &path) override;

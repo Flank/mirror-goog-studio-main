@@ -36,6 +36,7 @@ import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintListener;
 import com.android.tools.lint.detector.api.Context;
+import com.android.tools.lint.detector.api.Desugaring;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintFix;
@@ -63,6 +64,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @SuppressWarnings("SameParameterValue")
 public class TestLintTask {
@@ -104,10 +106,11 @@ public class TestLintTask {
     boolean vital;
     Map<String, byte[]> mockNetworkData;
     boolean allowNetworkAccess;
-    boolean allowDuplicates = false;
+    boolean allowDuplicates;
     File rootDirectory;
     private TestFile baseline;
     File baselineFile;
+    Set<Desugaring> desugaring;
 
     /** Creates a new lint test task */
     public TestLintTask() {
@@ -566,6 +569,16 @@ public class TestLintTask {
      */
     public TestLintTask allowDuplicates() {
         this.allowDuplicates = true;
+        return this;
+    }
+
+    /**
+     * Sets the set of desugaring operations in effect
+     *
+     * @return this for constructor chaining
+     */
+    public TestLintTask desugaring(@NonNull Set<Desugaring> desugaring) {
+        this.desugaring = desugaring;
         return this;
     }
 

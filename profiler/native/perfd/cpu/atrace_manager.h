@@ -24,8 +24,9 @@
 #include <string>
 #include <thread>
 
+#include "perfd/cpu/atrace.h"
 #include "utils/clock.h"
-
+#include "utils/fs/file_system.h"
 namespace profiler {
 
 // Entry storing all data related to an ongoing profiling.
@@ -37,7 +38,13 @@ struct AtraceProfilingMetadata {
 
 class AtraceManager {
  public:
-  explicit AtraceManager(Clock *clock, int dump_data_interval_ms);
+  explicit AtraceManager(std::unique_ptr<FileSystem> file_system, Clock *clock,
+                         int dump_data_interval_ms)
+      : AtraceManager(std::move(file_system), clock, dump_data_interval_ms,
+                      std::unique_ptr<Atrace>(new Atrace(clock))) {}
+  explicit AtraceManager(std::unique_ptr<FileSystem> file_system, Clock *clock,
+                         int dump_data_interval_ms,
+                         std::unique_ptr<Atrace> atrace);
   virtual ~AtraceManager() = default;
 
   // Returns true if profiling of app |app_name| was started successfully.
@@ -56,9 +63,12 @@ class AtraceManager {
   bool IsProfiling() { return is_profiling_; }
   int GetDumpCount() { return dumps_created_; }
 
+  // Generates the trace path to be used for storing trace files.
+  virtual std::string GetTracePath(const std::string &app_name) const;
+
  private:
+  std::unique_ptr<FileSystem> file_system_;
   Clock *clock_;
-  static const char *kAtraceExecutable;
   static const char *kArguments;
   AtraceProfilingMetadata profiled_app_;
   // Protects atrace start/stop
@@ -68,64 +78,28 @@ class AtraceManager {
   // Used to block async_dump until timeout, or notifiy is triggered.
   std::condition_variable dump_data_condition_;
   std::thread atrace_thread_;
-  std::string categories_;
   std::string buffer_size_arg_;
   int dump_data_interval_ms_;
   int dumps_created_;  // Incremented by the atrace_thread_.
   bool is_profiling_;  // Writen to by main thread, read from by atrace thread.
+  std::unique_ptr<Atrace> atrace_;
 
   // Generate the filename pattern used for trace and log (a name guaranteed
   // not to collide and without an extension).
   std::string GetFileBaseName(const std::string &app_name) const;
 
-  // Generates the trace path to be used for storing trace files.
-  virtual std::string GetTracePath(const std::string &app_name) const;
-
   // Function to dump atrace data periodically this should be run in its own
   // thread.
   void DumpData();
-
-  // Runs atrace with the given arguments, app_name, the path expected for the
-  // output, the additional command arguments to pass atrace.
-  virtual void RunAtrace(const std::string &app_name, const std::string &path,
-                         const std::string &command,
-                         const std::string &additonal_args = "");
 
   // Takes [combine_file_prefix] appends an integer from 0 to count and writes
   // contents to [output_path].
   bool CombineFiles(const std::string &combine_file_prefix, int count,
                     const std::string &output_path);
 
-  // Runs --list_categories on connected device/emulator. Only categories that
-  // are supported by the device / emulator are returned. This set of
-  // categories is used to restrict what categories are selected when running
-  // atrace.
-  virtual std::string BuildSupportedCategoriesString();
-
   // Returns the trace_path with the current count of dumps. Then increments the
   // number of dumps captured.
   std::string GetNextDumpPath();
-
-  // Checks legacy and current system path to see if atrace is running.
-  virtual bool IsAtraceRunning();
-
-  // Writes clock sync marker to systrace file before stopping the trace.
-  // The marker is written near the end of the trace file.
-  // This is done because sometimes the sync marker may be stomped over by
-  // the ring buffer internally by atrace. This marker is used to sync
-  // the atrace clock with the device boot clock (used by studio).
-  virtual void WriteClockSyncMarker();
-
-  // Checks the atrace allocated buffer matches the expected buffer size.
-  // Atrace requires a contiguous block of memory to be allocated for the
-  // buffer as such sometimes requesting the memory fails.
-  // The expected size is in units of kilobytes.
-  virtual bool ValidateBuffer(int expected_buffer_size_kb);
-
- protected:
-  // Takes the output from atrace --list_categories parses the output and
-  // returns the set of supported categories.
-  std::set<std::string> ParseListCategoriesOutput(const std::string &output);
 };
 }  // namespace profiler
 

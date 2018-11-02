@@ -32,7 +32,7 @@ string CurrentProcess::GetExeDir() {
 
   int ret = _NSGetExecutablePath(path, &size);
   if (ret == -1) {
-    return string{}; // Returns an empty string on failure.
+    return string{};  // Returns an empty string on failure.
   }
   return CurrentProcess::GetResolvedPath(path);
 }

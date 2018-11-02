@@ -28,18 +28,18 @@
 
 using grpc::ClientContext;
 using grpc::Status;
+using profiler::Agent;
 using profiler::JByteArrayWrapper;
 using profiler::JStringWrapper;
-using profiler::Agent;
 using profiler::SteadyClock;
 using profiler::proto::ChunkRequest;
+using profiler::proto::EmptyNetworkReply;
 using profiler::proto::HttpDataRequest;
 using profiler::proto::HttpEventRequest;
 using profiler::proto::HttpRequestRequest;
 using profiler::proto::HttpResponseRequest;
-using profiler::proto::EmptyNetworkReply;
-using profiler::proto::JavaThreadRequest;
 using profiler::proto::InternalNetworkService;
+using profiler::proto::JavaThreadRequest;
 
 namespace {
 std::atomic_int id_generator_(1);

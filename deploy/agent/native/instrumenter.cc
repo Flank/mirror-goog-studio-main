@@ -270,6 +270,18 @@ bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
 
   // Need to register native methods every time; otherwise, the Java methods
   // could potentially call old versions if a previous agent.so was loaded.
+  RegisterNative(jni, {kHandlerWrapperClass, "fixAppContext",
+                       "(Ljava/lang/Object;)Ljava/lang/Object;",
+                       (void*)&Native_FixAppContext});
+
+  RegisterNative(jni, {kHandlerWrapperClass, "getActivityClientRecords",
+                       "(Ljava/lang/Object;)Ljava/util/Collection;",
+                       (void*)&Native_GetActivityClientRecords});
+
+  RegisterNative(jni, {kHandlerWrapperClass, "fixActivityContext",
+                       "(Ljava/lang/Object;Ljava/lang/Object;)V",
+                       (void*)&Native_FixActivityContext});
+
   RegisterNative(
       jni, {kHandlerWrapperClass, "updateApplicationInfo",
             "(Ljava/lang/Object;)V", (void*)&Native_UpdateApplicationInfo});

@@ -21,6 +21,8 @@ import static com.android.testutils.truth.FileSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -49,5 +51,20 @@ public class LintCustomRuleTest {
         File file = new File(project.getSubproject("app").getTestDir(), "lint-results.txt");
         assertThat(file).exists();
         assertThat(file).contentWithUnixLineSeparatorsIsExactly(expected);
+    }
+
+    @Test
+    public void checkJarLocation() throws Exception {
+        // Regression test for b/118499744, where the path to custom lint check jars changed
+        // on the Gradle side, but was not updated on the Lint side.
+        // This kind of issue should go away entirely once b/66166521 is fixed.
+        // Until then: if this test fails, (1) update the test and (2) update the code in
+        // LintClient#findRuleJars to use the new path to the lint.jar output.
+        File buildDir = project.getSubproject("app").getBuildDir();
+        Path lintPath = Paths.get("intermediates", "lint_jar", "global", "prepareLintJar");
+        File lintFolder = new File(buildDir, lintPath.toString());
+        assertThat(lintFolder).doesNotExist();
+        project.executor().expectFailure().run("clean", ":app:lintDebug");
+        assertThat(lintFolder).exists();
     }
 }

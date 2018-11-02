@@ -25,7 +25,7 @@
 namespace profiler {
 
 static jniNativeInterface *g_original_native_table = nullptr;
-static std::atomic<GlobalRefListener *>g_gref_listener(nullptr);
+static std::atomic<GlobalRefListener *> g_gref_listener(nullptr);
 
 namespace jni_wrappers {
 

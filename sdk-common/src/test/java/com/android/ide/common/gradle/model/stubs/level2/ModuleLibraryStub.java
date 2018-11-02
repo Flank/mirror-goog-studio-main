@@ -108,9 +108,9 @@ public class ModuleLibraryStub extends BaseStub implements Library {
 
     @Override
     @NonNull
-    public String getApiJarFile() {
+    public String getCompileJarFile() {
         throw new UnsupportedOperationException(
-                "getApiJarFile() cannot be called when getType() returns LIBRARY_MODULE");
+                "getCompileJarFile() cannot be called when getType() returns LIBRARY_MODULE");
     }
 
     @Override

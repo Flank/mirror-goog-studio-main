@@ -64,7 +64,6 @@ enum class BooleanOption(
     ENABLE_EXPERIMENTAL_FEATURE_DATABINDING("android.enableExperimentalFeatureDatabinding", false),
     ENABLE_JETIFIER("android.enableJetifier", false, status = Option.Status.STABLE),
     USE_ANDROID_X("android.useAndroidX", false, status = Option.Status.STABLE),
-    ENABLE_UNIT_TEST_BINARY_RESOURCES("android.enableUnitTestBinaryResources", false),
     DISABLE_EARLY_MANIFEST_PARSING("android.disableEarlyManifestParsing", false),
     DEPLOYMENT_USES_DIRECTORY("android.deployment.useOutputDirectory", false),
     DEPLOYMENT_PROVIDES_LIST_OF_CHANGES("android.deployment.provideListOfChanges", false),
@@ -100,6 +99,7 @@ enum class BooleanOption(
     ENABLE_UNCOMPRESSED_NATIVE_LIBS_IN_BUNDLE("android.bundle.enableUncompressedNativeLibs", true),
     USE_DEPENDENCY_CONSTRAINTS("android.dependency.useConstraints", true),
     ENABLE_DEXING_ARTIFACT_TRANSFORM("android.enableDexingArtifactTransform", true, status=Option.Status.STABLE),
+    ENABLE_UNIT_TEST_BINARY_RESOURCES("android.enableUnitTestBinaryResources", true, Option.Status.STABLE),
 
     // ---------------
     // Lifecycle flags: Deprecated stage, feature is stable and we want to get rid of the ability to revert to older code path

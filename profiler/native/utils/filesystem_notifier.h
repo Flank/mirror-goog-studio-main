@@ -24,9 +24,7 @@ class FileSystemNotifier {
  public:
   // IMPORTANT: These values are used to build a bit mask:
   // Only power of two values are allowed: 3 doesn't work !
-  enum Event {
-    CLOSE = 1
-  };
+  enum Event { CLOSE = 1 };
 
   // A monitor on file |path| listening for |event_mask_| events.
   FileSystemNotifier(const std::string &path, uint32_t event_mask);

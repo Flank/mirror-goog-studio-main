@@ -1459,9 +1459,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
 
     @Nullable
     public SigningConfig getSigningConfig() {
-        if (mType.isFeatureSplit()) {
-            return null;
-        }
         if (mSigningConfigOverride != null) {
             return mSigningConfigOverride;
         }

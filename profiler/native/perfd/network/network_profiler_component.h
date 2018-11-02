@@ -20,14 +20,16 @@
 #include "perfd/network/network_collector.h"
 #include "perfd/network/network_service.h"
 #include "perfd/profiler_component.h"
+#include "utils/config.h"
 #include "utils/file_cache.h"
 
 namespace profiler {
 
 class NetworkProfilerComponent final : public ProfilerComponent {
  public:
-  explicit NetworkProfilerComponent(Clock* clock, FileCache* file_cache)
-      : public_service_(clock, &network_cache_),
+  explicit NetworkProfilerComponent(const Config& config, Clock* clock,
+                                    FileCache* file_cache)
+      : public_service_(config, clock, &network_cache_),
         internal_service_(file_cache, &network_cache_) {}
 
   // Returns the service that talks to desktop clients (e.g., Studio).

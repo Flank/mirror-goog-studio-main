@@ -32,8 +32,9 @@ class SpeedConverter final {
   // Initialize this converter with the current state of the device. |bytes|
   // should represent the number of bytes transferred since device boot.
   SpeedConverter(int64_t timestamp_ns, int64_t bytes)
-  : last_timestamp_ns_(timestamp_ns), last_bytes_(bytes),
-    speed_time_ns_(timestamp_ns) {}
+      : last_timestamp_ns_(timestamp_ns),
+        last_bytes_(bytes),
+        speed_time_ns_(timestamp_ns) {}
 
   // Add the next data point of |bytes| transferred since device boot, and from
   // that, we'll calculate the latest speed. |timestamp_ns| should always be a
@@ -52,7 +53,6 @@ class SpeedConverter final {
   int64_t speed_time_ns() { return speed_time_ns_; }
 
  private:
-
   // Given the last speed value and other relevant values, calculate the next
   // speed value we need to generate a timeslice that would produce |bytes|.
   // Calculated values will be output into |speed| and |speed_time_ns|.
@@ -61,7 +61,8 @@ class SpeedConverter final {
   // the speed dropped to 0 at some point between |prev_time_ns| and
   // |curr_time_ns|.
   static void Convert(int64_t prev_time_ns, int64_t curr_time_ns,
-    int64_t prev_speed, int64_t bytes, int64_t* speed, int64_t* speed_time_ns);
+                      int64_t prev_speed, int64_t bytes, int64_t* speed,
+                      int64_t* speed_time_ns);
 
   int64_t last_timestamp_ns_;
   int64_t last_bytes_;

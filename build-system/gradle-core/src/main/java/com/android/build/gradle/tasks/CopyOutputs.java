@@ -34,7 +34,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
 import javax.inject.Inject;
 import org.gradle.api.file.FileCollection;
@@ -90,32 +90,25 @@ public class CopyOutputs extends AndroidVariantTask {
     @TaskAction
     protected void copy() throws IOException {
         FileUtils.cleanOutputDir(getDestinationDir());
-        List<BuildOutput> copiedFilesList = Collections.synchronizedList(new ArrayList<>());
 
         workerExecutorFacade.submit(
                 CopyOutputsRunnable.class,
                 new CopyOutputsParams(
-                        InternalArtifactType.FULL_APK,
-                        fullApks.get(),
-                        getDestinationDir(),
-                        copiedFilesList));
+                        InternalArtifactType.FULL_APK, fullApks.get(), getDestinationDir()));
         workerExecutorFacade.submit(
                 CopyOutputsRunnable.class,
                 new CopyOutputsParams(
                         InternalArtifactType.ABI_PACKAGED_SPLIT,
                         abiSplits.get(),
-                        getDestinationDir(),
-                        copiedFilesList));
+                        getDestinationDir()));
         workerExecutorFacade.submit(
                 CopyOutputsRunnable.class,
                 new CopyOutputsParams(
                         InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
                         resourcesSplits.get(),
-                        getDestinationDir(),
-                        copiedFilesList));
+                        getDestinationDir()));
 
-        workerExecutorFacade.await();
-        new BuildElements(copiedFilesList).save(getDestinationDir());
+        workerExecutorFacade.close();
     }
 
     public static class CreationAction extends VariantTaskCreationAction<CopyOutputs> {
@@ -171,10 +164,22 @@ public class CopyOutputs extends AndroidVariantTask {
             this.params = params;
         }
 
+        private static synchronized void appendOutput(
+                Collection<BuildOutput> outputs, File destinationDir) throws IOException {
+            List<BuildOutput> buildOutputs = new ArrayList<>(outputs);
+            buildOutputs.addAll(ExistingBuildElements.from(destinationDir).getElements());
+            new BuildElements(buildOutputs).save(destinationDir);
+        }
+
         @Override
         public void run() {
-            params.copiedFilesList.addAll(
-                    copy(params.inputType, params.inputs, params.destinationDir).getElements());
+            try {
+                appendOutput(
+                        copy(params.inputType, params.inputs, params.destinationDir).getElements(),
+                        params.destinationDir);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         private static BuildElements copy(
@@ -198,17 +203,12 @@ public class CopyOutputs extends AndroidVariantTask {
         private final InternalArtifactType inputType;
         private final FileCollection inputs;
         private final File destinationDir;
-        private final List<BuildOutput> copiedFilesList;
 
         CopyOutputsParams(
-                InternalArtifactType inputType,
-                FileCollection inputs,
-                File destinationDir,
-                List<BuildOutput> copiedFilesList) {
+                InternalArtifactType inputType, FileCollection inputs, File destinationDir) {
             this.inputType = inputType;
             this.inputs = inputs;
             this.destinationDir = destinationDir;
-            this.copiedFilesList = copiedFilesList;
         }
     }
 }

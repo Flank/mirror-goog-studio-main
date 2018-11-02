@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.ide.common.symbols.Symbol
+import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
 import com.android.ide.common.xml.XmlFormatPreferences
 import com.android.ide.common.xml.XmlFormatStyle
@@ -37,6 +38,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.io.StringWriter
+import java.lang.reflect.InvocationTargetException
 import java.net.URLClassLoader
 import java.nio.file.Files
 import java.nio.file.Path
@@ -191,6 +193,136 @@ class NamespaceRewriterTest {
         assertThat(e.message).contains(
             "In package my.example.lib found unknown symbol of type string and name s1."
         )
+    }
+
+    @Test
+    fun rewriteStyleableChildrenInBytecode() {
+        // Setup:
+        // lib.A -> lib.B -> lib.C
+        // We will rewrite all references in LibA to styleable children to be namespaced.
+
+        // Get the not-namespaced bytecode first.
+        val notNamespacedBytecode = getLibANotNamespacedBytecode()
+
+        // Setting up the Symbol Tables for the re-writer. We will also use them to write the
+        // namespaced R classes for Lib A and Lib B.
+        val libASymbols = SymbolTable.builder()
+            .tablePackage("lib.A")
+            .add(
+                Symbol.StyleableSymbol(
+                    "s2",
+                    ImmutableList.of(),
+                    ImmutableList.of("attr1", "attr2", "attr3", "attr4")))
+            .add(symbol("attr", "attr1", true))
+            .add(symbol("attr", "attr2", true))
+            .add(symbol("attr", "attr3", true))
+            .add(symbol("attr", "attr4")) // only this was actually defined
+            .build()
+        val libBSymbols = SymbolTable.builder()
+            .tablePackage("lib.B")
+            .add(Symbol.StyleableSymbol(
+                "s1",
+                ImmutableList.of(),
+                ImmutableList.of("attr1", "attr2")))
+            .add(symbol("attr", "attr1", true))
+            .add(symbol("attr", "attr2", true))
+            .add(symbol("attr", "attr3"))
+            .build()
+        val libCSymbols = SymbolTable.builder()
+            .tablePackage("lib.C")
+            .add(symbol("attr", "attr1"))
+            .build()
+
+        // The URL class loader needs to take the base directory, not the .class file directly.
+        val namespacedLibADir = temporaryFolder.newFolder()
+        val namespacedLibABytecode = FileUtils.join(namespacedLibADir, "lib", "A", "LibA.class")
+        FileUtils.mkdirs(namespacedLibABytecode.parentFile)
+        val rewriter = NamespaceRewriter(ImmutableList.of(libASymbols, libBSymbols, libCSymbols))
+
+        // Rewrite the bytecode to be namespaced. This is the main thing being tested in this test.
+        rewriter.rewriteClass(notNamespacedBytecode.toPath(), namespacedLibABytecode.toPath())
+
+        // We only need R classes for Lib A and Lib B, since we're not referencing anything from
+        // Lib C directly.
+        val namespacedRJars = temporaryFolder.newFolder()
+        val namespacedLibARJar = FileUtils.join(namespacedRJars, "LibA.jar")
+        rewriter.writeRClass(namespacedLibARJar.toPath())
+        val namespacedLibBRJar = FileUtils.join(namespacedRJars, "LibB.jar")
+        NamespaceRewriter(ImmutableList.of(libBSymbols, libCSymbols))
+            .writeRClass(namespacedLibBRJar.toPath())
+
+        // Let's make sure everything still works after the rewriting and using the namespaced R
+        // classes.
+        var urls = arrayOf(
+            namespacedLibARJar.toURI().toURL(),
+            namespacedLibBRJar.toURI().toURL(),
+            namespacedLibADir.toURI().toURL())
+        URLClassLoader(urls, null).use { classLoader ->
+            // Load the rewritten class. We have the namespaced R classes and not the original
+            // non-namespaced R class, so all the references need to be rewritten correctly for this
+            // to load.
+            val testC = classLoader.loadClass("lib.A.LibA")
+            val method = testC.getMethod("test")
+            val result = method.invoke(null) as Int
+            // The values we use are fake IDs of 1, so the sum should be 7 (just to make sure
+            // the references resolve correctly).
+            assertThat(result).isEqualTo(7)
+        }
+
+        // Now try without the R class for lib B. It should fail to resolve lib.B.R.styleable.
+        urls = arrayOf(
+            namespacedLibARJar.toURI().toURL(),
+            namespacedLibADir.toURI().toURL())
+        val e = assertFailsWith<InvocationTargetException> {
+            URLClassLoader(urls, null).use { classLoader ->
+                val testC = classLoader.loadClass("lib.A.LibA")
+                val method = testC.getMethod("test")
+                method.invoke(null) as Int
+            }
+        }
+        assertThat(e).hasCauseThat().hasMessageThat().contains("lib/B/R\$styleable")
+    }
+
+    private fun getLibANotNamespacedBytecode(): File {
+        // Create non-namespaced R class so the original lib.A java sources can compile. It contains
+        // All the resources from Lib A, Lib B and Lib C.
+        val rSource = temporaryFolder.newFolder()
+        val libANotNamespacedSymbols = SymbolTable.builder()
+            .tablePackage("lib.A")
+            .add(
+                Symbol.StyleableSymbol(
+                    "s1",
+                    ImmutableList.of(),
+                    ImmutableList.of("attr1", "attr2")))
+            .add(
+                Symbol.StyleableSymbol(
+                    "s2",
+                    ImmutableList.of(),
+                    ImmutableList.of("attr1", "attr2", "attr3", "attr4")))
+            .add(symbol("attr", "attr1"))
+            .add(symbol("attr", "attr2"))
+            .add(symbol("attr", "attr3"))
+            .add(symbol("attr", "attr4"))
+            .build()
+        // Non-final IDs since we don't want the values to get inlined!
+        SymbolIo.exportToJava(libANotNamespacedSymbols, rSource, false)
+        val notNamespacedRJava = FileUtils.join(rSource, "lib", "A", "R.java")
+        assertThat(notNamespacedRJava).exists()
+
+        // Get the lib.A non-namespaced java sources.
+        val notNamespacedSources = getFile("LibA.java")
+        assertThat(notNamespacedSources).exists()
+
+        // Compile everything.
+        val output = temporaryFolder.newFolder("out")
+        compileSources(ImmutableList.of(notNamespacedRJava, notNamespacedSources), output)
+
+        val compiledNotNamespacedSources = FileUtils.join(output, "lib", "A", "LibA.class")
+        assertThat(compiledNotNamespacedSources).exists()
+
+        // We only care about the LibA.class (it doesn't have sub-classes and we don't want the
+        // non-namespaced R class), return it.
+        return compiledNotNamespacedSources
     }
 
     @Test

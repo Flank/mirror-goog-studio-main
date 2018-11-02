@@ -24,8 +24,8 @@ using profiler::Clock;
 using std::function;
 using std::lock_guard;
 using std::mutex;
-using std::thread;
 using std::string;
+using std::thread;
 
 namespace profiler {
 

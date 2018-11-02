@@ -26,7 +26,6 @@ import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.core.DefaultApiVersion
-import com.android.builder.core.VariantTypeImpl
 import com.android.builder.model.ApiVersion
 import com.android.builder.model.ProductFlavor
 import com.android.utils.Pair
@@ -34,6 +33,7 @@ import com.google.common.base.Joiner
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
 import com.google.common.truth.Truth.assertThat
+import org.gradle.api.provider.Provider
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Rule
@@ -84,7 +84,6 @@ class CompatibleScreensManifestTest {
         `when`<ProductFlavor>(variantConfiguration.mergedFlavor).thenReturn(productFlavor)
         `when`(variantConfiguration.baseName).thenReturn("baseName")
         `when`(variantConfiguration.fullName).thenReturn("fullName")
-        `when`(variantConfiguration.type).thenReturn(VariantTypeImpl.BASE_APK)
     }
 
     @Test
@@ -114,7 +113,7 @@ class CompatibleScreensManifestTest {
 
         task.variantName = "variant"
         task.outputFolder = temporaryFolder.root
-        task.minSdkVersion = Supplier { "22" }
+        task.minSdkVersion = task.project.provider { "22" }
         task.screenSizes = ImmutableSet.of("mdpi", "xhdpi")
 
         task.generate(mainApk)
@@ -139,7 +138,7 @@ class CompatibleScreensManifestTest {
 
         task.variantName = "variant"
         task.outputFolder = temporaryFolder.root
-        task.minSdkVersion = Supplier { "22" }
+        task.minSdkVersion = task.project.provider { "22" }
         task.screenSizes = ImmutableSet.of("xhdpi")
 
         task.generate(splitApk)
@@ -172,7 +171,7 @@ class CompatibleScreensManifestTest {
 
         task.variantName = "variant"
         task.outputFolder = temporaryFolder.root
-        task.minSdkVersion = Supplier { null }
+        task.minSdkVersion = task.project.provider { null }
         task.screenSizes = ImmutableSet.of("xhdpi")
 
         task.generate(splitApk)
@@ -211,7 +210,7 @@ class CompatibleScreensManifestTest {
 
         task.variantName = "variant"
         task.outputFolder = temporaryFolder.root
-        task.minSdkVersion = Supplier { "23" }
+        task.minSdkVersion = task.project.provider { "23" }
         task.screenSizes = ImmutableSet.of("xhdpi", "xxhdpi")
 
         task.generate(xhdpiSplit)

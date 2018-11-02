@@ -28,6 +28,6 @@ class NetworkTypeProvider {
   virtual proto::ConnectivityData::NetworkType GetDefaultNetworkType() = 0;
 };
 
-} // namespace profiler
+}  // namespace profiler
 
 #endif  // PERFD_NETWORK_ABSTRACT_NETWORK_TYPE_H_

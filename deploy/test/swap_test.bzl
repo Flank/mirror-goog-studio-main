@@ -5,8 +5,8 @@ def swap_test(name, srcs):
         name = name,
         size = "medium",
         srcs = srcs + native.glob(
-            include = ["java/com/android/tools/deploy/swapper/*.java"],
-            exclude = ["java/com/android/tools/deploy/swapper/*Test.java"],
+            include = ["java/com/android/tools/deployer/*.java"],
+            exclude = ["java/com/android/tools/deployer/*Test.java"],
         ),
         data = [
             ":original_dex",

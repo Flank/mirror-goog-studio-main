@@ -94,9 +94,24 @@ open class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecutor)
     lateinit var bundleFlags: BundleFlags
         private set
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
-    lateinit var signingConfig: FileCollection
+    @get:InputFile
+    @get:Optional
+    var keystoreFile: File? = null
+        private set
+
+    @get:Input
+    @get:Optional
+    var keystorePassword: String? = null
+        private set
+
+    @get:Input
+    @get:Optional
+    var keyAlias: String? = null
+        private set
+
+    @get:Input
+    @get:Optional
+    var keyPassword: String? = null
         private set
 
     @get:OutputDirectory
@@ -112,10 +127,9 @@ open class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecutor)
 
     @TaskAction
     fun bundleModules() {
-        val config = SigningConfigMetadata.load(signingConfig)
-        val signature = if (config != null && config.storeFile != null)
-            JarSigner.Signature(
-                config.storeFile!!, config.storePassword, config.keyAlias, config.keyPassword)
+
+        val signature = if (keystoreFile != null)
+            JarSigner.Signature(keystoreFile!!, keystorePassword, keyAlias, keyPassword)
         else null
 
         workers.use {
@@ -307,7 +321,15 @@ open class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecutor)
                         variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.APK_MAPPING)
             }
 
-            task.signingConfig = variantScope.signingConfigFileCollection
+            // Don't sign debuggable bundles.
+            if (!variantScope.variantConfiguration.buildType.isDebuggable) {
+                variantScope.variantConfiguration.signingConfig?.let {
+                    task.keystoreFile = it.storeFile
+                    task.keystorePassword = it.storePassword
+                    task.keyAlias = it.keyAlias
+                    task.keyPassword = it.keyPassword
+                }
+            }
         }
     }
 }

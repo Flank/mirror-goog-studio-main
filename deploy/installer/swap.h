@@ -52,6 +52,13 @@ class SwapCommand : public Command {
   // device that match the names present in the SwapRequest object.
   std::vector<int> GetApplicationPids() const;
 
+  // Starts the server and waits for it to start listening. The sync is
+  // performed by opening a pipe and passing the write end to the server
+  // process, then blocking on the read end. The server indicates it is ready to
+  // receive connections by closing the write end, which unblocks this method.
+  bool WaitForServer(int agent_count, int* server_pid, int* read_fd,
+                     int* write_fd) const;
+
   // Tries to attach an agent to each process in process_ids; if any agent fails
   // to attach, returns false.
   bool AttachAgents(const std::vector<int>& process_ids) const;

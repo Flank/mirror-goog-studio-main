@@ -21,6 +21,9 @@ message SwapRequest {
 
   // The path to the full apks to be installed
   repeated string apks = 5;
+
+  // Don't perform actual code swap on these process.
+  repeated int32 skip_process_ids = 6;
 }
 
 message ResumeRequest {

@@ -89,6 +89,7 @@ import com.google.common.io.ByteStreams
 import com.intellij.ide.util.JavaAnonymousClassesHelper
 import com.intellij.lang.Language
 import com.intellij.openapi.components.ServiceManager
+import com.intellij.openapi.roots.LanguageLevelProjectExtension
 import com.intellij.pom.java.LanguageLevel
 import com.intellij.psi.CommonClassNames
 import com.intellij.psi.PsiAnonymousClass
@@ -1307,6 +1308,21 @@ fun getLanguageLevel(
 ): LanguageLevel {
     val containingFile = element as? PsiFile ?: element.containingFile
     return (containingFile as? PsiJavaFile)?.languageLevel ?: defaultLevel
+}
+
+/**
+ * Returns the Java language level for the given element, or the default level if an applicable
+ * the language level is not found (for example if the element is not a Java element
+ */
+fun getLanguageLevel(
+    project: Project,
+    defaultLevel: LanguageLevel
+): LanguageLevel {
+    val p = project.ideaProject ?: return defaultLevel
+    val extension = p.getComponent<LanguageLevelProjectExtension>(
+        LanguageLevelProjectExtension::class.java
+    ) ?: return defaultLevel
+    return extension.languageLevel
 }
 
 /**

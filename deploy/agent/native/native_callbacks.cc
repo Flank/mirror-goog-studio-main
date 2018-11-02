@@ -34,15 +34,12 @@ bool RegisterNative(JNIEnv* jni, const NativeBinding& binding) {
   return true;
 }
 
-void Native_UpdateApplicationInfo(JNIEnv* jni, jobject object,
-                                  jobject activity_thread) {
-  // We obtain the LoadedApk of the running application, then update the
-  // Application resource implementation with the resource implementation of the
-  // LoadedApk.
-
-  // We then call through to ActivityThread#handleApplicationInfoChanged() to
-  // restart all activities.
-
+// Obtain the LoadedApk of the current application, then replace the
+// application's ResourcesImpl with the ResourcesImpl of the LoadedApk. Return
+// the resource implementation of the LoadedApk so that it can be used to fix
+// activity contexts.
+jobject Native_FixAppContext(JNIEnv* jni, jobject object,
+                             jobject activity_thread) {
   // Application app = activityThread.getApplication();
   // LoadedApk loadedApk = app.mLoadedApk;
   // Resources newResources = loadedApk.getResources();
@@ -51,6 +48,7 @@ void Native_UpdateApplicationInfo(JNIEnv* jni, jobject object,
   // oldResources.setImpl(newResourcesImpl);
   // ApplicationInfo appInfo = loadedApk.getApplicationInfo();
   // activityThread.handleApplicationInfoChanged(appInfo);
+  // return newResourcesImpl;
 
   JniObject thread_wrapper(jni, activity_thread);
 
@@ -70,17 +68,75 @@ void Native_UpdateApplicationInfo(JNIEnv* jni, jobject object,
   JniObject old_resources = app_wrapper.CallMethod<JniObject>(
       {"getResources", "()Landroid/content/res/Resources;"});
 
-  jvalue resources_arg{.l = new_resources_impl};
+  jvalue arg{.l = new_resources_impl};
   old_resources.CallMethod<void>(
-      {"setImpl", "(Landroid/content/res/ResourcesImpl;)V"}, &resources_arg);
+      {"setImpl", "(Landroid/content/res/ResourcesImpl;)V"}, &arg);
+
+  return new_resources_impl;
+}
+
+// Get the list of ActivityClientRecords so that we can reach into each
+// activity and update its internal ResourceImpl.
+jobject Native_GetActivityClientRecords(JNIEnv* jni, jobject object,
+                                        jobject activity_thread) {
+  // ArrayMap<IBinder, ActivityClientRecord> map = activityThread.mActivities;
+  // return map.values();
+
+  JniObject thread_wrapper(jni, activity_thread);
+
+  JniObject map = thread_wrapper.GetField<JniObject>(
+      {"mActivities", "Landroid/util/ArrayMap;"});
+
+  return map.CallMethod<jobject>({"values", "()Ljava/util/Collection;"});
+}
+
+// Given an ActivityRecord, replace the resource implementation of the activity
+// with a new ResourcesImpl.
+void Native_FixActivityContext(JNIEnv* jni, jobject object,
+                               jobject activity_record,
+                               jobject new_resources_impl) {
+  // Activity activity = activityRecord.activity;
+  // Resources oldResources = activity.getResources();
+  // oldResources.setImpl(newResourcesImpl);
+
+  JniObject record_wrapper(jni, activity_record);
+
+  JniObject activity = record_wrapper.GetField<JniObject>(
+      {"activity", "Landroid/app/Activity;"});
+
+  JniObject old_resources = activity.CallMethod<JniObject>(
+      {"getResources", "()Landroid/content/res/Resources;"});
+
+  jvalue arg{.l = new_resources_impl};
+  old_resources.CallMethod<void>(
+      {"setImpl", "(Landroid/content/res/ResourcesImpl;)V"}, &arg);
+}
+
+// Call handleUpdateApplicationInfo changed on the current activity thread,
+// using the LoadedApk of the current application.
+void Native_UpdateApplicationInfo(JNIEnv* jni, jobject object,
+                                  jobject activity_thread) {
+  // Application app = activityThread.getApplication();
+  // LoadedApk loadedApk = app.mLoadedApk;
+  // ApplicationInfo appInfo = loadedApk.getApplicationInfo();
+  // activityThread.handleApplicationInfoChanged(appInfo);
+
+  JniObject thread_wrapper(jni, activity_thread);
+
+  jobject app = thread_wrapper.CallMethod<jobject>(
+      {"getApplication", "()Landroid/app/Application;"});
+  JniObject app_wrapper(jni, app);
+
+  JniObject loaded_apk = app_wrapper.GetField<JniObject>(
+      {"mLoadedApk", "Landroid/app/LoadedApk;"});
 
   jobject app_info = loaded_apk.CallMethod<jobject>(
       {"getApplicationInfo", "()Landroid/content/pm/ApplicationInfo;"});
 
-  jvalue app_info_arg{.l = app_info};
+  jvalue arg{.l = app_info};
   thread_wrapper.CallMethod<void>({"handleApplicationInfoChanged",
                                    "(Landroid/content/pm/ApplicationInfo;)V"},
-                                  &app_info_arg);
+                                  &arg);
 }
 
 }  // namespace deploy

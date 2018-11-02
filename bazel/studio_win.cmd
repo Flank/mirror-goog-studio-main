@@ -37,6 +37,20 @@ SET UPSALITEID=%%F
 )
 echo "<meta http-equiv="refresh" content="0; URL='https://source.cloud.google.com/results/invocations/%UPSALITEID%" />" > %DISTDIR%\upsalite_test_results.html
 
+FOR /F "tokens=*" %%F IN ('%SCRIPTDIR%bazel.cmd info bazel-testlogs --config=postsubmit --config=local --config=remote_common --auth_credentials=C:\buildbot\android-studio-alphasource.json') DO (
+  SET BAZEL_TESTLOGS=%%F
+)
+
+mkdir %DISTDIR%\gtest
+
+cd %BAZEL_TESTLOGS%
+
+FOR /F "tokens=*" %%F IN ('C:\cygwin64\bin\find.exe . -name "*.xml" -exec C:\cygwin64\bin\cygpath --windows {} +') DO (
+  call :COPYFILE %DISTDIR%\gtest %%F
+)
+
+cd %BASEDIR%
+
 :ENDSCRIPT
 @rem Lets run bazel clean to make sure any file handles of bazel are properly shut down
 CALL %SCRIPTDIR%bazel.cmd clean --expunge
@@ -52,3 +66,10 @@ EXIT /B %exitcode%
 :NORMALIZE_PATH
   SET RETVAL=%~dpfn1
   EXIT /B
+
+:COPYFILE
+  SET DISTDIR=%1
+  SET XML_FILE=%2
+  SET XML_MOD_PATH=%XML_FILE:\=_%
+  cp -pv %XML_FILE% %DISTDIR%\%XML_MOD_PATH%
+  goto :eof

@@ -23,10 +23,10 @@
 
 using grpc::ServerContext;
 using grpc::Status;
-using profiler::proto::ActivityData;
-using profiler::proto::SystemData;
-using profiler::proto::EmptyEventResponse;
 using profiler::EventCache;
+using profiler::proto::ActivityData;
+using profiler::proto::EmptyEventResponse;
+using profiler::proto::SystemData;
 
 namespace profiler {
 

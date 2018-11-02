@@ -238,7 +238,7 @@ protected constructor() {
         if (categories == null) {
             categories = Collections.unmodifiableList(createCategoryList())
             this.categories = categories
-            if (LintClient.isStudio) {
+            if (cacheable()) {
                 cachedCategories = categories
             }
         }
@@ -267,7 +267,7 @@ protected constructor() {
         if (map == null) {
             map = createIdToIssueMap()
             this.idToIssue = map
-            if (LintClient.isStudio) {
+            if (cacheable()) {
                 cachedIdToIssue = map
             }
         }
@@ -295,8 +295,16 @@ protected constructor() {
     private var idToIssue: Map<String, Issue>?
     private var scopeIssues: MutableMap<EnumSet<Scope>, List<Issue>>
 
+    /**
+     * Whether this issue registry has state that is cacheable. Issue registries
+     * which include project specific state (such as custom checks for example)
+     * are not.
+     */
+    protected open fun cacheable(): Boolean = false
+
     init {
-        if (LintClient.isStudio) {
+        @Suppress("LeakingThis")
+        if (cacheable()) {
             // In the IDE, cache across incremental runs; here, lint is never run in parallel
             scopeIssues = cachedScopeIssues
             idToIssue = cachedIdToIssue

@@ -150,13 +150,11 @@ public class SigningConfig extends DefaultSigningConfig implements Serializable,
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("name", mName)
-                .add(
-                        "storeFile",
-                        getStoreFile() != null ? getStoreFile().getAbsolutePath() : "null")
+                .add("storeFile", getStoreFile() != null ? getStoreFile().getAbsolutePath() : "null")
                 .add("storePassword", getStorePassword())
                 .add("keyAlias", getKeyAlias())
                 .add("keyPassword", getKeyPassword())
-                .add("storeType", getStoreType())
+                .add("storeType", getStoreFile())
                 .add("v1SigningEnabled", isV1SigningEnabled())
                 .add("v2SigningEnabled", isV2SigningEnabled())
                 .toString();

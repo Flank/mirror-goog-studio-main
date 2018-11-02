@@ -29,10 +29,12 @@ import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UClassInitializer
 import org.jetbrains.uast.UClassLiteralExpression
 import org.jetbrains.uast.UContinueExpression
+import org.jetbrains.uast.UDeclaration
 import org.jetbrains.uast.UDeclarationsExpression
 import org.jetbrains.uast.UDoWhileExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UEnumConstant
+import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UExpressionList
 import org.jetbrains.uast.UField
 import org.jetbrains.uast.UFile
@@ -134,6 +136,10 @@ open class UElementHandler {
         error(UContinueExpression::class.java)
     }
 
+    open fun visitDeclaration(node: UDeclaration) {
+        error(UDeclaration::class.java)
+    }
+
     open fun visitDeclarationsExpression(node: UDeclarationsExpression) {
         error(UDeclarationsExpression::class.java)
     }
@@ -148,6 +154,10 @@ open class UElementHandler {
 
     open fun visitEnumConstant(node: UEnumConstant) {
         error(UEnumConstant::class.java)
+    }
+
+    open fun visitExpression(node: UExpression) {
+        error(UExpression::class.java)
     }
 
     open fun visitExpressionList(node: UExpressionList) {

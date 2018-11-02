@@ -16,11 +16,11 @@
  */
 #include "native_backtrace.h"
 
-#include <algorithm>
 #include <unwind.h>
+#include <algorithm>
 
-using std::vector;
 using std::uintptr_t;
+using std::vector;
 
 namespace profiler {
 
@@ -34,7 +34,7 @@ struct BacktraceContext {
 };
 
 _Unwind_Reason_Code UnwindCallback(_Unwind_Context* unwind_ctx, void* arg) {
-  BacktraceContext *backtrace_ctx = static_cast<BacktraceContext *>(arg);
+  BacktraceContext* backtrace_ctx = static_cast<BacktraceContext*>(arg);
   std::uintptr_t ip = _Unwind_GetIP(unwind_ctx);
   if (ip == 0) {
     return _URC_NO_REASON;

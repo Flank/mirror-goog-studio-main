@@ -690,6 +690,16 @@ class NamespaceRewriter(
         }
 
         /**
+         * Finds the parent Symbol and its package for the given declare-styleable attribute name.
+         * This will search through all SymbolTables trying to find a matching parent, and once the
+         * parent is found, it will return it and the package it was found in. If the parent is not
+         * found, this method will raise an error.
+         */
+        fun findStyleableChildSymbol(name: String): Pair<Symbol.StyleableSymbol, String> {
+            return findStyleableChild(name)
+        }
+
+        /**
          * Finds the first package in which the R file contains a symbol with the given type and
          * name.
          */
@@ -714,18 +724,65 @@ class NamespaceRewriter(
         override fun visitFieldInsn(opcode: Int, owner: String, name: String, desc: String?) {
             if (owner.contains("/R$")) {
                 val type = owner.substringAfterLast('$')
-                val newPkg = crw.findPackageForSymbol(type, name).replace('.', '/')
+                if (type == "styleable" && desc == "I") {
+                    visitFieldInsnForStyleable(opcode, owner, name)
+                } else {
+                    // If it's not a styleable child, just update the R class reference.
+                    val newPkg = crw.findPackageForSymbol(type, name).replace('.', '/')
 
-                // We need to visit the inner class later. It could happen that the [newOwner]
-                // is the same as the [owner] since a class can reference resources from its'
-                // module, but we still need to remember all references.
-                val newOwner = "$newPkg/R$$type"
-                crw.addInnerClass(newOwner)
+                    // We need to visit the inner class later. It could happen that the [newOwner]
+                    // is the same as the [owner] since a class can reference resources from its'
+                    // module, but we still need to remember all references.
+                    val newOwner = "$newPkg/R$$type"
+                    crw.addInnerClass(newOwner)
 
-                this.mv.visitFieldInsn(opcode, newOwner, name, desc)
+                    this.mv.visitFieldInsn(opcode, newOwner, name, desc)
+                }
             } else {
                 // The field instruction does not reference an R class, visit normally.
                 this.mv.visitFieldInsn(opcode, owner, name, desc)
+            }
+        }
+
+        private fun visitFieldInsnForStyleable(opcode: Int, owner: String, name: String) {
+            // If we found a styleable child, we not only need to update the R class
+            // reference, but also need to namespace the resource name, for example:
+            // "AppBarLayout_elevation" becomes "AppBarLayout_androidx_appcompat_elevation"
+            // since the child attribute was defined in the AppCompat library.
+            val parentPackage = crw.findStyleableChildSymbol(name)
+            val parent = parentPackage.first
+            val newOwner = "${parentPackage.second.replace('.', '/')}/R\$styleable"
+            crw.addInnerClass(newOwner)
+
+            // Get the parent name from the parent Symbol and remove "<parent-name>_" from
+            // the original name to find the child attr name.
+            val parentName = parent.canonicalName
+            val childName = name.substringAfter(parentName).drop(1)
+
+            if (childName.startsWith("android_")) {
+                // Leave "android:" attributes alone since they already have the namespace, just
+                // update the R class package.
+                this.mv.visitFieldInsn(opcode, newOwner, name, "I")
+            } else {
+                // Find where the attribute was actually defined. This is the same way we resolve
+                // the styleable children's packages when creating the R classes.
+                val childPackage = crw.findPackageForSymbol("attr", childName)
+
+                if (childPackage == parentPackage.second) {
+                    // If the R class package matches the package where the attribute was defined,
+                    // do NOT add the package to the styleable child's name as it will not be
+                    // modified in the R class either.
+                    this.mv.visitFieldInsn(opcode, newOwner, name, "I")
+                } else {
+                    // We're dealing with the most common case of the styleable children, where we
+                    // are re-using an attribute from a different package than the parent (most
+                    // likely the parent is in the same package as the class we're handling now).
+                    // The format of the new name is "<parent-name>_<attr-package>_<child-name>",
+                    // e.g. "AppBarLayout_androidx_appcompat_elevation".
+                    val newName = "${parentName}_${childPackage.replace('.', '_')}_$childName"
+
+                    this.mv.visitFieldInsn(opcode, newOwner, newName, "I")
+                }
             }
         }
     }
@@ -744,6 +801,17 @@ class NamespaceRewriter(
         val copy = ArrayList<Node>(length)
         for (i in 0 until length) copy.add(item(i))
         copy.forEach { f(it) }
+    }
+
+    private fun findStyleableChild(name: String): Pair<Symbol.StyleableSymbol, String> {
+        val canonicalName = canonicalizeValueResourceName(name)
+        for (table in symbolTables) {
+            val maybeParent = table.maybeGetStyleableParentSymbolForChild(canonicalName)
+            if (maybeParent != null) {
+                return Pair(maybeParent, table.tablePackage)
+            }
+        }
+        error("In package ${symbolTables[0].tablePackage} found unknown styleable $canonicalName")
     }
 
     /**

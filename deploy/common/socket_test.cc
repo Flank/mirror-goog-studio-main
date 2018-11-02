@@ -37,7 +37,7 @@ TEST_F(SocketTest, TestBindAndConnect) {
   EXPECT_TRUE(server.BindAndListen(socket_name));
 
   EXPECT_TRUE(write.Open());
-  EXPECT_TRUE(write.Connect(socket_name, 1000));
+  EXPECT_TRUE(write.Connect(socket_name));
 
   EXPECT_TRUE(server.Accept(&read, 1000));
   EXPECT_TRUE(write.Write("\xFF"));

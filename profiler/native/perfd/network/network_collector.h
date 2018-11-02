@@ -19,6 +19,7 @@
 #include "perfd/network/network_sampler.h"
 #include "proto/network.pb.h"
 #include "utils/clock.h"
+#include "utils/config.h"
 #include "utils/time_value_buffer.h"
 
 #include <atomic>
@@ -35,7 +36,7 @@ typedef TimeValueBuffer<profiler::proto::NetworkProfilerData>
 // Class that runs in the background, continuously collecting network data
 class NetworkCollector final {
  public:
-  NetworkCollector(Clock* clock, int sample_ms);
+  NetworkCollector(const Config& config, Clock* clock, int sample_ms);
   ~NetworkCollector();
 
   // Allocates the given app's buffer and add it for all samplers to start.
@@ -43,6 +44,11 @@ class NetworkCollector final {
 
   // Remove the given app from all samplers and deallocate buffer to stop.
   void Stop(int32_t pid);
+
+  // Visible for testing.
+  const std::vector<std::unique_ptr<NetworkSampler>>& samplers() const {
+    return samplers_;
+  }
 
  private:
   // Continually collects data on a background thread until stopped.

@@ -17,7 +17,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "perfd/cpu/fake_atrace_manager.h"
+#include "perfd/cpu/fake_atrace.h"
 #include "perfd/cpu/fake_simpleperf.h"
 #include "perfd/termination_service.h"
 #include "utils/fake_clock.h"
@@ -96,7 +96,9 @@ TEST(CpuServiceTest, StopSimpleperfTraceWhenPerfdTerminated) {
       ActivityManager::Instance(),
       std::unique_ptr<SimpleperfManager>(new SimpleperfManager(
           &clock, std::unique_ptr<Simpleperf>(new FakeSimpleperf()))),
-      std::unique_ptr<AtraceManager>(new FakeAtraceManager(&clock))};
+      std::unique_ptr<AtraceManager>(new AtraceManager(
+          std::unique_ptr<FileSystem>(new MemoryFileSystem()), &clock, 50,
+          std::unique_ptr<Atrace>(new FakeAtrace(&clock))))};
 
   // Start a Simpleperf recording.
   ServerContext context;
@@ -160,7 +162,9 @@ TEST(CpuServiceTest, StopArtTraceWhenPerfdTerminated) {
       &activity_manager,
       std::unique_ptr<SimpleperfManager>(new SimpleperfManager(
           &clock, std::unique_ptr<Simpleperf>(new FakeSimpleperf()))),
-      std::unique_ptr<AtraceManager>(new FakeAtraceManager(&clock))};
+      std::unique_ptr<AtraceManager>(new AtraceManager(
+          std::unique_ptr<FileSystem>(new MemoryFileSystem()), &clock, 50,
+          std::unique_ptr<Atrace>(new FakeAtrace(&clock))))};
 
   // Start an ART recording.
   ServerContext context;

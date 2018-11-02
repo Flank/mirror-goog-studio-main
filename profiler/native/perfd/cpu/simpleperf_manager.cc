@@ -25,6 +25,7 @@
 
 #include "utils/bash_command.h"
 #include "utils/current_process.h"
+#include "utils/fs/disk_file_system.h"
 #include "utils/log.h"
 #include "utils/process_manager.h"
 #include "utils/trace.h"
@@ -134,7 +135,9 @@ bool SimpleperfManager::IsProfiling(const std::string &app_name) {
 }
 
 bool SimpleperfManager::StopProfiling(const std::string &app_name,
-                                      bool need_result, std::string *error) {
+                                      bool need_result,
+                                      bool report_sample_on_host,
+                                      std::string *error) {
   std::lock_guard<std::mutex> lock(start_stop_mutex_);
   Trace trace("CPU:StopProfiling simpleperf");
   Log::D("Profiler:Stopping profiling for %s", app_name.c_str());
@@ -197,7 +200,14 @@ bool SimpleperfManager::StopProfiling(const std::string &app_name,
   }
 
   if (need_result && success) {
-    if (!ConvertRawToProto(ongoing_recording, error)) success = false;
+    if (report_sample_on_host) {
+      // If report-sample is going to be executed on the host, just copy the raw
+      // trace to the path returned by CPU service.
+      if (!CopyRawToTrace(ongoing_recording, error)) success = false;
+    } else {
+      // Otherwise, run report-sample on the device.
+      if (!ConvertRawToProto(ongoing_recording, error)) success = false;
+    }
   }
 
   CleanUp(ongoing_recording);
@@ -238,6 +248,25 @@ bool SimpleperfManager::ConvertRawToProto(
       ongoing_recording.abi_arch, &output);
   if (!report_sample_result) {
     string msg = "Unable to generate simpleperf report:" + output;
+    Log::D("%s", msg.c_str());
+    error->append("\n");
+    error->append(msg);
+    return false;
+  }
+  return true;
+}
+
+bool SimpleperfManager::CopyRawToTrace(
+    const OnGoingProfiling &ongoing_recording, string *error) const {
+  DiskFileSystem fs;
+  // DiskFileSystem::MoveFile cast the result of stdio's |rename| to boolean. As
+  // |rename| returns 0 when successfuly renaming the file and non-zero
+  // otherwise, DiskFileSystem::MoveFile returns true when it fails.
+  bool move_trace_fail = fs.MoveFile(ongoing_recording.raw_trace_path,
+                                     ongoing_recording.trace_path);
+
+  if (move_trace_fail) {
+    string msg = "Unable to copy simpleperf raw trace.";
     Log::D("%s", msg.c_str());
     error->append("\n");
     error->append(msg);

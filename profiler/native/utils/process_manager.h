@@ -64,5 +64,5 @@ class ProcessManager {
  private:
   std::vector<Process> GetAllProcesses() const;
 };
-}
+}  // namespace profiler
 #endif  // UTILS_PROCESS_MANAGER_H

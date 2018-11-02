@@ -24,15 +24,14 @@ import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.io.IOException
-import java.util.function.Supplier
 
 /**
  * Task responsible for publishing this module metadata (like its application ID) for other modules
@@ -48,8 +47,7 @@ import java.util.function.Supplier
  */
 open class ModuleMetadataWriterTask : AndroidVariantTask() {
 
-    @get:Internal lateinit var applicationIdSupplier: Supplier<String> private set
-    @get:Input val applicationId get() = applicationIdSupplier.get()
+    @get:Input lateinit var applicationId: Provider<String> private set
 
     private lateinit var outputScope: OutputScope
 
@@ -83,7 +81,7 @@ open class ModuleMetadataWriterTask : AndroidVariantTask() {
                 ModuleMetadata.load(metadataFromInstalledModule!!.singleFile)
             } else {
                 ModuleMetadata(
-                    applicationId = applicationId,
+                    applicationId = applicationId.get(),
                     versionCode = versionCode.toString(),
                     versionName = versionName,
                     debuggable = debuggable
@@ -127,7 +125,7 @@ open class ModuleMetadataWriterTask : AndroidVariantTask() {
 
             // default value of the app ID to publish. This may get overwritten by something
             // coming from an application module.
-            task.applicationIdSupplier = TaskInputHelper.memoize {
+            task.applicationId = TaskInputHelper.memoizeToProvider(task.project) {
                 variantScope.variantConfiguration.applicationId
             }
 

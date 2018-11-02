@@ -32,7 +32,7 @@ public class AndroidBundleStub extends LibraryStub implements AndroidBundle {
     @NonNull private final Collection<JavaLibrary> myJavaDependencies;
     @NonNull private final File myManifest;
     @NonNull private final File myJarFile;
-    @NonNull private final File myApiJarFile;
+    @NonNull private final File myCompileJarFile;
     @NonNull private final File myResFolder;
     @Nullable private final File myResStaticLibrary;
     @NonNull private final File myAssetsFolder;
@@ -60,7 +60,7 @@ public class AndroidBundleStub extends LibraryStub implements AndroidBundle {
             @NonNull Collection<JavaLibrary> javaDependencies,
             @NonNull File manifest,
             @NonNull File jarFile,
-            @NonNull File apiJarFile,
+            @NonNull File compileJarFile,
             @NonNull File resFolder,
             @Nullable File resStaticLibrary,
             @NonNull File assetsFolder,
@@ -71,7 +71,7 @@ public class AndroidBundleStub extends LibraryStub implements AndroidBundle {
         myJavaDependencies = javaDependencies;
         myManifest = manifest;
         myJarFile = jarFile;
-        myApiJarFile = apiJarFile;
+        myCompileJarFile = compileJarFile;
         myResFolder = resFolder;
         myResStaticLibrary = resStaticLibrary;
         myAssetsFolder = assetsFolder;
@@ -116,8 +116,8 @@ public class AndroidBundleStub extends LibraryStub implements AndroidBundle {
 
     @Override
     @NonNull
-    public File getApiJarFile() {
-        return myApiJarFile;
+    public File getCompileJarFile() {
+        return myCompileJarFile;
     }
 
     @Override
@@ -161,8 +161,8 @@ public class AndroidBundleStub extends LibraryStub implements AndroidBundle {
                 + myManifest
                 + ", myJarFile="
                 + myJarFile
-                + ", myApiJarFile="
-                + myApiJarFile
+                + ", myCompileJarFile="
+                + myCompileJarFile
                 + ", myResFolder="
                 + myResFolder
                 + ", myAssetsFolder="

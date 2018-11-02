@@ -16,6 +16,8 @@
 
 package com.android.tools.lint
 
+import com.android.SdkConstants.DOT_KT
+import com.android.SdkConstants.DOT_KTS
 import com.android.SdkConstants.DOT_SRCJAR
 import com.intellij.core.CoreJavaFileManager
 import com.intellij.ide.highlighter.JavaFileType
@@ -24,6 +26,7 @@ import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.openapi.vfs.PersistentFSConstants
 import com.intellij.openapi.vfs.StandardFileSystems
+import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.PsiManager
@@ -94,8 +97,35 @@ class KotlinLintAnalyzerFacade {
 
         val virtualFiles = files.mapNotNull { localFs.findFileByPath(it.absolutePath) }
         val ktFiles = virtualFiles.mapNotNull { psiManager.findFile(it) }.filterIsInstance<KtFile>()
+            .toMutableList()
+
+        for (root in contentRoots) {
+            if (root.path.endsWith(DOT_SRCJAR)) {
+                // Add in any .kt files found in the source jars as well
+                val jarFs = StandardFileSystems.jar()
+                val jar = jarFs.findFileByPath(root.path + URLUtil.JAR_SEPARATOR)
+                if (jar != null) {
+                    addKtFiles(psiManager, jar, ktFiles)
+                }
+            }
+        }
 
         return analyzePsi(ktFiles, contentRoots, project)
+    }
+
+    private fun addKtFiles(
+        psiManager: PsiManager,
+        root: VirtualFile,
+        ktFiles: MutableList<KtFile>
+    ) {
+        val name = root.name
+        if (name.endsWith(DOT_KT) || name.endsWith(DOT_KTS)) {
+            (psiManager.findFile(root) as? KtFile)?.let { ktFiles.add(it) }
+        } else {
+            for (child in root.children) {
+                addKtFiles(psiManager, child, ktFiles)
+            }
+        }
     }
 
     private fun analyzePsi(
@@ -133,7 +163,11 @@ class KotlinLintAnalyzerFacade {
             if (!hasKotlinStdlib(contentRoots)) findKotlinStandardLibraries() else emptyList()
         val allJavaRoots = javaBinaryRoots + javaSourceRoots + extraRoots
 
-        val compilerConfiguration = createCompilerConfiguration("lintWithKotlin", contentRoots)
+        val compilerConfiguration = createCompilerConfiguration(
+            "lintWithKotlin",
+            javaBinaryRoots,
+            javaSourceRoots
+        )
 
         for (registrar in compilerConfiguration.getList(ComponentRegistrar.PLUGIN_COMPONENT_REGISTRARS)) {
             registrar.registerProjectComponents(project, compilerConfiguration)
@@ -272,24 +306,14 @@ class KotlinLintAnalyzerFacade {
     }
 
     private fun contentRootToVirtualFile(root: JvmContentRoot): VirtualFile? {
-        if (root is JvmClasspathRoot) {
+        if (root is JvmClasspathRoot || root is JvmModulePathRoot || root is JavaSourceRoot) {
             return if (root.file.isFile) {
                 findJarRoot(root.file)
             } else {
                 findLocalFile(root)
             }
         }
-        if (root is JvmModulePathRoot) {
-            return if (root.file.isFile) {
-                findJarRoot(root.file)
-            } else {
-                findLocalFile(root)
-            }
-        }
-        if (root is JavaSourceRoot) {
-            return findLocalFile(root)
-        }
-        throw IllegalStateException("Unexpected root: \$root")
+        throw IllegalStateException("Unexpected root: $root")
     }
 
     private fun <T> MockProject.registerServiceIfNeeded(intf: Class<T>, impl: T) {
@@ -306,7 +330,8 @@ class KotlinLintAnalyzerFacade {
 
     private fun createCompilerConfiguration(
         moduleName: String,
-        contentRoots: List<File>
+        javaBinaryRoots: List<JavaRoot>,
+        javaSourceRoots: List<JavaRoot>
     ): CompilerConfiguration {
         val configuration = CompilerConfiguration()
         configuration.put(CommonConfigurationKeys.MODULE_NAME, moduleName)
@@ -315,8 +340,11 @@ class KotlinLintAnalyzerFacade {
             configuration.add(JVMConfigurationKeys.SCRIPT_DEFINITIONS, StandardScriptDefinition)
         }
 
-        configuration.addJavaSourceRoots(contentRoots.filter { it.isDirectory })
-        configuration.addJvmClasspathRoots(contentRoots)
+        val sourceRoots = javaSourceRoots.map { VfsUtilCore.virtualToIoFile(it.file) }
+        val classpathRoots = javaBinaryRoots.map { VfsUtilCore.virtualToIoFile(it.file) }
+
+        configuration.addJavaSourceRoots(sourceRoots)
+        configuration.addJvmClasspathRoots(classpathRoots)
 
         return configuration
     }

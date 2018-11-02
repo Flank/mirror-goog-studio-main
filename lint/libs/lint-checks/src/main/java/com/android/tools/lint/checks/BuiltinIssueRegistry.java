@@ -19,6 +19,7 @@ package com.android.tools.lint.checks;
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.tools.lint.client.api.IssueRegistry;
+import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.ApiKt;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Scope;
@@ -352,6 +353,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(UnsafeBroadcastReceiverDetector.BROADCAST_SMS);
         issues.add(UnsafeNativeCodeDetector.LOAD);
         issues.add(UnsafeNativeCodeDetector.UNSAFE_NATIVE_CODE_LOCATION);
+        issues.add(UnusedNavigationDetector.ISSUE);
         issues.add(UnusedResourceDetector.ISSUE);
         issues.add(UnusedResourceDetector.ISSUE_IDS);
         issues.add(UseCompoundDrawableDetector.ISSUE);
@@ -388,6 +390,15 @@ public class BuiltinIssueRegistry extends IssueRegistry {
 
     /** Constructs a new {@link BuiltinIssueRegistry} */
     public BuiltinIssueRegistry() {}
+
+    @Override
+    public boolean cacheable() {
+        // In the IDE, cache across incremental runs; here, lint is never run in parallel
+        // Outside of the IDE, typically in Gradle, we don't want this caching since
+        // lint can run in parallel and this caching can be incorrect;
+        // see for example issue 77891711
+        return LintClient.Companion.isStudio();
+    }
 
     @NonNull
     @Override

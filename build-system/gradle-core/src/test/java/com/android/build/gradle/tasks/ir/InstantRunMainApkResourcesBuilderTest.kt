@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.ProjectOptions
-import com.android.builder.core.VariantTypeImpl
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.utils.FileCache
 import com.android.ide.common.build.ApkInfo
@@ -100,7 +99,6 @@ open class InstantRunMainApkResourcesBuilderTest {
         `when`(variantScope.globalScope).thenReturn(globalScope)
         `when`(variantScope.outputScope).thenReturn(outputScope)
         `when`(variantScope.artifacts).thenReturn(buildArtifactsHolder)
-        `when`(variantConfiguration.type).thenReturn(VariantTypeImpl.BASE_APK)
 
         `when`(variantScope.taskContainer).thenReturn(MutableTaskContainer())
         variantScope.taskContainer.preBuildTask = project.tasks.register("preBuildTask")

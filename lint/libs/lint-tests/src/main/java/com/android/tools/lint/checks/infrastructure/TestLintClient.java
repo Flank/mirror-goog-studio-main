@@ -79,6 +79,7 @@ import com.android.tools.lint.client.api.LintRequest;
 import com.android.tools.lint.client.api.UastParser;
 import com.android.tools.lint.client.api.XmlParser;
 import com.android.tools.lint.detector.api.Context;
+import com.android.tools.lint.detector.api.Desugaring;
 import com.android.tools.lint.detector.api.GradleContext;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -121,6 +122,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.uast.UFile;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -1145,6 +1147,15 @@ public class TestLintClient extends LintCliClient {
         }
 
         return compileTarget;
+    }
+
+    @NotNull
+    @Override
+    public Set<Desugaring> getDesugaring(@NotNull Project project) {
+        if (task.desugaring != null) {
+            return task.desugaring;
+        }
+        return super.getDesugaring(project);
     }
 
     @NonNull

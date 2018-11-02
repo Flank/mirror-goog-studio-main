@@ -199,5 +199,13 @@ public class Metric {
             mySampleTimestampMs = timestampMs;
             mySampleData = data;
         }
+
+        public long getSampleTimestampMs() {
+            return mySampleTimestampMs;
+        }
+
+        public long getSampleData() {
+            return mySampleData;
+        }
     }
 }

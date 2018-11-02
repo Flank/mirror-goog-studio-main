@@ -273,8 +273,8 @@ void CpuServiceImpl::DoStopProfilingApp(int32_t pid,
   bool success = false;
   bool need_trace = response != nullptr;
   if (profiler_type == CpuProfilerType::SIMPLEPERF) {
-    success = simpleperf_manager_->StopProfiling(app->app_pkg_name, need_trace,
-                                                 &error);
+    success = simpleperf_manager_->StopProfiling(
+        app->app_pkg_name, need_trace, cpu_config_.simpleperf_host(), &error);
   } else if (profiler_type == CpuProfilerType::ATRACE) {
     success =
         atrace_manager_->StopProfiling(app->app_pkg_name, need_trace, &error);

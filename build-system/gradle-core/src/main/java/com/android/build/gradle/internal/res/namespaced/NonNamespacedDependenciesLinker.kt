@@ -48,7 +48,7 @@ class NonNamespacedDependenciesLinker(
     private val compiled: Map<Node, File>,
     private val outputStaticLibrariesDirectory: File,
     private val intermediateDirectory: File,
-    private val pool: ForkJoinPool,
+    private val pool: ForkJoinPool = sharedForkJoinPool,
     private val aapt2ServiceKey: Aapt2ServiceKey,
     private val aaptOptions: AaptOptions = AaptOptions(),
     val androidJarPath: String
@@ -195,6 +195,17 @@ class NonNamespacedDependenciesLinker(
             NodeType.JAR ->
                 error("No static library for libraries with no resources.")
         }
+
+    companion object {
+        val sharedForkJoinPool: ForkJoinPool by lazy {
+            ForkJoinPool(
+                Math.max(
+                    1,
+                    Math.min(8, Runtime.getRuntime().availableProcessors() / 2)
+                )
+            )
+        }
+    }
 }
 
 fun getType(node: DependenciesGraph.Node): NodeType {

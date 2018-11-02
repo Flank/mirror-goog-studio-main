@@ -34,10 +34,10 @@ import com.android.ide.common.symbols.parseResourceSourceSetDirectory
 import com.google.common.base.Strings
 import com.google.common.collect.Iterables
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
@@ -46,7 +46,6 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.io.IOException
-import java.util.function.Supplier
 
 @CacheableTask
 open class GenerateLibraryRFileTask : ProcessAndroidResources() {
@@ -78,16 +77,13 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
     @get:PathSensitive(PathSensitivity.NONE) lateinit var dependencies: FileCollection
         private set
 
-    @get:Internal lateinit var packageForRSupplier: Supplier<String> private set
-    @Suppress("MemberVisibilityCanBePrivate")
-    @get:Input val packageForR get() = packageForRSupplier.get()
+    @get:Input lateinit var packageForR: Provider<String> private set
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NAME_ONLY) lateinit var platformAttrRTxt: FileCollection
         private set
 
-    @get:Internal lateinit var applicationIdSupplier: Supplier<String> private set
-    @get:Input val applicationId get() = applicationIdSupplier.get()
+    @get:Input lateinit var applicationId: Provider<String> private set
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -114,7 +110,7 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
         processLibraryMainSymbolTable(
                 librarySymbols = symbolTable,
                 libraries = this.dependencies.files,
-                mainPackageName = packageForR,
+                mainPackageName = packageForR.get(),
                 manifestFile = manifest,
                 sourceOut = sourceOutputDirectory,
                 rClassOutputJar = rClassOutputJar,
@@ -186,7 +182,7 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
 
             task.platformAttrRTxt = variantScope.globalScope.platformAttrs
 
-            task.applicationIdSupplier = TaskInputHelper.memoize {
+            task.applicationId = TaskInputHelper.memoizeToProvider(task.project) {
                 variantScope.variantData.variantConfiguration.applicationId
             }
 
@@ -206,7 +202,7 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
                 task.proguardOutputFile = variantScope.processAndroidResourcesProguardOutputFile
             }
 
-            task.packageForRSupplier = TaskInputHelper.memoize {
+            task.packageForR = TaskInputHelper.memoizeToProvider(task.project) {
                 Strings.nullToEmpty(variantScope.variantConfiguration.originalApplicationId)
             }
 

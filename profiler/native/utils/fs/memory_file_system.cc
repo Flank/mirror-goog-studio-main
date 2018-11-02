@@ -127,6 +127,10 @@ bool MemoryFileSystem::Append(const string &fpath, const string &str) {
   files_[fpath].contents += str;
   return true;
 }
+bool MemoryFileSystem::AppendFile(const string &dpath, const string &spath) {
+  files_[dpath].contents += files_[spath].contents;
+  return true;
+}
 
 void MemoryFileSystem::Close(const string &fpath) {
   files_[fpath].in_write_mode = false;

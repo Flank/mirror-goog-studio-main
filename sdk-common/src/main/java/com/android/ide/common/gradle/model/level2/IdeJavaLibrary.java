@@ -101,8 +101,8 @@ public final class IdeJavaLibrary extends IdeModel implements Library {
 
     @Override
     @NonNull
-    public String getApiJarFile() {
-        throw unsupportedMethodForJavaLibrary("getApiJarFile");
+    public String getCompileJarFile() {
+        throw unsupportedMethodForJavaLibrary("getCompileJarFile");
     }
 
     @Override

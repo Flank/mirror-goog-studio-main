@@ -17,12 +17,14 @@
 #include "filesystem_notifier.h"
 
 namespace profiler {
-FileSystemNotifier::FileSystemNotifier(const std::string &path, uint32_t event_mask)
-    : event_mask_(event_mask), path_(path), file_descriptor_(-1), watch_descriptor_(-1) {
-}
+FileSystemNotifier::FileSystemNotifier(const std::string &path,
+                                       uint32_t event_mask)
+    : event_mask_(event_mask),
+      path_(path),
+      file_descriptor_(-1),
+      watch_descriptor_(-1) {}
 
-FileSystemNotifier::~FileSystemNotifier() {
-}
+FileSystemNotifier::~FileSystemNotifier() {}
 
 // On Mac OS X, this always succeeds.
 // TODO: Implement this with FSEvents from File System Events API.
@@ -40,11 +42,7 @@ bool FileSystemNotifier::WaitUntilEventOccurs(int64_t timeout_ms) {
   return true;
 }
 
-uint32_t FileSystemNotifier::TranslateMask(uint32_t event_mask) {
-  return 0;
-}
+uint32_t FileSystemNotifier::TranslateMask(uint32_t event_mask) { return 0; }
 
-uint32_t FileSystemNotifier::GetDstValue(Event e) {
-  return 0;
-}
+uint32_t FileSystemNotifier::GetDstValue(Event e) { return 0; }
 }  // namespace profiler

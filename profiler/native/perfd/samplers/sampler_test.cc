@@ -78,8 +78,10 @@ TEST(FakeSampler, TestSamplerInsertion) {
   Session session(0, 0, 0, &daemon);
   std::vector<FakeSampler*> samplers;
   for (int i = 1; i < 11; i++) {
-    samplers.push_back(
-        new FakeSampler(session, &event_buffer, Clock::ms_to_ns(100), i, i));
+    auto sampler =
+        new FakeSampler(session, &event_buffer, Clock::ms_to_ns(100), i, i);
+    samplers.push_back(sampler);
+    sampler->Start();
   }
 
   // Wait for all FakeSamplers to finish

@@ -24,6 +24,7 @@ import static org.mockito.Mockito.when;
 import com.android.SdkConstants;
 import com.android.build.VariantOutput;
 import com.android.build.api.artifact.BuildableArtifact;
+import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
@@ -44,8 +45,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Map;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.Project;
@@ -71,12 +70,11 @@ public class InstantRunSplitApkBuilderTest {
     @Mock InstantRunBuildContext buildContext;
     @Mock AndroidBuilder androidBuilder;
     @Mock Aapt aapt;
-    @Mock FileCollection coreSigningConfig;
+    @Mock CoreSigningConfig coreSigningConfig;
     @Mock BuildableArtifact mainResources;
     @Mock FileCollection mainResourcesFiles;
     @Mock FileTree mainResourcesApkFileTree;
     @Mock BuildableArtifact splitApkResources;
-    @Mock FileTree coreSigningConfigFileTree;
 
     @Mock TargetInfo targetInfo;
     @Mock BuildToolInfo buildTools;
@@ -86,7 +84,6 @@ public class InstantRunSplitApkBuilderTest {
     @Rule public TemporaryFolder outputDirectory = new TemporaryFolder();
     @Rule public TemporaryFolder supportDirectory = new TemporaryFolder();
     @Rule public TemporaryFolder apkListDirectory = new TemporaryFolder();
-    @Rule public TemporaryFolder signingConfigDirectory = new TemporaryFolder();
 
     InstantRunSliceSplitApkBuilder instantRunSliceSplitApkBuilder;
     File instantRunFolder;
@@ -103,11 +100,6 @@ public class InstantRunSplitApkBuilderTest {
         when(target.getPath(IAndroidTarget.ANDROID_JAR)).thenReturn("fake android.jar");
         when(mainResources.get()).thenReturn(mainResourcesFiles);
         when(mainResourcesFiles.getAsFileTree()).thenReturn(mainResourcesApkFileTree);
-        when(coreSigningConfig.getAsFileTree()).thenReturn(coreSigningConfigFileTree);
-        File signingConfigFile = signingConfigDirectory.newFile("signing-config.json");
-        when(coreSigningConfigFileTree.getFiles())
-                .thenReturn(new HashSet<>(Arrays.asList(signingConfigFile)));
-        when(coreSigningConfigFileTree.getSingleFile()).thenReturn(signingConfigFile);
 
         File apkListFile = apkListDirectory.newFile("apk-list.json");
         FileUtils.write(
@@ -225,14 +217,10 @@ public class InstantRunSplitApkBuilderTest {
         assertThat(resourceOutputApk.getName()).isEqualTo("resources_ap");
 
         ArgumentCaptor<File> outApkLocation = ArgumentCaptor.forClass(File.class);
-        Mockito.verify(androidBuilder)
-                .packageCodeSplitApk(
-                        eq(resourceOutputApk),
-                        eq(dexFiles.getDexFiles()),
-                        eq(null),
-                        outApkLocation.capture(),
-                        any(File.class),
-                        any(ApkCreatorFactory.class));
+        Mockito.verify(androidBuilder).packageCodeSplitApk(
+                eq(resourceOutputApk), eq(dexFiles.getDexFiles()),
+                eq(coreSigningConfig), outApkLocation.capture(), any(File.class),
+                any(ApkCreatorFactory.class));
 
         assertThat(outApkLocation.getValue().getName()).isEqualTo(dexFiles.encodeName() + ".apk");
         Mockito.verify(buildContext).addChangedFile(eq(FileType.SPLIT),

@@ -23,7 +23,9 @@ import java.util.Stack;
 import java.util.concurrent.TimeUnit;
 
 // TODO: Instead of using synchronized method, use ThreadLocal
-public class Trace {
+public class Trace implements AutoCloseable {
+
+    private static Trace INSTANCE = new Trace();
 
     interface TraceConsumer {
         void onStart();
@@ -90,9 +92,10 @@ public class Trace {
         return threadBegins.get(tid);
     }
 
-    public static synchronized void begin(String text) {
+    public static synchronized Trace begin(String text) {
         if (!enabled()) {
-            return;
+            // Java try-with-resources allows null closeables.
+            return null;
         }
         Event event = new Event();
         event.pid = 0;
@@ -102,6 +105,7 @@ public class Trace {
         event.type = Type.BEGIN;
         events.add(event);
         getCurrentThreadBeginStack().push(event);
+        return INSTANCE;
     }
 
     public static synchronized void end() {
@@ -119,6 +123,11 @@ public class Trace {
         event.timestamp_ns = System.nanoTime();
         event.type = Type.END;
         events.add(event);
+    }
+
+    @Override
+    public void close() {
+        end();
     }
 
     public static synchronized void endtWithRemoteEvents(List<Deploy.Event> remoteEvents) {

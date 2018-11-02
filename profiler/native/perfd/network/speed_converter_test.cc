@@ -40,8 +40,8 @@ TEST(SpeedConverter, OneAddProducesExpectedSpeed) {
 
 TEST(SpeedConverter, TwoAddsProducesExpectedSpeed) {
   SpeedConverter converter(0, 0);
-  converter.Add(Clock::s_to_ns(1), 1024); // Final speek, 2K / sec
-  converter.Add(Clock::s_to_ns(2), 1024 + 2048); // Maintain 2K / sec
+  converter.Add(Clock::s_to_ns(1), 1024);         // Final speek, 2K / sec
+  converter.Add(Clock::s_to_ns(2), 1024 + 2048);  // Maintain 2K / sec
 
   EXPECT_EQ(2048, converter.speed());
   EXPECT_EQ(Clock::s_to_ns(2), converter.speed_time_ns());
@@ -62,4 +62,3 @@ TEST(SpeedConverter, SpeedCanDropToZero) {
   EXPECT_EQ(0, converter.speed());
   EXPECT_EQ(Clock::s_to_ns(3), converter.speed_time_ns());
 }
-

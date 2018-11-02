@@ -747,6 +747,54 @@ public class ManifestMerger2SmallTest {
     }
 
     @Test
+    public void testMergeWithImpliedPreviewTargetSdk() throws Exception {
+        // sdk version "foo" is acting as a preview code.
+        String xmlInput =
+                ""
+                        + "<manifest\n"
+                        + "    package=\"main\""
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                        + "    <uses-sdk android:minSdkVersion=\"foo\"\n"
+                        + "        android:targetSdkVersion=\"24\"/>\n"
+                        + "</manifest>";
+
+        String xmlToMerge =
+                ""
+                        + "<manifest\n"
+                        + "    package=\"lib\""
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                        + "    <uses-sdk android:minSdkVersion=\"foo\"/>\n"
+                        + "</manifest>";
+
+        File inputFile = TestUtils.inputAsFile("testImpliedTargetSdk1", xmlInput);
+        File libFile = TestUtils.inputAsFile("testImpliedTargetSdk2", xmlToMerge);
+
+        MockLog mockLog = new MockLog();
+        MergingReport mergingReport =
+                ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                        .addLibraryManifest(libFile)
+                        .merge();
+
+        assertTrue(mergingReport.getResult().isSuccess());
+        Document document = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+        assertEquals(
+                "foo",
+                document.getElementsByTagName(SdkConstants.TAG_USES_SDK)
+                        .item(0)
+                        .getAttributes()
+                        .getNamedItemNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_MIN_SDK_VERSION)
+                        .getNodeValue());
+        assertEquals(
+                "24",
+                document.getElementsByTagName(SdkConstants.TAG_USES_SDK)
+                        .item(0)
+                        .getAttributes()
+                        .getNamedItemNS(
+                                SdkConstants.ANDROID_URI, SdkConstants.ATTR_TARGET_SDK_VERSION)
+                        .getNodeValue());
+    }
+
+    @Test
     public void testInstantRunReplacement() throws Exception {
         String xml = ""
                 + "<manifest\n"

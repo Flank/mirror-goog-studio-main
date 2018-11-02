@@ -13,155 +13,220 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "atrace_manager.h"
+#include "fake_atrace.h"
+#include "utils/current_process.h"
+#include "utils/fake_clock.h"
+#include "utils/fs/memory_file_system.h"
+#include "utils/tokenizer.h"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <condition_variable>
 #include <queue>
-#include "perfd/cpu/fake_atrace_manager.h"
-#include "utils/fake_clock.h"
-#include "utils/tokenizer.h"
 
 using std::string;
 using testing::EndsWith;
 using testing::Eq;
-using testing::Ge;
-using testing::Lt;
-
 namespace profiler {
 
 // Simple helper struct to define test data used across multiple test.
 struct TestInitializer {
  public:
-  TestInitializer() : fake_clock(0), app_name("Fake_App") {}
+  TestInitializer()
+      : fake_clock(0),
+        atrace(new FakeAtrace(&fake_clock)),
+        app_name("Fake_App") {}
   FakeClock fake_clock;
+  FakeAtrace* atrace;
   std::string app_name;
   std::string trace_path;
   std::string error;
 };
 
+void EnqueueExpectedParams(TestInitializer& test_data, AtraceManager& manager,
+                           const std::string& path_append,
+                           const std::string& cmd, const std::string& buffer,
+                           bool running) {
+  AtraceArgs start_args{
+      test_data.app_name,
+      manager.GetTracePath(test_data.app_name).append(path_append), cmd,
+      buffer};
+  test_data.atrace->EnqueueExpectedParams({start_args, running});
+}
+
 TEST(AtraceManagerTest, ProfilingStartStop) {
   TestInitializer test_data;
-  int dump_count = 3;
-  FakeAtraceManager atrace(&test_data.fake_clock);
-  EXPECT_TRUE(atrace.StartProfiling(test_data.app_name, 1000, 8,
-                                    &test_data.trace_path, &test_data.error));
-  EXPECT_TRUE(atrace.IsProfiling());
-  atrace.BlockForXTraces(dump_count);
-  EXPECT_THAT(atrace.GetDumpCount(), Ge(dump_count));
-  EXPECT_TRUE(atrace.StopProfiling(test_data.app_name, true, &test_data.error));
-  EXPECT_FALSE(atrace.IsProfiling());
+  AtraceManager manager(std::unique_ptr<FileSystem>(new MemoryFileSystem()),
+                        &test_data.fake_clock, 200,
+                        std::unique_ptr<Atrace>(test_data.atrace));
+  EnqueueExpectedParams(test_data, manager, "", "--async_start", "-b 8192",
+                        true);
+  EnqueueExpectedParams(test_data, manager, "0", "--async_dump", "-b 8192",
+                        true);
+  EnqueueExpectedParams(test_data, manager, "1", "--async_dump", "-b 8192",
+                        true);
+  EnqueueExpectedParams(test_data, manager, "2", "--async_stop", "", false);
+  int dump_count = 2;
+  EXPECT_TRUE(manager.StartProfiling(test_data.app_name, 1000, 8,
+                                     &test_data.trace_path, &test_data.error));
+  EXPECT_TRUE(manager.IsProfiling());
+  test_data.atrace->WaitUntilParamsSize(1);
+  EXPECT_EQ(manager.GetDumpCount(), dump_count);
+  EXPECT_TRUE(
+      manager.StopProfiling(test_data.app_name, false, &test_data.error));
+  EXPECT_FALSE(manager.IsProfiling());
 }
 
 TEST(AtraceManagerTest, ProfilerReentrant) {
   TestInitializer test_data;
-  int dump_count = 3;
-  FakeAtraceManager atrace(&test_data.fake_clock);
-  for (int i = 0; i < 3; i++) {
-    EXPECT_TRUE(atrace.StartProfiling(test_data.app_name, 1000, 8,
-                                      &test_data.trace_path, &test_data.error));
-    EXPECT_THAT(atrace.GetDumpCount(), Lt(dump_count));
-    EXPECT_TRUE(atrace.IsProfiling());
-    atrace.BlockForXTraces(dump_count);
-    EXPECT_THAT(atrace.GetDumpCount(), Ge(dump_count));
+  AtraceManager manager(std::unique_ptr<FileSystem>(new MemoryFileSystem()),
+                        &test_data.fake_clock, 200,
+                        std::unique_ptr<Atrace>(test_data.atrace));
+  int retry_count = 3;
+  int dump_count = 2;
+  for (int i = 0; i < retry_count; i++) {
+    EnqueueExpectedParams(test_data, manager, "", "--async_start", "-b 8192",
+                          true);
+    EnqueueExpectedParams(test_data, manager, "0", "--async_dump", "-b 8192",
+                          true);
+    EnqueueExpectedParams(test_data, manager, "1", "--async_dump", "-b 8192",
+                          true);
+    EnqueueExpectedParams(test_data, manager, "2", "--async_stop", "", false);
+    EXPECT_TRUE(manager.StartProfiling(
+        test_data.app_name, 1000, 8, &test_data.trace_path, &test_data.error));
+    EXPECT_TRUE(manager.IsProfiling());
+    test_data.atrace->WaitUntilParamsSize(1);
+    EXPECT_EQ(manager.GetDumpCount(), dump_count);
     EXPECT_TRUE(
-        atrace.StopProfiling(test_data.app_name, false, &test_data.error));
-    EXPECT_FALSE(atrace.IsProfiling());
-    atrace.ResetState();
+        manager.StopProfiling(test_data.app_name, false, &test_data.error));
+    EXPECT_FALSE(manager.IsProfiling());
   }
 }
 
 TEST(AtraceManagerTest, ProfilingStartTwice) {
   TestInitializer test_data;
-  FakeAtraceManager atrace(&test_data.fake_clock);
-  EXPECT_TRUE(atrace.StartProfiling(test_data.app_name, 1000, 8,
-                                    &test_data.trace_path, &test_data.error));
-  atrace.BlockForXTraces(1);
-  EXPECT_THAT(atrace.GetDumpCount(), Ge(1));
-  EXPECT_TRUE(atrace.IsProfiling());
-  EXPECT_FALSE(atrace.StartProfiling(test_data.app_name, 1000, 8,
+  AtraceManager manager(std::unique_ptr<FileSystem>(new MemoryFileSystem()),
+                        &test_data.fake_clock, 200,
+                        std::unique_ptr<Atrace>(test_data.atrace));
+  EnqueueExpectedParams(test_data, manager, "", "--async_start", "-b 8192",
+                        true);
+  EnqueueExpectedParams(test_data, manager, "0", "--async_dump", "-b 8192",
+                        true);
+  EnqueueExpectedParams(test_data, manager, "1", "--async_stop", "", false);
+  EXPECT_TRUE(manager.StartProfiling(test_data.app_name, 1000, 8,
                                      &test_data.trace_path, &test_data.error));
-
-  EXPECT_THAT(atrace.GetDumpCount(), Ge(1));
-  EXPECT_TRUE(atrace.StopProfiling(test_data.app_name, true, &test_data.error));
+  test_data.atrace->WaitUntilParamsSize(1);
+  EXPECT_EQ(manager.GetDumpCount(), 1);
+  EXPECT_TRUE(manager.IsProfiling());
+  EXPECT_FALSE(manager.StartProfiling(test_data.app_name, 1000, 8,
+                                      &test_data.trace_path, &test_data.error));
+  EXPECT_EQ(manager.GetDumpCount(), 1);
+  EXPECT_TRUE(
+      manager.StopProfiling(test_data.app_name, false, &test_data.error));
 }
 
 TEST(AtraceManagerTest, StartStopFailsAndReturnsError) {
   TestInitializer test_data;
-  FakeAtraceManager atrace(&test_data.fake_clock);
-  atrace.ForceRunningState(false);
-  EXPECT_FALSE(atrace.StartProfiling(test_data.app_name, 1000, 8,
-                                     &test_data.trace_path, &test_data.error));
+  AtraceManager manager(std::unique_ptr<FileSystem>(new MemoryFileSystem()),
+                        &test_data.fake_clock, 200,
+                        std::unique_ptr<Atrace>(test_data.atrace));
+  // Async start fails, so the manager retries 5 times.
+  EnqueueExpectedParams(test_data, manager, "", "--async_start", "-b 8192",
+                        false);
+  EnqueueExpectedParams(test_data, manager, "", "--async_start", "-b 8192",
+                        false);
+  EnqueueExpectedParams(test_data, manager, "", "--async_start", "-b 8192",
+                        false);
+  EnqueueExpectedParams(test_data, manager, "", "--async_start", "-b 8192",
+                        false);
+  EnqueueExpectedParams(test_data, manager, "", "--async_start", "-b 8192",
+                        false);
+  // Actually start the profiling
+  EnqueueExpectedParams(test_data, manager, "", "--async_start", "-b 8192",
+                        true);
+  // Async stop fails so the manager retries 5 times.
+  EnqueueExpectedParams(test_data, manager, "0", "--async_stop", "", true);
+  EnqueueExpectedParams(test_data, manager, "0", "--async_stop", "", true);
+  EnqueueExpectedParams(test_data, manager, "0", "--async_stop", "", true);
+  EnqueueExpectedParams(test_data, manager, "0", "--async_stop", "", true);
+  EnqueueExpectedParams(test_data, manager, "0", "--async_stop", "", true);
+  EXPECT_FALSE(manager.StartProfiling(test_data.app_name, 1000, 8,
+                                      &test_data.trace_path, &test_data.error));
   EXPECT_THAT(test_data.error, Eq("Failed to run atrace start."));
-
   test_data.error.clear();
-  atrace.ResetState();
-  // Start profiling
-  EXPECT_TRUE(atrace.StartProfiling(test_data.app_name, 1000, 8,
-                                    &test_data.trace_path, &test_data.error));
-  // Fail to stop profiling
-  atrace.ForceRunningState(true);
+  EXPECT_TRUE(manager.StartProfiling(test_data.app_name, 1000, 8,
+                                     &test_data.trace_path, &test_data.error));
   EXPECT_FALSE(
-      atrace.StopProfiling(test_data.app_name, false, &test_data.error));
+      manager.StopProfiling(test_data.app_name, false, &test_data.error));
   EXPECT_THAT(test_data.error, Eq("Failed to stop atrace."));
-
-  test_data.error.clear();
-  atrace.ResetState();
-  // Start profiling
-  EXPECT_TRUE(atrace.StartProfiling(test_data.app_name, 1000, 8,
-                                    &test_data.trace_path, &test_data.error));
-  // Fail to stop profiling, this time we expect a result however the error
-  // should be the same.
-  atrace.ForceRunningState(true);
-  EXPECT_FALSE(
-      atrace.StopProfiling(test_data.app_name, true, &test_data.error));
-  EXPECT_THAT(test_data.error, Eq("Failed to stop atrace."));
-}
-
-TEST(AtraceManagerTest, StopProfilingCombinesFiles) {
-  TestInitializer test_data;
-  int dump_count = 3;
-  // Tell our mock Atrace manager that for each "atrace" run we want to create a
-  // file and write how many dumps have been created to this point to the file.
-  FakeAtraceManager atrace(&test_data.fake_clock,
-                           [](const std::string& path, int count) {
-                             FILE* file = fopen(path.c_str(), "wb");
-                             fwrite(&count, sizeof(int), 1, file);
-                             fclose(file);
-                           });
-  EXPECT_TRUE(atrace.StartProfiling(test_data.app_name, 1000, 8,
-                                    &test_data.trace_path, &test_data.error));
-  EXPECT_THAT(atrace.GetDumpCount(), Ge(0));
-  atrace.BlockForXTraces(dump_count);
-  EXPECT_TRUE(atrace.StopProfiling(test_data.app_name, true, &test_data.error));
-
-  // On stop profiling get the dump count (this is incremented by stop
-  // profiling)
-  int total_dumps = atrace.GetDumpCount();
-
-  // Open the final output file and validate that it contains the contents of
-  // each individual dump file.
-  FILE* file = fopen(test_data.trace_path.c_str(), "rb");
-  int value = 0;
-  for (int i = 0; i < total_dumps; i++) {
-    int read_amount = fread(&value, sizeof(int), 1, file);
-    EXPECT_THAT(value, i);
-    EXPECT_THAT(read_amount, 1);
-  }
-  int read_amount = fread(&value, sizeof(int), 1, file);
-  EXPECT_THAT(read_amount, 0);
-  fclose(file);
 }
 
 TEST(AtraceManagerTest, BufferAutoDownSamples) {
   TestInitializer test_data;
-  FakeAtraceManager atrace(&test_data.fake_clock);
-  atrace.SetAvailableBufferSizeKb(4096);
-  atrace.SetBufferTest(true);
-  EXPECT_TRUE(atrace.StartProfiling(test_data.app_name, 1000, 8,
-                                    &test_data.trace_path, &test_data.error));
-  atrace.BlockForXTraces(1);
-  EXPECT_THAT(atrace.GetDumpCount(), Ge(1));
-  EXPECT_TRUE(atrace.IsProfiling());
-  EXPECT_TRUE(atrace.StopProfiling(test_data.app_name, true, &test_data.error));
+  test_data.atrace->SetBufferSize(2048);
+  AtraceManager manager(std::unique_ptr<FileSystem>(new MemoryFileSystem()),
+                        &test_data.fake_clock, 200,
+                        std::unique_ptr<Atrace>(test_data.atrace));
+  // Async start fails, so the manager retries
+  EnqueueExpectedParams(test_data, manager, "", "--async_start", "-b 8192",
+                        true);
+  EnqueueExpectedParams(test_data, manager, "", "--async_start", "-b 4096",
+                        true);
+  EnqueueExpectedParams(test_data, manager, "", "--async_start", "-b 2048",
+                        true);
+  EnqueueExpectedParams(test_data, manager, "0", "--async_dump", "-b 2048",
+                        true);
+  EnqueueExpectedParams(test_data, manager, "1", "--async_stop", "", false);
+  EXPECT_TRUE(manager.StartProfiling(test_data.app_name, 1000, 8,
+                                     &test_data.trace_path, &test_data.error));
+  EXPECT_TRUE(manager.IsProfiling());
+  EXPECT_EQ(manager.GetDumpCount(), 0);
+  test_data.atrace->WaitUntilParamsSize(1);
+  EXPECT_EQ(manager.GetDumpCount(), 1);
+  EXPECT_TRUE(
+      manager.StopProfiling(test_data.app_name, false, &test_data.error));
+}
+
+TEST(AtraceManagerTest, StopProfilingCombinesFiles) {
+  TestInitializer test_data;
+  // Ownership of the file system is passed to atrace manager, but the test
+  // still needs access to it. The access is used to create fake dump files, as
+  // well as validate the output file.
+  MemoryFileSystem* file_system = new MemoryFileSystem();
+  AtraceManager manager(std::unique_ptr<FileSystem>(file_system),
+                        &test_data.fake_clock, 200,
+                        std::unique_ptr<Atrace>(test_data.atrace));
+  char index_buffer[10];
+
+  for (int i = 0; i < 3; i++) {
+    sprintf(index_buffer, "%d", i);
+    std::shared_ptr<File> file = file_system->GetOrNewFile(
+        manager.GetTracePath(test_data.app_name).append(index_buffer));
+    file->OpenForWrite();
+    file->Append(index_buffer);
+    file->Close();
+  }
+  // Async start fails, so the manager retries
+  EnqueueExpectedParams(test_data, manager, "", "--async_start", "-b 8192",
+                        true);
+  EnqueueExpectedParams(test_data, manager, "0", "--async_dump", "-b 8192",
+                        true);
+  EnqueueExpectedParams(test_data, manager, "1", "--async_dump", "-b 8192",
+                        true);
+  EnqueueExpectedParams(test_data, manager, "2", "--async_stop", "", false);
+  EXPECT_TRUE(manager.StartProfiling(test_data.app_name, 1000, 8,
+                                     &test_data.trace_path, &test_data.error));
+  EXPECT_TRUE(manager.IsProfiling());
+  test_data.atrace->WaitUntilParamsSize(1);
+  EXPECT_TRUE(
+      manager.StopProfiling(test_data.app_name, true, &test_data.error));
+
+  // On stop profiling get the dump count (this is incremented by stop
+  // profiling)
+  EXPECT_EQ(manager.GetDumpCount(), 3);
+  // Read files from the memory file system.
+  std::string contents = file_system->GetFileContents(test_data.trace_path);
+  EXPECT_EQ(contents, "012");
 }
 }  // namespace profiler

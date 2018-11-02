@@ -33,6 +33,8 @@ Status BeginSession::ExecuteOn(Daemon* daemon) {
   }
   daemon->sessions()->BeginSession(command().stream_id(), data_);
 
+  auto session = daemon->sessions()->GetLastSession();
+  session->StartSamplers();
   if (data_.jvmti_config().attach_agent()) {
     daemon->TryAttachAppAgent(data_.pid(), app_name,
                               data_.jvmti_config().agent_lib_file_name());

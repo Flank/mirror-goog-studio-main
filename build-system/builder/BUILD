@@ -54,6 +54,7 @@ kotlin_library(
         "//tools/base/third_party:com.squareup_javawriter",
         "//tools/base/third_party:commons-codec_commons-codec",
         "//tools/base/third_party:it.unimi.dsi_fastutil",
+        "//tools/base/third_party:javax.inject_javax.inject",
         "//tools/base/third_party:net.sf.jopt-simple_jopt-simple",
         "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",
         "//tools/base/third_party:org.bouncycastle_bcprov-jdk15on",

@@ -23,6 +23,7 @@ import static com.android.tools.lint.checks.ManifestDetector.DEVICE_ADMIN;
 import static com.android.tools.lint.checks.ManifestDetector.DUPLICATE_ACTIVITY;
 
 import com.android.annotations.NonNull;
+import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.detector.api.Issue;
 import java.util.Arrays;
 import java.util.Collections;
@@ -74,5 +75,21 @@ public class CompositeIssueRegistryTest extends TestCase {
                         ICON_DIP_SIZE),
                 new CompositeIssueRegistry(Arrays.asList(registry1, registry2, registry3))
                         .getIssues());
+    }
+
+    static class MyCompositeRegistry extends CompositeIssueRegistry {
+        public MyCompositeRegistry(@NonNull List<? extends IssueRegistry> registries) {
+            super(registries);
+        }
+
+        public boolean isCacheable() {
+            return cacheable();
+        }
+    }
+
+    public void testCacheable() {
+        MyCompositeRegistry registry =
+                new MyCompositeRegistry(Collections.singletonList(new BuiltinIssueRegistry()));
+        assertFalse(registry.isCacheable());
     }
 }

@@ -139,44 +139,54 @@ abstract class SymbolTable protected constructor() {
         if (!found && type == ResourceType.STYLEABLE && canonicalName.contains('_')) {
             // If the symbol is a styleable and contains the underscore character, it is very likely
             // that we're looking for a styleable child. These are stored under the parent's symbol,
-            // so try finding the parent first and then the child under it.
-            found = containsStyleableSymbol(canonicalName)
+            // so try finding the parent first and then the child under it. If we haven't found the
+            // parent, then the child doesn't exist either.
+            found = maybeGetStyleableParentSymbolForChild(canonicalName) != null
         }
         return found
     }
 
     /**
-     * Checks if the table contains a declare-styleable's child with the given name. For example:
+     * Tries to retrieve a declare-styleable's parent for the given child name. For example:
      * <pre>
      *     <declare-styleable name="s1">
      *         <item name="foo"/>
      *     </declare-styleable>
      * </pre>
-     * Calling {@code containsStyleableSymbol("s1_foo")} would return {@code true}, but calling
+     * Calling {@code containsStyleableSymbol("s1_foo")} would return the parent symbol, but calling
      * {@code containsStyleableSymbol("foo")} or {@code containsSymbol(STYLEABLE, "foo")} would
-     * both return {@code false}.
+     * both return {@code null}.
      */
-    private fun containsStyleableSymbol(canonicalName: String, start: Int = 0): Boolean {
-        var found = false
+    fun maybeGetStyleableParentSymbolForChild(canonicalName: String, start: Int = 0):
+            Symbol.StyleableSymbol? {
+        var found: Symbol.StyleableSymbol? = null
         val index = canonicalName.indexOf('_', start)
         if (index > -1) {
             val parentName = canonicalName.substring(0, index)
             if (symbols.contains(ResourceType.STYLEABLE, parentName)) {
                 var childName = canonicalName.substring(index + 1, canonicalName.length)
                 val parent = symbols.get(ResourceType.STYLEABLE, parentName)
-                found = parent.children.any { it == childName }
+                found =
+                        if (parent.children.any { it == childName })
+                            parent as Symbol.StyleableSymbol
+                        else
+                            null // I still haven't found what I'm looking for~
+
                 // styleable children of the format <parent>_android_<child> could have been either
                 // declared as <item name="android_foo"/> or <item name="android:foo>.
                 // If we didn't find the "android_" child, look for one in the "android:" namespace.
-                if (!found && childName.startsWith(ANDROID_ATTR_PREFIX)) {
+                if (found == null && childName.startsWith(ANDROID_ATTR_PREFIX)) {
                     childName =
                             SdkConstants.ANDROID_NS_NAME_PREFIX +
                                     childName.substring(ANDROID_ATTR_PREFIX.length)
-                    found = parent.children.any { it == childName }
+                    found =
+                            if (parent.children.any { it == childName })
+                                parent as Symbol.StyleableSymbol
+                            else null
                 }
             }
-            if (!found) {
-                found = containsStyleableSymbol(canonicalName, index + 1)
+            if (found == null) {
+                found = maybeGetStyleableParentSymbolForChild(canonicalName, index + 1)
             }
         }
         return found

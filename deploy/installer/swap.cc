@@ -72,6 +72,18 @@ void SwapCommand::ParseParameters(int argc, char** argv) {
   ready_to_run_ = true;
 }
 
+inline void FilterPids(std::vector<int>& process_ids,
+                       proto::SwapRequest request) {
+  process_ids.erase(
+      remove_if(process_ids.begin(), process_ids.end(),
+                [&](int x) {
+                  return std::find(request.skip_process_ids().begin(),
+                                   request.skip_process_ids().end(),
+                                   x) != request.skip_process_ids().end();
+                }),
+      process_ids.end());
+}
+
 void SwapCommand::Run(Workspace& workspace) {
   Phase p("Command Swap");
 
@@ -87,26 +99,32 @@ void SwapCommand::Run(Workspace& workspace) {
 
   // Get the list of processes we need to attach to.
   std::vector<int> process_ids = GetApplicationPids();
+  if (process_ids.empty()) {
+    response_->set_status(proto::SwapResponse::ERROR);
+    ErrEvent("No PIDs found.");
+    return;
+  }
 
-  // TODO: Use std::to_string. NDK doesn't currently support it.
-  std::ostringstream os;
-  os << process_ids.size();
-  std::string agent_count = os.str();
+  // Filter out PIDs that was instructed to skip.
+  FilterPids(process_ids, request_);
 
-  std::string command = target_dir_ + kServerFilename;
-  std::vector<std::string> parameters;
-  parameters.push_back(agent_count);
-  parameters.push_back(Socket::kDefaultAddress);
-  int read_fd, write_fd, err_fd;
+  // Don't brother with the server if we have no work to do.
+  if (process_ids.empty()) {
+    response_->set_status(proto::SwapResponse::OK);
+    LogEvent("No PIDs needs to be swapped");
+    return;
+  }
+
+  // Start the server and wait for it to begin listening for connections.
+  int read_fd, write_fd;
   int agent_server_pid;
-  if (!Executor::ForkAndExecAs(command, request_.package_name(), parameters,
-                               &write_fd, &read_fd, &err_fd,
-                               &agent_server_pid)) {
+  if (!WaitForServer(process_ids.size(), &agent_server_pid, &read_fd,
+                     &write_fd)) {
     ErrEvent("Unable to start server");
     response_->set_status(proto::SwapResponse::ERROR);
     return;
   }
-  close(err_fd);
+
   OwnedMessagePipeWrapper server_input(write_fd);
   OwnedMessagePipeWrapper server_output(read_fd);
 
@@ -309,6 +327,56 @@ std::vector<int> SwapCommand::GetApplicationPids() const {
   return process_ids;
 }
 
+bool SwapCommand::WaitForServer(int agent_count, int* server_pid, int* read_fd,
+                                int* write_fd) const {
+  Phase p("WaitForServer");
+
+  int sync_pipe[2];
+  if (pipe(sync_pipe) != 0) {
+    ErrEvent("Could not create sync pipe");
+    return false;
+  }
+
+  const int sync_read_fd = sync_pipe[0];
+  const int sync_write_fd = sync_pipe[1];
+
+  // The server doesn't know about the read end of the pipe, so set it to
+  // close-on-exec. Not a big deal if this fails, but we should still log.
+  if (fcntl(sync_read_fd, F_SETFD, FD_CLOEXEC) == -1) {
+    LogEvent("Could not set sync pipe read end to close-on-exec");
+  }
+
+  std::string command = target_dir_ + kServerFilename;
+
+  std::vector<std::string> parameters;
+  parameters.push_back(to_string(agent_count));
+  parameters.push_back(Socket::kDefaultAddress);
+
+  // Pass the write end of the sync pipe to the server. The server will close
+  // the pipe to indicate that it is ready to receive connections.
+  parameters.push_back(to_string(sync_write_fd));
+  LogEvent(parameters.back());
+
+  int err_fd = -1;
+  bool success =
+      Executor::ForkAndExecAs(command, request_.package_name(), parameters,
+                              write_fd, read_fd, &err_fd, server_pid);
+  close(sync_write_fd);
+  close(err_fd);
+
+  if (success) {
+    // This branch is only possible in the parent process; we only reach this
+    // conditional in the child if success is false (the server failed to run).
+    char unused;
+    if (read(sync_read_fd, &unused, 1) != 0) {
+      ErrEvent("Unexpected response received on sync pipe");
+    }
+  }
+
+  close(sync_read_fd);
+  return success;
+}
+
 bool SwapCommand::AttachAgents(const std::vector<int>& process_ids) const {
   Phase p("AttachAgents");
   CmdCommand cmd;
@@ -329,8 +397,8 @@ bool SwapCommand::RunCmd(const std::string& shell_cmd, User run_as,
                          std::string* output) const {
   std::string err;
   if (run_as == User::APP_PACKAGE) {
-    return Executor::RunAs(shell_cmd, request_.package_name(), args,
-                           output, &err);
+    return Executor::RunAs(shell_cmd, request_.package_name(), args, output,
+                           &err);
   } else {
     return Executor::Run(shell_cmd, args, output, &err);
   }

@@ -54,6 +54,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -458,6 +459,43 @@ public class DexArchiveBuilderTransformDesugaringTest {
         MoreTruth.assertThatDex(getDex(InvokesDefault.class)).hasClassesCount(1);
     }
 
+    /** Regression test for b/117062425. */
+    @Test
+    public void test_incrementalDesugaringWithCaching() throws Exception {
+        Path lib1 = tmpDir.getRoot().toPath().resolve("lib1.jar");
+        TestInputsGenerator.pathWithClasses(lib1, ImmutableSet.of(ImplementsWithDefault.class));
+        Path lib2 = tmpDir.getRoot().toPath().resolve("lib2.jar");
+        TestInputsGenerator.pathWithClasses(lib2, ImmutableSet.of(WithDefault.class));
+
+        TransformInput lib1Input =
+                TransformTestHelper.singleJarBuilder(lib1.toFile())
+                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                        .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+                        .build();
+        // Mimics dex that from cache for lib1.jar. Transform invocation should remove it.
+        Files.createFile(out.resolve("lib1.jar.jar"));
+
+        TransformInput lib2Input =
+                TransformTestHelper.singleJarBuilder(lib2.toFile())
+                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                        .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+                        .setStatus(Status.CHANGED)
+                        .build();
+        TransformInvocation invocation =
+                TransformTestHelper.invocationBuilder()
+                        .setTransformOutputProvider(outputProvider)
+                        .addInput(lib1Input)
+                        .addInput(lib2Input)
+                        .setIncremental(true)
+                        .build();
+        getTransform(null, 15, true, true).transform(invocation);
+        List<Path> lib1DexOutputs =
+                Files.list(out)
+                        .filter(p -> p.getFileName().toString().startsWith("lib1.jar"))
+                        .collect(Collectors.toList());
+        assertThat(lib1DexOutputs).hasSize(1);
+    }
+
     @NonNull
     private DexArchiveBuilderTransform getTransform(
             @Nullable FileCache userCache,
@@ -482,6 +520,7 @@ public class DexArchiveBuilderTransformDesugaringTest {
                 .setJava8LangSupportType(VariantScope.Java8LangSupport.D8)
                 .setProjectVariant("myVariant")
                 .setIncludeFeaturesInScope(false)
+                .setNumberOfBuckets(2)
                 .createDexArchiveBuilderTransform();
     }
 

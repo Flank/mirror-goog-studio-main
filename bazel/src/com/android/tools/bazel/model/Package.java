@@ -87,6 +87,7 @@ public class Package {
 
         if (buildFile != null) {
             File tmp = File.createTempFile("BUILD", "test");
+            boolean keepFile = false;
             try {
                 try (FileOutputStream fileOutputStream = new FileOutputStream(tmp);
                         PrintWriter writer = new PrintWriter(fileOutputStream)) {
@@ -98,12 +99,15 @@ public class Package {
                     if (listener.packageUpdated(name)) {
                         Files.copy(tmp, build);
                     } else {
+                        keepFile = true;
                         System.err.println(
                                 "diff " + tmp.getAbsolutePath() + " " + build.getAbsolutePath());
                     }
                 }
             } finally {
-                tmp.delete();
+                if (!keepFile) {
+                    tmp.delete();
+                }
             }
         }
     }

@@ -27,6 +27,6 @@ class IoNetworkTypeProvider final : public NetworkTypeProvider {
   proto::ConnectivityData::NetworkType GetDefaultNetworkType() override;
 };
 
-} // namespace profiler
+}  // namespace profiler
 
 #endif  // PERFD_NETWORK_IO_NETWORK_TYPE_PROVIDER_H_

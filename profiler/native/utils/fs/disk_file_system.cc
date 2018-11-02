@@ -185,6 +185,25 @@ bool DiskFileSystem::Append(const string &fpath, const string &str) {
   return false;
 }
 
+bool DiskFileSystem::AppendFile(const string &dpath, const string &spath) {
+  auto it = open_files_.find(dpath);
+  if (it != open_files_.end()) {
+    FILE *dest_file = it->second;
+    FILE *src_file = fopen(spath.c_str(), "rb");
+    if (src_file == nullptr) {
+      return false;
+    }
+    char buffer[1024];
+    while (!feof(src_file)) {
+      size_t read = fread(buffer, sizeof(char), sizeof(buffer), src_file);
+      fwrite(buffer, sizeof(char), read, dest_file);
+    }
+    fclose(src_file);
+    return true;
+  }
+  return false;
+}
+
 void DiskFileSystem::Close(const string &fpath) {
   auto it = open_files_.find(fpath);
   if (it != open_files_.end()) {

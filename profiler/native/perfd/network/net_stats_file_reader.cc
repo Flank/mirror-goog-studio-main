@@ -15,8 +15,8 @@
  */
 #include "net_stats_file_reader.h"
 
-#include <cstring>
 #include <inttypes.h>
+#include <cstring>
 
 namespace profiler {
 
@@ -44,11 +44,13 @@ void NetStatsFileReader::Refresh() {
   // we ignore the bytes sent on the loopback device to avoid counting such
   // traffic. We agree as of right now that, users care about traffic from
   // outside much more than inter-process traffic.
-  while(fgets(buffer, sizeof(buffer), fp) != NULL) {
+  while (fgets(buffer, sizeof(buffer), fp) != NULL) {
     if (sscanf(buffer,
-               "%" SCNu32 " %31s 0x%" SCNx64 " %u %u %" SCNu64 " %" SCNu64 " %"
-               SCNu64, &idx, iface, &tag, &uid, &set, &rx_bytes, &rx_packets,
-               &tx_bytes) == 8 && strcmp("lo", iface) != 0) {
+               "%" SCNu32 " %31s 0x%" SCNx64 " %u %u %" SCNu64 " %" SCNu64
+               " %" SCNu64,
+               &idx, iface, &tag, &uid, &set, &rx_bytes, &rx_packets,
+               &tx_bytes) == 8 &&
+        strcmp("lo", iface) != 0) {
       bytes_tx_[uid] = bytes_tx_[uid] + tx_bytes;
       bytes_rx_[uid] = bytes_rx_[uid] + rx_bytes;
     }

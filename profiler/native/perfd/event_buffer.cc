@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "perfd/event_buffer.h"
+#include "perfd/event_writer.h"
 
 #include "utils/log.h"
 
@@ -24,8 +25,6 @@ void EventBuffer::Add(proto::Event& event) {
   events_added_++;
   event.set_timestamp(clock_->GetCurrentTime());
   events_.Add(event);
-  lock.unlock();
-  events_cv_.notify_all();
   // TODO(b/73538507): optimize this:
   proto::EventGroup* group = nullptr;
   for (size_t i = 0; i < groups_.size(); i++) {
@@ -41,9 +40,10 @@ void EventBuffer::Add(proto::Event& event) {
     group->set_event_id(event.event_id());
   }
   group->add_events()->CopyFrom(event);
+  events_cv_.notify_all();
 }
 
-void EventBuffer::WriteEventsTo(grpc::ServerWriter<proto::Event>* response) {
+void EventBuffer::WriteEventsTo(EventWriter* writer) {
   while (!interrupt_write_) {
     // Write any events that may have queued before our event listener has
     // connected.
@@ -57,8 +57,7 @@ void EventBuffer::WriteEventsTo(grpc::ServerWriter<proto::Event>* response) {
       events_added_ = events_.size();
     }
     while (events_added_ > 0) {
-      bool success =
-          response->Write(events_.Get(events_.size() - events_added_));
+      bool success = writer->Write(events_.Get(events_.size() - events_added_));
       events_added_--;
       // If we fail to send data to a client.
       if (!success) {

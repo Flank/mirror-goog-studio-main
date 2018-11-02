@@ -38,7 +38,10 @@ class Sampler {
           int64_t sample_interval_ns);
   virtual ~Sampler();
 
-  // Stops the sampling worker thread.
+  // Start the sampling worker thread. No-op if the thread is started already
+  void Start();
+
+  // Stops the sampling worker thread. No-op if the thread has not been started.
   void Stop();
 
   // Collect data related to the session that s currently being sampled.

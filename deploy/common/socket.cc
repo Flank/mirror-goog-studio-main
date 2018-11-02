@@ -16,9 +16,11 @@
 
 #include "tools/base/deploy/common/socket.h"
 
-#include <iostream>
-
 #include <poll.h>
+#include <cerrno>
+#include <cstring>
+
+#include "tools/base/deploy/common/event.h"
 
 namespace deploy {
 
@@ -70,7 +72,7 @@ bool Socket::Accept(Socket* socket, int timeout_ms) {
   return socket->fd_ != -1;
 }
 
-bool Socket::Connect(const std::string& socket_name, int timeout_ms) {
+bool Socket::Connect(const std::string& socket_name) {
   if (fd_ == -1) {
     return false;
   }
@@ -81,14 +83,32 @@ bool Socket::Connect(const std::string& socket_name, int timeout_ms) {
 
   strncpy(addr.sun_path + 1, socket_name.c_str(), sizeof(addr.sun_path) - 2);
 
-  pollfd pfd = {fd_, POLLIN, 0};
-  if (poll(&pfd, 1, timeout_ms) != 1) {
-    return false;
-  }
+  size_t retries = 0;
+  while (connect(fd_, (const struct sockaddr*)&addr, sizeof(addr)) != 0) {
+    // Connection refusal means the server might have been slow to start, so
+    // allow for retries.
+    if (errno != ECONNREFUSED) {
+      std::string error = "Error connecting to server: ";
+      error.append(strerror(errno));
+      ErrEvent(error);
+      return false;
+    }
 
-  if (connect(fd_, (const struct sockaddr*)&addr, sizeof(addr)) != 0) {
-    close(fd_);
-    return false;
+    if (retries >= kConnectRetries) {
+      ErrEvent("Error connectiong to server: timed out waiting for connection");
+      return false;
+    }
+
+    // A failed connect() leaves the socket in an invalid state, so we need to
+    // close and reopen the socket before retrying.
+    Close();
+    if (!Open()) {
+      ErrEvent("Error connecting to server: could not open socket");
+      return false;
+    }
+
+    usleep(kConnectRetryMs * 1000);
+    retries++;
   }
 
   return true;

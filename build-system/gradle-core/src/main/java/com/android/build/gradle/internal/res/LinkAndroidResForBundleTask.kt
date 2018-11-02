@@ -40,10 +40,10 @@ import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
@@ -93,19 +93,12 @@ open class LinkAndroidResForBundleTask
     val resOffset: Int?
         get() = resOffsetSupplier?.get()
 
-    @get:Internal lateinit var versionNameSupplier: Supplier<String?>
-        private set
-
     @get:Input
     @get:Optional
-    val versionName
-        get() = versionNameSupplier.get()
+    lateinit var versionName: Provider<String?> private set
 
-    @get:Internal lateinit var versionCodeSupplier: Supplier<Int?>
-        private set
-
-    @get:Input val versionCode
-        get() = versionCodeSupplier.get()
+    @get:Input
+    lateinit var versionCode: Provider<Int?> private set
 
     @get:OutputDirectory
     lateinit var incrementalFolder: File
@@ -233,10 +226,10 @@ open class LinkAndroidResForBundleTask
 
             task.incrementalFolder = variantScope.getIncrementalDir(name)
 
-            task.versionCodeSupplier = TaskInputHelper.memoize {
+            task.versionCode = TaskInputHelper.memoizeToProvider(task.project) {
                 config.versionCode
             }
-            task.versionNameSupplier = TaskInputHelper.memoize {
+            task.versionName = TaskInputHelper.memoizeToProvider(task.project) {
                 config.versionName
             }
 
