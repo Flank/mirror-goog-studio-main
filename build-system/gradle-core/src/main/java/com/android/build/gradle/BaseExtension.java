@@ -15,6 +15,8 @@
  */
 package com.android.build.gradle;
 
+import static com.android.build.gradle.internal.cxx.configure.NdkLocatorKt.findNdkPath;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -902,7 +904,7 @@ public abstract class BaseExtension implements AndroidConfig {
      * the standalone NDK package</a>.
      */
     public File getNdkDirectory() {
-        return sdkHandler.getNdkFolder();
+        return findNdkPath(ndkVersion, project.getRootDir());
     }
 
     @Override

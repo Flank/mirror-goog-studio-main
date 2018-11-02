@@ -511,7 +511,7 @@ public abstract class ExternalNativeJsonGenerator {
         File ndkFolder = ndkHandler.getNdkDirectory();
         if (ndkFolder == null || !ndkFolder.exists() || !ndkFolder.isDirectory()) {
             sdkHandler.installNdk(ndkHandler);
-            ndkFolder = sdkHandler.getNdkFolder();
+            ndkFolder = ndkHandler.getNdkDirectory();
             if (ndkFolder == null || !ndkFolder.exists() || !ndkFolder.isDirectory()) {
                 throw new InvalidUserDataException(
                         String.format(
@@ -597,8 +597,7 @@ public abstract class ExternalNativeJsonGenerator {
                             externalNativeBuildFolder.getParentFile().getParentFile(),
                             objFolder,
                             buildSystem,
-                            ndkHandler.findSuitablePlatformVersion(
-                                    abi.getName(), variantData.getName(), version)));
+                            ndkHandler.findSuitablePlatformVersion(abi.getName(), version)));
         }
 
         assert ndkHandler.getRevision() != null;
@@ -617,7 +616,7 @@ public abstract class ExternalNativeJsonGenerator {
                         variantData.getName(),
                         makefile,
                         sdkHandler.getSdkFolder(),
-                        sdkHandler.getNdkFolder(),
+                        ndkFolder,
                         soFolder,
                         objFolder,
                         externalNativeBuildFolder,

@@ -372,7 +372,7 @@ public class SdkAutoDownloadTest {
         // See https://github.com/ninja-build/ninja/issues/1161
         getExecutor().run("clean");
 
-        File ndkDirectory = FileUtils.join(mSdkHome, SdkConstants.FD_NDK);
+        File ndkDirectory = FileUtils.join(mSdkHome, SdkConstants.FD_NDK_SIDE_BY_SIDE);
         assertThat(ndkDirectory).isDirectory();
     }
 
@@ -405,7 +405,7 @@ public class SdkAutoDownloadTest {
         assertThat(result.getStdout())
                 .contains(
                         "Failed to install the following Android SDK packages as some licences have not been accepted");
-        assertThat(result.getStdout()).contains("ndk-bundle");
+        assertThat(result.getStdout()).contains("ndk");
     }
 
     @Test

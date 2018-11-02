@@ -16,187 +16,107 @@
 
 package com.android.build.gradle.internal.ndk;
 
-import static com.android.SdkConstants.FN_LOCAL_PROPERTIES;
+import static com.android.build.gradle.internal.cxx.configure.NdkLocatorKt.findNdkPath;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
-import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.core.Abi;
+import com.android.build.gradle.internal.cxx.configure.SdkSourceProperties;
 import com.android.repository.Revision;
 import com.android.sdklib.AndroidVersion;
-import com.android.utils.Pair;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Collection;
-import java.util.Properties;
-import org.gradle.api.logging.Logging;
 
 /**
  * Handles NDK related information.
+ *
+ * <p>This class has three phases of initialization: 1) Constructor is called with project
+ * directory. It's constructed by GlobalScope object *before* NDK version has been populated into
+ * the DSL. 2) Once NDK version has been populated setExtensionValues is called with the additional
+ * information. 3) Later, when information about the NDK is needed, the initialize() function is
+ * called.
+ *
+ * <p>If, at some point, the SDK manager installs NDK that didn't exist before on disk then
+ * invalidate() will be called to indicate that initilization is needed again.
  */
 public class NdkHandler {
     @NonNull private final File projectDir;
-    @Nullable
-    private String compileSdkVersion;
-    private File ndkDirectory;
-    @Nullable private NdkInfo ndkInfo;
-    @Nullable private Revision revision;
+    @Nullable private String compileSdkVersion;
+    @Nullable private String ndkVersionFromDsl;
+    @Nullable private Deferred deferred;
 
-    public NdkHandler(@Nullable String ndkVersionFromDsl, @NonNull File projectDir) {
-        // TODO: Consume ndkVersionFromDsl here
-        this.projectDir = projectDir;
-        relocateNdkFolder();
+    /** NdkHandler fields that are deferred-initialized. */
+    private static class Deferred {
+        @Nullable final File ndkDirectory;
+        @Nullable final NdkInfo ndkInfo;
+        @Nullable final Revision revision;
+
+        Deferred(
+                @Nullable File ndkDirectory,
+                @Nullable NdkInfo ndkInfo,
+                @Nullable Revision revision) {
+            this.ndkDirectory = ndkDirectory;
+            this.ndkInfo = ndkInfo;
+            this.revision = revision;
+        }
     }
 
-    /** Attempts to search again for the Ndk directory. */
-    public void relocateNdkFolder() {
-        ndkDirectory = findNdkDirectory(projectDir);
+    public NdkHandler(@NonNull File projectDir) {
+        this.projectDir = projectDir;
+        this.deferred = null;
+    }
 
-        if (ndkDirectory == null || !ndkDirectory.exists()) {
-            ndkInfo = null;
-            revision = null;
-        } else {
-            revision = findRevision(ndkDirectory);
+    /**
+     * Called to indicate that initialization is needed again. This should be due to SDK manager
+     * installing NDK on disk or if native build needs to initialize in order to register sync
+     * errors.
+     */
+    public void invalidate() {
+        this.deferred = null;
+    }
+
+    /** If not yet initialized, then initialize. It finds the NDK folder */
+    private void initialize() {
+        if (this.deferred != null) {
+            return;
+        }
+        File ndkDirectory = findNdkPath(ndkVersionFromDsl, projectDir);
+        Revision revision = null;
+        NdkInfo ndkInfo = null;
+        if (ndkDirectory != null && ndkDirectory.exists()) {
+            revision = SdkSourceProperties.Companion.fromInstallFolder(ndkDirectory).getRevision();
             if (revision == null) {
                 ndkInfo = new DefaultNdkInfo(ndkDirectory);
             } else {
                 ndkInfo = new NdkR14Info(ndkDirectory);
             }
         }
+        this.deferred = new Deferred(ndkDirectory, ndkInfo, revision);
     }
-
-    private static Properties readProperties(File file) {
-        Properties properties = new Properties();
-        try (FileInputStream fis = new FileInputStream(file);
-             InputStreamReader reader = new InputStreamReader(fis, Charsets.UTF_8)) {
-            properties.load(reader);
-        } catch (FileNotFoundException ignored) {
-            // ignore since we check up front and we don't want to fail on it anyway
-            // in case there's an env var.
-        } catch (IOException e) {
-            throw new RuntimeException(String.format("Unable to read %1$s.", file), e);
-        }
-        return properties;
-    }
-
-    @VisibleForTesting
-    @Nullable
-    public static Revision findRevision(@Nullable File ndkDirectory) {
-        if (ndkDirectory == null) {
-            return null;
-        } else {
-            File sourceProperties = new File(ndkDirectory, "source.properties");
-            if (!sourceProperties.exists()) {
-                // source.properties does not exist.  It's probably r10.  Use the DefaultNdkInfo.
-                return null;
-            }
-            Properties properties = readProperties(sourceProperties);
-            String version = properties.getProperty("Pkg.Revision");
-            if (version != null) {
-                return Revision.parseRevision(version);
-            } else {
-                return null;
-            }
-        }
-    }
-
 
     @Nullable
     public Revision getRevision() {
-        return revision;
+        initialize();
+        assert deferred != null;
+        return deferred.revision;
     }
 
     @Nullable
     public String getPlatformVersion() {
+        initialize();
+        assert deferred != null;
         assert compileSdkVersion != null;
-        assert ndkInfo != null;
-        return ndkInfo.findLatestPlatformVersion(compileSdkVersion);
+        return ndkInfo().findLatestPlatformVersion(compileSdkVersion);
     }
 
-    public void setCompileSdkVersion(@NonNull String compileSdkVersion) {
+    /** Values from the "extension" DSL. */
+    public void setExtensionValues(
+            @Nullable String ndkVersionFromDsl, @NonNull String compileSdkVersion) {
+        this.ndkVersionFromDsl = ndkVersionFromDsl;
         this.compileSdkVersion = compileSdkVersion;
-    }
-
-    @Nullable
-    private static File findNdkDirectory(@NonNull File projectDir) {
-        File localProperties = new File(projectDir, FN_LOCAL_PROPERTIES);
-        Properties properties = new Properties();
-        if (localProperties.isFile()) {
-            properties = readProperties(localProperties);
-        }
-
-        File ndkDir = findNdkDirectory(properties, projectDir);
-        if (ndkDir == null) {
-            return null;
-        }
-        return checkNdkDir(ndkDir) ? ndkDir : null;
-    }
-
-    /**
-     * Perform basic verification on the NDK directory.
-     */
-    private static boolean checkNdkDir(File ndkDir) {
-        if (!new File(ndkDir, "platforms").isDirectory()) {
-            invalidNdkWarning("NDK is missing a \"platforms\" directory.", ndkDir);
-            return false;
-        }
-        if (!new File(ndkDir, "toolchains").isDirectory()) {
-            invalidNdkWarning("NDK is missing a \"toolchains\" directory.", ndkDir);
-            return false;
-        }
-        return true;
-    }
-
-    private static void invalidNdkWarning(String message, File ndkDir) {
-        Logging.getLogger(NdkHandler.class).warn(
-                "{}\n"
-                        + "If you are using NDK, verify the ndk.dir is set to a valid NDK "
-                        + "directory.  It is currently set to {}.\n"
-                        + "If you are not using NDK, unset the NDK variable from ANDROID_NDK_HOME "
-                        + "or local.properties to remove this warning.\n",
-                message,
-                ndkDir.getAbsolutePath());
-    }
-
-    /**
-     * Determine the location of the NDK directory.
-     *
-     * The NDK directory can be set in the local.properties file, using the ANDROID_NDK_HOME
-     * environment variable or come bundled with the SDK.
-     *
-     * Return null if NDK directory is not found.
-     */
-    @Nullable
-    public static File findNdkDirectory(@NonNull Properties properties, @NonNull File projectDir) {
-        String ndkDirProp = properties.getProperty("ndk.dir");
-        if (ndkDirProp != null) {
-            return new File(ndkDirProp);
-        }
-
-        String ndkEnvVar = System.getenv("ANDROID_NDK_HOME");
-        if (ndkEnvVar != null) {
-            return new File(ndkEnvVar);
-        }
-
-        Pair<File, Boolean> sdkLocation = SdkHandler.findSdkLocation(properties, projectDir);
-        File sdkFolder = sdkLocation.getFirst();
-        if (sdkFolder != null) {
-            // Worth checking if the NDK came bundled with the SDK
-            File ndkBundle = new File(sdkFolder, SdkConstants.FD_NDK);
-            if (ndkBundle.isDirectory()) {
-                return ndkBundle;
-            }
-        }
-
-        return null;
+        this.deferred = null;
     }
 
     /**
@@ -204,13 +124,16 @@ public class NdkHandler {
      */
     @Nullable
     public File getNdkDirectory() {
-        return ndkDirectory;
+        initialize();
+        assert deferred != null;
+        return deferred.ndkDirectory;
     }
 
     /**
      * Return true if NDK directory is configured.
      */
     public boolean isConfigured() {
+        File ndkDirectory = getNdkDirectory();
         return ndkDirectory != null && ndkDirectory.isDirectory();
     }
 
@@ -263,8 +186,11 @@ public class NdkHandler {
      */
     @NonNull
     public Collection<Abi> getSupportedAbis() {
-        if (ndkInfo != null) {
-            return supports64Bits() ? ndkInfo.getSupportedAbis() : ndkInfo.getSupported32BitsAbis();
+        initialize();
+        if (ndkInfo() != null) {
+            return supports64Bits()
+                    ? ndkInfo().getSupportedAbis()
+                    : ndkInfo().getSupported32BitsAbis();
         }
         return supports64Bits() ? getAbiList() : getAbiList32();
     }
@@ -272,8 +198,8 @@ public class NdkHandler {
     /** Returns a list of supported ABI. */
     @NonNull
     public Collection<Abi> getDefaultAbis() {
-        if (ndkInfo != null) {
-            return supports64Bits() ? ndkInfo.getDefaultAbis() : ndkInfo.getDefault32BitsAbis();
+        if (ndkInfo() != null) {
+            return supports64Bits() ? ndkInfo().getDefaultAbis() : ndkInfo().getDefault32BitsAbis();
         }
         return supports64Bits() ? getAbiList() : getAbiList32();
     }
@@ -283,15 +209,20 @@ public class NdkHandler {
      */
     @NonNull
     public File getStripExecutable(Abi abi) {
-        checkNotNull(ndkInfo);
-        return ndkInfo.getStripExecutable(abi);
+        checkNotNull(getNdkDirectory());
+        return ndkInfo().getStripExecutable(abi);
     }
 
     public int findSuitablePlatformVersion(
             @NonNull String abi,
-            @NonNull String variantName,
             @Nullable AndroidVersion androidVersion) {
-        checkNotNull(ndkInfo);
-        return ndkInfo.findSuitablePlatformVersion(abi, androidVersion);
+        checkNotNull(ndkInfo());
+        return ndkInfo().findSuitablePlatformVersion(abi, androidVersion);
+    }
+
+    private NdkInfo ndkInfo() {
+        initialize();
+        assert this.deferred != null;
+        return this.deferred.ndkInfo;
     }
 }
