@@ -16,15 +16,17 @@
 
 package com.android.build.gradle.internal.scope
 
-import com.android.build.FilterData
 import com.android.build.OutputFile
 import com.android.build.VariantOutput
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
+import com.android.build.gradle.internal.fixtures.DirectWorkerExecutor
 import com.android.build.gradle.internal.scope.InternalArtifactType.*
+import com.android.build.gradle.internal.tasks.Workers
 import com.android.ide.common.build.ApkInfo
 import com.android.utils.Pair
 import com.google.common.base.Charsets
 import com.google.common.collect.ImmutableList
+import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Iterators
 import com.google.common.io.FileWriteMode
 import com.google.common.io.Files
@@ -43,6 +45,7 @@ import java.io.File
 import java.io.IOException
 import java.io.StringReader
 import java.util.HashMap
+import javax.inject.Inject
 
 /**
  * Tests for the {@link KBuildOutputs} class
@@ -299,4 +302,82 @@ class BuildElementsTest {
         }
     }
 
+    @Test
+    fun testTransformBuildElements() {
+        val folder = temporaryFolder.newFolder()
+        val splitOutputFolder = temporaryFolder.newFolder()
+        val manifestOutputFolder = temporaryFolder.newFolder()
+        val outputFile = File(folder, "output.json")
+        FileUtils.write(
+            outputFile,
+            "[{\"outputType\":{\"type\":\"MERGED_MANIFESTS\"},"
+                    + "\"apkInfo\":{\"type\":\"MAIN\",\"splits\":[],\"versionCode\":12},"
+                    + "\"path\":\"/foo/bar/AndroidManifest.xml\","
+                    + "\"properties\":{\"packageId\":\"com.android.tests.basic.debug\","
+                    + "\"split\":\"\"}},"
+                    + "{\"outputType\":{\"type\":\"DENSITY_OR_LANGUAGE_PACKAGED_SPLIT\"},"
+                    + "\"apkInfo\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
+                    + "\"value\":\"mdpi\"}],\"versionCode\":12},\"path\":"
+                    + "\"/foo/bar/SplitAware-mdpi-debug-unsigned.apk\",\"properties\":{}},"
+                    + "{\"outputType\":{\"type\":\"DENSITY_OR_LANGUAGE_PACKAGED_SPLIT\"},"
+                    + "\"apkInfo\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
+                    + "\"value\":\"xhdpi\"}],\"versionCode\":14},\"path\":"
+                    + "\"/foo/bar/SplitAware-xhdpi-debug-unsigned.apk\",\"properties\":{}},"
+                    + "{\"outputType\":{\"type\":\"DENSITY_OR_LANGUAGE_PACKAGED_SPLIT\"},"
+                    + "\"apkInfo\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
+                    + "\"value\":\"hdpi\"}],\"versionCode\":13},"
+                    + "\"path\":\"/foo/bar/SplitAware-hdpi-debug-unsigned.apk\",\"properties\""
+                    + ":{}}]"
+        )
+
+        val workers = Workers.getWorker(DirectWorkerExecutor())
+
+        ExistingBuildElements.from(DENSITY_OR_LANGUAGE_PACKAGED_SPLIT, folder).transform(
+            workers,
+            TransformTestRunnable::class.java
+        ) { _, input -> TransformTestParams(input, splitOutputFolder) }
+            .into(InternalArtifactType.APK, splitOutputFolder)
+
+        ExistingBuildElements.from(MERGED_MANIFESTS, folder).transform(
+            workers,
+            TransformTestRunnable::class.java
+        ) { _, input -> TransformTestParams(input, manifestOutputFolder) }
+            .into(InternalArtifactType.FULL_APK, manifestOutputFolder)
+
+        assertThat(
+            HashSet<String>(
+                ExistingBuildElements.from(
+                    InternalArtifactType.APK,
+                    splitOutputFolder
+                ).elements.map { it.outputFile.name })
+        ).containsExactlyElementsIn(
+            ImmutableSet.of(
+                "SplitAware-mdpi-debug-unsigned.apk",
+                "SplitAware-xhdpi-debug-unsigned.apk",
+                "SplitAware-hdpi-debug-unsigned.apk"
+            )
+        )
+
+        assertThat(
+            HashSet<String>(
+                ExistingBuildElements.from(
+                    InternalArtifactType.FULL_APK,
+                    manifestOutputFolder
+                ).elements.map { it.outputFile.name })
+        ).containsExactlyElementsIn(ImmutableSet.of("AndroidManifest.xml"))
+    }
+
+    private class TransformTestRunnable @Inject constructor(params: TransformTestParams) :
+        BuildElementsTransformRunnable(params) {
+        override fun run() {
+            val params = super.params as TransformTestParams
+            params.output!!.createNewFile()
+        }
+    }
+
+    private class TransformTestParams(
+        val input: File,
+        outputFolder: File,
+        override val output: File? = File(outputFolder, input.name)
+    ) : BuildElementsTransformParams()
 }
