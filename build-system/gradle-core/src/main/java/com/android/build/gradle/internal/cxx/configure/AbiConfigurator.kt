@@ -25,8 +25,7 @@ import com.android.builder.errors.EvalIssueReporter
  * This class is responsible for determining which ABIs are needed for the build based on the
  * relevant contents of build.gradle DSL.
  */
-class AbiConfigurator(issueReporter: EvalIssueReporter,
-        variantName: String,
+class AbiConfigurator(
         ndkHandlerSupportedAbis: Collection<Abi>,
         ndkHandlerDefaultAbis: Collection<Abi>,
         externalNativeBuildAbiFilters: Set<String>,
@@ -53,11 +52,8 @@ class AbiConfigurator(issueReporter: EvalIssueReporter,
         val userMistakes =
                 userChosenAbis subtract ndkHandlerSupportedAbiStrings
         if (!userMistakes.isEmpty()) {
-            issueReporter.reportError(
-                    EvalIssueReporter.Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION,
-                EvalIssueException("ABIs [${sortAndJoinAbiStrings(userMistakes)}] are not supported for platform. " +
-                            "Supported ABIs are [${sortAndJoinAbiStrings(ndkHandlerSupportedAbiStrings)}].",
-                    variantName))
+            error("ABIs [${sortAndJoinAbiStrings(userMistakes)}] are not supported for platform. " +
+                "Supported ABIs are [${sortAndJoinAbiStrings(ndkHandlerSupportedAbiStrings)}].")
         }
 
         val configurationAbis : Collection<Abi>
@@ -93,25 +89,19 @@ class AbiConfigurator(issueReporter: EvalIssueReporter,
                 // The user (or android studio) didn't select any legal ABIs, that's an error
                 // since there's nothing to build. Fall back to the ABIs from build.gradle so
                 // that there's something to show the user.
-                issueReporter.reportError(
-                        EvalIssueReporter.Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION,
-                    EvalIssueException("ABIs [$ideBuildTargetAbi] set by " +
+                error("ABIs [$ideBuildTargetAbi] set by " +
                                 "'${StringOption.IDE_BUILD_TARGET_ABI.propertyName}' gradle " +
                                 "flag is not supported. Supported ABIs " +
-                                "are [${sortAndJoinAbiStrings(allAbis)}].",
-                        variantName))
+                                "are [${sortAndJoinAbiStrings(allAbis)}].")
                 configurationAbis
             } else {
                 val invalidAbis = injectedAbis.filter { Abi.getByName(it) == null }
                 if (!invalidAbis.isEmpty()) {
                     // The user (or android studio) selected some illegal ABIs. Give a warning and
                     // continue on.
-                    issueReporter.reportWarning(
-                        EvalIssueReporter.Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION,
-                        "ABIs [$ideBuildTargetAbi] set by " +
-                                "'${StringOption.IDE_BUILD_TARGET_ABI.propertyName}' gradle " +
-                                "flag contained '${sortAndJoinAbiStrings(invalidAbis)}' which is invalid.",
-                        variantName)
+                    warn("ABIs [$ideBuildTargetAbi] set by " +
+                        "'${StringOption.IDE_BUILD_TARGET_ABI.propertyName}' gradle " +
+                        "flag contained '${sortAndJoinAbiStrings(invalidAbis)}' which is invalid.")
                 }
 
                 val legalButNotTargetedByConfiguration = injectedLegalAbis subtract configurationAbis
@@ -119,13 +109,10 @@ class AbiConfigurator(issueReporter: EvalIssueReporter,
                     // The user (or android studio) selected some ABIs that are valid but that
                     // aren't targeted by this build configuration. Warn but continue on with any
                     // ABIs that were valid.
-                    issueReporter.reportWarning(
-                        EvalIssueReporter.Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION,
-                        "ABIs [$ideBuildTargetAbi] set by " +
-                                "'${StringOption.IDE_BUILD_TARGET_ABI.propertyName}' gradle " +
-                                "flag contained '${sortAndJoinAbi(legalButNotTargetedByConfiguration)}' " +
-                                "not targeted by this project.",
-                        variantName)
+                    warn("ABIs [$ideBuildTargetAbi] set by " +
+                        "'${StringOption.IDE_BUILD_TARGET_ABI.propertyName}' gradle " +
+                        "flag contained '${sortAndJoinAbi(legalButNotTargetedByConfiguration)}' " +
+                        "not targeted by this project.")
                     // Keep ABIs actually targeted
                     injectedLegalAbis intersect configurationAbis
                 } else {

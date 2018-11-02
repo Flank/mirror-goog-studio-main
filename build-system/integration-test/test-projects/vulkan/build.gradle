@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId  "com.google.vulkan.tutorials.five"
-        minSdkVersion    rootProject.latestCompileSdk
+        minSdkVersion  24
         //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
         targetSdkVersion rootProject.latestCompileSdk
         versionCode 1

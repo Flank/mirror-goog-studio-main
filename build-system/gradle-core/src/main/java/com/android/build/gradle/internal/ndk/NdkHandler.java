@@ -292,6 +292,6 @@ public class NdkHandler {
             @NonNull String variantName,
             @Nullable AndroidVersion androidVersion) {
         checkNotNull(ndkInfo);
-        return ndkInfo.findSuitablePlatformVersion(abi, variantName, androidVersion);
+        return ndkInfo.findSuitablePlatformVersion(abi, androidVersion);
     }
 }

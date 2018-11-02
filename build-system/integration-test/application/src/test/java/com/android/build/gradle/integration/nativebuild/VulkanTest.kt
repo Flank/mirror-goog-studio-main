@@ -19,7 +19,11 @@ package com.android.build.gradle.integration.nativebuild
 import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import com.android.build.gradle.integration.common.utils.AssumeUtil
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import org.junit.Assume
+import org.junit.Before
+import org.junit.BeforeClass
 import org.junit.Rule
 import org.junit.Test
 

@@ -27,6 +27,7 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 /**
  * This strategy uses the older custom CMake (version 3.6) that directly generates the JSON file as
@@ -36,10 +37,11 @@ class CmakeAndroidNinjaExternalNativeJsonGenerator extends CmakeExternalNativeJs
     // Constructor
     CmakeAndroidNinjaExternalNativeJsonGenerator(
             @NonNull JsonGenerationVariantConfiguration config,
+            @NonNull Set<String> configurationFailures,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull File cmakeInstallFolder,
             @NonNull GradleBuildVariant.Builder stats) {
-        super(config, androidBuilder, cmakeInstallFolder, stats);
+        super(config, configurationFailures, androidBuilder, cmakeInstallFolder, stats);
     }
 
     @NonNull
