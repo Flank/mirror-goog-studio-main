@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks;
 
+import static com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfigurationKt.createJsonGenerationAbiConfiguration;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
@@ -70,8 +71,9 @@ public class CmakeExternalNativeJsonGeneratorFactoryTest {
         abis = Lists.newArrayList();
         for (Abi abi : Abi.values()) {
             abis.add(
-                    new JsonGenerationAbiConfiguration(
+                    createJsonGenerationAbiConfiguration(
                             abi,
+                            "debug",
                             new File("./json"),
                             new File("./obj"),
                             NativeBuildSystem.CMAKE,

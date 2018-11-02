@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks;
 
+import static com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfigurationKt.createJsonGenerationAbiConfiguration;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
@@ -76,8 +77,9 @@ public class CmakeAndroidNinjaExternalNativeJsonGeneratorTest {
         abis = Lists.newArrayList();
         for (Abi abi : Abi.values()) {
             abis.add(
-                    new JsonGenerationAbiConfiguration(
+                    createJsonGenerationAbiConfiguration(
                             abi,
+                            "debug",
                             new File("./json"),
                             new File("./obj"),
                             NativeBuildSystem.CMAKE,
@@ -133,8 +135,15 @@ public class CmakeAndroidNinjaExternalNativeJsonGeneratorTest {
         CmakeAndroidNinjaExternalNativeJsonGenerator cmakeAndroidNinjaStrategy =
                 new CmakeAndroidNinjaExternalNativeJsonGenerator(
                         config, androidBuilder, cmakeFolder, stats);
-        List<String> cacheArguments =
-                cmakeAndroidNinjaStrategy.getProcessBuilderArgs("x86", 12, jsonFolder);
+        JsonGenerationAbiConfiguration abiConfig =
+                createJsonGenerationAbiConfiguration(
+                        Abi.X86,
+                        "debug",
+                        new File("./json"),
+                        new File("./obj"),
+                        NativeBuildSystem.CMAKE,
+                        12);
+        List<String> cacheArguments = cmakeAndroidNinjaStrategy.getProcessBuilderArgs(abiConfig);
 
         assertThat(cacheArguments).isNotEmpty();
         assertThat(cacheArguments)

@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks;
 import static com.android.build.gradle.internal.cxx.process.ProcessOutputJunctionKt.createProcessOutputJunction;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConfiguration;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
@@ -43,9 +44,8 @@ class CmakeAndroidNinjaExternalNativeJsonGenerator extends CmakeExternalNativeJs
 
     @NonNull
     @Override
-    List<String> getCacheArguments(@NonNull String abi, int abiPlatformVersion) {
-        List<String> cacheArguments = getCommonCacheArguments(abi, abiPlatformVersion);
-
+    List<String> getCacheArguments(@NonNull JsonGenerationAbiConfiguration abiConfig) {
+        List<String> cacheArguments = getCommonCacheArguments(abiConfig);
         cacheArguments.add(
                 String.format("-DCMAKE_TOOLCHAIN_FILE=%s", getToolChainFile().getAbsolutePath()));
         cacheArguments.add(
@@ -56,14 +56,13 @@ class CmakeAndroidNinjaExternalNativeJsonGenerator extends CmakeExternalNativeJs
 
     @NonNull
     @Override
-    public String executeProcessAndGetOutput(
-            @NonNull String abi, int abiPlatformVersion, @NonNull File outputJsonDir)
+    public String executeProcessAndGetOutput(@NonNull JsonGenerationAbiConfiguration abiConfig)
             throws ProcessException, IOException {
-        String logPrefix = config.variantName + "|" + abi + " :";
+        String logPrefix = config.variantName + "|" + abiConfig.getAbiName() + " :";
         return createProcessOutputJunction(
-                        outputJsonDir.getParentFile(),
-                        "android_gradle_generate_cmake_ninja_json_" + abi,
-                        getProcessBuilder(abi, abiPlatformVersion, outputJsonDir),
+                        abiConfig.getExternalNativeBuildFolder(),
+                        "android_gradle_generate_cmake_ninja_json_" + abiConfig.getAbiName(),
+                        getProcessBuilder(abiConfig),
                         androidBuilder,
                         logPrefix)
                 .logStderrToInfo()

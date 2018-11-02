@@ -23,6 +23,7 @@ import static com.android.build.gradle.internal.cxx.process.ProcessOutputJunctio
 import com.android.annotations.NonNull;
 import com.android.build.gradle.external.gnumake.NativeBuildConfigValueBuilder;
 import com.android.build.gradle.internal.core.Abi;
+import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConfiguration;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue;
 import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor;
@@ -77,14 +78,16 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
 
     @Override
     void processBuildOutput(
-            @NonNull String buildOutput, @NonNull String abi, int abiPlatformVersion)
+            @NonNull String buildOutput, @NonNull JsonGenerationAbiConfiguration abiConfig)
             throws IOException {
         // Discover Application.mk if one exists next to Android.mk
         // If there is an Application.mk file next to Android.mk then pick it up.
         File applicationMk = new File(getMakeFile().getParent(), "Application.mk");
 
         // Write the captured ndk-build output to a file for diagnostic purposes.
-        diagnosticForAbi(abi, "parse and convert ndk-build output to build configuration JSON");
+        diagnosticForAbi(
+                abiConfig.getAbiName(),
+                "parse and convert ndk-build output to build configuration JSON");
 
         // Tasks, including the Exec task used to execute ndk-build, will execute in the same folder
         // as the module build.gradle. However, parsing of ndk-build output doesn't necessarily
@@ -113,15 +116,8 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
                 new NativeBuildConfigValueBuilder(getMakeFile(), projectDir)
                         .addCommands(
                                 getBuildCommand(
-                                        abi,
-                                        abiPlatformVersion,
-                                        applicationMk,
-                                        false /* removeJobsFlag */),
-                                getBuildCommand(
-                                                abi,
-                                                abiPlatformVersion,
-                                                applicationMk,
-                                                true /* removeJobsFlag */)
+                                        abiConfig, applicationMk, false /* removeJobsFlag */),
+                                getBuildCommand(abiConfig, applicationMk, true /* removeJobsFlag */)
                                         + " clean",
                                 config.variantName,
                                 buildOutput)
@@ -129,7 +125,9 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
 
         if (applicationMk.exists()) {
             diagnosticForAbi(
-                    abi, "found application make file %s", applicationMk.getAbsolutePath());
+                    abiConfig.getAbiName(),
+                    "found application make file %s",
+                    applicationMk.getAbsolutePath());
             Preconditions.checkNotNull(buildConfig.buildFiles);
             buildConfig.buildFiles.add(applicationMk);
         }
@@ -141,8 +139,7 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
                 .toJson(buildConfig);
 
         // Write the captured ndk-build output to JSON file
-        File expectedJson = ExternalNativeBuildTaskUtils.getOutputJson(getJsonFolder(), abi);
-        Files.write(expectedJson.toPath(), actualResult.getBytes(Charsets.UTF_8));
+        Files.write(abiConfig.getJsonFile().toPath(), actualResult.getBytes(Charsets.UTF_8));
     }
 
     /**
@@ -151,16 +148,13 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
      */
     @NonNull
     @Override
-    ProcessInfoBuilder getProcessBuilder(@NonNull String abi, int abiPlatformVersion,
-            @NonNull File outputJson) {
+    ProcessInfoBuilder getProcessBuilder(@NonNull JsonGenerationAbiConfiguration abiConfig) {
         // Discover Application.mk if one exists next to Android.mk
         // If there is an Application.mk file next to Android.mk then pick it up.
         File applicationMk = new File(getMakeFile().getParent(), "Application.mk");
         ProcessInfoBuilder builder = new ProcessInfoBuilder();
         builder.setExecutable(getNdkBuild())
-                .addArgs(
-                        getBaseArgs(
-                                abi, abiPlatformVersion, applicationMk, false /* removeJobsFlag */))
+                .addArgs(getBaseArgs(abiConfig, applicationMk, false /* removeJobsFlag */))
                 // Disable response files so we can parse the command line.
                 .addArgs("APP_SHORT_COMMANDS=false")
                 .addArgs("LOCAL_SHORT_COMMANDS=false")
@@ -171,12 +165,12 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
 
     @NonNull
     @Override
-    String executeProcess(@NonNull String abi, int abiPlatformVersion, @NonNull File outputJsonFile)
+    String executeProcess(@NonNull JsonGenerationAbiConfiguration abiConfig)
             throws ProcessException, IOException {
         return createProcessOutputJunction(
-                        outputJsonFile.getParentFile(),
-                        "android_gradle_generate_ndk_build_json_" + abi,
-                        getProcessBuilder(abi, abiPlatformVersion, outputJsonFile),
+                        abiConfig.getObjFolder(),
+                        "android_gradle_generate_ndk_build_json_" + abiConfig.getAbiName(),
+                        getProcessBuilder(abiConfig),
                         androidBuilder,
                         "")
                 .logStderrToInfo()
@@ -229,8 +223,7 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
     /** Get the base list of arguments for invoking ndk-build. */
     @NonNull
     private List<String> getBaseArgs(
-            @NonNull String abi,
-            int abiPlatformVersion,
+            @NonNull JsonGenerationAbiConfiguration abiConfig,
             @NonNull File applicationMk,
             boolean removeJobsFlag) {
         List<String> result = Lists.newArrayList();
@@ -246,8 +239,8 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
         // NDK_ALL_ABIS is the universe of all ABIs for this build. NDK_ALL_ABIS is set to just the
         // current ABI. If we don't do this, then ndk-build will erase build artifacts for all abis
         // aside from the current.
-        result.add("APP_ABI=" + abi);
-        result.add("NDK_ALL_ABIS=" + abi);
+        result.add("APP_ABI=" + abiConfig.getAbiName());
+        result.add("NDK_ALL_ABIS=" + abiConfig.getAbiName());
 
         if (isDebuggable()) {
             result.add("NDK_DEBUG=1");
@@ -255,7 +248,7 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
             result.add("NDK_DEBUG=0");
         }
 
-        result.add("APP_PLATFORM=android-" + abiPlatformVersion);
+        result.add("APP_PLATFORM=android-" + abiConfig.getAbiPlatformVersion());
 
         // getObjFolder is set to the "local" subfolder in the user specified directory, therefore,
         // NDK_OUT should be set to getObjFolder().getParent() instead of getObjFolder().
@@ -319,13 +312,11 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
     /** Get the build command */
     @NonNull
     private String getBuildCommand(
-            @NonNull String abi,
-            int abiPlatformVersion,
+            @NonNull JsonGenerationAbiConfiguration abiConfig,
             @NonNull File applicationMk,
             boolean removeJobsFlag) {
         return getNdkBuild()
                 + " "
-                + Joiner.on(" ")
-                        .join(getBaseArgs(abi, abiPlatformVersion, applicationMk, removeJobsFlag));
+                + Joiner.on(" ").join(getBaseArgs(abiConfig, applicationMk, removeJobsFlag));
     }
 }
