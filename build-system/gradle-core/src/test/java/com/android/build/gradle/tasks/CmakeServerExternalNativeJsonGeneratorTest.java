@@ -479,7 +479,9 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
                         debuggable,
                         abis,
                         ndkHandler.getRevision(),
-                        nativeBuildConfigurationsJsons);
+                        nativeBuildConfigurationsJsons,
+                        new File("./compiler-settings-cache"),
+                        true);
         return new CmakeServerExternalNativeJsonGenerator(
                 config, androidBuilder, cmakeFolder, stats);
     }

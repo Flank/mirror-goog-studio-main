@@ -125,7 +125,9 @@ public class CmakeAndroidNinjaExternalNativeJsonGeneratorTest {
                         debuggable,
                         abis,
                         Revision.parseRevision("15"),
-                        nativeBuildConfigurationsJsons);
+                        nativeBuildConfigurationsJsons,
+                        new File("./compiler-settings-cache"),
+                        true);
         Mockito.when(androidBuilder.getLogger()).thenReturn(logger);
         Mockito.when(androidBuilder.getIssueReporter()).thenReturn(issueReporter);
         CmakeAndroidNinjaExternalNativeJsonGenerator cmakeAndroidNinjaStrategy =

@@ -555,6 +555,7 @@ public abstract class ExternalNativeJsonGenerator {
 
     @NonNull
     public static ExternalNativeJsonGenerator create(
+            @NonNull File rootBuildGradlePath,
             @NonNull String projectPath,
             @NonNull File projectDir,
             @NonNull File buildDir,
@@ -678,7 +679,11 @@ public abstract class ExternalNativeJsonGenerator {
                         variantConfig.getBuildType().isDebuggable(),
                         abiConfigurations,
                         ndkHandler.getRevision(),
-                        expectedJsons);
+                        expectedJsons,
+                        new File(rootBuildGradlePath, ".externalNativeBuild"),
+                        globalScope
+                                .getProjectOptions()
+                                .get(BooleanOption.ENABLE_NATIVE_COMPILER_SETTINGS_CACHE));
 
 
         switch (buildSystem) {

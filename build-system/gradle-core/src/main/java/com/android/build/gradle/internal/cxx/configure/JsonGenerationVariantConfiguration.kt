@@ -34,5 +34,7 @@ data class JsonGenerationVariantConfiguration(
     @JvmField val debuggable: Boolean,
     @JvmField val abiConfigurations: List<JsonGenerationAbiConfiguration>,
     @JvmField val ndkVersion : Revision,
-    @JvmField val generatedJsonFiles : List<File>
+    @JvmField val generatedJsonFiles : List<File>,
+    @JvmField val compilerSettingsCacheFolder : File,
+    @JvmField val enableCmakeCompilerSettingsCache : Boolean
 )
