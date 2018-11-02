@@ -124,6 +124,7 @@ import org.jetbrains.uast.UCallableReferenceExpression
 import org.jetbrains.uast.UCatchClause
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UClassLiteralExpression
+import org.jetbrains.uast.UDeclaration
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UForEachExpression
@@ -1817,6 +1818,20 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                         }
                     } else if (isBenignConstantUsage(node, name, owner)) {
                         return
+                    }
+
+                    if (owner == "java.lang.annotation.ElementType") {
+                        // TYPE_USE and TYPE_PARAMETER annotations cannot be referenced
+                        // on older devices, but it's typically fine to declare these
+                        // annotations since they're normally not loaded at runtime; they're
+                        // meant for static analysis.
+                        val parent: UDeclaration? = node.getParentOfType(
+                            parentClass = UDeclaration::class.java,
+                            strict = true
+                        )
+                        if (parent is UClass && parent.isAnnotationType) {
+                            return
+                        }
                     }
 
                     val fqcn = getFqcn(owner) + '#'.toString() + name

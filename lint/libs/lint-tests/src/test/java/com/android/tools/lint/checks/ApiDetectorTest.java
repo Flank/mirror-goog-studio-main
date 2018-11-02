@@ -2654,95 +2654,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    @SuppressWarnings("OnDemandImport")
-    public void testTypeAnnotations() {
-        if (createClient().getHighestKnownApiLevel() < 24) {
-            // This test only works if you have at least Android N installed
-            return;
-        }
-
-        // Type annotations are not supported
-        String expected =
-                ""
-                        + "src/test/pkg/MyAnnotation.java:9: Error: Field requires API level 26 (current min is 15): java.lang.annotation.ElementType#TYPE_PARAMETER [NewApi]\n"
-                        + "@Target({METHOD, PARAMETER, FIELD, LOCAL_VARIABLE, TYPE_PARAMETER, TYPE_USE})\n"
-                        + "                                                   ~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/MyAnnotation.java:9: Error: Field requires API level 26 (current min is 15): java.lang.annotation.ElementType#TYPE_USE [NewApi]\n"
-                        + "@Target({METHOD, PARAMETER, FIELD, LOCAL_VARIABLE, TYPE_PARAMETER, TYPE_USE})\n"
-                        + "                                                                   ~~~~~~~~\n"
-                        + "src/test/pkg/MyAnnotation2.java:9: Error: Field requires API level 26 (current min is 15): java.lang.annotation.ElementType#TYPE_PARAMETER [NewApi]\n"
-                        + "@Target(TYPE_PARAMETER)\n"
-                        + "        ~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/MyAnnotation4.java:8: Error: Field requires API level 26 (current min is 15): java.lang.annotation.ElementType#TYPE_PARAMETER [NewApi]\n"
-                        + "@Target(TYPE_PARAMETER)\n"
-                        + "        ~~~~~~~~~~~~~~\n"
-                        + "4 errors, 0 warnings";
-        //noinspection all // Sample code
-        lint().files(
-                        manifest().minSdk(15),
-                        java(
-                                "src/test/pkg/MyAnnotation.java",
-                                ""
-                                        + "package test.pkg;\n"
-                                        + "\n"
-                                        + "import java.lang.annotation.*;\n"
-                                        + "import static java.lang.annotation.ElementType.*;\n"
-                                        + "import static java.lang.annotation.RetentionPolicy.*;\n"
-                                        + "\n"
-                                        + "@Documented\n"
-                                        + "@Retention(SOURCE)\n"
-                                        + "@Target({METHOD, PARAMETER, FIELD, LOCAL_VARIABLE, TYPE_PARAMETER, TYPE_USE})\n"
-                                        + "public @interface MyAnnotation {\n"
-                                        + "}"),
-                        java(
-                                "src/test/pkg/MyAnnotation2.java",
-                                ""
-                                        + "package test.pkg;\n"
-                                        + "\n"
-                                        + "import java.lang.annotation.*;\n"
-                                        + "import static java.lang.annotation.ElementType.*;\n"
-                                        + "import static java.lang.annotation.RetentionPolicy.*;\n"
-                                        + "\n"
-                                        + "@Documented\n"
-                                        + "@Retention(RUNTIME)\n"
-                                        + "@Target(TYPE_PARAMETER)\n"
-                                        + "public @interface MyAnnotation2 {\n"
-                                        + "}"),
-                        java(
-                                "src/test/pkg/MyAnnotation3.java",
-                                ""
-                                        + "package test.pkg;\n"
-                                        + "\n"
-                                        + "import android.annotation.SuppressLint;\n"
-                                        + "import java.lang.annotation.*;\n"
-                                        + "import static java.lang.annotation.ElementType.*;\n"
-                                        + "import static java.lang.annotation.RetentionPolicy.*;\n"
-                                        + "\n"
-                                        + "@Documented\n"
-                                        + "@Retention(SOURCE)\n"
-                                        + "@SuppressLint(\"NewApi\")\n"
-                                        + "@Target(TYPE_PARAMETER)\n"
-                                        + "public @interface MyAnnotation3 {\n"
-                                        + "}"),
-                        java(
-                                "src/test/pkg/MyAnnotation4.java",
-                                ""
-                                        + "package test.pkg;\n"
-                                        + "\n"
-                                        + "import java.lang.annotation.*;\n"
-                                        + "import static java.lang.annotation.ElementType.*;\n"
-                                        + "import static java.lang.annotation.RetentionPolicy.*;\n"
-                                        + "\n"
-                                        + "@Documented\n"
-                                        // No warnings if not using runtime retention (class is default)
-                                        + "@Target(TYPE_PARAMETER)\n"
-                                        + "public @interface MyAnnotation2 {\n"
-                                        + "}"))
-                .checkMessage(this::checkReportedError)
-                .run()
-                .expect(expected);
-    }
-
     public void testAnonymousInherited() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=172621
         //noinspection all // Sample code
@@ -5348,6 +5259,44 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "            getContext(); // Expects warning from lint\n"
                                 + "            ~~~~~~~~~~\n"
                                 + "2 errors, 0 warnings");
+    }
+
+    public void testTypeUseAnnotations() {
+        // Regression test for issue 118489828: type use annotations are allowed
+        lint().files(
+                        manifest().minSdk(15),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import java.lang.annotation.ElementType;\n"
+                                        + "import java.lang.annotation.Repeatable;\n"
+                                        + "import java.lang.annotation.Target;\n"
+                                        + "\n"
+                                        + "public class TypeUseAnnotations {\n"
+                                        + "    @Target({ElementType.TYPE_PARAMETER, ElementType.TYPE_USE}) // OK\n"
+                                        + "    @interface MyTypeUseAnnotation {\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    public void test() {\n"
+                                        + "        System.out.println(ElementType.TYPE_PARAMETER); // ERROR\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "class TypeUseAnnotations {\n"
+                                        + "    @Target(AnnotationTarget.TYPE_PARAMETER, AnnotationTarget.TYPE)\n"
+                                        + "    internal annotation class MyTypeUseAnnotation\n"
+                                        + "}\n"))
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/TypeUseAnnotations.java:13: Error: Field requires API level 26 (current min is 15): java.lang.annotation.ElementType#TYPE_PARAMETER [NewApi]\n"
+                                + "        System.out.println(ElementType.TYPE_PARAMETER); // ERROR\n"
+                                + "                           ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "1 errors, 0 warnings");
     }
 
     public void test110576964() {
