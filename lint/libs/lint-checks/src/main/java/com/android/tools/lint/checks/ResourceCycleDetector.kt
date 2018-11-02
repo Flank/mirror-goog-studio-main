@@ -294,6 +294,13 @@ class ResourceCycleDetector : ResourceXmlDetector() {
                 if (!parent.isEmpty() && !parent.startsWith(ANDROID_STYLE_RESOURCE_PREFIX)) {
                     val parentName = parent.substring(parent.lastIndexOf('/') + 1)
                     handleReference(context, parentNode, ResourceType.STYLE, name, parentName)
+
+                    if (parent.startsWith(PREFIX_RESOURCE_REF) && !parent.contains("style/")) {
+                        context.report(
+                            CYCLE, parentNode, context.getLocation(parentNode),
+                            "Invalid parent reference: expected a @style"
+                        )
+                    }
                 }
             } else if (mReferences != null && nameNode != null) {
                 val name = nameNode.value

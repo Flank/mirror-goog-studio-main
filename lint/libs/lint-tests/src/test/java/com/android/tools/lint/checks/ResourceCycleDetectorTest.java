@@ -25,15 +25,14 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
         return new ResourceCycleDetector();
     }
 
-    public void testStyles() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testStyles() {
+        String expected =
                 ""
                         + "res/values/styles.xml:9: Error: Style DetailsPage_EditorialBuyButton should not extend itself [ResourceCycle]\n"
                         + "<style name=\"DetailsPage_EditorialBuyButton\" parent=\"@style/DetailsPage_EditorialBuyButton\" />\n"
                         + "                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(
+                        + "1 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "res/values/styles.xml",
                                 ""
@@ -51,18 +50,19 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                                         + "-->\n"
                                         + "\n"
                                         + "</resources>\n"
-                                        + "\n")));
+                                        + "\n"))
+                .run()
+                .expect(expected);
     }
 
-    public void testStyleImpliedParent() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testStyleImpliedParent() {
+        String expected =
                 ""
                         + "res/values/stylecycle.xml:3: Error: Potential cycle: PropertyToggle is the implied parent of PropertyToggle.Base and this defines the opposite [ResourceCycle]\n"
                         + "  <style name=\"PropertyToggle\" parent=\"@style/PropertyToggle.Base\"></style>\n"
                         + "                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(
+                        + "1 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "res/values/stylecycle.xml",
                                 ""
@@ -70,18 +70,40 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                                         + "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
                                         + "  <style name=\"PropertyToggle\" parent=\"@style/PropertyToggle.Base\"></style>\n"
                                         + "  <style name=\"PropertyToggle.Base\"></style>\n"
-                                        + "</resources>\n")));
+                                        + "</resources>\n"))
+                .run()
+                .expect(expected);
     }
 
-    public void testLayouts() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testStylesInvalidParent() {
+        // Regression test for 115722815
+        lint().files(
+                        xml(
+                                "res/values/styles.xml",
+                                ""
+                                        + "<resources>\n"
+                                        + "    <style name=\"AppTheme\" parent=\"@string/app_name\">\n"
+                                        + "        <item name=\"colorPrimary\">@color/colorPrimary</item>\n"
+                                        + "    </style>\n"
+                                        + "</resources>\n"
+                                        + "\n"))
+                .run()
+                .expect(
+                        ""
+                                + "res/values/styles.xml:2: Error: Invalid parent reference: expected a @style [ResourceCycle]\n"
+                                + "    <style name=\"AppTheme\" parent=\"@string/app_name\">\n"
+                                + "                           ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "1 errors, 0 warnings");
+    }
+
+    public void testLayouts() {
+        String expected =
                 ""
                         + "res/layout/layoutcycle1.xml:10: Error: Layout layoutcycle1 should not include itself [ResourceCycle]\n"
                         + "        layout=\"@layout/layoutcycle1\" />\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(
+                        + "1 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "res/layout/layoutcycle1.xml",
                                 ""
@@ -96,11 +118,12 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                                         + "        android:layout_height=\"wrap_content\"\n"
                                         + "        layout=\"@layout/layoutcycle1\" />\n"
                                         + "\n"
-                                        + "</LinearLayout>\n")));
+                                        + "</LinearLayout>\n"))
+                .run()
+                .expect(expected);
     }
 
-    public void testNoCycleThroughFramework() throws Exception {
-        //noinspection all // Sample code
+    public void testNoCycleThroughFramework() {
         lint().files(
                         xml(
                                 "res/values/theme.xml",
@@ -118,32 +141,32 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testColors() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testColors() {
+        String expected =
                 ""
                         + "res/values/colorcycle1.xml:2: Error: Color test should not reference itself [ResourceCycle]\n"
                         + "    <color name=\"test\">@color/test</color>\n"
                         + "                       ^\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(
+                        + "1 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "res/values/colorcycle1.xml",
                                 ""
                                         + "<resources>\n"
                                         + "    <color name=\"test\">@color/test</color>\n"
-                                        + "</resources>\n")));
+                                        + "</resources>\n"))
+                .run()
+                .expect(expected);
     }
 
-    public void testAaptCrash() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testAaptCrash() {
+        String expected =
                 ""
                         + "res/values/aaptcrash.xml:5: Error: This construct can potentially crash aapt during a build. Change @+id/titlebar to @id/titlebar and define the id explicitly using <item type=\"id\" name=\"titlebar\"/> instead. [AaptCrash]\n"
                         + "        <item name=\"android:id\">@+id/titlebar</item>\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(
+                        + "1 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "res/values/aaptcrash.xml",
                                 ""
@@ -156,21 +179,22 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                                         + "        <item name=\"android:layout_width\">fill_parent</item>\n"
                                         + "        <item name=\"android:layout_height\">@dimen/titlebar_height</item>\n"
                                         + "    </style>\n"
-                                        + "</resources>\n")));
+                                        + "</resources>\n"))
+                .run()
+                .expect(expected);
     }
 
-    public void testDeepColorCycle1() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testDeepColorCycle1() {
+        String expected =
                 ""
                         + "res/values/colorcycle2.xml:2: Error: Color Resource definition cycle: test1 => test2 => test3 => test1 [ResourceCycle]\n"
                         + "    <color name=\"test1\">@color/test2</color>\n"
                         + "                        ^\n"
                         + "    res/values/colorcycle4.xml:2: Reference from @color/test3 to color/test1 here\n"
                         + "    res/values/colorcycle3.xml:2: Reference from @color/test2 to color/test3 here\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(
-                        mColorcycle2,
+                        + "1 errors, 0 warnings\n";
+        lint().files(
+                        colorcycle2,
                         xml(
                                 "res/values/colorcycle3.xml",
                                 ""
@@ -183,38 +207,40 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                                 ""
                                         + "<resources>\n"
                                         + "    <color name=\"test3\">@color/test1</color>\n"
-                                        + "</resources>\n")));
+                                        + "</resources>\n"))
+                .run()
+                .expect(expected);
     }
 
-    public void testDeepColorCycle2() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testDeepColorCycle2() {
+        String expected =
                 ""
                         + "res/values/colorcycle5.xml:2: Error: Color Resource definition cycle: test1 => test2 => test1 [ResourceCycle]\n"
                         + "    <color name=\"test1\">@color/test2</color>\n"
                         + "                        ^\n"
                         + "    res/values/colorcycle5.xml:3: Reference from @color/test2 to color/test1 here\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(
+                        + "1 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "res/values/colorcycle5.xml",
                                 ""
                                         + "<resources>\n"
                                         + "    <color name=\"test1\">@color/test2</color>\n"
                                         + "    <color name=\"test2\">@color/test1</color>\n"
-                                        + "</resources>\n")));
+                                        + "</resources>\n"))
+                .run()
+                .expect(expected);
     }
 
-    public void testDeepStyleCycle1() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testDeepStyleCycle1() {
+        String expected =
                 ""
                         + "res/values/stylecycle1.xml:6: Error: Style Resource definition cycle: ButtonStyle => ButtonStyle.Base => ButtonStyle [ResourceCycle]\n"
                         + "    <style name=\"ButtonStyle\" parent=\"ButtonStyle.Base\">\n"
                         + "                              ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    res/values/stylecycle1.xml:3: Reference from @style/ButtonStyle.Base to style/ButtonStyle here\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(
+                        + "1 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "res/values/stylecycle1.xml",
                                 ""
@@ -226,20 +252,21 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                                         + "    <style name=\"ButtonStyle\" parent=\"ButtonStyle.Base\">\n"
                                         + "        <item name=\"android:layout_height\">40dp</item>\n"
                                         + "    </style>\n"
-                                        + "</resources>\n")));
+                                        + "</resources>\n"))
+                .run()
+                .expect(expected);
     }
 
-    public void testDeepStyleCycle2() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testDeepStyleCycle2() {
+        String expected =
                 ""
                         + "res/values/stylecycle2.xml:3: Error: Style Resource definition cycle: mystyle1 => mystyle2 => mystyle3 => mystyle1 [ResourceCycle]\n"
                         + "    <style name=\"mystyle1\" parent=\"@style/mystyle2\">\n"
                         + "                           ~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    res/values/stylecycle2.xml:9: Reference from @style/mystyle3 to style/mystyle1 here\n"
                         + "    res/values/stylecycle2.xml:6: Reference from @style/mystyle2 to style/mystyle3 here\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(
+                        + "1 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "res/values/stylecycle2.xml",
                                 ""
@@ -254,17 +281,16 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                                         + "    <style name=\"mystyle3\" parent=\"@style/mystyle1\">\n"
                                         + "        <item name=\"android:textColor\">#ffff00</item>\n"
                                         + "    </style>\n"
-                                        + "</resources>\n")));
+                                        + "</resources>\n"))
+                .run()
+                .expect(expected);
     }
 
-    public void testDeepIncludeOk() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
-                        mLayout1,
-                        mLayout2,
-                        mLayout3,
+    public void testDeepIncludeOk() {
+        lint().files(
+                        layout1,
+                        layout2,
+                        layout3,
                         xml(
                                 "res/layout/layout4.xml",
                                 ""
@@ -286,23 +312,24 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                                         + "        android:layout_height=\"wrap_content\"\n"
                                         + "        android:text=\"Button\" />\n"
                                         + "\n"
-                                        + "</LinearLayout>\n")));
+                                        + "</LinearLayout>\n"))
+                .run()
+                .expectClean();
     }
 
-    public void testDeepIncludeCycle() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testDeepIncludeCycle() {
+        String expected =
                 ""
                         + "res/layout/layout1.xml:10: Error: Layout Resource definition cycle: layout1 => layout2 => layout4 => layout1 [ResourceCycle]\n"
                         + "        layout=\"@layout/layout2\" />\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    res/layout/layout4.xml:16: Reference from @layout/layout4 to layout/layout1 here\n"
                         + "    res/layout/layout2.xml:16: Reference from @layout/layout2 to layout/layout4 here\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(
-                        mLayout1,
-                        mLayout2,
-                        mLayout3,
+                        + "1 errors, 0 warnings\n";
+        lint().files(
+                        layout1,
+                        layout2,
+                        layout3,
                         xml(
                                 "res/layout/layout4.xml",
                                 ""
@@ -323,12 +350,13 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                                         + "        android:layout_height=\"wrap_content\"\n"
                                         + "        layout=\"@layout/layout1\" />\n"
                                         + "\n"
-                                        + "</LinearLayout>\n")));
+                                        + "</LinearLayout>\n"))
+                .run()
+                .expect(expected);
     }
 
-    public void testDeepAliasCycle() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testDeepAliasCycle() {
+        String expected =
                 ""
                         + "res/values/aliases.xml:2: Error: Layout Resource definition cycle: layout10 => layout20 => layout30 => layout10 [ResourceCycle]\n"
                         + "    <item name=\"layout10\" type=\"layout\">@layout/layout20</item>\n"
@@ -344,8 +372,8 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    res/values/aliases.xml:6: Reference from @layout/layout4 to layout/layout1 here\n"
                         + "    res/layout/layout2.xml:16: Reference from @layout/layout2 to layout/layout4 here\n"
-                        + "3 errors, 0 warnings\n",
-                lintProject(
+                        + "3 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "res/values/aliases.xml",
                                 ""
@@ -357,22 +385,23 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                                         + "    <item name=\"layout4\" type=\"layout\">@layout/layout1</item>\n"
                                         + "</resources>\n"
                                         + "\n"),
-                        mLayout1,
-                        mLayout2,
-                        mLayout3,
-                        mColorcycle2));
+                        layout1,
+                        layout2,
+                        layout3,
+                        colorcycle2)
+                .run()
+                .expect(expected);
     }
 
-    public void testColorStateListCycle() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testColorStateListCycle() {
+        String expected =
                 ""
                         + "res/values/aliases2.xml:2: Error: Color Resource definition cycle: bright_foreground_dark => color1 => bright_foreground_dark [ResourceCycle]\n"
                         + "    <item name=\"bright_foreground_dark\" type=\"color\">@color/color1</item>\n"
                         + "                                                     ^\n"
                         + "    res/color/color1.xml:3: Reference from @color/color1 to color/bright_foreground_dark here\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(
+                        + "1 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "res/color/color1.xml",
                                 ""
@@ -381,20 +410,21 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                                         + "    <item android:state_enabled=\"false\" android:color=\"@color/bright_foreground_dark_disabled\"/>\n"
                                         + "    <item android:color=\"@color/bright_foreground_dark\"/>\n"
                                         + "</selector>\n"),
-                        mAliases2));
+                        aliases2)
+                .run()
+                .expect(expected);
     }
 
-    public void testDrawableStateListCycle() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testDrawableStateListCycle() {
+        String expected =
                 ""
                         + "res/drawable/drawable1.xml:4: Error: Drawable Resource definition cycle: drawable1 => textfield_search_pressed => drawable2 => drawable1 [ResourceCycle]\n"
                         + "    <item android:state_window_focused=\"false\" android:state_enabled=\"true\"\n"
                         + "    ^\n"
                         + "    res/values/aliases2.xml:4: Reference from @drawable/drawable2 to drawable/drawable1 here\n"
                         + "    res/values/aliases2.xml:3: Reference from @drawable/textfield_search_pressed to drawable/drawable2 here\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(
+                        + "1 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "res/drawable/drawable1.xml",
                                 ""
@@ -413,19 +443,20 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                                         + "    <item android:drawable=\"@drawable/textfield_search_default\" />\n"
                                         + "</selector>\n"
                                         + "\n"),
-                        mAliases2));
+                        aliases2)
+                .run()
+                .expect(expected);
     }
 
-    public void testFontCycle() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testFontCycle() {
+        String expected =
                 ""
                         + "res/font/font1.xml:6: Error: Font Resource definition cycle: font1 => font2 => font1 [ResourceCycle]\n"
                         + "        android:font=\"@font/font2\" />\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    res/font/font2.xml:6: Reference from @font/font2 to font/font1 here\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(
+                        + "1 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "res/font/font1.xml",
                                 ""
@@ -447,20 +478,21 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                                         + "        android:fontWeight=\"400\"\n"
                                         + "        android:font=\"@font/font1\" />\n"
                                         + "</font-family>"
-                                        + "\n")));
+                                        + "\n"))
+                .run()
+                .expect(expected);
     }
 
-    public void testFontCycleWithLocation() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testFontCycleWithLocation() {
+        String expected =
                 ""
                         + "res/font/font1.xml:6: Error: Font Resource definition cycle: font1 => font2 => font3 => font1 [ResourceCycle]\n"
                         + "        android:font=\"@font/font2\" />\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    res/font/font3.xml:6: Reference from @font/font3 to font/font1 here\n"
                         + "    res/font/font2.xml:6: Reference from @font/font2 to font/font3 here\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(
+                        + "1 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "res/font/font1.xml",
                                 ""
@@ -493,12 +525,13 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                                         + "        android:fontWeight=\"700\"\n"
                                         + "        android:font=\"@font/font1\" />\n"
                                         + "</font-family>"
-                                        + "\n")));
+                                        + "\n"))
+                .run()
+                .expect(expected);
     }
 
     public void testAdaptiveIconCycle() {
         // Regression test for issue 67462465: Flag cycles in adaptive icons
-        //noinspection all // Sample code
         lint().files(
                         xml(
                                 "res/drawable/drawable_recursive.xml",
@@ -519,7 +552,6 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
 
     public void testNoCycleWithDifferentTypes() {
         // Ensure that we don't think we have a cycle when the folder+resource types don't match
-        //noinspection all // Sample code
         lint().files(
                         // Sample from support/v17/leanback
                         xml(
@@ -550,8 +582,6 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
         // Ensure that we don't consider tools:showIn as a real resource since it's not
         // a regular resource reference and is used to clue in the layout editor for what
         // layout to surround a layout with
-
-        //noinspection all // Sample code
         lint().files(
                         xml(
                                 "res/layout/a.xml",
@@ -619,8 +649,7 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    @SuppressWarnings("all") // Sample code
-    private TestFile mAliases2 =
+    private TestFile aliases2 =
             xml(
                     "res/values/aliases2.xml",
                     ""
@@ -631,8 +660,7 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                             + "</resources>\n"
                             + "\n");
 
-    @SuppressWarnings("all") // Sample code
-    private TestFile mColorcycle2 =
+    private TestFile colorcycle2 =
             xml(
                     "res/values/colorcycle2.xml",
                     ""
@@ -642,8 +670,7 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                             + "    <color name=\"unrelated2\">#ff0000</color>\n"
                             + "</resources>\n");
 
-    @SuppressWarnings("all") // Sample code
-    private TestFile mLayout1 =
+    private TestFile layout1 =
             xml(
                     "res/layout/layout1.xml",
                     ""
@@ -672,8 +699,7 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                             + "\n"
                             + "</LinearLayout>\n");
 
-    @SuppressWarnings("all") // Sample code
-    private TestFile mLayout2 =
+    private TestFile layout2 =
             xml(
                     "res/layout/layout2.xml",
                     ""
@@ -701,8 +727,7 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                             + "\n"
                             + "</LinearLayout>\n");
 
-    @SuppressWarnings("all") // Sample code
-    private TestFile mLayout3 =
+    private TestFile layout3 =
             xml(
                     "res/layout/layout3.xml",
                     ""
