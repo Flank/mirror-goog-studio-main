@@ -135,7 +135,7 @@ public class CmakeAndroidNinjaExternalNativeJsonGeneratorTest {
         Mockito.when(androidBuilder.getIssueReporter()).thenReturn(issueReporter);
         CmakeAndroidNinjaExternalNativeJsonGenerator cmakeAndroidNinjaStrategy =
                 new CmakeAndroidNinjaExternalNativeJsonGenerator(
-                        config, androidBuilder, cmakeFolder, stats);
+                        config, new HashSet<>(), androidBuilder, cmakeFolder, stats);
         JsonGenerationAbiConfiguration abiConfig =
                 createJsonGenerationAbiConfiguration(
                         Abi.X86,

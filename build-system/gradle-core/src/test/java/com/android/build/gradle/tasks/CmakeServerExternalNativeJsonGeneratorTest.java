@@ -494,7 +494,7 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
                         new File("./compiler-settings-cache"),
                         true);
         return new CmakeServerExternalNativeJsonGenerator(
-                config, androidBuilder, cmakeFolder, stats);
+                config, new HashSet<>(), androidBuilder, cmakeFolder, stats);
     }
 
     /**

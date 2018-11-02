@@ -16,11 +16,13 @@
 
 package com.android.build.gradle.tasks;
 
+import static com.android.build.gradle.internal.cxx.configure.LoggingEnvironmentKt.info;
 import static com.android.build.gradle.internal.cxx.process.ProcessOutputJunctionKt.createProcessOutputJunction;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.core.Abi;
+import com.android.build.gradle.internal.cxx.configure.GradleBuildLoggingEnvironment;
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini;
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini;
@@ -56,61 +58,60 @@ public class ExternalNativeCleanTask extends AndroidBuilderTask {
 
     private Map<Abi, File> stlSharedObjectFiles;
 
-    /** Log low level diagnostic information. */
-    protected void diagnostic(String format, Object... args) {
-        getLogger().info(String.format(getName() + ": " + format, args));
-    }
-
     @TaskAction
     void clean() throws ProcessException, IOException {
-        diagnostic("starting clean");
-        diagnostic("finding existing JSONs");
+        try (GradleBuildLoggingEnvironment ignore =
+                new GradleBuildLoggingEnvironment(getLogger(), getVariantName())) {
+            info("starting clean");
+            info("finding existing JSONs");
 
-        List<File> existingJsons = Lists.newArrayList();
-        for (File json : nativeBuildConfigurationsJsons) {
-            if (json.isFile()) {
-                existingJsons.add(json);
-            }
-        }
-
-        List<NativeBuildConfigValueMini> configValueList =
-                AndroidBuildGradleJsons.getNativeBuildMiniConfigs(existingJsons, null);
-        List<String> cleanCommands = Lists.newArrayList();
-        List<String> targetNames = Lists.newArrayList();
-        for (NativeBuildConfigValueMini config : configValueList) {
-            cleanCommands.addAll(config.cleanCommands);
-            Set<String> targets = Sets.newHashSet();
-            for (NativeLibraryValueMini library : config.libraries.values()) {
-                targets.add(String.format("%s %s", library.artifactName, library.abi));
-            }
-            targetNames.add(Joiner.on(",").join(targets));
-        }
-        diagnostic("about to execute %s clean commands", cleanCommands.size());
-        executeProcessBatch(cleanCommands, targetNames);
-
-        if (!stlSharedObjectFiles.isEmpty()) {
-            diagnostic("remove STL shared object files");
-            for (Abi abi : stlSharedObjectFiles.keySet()) {
-                File stlSharedObjectFile = checkNotNull(stlSharedObjectFiles.get(abi));
-                File objAbi = FileUtils.join(objFolder, abi.getName(),
-                        stlSharedObjectFile.getName());
-
-                if (objAbi.delete()) {
-                    diagnostic("removed file %s", objAbi);
-                } else {
-                    diagnostic("failed to remove file %s", objAbi);
+            List<File> existingJsons = Lists.newArrayList();
+            for (File json : nativeBuildConfigurationsJsons) {
+                if (json.isFile()) {
+                    existingJsons.add(json);
                 }
             }
+
+            List<NativeBuildConfigValueMini> configValueList =
+                    AndroidBuildGradleJsons.getNativeBuildMiniConfigs(existingJsons, null);
+            List<String> cleanCommands = Lists.newArrayList();
+            List<String> targetNames = Lists.newArrayList();
+            for (NativeBuildConfigValueMini config : configValueList) {
+                cleanCommands.addAll(config.cleanCommands);
+                Set<String> targets = Sets.newHashSet();
+                for (NativeLibraryValueMini library : config.libraries.values()) {
+                    targets.add(String.format("%s %s", library.artifactName, library.abi));
+                }
+                targetNames.add(Joiner.on(",").join(targets));
+            }
+            info("about to execute %s clean commands", cleanCommands.size());
+            executeProcessBatch(cleanCommands, targetNames);
+
+            if (!stlSharedObjectFiles.isEmpty()) {
+                info("remove STL shared object files");
+                for (Abi abi : stlSharedObjectFiles.keySet()) {
+                    File stlSharedObjectFile = checkNotNull(stlSharedObjectFiles.get(abi));
+                    File objAbi =
+                            FileUtils.join(objFolder, abi.getName(), stlSharedObjectFile.getName());
+
+                    if (objAbi.delete()) {
+                        info("removed file %s", objAbi);
+                    } else {
+                        info("failed to remove file %s", objAbi);
+                    }
+                }
+            }
+            info("clean complete");
         }
-        diagnostic("clean complete");
     }
 
     /**
      * Given a list of build commands, execute each. If there is a failure, processing is stopped at
      * that point.
      */
-    protected void executeProcessBatch(@NonNull List<String> commands,
-            @NonNull List<String> targetNames) throws ProcessException, IOException {
+    private void executeProcessBatch(
+            @NonNull List<String> commands, @NonNull List<String> targetNames)
+            throws ProcessException, IOException {
         for (int commandIndex = 0; commandIndex < commands.size(); ++commandIndex) {
             String command = commands.get(commandIndex);
             String target = targetNames.get(commandIndex);
@@ -121,7 +122,7 @@ public class ExternalNativeCleanTask extends AndroidBuilderTask {
             for (int i = 1; i < tokens.size(); ++i) {
                 processBuilder.addArgs(tokens.get(i));
             }
-            diagnostic("%s", processBuilder);
+            info("%s", processBuilder);
             createProcessOutputJunction(
                             this.objFolder,
                             "android_gradle_clean_" + commandIndex,
