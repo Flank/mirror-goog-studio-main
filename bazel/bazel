@@ -68,7 +68,10 @@ def main():
   if command == 'info' and bazel_command_index(args) == len(args) - 1:
     print("bazel-cpu-count: " + str(count_bazel_CPUs()))
 
-  sys.exit(subprocess.call([bazel] + args, env=env))
+  bazelrc_arg = '--bazelrc=%s' % os.path.join(workspace, 'tools',
+                                              'base', 'bazel',
+                                              'toplevel.bazel.rc')
+  sys.exit(subprocess.call([bazel, bazelrc_arg] + args, env=env))
 
 
 def define_env(env, var, value, msg=None):
