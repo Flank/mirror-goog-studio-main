@@ -67,7 +67,7 @@ public class MergeJavaResourcesTransformTest {
     public void testMergeResources() throws Exception {
         // Create a jar file containing resources
         File jarFile = new File(tmpDir.getRoot(), "foo.jar");
-        try (ZFile zf = new ZFile(jarFile)) {
+        try (ZFile zf = ZFile.openReadWrite(jarFile)) {
             zf.add("fileEndingWithDot.", new ByteArrayInputStream(new byte[0]));
             zf.add("fileNotEndingWithDot", new ByteArrayInputStream(new byte[0]));
         }
@@ -105,7 +105,7 @@ public class MergeJavaResourcesTransformTest {
     public void testErrorWhenDuplicateJavaResInFeature() throws Exception {
         // Create a jar file containing resources
         File jarFile = new File(tmpDir.getRoot(), "foo.jar");
-        try (ZFile zf = new ZFile(jarFile)) {
+        try (ZFile zf = ZFile.openReadWrite(jarFile)) {
             zf.add("foo.txt", new ByteArrayInputStream(new byte[0]));
         }
         MergeJavaResourcesTransform transform =

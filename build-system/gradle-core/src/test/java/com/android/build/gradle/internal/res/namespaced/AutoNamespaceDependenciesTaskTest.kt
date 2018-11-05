@@ -70,7 +70,7 @@ class AutoNamespaceDependenciesTaskTest {
         assertThat(testRStringClass).exists()
 
         val testClassesJar = File(tempFolder.newFolder("jars"), ("classes.jar"))
-        ZFile(testClassesJar).use {
+        ZFile.openReadWrite(testClassesJar).use {
             it.add("com/example/mymodule/Test.class", testClass.inputStream())
         }
 
@@ -160,7 +160,7 @@ class AutoNamespaceDependenciesTaskTest {
 
 </manifest>""")
 
-        ZFile(namespacedJar).use {
+        ZFile.openReadWrite(namespacedJar).use {
             it.add("com/example/mymodule/R.class", testRClass.inputStream())
             it.add("com/example/mymodule/R\$string.class", testRStringClass.inputStream())
         }
@@ -361,7 +361,7 @@ class AutoNamespaceDependenciesTaskTest {
             // only add the R classes where the value was declared or overridden, so we can verify
             // that the other libraries are referencing the namespaced values.
             if (c == 'G' || c == 'F' || c == 'D' || c == 'B') {
-                ZFile(namespacedJar).use {
+                ZFile.openReadWrite(namespacedJar).use {
                     it.add("com/example/lib$c/R.class", rClasses["lib$c"]!!.inputStream())
                     it.add(
                             "com/example/lib$c/R\$string.class",
@@ -479,7 +479,7 @@ class AutoNamespaceDependenciesTaskTest {
         rStringClasses[identifier] = rStringClass
 
         val classesJar = File(tempFolder.newFolder(name), ("classes.jar"))
-        ZFile(classesJar).use {
+        ZFile.openReadWrite(classesJar).use {
             it.add("com/example/$name/Test.class", testClass.inputStream())
         }
         classesJars[identifier] = classesJar

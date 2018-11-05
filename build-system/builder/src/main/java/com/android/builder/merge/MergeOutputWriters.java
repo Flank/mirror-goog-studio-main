@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.build.apkzlib.zip.StoredEntry;
 import com.android.tools.build.apkzlib.zip.ZFile;
-import com.android.tools.build.apkzlib.zip.ZFileOptions;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
@@ -180,7 +179,7 @@ public final class MergeOutputWriters {
                 Preconditions.checkState(zipFile == null, "Writer already open");
 
                 try {
-                    zipFile = new ZFile(file, new ZFileOptions(), false);
+                    zipFile = ZFile.openReadWrite(file);
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);
                 }

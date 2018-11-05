@@ -174,7 +174,7 @@ public class MergeOutputWritersTests {
     public void zipWriterCreateFile() throws Exception {
         File dir = temporaryFolder.newFolder();
         File zipFile = new File(dir, "test.zip");
-        try (ZFile zf = new ZFile(zipFile)) {}
+        try (ZFile zf = ZFile.openReadWrite(zipFile)) {}
 
         MergeOutputWriter w = MergeOutputWriters.toZip(zipFile);
         w.open();
@@ -183,7 +183,7 @@ public class MergeOutputWritersTests {
         w.create("d e/f g", new ByteArrayInputStream(new byte[] { 6, 7, 8, 9 }));
         w.close();
 
-        try (ZFile zf = new ZFile(zipFile)) {
+        try (ZFile zf = ZFile.openReadOnly(zipFile)) {
             assertEquals(3, zf.entries().size());
 
             StoredEntry aEntry = zf.get("a");
@@ -205,7 +205,7 @@ public class MergeOutputWritersTests {
     public void zipWriterRemoveFile() throws Exception {
         File dir = temporaryFolder.newFolder();
         File zipFile = new File(dir, "test.zip");
-        try (ZFile zf = new ZFile(zipFile)) {
+        try (ZFile zf = ZFile.openReadWrite(zipFile)) {
             zf.add("a", new ByteArrayInputStream(new byte[] { 75 }));
             zf.add("b/c", new ByteArrayInputStream(new byte[] { 1, 0, 0, 1 }));
             zf.add("d e/f g", new ByteArrayInputStream(new byte[] { 3, 3, 3 }));
@@ -219,7 +219,7 @@ public class MergeOutputWritersTests {
         w.close();
 
 
-        try (ZFile zf = new ZFile(zipFile)) {
+        try (ZFile zf = ZFile.openReadOnly(zipFile)) {
             assertEquals(0, zf.entries().size());
         }
     }
@@ -228,7 +228,7 @@ public class MergeOutputWritersTests {
     public void zipWriterUpdateFile() throws Exception {
         File dir = temporaryFolder.newFolder();
         File zipFile = new File(dir, "test.zip");
-        try (ZFile zf = new ZFile(zipFile)) {
+        try (ZFile zf = ZFile.openReadWrite(zipFile)) {
             zf.add("a", new ByteArrayInputStream(new byte[] { 13, 17 }));
             zf.add("b/c", new ByteArrayInputStream(new byte[] { 19, 23 }));
             zf.add("d e/f g", new ByteArrayInputStream(new byte[] { 29, 31 }));
@@ -241,7 +241,7 @@ public class MergeOutputWritersTests {
         w.replace("d e/f g", new ByteArrayInputStream(new byte[] { 36, 49 }));
         w.close();
 
-        try (ZFile zf = new ZFile(zipFile)) {
+        try (ZFile zf = ZFile.openReadOnly(zipFile)) {
             assertEquals(3, zf.entries().size());
 
             StoredEntry aEntry = zf.get("a");

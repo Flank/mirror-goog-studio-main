@@ -54,7 +54,7 @@ public class RelativeFilesTest {
     public void readFullZip() throws Exception {
         File zfile = new File(temporaryFolder.getRoot(), "zf.zip");
 
-        try (ZFile zf = new ZFile(zfile)) {
+        try (ZFile zf = ZFile.openReadWrite(zfile)) {
             zf.add("file1", new ByteArrayInputStream(new byte[0]));
             zf.add("dir/", new ByteArrayInputStream(new byte[0]));
             zf.add("dir/file2", new ByteArrayInputStream(new byte[0]));

@@ -82,7 +82,7 @@ public class ClassFileInputTest {
     @Test
     public void testJarCorrectlyRead() throws IOException {
         File jarFile = FileUtils.join(temporaryFolder.getRoot(), "input.jar");
-        try (ZFile zFile = new ZFile(jarFile)) {
+        try (ZFile zFile = ZFile.openReadWrite(jarFile)) {
             zFile.add("A.class", dummyContent());
             zFile.add("C.class", dummyContent());
             zFile.add("ignore.txt", dummyContent());
@@ -95,7 +95,7 @@ public class ClassFileInputTest {
     @Test
     public void testEmptyJar() throws IOException {
         File jarFile = FileUtils.join(temporaryFolder.getRoot(), "input.jar");
-        try (ZFile zFile = new ZFile(jarFile)) {
+        try (ZFile zFile = ZFile.openReadWrite(jarFile)) {
             // empty block, we want an empty archive
         }
 
@@ -105,7 +105,7 @@ public class ClassFileInputTest {
     @Test
     public void testJarNoClassFiles() throws IOException {
         File jarFile = FileUtils.join(temporaryFolder.getRoot(), "input.jar");
-        try (ZFile zFile = new ZFile(jarFile)) {
+        try (ZFile zFile = ZFile.openReadWrite(jarFile)) {
             zFile.add("ignored.txt", dummyContent());
             zFile.add("ignored_2.txt", dummyContent());
             zFile.add("dir/ignored.txt", dummyContent());
@@ -117,7 +117,7 @@ public class ClassFileInputTest {
     @Test
     public void testJarOnlyClassFiles() throws IOException {
         File jarFile = FileUtils.join(temporaryFolder.getRoot(), "input.jar");
-        try (ZFile zFile = new ZFile(jarFile)) {
+        try (ZFile zFile = ZFile.openReadWrite(jarFile)) {
             zFile.add("A.class", dummyContent());
             zFile.add("dir/B.class", dummyContent());
             zFile.add("dir/dir/C.class", dummyContent());
@@ -129,7 +129,7 @@ public class ClassFileInputTest {
     @Test
     public void testLowerCaseClassFile() throws IOException {
         File jarFile = FileUtils.join(temporaryFolder.getRoot(), "input.jar");
-        try (ZFile zFile = new ZFile(jarFile)) {
+        try (ZFile zFile = ZFile.openReadWrite(jarFile)) {
             zFile.add("aA.class", dummyContent());
         }
 
@@ -139,7 +139,7 @@ public class ClassFileInputTest {
     @Test
     public void testInnerClassClassFile() throws IOException {
         File jarFile = FileUtils.join(temporaryFolder.getRoot(), "input.jar");
-        try (ZFile zFile = new ZFile(jarFile)) {
+        try (ZFile zFile = ZFile.openReadWrite(jarFile)) {
             zFile.add("A$InnerClass.class", dummyContent());
         }
 
@@ -169,7 +169,7 @@ public class ClassFileInputTest {
     public void checkJarEntriesNotChanged() throws IOException {
         File jarFile = FileUtils.join(temporaryFolder.getRoot(), "input.jar");
         List<String> fileNames = ImmutableList.of("//A.class", "/b//B.class");
-        try (ZFile zFile = new ZFile(jarFile)) {
+        try (ZFile zFile = ZFile.openReadWrite(jarFile)) {
             for (String fileName : fileNames) {
                 zFile.add(fileName, dummyContent());
             }

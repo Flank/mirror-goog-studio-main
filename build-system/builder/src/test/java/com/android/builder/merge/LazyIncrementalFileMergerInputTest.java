@@ -210,7 +210,7 @@ public class LazyIncrementalFileMergerInputTest {
                 File dir = baseDirs.get(i);
                 File z = new File(dir.getParent(), dir.getName() + ".zip");
                 try (Closer closer = Closer.create()) {
-                    ZFile zf = closer.register(new ZFile(z));
+                    ZFile zf = closer.register(ZFile.openReadWrite(z));
 
                     File[] files = dir.listFiles();
                     assertNotNull(files);
@@ -278,7 +278,7 @@ public class LazyIncrementalFileMergerInputTest {
 
             ZFile zfile;
             if (f.isFile()) {
-                zfile = new ZFile(f);
+                zfile = ZFile.openReadWrite(f);
             } else {
                 zfile = null;
             }
@@ -471,7 +471,7 @@ public class LazyIncrementalFileMergerInputTest {
 
             if (zipInputs) {
                 File zfile = new File(dir, "z.zip");
-                try (ZFile zf = new ZFile(zfile)) {
+                try (ZFile zf = ZFile.openReadWrite(zfile)) {
                     zf.add("foo", new ByteArrayInputStream(new byte[] { 1, 2 }));
                 }
 

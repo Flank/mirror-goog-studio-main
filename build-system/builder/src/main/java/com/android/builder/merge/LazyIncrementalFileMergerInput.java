@@ -24,7 +24,6 @@ import com.android.ide.common.resources.FileStatus;
 import com.android.tools.build.apkzlib.utils.CachedSupplier;
 import com.android.tools.build.apkzlib.zip.StoredEntry;
 import com.android.tools.build.apkzlib.zip.ZFile;
-import com.android.tools.build.apkzlib.zip.ZFileOptions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -225,7 +224,7 @@ public class LazyIncrementalFileMergerInput implements IncrementalFileMergerInpu
         UncheckedIOException failure = null;
         for (File f : zips.get()) {
             try {
-                ZFile zf = new ZFile(f, new ZFileOptions(), true);
+                ZFile zf = ZFile.openReadOnly(f);
                 open.put(f, zf);
             } catch (IOException e) {
                 failure = new UncheckedIOException(e);

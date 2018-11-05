@@ -332,7 +332,7 @@ class NamespaceRewriterTest {
         val inputJar = File(aarsDir, "classes.jar")
         val outputJar = File(aarsDir, "namespaced-classes.jar")
 
-        ZFile(inputJar).use {
+        ZFile.openReadWrite(inputJar).use {
             it.add("com/example/mymodule/Test.class", testClass.inputStream())
             it.add("com/example/mymodule/Test2.class", test2Class.inputStream())
         }
@@ -352,7 +352,7 @@ class NamespaceRewriterTest {
             outputJar
         )
         assertThat(outputJar).exists()
-        ZFile(outputJar).use {
+        ZFile.openReadWrite(outputJar).use {
             it.add("com/example/mymodule/R.class", moduleRClass.inputStream())
             it.add("com/example/mymodule/R\$string.class", moduleRStringClass.inputStream())
             it.add("com/example/dependency/R.class", dependencyRClass.inputStream())
