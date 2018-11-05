@@ -59,7 +59,7 @@ public class PostProcessingBlock implements ProguardFilesProvider {
 
     @NonNull private final Project project;
 
-    private boolean removeUnusedCode;
+    private boolean removeUnusedCode = true;
     private boolean removeUnusedResources;
     private boolean obfuscate;
     private boolean optimizeCode;
