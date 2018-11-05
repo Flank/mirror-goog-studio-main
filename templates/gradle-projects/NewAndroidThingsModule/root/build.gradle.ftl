@@ -47,10 +47,6 @@ android {
         }
     }
 </#if>
-
-    lintOptions {
-        disable 'AllowBackup', 'GoogleAppIndexingWarning', 'MissingApplicationIcon'
-    }
 }
 
 dependencies {
