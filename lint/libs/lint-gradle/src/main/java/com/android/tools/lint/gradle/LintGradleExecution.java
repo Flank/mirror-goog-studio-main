@@ -231,6 +231,10 @@ public class LintGradleExecution {
         if (fatalOnly) {
             flags.setFatalOnly(true);
         }
+
+        // Explicit fix Gradle target?
+        boolean autoFixing = allowFix & descriptor.getAutoFix();
+
         LintOptions lintOptions = descriptor.getLintOptions();
         boolean fix = false;
         if (lintOptions != null) {
@@ -253,41 +257,44 @@ public class LintGradleExecution {
                     .add(
                             Reporter.createTextReporter(
                                     client, flags, null, new PrintWriter(System.out, true), false));
-            File html =
-                    validateOutputFile(
-                            createOutputPath(
-                                    descriptor.getProject(),
-                                    null,
-                                    ".html",
-                                    null,
-                                    flags.isFatalOnly()));
-            File xml =
-                    validateOutputFile(
-                            createOutputPath(
-                                    descriptor.getProject(),
-                                    null,
-                                    DOT_XML,
-                                    null,
-                                    flags.isFatalOnly()));
-            try {
-                flags.getReporters().add(Reporter.createHtmlReporter(client, html, flags));
-                flags.getReporters()
-                        .add(
-                                Reporter.createXmlReporter(
-                                        client, xml, false, flags.isIncludeXmlFixes()));
-            } catch (IOException e) {
-                throw new GradleException(e.getMessage(), e);
+            if (!autoFixing) {
+                File html =
+                        validateOutputFile(
+                                createOutputPath(
+                                        descriptor.getProject(),
+                                        null,
+                                        ".html",
+                                        null,
+                                        flags.isFatalOnly()));
+                File xml =
+                        validateOutputFile(
+                                createOutputPath(
+                                        descriptor.getProject(),
+                                        null,
+                                        DOT_XML,
+                                        null,
+                                        flags.isFatalOnly()));
+                try {
+                    flags.getReporters().add(Reporter.createHtmlReporter(client, html, flags));
+                    flags.getReporters()
+                            .add(
+                                    Reporter.createXmlReporter(
+                                            client, xml, false, flags.isIncludeXmlFixes()));
+                } catch (IOException e) {
+                    throw new GradleException(e.getMessage(), e);
+                }
             }
         }
         if (!report || fatalOnly) {
             flags.setQuiet(true);
         }
-        flags.setWriteBaselineIfMissing(report && !fatalOnly);
+        flags.setWriteBaselineIfMissing(report && !fatalOnly && !autoFixing);
 
         Pair<List<Warning>, LintBaseline> warnings;
 
-        if (allowFix & descriptor.getAutoFix()) { // Explicit fix Gradle target
+        if (autoFixing) {
             flags.setAutoFix(true);
+            flags.setSetExitCode(false);
         }
 
         try {
@@ -474,6 +481,7 @@ public class LintGradleExecution {
             // When running the individual variant scans we turn off auto fixing
             // so perform it manually here when we have the merged results
             if (flags.isAutoFix()) {
+                flags.setSetExitCode(false);
                 new LintFixPerformer(client, !flags.isQuiet()).fix(mergedWarnings);
             }
 
@@ -482,7 +490,7 @@ public class LintGradleExecution {
             }
 
             File baselineFile = flags.getBaselineFile();
-            if (baselineFile != null && !baselineFile.exists()) {
+            if (baselineFile != null && !baselineFile.exists() && !flags.isAutoFix()) {
                 File dir = baselineFile.getParentFile();
                 boolean ok = true;
                 if (!dir.isDirectory()) {

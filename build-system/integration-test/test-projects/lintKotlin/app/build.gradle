@@ -34,10 +34,9 @@ android {
         main.java.srcDirs += 'src/main/kotlin'
     }
     lintOptions {
-        abortOnError false
         xmlReport true
         xmlOutput file("lint-report.xml")
-        enable 'SyntheticAccessor'
+        error 'SyntheticAccessor'
     }
 }
 
