@@ -424,13 +424,15 @@ public class XmlElement extends OrphanXmlElement {
         XmlElement thisChild = thisChildOptional.get();
         switch (thisChild.getType().getMergeType()) {
             case CONFLICT:
-                addMessage(mergingReport, MergingReport.Record.Severity.ERROR, String.format(
-                        "Node %1$s cannot be present in more than one input file and it's "
-                                + "present at %2$s and %3$s",
-                        thisChild.getType(),
-                        thisChild.printPosition(),
-                        lowerPriorityChild.printPosition()
-                ));
+                mergingReport.addMessage(
+                        this,
+                        MergingReport.Record.Severity.ERROR,
+                        String.format(
+                                "Node %1$s cannot be present in more than one input file and it's "
+                                        + "present at %2$s and %3$s",
+                                thisChild.getType(),
+                                thisChild.printPosition(),
+                                lowerPriorityChild.printPosition()));
                 break;
             case ALWAYS:
 
@@ -611,15 +613,17 @@ public class XmlElement extends OrphanXmlElement {
                 Optional<String> compareMessage = higherPriority.compareTo(lowerPriority);
                 if (compareMessage.isPresent()) {
                     // flag error.
-                    addMessage(mergingReport, MergingReport.Record.Severity.ERROR, String.format(
-                            "Node %1$s at %2$s is tagged with tools:node=\"strict\", yet "
-                                    + "%3$s at %4$s is different : %5$s",
-                            higherPriority.getId(),
-                            higherPriority.printPosition(),
-                            lowerPriority.getId(),
-                            lowerPriority.printPosition(),
-                            compareMessage.get()
-                    ));
+                    mergingReport.addMessage(
+                            this,
+                            MergingReport.Record.Severity.ERROR,
+                            String.format(
+                                    "Node %1$s at %2$s is tagged with tools:node=\"strict\", yet "
+                                            + "%3$s at %4$s is different : %5$s",
+                                    higherPriority.getId(),
+                                    higherPriority.printPosition(),
+                                    lowerPriority.getId(),
+                                    lowerPriority.printPosition(),
+                                    compareMessage.get()));
                 }
                 break;
             default:
@@ -914,13 +918,5 @@ public class XmlElement extends OrphanXmlElement {
             previousSibling = previousSibling.getPreviousSibling();
         }
         return nodesToAdopt.build().reverse();
-    }
-
-    void addMessage(@NonNull MergingReport.Builder mergingReport,
-            @NonNull MergingReport.Record.Severity severity,
-            @NonNull String message) {
-        mergingReport.addMessage(getSourceFilePosition(),
-                severity,
-                message);
     }
 }

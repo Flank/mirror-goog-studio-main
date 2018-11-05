@@ -339,7 +339,8 @@ public class ManifestMerger2 {
 
         PostValidator.validate(finalMergedDocument, mergingReportBuilder);
         if (mergingReportBuilder.hasErrors()) {
-            finalMergedDocument.getRootNode().addMessage(mergingReportBuilder,
+            mergingReportBuilder.addMessage(
+                    finalMergedDocument.getRootNode(),
                     MergingReport.Record.Severity.WARNING,
                     "Post merge validation failed");
         }

@@ -112,9 +112,9 @@ public class PreValidator {
                                 childElement.printPosition(),
                                 childrenKeys.get(childElement.getId()).printPosition());
                         if (twin.compareTo(childElement).isPresent()) {
-                            childElement.addMessage(mergingReport, ERROR, message);
+                            mergingReport.addMessage(childElement, ERROR, message);
                         } else {
-                            childElement.addMessage(mergingReport, WARNING, message);
+                            mergingReport.addMessage(childElement, WARNING, message);
                         }
                     }
                     childrenKeys.put(childElement.getId(), childElement);
@@ -150,7 +150,7 @@ public class PreValidator {
                     element.printPosition(),
                     Joiner.on(',').join(extraAttributeNames)
             );
-            element.addMessage(mergingReport, ERROR, message);
+            mergingReport.addMessage(element, ERROR, message);
         }
     }
 
@@ -165,7 +165,7 @@ public class PreValidator {
                     selectorAttribute.getValue(),
                     element.getId(),
                     element.printPosition());
-            element.addMessage(mergingReport, ERROR, message);
+            mergingReport.addMessage(element, ERROR, message);
         }
     }
 
@@ -176,8 +176,8 @@ public class PreValidator {
         // types.
         if ((attributeNode == null || attributeNode.getValue().isEmpty())
                 && fileType != XmlDocument.Type.OVERLAY) {
-            manifest.addMessage(
-                    mergingReport,
+            mergingReport.addMessage(
+                    manifest,
                     ERROR,
                     String.format(
                             "Missing 'package' declaration in manifest at %1$s",
@@ -212,7 +212,7 @@ public class PreValidator {
                             keyAttributesNames.get(0),
                             xmlElement.getId(),
                             xmlElement.printPosition());
-            xmlElement.addMessage(mergingReport, ERROR, message);
+            mergingReport.addMessage(xmlElement, ERROR, message);
             return false;
         }
         return true;
@@ -255,26 +255,30 @@ public class PreValidator {
                     // check we are not provided a new value.
                     if (attribute.isPresent()) {
                         // Add one to startLine so the first line is displayed as 1.
-                        xmlElement.addMessage(mergingReport, ERROR, String.format(
-                                "tools:remove specified at line:%d for attribute %s, but "
-                                        + "attribute also declared at line:%d, "
-                                        + "do you want to use tools:replace instead ?",
-                                xmlElement.getPosition().getStartLine() + 1,
-                                attributeOperationTypeEntry.getKey(),
-                                attribute.get().getPosition().getStartLine() + 1
-                        ));
+                        mergingReport.addMessage(
+                                xmlElement,
+                                ERROR,
+                                String.format(
+                                        "tools:remove specified at line:%d for attribute %s, but "
+                                                + "attribute also declared at line:%d, "
+                                                + "do you want to use tools:replace instead ?",
+                                        xmlElement.getPosition().getStartLine() + 1,
+                                        attributeOperationTypeEntry.getKey(),
+                                        attribute.get().getPosition().getStartLine() + 1));
                     }
                     break;
                 case REPLACE:
                     // check we are provided a new value
                     if (!attribute.isPresent()) {
                         // Add one to startLine so the first line is displayed as 1.
-                        xmlElement.addMessage(mergingReport, ERROR, String.format(
-                                "tools:replace specified at line:%d for attribute %s, but "
-                                        + "no new value specified",
-                                xmlElement.getPosition().getStartLine() + 1,
-                                attributeOperationTypeEntry.getKey()
-                        ));
+                        mergingReport.addMessage(
+                                xmlElement,
+                                ERROR,
+                                String.format(
+                                        "tools:replace specified at line:%d for attribute %s, but "
+                                                + "no new value specified",
+                                        xmlElement.getPosition().getStartLine() + 1,
+                                        attributeOperationTypeEntry.getKey()));
                     }
                     break;
                 default:
