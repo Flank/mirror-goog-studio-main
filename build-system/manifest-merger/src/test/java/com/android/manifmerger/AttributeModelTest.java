@@ -18,7 +18,6 @@ package com.android.manifmerger;
 
 import static org.mockito.Mockito.verify;
 
-import com.android.utils.ILogger;
 import junit.framework.TestCase;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -35,8 +34,7 @@ public class AttributeModelTest extends TestCase {
     @Mock
     XmlAttribute mXmlAttribute;
 
-    @Mock
-    ILogger mMockLog;
+    @Mock MergingReport.Builder mMergingReport;
 
     @Override
     protected void setUp() throws Exception {
@@ -69,18 +67,17 @@ public class AttributeModelTest extends TestCase {
     public void testBooleanValidator() {
 
         AttributeModel.BooleanValidator booleanValidator = new AttributeModel.BooleanValidator();
-        MergingReport.Builder mergingReport = new MergingReport.Builder(mMockLog);
-        assertTrue(booleanValidator.validates(mergingReport, mXmlAttribute, "false"));
-        assertTrue(booleanValidator.validates(mergingReport, mXmlAttribute, "true"));
-        assertTrue(booleanValidator.validates(mergingReport, mXmlAttribute, "FALSE"));
-        assertTrue(booleanValidator.validates(mergingReport, mXmlAttribute, "TRUE"));
-        assertTrue(booleanValidator.validates(mergingReport, mXmlAttribute, "False"));
-        assertTrue(booleanValidator.validates(mergingReport, mXmlAttribute, "True"));
+        assertTrue(booleanValidator.validates(mMergingReport, mXmlAttribute, "false"));
+        assertTrue(booleanValidator.validates(mMergingReport, mXmlAttribute, "true"));
+        assertTrue(booleanValidator.validates(mMergingReport, mXmlAttribute, "FALSE"));
+        assertTrue(booleanValidator.validates(mMergingReport, mXmlAttribute, "TRUE"));
+        assertTrue(booleanValidator.validates(mMergingReport, mXmlAttribute, "False"));
+        assertTrue(booleanValidator.validates(mMergingReport, mXmlAttribute, "True"));
 
-        assertFalse(booleanValidator.validates(mergingReport, mXmlAttribute, "foo"));
-        verify(mXmlAttribute)
+        assertFalse(booleanValidator.validates(mMergingReport, mXmlAttribute, "foo"));
+        verify(mMergingReport)
                 .addMessage(
-                        mergingReport,
+                        mXmlAttribute,
                         MergingReport.Record.Severity.ERROR,
                         "Attribute Id at Position has an illegal value=(foo), "
                                 + "expected 'true' or 'false'");
@@ -89,15 +86,14 @@ public class AttributeModelTest extends TestCase {
     public void testMultiValuesValidator() {
         AttributeModel.MultiValueValidator multiValueValidator =
                 new AttributeModel.MultiValueValidator("foo", "bar", "doh !");
-        MergingReport.Builder mergingReport = new MergingReport.Builder(mMockLog);
-        assertTrue(multiValueValidator.validates(mergingReport, mXmlAttribute, "foo"));
-        assertTrue(multiValueValidator.validates(mergingReport, mXmlAttribute, "bar"));
-        assertTrue(multiValueValidator.validates(mergingReport, mXmlAttribute, "doh !"));
+        assertTrue(multiValueValidator.validates(mMergingReport, mXmlAttribute, "foo"));
+        assertTrue(multiValueValidator.validates(mMergingReport, mXmlAttribute, "bar"));
+        assertTrue(multiValueValidator.validates(mMergingReport, mXmlAttribute, "doh !"));
 
-        assertFalse(multiValueValidator.validates(mergingReport, mXmlAttribute, "oh no !"));
-        verify(mXmlAttribute)
+        assertFalse(multiValueValidator.validates(mMergingReport, mXmlAttribute, "oh no !"));
+        verify(mMergingReport)
                 .addMessage(
-                        mergingReport,
+                        mXmlAttribute,
                         MergingReport.Record.Severity.ERROR,
                         "Invalid value for attribute Id at Position, value=(oh no !), "
                                 + "acceptable values are (foo,bar,doh !)");
@@ -106,22 +102,21 @@ public class AttributeModelTest extends TestCase {
     public void testSeparatedValuesValidator() {
         AttributeModel.SeparatedValuesValidator separatedValuesValidator =
                 new AttributeModel.SeparatedValuesValidator(",", "foo", "bar", "doh !");
-        MergingReport.Builder mergingReport = new MergingReport.Builder(mMockLog);
-        assertTrue(separatedValuesValidator.validates(mergingReport, mXmlAttribute, "foo"));
-        assertTrue(separatedValuesValidator.validates(mergingReport, mXmlAttribute, "foo,bar"));
-        assertTrue(separatedValuesValidator.validates(mergingReport, mXmlAttribute, "foo,foo"));
+        assertTrue(separatedValuesValidator.validates(mMergingReport, mXmlAttribute, "foo"));
+        assertTrue(separatedValuesValidator.validates(mMergingReport, mXmlAttribute, "foo,bar"));
+        assertTrue(separatedValuesValidator.validates(mMergingReport, mXmlAttribute, "foo,foo"));
         assertTrue(
-                separatedValuesValidator.validates(mergingReport, mXmlAttribute, "doh !,bar,foo"));
+                separatedValuesValidator.validates(mMergingReport, mXmlAttribute, "doh !,bar,foo"));
 
-        assertFalse(separatedValuesValidator.validates(mergingReport, mXmlAttribute, "oh no !"));
+        assertFalse(separatedValuesValidator.validates(mMergingReport, mXmlAttribute, "oh no !"));
         assertFalse(
-                separatedValuesValidator.validates(mergingReport, mXmlAttribute, "foo,oh no !"));
-        assertFalse(separatedValuesValidator.validates(mergingReport, mXmlAttribute, ""));
-        assertFalse(separatedValuesValidator.validates(mergingReport, mXmlAttribute, ",,"));
-        assertFalse(separatedValuesValidator.validates(mergingReport, mXmlAttribute, "foo, bar"));
-        verify(mXmlAttribute)
+                separatedValuesValidator.validates(mMergingReport, mXmlAttribute, "foo,oh no !"));
+        assertFalse(separatedValuesValidator.validates(mMergingReport, mXmlAttribute, ""));
+        assertFalse(separatedValuesValidator.validates(mMergingReport, mXmlAttribute, ",,"));
+        assertFalse(separatedValuesValidator.validates(mMergingReport, mXmlAttribute, "foo, bar"));
+        verify(mMergingReport)
                 .addMessage(
-                        mergingReport,
+                        mXmlAttribute,
                         MergingReport.Record.Severity.ERROR,
                         "Invalid value for attribute Id at Position, value=(foo, bar), "
                                 + "acceptable delimiter-separated values are (foo,bar,doh !)");
@@ -130,15 +125,16 @@ public class AttributeModelTest extends TestCase {
     public void testIntegerValueValidator() {
         AttributeModel.IntegerValueValidator integerValueValidator =
                 new AttributeModel.IntegerValueValidator();
-        MergingReport.Builder mergingReport = new MergingReport.Builder(mMockLog);
-        assertFalse(integerValueValidator.validates(mergingReport, mXmlAttribute, "abcd"));
-        assertFalse(integerValueValidator.validates(mergingReport, mXmlAttribute,
-                "123456789123456789"));
-        assertFalse(integerValueValidator.validates(mergingReport, mXmlAttribute,
-                "0xFFFFFFFFFFFFFFFF"));
-        verify(mXmlAttribute)
+        assertFalse(integerValueValidator.validates(mMergingReport, mXmlAttribute, "abcd"));
+        assertFalse(
+                integerValueValidator.validates(
+                        mMergingReport, mXmlAttribute, "123456789123456789"));
+        assertFalse(
+                integerValueValidator.validates(
+                        mMergingReport, mXmlAttribute, "0xFFFFFFFFFFFFFFFF"));
+        verify(mMergingReport)
                 .addMessage(
-                        mergingReport,
+                        mXmlAttribute,
                         MergingReport.Record.Severity.ERROR,
                         "Attribute Id at Position must be an integer, found 0xFFFFFFFFFFFFFFFF");
     }

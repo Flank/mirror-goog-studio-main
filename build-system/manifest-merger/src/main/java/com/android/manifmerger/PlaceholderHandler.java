@@ -100,14 +100,15 @@ public class PlaceholderHandler {
                     // whatever precedes the placeholder key is added back to the string.
                     resultString.append(matcher.group(1));
                     if (placeholderValue == null) {
-                        xmlAttribute.addMessage(mergingReportBuilder, severity,
+                        mergingReportBuilder.addMessage(
+                                xmlAttribute,
+                                severity,
                                 String.format(
                                         "Attribute %1$s at %2$s requires a placeholder substitution"
                                                 + " but no value for <%3$s> is provided.",
                                         xmlAttribute.getId(),
                                         xmlAttribute.printPosition(),
-                                        matcher.group(2)
-                                ));
+                                        matcher.group(2)));
                         // we add back the placeholder key, since this is not an error for libraries
                         resultString.append(SdkConstants.MANIFEST_PLACEHOLDER_PREFIX);
                         resultString.append(matcher.group(2));

@@ -20,7 +20,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.blame.SourceFile;
-import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -270,8 +269,8 @@ public class XmlAttribute extends XmlNode {
                             printPosition(),
                             getValue());
 
-            higherPriority.addMessage(
-                    report,
+            report.addMessage(
+                    higherPriority,
                     attributeRecord != null
                             ? attributeRecord.getActionLocation().getPosition()
                             : SourcePosition.UNKNOWN,
@@ -401,7 +400,7 @@ public class XmlAttribute extends XmlNode {
                 printPosition(),
                 attributeModel.getDefaultValue(),
                 implicitNode.printPosition());
-        addMessage(mergingReport, MergingReport.Record.Severity.ERROR, error);
+        mergingReport.addMessage(this, MergingReport.Record.Severity.ERROR, error);
     }
 
     private void addConflictingValueMessage(
@@ -442,11 +441,13 @@ public class XmlAttribute extends XmlNode {
                     getOwnerElement().getType().toXmlName(),
                     higherPriority.getOwnerElement().printPosition());
         }
-        higherPriority.addMessage(report,
+        report.addMessage(
+                higherPriority,
                 attributeRecord != null
                         ? attributeRecord.getActionLocation().getPosition()
                         : SourcePosition.UNKNOWN,
-                MergingReport.Record.Severity.ERROR, error);
+                MergingReport.Record.Severity.ERROR,
+                error);
     }
 
     /**
@@ -461,21 +462,6 @@ public class XmlAttribute extends XmlNode {
             return mergeableTypes.contains(type);
         }
         return true;
-    }
-
-    void addMessage(@NonNull MergingReport.Builder report,
-            @NonNull MergingReport.Record.Severity severity,
-            @NonNull String message) {
-        addMessage(report, getPosition(), severity, message);
-    }
-
-    void addMessage(@NonNull MergingReport.Builder report,
-            @NonNull SourcePosition position,
-            @NonNull MergingReport.Record.Severity severity,
-            @NonNull String message) {
-        report.addMessage(
-                new SourceFilePosition(getOwnerElement().getDocument().getSourceFile(), position),
-                severity, message);
     }
 
     @NonNull

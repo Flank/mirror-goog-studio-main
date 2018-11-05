@@ -26,7 +26,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
-import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
 import com.android.testutils.MockLog;
 import com.google.common.base.Optional;
@@ -192,9 +191,11 @@ public class PlaceholderHandlerTest extends TestCase {
         PlaceholderHandler.visit(
                 MergingReport.Record.Severity.ERROR, refDocument, nullResolver, mBuilder);
         // verify the error was recorded.
-        verify(mBuilder).addMessage(
-                any(SourceFilePosition.class),
-                eq(MergingReport.Record.Severity.ERROR), anyString());
+        verify(mBuilder)
+                .addMessage(
+                        any(XmlAttribute.class),
+                        eq(MergingReport.Record.Severity.ERROR),
+                        anyString());
     }
 
     public void testPlaceHolder_notProvided_inLibrary()
@@ -212,9 +213,11 @@ public class PlaceholderHandlerTest extends TestCase {
         PlaceholderHandler.visit(
                 MergingReport.Record.Severity.INFO, refDocument, nullResolver, mBuilder);
         // verify the error was recorded.
-        verify(mBuilder).addMessage(
-                any(SourceFilePosition.class),
-                eq(MergingReport.Record.Severity.INFO), anyString());
+        verify(mBuilder)
+                .addMessage(
+                        any(XmlAttribute.class),
+                        eq(MergingReport.Record.Severity.INFO),
+                        anyString());
     }
 
     public void testPlaceHolder_change_keyId()
