@@ -285,11 +285,9 @@ public class FeatureTest {
 
     @Test
     public void testMinimalisticModel() throws Exception {
-        project.executor().run("clean", "assemble");
-
-        // get the initial minimalistic model.
+        // Execute build and get the initial minimalistic model.
         Map<String, ProjectBuildOutput> multi =
-                project.model().fetchMulti(ProjectBuildOutput.class);
+                project.executeAndReturnOutputMultiModel("clean", "assemble");
 
         ProjectBuildOutput projectBuildOutput = multi.get(":feature");
         assertThat(projectBuildOutput).isNotNull();
@@ -322,13 +320,11 @@ public class FeatureTest {
 
     @Test
     public void incrementalAllVariantsBuild() throws Exception {
-        project.executor().run("clean", "assemble");
-
         GradleTestProject featureProject = project.getSubproject(":feature");
 
-        // get the initial minimalistic model.
+        // Execute build and get the initial minimalistic model.
         Map<String, ProjectBuildOutput> multi =
-                project.model().fetchMulti(ProjectBuildOutput.class);
+                project.executeAndReturnOutputMultiModel("clean", "assemble");
 
         ProjectBuildOutput projectBuildOutput = multi.get(":feature");
         assertThat(projectBuildOutput).isNotNull();
@@ -345,9 +341,9 @@ public class FeatureTest {
 
         Files.write(javaCode, addedSource, Charsets.UTF_8);
 
-        GradleBuildResult assemble = project.executor().run("assemble");
+        GradleBuildResult assemble = project.executor().withOutputModelQuery().run("assemble");
 
-        multi = project.model().fetchMulti(ProjectBuildOutput.class);
+        multi = assemble.getBuildOutputContainer().getOnlyModelMap();
 
         assertThat(assemble.getNotUpToDateTasks()).contains(":feature:assembleDebug");
 
@@ -370,13 +366,11 @@ public class FeatureTest {
 
     @Test
     public void incrementalBuild() throws Exception {
-        project.executor().run("clean", "assemble");
-
         GradleTestProject featureProject = project.getSubproject(":feature");
 
-        // get the initial minimalistic model.
+        // Execute build and get the initial minimalistic model.
         Map<String, ProjectBuildOutput> multi =
-                project.model().fetchMulti(ProjectBuildOutput.class);
+                project.executeAndReturnOutputMultiModel("clean", "assemble");
 
         ProjectBuildOutput projectBuildOutput = multi.get(":feature");
         assertThat(projectBuildOutput).isNotNull();
@@ -398,9 +392,10 @@ public class FeatureTest {
 
         Files.write(javaCode, addedSource, Charsets.UTF_8);
 
-        GradleBuildResult assembleDebug = project.executor().run("assembleDebug");
+        GradleBuildResult assembleDebug =
+                project.executor().withOutputModelQuery().run("assembleDebug");
 
-        multi = project.model().fetchMulti(ProjectBuildOutput.class);
+        multi = assembleDebug.getBuildOutputContainer().getOnlyModelMap();
 
         assertThat(assembleDebug.getNotUpToDateTasks()).contains(":feature:assembleDebug");
 
