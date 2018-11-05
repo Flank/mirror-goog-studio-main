@@ -213,12 +213,11 @@ class AttributeModel {
         boolean shouldMergeDefaultValues();
 
         /**
-         * Returns an XmlDocument.Type EnumSet which contains the types of lower priority
-         * XmlDocuments this attribute can be merged from.
+         * Returns true if this attribute can be merged from the provided {@link XmlDocument}, false
+         * otherwise
          */
-        @NonNull
-        default EnumSet<XmlDocument.Type> getMergeableLowerPriorityTypes() {
-            return EnumSet.allOf(XmlDocument.Type.class);
+        default boolean canMergeWithLowerPriority(@NonNull XmlDocument document) {
+            return EnumSet.allOf(XmlDocument.Type.class).contains(document.getFileType());
         }
 
         /**

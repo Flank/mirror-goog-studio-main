@@ -283,10 +283,11 @@ class ManifestModel {
                                         return false;
                                     }
 
-                                    @NonNull
                                     @Override
-                                    public EnumSet<Type> getMergeableLowerPriorityTypes() {
-                                        return EnumSet.of(Type.MAIN, Type.OVERLAY);
+                                    public boolean canMergeWithLowerPriority(
+                                            @NonNull XmlDocument document) {
+                                        return EnumSet.of(Type.MAIN, Type.OVERLAY)
+                                                .contains(document.getFileType());
                                     }
 
                                     @Nullable
