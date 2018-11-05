@@ -16,30 +16,15 @@
 
 package com.android.tools.deployer;
 
-import com.android.tools.deploy.proto.Deploy;
-import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.DexClass;
 import com.android.tools.deployer.model.FileDiff;
 import com.android.tools.deployer.tasks.TaskRunner;
 import com.android.tools.deployer.tasks.TaskRunner.Task;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.io.ByteStreams;
-import com.google.protobuf.ByteString;
 import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 public class Deployer {
 
@@ -72,12 +57,17 @@ public class Deployer {
             // Run installation on the current thread.
             adb.installMultiple(apks, options.getFlags());
 
+
+            // Inputs
+            Task<List<String>> paths = runner.submit(apks);
+            CachedDexSplitter splitter = new CachedDexSplitter(db);
+
             // Parse the apks
             Task<List<ApkEntry>> entries =
-                    runner.submit("parsePaths", new ApkParser()::parsePaths, runner.submit(apks));
+                    runner.submit("parsePaths", new ApkParser()::parsePaths, paths);
 
             // Update the database
-            runner.submit("computeClassChecksums", this::computeClassChecksums, entries);
+            runner.submit("computeClassChecksums", splitter::cache, entries);
         }
     }
 
@@ -101,6 +91,9 @@ public class Deployer {
             boolean restart,
             Map<Integer, ClassRedefiner> redefiners)
             throws DeployerException {
+
+        CachedDexSplitter splitter = new CachedDexSplitter(db);
+
         // Get the list of files from the local apks
         List<ApkEntry> newFiles = new ApkParser().parsePaths(paths);
 
@@ -113,150 +106,19 @@ public class Deployer {
         // Push the apks to device and get the remote paths
         List<String> apkPaths = new ApkPusher(adb).push(newFiles);
 
-        // Obtain the process names from the local apks
-        Set<String> processNames = extractProcessNames(newFiles);
-
         // Verify the changes are swappable and get only the dexes that we can change
-        List<FileDiff> dexDiffs = verify(diffs, restart);
+        List<FileDiff> dexDiffs = new SwapVerifier().verify(diffs, restart);
 
         // Compare the local vs remote dex files.
-        List<DexClass> toSwap = compare(dexDiffs);
+        List<DexClass> toSwap = new DexComparator().compare(dexDiffs, splitter);
 
         // Update the database with the entire new apk. In the normal case this should
         // be a no-op because the dexes that were modified were extracted at comparison time.
         // However if the compare task doesn't get to execute we still update the database.
-        computeClassChecksums(newFiles);
+        splitter.cache(newFiles);
 
-        // Builds the Request Protocol Buffer.
-        Deploy.SwapRequest request =
-                buildSwapRequest(
-                        packageName, restart, apkPaths, processNames, toSwap, redefiners.keySet());
-
-        // Send Request to agent
-        ClassRedefiner redefiner = new InstallerBasedClassRedefiner(installer);
-        sendSwapRequest(request, redefiner);
-
-        // Send requests to the alternative redefiners
-        for (ClassRedefiner r : redefiners.values()) {
-            sendSwapRequest(request, r);
-        }
-    }
-
-    private List<FileDiff> verify(List<FileDiff> diffs, boolean restart) throws DeployerException {
-        return new SwapVerifier().verify(diffs, restart);
-    }
-
-    private boolean computeClassChecksums(List<ApkEntry> newFiles) throws DeployerException {
-        try (Trace ignored = Trace.begin("update")) {
-            Function<ApkEntry, byte[]> dexProvider = dexProvider();
-            for (ApkEntry file : newFiles) {
-                if (file.name.endsWith(".dex")) {
-                    extractClasses(file, dexProvider, null);
-                }
-            }
-            return true;
-        }
-    }
-
-    private List<DexClass> compare(List<FileDiff> dexDiffs) throws DeployerException {
-        try (Trace ignored = Trace.begin("compare")) {
-            List<DexClass> toSwap = new ArrayList<>();
-            for (FileDiff diff : dexDiffs) {
-                List<DexClass> oldClasses = extractClasses(diff.oldFile, null, null);
-                Map<String, Long> checksums = new HashMap<>();
-                for (DexClass clz : oldClasses) {
-                    checksums.put(clz.name, clz.checksum);
-                }
-                // Memory optimization to discard not needed code
-                Predicate<DexClass> needsCode =
-                        (DexClass clz) -> {
-                            Long oldChecksum = checksums.get(clz.name);
-                            return oldChecksum != null && clz.checksum != oldChecksum;
-                        };
-
-                Function<ApkEntry, byte[]> dexProvider = dexProvider();
-                List<DexClass> newClasses = extractClasses(diff.newFile, dexProvider, needsCode);
-                toSwap.addAll(
-                        newClasses
-                                .stream()
-                                .filter(c -> c.code != null)
-                                .collect(Collectors.toList()));
-            }
-            return toSwap;
-        }
-    }
-
-    private Function<ApkEntry, byte[]> dexProvider() {
-        // TODO Check if opening the file several times matters
-        return (ApkEntry dex) -> {
-            try (ZipFile file = new ZipFile(dex.apk.path)) {
-                ZipEntry entry = file.getEntry(dex.name);
-                return ByteStreams.toByteArray(file.getInputStream(entry));
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        };
-    }
-
-    private Deploy.SwapRequest buildSwapRequest(
-            String packageName,
-            boolean restart,
-            List<String> apkPaths,
-            Set<String> processNames,
-            List<DexClass> classes,
-            Collection<Integer> pids) {
-        Deploy.SwapRequest.Builder request = Deploy.SwapRequest.newBuilder();
-        request.setPackageName(packageName);
-        request.setRestartActivity(restart);
-        for (DexClass clz : classes) {
-            request.addClasses(
-                    Deploy.ClassDef.newBuilder()
-                            .setName(clz.name)
-                            .setDex(ByteString.copyFrom(clz.code)));
-        }
-
-        request.addAllApks(apkPaths);
-        request.addAllProcessNames(processNames);
-        request.addAllSkipProcessIds(pids);
-        return request.build();
-    }
-
-    private void sendSwapRequest(Deploy.SwapRequest request, ClassRedefiner redefiner)
-            throws DeployerException {
-        Deploy.SwapResponse swapResponse = redefiner.redefine(request);
-        if (swapResponse.getStatus() != Deploy.SwapResponse.Status.OK) {
-            throw new DeployerException(DeployerException.Error.REDEFINER_ERROR, "Swap failed");
-        }
-    }
-
-
-    private Set<String> extractProcessNames(List<ApkEntry> newFiles) {
-        Set<String> processNames = new HashSet<>();
-        Set<Apk> apks = new HashSet<>();
-        for (ApkEntry file : newFiles) {
-            apks.add(file.apk);
-        }
-        for (Apk apk : apks) {
-            processNames.addAll(apk.processes);
-        }
-        return processNames;
-    }
-
-    private List<DexClass> extractClasses(
-            ApkEntry dex, Function<ApkEntry, byte[]> dexProvider, Predicate<DexClass> needsCode)
-            throws DeployerException {
-        // Try a cached version
-        List<DexClass> classes = db.getClasses(dex);
-        if (classes.isEmpty() || needsCode != null) {
-            if (dexProvider == null) {
-                throw new DeployerException(
-                        DeployerException.Error.REMOTE_APK_NOT_FOUND_ON_DB,
-                        "Cannot generate classes for unknown dex");
-            }
-            byte[] code = dexProvider.apply(dex);
-            classes = new DexSplitter().split(dex, code, needsCode);
-            db.addClasses(classes);
-        }
-        return classes;
+        // Do the swap
+        ApkSwapper swapper = new ApkSwapper(installer, packageName, restart, redefiners);
+        swapper.swap(newFiles, apkPaths, toSwap);
     }
 }

@@ -22,11 +22,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
-import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Phaser;
-import java.util.function.BiFunction;
 
 public class TaskRunner {
 
@@ -65,7 +63,7 @@ public class TaskRunner {
     }
 
     public <T, U, O> Task<O> submit(
-            String name, BiFunction<T, U, O> task, Task<T> input1, Task<U> input2) {
+            String name, ThrowingBiFunction<T, U, O> task, Task<T> input1, Task<U> input2) {
         ListenableFuture<O> future =
                 Futures.whenAllSucceed(ImmutableList.of(input1.future, input2.future))
                         .call(
@@ -112,6 +110,10 @@ public class TaskRunner {
     }
 
     public interface ThrowingFunction<I, O> {
-        O apply(I i) throws DeployerException, IOException;
+        O apply(I i) throws Exception;
+    }
+
+    public interface ThrowingBiFunction<T, U, R> {
+        R apply(T t, U u) throws Exception;
     }
 }
