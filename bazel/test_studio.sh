@@ -22,6 +22,8 @@ readonly command_log="$(${script_dir}/bazel --bazelrc=${script_dir}/toplevel.baz
 # Run Bazel
 "${script_dir}/bazel" --max_idle_secs=60 --bazelrc=${script_dir}/toplevel.bazel.rc test --keep_going --nobuild_runfile_links --bes_backend=buildeventservice.googleapis.com --auth_credentials="$HOME"/.android-studio-alphasource.json --auth_scope=https://www.googleapis.com/auth/cloud-source-tools --project_id=908081808034 --config=remote --cache_test_results=no --build_tag_filters=-no_linux --test_tag_filters=-no_linux,-no_test_linux,-qa_sanity,-qa_fast,-qa_unreliable,-slow -- $(< "${script_dir}/targets")
 
+readonly bazel_status=$?
+
 if [[ -d "${dist_dir}" ]]; then
   # Grab the upsalite_id from the stdout of the bazel command.  This is captured in command.log
   readonly upsalite_id=`sed -n -e 's/.*invocation_id: //p' $command_log`
@@ -38,3 +40,5 @@ if [[ -d "${dist_dir}" ]]; then
     sed -i 's/<testsuites>/<testsuites tests="0" time="0">/' "${dist_dir}/gtest/${target_xml}"
   done
 fi
+
+exit $bazel_status

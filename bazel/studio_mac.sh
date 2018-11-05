@@ -14,6 +14,8 @@ readonly command_log="$(${script_dir}/bazel --bazelrc=${script_dir}/toplevel.baz
 # Run Bazel
 "${script_dir}/bazel" --max_idle_secs=60 --bazelrc=${script_dir}/toplevel.bazel.rc test --config=postsubmit --config=local --config=mac-experimental --build_tag_filters=-no_mac --test_tag_filters=-no_mac,-no_test_mac,-qa_sanity,-qa_fast,-qa_unreliable --auth_credentials=/buildbot/android-studio-alphasource.json -- @blaze//:aswb_tests //prebuilts/studio/... //prebuilts/tools/... //tools/...
 
+readonly bazel_status=$?
+
 if [[ -d "${dist_dir}" ]]; then
   # Grab the upsalite_id from the stdout of the bazel command.  This is captured in command.log
   readonly upsalite_id=`sed -n -e 's/.*invocation_id: //p' $command_log`
@@ -31,3 +33,5 @@ if [[ -d "${dist_dir}" ]]; then
     sed -i '' 's/<testsuites>/<testsuites tests="0" time="0">/' "${dist_dir}/gtest/${target_xml}"
   done
 fi
+
+exit $bazel_status
