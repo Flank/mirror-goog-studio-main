@@ -12,11 +12,14 @@ import com.android.build.gradle.integration.common.utils.VariantOutputUtils;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.VariantBuildOutput;
 import com.android.testutils.TestUtils;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -72,7 +75,7 @@ public class DensitySplitInLTest {
         // get the last modified time of the initial APKs so we can make sure incremental build
         // does not rebuild things unnecessarily.
         waitForSystemTicks();
-        final Map<String, Long> lastModifiedTimePerDensity =
+        Map<String, Long> lastModifiedTimePerDensity =
                 getApkModifiedTimePerDensity(getOutputs(outputModel));
 
         TemporaryProjectModification.doTest(
@@ -88,25 +91,19 @@ public class DensitySplitInLTest {
                     waitForSystemTicks();
                     Collection<? extends OutputFile> outputs = getOutputs(incrementalModel);
                     assertThat(outputs).hasSize(6);
-                    boolean foundAddedAPK = false;
-                    for (OutputFile output : outputs) {
-                        String filter = VariantOutputUtils.getFilter(output, OutputFile.DENSITY);
 
-                        if (filter != null && filter.matches("^xxxhdpi$")) {
-                            // found our added density, done.
-                            foundAddedAPK = true;
-                        } else {
-                            // check that the APK was not rebuilt.
-                            String key = getArtifactKeyName(output);
-                            Long initialApkModifiedTime = lastModifiedTimePerDensity.get(key);
-                            assertThat(initialApkModifiedTime).isNotNull();
-                            assertWithMessage("output has changed " + output.getOutputFile())
-                                    .that(initialApkModifiedTime)
-                                    .isEqualTo(output.getOutputFile().lastModified());
-                        }
-                    }
+                    List<OutputFile> xxxHDPIOutputs =
+                            outputs.stream()
+                                    .filter(constainsDensityFilter("^xxxhdpi$"))
+                                    .collect(Collectors.toList());
+                    assertThat(xxxHDPIOutputs).hasSize(1);
 
-                    assertThat(foundAddedAPK).isTrue();
+                    Map<String, Long> newTimePerDensity = getApkModifiedTimePerDensity(outputs);
+                    newTimePerDensity.remove(
+                            getArtifactKeyName(Iterables.getOnlyElement(xxxHDPIOutputs)));
+                    assertWithMessage("initial output changed")
+                            .that(newTimePerDensity)
+                            .containsExactlyEntriesIn(lastModifiedTimePerDensity);
                 });
     }
 
@@ -115,7 +112,7 @@ public class DensitySplitInLTest {
         // get the last modified time of the initial APKs so we can make sure incremental build
         // does not rebuild things unnecessarily.
         waitForSystemTicks();
-        final Map<String, Long> lastModifiedTimePerDensity =
+        Map<String, Long> lastModifiedTimePerDensity =
                 getApkModifiedTimePerDensity(getOutputs(outputModel));
 
         TemporaryProjectModification.doTest(
@@ -131,21 +128,23 @@ public class DensitySplitInLTest {
                     waitForSystemTicks();
                     Collection<? extends OutputFile> outputs = getOutputs(incrementalModel);
                     assertThat(outputs).hasSize(4);
-                    for (OutputFile output : outputs) {
-                        String filter = VariantOutputUtils.getFilter(output, OutputFile.DENSITY);
-                        if (filter == null) {
-                            continue;
-                        }
-                        assertThat(filter).doesNotMatch("^xxhdpi$");
 
-                        // check that the APK was not rebuilt.
-                        String key = getArtifactKeyName(output);
-                        Long initialApkModifiedTime = lastModifiedTimePerDensity.get(key);
-                        assertThat(initialApkModifiedTime).isNotNull();
-                        assertWithMessage("output has changed " + output.getOutputFile())
-                                .that(initialApkModifiedTime)
-                                .isEqualTo(output.getOutputFile().lastModified());
-                    }
+                    List<OutputFile> xxHDPIOutputs =
+                            outputs.stream()
+                                    .filter(constainsDensityFilter("^xxhdpi$"))
+                                    .collect(Collectors.toList());
+                    assertThat(xxHDPIOutputs).isEmpty();
+
+                    Map<String, Long> newTimePerDensity = getApkModifiedTimePerDensity(outputs);
+                    // We're removing from the original map, since it shouldn't be present
+                    // in the new one.
+                    lastModifiedTimePerDensity.remove("SPLITxxhdpi");
+                    // We also remove the main APK from both as they are expected to change:
+                    lastModifiedTimePerDensity.remove("MAINnull");
+                    newTimePerDensity.remove("MAINnull");
+                    assertWithMessage("initial output changed")
+                            .that(newTimePerDensity)
+                            .containsExactlyEntriesIn(lastModifiedTimePerDensity);
                 });
     }
 
@@ -166,7 +165,7 @@ public class DensitySplitInLTest {
             Collection<? extends OutputFile> outputs) {
         return outputs.stream()
                 .collect(
-                        ImmutableMap.toImmutableMap(
+                        Collectors.toMap(
                                 o -> getArtifactKeyName(o), o -> o.getOutputFile().lastModified()));
     }
 
@@ -175,6 +174,13 @@ public class DensitySplitInLTest {
         return outputFile.getOutputType()
                 + VariantOutputUtils.getFilter(outputFile, OutputFile.DENSITY);
 
+    }
+
+    private static Predicate<OutputFile> constainsDensityFilter(String filterRegex) {
+        return outputFile -> {
+            String filter = VariantOutputUtils.getFilter(outputFile, OutputFile.DENSITY);
+            return filter != null && filter.matches(filterRegex);
+        };
     }
 
     // b/113323972 - Let's wait for a few more system ticks before trying to read the files
