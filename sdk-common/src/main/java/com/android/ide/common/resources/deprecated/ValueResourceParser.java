@@ -112,25 +112,23 @@ public final class ValueResourceParser extends DefaultHandler {
                                 String parent = attributes.getValue(ATTR_PARENT);
                                 mCurrentStyle =
                                         new StyleResourceValueImpl(
-                                                namespace, type, name, parent, mLibraryName);
+                                                namespace, name, parent, mLibraryName);
                                 mRepository.addResourceValue(mCurrentStyle);
                                 break;
                             case STYLEABLE:
                                 mCurrentDeclareStyleable =
                                         new StyleableResourceValueImpl(
-                                                namespace, type, name, null, mLibraryName);
+                                                namespace, name, null, mLibraryName);
                                 mRepository.addResourceValue(mCurrentDeclareStyleable);
                                 break;
                             case ATTR:
                                 mCurrentAttr =
-                                        new AttrResourceValueImpl(
-                                                namespace, type, name, mLibraryName);
+                                        new AttrResourceValueImpl(namespace, name, mLibraryName);
                                 mRepository.addResourceValue(mCurrentAttr);
                                 break;
                             case ARRAY:
                                 mArrayResourceValue =
-                                        new ArrayResourceValueImpl(
-                                                namespace, type, name, mLibraryName);
+                                        new ArrayResourceValueImpl(namespace, name, mLibraryName);
                                 mRepository.addResourceValue(mArrayResourceValue);
                                 break;
                             default:
@@ -159,9 +157,7 @@ public final class ValueResourceParser extends DefaultHandler {
                             isFramework = true;
                         }
 
-                        mCurrentAttr =
-                                new AttrResourceValueImpl(
-                                        namespace, ResourceType.ATTR, name, mLibraryName);
+                        mCurrentAttr = new AttrResourceValueImpl(namespace, name, mLibraryName);
                         mCurrentDeclareStyleable.addValue(mCurrentAttr);
 
                         // also add it to the repository.

@@ -50,19 +50,17 @@ public class StyleResourceValueImpl extends ResourceValueImpl implements StyleRe
      */
     public StyleResourceValueImpl(
             @NonNull ResourceNamespace namespace,
-            @NonNull ResourceType type,
             @NonNull String name,
             @Nullable String parentStyle,
             @Nullable String libraryName) {
-        super(namespace, type, name, null, libraryName);
-        assert type == ResourceType.STYLE;
+        super(namespace, ResourceType.STYLE, name, null, libraryName);
         this.parentStyle = parentStyle;
     }
 
     /**
      * Creates a new {@link StyleResourceValueImpl}.
      *
-     * @see #StyleResourceValueImpl(ResourceNamespace, ResourceType, String, String, String)
+     * @see #StyleResourceValueImpl(ResourceNamespace, String, String, String)
      */
     public StyleResourceValueImpl(
             @NonNull ResourceReference reference,
@@ -78,7 +76,6 @@ public class StyleResourceValueImpl extends ResourceValueImpl implements StyleRe
     public static StyleResourceValueImpl copyOf(@NonNull StyleResourceValue style) {
         StyleResourceValueImpl copy = new StyleResourceValueImpl(
                 style.getNamespace(),
-                style.getResourceType(),
                 style.getName(),
                 style.getParentStyleName(),
                 style.getLibraryName());

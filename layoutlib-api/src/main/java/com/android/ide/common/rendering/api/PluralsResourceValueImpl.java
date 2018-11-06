@@ -28,12 +28,10 @@ public class PluralsResourceValueImpl extends ResourceValueImpl implements Plura
 
     public PluralsResourceValueImpl(
             @NonNull ResourceNamespace namespace,
-            @NonNull ResourceType type,
             @NonNull String name,
             @Nullable String value,
             @Nullable String libraryName) {
-        super(namespace, type, name, value, libraryName);
-        assert type == ResourceType.PLURALS;
+        super(namespace, ResourceType.PLURALS, name, value, libraryName);
     }
 
     public PluralsResourceValueImpl(

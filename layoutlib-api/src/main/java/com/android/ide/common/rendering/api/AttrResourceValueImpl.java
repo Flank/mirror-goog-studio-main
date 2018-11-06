@@ -39,10 +39,9 @@ public class AttrResourceValueImpl extends ResourceValueImpl implements AttrReso
 
     public AttrResourceValueImpl(
             @NonNull ResourceNamespace namespace,
-            @NonNull ResourceType type,
             @NonNull String name,
             @Nullable String libraryName) {
-        super(namespace, type, name, null, libraryName);
+        super(namespace, ResourceType.ATTR, name, null, libraryName);
     }
 
     public AttrResourceValueImpl(

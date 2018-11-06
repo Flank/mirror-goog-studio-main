@@ -28,12 +28,10 @@ public class StyleableResourceValueImpl extends ResourceValueImpl
 
     public StyleableResourceValueImpl(
             @NonNull ResourceNamespace namespace,
-            @NonNull ResourceType type,
             @NonNull String name,
             @Nullable String value,
             @Nullable String libraryName) {
-        super(namespace, type, name, value, libraryName);
-        assert type == ResourceType.STYLEABLE;
+        super(namespace, ResourceType.STYLEABLE, name, value, libraryName);
     }
 
     public StyleableResourceValueImpl(

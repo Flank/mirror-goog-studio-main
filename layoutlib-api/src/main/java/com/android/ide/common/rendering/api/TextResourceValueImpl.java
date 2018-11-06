@@ -27,12 +27,11 @@ public class TextResourceValueImpl extends ResourceValueImpl implements TextReso
 
     public TextResourceValueImpl(
             @NonNull ResourceNamespace namespace,
-            @NonNull ResourceType type,
             @NonNull String name,
             @Nullable String textValue,
             @Nullable String rawXmlValue,
             @Nullable String libraryName) {
-        super(namespace, type, name, textValue, libraryName);
+        super(namespace, ResourceType.STRING, name, textValue, libraryName);
         this.rawXmlValue = rawXmlValue;
     }
 
@@ -43,6 +42,7 @@ public class TextResourceValueImpl extends ResourceValueImpl implements TextReso
             @Nullable String libraryName) {
         super(reference, textValue, libraryName);
         this.rawXmlValue = rawXmlValue;
+        assert reference.getResourceType() == ResourceType.STRING;
     }
 
     @Override

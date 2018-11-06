@@ -31,11 +31,9 @@ public class ArrayResourceValueImpl extends ResourceValueImpl implements ArrayRe
 
     public ArrayResourceValueImpl(
             @NonNull ResourceNamespace namespace,
-            @NonNull ResourceType type,
             @NonNull String name,
             @Nullable String libraryName) {
-        super(namespace, type, name, null, libraryName);
-        assert type == ResourceType.ARRAY;
+        super(namespace, ResourceType.ARRAY, name, null, libraryName);
     }
 
     public ArrayResourceValueImpl(

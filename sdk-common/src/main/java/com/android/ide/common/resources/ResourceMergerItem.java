@@ -431,17 +431,15 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
             case STYLE:
                 String parent = getAttributeValue(attributes, ATTR_PARENT);
                 return parseStyleValue(
-                        new StyleResourceValueImpl(
-                                mNamespace, mType, getName(), parent, mLibraryName));
+                        new StyleResourceValueImpl(mNamespace, getName(), parent, mLibraryName));
 
             case STYLEABLE:
                 return parseDeclareStyleable(
-                        new StyleableResourceValueImpl(
-                                mNamespace, mType, getName(), null, mLibraryName));
+                        new StyleableResourceValueImpl(mNamespace, getName(), null, mLibraryName));
 
             case ARRAY:
                 ArrayResourceValueImpl arrayValue =
-                        new ArrayResourceValueImpl(mNamespace, mType, getName(), mLibraryName) {
+                        new ArrayResourceValueImpl(mNamespace, getName(), mLibraryName) {
                             @Override
                             protected int getDefaultIndex() {
                                 // Allow the user to specify a specific element to use via tools:index
@@ -461,8 +459,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
 
             case PLURALS:
                 PluralsResourceValueImpl pluralsResourceValue =
-                        new PluralsResourceValueImpl(
-                                mNamespace, mType, getName(), null, mLibraryName) {
+                        new PluralsResourceValueImpl(mNamespace, getName(), null, mLibraryName) {
                             @Override
                             public String getValue() {
                                 // Allow the user to specify tools:quantity.
@@ -481,12 +478,11 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
 
             case ATTR:
                 return parseAttrValue(
-                        new AttrResourceValueImpl(mNamespace, mType, getName(), mLibraryName));
+                        new AttrResourceValueImpl(mNamespace, getName(), mLibraryName));
 
             case STRING:
                 return parseTextValue(
-                        new TextResourceValueImpl(
-                                mNamespace, mType, getName(), null, null, mLibraryName));
+                        new TextResourceValueImpl(mNamespace, getName(), null, null, mLibraryName));
 
             case ANIMATOR:
             case DRAWABLE:
@@ -723,8 +719,7 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
                     AttrResourceValueImpl attr =
                             parseAttrValue(
                                     child,
-                                    new AttrResourceValueImpl(
-                                            namespace, ResourceType.ATTR, name, mLibraryName));
+                                    new AttrResourceValueImpl(namespace, name, mLibraryName));
                     attr.setNamespaceResolver(getNamespaceResolver(child));
                     declareStyleable.addValue(attr);
                 }

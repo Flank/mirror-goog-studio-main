@@ -25,7 +25,6 @@ import com.android.ide.common.rendering.api.ResourceValueImpl
 import com.android.ide.common.rendering.api.StyleResourceValue
 import com.android.ide.common.rendering.api.StyleResourceValueImpl
 import com.android.resources.ResourceType
-import com.android.resources.ResourceType.ATTR
 import com.android.resources.ResourceType.COLOR
 import com.android.resources.ResourceType.STRING
 import com.android.resources.ResourceType.STYLE
@@ -59,13 +58,13 @@ class ResourceResolverNamespacesTest {
         val androidRes = listOf(
             ResourceValueImpl(ANDROID, COLOR, "black", "#000000"),
             ResourceValueImpl(ANDROID, COLOR, "white", "#ffffff"),
-            AttrResourceValueImpl(ANDROID, ATTR, "colorPrimary", null)
+            AttrResourceValueImpl(ANDROID, "colorPrimary", null)
         )
 
         val supportRes = listOf(
-            ResourceValueImpl(supportLib, COLOR, "material_blue", "#0000ff"),
-            AttrResourceValueImpl(supportLib, ATTR, "fabColor", null),
-            AttrResourceValueImpl(supportLib, ATTR, "actionBarColor", null)
+          ResourceValueImpl(supportLib, COLOR, "material_blue", "#0000ff"),
+          AttrResourceValueImpl(supportLib, "fabColor", null),
+          AttrResourceValueImpl(supportLib, "actionBarColor", null)
         )
 
         val libRes = listOf(
