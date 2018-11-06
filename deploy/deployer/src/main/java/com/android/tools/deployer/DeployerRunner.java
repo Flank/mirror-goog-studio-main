@@ -20,6 +20,7 @@ import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
 import com.android.tools.deployer.tasks.TaskRunner;
 import com.android.utils.ILogger;
+import com.google.common.collect.ImmutableMap;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
@@ -81,7 +82,8 @@ public class DeployerRunner {
         AdbClient adb = new AdbClient(device, LOGGER);
         Installer installer = new AdbInstaller(adb, LOGGER);
         ExecutorService service = Executors.newFixedThreadPool(5);
-        Deployer deployer = new Deployer(adb, db, new TaskRunner(service), installer);
+        TaskRunner runner = new TaskRunner(service);
+        Deployer deployer = new Deployer(adb, db, runner, installer);
         if (command.equals("install")) {
             InstallOptions.Builder options = InstallOptions.builder().setAllowDebuggable();
             if (device.supportsFeature(IDevice.HardwareFeature.EMBEDDED)) {
@@ -93,12 +95,14 @@ public class DeployerRunner {
                 if (command.equals("fullswap")) {
                     deployer.fullSwap(packageName, apks);
                 } else if (command.equals("codeswap")) {
-                    deployer.codeSwap(packageName, apks, null);
+                    deployer.codeSwap(packageName, apks, ImmutableMap.of());
                 }
             } catch (DeployerException e) {
+                e.printStackTrace(System.out);
                 LOGGER.error(e, "Error executing the deployer");
             }
         }
+        runner.join();
         service.shutdown();
     }
 

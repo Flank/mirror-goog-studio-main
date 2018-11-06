@@ -37,22 +37,53 @@ public class DexComparator {
      */
     public List<DexClass> compare(List<FileDiff> dexDiffs, CachedDexSplitter splitter)
             throws DeployerException {
+        // Iterate through the list of .dex files which have changed. We cannot trust dex filenames to be stable
+        // since there have been instances where we receive:
+        //
+        // OLD FILENAME    CRC  |      NEW FILENAME     CRC
+        // classes1.dex     A   |      classes1.dex      A
+        // classes2.dex     B   |      classes2.dex      D
+        // classes3.dex     C   |      classes3.dex      B
+        //
+        // classes2.dex and classes3.dex seem to have changed. However classes2.dex as only been renamed classes3.dex
+        // and the only real changes are between the pair old classes3.dex and new classes2.dex.
+        //
+        // To solve this, we flatten all classes in the old apk into a single list and compare it with each dex list
+        // received
         try (Trace ignored = Trace.begin("compare")) {
+
+            // Flatten the list of old files.
+            Map<String, Long> oldChecksums = new HashMap<>();
+            for (FileDiff diff : dexDiffs) {
+                // If the dex is new, there is no old dex to open.
+                if (diff.status == FileDiff.Status.CREATED) {
+                    continue;
+                }
+                List<DexClass> klasses = splitter.split(diff.oldFile, false, null);
+                for (DexClass clz : klasses) {
+                    oldChecksums.put(clz.name, clz.checksum);
+                }
+            }
+
             List<DexClass> toSwap = new ArrayList<>();
             for (FileDiff diff : dexDiffs) {
-                List<DexClass> oldClasses = splitter.split(diff.oldFile, false, null);
-                Map<String, Long> checksums = new HashMap<>();
-                for (DexClass clz : oldClasses) {
-                    checksums.put(clz.name, clz.checksum);
-                }
                 // Memory optimization to discard not needed code
                 Predicate<DexClass> needsCode =
                         (DexClass clz) -> {
-                            Long oldChecksum = checksums.get(clz.name);
+                            Long oldChecksum = oldChecksums.get(clz.name);
                             return oldChecksum != null && clz.checksum != oldChecksum;
                         };
 
                 List<DexClass> newClasses = splitter.split(diff.newFile, true, needsCode);
+                for (DexClass klass : newClasses) {
+                    if (!oldChecksums.containsKey(klass.name)) {
+                        // This is a new class. This is not supported.
+                        throw new DeployerException(
+                                DeployerException.Error.CANNOT_SWAP_NEW_CLASS,
+                                "Unable to swap new class '" + klass.name + "'");
+                    }
+                }
+
                 toSwap.addAll(
                         newClasses
                                 .stream()
