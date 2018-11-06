@@ -2941,11 +2941,13 @@ public abstract class TaskManager {
      * per build-type, per-flavor, per-flavor-combo and the main 'assemble' and 'bundle' ones.
      *
      * @param variantScopes the list of variant scopes.
+     * @param flavorCount the number of flavors
      * @param flavorDimensionCount whether there are flavor dimensions at all.
      * @param variantTypeCount the number of variant types generated.
      */
     public void createAnchorAssembleTasks(
             @NonNull List<VariantScope> variantScopes,
+            int flavorCount,
             int flavorDimensionCount,
             int variantTypeCount) {
 
@@ -2954,7 +2956,7 @@ public abstract class TaskManager {
         List<TaskProvider<? extends Task>> subBundleTasks = Lists.newArrayList();
 
         // There are 3 different scenarios:
-        // 1. there is 1+ flavor dimension. In this case the variant-specific assemble task is
+        // 1. There are 1+ flavors. In this case the variant-specific assemble task is
         //    different from all the assemble<BuildType> or assemble<Flavor>
         // 2. There is no flavor but this is a feature plugin that has 2 different variants for
         //    the same build type (aar + feature), so we still create a specific assemble<buildType>
@@ -2962,7 +2964,7 @@ public abstract class TaskManager {
         // 3. Else, the assemble<BuildType> is the same as the variant specific assemble task.
 
         // Case #1
-        if (flavorDimensionCount > 0) {
+        if (flavorCount > 0) {
             // loop on the variants and record their build type/flavor usage.
             // map from build type/flavor names to the variant-specific assemble/bundle tasks
             ListMultimap<String, TaskProvider<? extends Task>> assembleMap =
@@ -2985,7 +2987,7 @@ public abstract class TaskManager {
                         assembleMap.put(flavor.getName(), assembleTask);
                     }
 
-                    // if 2+ flavors, then make an assemble for the flavor combo
+                    // if 2+ flavor dimensions, then make an assemble for the flavor combo
                     if (flavorDimensionCount > 1) {
                         assembleMap.put(variantConfig.getFlavorName(), assembleTask);
                     }
@@ -3000,7 +3002,7 @@ public abstract class TaskManager {
                             bundleMap.put(flavor.getName(), bundleTask);
                         }
 
-                        // if 2+ flavors, then make an assemble for the flavor combo
+                        // if 2+ flavor dimensions, then make an assemble for the flavor combo
                         if (flavorDimensionCount > 1) {
                             bundleMap.put(variantConfig.getFlavorName(), bundleTask);
                         }
