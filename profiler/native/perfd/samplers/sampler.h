@@ -29,13 +29,13 @@ namespace profiler {
 
 // Base class of the sampling infrastructure in the profilers' new data
 // pipeline. It runs a worker thread that calls into Sample() at regular
-// intervals as specified in |sample_interval_ns|. Subclasses are expected to
+// intervals as specified in |sample_interval_ms|. Subclasses are expected to
 // implement the sampling logic based on the |session| that is currently being
 // profiled, and to insert the data into the event buffer.
 class Sampler {
  public:
   Sampler(const profiler::Session& session, EventBuffer* buffer,
-          int64_t sample_interval_ns);
+          int64_t sample_interval_ms);
   virtual ~Sampler();
 
   // Start the sampling worker thread. No-op if the thread is started already
