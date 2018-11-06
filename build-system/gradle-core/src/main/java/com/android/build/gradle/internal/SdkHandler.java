@@ -271,7 +271,8 @@ public class SdkHandler {
     public File checkAndGetSdkFolder() {
         if (sdkFolder == null) {
             throw new RuntimeException(
-                    "SDK location not found. Define location with sdk.dir in the local.properties file or with an ANDROID_HOME environment variable.");
+                    "SDK location not found. Define location with sdk.dir in the local.properties "
+                    + "file or with an ANDROID_SDK_ROOT environment variable.");
         }
 
         return sdkFolder;
@@ -347,7 +348,10 @@ public class SdkHandler {
             return Pair.of(new File(rootDir, sdkDirProp), false);
         }
 
-        String envVar = System.getenv("ANDROID_HOME");
+        String envVar = System.getenv(SdkConstants.ANDROID_SDK_ROOT_ENV);
+        if (envVar == null) {
+            envVar = System.getenv(SdkConstants.ANDROID_HOME_ENV);
+        }
         if (envVar != null) {
             File sdk = new File(envVar);
             if (!sdk.isAbsolute()) {

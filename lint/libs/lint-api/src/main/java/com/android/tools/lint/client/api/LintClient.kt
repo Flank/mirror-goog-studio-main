@@ -456,7 +456,8 @@ abstract class LintClient {
             }
         }
 
-        val home = System.getenv("ANDROID_HOME") ?: return null
+        val home = System.getenv(SdkConstants.ANDROID_SDK_ROOT_ENV) ?:
+                   System.getenv(SdkConstants.ANDROID_HOME_ENV) ?: return null
         return File(home)
     }
 

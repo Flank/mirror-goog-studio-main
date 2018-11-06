@@ -1090,7 +1090,7 @@ public class AvdManager {
         File androidFolder = mSdkHandler.getAndroidFolder();
         if (androidFolder == null) {
             throw new AndroidLocation.AndroidLocationException(
-                    "Can't locate ANDROID_HOME for the AVD .ini file.");
+                    "Can't locate Android SDK installation directory for the AVD .ini file.");
         }
         String androidPath = androidFolder.getAbsolutePath() + File.separator;
         if (absPath.startsWith(androidPath)) {
