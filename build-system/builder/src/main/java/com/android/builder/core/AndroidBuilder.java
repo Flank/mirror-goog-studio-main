@@ -1093,6 +1093,30 @@ public class AndroidBuilder {
             @NonNull File incrementalDir,
             @NonNull ApkCreatorFactory apkCreatorFactory)
             throws KeytoolException, PackagerException, IOException {
+        packageCodeSplitApk(
+                androidResPkg,
+                dexFiles,
+                signingConfig,
+                outApkLocation,
+                incrementalDir,
+                apkCreatorFactory,
+                mCreatedBy);
+    }
+
+    /**
+     * Creates a new split APK containing only code.
+     *
+     * <p>This is used for instant run cold swaps on N and above.
+     */
+    public static void packageCodeSplitApk(
+            @NonNull File androidResPkg,
+            @NonNull Set<File> dexFiles,
+            @Nullable SigningConfig signingConfig,
+            @NonNull File outApkLocation,
+            @NonNull File incrementalDir,
+            @NonNull ApkCreatorFactory apkCreatorFactory,
+            @Nullable String createdBy)
+            throws KeytoolException, PackagerException, IOException {
 
         Optional<SigningOptions> signingOptions;
 
@@ -1121,7 +1145,7 @@ public class AndroidBuilder {
                         outApkLocation,
                         signingOptions,
                         null,
-                        mCreatedBy,
+                        createdBy,
                         NativeLibrariesPackagingMode.COMPRESSED,
                         s -> false);
 

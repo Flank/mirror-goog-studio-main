@@ -18,34 +18,43 @@ package com.android.build.gradle.tasks;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.api.artifact.BuildableArtifact;
+import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.packaging.ApkCreatorFactories;
 import com.android.build.gradle.internal.scope.BuildElements;
+import com.android.build.gradle.internal.scope.BuildElementsTransformParams;
+import com.android.build.gradle.internal.scope.BuildElementsTransformRunnable;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.internal.tasks.SigningConfigMetadata;
+import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.packaging.PackagerException;
 import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.signing.KeytoolException;
+import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import javax.inject.Inject;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.tooling.BuildException;
+import org.gradle.workers.WorkerExecutor;
 
 /**
  * Task for create a split apk per packaged resources.
@@ -57,6 +66,9 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
 
     @VisibleForTesting public static final String APK_FILE_NAME = "resources";
 
+    /** Used to stop the worker item from actually doing the packaging in unit tests */
+    @VisibleForTesting static boolean doPackageCodeSplitApk = true;
+
     private AndroidBuilder androidBuilder;
     private InstantRunBuildContext instantRunBuildContext;
     private File outputDirectory;
@@ -66,6 +78,13 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
     private BuildableArtifact resources;
 
     private InternalArtifactType resInputType;
+
+    private final WorkerExecutorFacade workers;
+
+    @Inject
+    public InstantRunResourcesApkBuilder(WorkerExecutor workerExecutor) {
+        workers = Workers.INSTANCE.getWorker(workerExecutor);
+    }
 
     @InputFiles
     public FileCollection getSigningConf() {
@@ -117,48 +136,81 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
                             });
             return;
         }
+        List<File> outputFiles = new ArrayList<>();
         getResInputBuildArtifacts()
                 .transform(
-                        (apkData, input) -> {
-                            try {
-                                if (input == null) {
-                                    return null;
-                                }
-                                final File outputFile =
-                                        new File(
-                                                outputDirectory,
-                                                mangleApkName(apkData)
-                                                        + SdkConstants.DOT_ANDROID_PACKAGE);
-                                FileUtils.deleteIfExists(outputFile);
-                                Files.createParentDirs(outputFile);
-
-                                // packageCodeSplitApk uses a temporary directory for incremental runs.
-                                // Since we don't
-                                // do incremental builds here, make sure it gets an empty directory.
-                                File tempDir =
-                                        new File(
-                                                supportDirectory,
-                                                "package_" + mangleApkName(apkData));
-
-                                FileUtils.cleanOutputDir(tempDir);
-
-                                androidBuilder.packageCodeSplitApk(
-                                        input,
-                                        ImmutableSet.of(),
-                                        SigningConfigMetadata.Companion.load(signingConf),
-                                        outputFile,
-                                        tempDir,
-                                        ApkCreatorFactories.fromProjectProperties(
-                                                getProject(), true));
-                                instantRunBuildContext.addChangedFile(FileType.SPLIT, outputFile);
-                                return outputFile;
-
-                            } catch (IOException | KeytoolException | PackagerException e) {
-                                throw new BuildException(
-                                        "Exception while creating resources split APK", e);
-                            }
+                        workers,
+                        ApkBuilderRunnable.class,
+                        (apkInfo, input) -> {
+                            ApkBuilderParams params = new ApkBuilderParams(apkInfo, input, this);
+                            outputFiles.add(params.getOutput());
+                            return params;
                         })
                 .into(InternalArtifactType.INSTANT_RUN_PACKAGED_RESOURCES, outputDirectory);
+        outputFiles.forEach(it -> instantRunBuildContext.addChangedFile(FileType.SPLIT, it));
+    }
+
+    private static class ApkBuilderRunnable extends BuildElementsTransformRunnable {
+
+        public ApkBuilderRunnable(@NonNull ApkBuilderParams params) {
+            super(params);
+        }
+
+        @Override
+        public void run() {
+            ApkBuilderParams params = (ApkBuilderParams) getParams();
+
+            try {
+
+                FileUtils.deleteIfExists(params.outputFile);
+                FileUtils.mkdirs(params.outputFile.getParentFile());
+
+                // packageCodeSplitApk uses a temporary directory for incremental runs.
+                // Since we don't
+                // do incremental builds here, make sure it gets an empty directory.
+                FileUtils.cleanOutputDir(params.tempDir);
+                if (doPackageCodeSplitApk) {
+                    AndroidBuilder.packageCodeSplitApk(
+                            params.input,
+                            ImmutableSet.of(),
+                            SigningConfigMetadata.Companion.load(params.signingConfigFile),
+                            params.outputFile,
+                            params.tempDir,
+                            ApkCreatorFactories.fromProjectProperties(
+                                    params.keepTimestampsInApk, true),
+                            params.createdBy);
+                }
+            } catch (IOException | KeytoolException | PackagerException e) {
+                throw new BuildException("Exception while creating resources split APK", e);
+            }
+        }
+    }
+
+    private static class ApkBuilderParams extends BuildElementsTransformParams {
+        @NonNull private final File input;
+        @NonNull private final File outputFile;
+        @NonNull private final File tempDir;
+        @Nullable private final File signingConfigFile;
+        private final String createdBy;
+        private final boolean keepTimestampsInApk;
+
+        ApkBuilderParams(ApkInfo apkInfo, @NonNull File input, InstantRunResourcesApkBuilder task) {
+            this.input = input;
+            outputFile =
+                    new File(
+                            task.outputDirectory,
+                            mangleApkName(apkInfo) + SdkConstants.DOT_ANDROID_PACKAGE);
+            tempDir = new File(task.supportDirectory, "package_" + mangleApkName(apkInfo));
+            signingConfigFile = SigningConfigMetadata.Companion.getOutputFile(task.signingConf);
+            createdBy = task.androidBuilder.getCreatedBy();
+            keepTimestampsInApk = AndroidGradleOptions.keepTimestampsInApk(task.getProject());
+        }
+
+        @NonNull
+        @Override
+        public File getOutput() {
+            return outputFile;
+        }
     }
 
     @VisibleForTesting

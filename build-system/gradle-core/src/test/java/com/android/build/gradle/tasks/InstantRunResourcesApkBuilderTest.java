@@ -18,33 +18,33 @@ package com.android.build.gradle.tasks;
 
 import static com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy.MULTI_APK_SEPARATE_RESOURCES;
 import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.android.SdkConstants;
-import com.android.annotations.NonNull;
 import com.android.build.VariantOutput;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.fixtures.DirectWorkerExecutor;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildElementActionScheduler;
 import com.android.build.gradle.internal.scope.BuildElements;
+import com.android.build.gradle.internal.scope.BuildElementsTransformParams;
+import com.android.build.gradle.internal.scope.BuildElementsTransformRunnable;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.Workers;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.packaging.PackagerException;
 import com.android.ide.common.build.ApkData;
 import com.android.ide.common.build.ApkInfo;
-import com.android.ide.common.signing.KeytoolException;
-import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory;
+import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -54,11 +54,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import javax.inject.Inject;
 import kotlin.jvm.functions.Function2;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
 import org.gradle.testfixtures.ProjectBuilder;
+import org.gradle.workers.WorkerExecutor;
+import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -91,14 +94,31 @@ public class InstantRunResourcesApkBuilderTest {
     @Rule public TemporaryFolder signingConfigDirectory = new TemporaryFolder();
 
     public static class InstantRunResourcesApkBuilderForTest extends InstantRunResourcesApkBuilder {
+        @Inject
+        public InstantRunResourcesApkBuilderForTest(WorkerExecutor workerExecutor) {
+            super(workerExecutor);
+        }
+
         @Override
         protected BuildElements getResInputBuildArtifacts() {
             return new BuildElements(super.getResInputBuildArtifacts().getElements()) {
-                @NonNull
+
+                @NotNull
                 @Override
                 public BuildElementActionScheduler transform(
-                        @NonNull Function2<? super ApkInfo, ? super File, ? extends File> action) {
-                    return new BuildElementActionScheduler.Synchronous(this, action);
+                        @NotNull WorkerExecutorFacade workers,
+                        @NotNull
+                                Class<? extends BuildElementsTransformRunnable>
+                                        transformRunnableClass,
+                        @NotNull
+                                Function2<
+                                                ? super ApkInfo, ? super File,
+                                                ? extends BuildElementsTransformParams>
+                                        paramsFactory) {
+                    return super.transform(
+                            Workers.INSTANCE.getWorker(new DirectWorkerExecutor()),
+                            transformRunnableClass,
+                            paramsFactory);
                 }
             };
         }
@@ -111,6 +131,8 @@ public class InstantRunResourcesApkBuilderTest {
         project = ProjectBuilder.builder().withProjectDir(testDir).build();
 
         task = project.getTasks().create("test", InstantRunResourcesApkBuilderForTest.class);
+
+        InstantRunResourcesApkBuilder.doPackageCodeSplitApk = false;
 
         when(variantScope.getFullVariantName()).thenReturn("testVariant");
         when(variantScope.getGlobalScope()).thenReturn(globalScope);
@@ -221,20 +243,17 @@ public class InstantRunResourcesApkBuilderTest {
     }
 
     @Test
-    public void testAnotherSingleSplitExecution()
-            throws KeytoolException, IOException, PackagerException {
+    public void testAnotherSingleSplitExecution() throws IOException {
         testExecution(1);
     }
 
     @Test
-    public void testMultipleSplitExecution()
-            throws KeytoolException, IOException, PackagerException {
+    public void testMultipleSplitExecution() throws IOException {
         testExecution(3);
     }
 
     @SuppressWarnings("unchecked")
-    private void testExecution(int numberOfSplits)
-            throws IOException, PackagerException, KeytoolException {
+    private void testExecution(int numberOfSplits) throws IOException {
 
         InstantRunResourcesApkBuilder.CreationAction configAction =
                 new InstantRunResourcesApkBuilder.CreationAction(
@@ -261,14 +280,6 @@ public class InstantRunResourcesApkBuilderTest {
                             outputFolder,
                             InstantRunResourcesApkBuilder.mangleApkName(apkDatas.get(i))
                                     + SdkConstants.DOT_ANDROID_PACKAGE);
-            verify(androidBuilder)
-                    .packageCodeSplitApk(
-                            eq(resourcesFiles.get(i)),
-                            eq(ImmutableSet.of()),
-                            eq(null),
-                            eq(expectedOutputFile),
-                            any(File.class),
-                            any(ApkCreatorFactory.class));
 
             verify(buildContext).addChangedFile(FileType.SPLIT, expectedOutputFile);
         }
