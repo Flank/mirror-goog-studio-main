@@ -19,6 +19,7 @@ package com.android.manifmerger;
 import static com.android.manifmerger.MergingReport.Record.Severity.ERROR;
 
 import com.android.SdkConstants;
+import com.android.ide.common.blame.SourceFile;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.testutils.MockLog;
 import com.android.utils.ILogger;
@@ -48,6 +49,8 @@ import org.xml.sax.SAXParseException;
  */
 public class XmlDocumentTest extends TestCase {
 
+    private final ManifestModel mModel = new ManifestModel();
+
     @Mock ILogger mLogger;
 
     @Override
@@ -69,8 +72,10 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testMergeableElementsIdentification()"), input);
+        XmlDocument xmlDocument =
+                loadXmlDoc(
+                        TestUtils.sourceFile(getClass(), "testMergeableElementsIdentification()"),
+                        input);
         ImmutableList<XmlElement> mergeableElements = xmlDocument.getRootNode().getMergeableElements();
         assertEquals(2, mergeableElements.size());
     }
@@ -88,8 +93,10 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testMergeableElementsIdentification()"), input);
+        XmlDocument xmlDocument =
+                loadXmlDoc(
+                        TestUtils.sourceFile(getClass(), "testMergeableElementsIdentification()"),
+                        input);
         ImmutableList<XmlElement> mergeableElements = xmlDocument.getRootNode().getMergeableElements();
         assertEquals(2, mergeableElements.size());
         assertEquals(ManifestModel.NodeTypes.APPLICATION, mergeableElements.get(0).getType());
@@ -112,8 +119,10 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</android:manifest>";
 
-        XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testMergeableElementsIdentification()"), input);
+        XmlDocument xmlDocument =
+                loadXmlDoc(
+                        TestUtils.sourceFile(getClass(), "testMergeableElementsIdentification()"),
+                        input);
         ImmutableList<XmlElement> mergeableElements = xmlDocument.getRootNode().getMergeableElements();
         assertEquals(3, mergeableElements.size());
         assertEquals(ManifestModel.NodeTypes.APPLICATION, mergeableElements.get(0).getType());
@@ -135,8 +144,8 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testGetXmlNodeByTypeAndKey()"), input);
+        XmlDocument xmlDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "testGetXmlNodeByTypeAndKey()"), input);
         assertTrue(xmlDocument.getRootNode().getNodeByTypeAndKey(
                 ManifestModel.NodeTypes.ACTIVITY, "com.example.lib3.activityOne").isPresent());
         assertFalse(xmlDocument.getRootNode().getNodeByTypeAndKey(
@@ -162,10 +171,10 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testSimpleMerge()"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "testSimpleMerge()"), library);
+        XmlDocument mainDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "testSimpleMerge()"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "testSimpleMerge()"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument =
                 mainDocument.merge(libraryDocument, mergingReportBuilder);
@@ -199,10 +208,10 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testDiff1()"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "testDiff1()"), library);
+        XmlDocument mainDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "testDiff1()"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "testDiff1()"), library);
         assertTrue(mainDocument.compareTo(libraryDocument).isPresent());
     }
 
@@ -228,10 +237,10 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testDiff2()"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "testDiff2()"), library);
+        XmlDocument mainDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "testDiff2()"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "testDiff2()"), library);
         assertFalse(mainDocument.compareTo(libraryDocument).isPresent());
     }
 
@@ -259,10 +268,10 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testDiff3()"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "testDiff3()"), library);
+        XmlDocument mainDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "testDiff3()"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "testDiff3()"), library);
         assertFalse(mainDocument.compareTo(libraryDocument).isPresent());
     }
 
@@ -278,8 +287,8 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testWriting()"), input);
+        XmlDocument xmlDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "testWriting()"), input);
         assertEquals(input, xmlDocument.prettyPrint().replace(System.lineSeparator(), "\n"));
     }
 
@@ -313,10 +322,9 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument =
                 mainDocument.merge(libraryDocument, mergingReportBuilder);
@@ -395,10 +403,9 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument =
                 mainDocument.merge(libraryDocument, mergingReportBuilder);
@@ -453,10 +460,9 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument =
                 mainDocument.merge(libraryDocument, mergingReportBuilder);
@@ -491,10 +497,9 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument =
                 mainDocument.merge(libraryDocument, mergingReportBuilder);
@@ -533,10 +538,9 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument =
                 mainDocument.merge(libraryDocument, mergingReportBuilder);
@@ -580,10 +584,8 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument flavorDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "flavor"), flavor);
-        XmlDocument mainDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument flavorDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "flavor"), flavor);
+        XmlDocument mainDocument = loadXmlLib(TestUtils.sourceFile(getClass(), "main"), main);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument =
                 flavorDocument.merge(mainDocument, mergingReportBuilder);
@@ -623,10 +625,9 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument =
                 mainDocument.merge(libraryDocument, mergingReportBuilder);
@@ -655,10 +656,9 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument =
                 mainDocument.merge(libraryDocument, mergingReportBuilder);
@@ -699,10 +699,9 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument =
                 mainDocument.merge(libraryDocument, mergingReportBuilder);
@@ -724,8 +723,8 @@ public class XmlDocumentTest extends TestCase {
         Actions actions = mergingReportBuilder.getActionRecorder().build();
         XmlElement xmlElement = xmlDocument.getByTypeAndKey(ManifestModel.NodeTypes.USES_PERMISSION,
                 "android.permission.WRITE_EXTERNAL_STORAGE").get();
-        ImmutableList<Actions.NodeRecord> nodeRecords = actions
-                .getNodeRecords(XmlNode.NodeKey.fromXml(xmlElement.getXml()));
+        ImmutableList<Actions.NodeRecord> nodeRecords =
+                actions.getNodeRecords(XmlNode.NodeKey.fromXml(xmlElement.getXml(), mModel));
         assertEquals(1, nodeRecords.size());
         assertEquals(nodeRecords.iterator().next().mReason,
                 "com.example.lib3 has a targetSdkVersion < 4");
@@ -753,10 +752,9 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument = mainDocument
                 .merge(libraryDocument, mergingReportBuilder, false /* addImplicitPermissions */);
@@ -797,10 +795,9 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument =
                 mainDocument.merge(libraryDocument, mergingReportBuilder);
@@ -844,10 +841,9 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument =
                 mainDocument.merge(libraryDocument, mergingReportBuilder);
@@ -869,15 +865,15 @@ public class XmlDocumentTest extends TestCase {
         Actions actions = mergingReportBuilder.getActionRecorder().build();
         XmlElement xmlElement = xmlDocument.getByTypeAndKey(ManifestModel.NodeTypes.USES_PERMISSION,
                 "android.permission.WRITE_EXTERNAL_STORAGE").get();
-        ImmutableList<Actions.NodeRecord> nodeRecords = actions
-                .getNodeRecords(XmlNode.NodeKey.fromXml(xmlElement.getXml()));
+        ImmutableList<Actions.NodeRecord> nodeRecords =
+                actions.getNodeRecords(XmlNode.NodeKey.fromXml(xmlElement.getXml(), mModel));
         assertEquals(1, nodeRecords.size());
         assertEquals(nodeRecords.iterator().next().mReason,
                 "com.example.lib3 has a targetSdkVersion < 4");
 
         xmlElement = xmlDocument.getByTypeAndKey(ManifestModel.NodeTypes.USES_PERMISSION,
                 "android.permission.READ_CALL_LOG").get();
-        nodeRecords = actions.getNodeRecords(XmlNode.NodeKey.fromXml(xmlElement.getXml()));
+        nodeRecords = actions.getNodeRecords(XmlNode.NodeKey.fromXml(xmlElement.getXml(), mModel));
         assertEquals(1, nodeRecords.size());
         assertEquals(nodeRecords.iterator().next().mReason,
                 "com.example.lib3 has targetSdkVersion < 16 and requested READ_CONTACTS");
@@ -908,10 +904,9 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument = mainDocument
                 .merge(libraryDocument, mergingReportBuilder, false /* addImplicitPermissions */);
@@ -954,10 +949,9 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument =
                 mainDocument.merge(libraryDocument, mergingReportBuilder);
@@ -1000,10 +994,9 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument = mainDocument
                 .merge(libraryDocument, mergingReportBuilder, false /* addImplicitPermissions */);
@@ -1046,10 +1039,9 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument =
                 mainDocument.merge(libraryDocument, mergingReportBuilder);
@@ -1092,10 +1084,9 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument = mainDocument
                 .merge(libraryDocument, mergingReportBuilder, false /* addImplicitPermissions */);
@@ -1138,10 +1129,9 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument =
                 mainDocument.merge(libraryDocument, mergingReportBuilder);
@@ -1185,13 +1175,14 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "overlay"),
-                overlay,
-                XmlDocument.Type.OVERLAY,
-                Optional.of("com.example.lib3"));
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument mainDocument =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), "overlay"),
+                        overlay,
+                        XmlDocument.Type.OVERLAY,
+                        Optional.of("com.example.lib3"),
+                        mModel);
+        XmlDocument libraryDocument = loadXmlLib(TestUtils.sourceFile(getClass(), "main"), main);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument =
                 mainDocument.merge(libraryDocument, mergingReportBuilder);
@@ -1229,10 +1220,9 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument =
                 mainDocument.merge(libraryDocument, mergingReportBuilder);
@@ -1273,10 +1263,9 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument =
                 mainDocument.merge(libraryDocument, mergingReportBuilder);
@@ -1316,10 +1305,9 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument =
                 mainDocument.merge(libraryDocument, mergingReportBuilder);
@@ -1358,10 +1346,9 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument =
                 mainDocument.merge(libraryDocument, mergingReportBuilder);
@@ -1402,10 +1389,9 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument =
                 mainDocument.merge(libraryDocument, mergingReportBuilder);
@@ -1448,10 +1434,9 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument =
                 mainDocument.merge(libraryDocument, mergingReportBuilder);
@@ -1485,10 +1470,9 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument =
                 mainDocument.merge(libraryDocument, mergingReportBuilder);
@@ -1510,8 +1494,8 @@ public class XmlDocumentTest extends TestCase {
         Actions actions = mergingReportBuilder.getActionRecorder().build();
         XmlElement xmlElement = xmlDocument.getByTypeAndKey(ManifestModel.NodeTypes.USES_PERMISSION,
                 "android.permission.WRITE_EXTERNAL_STORAGE").get();
-        ImmutableList<Actions.NodeRecord> nodeRecords = actions
-                .getNodeRecords(XmlNode.NodeKey.fromXml(xmlElement.getXml()));
+        ImmutableList<Actions.NodeRecord> nodeRecords =
+                actions.getNodeRecords(XmlNode.NodeKey.fromXml(xmlElement.getXml(), mModel));
         assertEquals(1, nodeRecords.size());
         assertEquals(nodeRecords.iterator().next().mReason,
                 "com.example.lib3 has a targetSdkVersion < 4");
@@ -1543,10 +1527,9 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument = mainDocument
                 .merge(libraryDocument, mergingReportBuilder, false /* addImplicitPermissions */);
@@ -1608,10 +1591,9 @@ public class XmlDocumentTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument =
                 mainDocument.merge(libraryDocument, mergingReportBuilder);
@@ -1674,10 +1656,9 @@ public class XmlDocumentTest extends TestCase {
                         + "\n"
                         + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument =
                 mainDocument.merge(libraryDocument, mergingReportBuilder);
@@ -1746,10 +1727,9 @@ public class XmlDocumentTest extends TestCase {
                         + "\n"
                         + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument =
                 mainDocument.merge(libraryDocument, mergingReportBuilder);
@@ -1821,10 +1801,9 @@ public class XmlDocumentTest extends TestCase {
                         + "\n"
                         + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument =
                 mainDocument.merge(libraryDocument, mergingReportBuilder);
@@ -1895,10 +1874,9 @@ public class XmlDocumentTest extends TestCase {
                         + "\n"
                         + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument =
                 mainDocument.merge(libraryDocument, mergingReportBuilder);
@@ -1959,10 +1937,9 @@ public class XmlDocumentTest extends TestCase {
                         + "\n"
                         + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "main"), main);
-        XmlDocument libraryDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "library"), library);
+        XmlDocument mainDocument = loadXmlDoc(TestUtils.sourceFile(getClass(), "main"), main);
+        XmlDocument libraryDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "library"), library);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
         Optional<XmlDocument> mergedDocument =
                 mainDocument.merge(libraryDocument, mergingReportBuilder);
@@ -2021,5 +1998,15 @@ public class XmlDocumentTest extends TestCase {
         Document validated = dBuilder.parse(
                 new InputSource(new StringReader(xml)));
         return (Element) validated.getChildNodes().item(0);
+    }
+
+    private XmlDocument loadXmlDoc(SourceFile location, String input)
+            throws ParserConfigurationException, SAXException, IOException {
+        return TestUtils.xmlDocumentFromString(location, input, mModel);
+    }
+
+    private XmlDocument loadXmlLib(SourceFile location, String input)
+            throws ParserConfigurationException, SAXException, IOException {
+        return TestUtils.xmlLibraryFromString(location, input, mModel);
     }
 }

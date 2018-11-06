@@ -35,6 +35,8 @@ import org.xml.sax.SAXException;
  */
 public class XmlLoaderTest extends TestCase {
 
+    private final ManifestModel mModel = new ManifestModel();
+
     public void testAndroidPrefix() throws IOException, SAXException, ParserConfigurationException {
 
         String input = ""
@@ -46,8 +48,9 @@ public class XmlLoaderTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testToolsPrefix()"), input);
+        XmlDocument xmlDocument =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), "testToolsPrefix()"), input, mModel);
         Optional<XmlElement> applicationOptional = xmlDocument.getRootNode()
                 .getNodeByTypeAndKey(ManifestModel.NodeTypes.APPLICATION, null);
         assertTrue(applicationOptional.isPresent());
@@ -82,8 +85,9 @@ public class XmlLoaderTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testPrettyPrint()"), input);
+        XmlDocument xmlDocument =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), "testPrettyPrint()"), input, mModel);
         Optional<XmlElement> applicationOptional = xmlDocument.getRootNode()
                 .getNodeByTypeAndKey(ManifestModel.NodeTypes.APPLICATION, null);
         assertTrue(applicationOptional.isPresent());
@@ -105,8 +109,9 @@ public class XmlLoaderTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testToolsPrefix()"),input);
+        XmlDocument xmlDocument =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), "testToolsPrefix()"), input, mModel);
         Optional<XmlElement> applicationOptional = xmlDocument.getRootNode()
                 .getNodeByTypeAndKey(ManifestModel.NodeTypes.APPLICATION, null);
         assertTrue(applicationOptional.isPresent());
@@ -145,8 +150,9 @@ public class XmlLoaderTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testUnusualPrefixes()"), input);
+        XmlDocument xmlDocument =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), "testUnusualPrefixes()"), input, mModel);
         Optional<XmlElement> applicationOptional = xmlDocument.getRootNode()
                 .getNodeByTypeAndKey(ManifestModel.NodeTypes.APPLICATION, null);
         assertTrue(applicationOptional.isPresent());

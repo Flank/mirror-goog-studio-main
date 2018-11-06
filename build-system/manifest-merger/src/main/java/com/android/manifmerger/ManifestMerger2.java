@@ -89,6 +89,7 @@ public class ManifestMerger2 {
     @NonNull private final String mFeatureName;
     @NonNull private final FileStreamProvider mFileStreamProvider;
     @NonNull private final ImmutableList<File> mNavigationFiles;
+    @NonNull private final DocumentModel<ManifestModel.NodeTypes> mModel;
 
     private ManifestMerger2(
             @NonNull ILogger logger,
@@ -117,6 +118,7 @@ public class ManifestMerger2 {
         this.mFeatureName = featureName;
         this.mFileStreamProvider = fileStreamProvider;
         this.mNavigationFiles = navigationFiles;
+        this.mModel = new ManifestModel();
     }
 
     /**
@@ -992,13 +994,16 @@ public class ManifestMerger2 {
         XmlDocument xmlDocument;
         try {
             InputStream inputStream = mFileStreamProvider.getInputStream(xmlFile);
-            xmlDocument = XmlLoader.load(selectors,
-                    mSystemPropertyResolver,
-                    manifestInfo.mName,
-                    xmlFile,
-                    inputStream,
-                    manifestInfo.getType(),
-                    manifestInfo.getMainManifestPackageName());
+            xmlDocument =
+                    XmlLoader.load(
+                            selectors,
+                            mSystemPropertyResolver,
+                            manifestInfo.mName,
+                            xmlFile,
+                            inputStream,
+                            manifestInfo.getType(),
+                            manifestInfo.getMainManifestPackageName(),
+                            mModel);
         } catch (Exception e) {
             throw new MergeFailureException(e);
         }
@@ -1141,7 +1146,8 @@ public class ManifestMerger2 {
                                 xmlFile,
                                 inputStream,
                                 XmlDocument.Type.LIBRARY,
-                                Optional.absent() /* mainManifestPackageName */);
+                                Optional.absent(), /* mainManifestPackageName */
+                                mModel);
             } catch (Exception e) {
                 throw new MergeFailureException(e);
             }

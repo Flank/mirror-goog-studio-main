@@ -35,6 +35,7 @@ import org.w3c.dom.Node
  * "action:name:android.intent.action.VIEW+category:name:android.intent.category.DEFAULT+data:host:www.example.com"
  */
 object IntentFilterNodeKeyResolver : NodeKeyResolver {
+    private val model = ManifestModel()
 
     private val dataAttributeNames = ImmutableList.of(
             SdkConstants.ATTR_SCHEME,
@@ -50,13 +51,13 @@ object IntentFilterNodeKeyResolver : NodeKeyResolver {
             val builder = ImmutableList.builder<String>()
             builder.add("action#name", "category#name")
             for (dataAttributeName in dataAttributeNames) {
-                builder.add("data#" + dataAttributeName)
+                builder.add("data#$dataAttributeName")
             }
             return builder.build()
         }
 
     override fun getKey(element: Element): String? {
-        val xmlElement = OrphanXmlElement(element)
+        val xmlElement = OrphanXmlElement(element, model)
         assert(xmlElement.type == ManifestModel.NodeTypes.INTENT_FILTER)
         // concatenate attribute info for action, category, and data sub-elements.
         val subElementAttributes = ArrayList<String>()
@@ -64,7 +65,7 @@ object IntentFilterNodeKeyResolver : NodeKeyResolver {
         for (i in 0 until childNodes.length) {
             val child = childNodes.item(i)
             if (child.nodeType != Node.ELEMENT_NODE) continue
-            val subElement = OrphanXmlElement(child as Element)
+            val subElement = OrphanXmlElement(child as Element, model)
             if (subElement.type == ManifestModel.NodeTypes.ACTION ||
                     subElement.type == ManifestModel.NodeTypes.CATEGORY) {
                 val attributeInfo = getAttributeInfo(subElement, ATTR_NAME)
@@ -80,7 +81,7 @@ object IntentFilterNodeKeyResolver : NodeKeyResolver {
                 }
             }
         }
-        Collections.sort(subElementAttributes)
+        subElementAttributes.sort()
         return Joiner.on('+').join(subElementAttributes)
     }
 

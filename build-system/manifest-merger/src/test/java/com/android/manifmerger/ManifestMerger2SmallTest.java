@@ -62,6 +62,8 @@ import org.xml.sax.SAXException;
  * Tests for the {@link ManifestMergerTestUtil} class
  */
 public class ManifestMerger2SmallTest {
+    private final ManifestModel mModel = new ManifestModel();
+
     @Rule public MockitoRule rule = MockitoJUnit.rule();
 
     @Mock
@@ -286,8 +288,9 @@ public class ManifestMerger2SmallTest {
                 + "    <activity android:name=\"activityOne\"/>\n"
                 + "</manifest>";
 
-        XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testPackageOverride#xml"), xml);
+        XmlDocument refDocument =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), "testPackageOverride#xml"), xml, mModel);
 
         ManifestSystemProperty.PACKAGE.addTo(mActionRecorder, refDocument, "com.bar.new");
         // verify the package value was overridden.
@@ -302,8 +305,11 @@ public class ManifestMerger2SmallTest {
                 + "    <activity android:name=\"activityOne\"/>\n"
                 + "</manifest>";
 
-        XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testMissingPackageOverride#xml"), xml);
+        XmlDocument refDocument =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), "testMissingPackageOverride#xml"),
+                        xml,
+                        mModel);
 
         ManifestSystemProperty.PACKAGE.addTo(mActionRecorder, refDocument, "com.bar.new");
         // verify the package value was added.
@@ -318,9 +324,11 @@ public class ManifestMerger2SmallTest {
                 + "    <activity android:name=\"activityOne\"/>\n"
                 + "</manifest>";
 
-        XmlDocument document = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(),
-                        "testAddingSystemProperties#xml"), xml);
+        XmlDocument document =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), "testAddingSystemProperties#xml"),
+                        xml,
+                        mModel);
 
         ManifestSystemProperty.VERSION_CODE.addTo(mActionRecorder, document, "101");
         assertEquals("101",
@@ -354,10 +362,11 @@ public class ManifestMerger2SmallTest {
                 + "    <activity t:name=\"activityOne\"/>\n"
                 + "</manifest>";
 
-        XmlDocument document = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(),
-                        "testAddingSystemProperties#xml"), xml
-        );
+        XmlDocument document =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), "testAddingSystemProperties#xml"),
+                        xml,
+                        mModel);
 
         ManifestSystemProperty.VERSION_CODE.addTo(mActionRecorder, document, "101");
         // using the non namespace aware API to make sure the prefix is the expected one.
@@ -374,9 +383,11 @@ public class ManifestMerger2SmallTest {
                 + "    <activity android:name=\"activityOne\"/>\n"
                 + "</manifest>";
 
-        XmlDocument document = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(),
-                        "testAddingSystemProperties#xml"), xml);
+        XmlDocument document =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), "testAddingSystemProperties#xml"),
+                        xml,
+                        mModel);
         // check initial state.
         assertEquals("34", document.getXml().getDocumentElement().getAttribute("versionCode"));
         assertEquals("3.4", document.getXml().getDocumentElement().getAttribute("versionName"));

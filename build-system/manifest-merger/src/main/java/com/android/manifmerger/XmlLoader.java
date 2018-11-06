@@ -51,7 +51,8 @@ public final class XmlLoader {
             @NonNull File xmlFile,
             @NonNull InputStream inputStream,
             @NonNull XmlDocument.Type type,
-            @NonNull Optional<String> mainManifestPackageName)
+            @NonNull Optional<String> mainManifestPackageName,
+            @NonNull DocumentModel<ManifestModel.NodeTypes> model)
             throws IOException, SAXException, ParserConfigurationException {
         Document domDocument = PositionXmlParser.parse(inputStream);
         return new XmlDocument(
@@ -60,12 +61,14 @@ public final class XmlLoader {
                 systemPropertyResolver,
                 domDocument.getDocumentElement(),
                 type,
-                mainManifestPackageName);
+                mainManifestPackageName,
+                model);
     }
 
     /**
      * Loads a xml document from its {@link String} representation without doing xml validation and
      * return a {@link com.android.manifmerger.XmlDocument}
+     *
      * @param sourceFile the source location to use for logging and record collection.
      * @param xml the persisted xml.
      * @return the initialized {@link com.android.manifmerger.XmlDocument}
@@ -80,15 +83,17 @@ public final class XmlLoader {
             @NonNull SourceFile sourceFile,
             @NonNull String xml,
             @NonNull XmlDocument.Type type,
-            @NonNull Optional<String> mainManifestPackageName)
+            @NonNull Optional<String> mainManifestPackageName,
+            @NonNull DocumentModel<ManifestModel.NodeTypes> model)
             throws IOException, SAXException, ParserConfigurationException {
         Document domDocument = PositionXmlParser.parse(xml);
         return new XmlDocument(
-                        sourceFile,
-                        selectors,
-                        systemPropertyResolver,
-                        domDocument.getDocumentElement(),
-                        type,
-                        mainManifestPackageName);
+                sourceFile,
+                selectors,
+                systemPropertyResolver,
+                domDocument.getDocumentElement(),
+                type,
+                mainManifestPackageName,
+                model);
     }
 }

@@ -62,40 +62,65 @@ public class TestUtils {
         return new SourceFile(sourceClass.getSimpleName() + "#" + location);
     }
 
-    static XmlDocument xmlDocumentFromString(
-            SourceFile location,
-            String input)  throws IOException, SAXException, ParserConfigurationException {
+    static XmlDocument xmlDocumentFromString(SourceFile location, String input, ManifestModel model)
+            throws IOException, SAXException, ParserConfigurationException {
 
         return XmlLoader.load(
-                NULL_RESOLVER, NO_PROPERTY_RESOLVER, location, input, XmlDocument.Type.MAIN,
-                Optional.<String>absent() /* mainManifestPackageName */);
+                NULL_RESOLVER,
+                NO_PROPERTY_RESOLVER,
+                location,
+                input,
+                XmlDocument.Type.MAIN,
+                Optional.<String>absent(), /* mainManifestPackageName */
+                model);
     }
 
-    static XmlDocument xmlLibraryFromString(
-            SourceFile location,
-            String input)  throws IOException, SAXException, ParserConfigurationException {
+    static XmlDocument xmlLibraryFromString(SourceFile location, String input, ManifestModel model)
+            throws IOException, SAXException, ParserConfigurationException {
 
         return XmlLoader.load(
-                NULL_RESOLVER, NO_PROPERTY_RESOLVER, location, input, XmlDocument.Type.LIBRARY,
-                Optional.<String>absent()  /* mainManifestPackageName */);
+                NULL_RESOLVER,
+                NO_PROPERTY_RESOLVER,
+                location,
+                input,
+                XmlDocument.Type.LIBRARY,
+                Optional.<String>absent(), /* mainManifestPackageName */
+                model);
     }
 
     static XmlDocument xmlDocumentFromString(
             SourceFile location,
             String input,
             XmlDocument.Type type,
-            Optional<String> mainManifestPackageName)  throws IOException, SAXException, ParserConfigurationException {
+            Optional<String> mainManifestPackageName,
+            ManifestModel model)
+            throws IOException, SAXException, ParserConfigurationException {
 
-        return XmlLoader.load(NULL_RESOLVER, NO_PROPERTY_RESOLVER, location, input, type, mainManifestPackageName);
+        return XmlLoader.load(
+                NULL_RESOLVER,
+                NO_PROPERTY_RESOLVER,
+                location,
+                input,
+                type,
+                mainManifestPackageName,
+                model);
     }
 
     static XmlDocument xmlDocumentFromString(
             @NonNull KeyResolver<String> selectors,
             @NonNull SourceFile location,
-            String input)  throws IOException, SAXException, ParserConfigurationException {
+            String input,
+            ManifestModel model)
+            throws IOException, SAXException, ParserConfigurationException {
 
-        return XmlLoader.load(selectors, NO_PROPERTY_RESOLVER, location, input,
-                XmlDocument.Type.LIBRARY, Optional.<String>absent() /* mainManifestPackageName */);
+        return XmlLoader.load(
+                selectors,
+                NO_PROPERTY_RESOLVER,
+                location,
+                input,
+                XmlDocument.Type.LIBRARY,
+                Optional.<String>absent(), /* mainManifestPackageName */
+                model);
     }
 
     /** Utility method to save a {@link String} XML into a file. */

@@ -17,6 +17,7 @@ package com.android.tools.lint.client.api
 
 import com.android.manifmerger.Actions
 import com.android.manifmerger.XmlNode
+import com.android.manifmerger.ManifestModel
 import com.android.utils.Pair
 import com.google.common.base.Charsets
 import com.google.common.collect.Lists
@@ -40,7 +41,7 @@ class BlameFile internal constructor(
         var blameNode: BlameNode? = nodes[key]
 
         if (blameNode == null && actions != null) {
-            val nodeKey = XmlNode.NodeKey.fromXml(element)
+            val nodeKey = XmlNode.NodeKey.fromXml(element, model)
             val records = actions.getNodeRecords(nodeKey)
             for (record in records) {
                 val actionType = record.actionType
@@ -303,6 +304,7 @@ class BlameFile internal constructor(
 
     companion object {
         val NONE = BlameFile(mutableMapOf(), null)
+        private val model = ManifestModel()
 
         private fun getNodeKey(element: Element): String {
             // This unfortunately doesn't work well because in the merged manifest we'll
@@ -314,7 +316,7 @@ class BlameFile internal constructor(
             // (I've actually just patched the key lookup to produce
             // qualified names. If that's not acceptable in the manifest merger,
             // the alternative is to duplicate the naming logic here.)
-            return XmlNode.NodeKey.fromXml(element).toString()
+            return XmlNode.NodeKey.fromXml(element, model).toString()
         }
 
         @Throws(IOException::class)

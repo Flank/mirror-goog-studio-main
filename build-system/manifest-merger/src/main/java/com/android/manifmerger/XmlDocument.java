@@ -88,6 +88,7 @@ public class XmlDocument {
     private final Type mType;
     @NonNull
     private final Optional<String> mMainManifestPackageName;
+    @NonNull private final DocumentModel<ManifestModel.NodeTypes> mModel;
 
     public XmlDocument(
             @NonNull SourceFile sourceLocation,
@@ -95,18 +96,25 @@ public class XmlDocument {
             @NonNull KeyBasedValueResolver<ManifestSystemProperty> systemPropertyResolver,
             @NonNull Element element,
             @NonNull Type type,
-            @NonNull Optional<String> mainManifestPackageName) {
+            @NonNull Optional<String> mainManifestPackageName,
+            @NonNull DocumentModel<ManifestModel.NodeTypes> model) {
         this.mSourceFile = Preconditions.checkNotNull(sourceLocation);
         this.mRootElement = Preconditions.checkNotNull(element);
         this.mSelectors = Preconditions.checkNotNull(selectors);
         this.mSystemPropertyResolver = Preconditions.checkNotNull(systemPropertyResolver);
         this.mType = type;
         this.mMainManifestPackageName = mainManifestPackageName;
+        this.mModel = model;
     }
 
     @NonNull
     public Type getFileType() {
         return mType;
+    }
+
+    @NonNull
+    public DocumentModel<ManifestModel.NodeTypes> getModel() {
+        return mModel;
     }
 
     /**
@@ -162,9 +170,7 @@ public class XmlDocument {
                 lowerPriorityDocument, reparse(), mergingReportBuilder, addImplicitPermissions);
 
         // force re-parsing as new nodes may have appeared.
-        return mergingReportBuilder.hasErrors()
-                ? Optional.<XmlDocument>absent()
-                : Optional.of(reparse());
+        return mergingReportBuilder.hasErrors() ? Optional.absent() : Optional.of(reparse());
     }
 
     /**
@@ -179,7 +185,8 @@ public class XmlDocument {
                 mSystemPropertyResolver,
                 mRootElement,
                 mType,
-                mMainManifestPackageName);
+                mMainManifestPackageName,
+                mModel);
     }
 
     /**
@@ -636,10 +643,10 @@ public class XmlDocument {
         if (xmlElementOptional.isPresent()) {
             return Optional.absent();
         }
-        Element elementNS = getXml().createElement(nodeType.toXmlName());
+        Element elementNS = getXml().createElement(mModel.toXmlName(nodeType));
 
-        ImmutableList<String> keyAttributesNames = nodeType.getNodeKeyResolver()
-                .getKeyAttributesNames();
+        ImmutableList<String> keyAttributesNames =
+                nodeType.getNodeKeyResolver().getKeyAttributesNames();
         if (keyAttributesNames.size() == 1) {
             elementNS.setAttributeNS(
                     SdkConstants.ANDROID_URI, "android:" + keyAttributesNames.get(0), keyValue);

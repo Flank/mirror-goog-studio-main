@@ -36,6 +36,8 @@ import org.xml.sax.SAXException;
  */
 public class ManifestModelTest extends TestCase {
 
+    private final ManifestModel mModel = new ManifestModel();
+
     public void testNameResolution()
             throws ParserConfigurationException, SAXException, IOException {
         String input = ""
@@ -48,8 +50,11 @@ public class ManifestModelTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testNoUseFeaturesDeclaration"), input);
+        XmlDocument xmlDocument =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), "testNoUseFeaturesDeclaration"),
+                        input,
+                        mModel);
 
         XmlElement xmlElement = xmlDocument.getRootNode().getMergeableElements().get(0);
         assertEquals("uses-feature",xmlElement.getXml().getNodeName());
@@ -68,8 +73,11 @@ public class ManifestModelTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testNoUseFeaturesDeclaration"), input);
+        XmlDocument xmlDocument =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), "testNoUseFeaturesDeclaration"),
+                        input,
+                        mModel);
 
         XmlElement xmlElement = xmlDocument.getRootNode().getMergeableElements().get(0);
         assertEquals("uses-feature",xmlElement.getXml().getNodeName());
@@ -174,8 +182,11 @@ public class ManifestModelTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testNoUseFeaturesDeclaration"), input);
+        XmlDocument xmlDocument =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), "testNoUseFeaturesDeclaration"),
+                        input,
+                        mModel);
 
         XmlElement xmlElement = xmlDocument.getRootNode().getMergeableElements().get(0);
         assertEquals("uses-feature",xmlElement.getXml().getNodeName());
@@ -200,8 +211,11 @@ public class ManifestModelTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testNoUseFeaturesDeclaration"), input);
+        XmlDocument xmlDocument =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), "testNoUseFeaturesDeclaration"),
+                        input,
+                        mModel);
 
         XmlElement xmlElement = xmlDocument.getRootNode().getMergeableElements().get(0);
         ImmutableList<XmlElement> screenDefinitions = xmlElement.getMergeableElements();
@@ -236,7 +250,9 @@ public class ManifestModelTest extends TestCase {
 
         XmlDocument xmlDocument =
                 TestUtils.xmlDocumentFromString(
-                        TestUtils.sourceFile(getClass(), "testIntentFilterKeyResolution"), input);
+                        TestUtils.sourceFile(getClass(), "testIntentFilterKeyResolution"),
+                        input,
+                        mModel);
 
         XmlElement applicationXmlElement =
                 xmlDocument
@@ -281,7 +297,8 @@ public class ManifestModelTest extends TestCase {
             XmlDocument xmlDocument =
                     TestUtils.xmlDocumentFromString(
                             TestUtils.sourceFile(getClass(), "testNoUseFeaturesDeclaration"),
-                            input);
+                            input,
+                            mModel);
 
             XmlElement xmlElement = xmlDocument.getRootNode().getMergeableElements().get(0);
             assertEquals(

@@ -44,11 +44,13 @@ import org.xml.sax.SAXException;
  */
 public class ActionsTest extends TestCase {
 
+    private ManifestModel mModel = new ManifestModel();
+
     public void testGetNodeKeys() {
         Element xmlElement = mock(Element.class);
         when(xmlElement.getNodeName()).thenReturn("activity");
         when(xmlElement.getAttributeNS(SdkConstants.ANDROID_URI, "name")).thenReturn("keyOne");
-        NodeKey nodeKey = NodeKey.fromXml(xmlElement);
+        NodeKey nodeKey = NodeKey.fromXml(xmlElement, mModel);
         assertNotNull(nodeKey);
 
         ImmutableMap.Builder<NodeKey, DecisionTreeRecord> records = ImmutableMap.builder();
@@ -64,7 +66,7 @@ public class ActionsTest extends TestCase {
         Element xmlElement = mock(Element.class);
         when(xmlElement.getNodeName()).thenReturn("activity");
         when(xmlElement.getAttributeNS(SdkConstants.ANDROID_URI, "name")).thenReturn("keyOne");
-        NodeKey nodeKey = NodeKey.fromXml(xmlElement);
+        NodeKey nodeKey = NodeKey.fromXml(xmlElement, mModel);
         assertNotNull(nodeKey);
 
         ImmutableMap.Builder<NodeKey, DecisionTreeRecord> records = ImmutableMap.builder();
@@ -88,7 +90,7 @@ public class ActionsTest extends TestCase {
         Element xmlElement = mock(Element.class);
         when(xmlElement.getNodeName()).thenReturn("activity");
         when(xmlElement.getAttributeNS(SdkConstants.ANDROID_URI, "name")).thenReturn("keyOne");
-        NodeKey nodeKey = NodeKey.fromXml(xmlElement);
+        NodeKey nodeKey = NodeKey.fromXml(xmlElement, mModel);
         assertNotNull(nodeKey);
 
         ImmutableMap.Builder<NodeKey, DecisionTreeRecord> records = ImmutableMap.builder();
@@ -178,12 +180,19 @@ public class ActionsTest extends TestCase {
                 + "\n"                                                                      // 12
                 + "</manifest>";                                                            // 13
 
-        XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
-        XmlDocument firstLibrary = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "lowerPriorityOne"), lowerPriorityOne);
-        XmlDocument secondLibrary = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "lowerPriorityTwo"), lowerPriorityTwo);
+        XmlDocument refDocument =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority, mModel);
+        XmlDocument firstLibrary =
+                TestUtils.xmlLibraryFromString(
+                        TestUtils.sourceFile(getClass(), "lowerPriorityOne"),
+                        lowerPriorityOne,
+                        mModel);
+        XmlDocument secondLibrary =
+                TestUtils.xmlLibraryFromString(
+                        TestUtils.sourceFile(getClass(), "lowerPriorityTwo"),
+                        lowerPriorityTwo,
+                        mModel);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
