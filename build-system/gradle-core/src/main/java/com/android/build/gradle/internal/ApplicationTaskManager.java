@@ -45,6 +45,7 @@ import com.android.build.gradle.internal.tasks.BundleToApkTask;
 import com.android.build.gradle.internal.tasks.BundleToStandaloneApkTask;
 import com.android.build.gradle.internal.tasks.CheckMultiApkLibrariesTask;
 import com.android.build.gradle.internal.tasks.ExtractApksTask;
+import com.android.build.gradle.internal.tasks.FinalizeBundleTask;
 import com.android.build.gradle.internal.tasks.InstallVariantViaBundleTask;
 import com.android.build.gradle.internal.tasks.InstantRunSplitApkResourcesBuilder;
 import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesTask;
@@ -477,13 +478,11 @@ public class ApplicationTaskManager extends TaskManager {
         taskFactory.register(new PerModuleBundleTask.CreationAction(scope));
 
         if (scope.getType().isBaseModule()) {
-            TaskProvider<PackageBundleTask> packageBundleTask =
-                    taskFactory.register(new PackageBundleTask.CreationAction(scope));
+            taskFactory.register(new PackageBundleTask.CreationAction(scope));
+            taskFactory.register(new FinalizeBundleTask.CreationAction(scope));
 
-            TaskProvider<BundleToApkTask> splitAndMultiApkTask =
-                    taskFactory.register(new BundleToApkTask.CreationAction(scope));
-            TaskProvider<BundleToStandaloneApkTask> universalApkTask =
-                    taskFactory.register(new BundleToStandaloneApkTask.CreationAction(scope));
+            taskFactory.register(new BundleToApkTask.CreationAction(scope));
+            taskFactory.register(new BundleToStandaloneApkTask.CreationAction(scope));
 
             taskFactory.register(new ExtractApksTask.CreationAction(scope));
         }

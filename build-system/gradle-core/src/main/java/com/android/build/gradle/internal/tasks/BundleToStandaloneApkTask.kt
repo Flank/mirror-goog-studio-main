@@ -195,7 +195,7 @@ open class BundleToStandaloneApkTask @Inject constructor(workerExecutor: WorkerE
             super.configure(task)
 
             task.outputFile = outputFile
-            task.bundle = variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.BUNDLE)
+            task.bundle = variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.INTERMEDIARY_BUNDLE)
             task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
             task.tempDirectory = variantScope.getIncrementalDir(name)
             task.signingConfig = variantScope.signingConfigFileCollection

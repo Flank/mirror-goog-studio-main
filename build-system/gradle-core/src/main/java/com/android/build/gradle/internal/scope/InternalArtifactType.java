@@ -240,8 +240,14 @@ public enum InternalArtifactType implements ArtifactType {
     // The main dex list for the bundle, unlike the main dex list for a monolithic application, this
     // analyzes all of the dynamic feature classes too.
     MAIN_DEX_LIST_FOR_BUNDLE,
-    // the full bundle, including feature module. This is only valid for the base module.
+    // The final Bundle, including feature module, ready for consumption at Play Store.
+    // This is only valid for the base module.
     BUNDLE(Category.OUTPUTS, Kind.FILE),
+    // The bundle artifact, including feature module, used as the base for further processing,
+    // like extracting APKs. It's cheaper to produce but not suitable as a final artifact to send
+    // to the Play Store.
+    // This is only valid for the base module.
+    INTERMEDIARY_BUNDLE(Category.INTERMEDIATES, Kind.FILE),
     // APK Set archive with APKs generated from a bundle.
     APKS_FROM_BUNDLE,
     // output of ExtractApks applied to APKS_FROM_BUNDLE and a device config.

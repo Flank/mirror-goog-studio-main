@@ -141,7 +141,7 @@ open class BundleToApkTask @Inject constructor(workerExecutor: WorkerExecutor) :
             super.configure(task)
 
             task.outputFile = outputFile
-            task.bundle = variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.BUNDLE)
+            task.bundle = variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.INTERMEDIARY_BUNDLE)
             task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
             task.signingConfig = variantScope.signingConfigFileCollection
         }
