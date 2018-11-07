@@ -32,8 +32,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.Objects;
 import org.gradle.tooling.BuildAction;
 import org.gradle.tooling.BuildController;
 import org.gradle.tooling.model.BuildIdentifier;
@@ -66,7 +65,7 @@ public class GetAndroidModelAction<T> implements BuildAction<ModelContainer<T>> 
             Class<T> type, boolean isMultiThreaded, boolean shouldGenerateSource) {
         this.type = type;
         // parallelization hit a change in Gradle 3.2 which makes it not work.
-        this.isMultiThreaded = false; //isMultiThreaded;
+        this.isMultiThreaded = false; // isMultiThreaded;
         this.shouldGenerateSources = shouldGenerateSource;
     }
 
@@ -82,32 +81,16 @@ public class GetAndroidModelAction<T> implements BuildAction<ModelContainer<T>> 
         BuildIdentifier rootBuildId = rootBuild.getBuildIdentifier();
 
         // add the root project.
-        projects.addAll(
-                rootBuild
-                        .getProjects()
-                        .stream()
-                        .map(
-                                (Function<
-                                                BasicGradleProject,
-                                                Pair<BuildIdentifier, BasicGradleProject>>)
-                                        basicGradleProject ->
-                                                Pair.of(rootBuildId, basicGradleProject))
-                        .collect(Collectors.toList()));
+        for (BasicGradleProject gradleProject : rootBuild.getProjects()) {
+            projects.add(Pair.of(rootBuildId, gradleProject));
+        }
 
         // and the included builds
         for (GradleBuild gradleBuild : rootBuild.getIncludedBuilds()) {
             BuildIdentifier buildId = gradleBuild.getBuildIdentifier();
-            projects.addAll(
-                    gradleBuild
-                            .getProjects()
-                            .stream()
-                            .map(
-                                    (Function<
-                                                    BasicGradleProject,
-                                                    Pair<BuildIdentifier, BasicGradleProject>>)
-                                            basicGradleProject ->
-                                                    Pair.of(buildId, basicGradleProject))
-                            .collect(Collectors.toList()));
+            for (BasicGradleProject basicGradleProject : gradleBuild.getProjects()) {
+                projects.add(Pair.of(buildId, basicGradleProject));
+            }
         }
 
         final int projectCount = projects.size();
@@ -142,13 +125,8 @@ public class GetAndroidModelAction<T> implements BuildAction<ModelContainer<T>> 
         }
 
         GlobalLibraryMap globalLibraryMap = null;
-        for (BasicGradleProject project :
-                projects.stream().map(Pair::getSecond).collect(Collectors.toList())) {
-            globalLibraryMap = buildController.findModel(project, GlobalLibraryMap.class);
-            //noinspection VariableNotUsedInsideIf
-            if (globalLibraryMap != null) {
-                break;
-            }
+        if (type == AndroidProject.class) {
+            globalLibraryMap = getGlobalLibraryMap(buildController, projects);
         }
 
         long t2 = System.currentTimeMillis();
@@ -168,6 +146,19 @@ public class GetAndroidModelAction<T> implements BuildAction<ModelContainer<T>> 
                 to.put(entry.getKey(), entry.getValue());
             }
         }
+    }
+
+    @NonNull
+    private static GlobalLibraryMap getGlobalLibraryMap(
+            BuildController buildController,
+            List<Pair<BuildIdentifier, BasicGradleProject>> projects) {
+        return projects.stream()
+                .map(Pair::getSecond)
+                .peek(System.out::println)
+                .map(project -> buildController.findModel(project, GlobalLibraryMap.class))
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("No GlobalLibraryMap model found."));
     }
 
     // index used by threads to get the new project to query.

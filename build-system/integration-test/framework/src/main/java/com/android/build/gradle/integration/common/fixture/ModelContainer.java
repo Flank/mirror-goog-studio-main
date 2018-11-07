@@ -17,7 +17,9 @@
 package com.android.build.gradle.integration.common.fixture;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.model.level2.GlobalLibraryMap;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import java.io.Serializable;
 import java.util.Map;
@@ -28,12 +30,12 @@ public final class ModelContainer<T> implements Serializable {
 
     @NonNull private final BuildIdentifier rootBuildId;
     @NonNull private final Map<BuildIdentifier, Map<String, T>> modelMap;
-    @NonNull private final GlobalLibraryMap globalLibraryMap;
+    @Nullable private final GlobalLibraryMap globalLibraryMap;
 
     public ModelContainer(
             @NonNull BuildIdentifier rootBuildId,
             @NonNull Map<BuildIdentifier, Map<String, T>> modelMap,
-            @NonNull GlobalLibraryMap globalLibraryMap) {
+            @Nullable GlobalLibraryMap globalLibraryMap) {
         this.rootBuildId = rootBuildId;
         this.modelMap = modelMap;
         this.globalLibraryMap = globalLibraryMap;
@@ -74,6 +76,6 @@ public final class ModelContainer<T> implements Serializable {
 
     @NonNull
     public GlobalLibraryMap getGlobalLibraryMap() {
-        return globalLibraryMap;
+        return Preconditions.checkNotNull(globalLibraryMap);
     }
 }
