@@ -821,14 +821,31 @@ public class AndroidBuilder {
             @NonNull BlockingResourceLinker aapt,
             @NonNull AaptPackageConfig.Builder aaptConfigBuilder)
             throws IOException, ProcessException {
+        processResources(aapt, aaptConfigBuilder, getTarget(), mLogger);
+    }
 
-        checkState(getTargetInfo() != null,
-                "Cannot call processResources() before setTargetInfo() is called.");
+    /**
+     * Process the resources and generate R.java and/or the packaged resources.
+     *
+     * @param aapt the interface to the {@code aapt} tool
+     * @param aaptConfigBuilder aapt command invocation parameters
+     * @param androidTarget the android target used in {@link AaptPackageConfig}
+     * @param logger the logger used to request package invocation in {@code aapt} (see {@link
+     *     BlockingResourceLinker#link(AaptPackageConfig, ILogger)})
+     * @throws IOException failed
+     * @throws ProcessException failed
+     */
+    public static void processResources(
+            @NonNull BlockingResourceLinker aapt,
+            @NonNull AaptPackageConfig.Builder aaptConfigBuilder,
+            @NonNull IAndroidTarget androidTarget,
+            @NonNull ILogger logger)
+            throws IOException, ProcessException {
 
-        aaptConfigBuilder.setAndroidTarget(getTargetInfo().getTarget());
+        aaptConfigBuilder.setAndroidTarget(androidTarget);
 
         AaptPackageConfig aaptConfig = aaptConfigBuilder.build();
-        processResources(aapt, aaptConfig, mLogger);
+        processResources(aapt, aaptConfig, logger);
     }
 
     public static void processResources(

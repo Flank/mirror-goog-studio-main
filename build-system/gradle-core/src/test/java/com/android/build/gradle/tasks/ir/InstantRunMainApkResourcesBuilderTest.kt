@@ -17,7 +17,6 @@
 package com.android.build.gradle.tasks.ir
 
 import com.android.build.api.artifact.BuildableArtifact
-import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext
@@ -28,13 +27,13 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.OutputFactory
-import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantTypeImpl
+import com.android.builder.core.AndroidBuilder
 import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.internal.FakeAndroidTarget
 import com.android.builder.utils.FileCache
-import com.android.ide.common.build.ApkInfo
 import com.android.utils.ILogger
 import com.google.common.collect.Iterables
 import com.google.common.truth.Truth.assertThat
@@ -84,6 +83,8 @@ open class InstantRunMainApkResourcesBuilderTest {
     @Mock private lateinit var dslScope: DslScope
     @Mock private lateinit var issueReporter: EvalIssueReporter
     @Mock private lateinit var projectOptions: ProjectOptions
+    @Mock
+    private lateinit var androidBuilder: AndroidBuilder
 
     internal lateinit var project: Project
     internal lateinit var task: InstantRunMainApkResourcesBuilder
@@ -113,6 +114,7 @@ open class InstantRunMainApkResourcesBuilderTest {
         `when`(dslScope.issueReporter).thenReturn(issueReporter)
         `when`(resources.get()).thenReturn(fileCollection)
         `when`(fileCollection.asFileTree).thenReturn(fileTree)
+        `when`(androidBuilder.target).thenReturn(FakeAndroidTarget("", ""))
     }
 
     @Test
@@ -138,18 +140,11 @@ open class InstantRunMainApkResourcesBuilderTest {
         assertThat(task.outputDirectory).isEqualTo(outDir)
     }
 
-    // subclass the task to not have to create an AndroidBuilder and aapt mock. those parts
-    // should be tested elsewhere.
-    open class InstantRunMainApkResourcesBuilderForTest: InstantRunMainApkResourcesBuilder() {
-        @Throws(IOException::class)
-        override fun processSplit(apkData: ApkInfo, manifestFile: File?): File? {
-            return File(outputDirectory, apkData.baseName)
-        }
-    }
-
     @Test
     fun testSingleApkData() {
-        task = project.tasks.create("test", InstantRunMainApkResourcesBuilderForTest::class.java)
+        task = project.tasks.create("test", InstantRunMainApkResourcesBuilder::class.java)
+
+        InstantRunMainApkResourcesBuilder.doProcessSplit = false
 
         val configAction = InstantRunMainApkResourcesBuilder.CreationAction(
                 variantScope,
@@ -182,10 +177,12 @@ open class InstantRunMainApkResourcesBuilderTest {
         configAction.preConfigure(task.name)
         configAction.configure(task)
 
+        task.setAndroidBuilder(androidBuilder)
+
         task.doFullTaskAction()
         val resultingFiles = outDir.listFiles()
-        assertThat(resultingFiles).hasLength(1)
-        assertThat(resultingFiles[0].name).isEqualTo("output.json")
+        assertThat(resultingFiles).hasLength(2)
+        assertThat(resultingFiles.filter { it.name == "output.json" }).hasSize(1)
         val buildArtifacts = ExistingBuildElements.from(
                 InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES, outDir)
         assertThat(buildArtifacts.size()).isEqualTo(1)

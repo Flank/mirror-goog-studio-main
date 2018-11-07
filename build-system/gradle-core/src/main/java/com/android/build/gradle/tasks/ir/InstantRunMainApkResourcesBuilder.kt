@@ -16,32 +16,42 @@
 
 package com.android.build.gradle.tasks.ir
 
+import com.android.annotations.VisibleForTesting
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.res.getAapt2FromMaven
+import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
+import com.android.build.gradle.internal.scope.BuildElementsTransformParams
+import com.android.build.gradle.internal.scope.BuildElementsTransformRunnable
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES
 import com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
+import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder
 import com.android.build.gradle.internal.transforms.InstantRunSplitApkBuilder
 import com.android.builder.internal.aapt.BlockingResourceLinker
 import com.android.ide.common.build.ApkInfo
 import com.android.ide.common.process.ProcessException
+import com.android.ide.common.workers.WorkerExecutorFacade
+import com.android.sdklib.IAndroidTarget
 import com.google.common.collect.ImmutableList
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
+import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.IOException
+import javax.inject.Inject
 
 /**
  * Task to create the main APK resources.ap_ file. This file will only contain the merged
@@ -51,7 +61,8 @@ import java.io.IOException
  * This task should only run when targeting an Android platform 26 and above.
  *
  */
-open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
+open class InstantRunMainApkResourcesBuilder @Inject constructor(workerExecutor: WorkerExecutor) :
+    AndroidBuilderTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -63,6 +74,8 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
     @get:InputFiles
     lateinit var manifestFiles: Provider<Directory>
         private set
+
+    private val workers: WorkerExecutorFacade = Workers.getWorker(workerExecutor)
 
     @get:InputFiles
     @get:Optional
@@ -77,41 +90,83 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
         // at this point, there should only be one instant-run merged manifest, but this may
         // change in the future.
         ExistingBuildElements.from(INSTANT_RUN_MERGED_MANIFESTS, manifestFiles)
-                .transform { apkData, processedResources ->
-                    processSplit(apkData, processedResources) }
-                .into(INSTANT_RUN_MAIN_APK_RESOURCES, outputDirectory)
-    }
-
-    @Throws(IOException::class)
-    protected open fun processSplit(apkData: ApkInfo, manifestFile: File?): File? {
-        if (manifestFile == null) {
-            return null
-        }
-
-        return try {
-            InstantRunSplitApkBuilder.getLinker(aapt2FromMaven, builder).use { aapt ->
-                processSplit(manifestFile, aapt)
+            .transform(
+                workers,
+                SplitProcessorRunnable::class.java
+            ) { _, processedResources ->
+                SplitProcessorParams(
+                    processedResources,
+                    this
+                )
             }
-        } catch (e: InterruptedException) {
-            Thread.interrupted()
-            throw IOException("Exception while generating InstantRun main resources APK", e)
-        } catch (e: ProcessException) {
-            throw IOException("Exception while generating InstantRun main resources APK", e)
+            .into(INSTANT_RUN_MAIN_APK_RESOURCES, outputDirectory)
+    }
+
+    private class SplitProcessorParams(
+        val manifestFile: File,
+        task: InstantRunMainApkResourcesBuilder
+    ) : BuildElementsTransformParams() {
+        val androidTarget: IAndroidTarget = task.builder.target
+        val resourceFiles: Set<File> = task.resourceFiles.get().asFileTree.files
+
+        override val output: File?
+        lateinit var key: Aapt2ServiceKey
+
+        init {
+            if (doProcessSplit) {
+                key = InstantRunSplitApkBuilder.getAapt2ServiceKey(
+                    task.aapt2FromMaven,
+                    task.builder
+                )
+            }
+
+            val apkSupportDir = File(task.outputDirectory, "main_resources")
+            if (!apkSupportDir.exists() && !apkSupportDir.mkdirs()) {
+                task.logger.error(
+                    "Cannot create apk support dir {}",
+                    apkSupportDir.absoluteFile
+                )
+            }
+            output = File(apkSupportDir, "resources_ap")
         }
     }
 
-    // use default values for aaptOptions since we don't package any resources.
-    private fun processSplit(manifestFile: File, aapt: BlockingResourceLinker): File =
+    private class SplitProcessorRunnable @Inject constructor(params: SplitProcessorParams) :
+        BuildElementsTransformRunnable(params) {
+        override fun run() {
+            if (doProcessSplit) {
+                try {
+                    InstantRunSplitApkBuilder.getLinker((params as SplitProcessorParams).key)
+                        .use { aapt ->
+                            processSplit(params, aapt)
+                        }
+                } catch (e: InterruptedException) {
+                    Thread.interrupted()
+                    throw IOException("Exception while generating InstantRun main resources APK", e)
+                } catch (e: ProcessException) {
+                    throw IOException("Exception while generating InstantRun main resources APK", e)
+                }
+            }
+        }
+
+        // use default values for aaptOptions since we don't package any resources.
+        private fun processSplit(
+            params: SplitProcessorParams,
+            aapt: BlockingResourceLinker
+        ) {
             InstantRunSliceSplitApkBuilder.generateSplitApkResourcesAp(
-                    logger,
-                    aapt,
-                    manifestFile,
-                    outputDirectory,
-                    com.android.builder.internal.aapt.AaptOptions(
-                            ImmutableList.of(), false, ImmutableList.of()),
-                    builder,
-                    resourceFiles,
-                    "main_resources")
+                Logging.getLogger(InstantRunMainApkResourcesBuilder::class.java),
+                aapt,
+                params.manifestFile,
+                params.output!!,
+                com.android.builder.internal.aapt.AaptOptions(
+                    ImmutableList.of(), false, ImmutableList.of()
+                ),
+                params.androidTarget,
+                params.resourceFiles
+            )
+        }
+    }
 
     class CreationAction(
         variantScope: VariantScope,
@@ -143,5 +198,11 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
             task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
         }
 
+    }
+
+    companion object {
+        /** Used to stop the worker item from actually doing the splitting in unit tests  */
+        @VisibleForTesting
+        var doProcessSplit = true
     }
 }
