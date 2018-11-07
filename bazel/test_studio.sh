@@ -26,7 +26,7 @@ readonly bazel_status=$?
 
 if [[ -d "${dist_dir}" ]]; then
   # Grab the upsalite_id from the stdout of the bazel command.  This is captured in command.log
-  readonly upsalite_id="$(awk '/invocation_id: / {printf $NF}' "${command_log}")"
+  readonly upsalite_id="$(sed -n 's/\r$//;s/^.* invocation_id: //p' "${command_log}")"
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/$upsalite_id\" />" > "${dist_dir}"/upsalite_test_results.html
 
   # follow conventions to use gtest-testlog-forwarding on ATP
