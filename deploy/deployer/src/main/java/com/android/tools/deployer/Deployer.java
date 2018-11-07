@@ -60,7 +60,7 @@ public class Deployer {
 
             // Inputs
             Task<List<String>> paths = runner.submit(apks);
-            CachedDexSplitter splitter = new CachedDexSplitter(db);
+            CachedDexSplitter splitter = new CachedDexSplitter(db, new D8DexSplitter());
 
             // Parse the apks
             Task<List<ApkEntry>> entries =
@@ -92,7 +92,7 @@ public class Deployer {
             Map<Integer, ClassRedefiner> redefiners)
             throws DeployerException {
 
-        CachedDexSplitter splitter = new CachedDexSplitter(db);
+        CachedDexSplitter splitter = new CachedDexSplitter(db, new D8DexSplitter());
 
         // Get the list of files from the local apks
         List<ApkEntry> newFiles = new ApkParser().parsePaths(paths);

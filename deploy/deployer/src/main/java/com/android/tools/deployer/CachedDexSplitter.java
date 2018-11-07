@@ -17,56 +17,40 @@ package com.android.tools.deployer;
 
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.DexClass;
-import com.google.common.io.ByteStreams;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.List;
-import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
-public class CachedDexSplitter {
+public class CachedDexSplitter implements DexSplitter {
 
     private final ApkFileDatabase db;
+    private final DexSplitter splitter;
 
-    public CachedDexSplitter(ApkFileDatabase db) {
+    public CachedDexSplitter(ApkFileDatabase db, DexSplitter splitter) {
         this.db = db;
+        this.splitter = splitter;
     }
 
-    public List<DexClass> split(ApkEntry dex, boolean read, Predicate<DexClass> needsCode)
+    @Override
+    public List<DexClass> split(ApkEntry dex, Predicate<DexClass> keepCode)
             throws DeployerException {
         // Try a cached version
         List<DexClass> classes = db.getClasses(dex);
-        if (classes.isEmpty() || needsCode != null) {
-            if (!read) {
+        if (classes.isEmpty() || keepCode != null) {
+            if (dex.apk.path == null) {
                 throw new DeployerException(
                         DeployerException.Error.REMOTE_APK_NOT_FOUND_ON_DB,
                         "Cannot generate classes for unknown dex");
             }
-            byte[] code = dexProvider().apply(dex);
-            classes = new DexSplitter().split(dex, code, needsCode);
+            classes = splitter.split(dex, keepCode);
             db.addClasses(classes);
         }
         return classes;
     }
 
-    private Function<ApkEntry, byte[]> dexProvider() {
-        // TODO Check if opening the file several times matters
-        return (ApkEntry dex) -> {
-            try (ZipFile file = new ZipFile(dex.apk.path)) {
-                ZipEntry entry = file.getEntry(dex.name);
-                return ByteStreams.toByteArray(file.getInputStream(entry));
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        };
-    }
-
     public boolean cache(List<ApkEntry> newFiles) throws DeployerException {
         for (ApkEntry file : newFiles) {
             if (file.name.endsWith(".dex")) {
-                split(file, true, null);
+                split(file, null);
             }
         }
         return true;
