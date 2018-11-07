@@ -23,6 +23,7 @@ import static java.util.stream.Collectors.toList;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ArtifactMetaData;
 import com.android.builder.model.JavaArtifact;
@@ -47,7 +48,10 @@ public class UnitTestingModelTest {
     @Test
     public void unitTestingArtifactsAreIncludedInTheModel() throws Exception {
         // Build the project, so we can verify paths in the model exist.
-        project.execute("test");
+        project.executor()
+                // allow dependency resolution at config time due to b/118644940
+                .with(BooleanOption.DISALLOW_DEPENDENCY_RESOLUTION_AT_CONFIGURATION, false)
+                .run("test");
 
         AndroidProject model = project.model().fetchAndroidProjects().getOnlyModelMap().get(":app");
 
