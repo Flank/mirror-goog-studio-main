@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,681 +13,575 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.build.gradle.internal.res;
 
-import static com.android.SdkConstants.FN_RES_BASE;
-import static com.android.SdkConstants.RES_QUALIFIER_SEP;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_RESOURCE_PKG;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
-import static com.google.common.base.Preconditions.checkNotNull;
+package com.android.build.gradle.internal.res
 
-import com.android.SdkConstants;
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.FilterData;
-import com.android.build.OutputFile;
-import com.android.build.VariantOutput;
-import com.android.build.api.artifact.BuildableArtifact;
-import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.dsl.AaptOptions;
-import com.android.build.gradle.internal.dsl.DslAdaptersKt;
-import com.android.build.gradle.internal.dsl.Splits;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
-import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
-import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.res.namespaced.Aapt2DaemonManagerService;
-import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey;
-import com.android.build.gradle.internal.scope.BuildElements;
-import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.ExistingBuildElements;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.SplitList;
-import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.build.gradle.internal.tasks.Workers;
-import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
-import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
-import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
-import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.MultiOutputPolicy;
-import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.options.ProjectOptions;
-import com.android.build.gradle.options.StringOption;
-import com.android.build.gradle.tasks.ProcessAndroidResources;
-import com.android.builder.core.AndroidBuilder;
-import com.android.builder.core.VariantType;
-import com.android.builder.core.VariantTypeImpl;
-import com.android.builder.internal.aapt.AaptPackageConfig;
-import com.android.builder.internal.aapt.v2.Aapt2DaemonManager;
-import com.android.builder.internal.aapt.v2.Aapt2Exception;
-import com.android.ide.common.blame.MergingLog;
-import com.android.ide.common.build.ApkData;
-import com.android.ide.common.build.ApkInfo;
-import com.android.ide.common.process.ProcessException;
-import com.android.ide.common.symbols.SymbolIo;
-import com.android.ide.common.workers.WorkerExecutorException;
-import com.android.ide.common.workers.WorkerExecutorFacade;
-import com.android.sdklib.IAndroidTarget;
-import com.android.utils.FileUtils;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Supplier;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import javax.inject.Inject;
-import org.gradle.api.file.FileCollection;
-import org.gradle.api.logging.Logger;
-import org.gradle.api.logging.Logging;
-import org.gradle.api.tasks.CacheableTask;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.Internal;
-import org.gradle.api.tasks.Nested;
-import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.PathSensitive;
-import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.api.tasks.TaskProvider;
-import org.gradle.tooling.BuildException;
-import org.gradle.workers.WorkerExecutor;
+import com.android.SdkConstants
+import com.android.SdkConstants.FN_RES_BASE
+import com.android.SdkConstants.RES_QUALIFIER_SEP
+import com.android.build.VariantOutput
+import com.android.build.api.artifact.BuildableArtifact
+import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.TaskManager
+import com.android.build.gradle.internal.api.artifact.singleFile
+import com.android.build.gradle.internal.dsl.AaptOptions
+import com.android.build.gradle.internal.dsl.convert
+import com.android.build.gradle.internal.incremental.InstantRunBuildContext
+import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy
+import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_RESOURCE_PKG
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
+import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
+import com.android.build.gradle.internal.res.namespaced.getAaptDaemon
+import com.android.build.gradle.internal.res.namespaced.registerAaptService
+import com.android.build.gradle.internal.scope.BuildElements
+import com.android.build.gradle.internal.scope.BuildOutput
+import com.android.build.gradle.internal.scope.ExistingBuildElements
+import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.SplitList
+import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.TaskInputHelper
+import com.android.build.gradle.internal.tasks.Workers
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
+import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder
+import com.android.build.gradle.internal.variant.BaseVariantData
+import com.android.build.gradle.internal.variant.MultiOutputPolicy
+import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.StringOption
+import com.android.build.gradle.tasks.ProcessAndroidResources
+import com.android.builder.core.AndroidBuilder
+import com.android.builder.core.VariantType
+import com.android.builder.core.VariantTypeImpl
+import com.android.builder.internal.aapt.AaptPackageConfig
+import com.android.builder.internal.aapt.v2.Aapt2Exception
+import com.android.ide.common.blame.MergingLog
+import com.android.ide.common.build.ApkData
+import com.android.ide.common.build.ApkInfo
+import com.android.ide.common.process.ProcessException
+import com.android.ide.common.symbols.SymbolIo
+import com.android.ide.common.workers.WorkerExecutorException
+import com.android.ide.common.workers.WorkerExecutorFacade
+import com.android.sdklib.IAndroidTarget
+import com.android.utils.FileUtils
+import com.google.common.base.Preconditions
+import com.google.common.collect.ImmutableList
+import com.google.common.collect.ImmutableSet
+import org.gradle.api.file.FileCollection
+import org.gradle.api.logging.Logging
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
+import org.gradle.tooling.BuildException
+import org.gradle.workers.WorkerExecutor
+import java.io.File
+import java.io.IOException
+import java.io.Serializable
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.ArrayList
+import java.util.function.Supplier
+import java.util.regex.Pattern
+import javax.inject.Inject
 
 @CacheableTask
-public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources {
+open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecutor: WorkerExecutor) :
+    ProcessAndroidResources() {
 
-    private static final String IR_APK_FILE_NAME = "resources";
+    companion object {
+        private const val IR_APK_FILE_NAME = "resources"
+        private val LOG = Logging.getLogger(LinkApplicationAndroidResourcesTask::class.java)
 
-    private static final Logger LOG = Logging.getLogger(LinkApplicationAndroidResourcesTask.class);
+        private fun getOutputBaseNameFile(apkInfo: ApkInfo, resPackageOutputFolder: File): File {
+            return File(
+                resPackageOutputFolder,
+                FN_RES_BASE + RES_QUALIFIER_SEP + apkInfo.fullName + SdkConstants.DOT_RES
+            )
+        }
+    }
 
-    @Nullable private File sourceOutputDir;
+    private var sourceOutputDir: File? = null
 
-    private Supplier<File> textSymbolOutputDir = () -> null;
+    private var textSymbolOutputDir: Supplier<File?> = Supplier { null }
 
-    @Nullable private File symbolsWithPackageNameOutputFile;
+    private var symbolsWithPackageNameOutputFile: File? = null
 
-    private File proguardOutputFile;
+    private var proguardOutputFile: File? = null
 
-    private File mainDexListProguardOutputFile;
+    private var mainDexListProguardOutputFile: File? = null
 
-    @Nullable private FileCollection dependenciesFileCollection;
-    @Nullable private FileCollection sharedLibraryDependencies;
+    private var dependenciesFileCollection: FileCollection? = null
+    private var sharedLibraryDependencies: FileCollection? = null
 
-    @Nullable private Supplier<Integer> resOffsetSupplier = null;
+    private var resOffsetSupplier: (Supplier<Int>)? = null
 
-    private MultiOutputPolicy multiOutputPolicy;
+    private lateinit var multiOutputPolicy: MultiOutputPolicy
 
-    private VariantType type;
+    private lateinit var type: VariantType
 
-    @Nullable private FileCollection aapt2FromMaven;
+    private var aapt2FromMaven: FileCollection? = null
 
-    private boolean debuggable;
+    private var debuggable: Boolean = false
 
-    private AaptOptions aaptOptions;
+    private lateinit var aaptOptions: AaptOptions
 
-    private File mergeBlameLogFolder;
+    private lateinit var mergeBlameLogFolder: File
 
-    private InstantRunBuildContext buildContext;
+    private lateinit var buildContext: InstantRunBuildContext
 
-    @Nullable private FileCollection featureResourcePackages;
+    private var featureResourcePackages: FileCollection? = null
 
-    private Supplier<String> originalApplicationId;
+    private lateinit var originalApplicationId: Supplier<String?>
 
-    private String buildTargetDensity;
+    private var buildTargetDensity: String? = null
 
-    private boolean useConditionalKeepRules;
+    private var useConditionalKeepRules: Boolean = false
 
-    private File resPackageOutputFolder;
+    private lateinit var resPackageOutputFolder: File
 
-    private String projectBaseName;
+    private lateinit var projectBaseName: String
 
-    private InternalArtifactType taskInputType;
+    private lateinit var taskInputType: InternalArtifactType
 
-    private boolean isNamespaced = false;
+    private var isNamespaced = false
+
+    private lateinit var splitList: SplitList
+
+    private lateinit var applicationId: Supplier<String?>
+
+    private lateinit var supportDirectory: File
+
+    private lateinit var apkList: BuildableArtifact
+
+    private var convertedLibraryDependencies: BuildableArtifact? = null
+
+    private var inputResourcesDir: BuildableArtifact? = null
+
+    private lateinit var variantScope: VariantScope
+
+    private var isLibrary: Boolean = false
+
+    private val workers: WorkerExecutorFacade = Workers.getWorker(workerExecutor)
 
     @Input
-    public boolean getUseConditionalKeepRules() {
-        return useConditionalKeepRules;
+    fun getTaskInputType(): InternalArtifactType? {
+        return taskInputType
     }
 
     @Input
-    public InternalArtifactType getTaskInputType() {
-        return taskInputType;
+    fun getUseConditionalKeepRules(): Boolean {
+        return useConditionalKeepRules
     }
 
     @Input
-    public InstantRunPatchingPolicy getPatchingPolicy() {
-        return buildContext.getPatchingPolicy();
+    fun getPatchingPolicy(): InstantRunPatchingPolicy {
+        return buildContext.patchingPolicy
     }
 
     @Input
-    public String getProjectBaseName() {
-        return projectBaseName;
-    }
-
-    private VariantScope variantScope;
-
-    @Input
-    public boolean canHaveSplits() {
-        return variantScope.getType().getCanHaveSplits();
-    }
-
-    @NonNull
-    @Internal
-    private Set<String> getSplits(@NonNull SplitList splitList) {
-        return splitList.getSplits(multiOutputPolicy);
+    fun getProjectBaseName(): String? {
+        return projectBaseName
     }
 
     @Input
-    public String getApplicationId() {
-        return applicationId.get();
+    fun canHaveSplits(): Boolean {
+        return variantScope.type.canHaveSplits
     }
 
-    SplitList splitList;
-
-    private Supplier<String> applicationId;
-
-    private File supportDirectory;
+    @Input
+    fun getApplicationId(): String? {
+        return applicationId.get()
+    }
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
-    public BuildableArtifact getApkList() {
-        return apkList;
+    fun getApkList(): BuildableArtifact? {
+        return apkList
     }
-
-    private BuildableArtifact apkList;
-
-    private BuildableArtifact convertedLibraryDependencies;
 
     @InputFiles
     @PathSensitive(PathSensitivity.NONE)
     @Optional
-    public BuildableArtifact getConvertedLibraryDependencies() {
-        return convertedLibraryDependencies;
-    }
-
-    private final WorkerExecutorFacade workers;
-
-    @Inject
-    public LinkApplicationAndroidResourcesTask(WorkerExecutor workerExecutor) {
-        this.workers = Workers.INSTANCE.getWorker(workerExecutor);
+    fun getConvertedLibraryDependencies(): BuildableArtifact? {
+        return convertedLibraryDependencies
     }
 
     // FIX-ME : make me incremental !
-    @Override
-    protected void doFullTaskAction() throws IOException {
-        FileUtils.deleteDirectoryContents(resPackageOutputFolder);
+    override fun doFullTaskAction() {
+        FileUtils.deleteDirectoryContents(resPackageOutputFolder)
 
-        BuildElements manifestBuildElements =
-                ExistingBuildElements.from(taskInputType, manifestFiles);
+        val manifestBuildElements = ExistingBuildElements.from(taskInputType, manifestFiles)
 
-        final Set<File> featureResourcePackages =
-                this.featureResourcePackages != null
-                        ? this.featureResourcePackages.getFiles()
-                        : ImmutableSet.of();
+        val featureResourcePackages = if (featureResourcePackages != null)
+            featureResourcePackages!!.files
+        else
+            ImmutableSet.of()
 
-        Set<File> dependencies =
-                dependenciesFileCollection != null
-                        ? dependenciesFileCollection.getFiles()
-                        : Collections.emptySet();
-        Set<File> imports =
-                sharedLibraryDependencies != null
-                        ? sharedLibraryDependencies.getFiles()
-                        : Collections.emptySet();
-        {
-            Aapt2ServiceKey aapt2ServiceKey =
-                    Aapt2DaemonManagerService.registerAaptService(
-                            aapt2FromMaven, getBuildTools(), getILogger());
+        val dependencies = if (dependenciesFileCollection != null)
+            dependenciesFileCollection!!.files
+        else
+            emptySet()
+        val imports = if (sharedLibraryDependencies != null)
+            sharedLibraryDependencies!!.files
+        else
+            emptySet()
+        run {
+            val aapt2ServiceKey = registerAaptService(
+                aapt2FromMaven, buildTools, iLogger
+            )
 
             // do a first pass at the list so we generate the code synchronously since it's required
             // by the full splits asynchronous processing below.
-            List<BuildOutput> unprocessedManifest =
-                    manifestBuildElements.stream().collect(Collectors.toList());
+            val unprocessedManifest = manifestBuildElements.toMutableList()
 
-            BuildOutput mainOutput = chooseOutput(manifestBuildElements);
+            val mainOutput = chooseOutput(manifestBuildElements)
 
-            unprocessedManifest.remove(mainOutput);
-            new AaptSplitInvoker(
-                            new AaptSplitInvokerParams(
-                                    mainOutput,
-                                    dependencies,
-                                    imports,
-                                    splitList,
-                                    featureResourcePackages,
-                                    mainOutput.getApkInfo(),
-                                    true,
-                                    aapt2ServiceKey,
-                                    this))
-                    .run();
+            unprocessedManifest.remove(mainOutput)
+            AaptSplitInvoker(
+                AaptSplitInvokerParams(
+                    mainOutput,
+                    dependencies,
+                    imports,
+                    splitList,
+                    featureResourcePackages,
+                    mainOutput.apkInfo,
+                    true,
+                    aapt2ServiceKey,
+                    this
+                )
+            )
+                .run()
+
             // now all remaining splits will be generated asynchronously.
-            if (variantScope.getType().getCanHaveSplits()) {
-                for (BuildOutput manifestBuildOutput : unprocessedManifest) {
-                    ApkInfo apkInfo = manifestBuildOutput.getApkInfo();
+            if (variantScope.type.canHaveSplits) {
+                for (manifestBuildOutput in unprocessedManifest) {
+                    val apkInfo = manifestBuildOutput.apkInfo
                     if (apkInfo.requiresAapt()) {
                         workers.submit(
-                                AaptSplitInvoker.class,
-                                new AaptSplitInvokerParams(
-                                        manifestBuildOutput,
-                                        dependencies,
-                                        imports,
-                                        splitList,
-                                        featureResourcePackages,
-                                        apkInfo,
-                                        false,
-                                        aapt2ServiceKey,
-                                        this));
+                            AaptSplitInvoker::class.java,
+                            AaptSplitInvokerParams(
+                                manifestBuildOutput,
+                                dependencies,
+                                imports,
+                                splitList,
+                                featureResourcePackages,
+                                apkInfo,
+                                false,
+                                aapt2ServiceKey,
+                                this
+                            )
+                        )
                     }
                 }
             }
 
             try {
-                workers.await();
-            } catch (WorkerExecutorException e) {
-                throw new BuildException(e.getMessage(), e);
+                workers.await()
+            } catch (e: WorkerExecutorException) {
+                throw BuildException(e.message, e)
             }
         }
 
-        if (multiOutputPolicy == MultiOutputPolicy.SPLITS) {
-            List<BuildOutput> unprocessedManifest =
-                    manifestBuildElements.stream().collect(Collectors.toList());
+        if (multiOutputPolicy === MultiOutputPolicy.SPLITS) {
+            val unprocessedManifest = manifestBuildElements.toList()
 
-            for (BuildOutput manifestBuildOutput : unprocessedManifest) {
-                ApkInfo apkInfo = manifestBuildOutput.getApkInfo();
-                if (apkInfo.getFilters()
+            for (manifestBuildOutput in unprocessedManifest) {
+                val apkInfo = manifestBuildOutput.apkInfo
+                if (apkInfo.filters
                         .stream()
-                        .anyMatch(f -> f.getFilterType().equals(VariantOutput.FilterType.ABI))) {
+                        .anyMatch { f -> f.filterType == VariantOutput.FilterType.ABI.name }
+                ) {
                     // NOTE: This if exists because ABI splits are produced by
                     // GenerateSplitAbiRes, so for ABI splits we're not supposed to find them
                     // here anyway.
-                    continue;
+                    continue
                 }
 
                 // In case we generated pure splits, we may have more than one
                 // resource AP_ in the output directory. reconcile with the
                 // splits list and save it for downstream tasks.
-                File packagedResForSplit = findPackagedResForSplit(resPackageOutputFolder, apkInfo);
+                val packagedResForSplit = findPackagedResForSplit(resPackageOutputFolder, apkInfo)
 
                 if (packagedResForSplit != null) {
                     AaptSplitInvoker.appendOutput(
-                            new BuildOutput(
-                                    InternalArtifactType.DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES,
-                                    apkInfo,
-                                    packagedResForSplit),
-                            resPackageOutputFolder);
+                        BuildOutput(
+                            InternalArtifactType.DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES,
+                            apkInfo,
+                            packagedResForSplit
+                        ),
+                        resPackageOutputFolder
+                    )
                 } else {
-                    getLogger().warn("Cannot find output for " + apkInfo);
+                    logger.warn("Cannot find output for $apkInfo")
                 }
             }
         }
     }
 
-    BuildOutput chooseOutput(@NonNull BuildElements manifestBuildElements) {
-        switch (multiOutputPolicy) {
-            case SPLITS:
-                java.util.Optional<BuildOutput> main =
-                        manifestBuildElements
-                                .stream()
-                                .filter(
-                                        output ->
-                                                output.getApkInfo().getType()
-                                                        == OutputFile.OutputType.MAIN)
-                                .findFirst();
-                if (!main.isPresent()) {
-                    throw new RuntimeException("No main apk found");
+    private fun chooseOutput(manifestBuildElements: BuildElements): BuildOutput {
+        when (multiOutputPolicy) {
+            MultiOutputPolicy.SPLITS -> {
+                val main = manifestBuildElements
+                    .stream()
+                    .filter { output -> output.apkInfo.type == VariantOutput.OutputType.MAIN }
+                    .findFirst()
+                if (!main.isPresent) {
+                    throw RuntimeException("No main apk found")
                 }
-                return main.get();
-            case MULTI_APK:
-                java.util.Optional<BuildOutput> nonDensity =
-                        manifestBuildElements
-                                .stream()
-                                .filter(
-                                        output ->
-                                                output.getApkInfo()
-                                                                .getFilter(
-                                                                        OutputFile.FilterType
-                                                                                .DENSITY)
-                                                        == null)
-                                .findFirst();
-                if (!nonDensity.isPresent()) {
-                    throw new RuntimeException("No non-density apk found");
-                }
-                return nonDensity.get();
-            default:
-                throw new RuntimeException(
-                        "Unexpected MultiOutputPolicy type: " + multiOutputPolicy);
-        }
-    }
-
-    private static File getOutputBaseNameFile(ApkInfo apkInfo, File resPackageOutputFolder) {
-        return new File(
-                resPackageOutputFolder,
-                FN_RES_BASE + RES_QUALIFIER_SEP + apkInfo.getFullName() + SdkConstants.DOT_RES);
-    }
-
-    @Nullable
-    private static File findPackagedResForSplit(@Nullable File outputFolder, ApkInfo apkInfo) {
-        Pattern resourcePattern =
-                Pattern.compile(
-                        FN_RES_BASE + RES_QUALIFIER_SEP + apkInfo.getFullName() + ".ap__(.*)");
-
-        if (outputFolder == null) {
-            return null;
-        }
-        File[] files = outputFolder.listFiles();
-        if (files != null) {
-            for (File file : files) {
-                Matcher match = resourcePattern.matcher(file.getName());
-                // each time we match, we remove the associated filter from our copies.
-                if (match.matches()
-                        && !match.group(1).isEmpty()
-                        && isValidSplit(apkInfo, match.group(1))) {
-                    return file;
-                }
+                return main.get()
             }
-        }
-        return null;
-    }
-
-    /**
-     * Returns true if the passed split identifier is a valid identifier (valid mean it is a
-     * requested split for this task). A density split identifier can be suffixed with characters
-     * added by aapt.
-     */
-    private static boolean isValidSplit(ApkInfo apkInfo, @NonNull String splitWithOptionalSuffix) {
-
-        FilterData splitFilter = apkInfo.getFilter(OutputFile.FilterType.DENSITY);
-        if (splitFilter != null) {
-            if (splitWithOptionalSuffix.startsWith(splitFilter.getIdentifier())) {
-                return true;
+            MultiOutputPolicy.MULTI_APK -> {
+                val nonDensity = manifestBuildElements
+                    .stream()
+                    .filter { output ->
+                        output.apkInfo
+                            .getFilter(
+                                VariantOutput.FilterType
+                                    .DENSITY
+                            ) == null
+                    }
+                    .findFirst()
+                if (!nonDensity.isPresent) {
+                    throw RuntimeException("No non-density apk found")
+                }
+                return nonDensity.get()
             }
+            else -> throw RuntimeException(
+                "Unexpected MultiOutputPolicy type: $multiOutputPolicy"
+            )
         }
-        String mangledName = unMangleSplitName(splitWithOptionalSuffix);
-        splitFilter = apkInfo.getFilter(OutputFile.FilterType.LANGUAGE);
-        return splitFilter != null && mangledName.equals(splitFilter.getIdentifier());
     }
 
-    /**
-     * Un-mangle a split name as created by the aapt tool to retrieve a split name as configured in
-     * the project's build.gradle.
-     *
-     * <p>when dealing with several split language in a single split, each language (+ optional
-     * region) will be separated by an underscore.
-     *
-     * <p>note that there is currently an aapt bug, remove the 'r' in the region so for instance,
-     * fr-rCA becomes fr-CA, temporarily put it back until it is fixed.
-     *
-     * @param splitWithOptionalSuffix the mangled split name.
-     */
-    public static String unMangleSplitName(String splitWithOptionalSuffix) {
-        String mangledName = splitWithOptionalSuffix.replaceAll("_", ",");
-        return mangledName.contains("-r") ? mangledName : mangledName.replace("-", "-r");
-    }
+    abstract class BaseCreationAction(
+        scope: VariantScope,
+        private val generateLegacyMultidexMainDexProguardRules: Boolean,
+        private val baseName: String?,
+        private val isLibrary: Boolean
+    ) : VariantTaskCreationAction<LinkApplicationAndroidResourcesTask>(scope) {
+        private lateinit var resPackageOutputFolder: File
+        private lateinit var proguardOutputFile: File
+        private lateinit var aaptMainDexListProguardOutputFile: File
 
-    private abstract static class BaseCreationAction
-            extends VariantTaskCreationAction<LinkApplicationAndroidResourcesTask> {
-        private final boolean generateLegacyMultidexMainDexProguardRules;
-        @Nullable private final String baseName;
-        private final boolean isLibrary;
-        private File resPackageOutputFolder;
-        private File proguardOutputFile;
-        private File aaptMainDexListProguardOutputFile;
+        override val name: String
+            get() = variantScope.getTaskName("process", "Resources")
 
-        public BaseCreationAction(
-                @NonNull VariantScope scope,
-                boolean generateLegacyMultidexMainDexProguardRules,
-                @Nullable String baseName,
-                boolean isLibrary) {
-            super(scope);
-            this.generateLegacyMultidexMainDexProguardRules =
-                    generateLegacyMultidexMainDexProguardRules;
-            this.baseName = baseName;
-            this.isLibrary = isLibrary;
-        }
+        override val type: Class<LinkApplicationAndroidResourcesTask>
+            get() = LinkApplicationAndroidResourcesTask::class.java
 
-        @NonNull
-        @Override
-        public final String getName() {
-            return getVariantScope().getTaskName("process", "Resources");
-        }
+        protected open fun preconditionsCheck(variantData: BaseVariantData) {}
 
-        @NonNull
-        @Override
-        public final Class<LinkApplicationAndroidResourcesTask> getType() {
-            return LinkApplicationAndroidResourcesTask.class;
-        }
+        override fun preConfigure(taskName: String) {
+            super.preConfigure(taskName)
+            val variantScope = variantScope
 
-        protected void preconditionsCheck(BaseVariantData variantData) {}
+            resPackageOutputFolder = variantScope
+                .artifacts
+                .appendArtifact(InternalArtifactType.PROCESSED_RES, taskName, "out")
 
-        @Override
-        public void preConfigure(@NonNull String taskName) {
-            super.preConfigure(taskName);
-            final VariantScope variantScope = getVariantScope();
-
-            resPackageOutputFolder =
-                    variantScope
-                            .getArtifacts()
-                            .appendArtifact(InternalArtifactType.PROCESSED_RES, taskName, "out");
-
-            if (generatesProguardOutputFile(variantScope)) {
-                proguardOutputFile = variantScope.getProcessAndroidResourcesProguardOutputFile();
+            if (ProcessAndroidResources.generatesProguardOutputFile(variantScope)) {
+                proguardOutputFile = variantScope.processAndroidResourcesProguardOutputFile
                 variantScope
-                        .getArtifacts()
-                        .appendArtifact(
-                                InternalArtifactType.AAPT_PROGUARD_FILE,
-                                ImmutableList.of(proguardOutputFile),
-                                taskName);
+                    .artifacts
+                    .appendArtifact(
+                        InternalArtifactType.AAPT_PROGUARD_FILE,
+                        ImmutableList.of(proguardOutputFile),
+                        taskName
+                    )
             }
 
             if (generateLegacyMultidexMainDexProguardRules) {
-                aaptMainDexListProguardOutputFile =
-                        variantScope
-                                .getArtifacts()
-                                .appendArtifact(
-                                        InternalArtifactType
-                                                .LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES,
-                                        taskName,
-                                        "manifest_keep.txt");
+                aaptMainDexListProguardOutputFile = variantScope
+                    .artifacts
+                    .appendArtifact(
+                        InternalArtifactType
+                            .LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES,
+                        taskName,
+                        "manifest_keep.txt"
+                    )
             }
         }
 
-        @Override
-        public void handleProvider(
-                @NonNull TaskProvider<? extends LinkApplicationAndroidResourcesTask> taskProvider) {
-            super.handleProvider(taskProvider);
-            getVariantScope().getTaskContainer().setProcessAndroidResTask(taskProvider);
+        override fun handleProvider(
+            taskProvider: TaskProvider<out LinkApplicationAndroidResourcesTask>
+        ) {
+            super.handleProvider(taskProvider)
+            variantScope.taskContainer.processAndroidResTask = taskProvider
         }
 
-        @Override
-        public void configure(@NonNull LinkApplicationAndroidResourcesTask task) {
-            super.configure(task);
-            final VariantScope variantScope = getVariantScope();
-            final BaseVariantData variantData = variantScope.getVariantData();
-            final ProjectOptions projectOptions = variantScope.getGlobalScope().getProjectOptions();
-            final GradleVariantConfiguration config = variantData.getVariantConfiguration();
+        override fun configure(task: LinkApplicationAndroidResourcesTask) {
+            super.configure(task)
+            val variantScope = variantScope
+            val variantData = variantScope.variantData
+            val projectOptions = variantScope.globalScope.projectOptions
+            val config = variantData.variantConfiguration
 
-            preconditionsCheck(variantData);
+            preconditionsCheck(variantData)
 
-            task.resPackageOutputFolder = resPackageOutputFolder;
-            task.aapt2FromMaven = Aapt2MavenUtils.getAapt2FromMaven(variantScope.getGlobalScope());
+            task.resPackageOutputFolder = resPackageOutputFolder
+            task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
 
-            task.applicationId = TaskInputHelper.memoize(config::getApplicationId);
+            task.applicationId = TaskInputHelper.memoize { config.applicationId }
 
-            task.setIncrementalFolder(variantScope.getIncrementalDir(getName()));
-            if (variantData.getType().getCanHaveSplits()) {
-                Splits splits = variantScope.getGlobalScope().getExtension().getSplits();
+            task.incrementalFolder = variantScope.getIncrementalDir(name)
+            if (variantData.type.canHaveSplits) {
+                val splits = variantScope.globalScope.extension.splits
 
-                ImmutableSet<String> densitySet =
-                        splits.getDensity().isEnable()
-                                ? ImmutableSet.copyOf(splits.getDensityFilters())
-                                : ImmutableSet.of();
-                ImmutableSet<String> languageSet =
-                        splits.getLanguage().isEnable()
-                                ? ImmutableSet.copyOf(splits.getLanguageFilters())
-                                : ImmutableSet.of();
-                ImmutableSet<String> abiSet =
-                        splits.getAbi().isEnable()
-                                ? ImmutableSet.copyOf(splits.getAbiFilters())
-                                : ImmutableSet.of();
-                ImmutableSet<String> resConfigSet =
-                        ImmutableSet.copyOf(
-                                variantScope
-                                        .getVariantConfiguration()
-                                        .getMergedFlavor()
-                                        .getResourceConfigurations());
+                val densitySet = if (splits.density.isEnable)
+                    ImmutableSet.copyOf(splits.densityFilters)
+                else
+                    ImmutableSet.of()
+                val languageSet = if (splits.language.isEnable)
+                    ImmutableSet.copyOf(splits.languageFilters)
+                else
+                    ImmutableSet.of()
+                val abiSet = if (splits.abi.isEnable)
+                    ImmutableSet.copyOf(splits.abiFilters)
+                else
+                    ImmutableSet.of()
+                val resConfigSet = ImmutableSet.copyOf(
+                    variantScope
+                        .variantConfiguration
+                        .mergedFlavor
+                        .resourceConfigurations
+                )
 
-                task.splitList = new SplitList(densitySet, languageSet, abiSet, resConfigSet);
+                task.splitList = SplitList(densitySet, languageSet, abiSet, resConfigSet)
             } else {
-                task.splitList =
-                        new SplitList(
-                                ImmutableSet.of(),
-                                ImmutableSet.of(),
-                                ImmutableSet.of(),
-                                ImmutableSet.of());
+                task.splitList = SplitList(
+                    ImmutableSet.of(),
+                    ImmutableSet.of(),
+                    ImmutableSet.of(),
+                    ImmutableSet.of()
+                )
             }
 
-            task.multiOutputPolicy = variantData.getMultiOutputPolicy();
-            task.apkList =
-                    variantScope
-                            .getArtifacts()
-                            .getFinalArtifactFiles(InternalArtifactType.APK_LIST);
+            task.multiOutputPolicy = variantData.multiOutputPolicy
+            task.apkList = variantScope
+                .artifacts
+                .getFinalArtifactFiles(InternalArtifactType.APK_LIST)
 
-            if (generatesProguardOutputFile(variantScope)) {
-                task.setProguardOutputFile(proguardOutputFile);
+            if (ProcessAndroidResources.generatesProguardOutputFile(variantScope)) {
+                task.setProguardOutputFile(proguardOutputFile)
             }
 
             if (generateLegacyMultidexMainDexProguardRules) {
-                task.setAaptMainDexListProguardOutputFile(aaptMainDexListProguardOutputFile);
+                task.setAaptMainDexListProguardOutputFile(aaptMainDexListProguardOutputFile)
             }
 
-            task.variantScope = variantScope;
-            task.outputScope = variantData.getOutputScope();
-            task.originalApplicationId = TaskInputHelper.memoize(config::getOriginalApplicationId);
+            task.variantScope = variantScope
+            task.outputScope = variantData.outputScope
+            task.originalApplicationId = TaskInputHelper.memoize { config.originalApplicationId }
 
-            boolean aaptFriendlyManifestsFilePresent =
-                    variantScope
-                            .getArtifacts()
-                            .hasFinalProduct(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS);
-            task.taskInputType =
-                    aaptFriendlyManifestsFilePresent
-                            ? InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS
-                            : variantScope.getManifestArtifactType();
-            task.setManifestFiles(variantScope.getArtifacts().getFinalProduct(task.taskInputType));
+            val aaptFriendlyManifestsFilePresent = variantScope
+                .artifacts
+                .hasFinalProduct(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
+            task.taskInputType = if (aaptFriendlyManifestsFilePresent)
+                InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS
+            else
+                variantScope.manifestArtifactType
+            task.setManifestFiles(
+                variantScope.artifacts.getFinalProduct(task.taskInputType)
+            )
 
-            task.setType(config.getType());
-            task.setDebuggable(config.getBuildType().isDebuggable());
-            task.setAaptOptions(variantScope.getGlobalScope().getExtension().getAaptOptions());
+            task.setType(config.type)
+            task.setDebuggable(config.buildType.isDebuggable)
+            task.setAaptOptions(variantScope.globalScope.extension.aaptOptions)
 
-            task.buildTargetDensity = projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY);
+            task.buildTargetDensity = projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)
 
-            task.useConditionalKeepRules = projectOptions.get(BooleanOption.CONDITIONAL_KEEP_RULES);
+            task.useConditionalKeepRules = projectOptions.get(BooleanOption.CONDITIONAL_KEEP_RULES)
 
-            task.setMergeBlameLogFolder(variantScope.getResourceBlameLogDir());
+            task.setMergeBlameLogFolder(variantScope.resourceBlameLogDir)
 
-            task.buildContext = variantScope.getInstantRunBuildContext();
+            task.buildContext = variantScope.instantRunBuildContext
 
-            VariantType variantType = variantScope.getType();
+            val variantType = variantScope.type
 
             // Tests should not have feature dependencies, however because they include the
             // tested production component in their dependency graph, we see the tested feature
             // package in their graph. Therefore we have to manually not set this up for tests.
-            task.featureResourcePackages = variantType.isForTesting() ? null :
-                    variantScope.getArtifactFileCollection(
-                            COMPILE_CLASSPATH, MODULE, FEATURE_RESOURCE_PKG);
+            task.featureResourcePackages = if (variantType.isForTesting)
+                null
+            else
+                variantScope.getArtifactFileCollection(
+                    COMPILE_CLASSPATH, MODULE, FEATURE_RESOURCE_PKG
+                )
 
-            if (variantType.isFeatureSplit()) {
-                task.resOffsetSupplier =
-                        FeatureSetMetadata.getInstance()
-                                .getResOffsetSupplierForTask(variantScope, task);
+            if (variantType.isFeatureSplit) {
+                task.resOffsetSupplier = FeatureSetMetadata.getInstance()
+                    .getResOffsetSupplierForTask(variantScope, task)
             }
 
-            task.projectBaseName = baseName;
-            task.isLibrary = isLibrary;
-            task.supportDirectory =
-                    new File(variantScope.getInstantRunSplitApkOutputFolder(), "resources");
+            task.projectBaseName = baseName!!
+            task.isLibrary = isLibrary
+            task.supportDirectory = File(variantScope.instantRunSplitApkOutputFolder, "resources")
         }
     }
 
-    public static final class CreationAction extends BaseCreationAction {
-        protected final Supplier<File> symbolLocation;
-        private final File symbolsWithPackageNameOutputFile;
-        private final TaskManager.MergeType sourceArtifactType;
-        private File sourceOutputDir;
+    class CreationAction(
+        scope: VariantScope,
+        private val symbolLocation: Supplier<File>,
+        private val symbolsWithPackageNameOutputFile: File,
+        generateLegacyMultidexMainDexProguardRules: Boolean,
+        private val sourceArtifactType: TaskManager.MergeType,
+        baseName: String,
+        isLibrary: Boolean
+    ) : BaseCreationAction(scope, generateLegacyMultidexMainDexProguardRules, baseName, isLibrary) {
+        private var sourceOutputDir: File? = null
 
-        public CreationAction(
-                @NonNull VariantScope scope,
-                @NonNull Supplier<File> symbolLocation,
-                @NonNull File symbolsWithPackageNameOutputFile,
-                boolean generateLegacyMultidexMainDexProguardRules,
-                @NonNull TaskManager.MergeType sourceArtifactType,
-                @NonNull String baseName,
-                boolean isLibrary) {
-            super(scope, generateLegacyMultidexMainDexProguardRules, baseName, isLibrary);
-            this.symbolLocation = symbolLocation;
-            this.symbolsWithPackageNameOutputFile = symbolsWithPackageNameOutputFile;
-            this.sourceArtifactType = sourceArtifactType;
-        }
-
-        @Override
-        protected final void preconditionsCheck(BaseVariantData variantData) {
-            if (variantData.getType().isAar()) {
-                throw new IllegalArgumentException("Use GenerateLibraryRFileTask");
+        override fun preconditionsCheck(variantData: BaseVariantData) {
+            if (variantData.type.isAar) {
+                throw IllegalArgumentException("Use GenerateLibraryRFileTask")
             } else {
                 Preconditions.checkState(
-                        sourceArtifactType == TaskManager.MergeType.MERGE,
-                        "source output type should be MERGE",
-                        sourceArtifactType);
+                    sourceArtifactType === TaskManager.MergeType.MERGE,
+                    "source output type should be MERGE",
+                    sourceArtifactType
+                )
             }
         }
 
-        @Override
-        public void preConfigure(@NonNull String taskName) {
-            super.preConfigure(taskName);
-            sourceOutputDir =
-                    getVariantScope()
-                            .getArtifacts()
-                            .appendArtifact(
-                                    InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
-                                    taskName,
-                                    SdkConstants.FD_RES_CLASS);
+        override fun preConfigure(taskName: String) {
+            super.preConfigure(taskName)
+            sourceOutputDir = variantScope
+                .artifacts
+                .appendArtifact(
+                    InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
+                    taskName,
+                    SdkConstants.FD_RES_CLASS
+                )
         }
 
-        @Override
-        public final void configure(@NonNull LinkApplicationAndroidResourcesTask task) {
-            super.configure(task);
+        override fun configure(task: LinkApplicationAndroidResourcesTask) {
+            super.configure(task)
 
             // TODO: unify with generateBuilderConfig, compileAidl, and library packaging somehow?
-            task.sourceOutputDir = sourceOutputDir;
+            task.setSourceOutputDir(sourceOutputDir)
 
-            task.dependenciesFileCollection =
-                    getVariantScope()
-                            .getArtifactFileCollection(
-                                    RUNTIME_CLASSPATH,
-                                    ALL,
-                                    AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME);
+            task.dependenciesFileCollection = variantScope
+                .getArtifactFileCollection(
+                    RUNTIME_CLASSPATH,
+                    ALL,
+                    AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME
+                )
 
-            task.inputResourcesDir =
-                    getVariantScope()
-                            .getArtifacts()
-                            .getFinalArtifactFiles(sourceArtifactType.getOutputType());
+            task.inputResourcesDir = variantScope
+                .artifacts
+                .getFinalArtifactFiles(sourceArtifactType.outputType)
 
-            task.textSymbolOutputDir = symbolLocation;
-            task.symbolsWithPackageNameOutputFile = symbolsWithPackageNameOutputFile;
+            @Suppress("UNCHECKED_CAST")
+            task.textSymbolOutputDir = symbolLocation as Supplier<File?>
+            task.symbolsWithPackageNameOutputFile = symbolsWithPackageNameOutputFile
         }
     }
 
@@ -695,554 +589,551 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
      * TODO: extract in to a separate task implementation once splits are calculated in the split
      * discovery task.
      */
-    public static final class NamespacedCreationAction extends BaseCreationAction {
-        private File sourceOutputDir;
+    class NamespacedCreationAction(
+        scope: VariantScope,
+        generateLegacyMultidexMainDexProguardRules: Boolean,
+        baseName: String?
+    ) : BaseCreationAction(scope, generateLegacyMultidexMainDexProguardRules, baseName, false) {
+        private var sourceOutputDir: File? = null
 
-        public NamespacedCreationAction(
-                @NonNull VariantScope scope,
-                boolean generateLegacyMultidexMainDexProguardRules,
-                @Nullable String baseName) {
-            super(scope, generateLegacyMultidexMainDexProguardRules, baseName, false);
+        override fun preConfigure(taskName: String) {
+            super.preConfigure(taskName)
+
+            sourceOutputDir = variantScope.artifacts
+                .appendArtifact(
+                    InternalArtifactType.RUNTIME_R_CLASS_SOURCES, taskName, "out"
+                )
         }
 
+        override fun configure(task: LinkApplicationAndroidResourcesTask) {
+            super.configure(task)
 
-        @Override
-        public void preConfigure(@NonNull String taskName) {
-            super.preConfigure(taskName);
+            val projectOptions = variantScope.globalScope.projectOptions
 
-            sourceOutputDir =
-                    getVariantScope()
-                            .getArtifacts()
-                            .appendArtifact(
-                                    InternalArtifactType.RUNTIME_R_CLASS_SOURCES, taskName, "out");
-        }
+            task.sourceOutputDir = sourceOutputDir
 
-        @Override
-        public final void configure(@NonNull LinkApplicationAndroidResourcesTask task) {
-            super.configure(task);
-
-            final VariantScope variantScope = getVariantScope();
-            final ProjectOptions projectOptions = variantScope.getGlobalScope().getProjectOptions();
-
-            task.sourceOutputDir = sourceOutputDir;
-
-            List<FileCollection> dependencies = new ArrayList<>(2);
+            val dependencies = ArrayList<FileCollection>(2)
             dependencies.add(
-                    variantScope
-                            .getArtifacts()
-                            .getFinalArtifactFiles(InternalArtifactType.RES_STATIC_LIBRARY)
-                            .get());
+                variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.RES_STATIC_LIBRARY).get()
+            )
             dependencies.add(
-                    variantScope.getArtifactFileCollection(
-                            RUNTIME_CLASSPATH,
-                            ALL,
-                            AndroidArtifacts.ArtifactType.RES_STATIC_LIBRARY));
-            if (variantScope.getGlobalScope().getExtension().getAaptOptions().getNamespaced()
-                    && projectOptions.get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
-                task.convertedLibraryDependencies =
-                        variantScope
-                                .getArtifacts()
-                                .getArtifactFiles(
-                                        InternalArtifactType
-                                                .RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES);
+                variantScope.getArtifactFileCollection(
+                    RUNTIME_CLASSPATH,
+                    ALL,
+                    AndroidArtifacts.ArtifactType.RES_STATIC_LIBRARY
+                )
+            )
+            if (variantScope.globalScope.extension.aaptOptions.namespaced && projectOptions.get(
+                    BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES
+                )
+            ) {
+                task.convertedLibraryDependencies = variantScope
+                    .artifacts
+                    .getArtifactFiles(
+                        InternalArtifactType
+                            .RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES
+                    )
             }
 
             task.dependenciesFileCollection =
-                    variantScope.getGlobalScope().getProject().files(dependencies);
+                    variantScope.globalScope.project.files(dependencies)
 
-            task.sharedLibraryDependencies =
-                    variantScope.getArtifactFileCollection(
-                            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-                            AndroidArtifacts.ArtifactScope.ALL,
-                            AndroidArtifacts.ArtifactType.RES_SHARED_STATIC_LIBRARY);
+            task.sharedLibraryDependencies = variantScope.getArtifactFileCollection(
+                AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                AndroidArtifacts.ArtifactScope.ALL,
+                AndroidArtifacts.ArtifactType.RES_SHARED_STATIC_LIBRARY
+            )
 
-            task.isNamespaced = true;
+            task.isNamespaced = true
         }
+    }
+
+    private class AaptSplitInvoker @Inject
+    internal constructor(private val params: AaptSplitInvokerParams) : Runnable {
+
+        companion object {
+            @Synchronized
+            @Throws(IOException::class)
+            fun appendOutput(
+                output: BuildOutput, resPackageOutputFolder: File
+            ) {
+                val buildOutputs = ArrayList(
+                    ExistingBuildElements.from(resPackageOutputFolder).elements
+                )
+                buildOutputs.add(output)
+                BuildElements(buildOutputs).save(resPackageOutputFolder)
+            }
+        }
+
+        override fun run() {
+            try {
+                invokeAaptForSplit(params)
+            } catch (e: IOException) {
+                throw RuntimeException(e)
+            }
+
+        }
+
+        @Throws(IOException::class)
+        private fun invokeAaptForSplit(params: AaptSplitInvokerParams) {
+
+            val featurePackagesBuilder = ImmutableList.builder<File>()
+            for (featurePackage in params.featureResourcePackages) {
+                val buildElements = ExistingBuildElements.from(
+                    InternalArtifactType.PROCESSED_RES, featurePackage
+                )
+                if (!buildElements.isEmpty()) {
+                    val mainBuildOutput = buildElements.elementByType(VariantOutput.OutputType.MAIN)
+                    if (mainBuildOutput != null) {
+                        featurePackagesBuilder.add(mainBuildOutput.outputFile)
+                    } else {
+                        throw IOException(
+                            "Cannot find PROCESSED_RES output for " + params.variantScopeMainSplit
+                        )
+                    }
+                }
+            }
+
+            val resOutBaseNameFile =
+                getOutputBaseNameFile(params.apkInfo, params.resPackageOutputFolder)
+            var manifestFile = params.manifestOutput.outputFile
+
+            var packageForR: String? = null
+            var srcOut: File? = null
+            var symbolOutputDir: File? = null
+            var proguardOutputFile: File? = null
+            var mainDexListProguardOutputFile: File? = null
+            if (params.generateCode) {
+                // workaround for b/74068247. Until that's fixed, if it's a namespaced feature,
+                // an extra empty dummy R.java file will be generated as well
+                packageForR =
+                        if (params.isNamespaced && params.variantDataType === VariantTypeImpl.FEATURE) {
+                            "dummy"
+                        } else {
+                            params.originalApplicationId
+                        }
+
+                // we have to clean the source folder output in case the package name changed.
+                srcOut = params.sourceOutputDir
+                if (srcOut != null) {
+                    FileUtils.cleanOutputDir(srcOut)
+                }
+
+                symbolOutputDir = params.textSymbolOutputDir
+                proguardOutputFile = params.proguardOutputFile
+                mainDexListProguardOutputFile = params.mainDexListProguardOutputFile
+            }
+
+            val densityFilterData = params.apkInfo.getFilter(VariantOutput.FilterType.DENSITY)
+            // if resConfigs is set, we should not use our preferredDensity.
+            val preferredDensity =
+                densityFilterData?.identifier
+                    ?: if (params.resourceConfigs.isEmpty()) params.buildTargetDensity else null
+
+            try {
+
+                // If we are in instant run mode and we use a split APK for these resources.
+                if (params.isInInstantRunMode && params.patchingPolicy == InstantRunPatchingPolicy.MULTI_APK_SEPARATE_RESOURCES) {
+                    params.supportDirectory.mkdirs()
+                    // create a split identification manifest.
+                    manifestFile = InstantRunSliceSplitApkBuilder.generateSplitApkManifest(
+                        params.supportDirectory,
+                        IR_APK_FILE_NAME,
+                        { params.applicationId },
+                        params.apkInfo.versionName,
+                        params.apkInfo.versionCode,
+                        params.manifestOutput.properties[SdkConstants.ATTR_MIN_SDK_VERSION]
+                    )
+                }
+
+                // If the new resources flag is enabled and if we are dealing with a library process
+                // resources through the new parsers
+                run {
+                    val configBuilder = AaptPackageConfig.Builder()
+                        .setManifestFile(manifestFile)
+                        .setOptions(params.aaptOptions)
+                        .setCustomPackageForR(packageForR)
+                        .setSymbolOutputDir(symbolOutputDir)
+                        .setSourceOutputDir(srcOut)
+                        .setResourceOutputApk(resOutBaseNameFile)
+                        .setProguardOutputFile(proguardOutputFile)
+                        .setMainDexListProguardOutputFile(mainDexListProguardOutputFile)
+                        .setVariantType(params.variantType)
+                        .setDebuggable(params.debuggable)
+                        .setResourceConfigs(params.resourceConfigs)
+                        .setSplits(params.multiOutputPolicySplitList)
+                        .setPreferredDensity(preferredDensity)
+                        .setPackageId(params.packageId)
+                        .setAllowReservedPackageId(
+                            params.packageId != null && params.packageId < FeatureSetMetadata.BASE_ID
+                        )
+                        .setDependentFeatures(featurePackagesBuilder.build())
+                        .setImports(params.imports)
+                        .setIntermediateDir(params.incrementalFolder)
+                        .setAndroidJarPath(params.androidJarPath)
+                        .setUseConditionalKeepRules(params.useConditionalKeepRules)
+
+                    if (params.isNamespaced) {
+                        val packagedDependencies = ImmutableList.builder<File>()
+                        packagedDependencies.addAll(params.dependencies)
+                        if (params.convertedLibraryDependenciesPath != null) {
+                            Files.list(params.convertedLibraryDependenciesPath).map { it.toFile() }
+                                .forEach { packagedDependencies.add(it) }
+                        }
+                        configBuilder.setStaticLibraryDependencies(packagedDependencies.build())
+                    } else {
+                        if (params.generateCode) {
+                            configBuilder.setLibrarySymbolTableFiles(params.dependencies)
+                        }
+                        configBuilder.setResourceDir(checkNotNull(params.inputResourcesDir))
+                    }
+
+                    @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+                    Preconditions.checkNotNull<Aapt2ServiceKey>(
+                        params.aapt2ServiceKey, "AAPT2 daemon manager service not initialized"
+                    )
+                    try {
+                        getAaptDaemon(params.aapt2ServiceKey!!).use { aaptDaemon ->
+
+                            AndroidBuilder.processResources(
+                                aaptDaemon,
+                                configBuilder.build(),
+                                LoggerWrapper(
+                                    Logging.getLogger(
+                                        LinkApplicationAndroidResourcesTask::class.java
+                                    )
+                                )
+                            )
+                        }
+                    } catch (e: Aapt2Exception) {
+                        throw rewriteLinkException(
+                            e, MergingLog(params.mergeBlameFolder)
+                        )
+                    }
+
+                    if (LOG.isInfoEnabled) {
+                        LOG.info("Aapt output file {}", resOutBaseNameFile.absolutePath)
+                    }
+                }
+                if (params.generateCode
+                    && (params.isLibrary || !params.dependencies.isEmpty())
+                    && params.symbolsWithPackageNameOutputFile != null
+                ) {
+                    SymbolIo.writeSymbolListWithPackageName(
+                        File(
+                            params.textSymbolOutputDir!!,
+                            SdkConstants.R_CLASS + SdkConstants.DOT_TXT
+                        )
+                            .toPath(),
+                        manifestFile.toPath(),
+                        params.symbolsWithPackageNameOutputFile.toPath()
+                    )
+                }
+                appendOutput(
+                    BuildOutput(
+                        InternalArtifactType.PROCESSED_RES,
+                        params.apkInfo,
+                        resOutBaseNameFile,
+                        params.manifestOutput.properties
+                    ),
+                    params.resPackageOutputFolder
+                )
+            } catch (e: ProcessException) {
+                throw BuildException(
+                    "Failed to process resources, see aapt output above for details.", e
+                )
+            }
+
+        }
+    }
+
+    private class AaptSplitInvokerParams internal constructor(
+        val manifestOutput: BuildOutput,
+        val dependencies: Set<File>,
+        val imports: Set<File>,
+        splitList: SplitList,
+        val featureResourcePackages: Set<File>,
+        val apkInfo: ApkInfo,
+        val generateCode: Boolean,
+        val aapt2ServiceKey: Aapt2ServiceKey?,
+        task: LinkApplicationAndroidResourcesTask
+    ) : Serializable {
+        val resourceConfigs: Set<String> = splitList.resourceConfigs
+        val multiOutputPolicySplitList: Set<String> = splitList.getSplits(task.multiOutputPolicy)
+        val variantScopeMainSplit: ApkData = task.variantScope.outputScope.mainSplit
+        val resPackageOutputFolder: File = task.resPackageOutputFolder
+        val isNamespaced: Boolean = task.isNamespaced
+        val variantDataType: VariantType = task.variantScope.variantData.type
+        val originalApplicationId: String? = task.originalApplicationId.get()
+        val sourceOutputDir: File? = task.getSourceOutputDir()
+        val textSymbolOutputDir: File? = task.textSymbolOutputDir.get()
+        val proguardOutputFile: File? = task.getProguardOutputFile()
+        val mainDexListProguardOutputFile: File? = task.getMainDexListProguardOutputFile()
+        val buildTargetDensity: String? = task.buildTargetDensity
+        val isInInstantRunMode: Boolean = task.buildContext.isInInstantRunMode
+        val patchingPolicy: InstantRunPatchingPolicy = task.buildContext.patchingPolicy
+        val supportDirectory: File = task.supportDirectory
+        val applicationId: String? = task.applicationId.get()
+        val aaptOptions: com.android.builder.internal.aapt.AaptOptions = task.aaptOptions.convert()
+        val variantType: VariantType = task.getType()
+        val debuggable: Boolean = task.getDebuggable()
+        val packageId: Int? = task.getResOffset()
+        val incrementalFolder: File = task.incrementalFolder
+        val androidJarPath: String = task.builder.target.getPath(IAndroidTarget.ANDROID_JAR)
+        val convertedLibraryDependenciesPath: Path? = if (task.convertedLibraryDependencies == null)
+            null
+        else
+            task.convertedLibraryDependencies!!.singleFile().toPath()
+        val inputResourcesDir: File? = if (task.getInputResourcesDir() == null)
+            null
+        else
+            task.inputResourcesDir!!.singleFile()
+        val mergeBlameFolder: File = task.getMergeBlameLogFolder()
+        val isLibrary: Boolean = task.isLibrary
+        val symbolsWithPackageNameOutputFile: File? = task.symbolsWithPackageNameOutputFile
+        val useConditionalKeepRules: Boolean = task.useConditionalKeepRules
     }
 
     @Optional
     @Input
-    public Integer getResOffset() {
-        return resOffsetSupplier != null ? resOffsetSupplier.get() : null;
+    fun getResOffset(): Int? {
+        return if (resOffsetSupplier != null) resOffsetSupplier!!.get() else null
     }
 
     /**
      * To force the task to execute when the manifest file to use changes.
      *
-     * <p>Fix for <a href="http://b.android.com/209985">b.android.com/209985</a>.
+     *
+     * Fix for [b.android.com/209985](http://b.android.com/209985).
      */
     @Input
-    public boolean isInstantRunMode() {
-        return this.buildContext.isInInstantRunMode();
+    fun isInstantRunMode(): Boolean {
+        return buildContext.isInInstantRunMode
     }
 
-    @Nullable private BuildableArtifact inputResourcesDir;
-
-    @Nullable
     @InputFiles
     @Optional
     @PathSensitive(PathSensitivity.RELATIVE)
-    public BuildableArtifact getInputResourcesDir() {
-        return inputResourcesDir;
+    fun getInputResourcesDir(): BuildableArtifact? {
+        return inputResourcesDir
     }
 
-    @Override
     @OutputDirectory
     @Optional
-    @Nullable
-    public File getSourceOutputDir() {
-        return sourceOutputDir;
-    }
-
-    public void setSourceOutputDir(@Nullable File sourceOutputDir) {
-        this.sourceOutputDir = sourceOutputDir;
+    override fun getSourceOutputDir(): File? {
+        return sourceOutputDir
     }
 
     @org.gradle.api.tasks.OutputFile
     @Optional
-    @Nullable
-    public File getTextSymbolOutputFile() {
-        File outputDir = textSymbolOutputDir.get();
-        return outputDir != null
-                ? new File(outputDir, SdkConstants.R_CLASS + SdkConstants.DOT_TXT)
-                : null;
+    fun getTextSymbolOutputFile(): File? {
+        val outputDir = textSymbolOutputDir.get()
+        return if (outputDir != null)
+            File(outputDir, SdkConstants.R_CLASS + SdkConstants.DOT_TXT)
+        else
+            null
     }
 
     @org.gradle.api.tasks.OutputFile
     @Optional
-    @Nullable
-    public File getSymbolslWithPackageNameOutputFile() {
-        return symbolsWithPackageNameOutputFile;
+    fun getSymbolsWithPackageNameOutputFile(): File? {
+        return symbolsWithPackageNameOutputFile
     }
 
     @org.gradle.api.tasks.OutputFile
     @Optional
-    @Nullable
-    public File getProguardOutputFile() {
-        return proguardOutputFile;
+    fun getProguardOutputFile(): File? {
+        return proguardOutputFile
     }
 
-    public void setProguardOutputFile(File proguardOutputFile) {
-        this.proguardOutputFile = proguardOutputFile;
+    fun setProguardOutputFile(proguardOutputFile: File) {
+        this.proguardOutputFile = proguardOutputFile
     }
 
     @org.gradle.api.tasks.OutputFile
     @Optional
-    @Nullable
-    public File getMainDexListProguardOutputFile() {
-        return mainDexListProguardOutputFile;
+    fun getMainDexListProguardOutputFile(): File? {
+        return mainDexListProguardOutputFile
     }
 
-    public void setAaptMainDexListProguardOutputFile(File mainDexListProguardOutputFile) {
-        this.mainDexListProguardOutputFile = mainDexListProguardOutputFile;
+    fun setAaptMainDexListProguardOutputFile(mainDexListProguardOutputFile: File) {
+        this.mainDexListProguardOutputFile = mainDexListProguardOutputFile
     }
 
     @Input
-    public String getBuildToolsVersion() {
-        return getBuildTools().getRevision().toString();
-    }
-
-    @Nullable
-    @InputFiles
-    @Optional
-    @PathSensitive(PathSensitivity.NONE)
-    public FileCollection getDependenciesFileCollection() {
-        return dependenciesFileCollection;
+    fun getBuildToolsVersion(): String {
+        return buildTools.revision.toString()
     }
 
     @InputFiles
     @Optional
     @PathSensitive(PathSensitivity.NONE)
-    @Nullable
-    public FileCollection getSharedLibraryDependencies() {
-        return sharedLibraryDependencies;
+    fun getDependenciesFileCollection(): FileCollection? {
+        return dependenciesFileCollection
+    }
+
+    @InputFiles
+    @Optional
+    @PathSensitive(PathSensitivity.NONE)
+    fun getSharedLibraryDependencies(): FileCollection? {
+        return sharedLibraryDependencies
     }
 
     @Input
-    public String getTypeAsString() {
-        return type.getName();
+    fun getTypeAsString(): String {
+        return type.name
     }
 
     @Internal
-    public VariantType getType() {
-        return type;
+    fun getType(): VariantType {
+        return type
     }
 
-    public void setType(VariantType type) {
-        this.type = type;
+    fun setType(type: VariantType) {
+        this.type = type
+    }
+
+    fun setSourceOutputDir(sourceOutputDir: File?) {
+        this.sourceOutputDir = sourceOutputDir
     }
 
     @InputFiles
     @Optional
     @PathSensitive(PathSensitivity.RELATIVE)
-    @Nullable
-    public FileCollection getAapt2FromMaven() {
-        return aapt2FromMaven;
+    fun getAapt2FromMaven(): FileCollection? {
+        return aapt2FromMaven
     }
 
     @Input
-    public boolean getDebuggable() {
-        return debuggable;
+    fun getDebuggable(): Boolean {
+        return debuggable
     }
 
-    public void setDebuggable(boolean debuggable) {
-        this.debuggable = debuggable;
+    fun setDebuggable(debuggable: Boolean) {
+        this.debuggable = debuggable
     }
 
     @Nested
-    public AaptOptions getAaptOptions() {
-        return aaptOptions;
+    fun getAaptOptions(): AaptOptions {
+        return aaptOptions
     }
 
-    public void setAaptOptions(AaptOptions aaptOptions) {
-        this.aaptOptions = aaptOptions;
+    fun setAaptOptions(aaptOptions: AaptOptions) {
+        this.aaptOptions = aaptOptions
     }
 
-    /** Only used for rewriting error messages. Should not affect task result. */
+    /** Only used for rewriting error messages. Should not affect task result.  */
     @Internal
-    public File getMergeBlameLogFolder() {
-        return mergeBlameLogFolder;
+    fun getMergeBlameLogFolder(): File {
+        return mergeBlameLogFolder
     }
 
-    public void setMergeBlameLogFolder(File mergeBlameLogFolder) {
-        this.mergeBlameLogFolder = mergeBlameLogFolder;
+    fun setMergeBlameLogFolder(mergeBlameLogFolder: File) {
+        this.mergeBlameLogFolder = mergeBlameLogFolder
     }
 
     @InputFiles
-    @Nullable
     @Optional
     @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getFeatureResourcePackages() {
-        return featureResourcePackages;
+    fun getFeatureResourcePackages(): FileCollection? {
+        return featureResourcePackages
     }
 
     @Input
-    public MultiOutputPolicy getMultiOutputPolicy() {
-        return multiOutputPolicy;
+    fun getMultiOutputPolicy(): MultiOutputPolicy {
+        return multiOutputPolicy
     }
 
     @Input
-    public String getOriginalApplicationId() {
-        return originalApplicationId.get();
+    fun getOriginalApplicationId(): String? {
+        return originalApplicationId.get()
     }
 
     @Nested
     @Optional
-    public SplitList getSplitListInput() {
-        return splitList;
+    fun getSplitListInput(): SplitList {
+        return splitList
     }
 
     @Input
     @Optional
-    public String getBuildTargetDensity() {
-        return buildTargetDensity;
+    fun getBuildTargetDensity(): String? {
+        return buildTargetDensity
     }
 
     @OutputDirectory
-    @NonNull
-    public File getResPackageOutputFolder() {
-        return resPackageOutputFolder;
-    }
-
-    boolean isLibrary;
-
-    @Input
-    public boolean isLibrary() {
-        return isLibrary;
+    fun getResPackageOutputFolder(): File {
+        return resPackageOutputFolder
     }
 
     @Input
-    public boolean isNamespaced() {
-        return isNamespaced;
+    fun isLibrary(): Boolean {
+        return isLibrary
     }
 
-    private static class AaptSplitInvoker implements Runnable {
-        private AaptSplitInvokerParams params;
-
-        @Inject
-        AaptSplitInvoker(AaptSplitInvokerParams params) {
-            this.params = params;
-        }
-
-        @Override
-        public void run() {
-            try {
-                invokeAaptForSplit(params);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        private static synchronized void appendOutput(
-                BuildOutput output, File resPackageOutputFolder) throws IOException {
-            List<BuildOutput> buildOutputs =
-                    new ArrayList<>(
-                            ExistingBuildElements.from(resPackageOutputFolder).getElements());
-            buildOutputs.add(output);
-            new BuildElements(buildOutputs).save(resPackageOutputFolder);
-        }
-
-        private static void invokeAaptForSplit(@NonNull AaptSplitInvokerParams params)
-                throws IOException {
-
-            ImmutableList.Builder<File> featurePackagesBuilder = ImmutableList.builder();
-            for (File featurePackage : params.featureResourcePackages) {
-                BuildElements buildElements =
-                        ExistingBuildElements.from(
-                                InternalArtifactType.PROCESSED_RES, featurePackage);
-                if (!buildElements.isEmpty()) {
-                    BuildOutput mainBuildOutput =
-                            buildElements.elementByType(VariantOutput.OutputType.MAIN);
-                    if (mainBuildOutput != null) {
-                        featurePackagesBuilder.add(mainBuildOutput.getOutputFile());
-                    } else {
-                        throw new IOException(
-                                "Cannot find PROCESSED_RES output for "
-                                        + params.variantScopeMainSplit);
-                    }
-                }
-            }
-
-            File resOutBaseNameFile =
-                    getOutputBaseNameFile(params.apkInfo, params.resPackageOutputFolder);
-            File manifestFile = params.manifestOutput.getOutputFile();
-
-            String packageForR = null;
-            File srcOut = null;
-            File symbolOutputDir = null;
-            File proguardOutputFile = null;
-            File mainDexListProguardOutputFile = null;
-            if (params.generateCode) {
-                // workaround for b/74068247. Until that's fixed, if it's a namespaced feature,
-                // an extra empty dummy R.java file will be generated as well
-                if (params.isNamespaced && params.variantDataType == VariantTypeImpl.FEATURE) {
-                    packageForR = "dummy";
-                } else {
-                    packageForR = params.originalApplicationId;
-                }
-
-                // we have to clean the source folder output in case the package name changed.
-                srcOut = params.sourceOutputDir;
-                if (srcOut != null) {
-                    FileUtils.cleanOutputDir(srcOut);
-                }
-
-                symbolOutputDir = params.textSymbolOutputDir;
-                proguardOutputFile = params.proguardOutputFile;
-                mainDexListProguardOutputFile = params.mainDexListProguardOutputFile;
-            }
-
-            FilterData densityFilterData = params.apkInfo.getFilter(OutputFile.FilterType.DENSITY);
-            String preferredDensity =
-                    densityFilterData != null
-                            ? densityFilterData.getIdentifier()
-                            // if resConfigs is set, we should not use our preferredDensity.
-                            : params.resourceConfigs.isEmpty() ? params.buildTargetDensity : null;
-
-            try {
-
-                // If we are in instant run mode and we use a split APK for these resources.
-                if (params.isInInstantRunMode
-                        && params.patchingPolicy
-                                == InstantRunPatchingPolicy.MULTI_APK_SEPARATE_RESOURCES) {
-                    params.supportDirectory.mkdirs();
-                    // create a split identification manifest.
-                    manifestFile =
-                            InstantRunSliceSplitApkBuilder.generateSplitApkManifest(
-                                    params.supportDirectory,
-                                    IR_APK_FILE_NAME,
-                                    () -> params.applicationId,
-                                    params.apkInfo.getVersionName(),
-                                    params.apkInfo.getVersionCode(),
-                                    params.manifestOutput
-                                            .getProperties()
-                                            .get(SdkConstants.ATTR_MIN_SDK_VERSION));
-                }
-
-                // If the new resources flag is enabled and if we are dealing with a library process
-                // resources through the new parsers
-                {
-                    AaptPackageConfig.Builder configBuilder =
-                            new AaptPackageConfig.Builder()
-                                    .setManifestFile(manifestFile)
-                                    .setOptions(params.aaptOptions)
-                                    .setCustomPackageForR(packageForR)
-                                    .setSymbolOutputDir(symbolOutputDir)
-                                    .setSourceOutputDir(srcOut)
-                                    .setResourceOutputApk(resOutBaseNameFile)
-                                    .setProguardOutputFile(proguardOutputFile)
-                                    .setMainDexListProguardOutputFile(mainDexListProguardOutputFile)
-                                    .setVariantType(params.variantType)
-                                    .setDebuggable(params.debuggable)
-                                    .setResourceConfigs(params.resourceConfigs)
-                                    .setSplits(params.multiOutputPolicySplitList)
-                                    .setPreferredDensity(preferredDensity)
-                                    .setPackageId(params.packageId)
-                                    .setAllowReservedPackageId(
-                                            params.packageId != null
-                                                    && params.packageId
-                                                            < FeatureSetMetadata.BASE_ID)
-                                    .setDependentFeatures(featurePackagesBuilder.build())
-                                    .setImports(params.imports)
-                                    .setIntermediateDir(params.incrementalFolder)
-                                    .setAndroidJarPath(params.androidJarPath)
-                                    .setUseConditionalKeepRules(params.useConditionalKeepRules);
-
-                    if (params.isNamespaced) {
-                        ImmutableList.Builder<File> packagedDependencies = ImmutableList.builder();
-                        packagedDependencies.addAll(params.dependencies);
-                        if (params.convertedLibraryDependenciesPath != null) {
-                            try (Stream<Path> list =
-                                    Files.list(params.convertedLibraryDependenciesPath)) {
-                                list.map(Path::toFile).forEach(packagedDependencies::add);
-                            }
-                        }
-                        configBuilder.setStaticLibraryDependencies(packagedDependencies.build());
-                    } else {
-                        if (params.generateCode) {
-                            configBuilder.setLibrarySymbolTableFiles(params.dependencies);
-                        }
-                        configBuilder.setResourceDir(checkNotNull(params.inputResourcesDir));
-                    }
-
-                    Preconditions.checkNotNull(
-                            params.aapt2ServiceKey, "AAPT2 daemon manager service not initialized");
-                    try (Aapt2DaemonManager.LeasedAaptDaemon aaptDaemon =
-                            Aapt2DaemonManagerService.getAaptDaemon(params.aapt2ServiceKey)) {
-
-                        AndroidBuilder.processResources(
-                                aaptDaemon,
-                                configBuilder.build(),
-                                new LoggerWrapper(
-                                        Logging.getLogger(
-                                                LinkApplicationAndroidResourcesTask.class)));
-                    } catch (Aapt2Exception e) {
-                        throw Aapt2ErrorUtils.rewriteLinkException(
-                                e, new MergingLog(params.mergeBlameFolder));
-                    }
-
-                    if (LOG.isInfoEnabled()) {
-                        LOG.info("Aapt output file {}", resOutBaseNameFile.getAbsolutePath());
-                    }
-                }
-                if (params.generateCode
-                        && (params.isLibrary || !params.dependencies.isEmpty())
-                        && params.symbolsWithPackageNameOutputFile != null) {
-                    SymbolIo.writeSymbolListWithPackageName(
-                            Preconditions.checkNotNull(
-                                            params.textSymbolOutputDir != null
-                                                    ? new File(
-                                                            params.textSymbolOutputDir,
-                                                            SdkConstants.R_CLASS
-                                                                    + SdkConstants.DOT_TXT)
-                                                    : null)
-                                    .toPath(),
-                            manifestFile.toPath(),
-                            params.symbolsWithPackageNameOutputFile.toPath());
-                }
-                appendOutput(
-                        new BuildOutput(
-                                InternalArtifactType.PROCESSED_RES,
-                                params.apkInfo,
-                                resOutBaseNameFile,
-                                params.manifestOutput.getProperties()),
-                        params.resPackageOutputFolder);
-            } catch (ProcessException e) {
-                throw new BuildException(
-                        "Failed to process resources, see aapt output above for details.", e);
-            }
-        }
+    @Input
+    fun isNamespaced(): Boolean {
+        return isNamespaced
     }
 
-    private static class AaptSplitInvokerParams implements Serializable {
-        private final BuildOutput manifestOutput;
-        @NonNull private final Set<File> dependencies;
-        private final Set<File> imports;
-        private final Set<String> resourceConfigs;
-        private final Set<String> multiOutputPolicySplitList;
-        @NonNull private final Set<File> featureResourcePackages;
-        private final ApkInfo apkInfo;
-        private final boolean generateCode;
-        @Nullable private final Aapt2ServiceKey aapt2ServiceKey;
-        private final ApkData variantScopeMainSplit;
-        private final File resPackageOutputFolder;
-        private final boolean isNamespaced;
-        private final VariantType variantDataType;
-        private final String originalApplicationId;
-        private final File sourceOutputDir;
-        private final File textSymbolOutputDir;
-        private final File proguardOutputFile;
-        private final File mainDexListProguardOutputFile;
-        private final String buildTargetDensity;
-        private final boolean isInInstantRunMode;
-        private final InstantRunPatchingPolicy patchingPolicy;
-        private final File supportDirectory;
-        private final String applicationId;
-        private final com.android.builder.internal.aapt.AaptOptions aaptOptions;
-        private final VariantType variantType;
-        private final boolean debuggable;
-        private final Integer packageId;
-        private final File incrementalFolder;
-        private final String androidJarPath;
-        private final Path convertedLibraryDependenciesPath;
-        private final File inputResourcesDir;
-        private final File mergeBlameFolder;
-        private final boolean isLibrary;
-        private final File symbolsWithPackageNameOutputFile;
-        private final boolean useConditionalKeepRules;
+    private fun findPackagedResForSplit(outputFolder: File?, apkInfo: ApkInfo): File? {
+        val resourcePattern = Pattern.compile(
+            FN_RES_BASE + RES_QUALIFIER_SEP + apkInfo.fullName + ".ap__(.*)"
+        )
 
-        AaptSplitInvokerParams(
-                BuildOutput manifestOutput,
-                @NonNull Set<File> dependencies,
-                Set<File> imports,
-                @NonNull SplitList splitList,
-                @NonNull Set<File> featureResourcePackages,
-                ApkInfo apkInfo,
-                boolean generateCode,
-                @Nullable Aapt2ServiceKey aapt2ServiceKey,
-                @NonNull LinkApplicationAndroidResourcesTask task) {
-            this.manifestOutput = manifestOutput;
-            this.dependencies = dependencies;
-            this.imports = imports;
-            this.resourceConfigs = splitList.getResourceConfigs();
-            this.multiOutputPolicySplitList = splitList.getSplits(task.multiOutputPolicy);
-            this.featureResourcePackages = featureResourcePackages;
-            this.apkInfo = apkInfo;
-            this.generateCode = generateCode;
-            this.aapt2ServiceKey = aapt2ServiceKey;
-            variantScopeMainSplit = task.variantScope.getOutputScope().getMainSplit();
-            resPackageOutputFolder = task.resPackageOutputFolder;
-            isNamespaced = task.isNamespaced;
-            variantDataType = task.variantScope.getVariantData().getType();
-            originalApplicationId = task.originalApplicationId.get();
-            sourceOutputDir = task.getSourceOutputDir();
-            textSymbolOutputDir = task.textSymbolOutputDir.get();
-            proguardOutputFile = task.getProguardOutputFile();
-            mainDexListProguardOutputFile = task.getMainDexListProguardOutputFile();
-            buildTargetDensity = task.buildTargetDensity;
-            isInInstantRunMode = task.buildContext.isInInstantRunMode();
-            patchingPolicy = task.buildContext.getPatchingPolicy();
-            supportDirectory = task.supportDirectory;
-            applicationId = task.applicationId.get();
-            aaptOptions = DslAdaptersKt.convert(task.aaptOptions);
-            variantType = task.getType();
-            debuggable = task.getDebuggable();
-            packageId = task.getResOffset();
-            incrementalFolder = task.getIncrementalFolder();
-            androidJarPath = task.getBuilder().getTarget().getPath(IAndroidTarget.ANDROID_JAR);
-            convertedLibraryDependenciesPath =
-                    task.convertedLibraryDependencies == null
-                            ? null
-                            : BuildableArtifactUtil.singleFile(task.convertedLibraryDependencies)
-                                    .toPath();
-            inputResourcesDir =
-                    task.getInputResourcesDir() == null
-                            ? null
-                            : BuildableArtifactUtil.singleFile(task.getInputResourcesDir());
-            mergeBlameFolder = task.getMergeBlameLogFolder();
-            isLibrary = task.isLibrary;
-            symbolsWithPackageNameOutputFile = task.symbolsWithPackageNameOutputFile;
-            useConditionalKeepRules = task.getUseConditionalKeepRules();
+        if (outputFolder == null) {
+            return null
         }
+        val files = outputFolder.listFiles()
+        if (files != null) {
+            for (file in files) {
+                val match = resourcePattern.matcher(file.name)
+                // each time we match, we remove the associated filter from our copies.
+                if (match.matches()
+                    && !match.group(1).isEmpty()
+                    && isValidSplit(apkInfo, match.group(1))
+                ) {
+                    return file
+                }
+            }
+        }
+        return null
+    }
+
+    /**
+     * Returns true if the passed split identifier is a valid identifier (valid mean it is a
+     * requested split for this task). A density split identifier can be suffixed with characters
+     * added by aapt.
+     */
+    private fun isValidSplit(apkInfo: ApkInfo, splitWithOptionalSuffix: String): Boolean {
+
+        var splitFilter = apkInfo.getFilter(VariantOutput.FilterType.DENSITY)
+        if (splitFilter != null) {
+            if (splitWithOptionalSuffix.startsWith(splitFilter.identifier)) {
+                return true
+            }
+        }
+        val mangledName = unMangleSplitName(splitWithOptionalSuffix)
+        splitFilter = apkInfo.getFilter(VariantOutput.FilterType.LANGUAGE)
+        return splitFilter != null && mangledName == splitFilter.identifier
+    }
+
+    /**
+     * Un-mangle a split name as created by the aapt tool to retrieve a split name as configured in
+     * the project's build.gradle.
+     *
+     *
+     * when dealing with several split language in a single split, each language (+ optional
+     * region) will be separated by an underscore.
+     *
+     *
+     * note that there is currently an aapt bug, remove the 'r' in the region so for instance,
+     * fr-rCA becomes fr-CA, temporarily put it back until it is fixed.
+     *
+     * @param splitWithOptionalSuffix the mangled split name.
+     */
+    private fun unMangleSplitName(splitWithOptionalSuffix: String): String {
+        val mangledName = splitWithOptionalSuffix.replace("_".toRegex(), ",")
+        return if (mangledName.contains("-r")) mangledName else mangledName.replace("-", "-r")
     }
 }
