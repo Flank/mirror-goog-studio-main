@@ -122,11 +122,17 @@ class GradleDetectorTest : AbstractCheckTest() {
         // version suggestions in the tests
         task.networkData(
             "https://maven.google.com/master-index.xml",
-            "" +
-                    "<?xml version='1.0' encoding='UTF-8'?>\n" +
-                    "<metadata>\n" +
-                    "  <com.android.tools.build/>" +
-                    "</metadata>"
+            """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <metadata>
+                  <com.android.support/>
+                  <com.android.support.test/>
+                  <com.android.tools/>
+                  <com.android.tools.build/>
+                  <com.google.android.gms/>
+                  <com.google.android.support/>
+                </metadata>
+            """.trimIndent()
         )
         task.networkData(
             "https://maven.google.com/com/android/tools/build/group-index.xml",
@@ -137,6 +143,55 @@ class GradleDetectorTest : AbstractCheckTest() {
                     "3.1.0-alpha01,3.1.0-alpha02,3.1.0-alpha03,3.1.0-alpha04,3.1.0-alpha05,3.1.0-alpha06,3.1.0-alpha07,3.1.0-alpha08,3.1.0-alpha09,3.1.0-beta1,3.1.0-beta2,3.1.0-beta3,3.1.0-beta4,3.1.0-rc1,3.1.0," +
                     "3.2.0-alpha01,3.2.0-alpha02,3.2.0-alpha03\"/>\n" +
                     "</com.android.tools.build>"
+        )
+        task.networkData(
+            "https://maven.google.com/com/android/support/group-index.xml",
+            """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <com.android.support>
+                  <support-compat versions="19.1.0,25.3.1,26.0.0-beta1"/>
+                  <appcompat-v7 versions="19.1.0, 19.1.0,25.3.1,26.0.0-beta1"/>
+                  <multidex versions="1.0.1,1.0.1"/>
+                  <support-v4 versions="19.1.0,21.0.2,25.3.1,26.0.0-beta1"/>
+                </com.android.support>
+            """.trimIndent()
+        )
+        task.networkData(
+            "https://maven.google.com/com/google/android/support/group-index.xml",
+            """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <com.google.android.support>
+                  <wearable versions="1.3.0,26.0.0-alpha1"/>
+                </com.google.android.support>
+            """.trimIndent()
+        )
+        task.networkData(
+            "https://maven.google.com/com/google/android/gms/group-index.xml",
+            """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <com.google.android.gms>
+                  <play-services-wearable versions="6.1.71"/>
+                  <play-services versions="11.1.71"/>
+                </com.google.android.gms>
+            """.trimIndent()
+        )
+        task.networkData(
+            "https://maven.google.com/com/android/support/constraint/group-index.xml",
+            """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <com.android.support.constraint>
+                  <constraint-layout versions="1.0.0,1.0.2"/>
+                </com.android.support.constraint>
+            """.trimIndent()
+        )
+        task.networkData(
+            "https://maven.google.com/com/android/support/test/group-index.xml",
+            """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <com.android.support.test>
+                  <runner versions="0.3,0.5"/>
+                </com.android.support.test>
+            """.trimIndent()
         )
 
         // Similarly set up the expected SDK registry network output from dl.google.com to
@@ -936,7 +991,7 @@ class GradleDetectorTest : AbstractCheckTest() {
 
     fun testBadPlayServicesVersion() {
         val expected = "" +
-                "build.gradle:5: Error: Version 5.2.08 should not be used; the app can not be published with this version. Use version 6.1.71 instead. [GradleCompatible]\n" +
+                "build.gradle:5: Error: Version 5.2.08 should not be used; the app can not be published with this version. Use version 11.1.71 instead. [GradleCompatible]\n" +
                 "    compile 'com.google.android.gms:play-services:5.2.08'\n" +
                 "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                 "1 errors, 0 warnings\n"
@@ -953,10 +1008,10 @@ class GradleDetectorTest : AbstractCheckTest() {
             )
         ).issues(COMPATIBILITY).run().expect(expected).expectFixDiffs(
             "" +
-                    "Fix for build.gradle line 4: Change to 6.1.71:\n" +
+                    "Fix for build.gradle line 4: Change to 11.1.71:\n" +
                     "@@ -5 +5\n" +
                     "-     compile 'com.google.android.gms:play-services:5.2.08'\n" +
-                    "+     compile 'com.google.android.gms:play-services:6.1.71'\n"
+                    "+     compile 'com.google.android.gms:play-services:11.1.71'\n"
         )
     }
 
@@ -2518,46 +2573,6 @@ class GradleDetectorTest : AbstractCheckTest() {
                 createRelativePaths(
                     fullSdkDir!!,
                     arrayOf(
-                        // Android repository
-                        "extras/android/m2repository/com/android/support/appcompat-v7/18.0.0/appcompat-v7-18.0.0.aar",
-                        "extras/android/m2repository/com/android/support/appcompat-v7/19.0.0/appcompat-v7-19.0.0.aar",
-                        "extras/android/m2repository/com/android/support/appcompat-v7/19.0.1/appcompat-v7-19.0.1.aar",
-                        "extras/android/m2repository/com/android/support/appcompat-v7/19.1.0/appcompat-v7-19.1.0.aar",
-                        "extras/android/m2repository/com/android/support/appcompat-v7/20.0.0/appcompat-v7-20.0.0.aar",
-                        "extras/android/m2repository/com/android/support/appcompat-v7/21.0.0/appcompat-v7-21.0.0.aar",
-                        "extras/android/m2repository/com/android/support/appcompat-v7/21.0.2/appcompat-v7-21.0.2.aar",
-                        "extras/android/m2repository/com/android/support/cardview-v7/21.0.0/cardview-v7-21.0.0.aar",
-                        "extras/android/m2repository/com/android/support/cardview-v7/21.0.2/cardview-v7-21.0.2.aar",
-                        "extras/android/m2repository/com/android/support/support-v13/20.0.0/support-v13-20.0.0.aar",
-                        "extras/android/m2repository/com/android/support/support-v13/21.0.0/support-v13-21.0.0.aar",
-                        "extras/android/m2repository/com/android/support/support-v13/21.0.2/support-v13-21.0.2.aar",
-                        "extras/android/m2repository/com/android/support/support-v4/20.0.0/support-v4-20.0.0.aar",
-                        "extras/android/m2repository/com/android/support/support-v4/21.0.0/support-v4-21.0.0.aar",
-                        "extras/android/m2repository/com/android/support/support-v4/21.0.2/support-v4-21.0.2.aar",
-                        "extras/android/m2repository/com/android/support/test/runner/0.5/runner-0.5.aar",
-                        "extras/android/m2repository/com/android/support/multidex/1.0.1/multidex-1.0.1.aar",
-
-                        // Google repository
-                        "extras/google/m2repository/com/google/android/gms/play-services/3.1.36/play-services-3.1.36.aar",
-                        "extras/google/m2repository/com/google/android/gms/play-services/3.1.59/play-services-3.1.59.aar",
-                        "extras/google/m2repository/com/google/android/gms/play-services/3.2.25/play-services-3.2.25.aar",
-                        "extras/google/m2repository/com/google/android/gms/play-services/3.2.65/play-services-3.2.65.aar",
-                        "extras/google/m2repository/com/google/android/gms/play-services/4.0.30/play-services-4.0.30.aar",
-                        "extras/google/m2repository/com/google/android/gms/play-services/4.1.32/play-services-4.1.32.aar",
-                        "extras/google/m2repository/com/google/android/gms/play-services/4.2.42/play-services-4.2.42.aar",
-                        "extras/google/m2repository/com/google/android/gms/play-services/4.3.23/play-services-4.3.23.aar",
-                        "extras/google/m2repository/com/google/android/gms/play-services/4.4.52/play-services-4.4.52.aar",
-                        "extras/google/m2repository/com/google/android/gms/play-services/5.0.89/play-services-5.0.89.aar",
-                        "extras/google/m2repository/com/google/android/gms/play-services/6.1.11/play-services-6.1.11.aar",
-                        "extras/google/m2repository/com/google/android/gms/play-services/6.1.71/play-services-6.1.71.aar",
-                        "extras/google/m2repository/com/google/android/gms/play-services-wearable/5.0.77/play-services-wearable-5.0.77.aar",
-                        "extras/google/m2repository/com/google/android/gms/play-services-wearable/6.1.11/play-services-wearable-6.1.11.aar",
-                        "extras/google/m2repository/com/google/android/gms/play-services-wearable/6.1.71/play-services-wearable-6.1.71.aar",
-                        "extras/google/m2repository/com/google/android/support/wearable/1.0.0/wearable-1.0.0.aar",
-                        "extras/google/m2repository/com/google/android/wearable/wearable/1.0.0/wearable-1.0.0.aar",
-                        "extras/google//m2repository/com/google/android/support/wearable/1.2.0/wearable-1.2.0.aar",
-                        "extras/google//m2repository/com/google/android/support/wearable/1.3.0/wearable-1.3.0.aar",
-
                         // build tools
                         "build-tools/23.0.0/aapt",
                         "build-tools/23.0.3/aapt"
