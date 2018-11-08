@@ -171,11 +171,11 @@ public class BasicTest {
 
     @Test
     public void testBuildOutputModel() throws Exception {
-        project.executor().run("assemble", "assembleDebugAndroidTest", "testDebugUnitTest");
-
-        // get the initial minimalistic model.
+        // Execute build and get the initial minimalistic model.
         Map<String, ProjectBuildOutput> multi =
-                project.model().fetchMulti(ProjectBuildOutput.class);
+                project.executeAndReturnOutputMultiModel(
+                        "assemble", "assembleDebugAndroidTest", "testDebugUnitTest");
+
         ProjectBuildOutput mainModule = multi.get(":");
         assertThat(mainModule.getVariantsBuildOutput()).hasSize(2);
         assertThat(

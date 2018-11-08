@@ -20,7 +20,6 @@
     xmlns:xsd="http://www.w3.org/2001/XMLSchema"
     xmlns:c="http://schemas.android.com/sdk/devices/3"
     elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
     version="1">
 
     <!-- The devices element contains a collection of device definitions.
@@ -45,7 +44,7 @@
             </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence>
-            <xsd:element name="device" minOccurs="1" maxOccurs="unbounded">
+            <xsd:element name="device" maxOccurs="unbounded">
                 <xsd:annotation>
                     <xsd:documentation xml:lang="en">
                         A device element contains one hardware profile for a device, along with
@@ -367,7 +366,7 @@
                          minOccurs="0" />
         </xsd:sequence>
         <xsd:attribute name="name"    use="required" type="xsd:token" />
-        <xsd:attribute name="default" use="optional" type="xsd:boolean" />
+        <xsd:attribute name="default"                type="xsd:boolean" />
     </xsd:complexType>
 
     <xsd:complexType name="metaType">
@@ -527,6 +526,7 @@
                         <xsd:enumeration value="360dpi" />
                         <xsd:enumeration value="400dpi" />
                         <xsd:enumeration value="420dpi" />
+                        <xsd:enumeration value="440dpi" />
                         <xsd:enumeration value="xxhdpi" />
                         <xsd:enumeration value="560dpi" />
                         <xsd:enumeration value="xxxhdpi" />

@@ -5,7 +5,7 @@
     name="Tabbed Activity"
     minApi="13"
     minBuildApi="14"
-    description="Creates a new blank activity, with an action bar and navigational elements such as tabs or horizontal swipe.">
+    description="Creates a new blank activity with tabs.">
 
     <category value="Activity" />
     <formfactor value="Mobile" />
@@ -71,17 +71,6 @@
         help="The hierarchical parent activity, used to provide a default implementation for the 'Up' button" />
 
     <parameter
-        id="features"
-        name="Navigation Style"
-        type="enum"
-        default="pager"
-        help="Additional features to include, such as a fragment, swipe views, or a navigation drawer" >
-        <option id="pager">Swipe Views (ViewPager)</option>
-        <option id="tabs">Action Bar Tabs (with ViewPager)</option>
-        <option id="spinner">Action Bar Spinner</option>
-    </parameter>
-
-    <parameter
         id="packageName"
         name="Package name"
         type="string"
@@ -130,12 +119,7 @@
 
     <!-- 128x128 thumbnails relative to template.xml -->
     <thumbs>
-        <!-- default thumbnail is required -->
-        <thumb>template_blank_activity_pager.png</thumb>
-        <!-- attributes act as selectors based on chosen parameters -->
-        <thumb features="tabs">template_blank_activity_tabs.png</thumb>
-        <thumb features="pager">template_blank_activity_pager.png</thumb>
-        <thumb features="spinner">template_blank_activity_dropdown.png</thumb>
+        <thumb>template_blank_activity_tabs.png</thumb>
     </thumbs>
 
     <globals file="globals.xml.ftl" />

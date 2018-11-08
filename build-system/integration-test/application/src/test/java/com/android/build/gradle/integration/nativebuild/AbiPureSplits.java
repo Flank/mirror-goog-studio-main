@@ -231,7 +231,8 @@ public class AbiPureSplits {
     }
 
     private ProjectBuildOutput assembleAndGetModel() throws IOException, InterruptedException {
-        project.executor().run("clean", "assembleDebug");
+        ProjectBuildOutput outputModel =
+                project.executeAndReturnOutputModel("clean", "assembleDebug");
         AndroidProject syncModel =
                 project.model()
                         .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
@@ -241,6 +242,6 @@ public class AbiPureSplits {
         assertThat(Iterables.getOnlyElement(syncModel.getSyncIssues()).getMessage())
                 .contains(
                         "Configuration APKs are supported by the Google Play Store only when publishing Android Instant Apps. To instead generate stand-alone APKs for different device configurations, set generatePureSplits=false.");
-        return project.model().fetch(ProjectBuildOutput.class);
+        return outputModel;
     }
 }

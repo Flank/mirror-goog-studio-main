@@ -13,6 +13,6 @@ android {
 }
 
 dependencies {
-	lintChecks project(':lint')
+    lintPublish project(':lint')
 }
 

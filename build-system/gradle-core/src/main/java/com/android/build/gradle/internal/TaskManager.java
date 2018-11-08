@@ -20,6 +20,7 @@ import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_ANDROID_APIS;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_LINTCHECKS;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_LINTPUBLISH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
@@ -40,7 +41,7 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.FEATU
 import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_JAR;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_PUBLISH_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JNI_LIBS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS;
@@ -121,6 +122,7 @@ import com.android.build.gradle.internal.tasks.LintCompile;
 import com.android.build.gradle.internal.tasks.MergeAaptProguardFilesCreationAction;
 import com.android.build.gradle.internal.tasks.PackageForUnitTest;
 import com.android.build.gradle.internal.tasks.PrepareLintJar;
+import com.android.build.gradle.internal.tasks.PrepareLintJarForPublish;
 import com.android.build.gradle.internal.tasks.ProcessJavaResTask;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
 import com.android.build.gradle.internal.tasks.SourceSetsTask;
@@ -441,6 +443,7 @@ public abstract class TaskManager {
         // This is not the configuration that consumes lint.jar artifacts from normal dependencies,
         // or publishes lint.jar to consumers. These are handled at the variant level.
         globalScope.setLintChecks(createCustomLintChecksConfig(project));
+        globalScope.setLintPublish(createCustomLintPublishConfig(project));
     }
 
     @NonNull
@@ -452,12 +455,22 @@ public abstract class TaskManager {
         return lintChecks;
     }
 
+    @NonNull
+    public static Configuration createCustomLintPublishConfig(@NonNull Project project) {
+        Configuration lintChecks = project.getConfigurations().maybeCreate(CONFIG_NAME_LINTPUBLISH);
+        lintChecks.setVisible(false);
+        lintChecks.setDescription("Configuration to publish external lint check jar");
+        lintChecks.setCanBeConsumed(false);
+        return lintChecks;
+    }
+
     // this is call before all the variants are created since they are all going to depend
-    // on the global LINT_JAR task output
+    // on the global LINT_JAR and LINT_PUBLISH_JAR task output
     public void configureCustomLintChecks() {
         // setup the task that reads the config and put the lint jar in the intermediate folder
         // so that the bundle tasks can copy it, and the inter-project publishing can publish it
         taskFactory.register(new PrepareLintJar.CreationAction(globalScope));
+        taskFactory.register(new PrepareLintJarForPublish.CreationAction(globalScope));
     }
 
     public void createGlobalLintTask() {
@@ -492,12 +505,14 @@ public abstract class TaskManager {
 
         // publish the local lint.jar to all the variants. This is not for the task output itself
         // but for the artifact publishing.
-        BuildableArtifact lintJar = globalScope.getArtifacts().getFinalArtifactFiles(LINT_JAR);
+        BuildableArtifact lintJar =
+                globalScope.getArtifacts().getFinalArtifactFiles(LINT_PUBLISH_JAR);
         for (VariantScope scope : variants) {
-            scope.getArtifacts().createBuildableArtifact(
-                    InternalArtifactType.LINT_JAR,
-                    BuildArtifactsHolder.OperationType.INITIAL,
-                    lintJar);
+            scope.getArtifacts()
+                    .createBuildableArtifact(
+                            InternalArtifactType.LINT_PUBLISH_JAR,
+                            BuildArtifactsHolder.OperationType.INITIAL,
+                            lintJar);
         }
     }
 
@@ -1515,6 +1530,7 @@ public abstract class TaskManager {
         scope.getTaskContainer()
                 .setExternalNativeJsonGenerator(
                         ExternalNativeJsonGenerator.create(
+                                project.getRootDir(),
                                 project.getPath(),
                                 project.getProjectDir(),
                                 project.getBuildDir(),
@@ -2925,11 +2941,13 @@ public abstract class TaskManager {
      * per build-type, per-flavor, per-flavor-combo and the main 'assemble' and 'bundle' ones.
      *
      * @param variantScopes the list of variant scopes.
+     * @param flavorCount the number of flavors
      * @param flavorDimensionCount whether there are flavor dimensions at all.
      * @param variantTypeCount the number of variant types generated.
      */
     public void createAnchorAssembleTasks(
             @NonNull List<VariantScope> variantScopes,
+            int flavorCount,
             int flavorDimensionCount,
             int variantTypeCount) {
 
@@ -2938,7 +2956,7 @@ public abstract class TaskManager {
         List<TaskProvider<? extends Task>> subBundleTasks = Lists.newArrayList();
 
         // There are 3 different scenarios:
-        // 1. there is 1+ flavor dimension. In this case the variant-specific assemble task is
+        // 1. There are 1+ flavors. In this case the variant-specific assemble task is
         //    different from all the assemble<BuildType> or assemble<Flavor>
         // 2. There is no flavor but this is a feature plugin that has 2 different variants for
         //    the same build type (aar + feature), so we still create a specific assemble<buildType>
@@ -2946,7 +2964,7 @@ public abstract class TaskManager {
         // 3. Else, the assemble<BuildType> is the same as the variant specific assemble task.
 
         // Case #1
-        if (flavorDimensionCount > 0) {
+        if (flavorCount > 0) {
             // loop on the variants and record their build type/flavor usage.
             // map from build type/flavor names to the variant-specific assemble/bundle tasks
             ListMultimap<String, TaskProvider<? extends Task>> assembleMap =
@@ -2969,7 +2987,7 @@ public abstract class TaskManager {
                         assembleMap.put(flavor.getName(), assembleTask);
                     }
 
-                    // if 2+ flavors, then make an assemble for the flavor combo
+                    // if 2+ flavor dimensions, then make an assemble for the flavor combo
                     if (flavorDimensionCount > 1) {
                         assembleMap.put(variantConfig.getFlavorName(), assembleTask);
                     }
@@ -2984,7 +3002,7 @@ public abstract class TaskManager {
                             bundleMap.put(flavor.getName(), bundleTask);
                         }
 
-                        // if 2+ flavors, then make an assemble for the flavor combo
+                        // if 2+ flavor dimensions, then make an assemble for the flavor combo
                         if (flavorDimensionCount > 1) {
                             bundleMap.put(variantConfig.getFlavorName(), bundleTask);
                         }

@@ -339,7 +339,8 @@ public class ManifestMerger2 {
 
         PostValidator.validate(finalMergedDocument, mergingReportBuilder);
         if (mergingReportBuilder.hasErrors()) {
-            finalMergedDocument.getRootNode().addMessage(mergingReportBuilder,
+            mergingReportBuilder.addMessage(
+                    finalMergedDocument.getRootNode(),
                     MergingReport.Record.Severity.WARNING,
                     "Post merge validation failed");
         }
@@ -956,11 +957,11 @@ public class ManifestMerger2 {
      * @param xmlElement the xml element to process recursively.
      */
     private static void extractFqcns(@NonNull String packageName, @NonNull XmlElement xmlElement) {
+        String packagePrefix = packageName + ".";
         for (XmlAttribute xmlAttribute : xmlElement.getAttributes()) {
             if (xmlAttribute.getModel() != null && xmlAttribute.getModel().isPackageDependent()) {
                 String value = xmlAttribute.getValue();
-                if (value.startsWith(packageName) &&
-                        value.charAt(packageName.length()) == '.') {
+                if (value.startsWith(packagePrefix)) {
                     xmlAttribute.getXml().setValue(value.substring(packageName.length()));
                 }
             }

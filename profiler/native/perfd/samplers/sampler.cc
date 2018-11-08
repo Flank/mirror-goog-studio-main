@@ -27,10 +27,10 @@
 namespace profiler {
 
 Sampler::Sampler(const profiler::Session& session, EventBuffer* buffer,
-                 int64_t sample_interval_ns)
+                 int64_t sample_interval_ms)
     : session_(session),
       buffer_(buffer),
-      sample_interval_ns_(sample_interval_ns),
+      sample_interval_ns_(Clock::ms_to_ns(sample_interval_ms)),
       is_running_(false) {}
 
 Sampler::~Sampler() { Stop(); }

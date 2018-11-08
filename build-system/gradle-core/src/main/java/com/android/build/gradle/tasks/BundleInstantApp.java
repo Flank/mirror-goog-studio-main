@@ -74,7 +74,7 @@ public class BundleInstantApp extends AndroidVariantTask {
                                         BundleInstantAppRunnable.class,
                                         new BundleInstantAppParams(compressTask)),
                         Deflater.DEFAULT_COMPRESSION));
-        try (ZFile file = new ZFile(bundleFile, zFileOptions)) {
+        try (ZFile file = ZFile.openReadWrite(bundleFile, zFileOptions)) {
             for (File apkDirectory : apkDirectories) {
                 for (BuildOutput buildOutput :
                         ExistingBuildElements.from(InternalArtifactType.APK, apkDirectory)) {

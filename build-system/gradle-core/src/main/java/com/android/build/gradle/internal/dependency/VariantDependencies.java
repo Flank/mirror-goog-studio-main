@@ -87,6 +87,7 @@ public class VariantDependencies {
     public static final String CONFIG_NAME_APPLICATION = "application";
 
     public static final String CONFIG_NAME_LINTCHECKS = "lintChecks";
+    public static final String CONFIG_NAME_LINTPUBLISH = "lintPublish";
 
     public static final String CONFIG_NAME_TESTED_APKS = "testedApks";
 

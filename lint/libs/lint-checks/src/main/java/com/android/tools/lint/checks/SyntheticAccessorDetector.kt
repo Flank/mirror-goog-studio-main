@@ -133,6 +133,7 @@ class SyntheticAccessorDetector : Detector(), SourceCodeScanner {
                     if (!context.evaluator.isPrivate(method)) {
                         return
                     }
+
                     val aClass = method.containingClass ?: return
                     if (aClass == containingClass.psi) {
                         return
@@ -226,13 +227,30 @@ class SyntheticAccessorDetector : Detector(), SourceCodeScanner {
             "field `${member.name}`"
         } else if (member is PsiMethod) {
             if (member.isConstructor) {
-                // Eventually we'll call evaluator.isSealed(member.containingClass) here,
-                // but it's not yet available (blocked on Kotlin PSI dependency reversal)
-                if (isKotlin(member) && member.modifierList.text.contains("sealed")) {
-                    return
-                }
                 if (context.evaluator.isStatic(member)) {
                     return
+                }
+                if (isKotlin(member)) {
+                    // Eventually we'll call evaluator.isSealed(member.containingClass) here,
+                    // but it's not yet available; the code to do it would be
+                    //    if (modifierList is KtLightModifierList<*>) {
+                    //        val ktModifierList = modifierList.kotlinOrigin
+                    //        if (ktModifierList != null &&
+                    //            ktModifierList.hasModifier(KtTokens.SEALED_KEYWORD)) {
+                    //            return
+                    //        }
+                    //    }
+                    // but unfortunately this doesn't compile in the IDE yet, so we work
+                    // around it:
+                    if (member.modifierList.text.contains("sealed")) {
+                        return
+                    }
+                    // Sealed class? This will create a private constructor we can't delete
+                    val modifierList = target.modifierList
+                    if (modifierList != null &&
+                        modifierList.text.contains("sealed")) {
+                        return
+                    }
                 }
                 "constructor"
             } else {

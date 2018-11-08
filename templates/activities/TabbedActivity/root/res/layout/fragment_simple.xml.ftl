@@ -4,7 +4,7 @@
     android:id="@+id/constraintLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="${packageName}.${activityClass}$PlaceholderFragment">
+    tools:context="${packageName}.ui.main.PlaceholderFragment">
 
     <TextView
         android:id="@+id/section_label"

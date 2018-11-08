@@ -23,6 +23,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.model.OptionalCompilationStep;
+import com.android.builder.model.ProjectBuildOutput;
 import com.android.ddmlib.IDevice;
 import com.android.resources.Density;
 import com.android.sdklib.AndroidVersion;
@@ -37,8 +38,11 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import org.gradle.tooling.BuildActionExecuter;
 import org.gradle.tooling.BuildLauncher;
+import org.gradle.tooling.ConfigurableLauncher;
 import org.gradle.tooling.GradleConnectionException;
 import org.gradle.tooling.ProjectConnection;
 import org.gradle.tooling.events.OperationType;
@@ -49,6 +53,7 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
     @Nullable private final String buildToolsVersion;
 
     private boolean isExpectingFailure = false;
+    private boolean queryOutputModel = false;
 
     GradleTaskExecutor(
             @NonNull GradleTestProject gradleTestProject,
@@ -70,6 +75,12 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
      */
     public GradleTaskExecutor expectFailure() {
         isExpectingFailure = true;
+        return this;
+    }
+
+    /** Retrieve the ProjectBuildOutput models along with the build */
+    public GradleTaskExecutor withOutputModelQuery() {
+        queryOutputModel = true;
         return this;
     }
 
@@ -141,8 +152,27 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
                         + "\n\n";
         stdout.write(message.getBytes());
 
-        BuildLauncher launcher =
-                projectConnection.newBuild().forTasks(Iterables.toArray(tasksList, String.class));
+        ConfigurableLauncher launcher;
+        Supplier<ModelContainer<ProjectBuildOutput>> runBuild;
+        if (queryOutputModel) {
+            BuildActionExecuter<ModelContainer<ProjectBuildOutput>> actionExecutor =
+                    projectConnection
+                            .action(new GetAndroidModelAction<>(ProjectBuildOutput.class))
+                            .forTasks(Iterables.toArray(tasksList, String.class));
+            runBuild = actionExecutor::run;
+            launcher = actionExecutor;
+        } else {
+            BuildLauncher buildLauncher =
+                    projectConnection
+                            .newBuild()
+                            .forTasks(Iterables.toArray(tasksList, String.class));
+            runBuild =
+                    () -> {
+                        buildLauncher.run();
+                        return null;
+                    };
+            launcher = buildLauncher;
+        }
 
         setJvmArguments(launcher);
         setStandardOut(launcher, stdout);
@@ -155,14 +185,20 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
         launcher.withArguments(Iterables.toArray(args, String.class));
 
         GradleConnectionException failure = null;
+        ModelContainer<ProjectBuildOutput> outputModelContainer = null;
         try {
-            launcher.run();
+            outputModelContainer = runBuild.get();
         } catch (GradleConnectionException e) {
             failure = e;
         }
 
         GradleBuildResult result =
-                new GradleBuildResult(stdout, stderr, progressListener.getEvents(), failure);
+                new GradleBuildResult(
+                        stdout,
+                        stderr,
+                        progressListener.getEvents(),
+                        failure,
+                        outputModelContainer);
         lastBuildResultConsumer.accept(result);
 
         if (isExpectingFailure && failure == null) {

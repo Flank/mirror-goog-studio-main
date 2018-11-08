@@ -795,6 +795,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
 
         taskManager.createAnchorAssembleTasks(
                 variantScopes,
+                extension.getProductFlavors().size(),
                 flavorDimensionCount,
                 variantFactory.getVariantConfigurationTypes().size());
 

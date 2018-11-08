@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.testing.unit;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.options.BooleanOption;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -28,6 +29,9 @@ public class UnitTestingComplexProjectTest {
 
     @Test
     public void runAllTests() throws Exception {
-        project.execute("clean", "test");
+        project.executor()
+                // allow dependency resolution at config time due to b/118644940
+                .with(BooleanOption.DISALLOW_DEPENDENCY_RESOLUTION_AT_CONFIGURATION, false)
+                .run("clean", "test");
     }
 }

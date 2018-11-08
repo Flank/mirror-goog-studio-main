@@ -107,22 +107,6 @@ public class ApkParser {
         return files;
     }
 
-    List<ApkEntry> parseDumps(List<Deploy.ApkDump> protoDumps) {
-        List<ApkEntry> dumps = new ArrayList<>();
-        for (Deploy.ApkDump dump : protoDumps) {
-            ByteBuffer cd = dump.getCd().asReadOnlyByteBuffer();
-            ByteBuffer signature = dump.getSignature().asReadOnlyByteBuffer();
-            HashMap<String, Long> crcs = ZipUtils.readCrcs(cd);
-            cd.rewind();
-            String digest = ZipUtils.digest(signature.remaining() != 0 ? signature : cd);
-            Apk apk = new Apk(dump.getName(), digest, null, ImmutableList.of());
-            for (Map.Entry<String, Long> entry : crcs.entrySet()) {
-                dumps.add(new ApkEntry(entry.getKey(), entry.getValue(), apk));
-            }
-        }
-        return dumps;
-    }
-
     // Parse the APK archive. The ByteBuffer is expected to contain the entire APK archive.
     private ApkArchiveMap parse(ByteBuffer bytes) {
         bytes.order(ByteOrder.LITTLE_ENDIAN);

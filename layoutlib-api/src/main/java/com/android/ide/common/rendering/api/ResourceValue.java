@@ -100,13 +100,10 @@ public interface ResourceValue extends Serializable {
      */
     void setValue(@Nullable String value);
 
+    /**
+     * Returns the namespace resolver that can be used to resolve any name prefixes in the string
+     * values associated with this resource.
+     */
     @NonNull
     ResourceNamespace.Resolver getNamespaceResolver();
-
-    /**
-     * Specifies logic used to resolve namespace aliases for values that come from XML files.
-     *
-     * <p>This method is meant to be called by the XML parser that created this ResourceValue.
-     */
-    void setNamespaceResolver(@NonNull ResourceNamespace.Resolver resolver);
 }

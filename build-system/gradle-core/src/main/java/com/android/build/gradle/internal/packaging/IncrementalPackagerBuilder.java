@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.packaging;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.incremental.CapturingChangesApkCreator;
 import com.android.build.gradle.internal.incremental.FolderBasedApkCreator;
 import com.android.builder.errors.EvalIssueReporter;
@@ -60,17 +61,19 @@ public class IncrementalPackagerBuilder {
         /** Usual APK format. */
         FILE {
             @Override
-            ApkCreatorFactory factory(@NonNull Project project, boolean debuggableBuild) {
-                return ApkCreatorFactories.fromProjectProperties(project, debuggableBuild);
+            ApkCreatorFactory factory(boolean keepTimestampsInApk, boolean debuggableBuild) {
+                return ApkCreatorFactories.fromProjectProperties(
+                        keepTimestampsInApk, debuggableBuild);
             }
         },
 
         FILE_WITH_LIST_OF_CHANGES {
             @SuppressWarnings({"OResourceOpenedButNotSafelyClosed", "resource"})
             @Override
-            ApkCreatorFactory factory(@NonNull Project project, boolean debuggableBuild) {
+            ApkCreatorFactory factory(boolean keepTimestampsInApk, boolean debuggableBuild) {
                 ApkCreatorFactory apk =
-                        ApkCreatorFactories.fromProjectProperties(project, debuggableBuild);
+                        ApkCreatorFactories.fromProjectProperties(
+                                keepTimestampsInApk, debuggableBuild);
                 return creationData ->
                         new CapturingChangesApkCreator(creationData, apk.make(creationData));
             }
@@ -80,14 +83,14 @@ public class IncrementalPackagerBuilder {
         DIRECTORY {
             @SuppressWarnings({"OResourceOpenedButNotSafelyClosed", "resource"})
             @Override
-            ApkCreatorFactory factory(@NonNull Project project, boolean debuggableBuild) {
+            ApkCreatorFactory factory(boolean keepTimestampsInApk, boolean debuggableBuild) {
                 return creationData ->
                         new CapturingChangesApkCreator(
                                 creationData, new FolderBasedApkCreator(creationData));
             }
         };
 
-        abstract ApkCreatorFactory factory(@NonNull Project project, boolean debuggableBuild);
+        abstract ApkCreatorFactory factory(boolean keepTimestampsInApk, boolean debuggableBuild);
     }
 
     /** Signing key. {@code null} if not defined. */
@@ -128,18 +131,20 @@ public class IncrementalPackagerBuilder {
     private NativeLibrariesPackagingMode nativeLibrariesPackagingMode;
 
     /**
-     * The no-compress predicate: returns {@code true} for paths that should not be compressed.
-     * If not defined, but {@link #aaptOptions} and {@link #manifest} are both defined, it can be
-     * inferred.
+     * The no-compress predicate: returns {@code true} for paths that should not be compressed. If
+     * not defined, but {@link #aaptOptionsNoCompress} and {@link #manifest} are both defined, it
+     * can be inferred.
      */
-    @Nullable
-    private Predicate<String> noCompressPredicate;
+    @Nullable private Predicate<String> noCompressPredicate;
 
     /**
      * The project.
      */
     @Nullable
     private Project project;
+
+    /** Whether the timestamps should be kept in the apk. */
+    @Nullable private Boolean keepTimestampsInApk;
 
     /**
      * Directory for intermediate contents.
@@ -315,6 +320,18 @@ public class IncrementalPackagerBuilder {
     }
 
     /**
+     * Sets whether the timestamps should be kept in the apk.
+     *
+     * @param keepTimestampsInApk whether the timestamps should be kept in the apk
+     * @return {@code this} for use with fluent-style notation
+     */
+    @NonNull
+    public IncrementalPackagerBuilder withKeepTimestampsInApk(boolean keepTimestampsInApk) {
+        this.keepTimestampsInApk = keepTimestampsInApk;
+        return this;
+    }
+
+    /**
      * Sets the intermediate directory used to store information for incremental builds.
      *
      * @param intermediateDir the intermediate directory
@@ -398,8 +415,12 @@ public class IncrementalPackagerBuilder {
      */
     @NonNull
     public IncrementalPackager build() {
+        if (project != null) {
+            keepTimestampsInApk = AndroidGradleOptions.keepTimestampsInApk(project);
+        }
+
         Preconditions.checkState(outputFile != null, "outputFile == null");
-        Preconditions.checkState(project != null, "project == null");
+        Preconditions.checkState(keepTimestampsInApk != null, "keepTimestampsInApk == null");
         Preconditions.checkState(intermediateDir != null, "intermediateDir == null");
 
         if (noCompressPredicate == null) {
@@ -437,7 +458,7 @@ public class IncrementalPackagerBuilder {
             return new IncrementalPackager(
                     creationData,
                     intermediateDir,
-                    apkFormat.factory(project, debuggableBuild),
+                    apkFormat.factory(keepTimestampsInApk, debuggableBuild),
                     abiFilters,
                     jniDebuggableBuild);
         } catch (PackagerException|IOException e) {

@@ -16,7 +16,6 @@
 package com.android.ide.common.resources
 
 import com.android.ide.common.rendering.api.AttrResourceValueImpl
-import com.android.ide.common.rendering.api.StyleItemResourceValue
 import com.android.ide.common.rendering.api.StyleItemResourceValueImpl
 import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.ide.common.rendering.api.ResourceNamespace.ANDROID
@@ -26,7 +25,6 @@ import com.android.ide.common.rendering.api.ResourceValueImpl
 import com.android.ide.common.rendering.api.StyleResourceValue
 import com.android.ide.common.rendering.api.StyleResourceValueImpl
 import com.android.resources.ResourceType
-import com.android.resources.ResourceType.ATTR
 import com.android.resources.ResourceType.COLOR
 import com.android.resources.ResourceType.STRING
 import com.android.resources.ResourceType.STYLE
@@ -60,13 +58,13 @@ class ResourceResolverNamespacesTest {
         val androidRes = listOf(
             ResourceValueImpl(ANDROID, COLOR, "black", "#000000"),
             ResourceValueImpl(ANDROID, COLOR, "white", "#ffffff"),
-            AttrResourceValueImpl(ANDROID, ATTR, "colorPrimary", null)
+            AttrResourceValueImpl(ANDROID, "colorPrimary", null)
         )
 
         val supportRes = listOf(
-            ResourceValueImpl(supportLib, COLOR, "material_blue", "#0000ff"),
-            AttrResourceValueImpl(supportLib, ATTR, "fabColor", null),
-            AttrResourceValueImpl(supportLib, ATTR, "actionBarColor", null)
+          ResourceValueImpl(supportLib, COLOR, "material_blue", "#0000ff"),
+          AttrResourceValueImpl(supportLib, "fabColor", null),
+          AttrResourceValueImpl(supportLib, "actionBarColor", null)
         )
 
         val libRes = listOf(
@@ -124,7 +122,7 @@ class ResourceResolverNamespacesTest {
               appPrefixes,
               StyleItemResourceValueImpl(app, "android:colorPrimary", "@android:color/white", null),
               StyleItemResourceValueImpl(app, "support:fabColor", "@color/image_color", null)
-            )
+            ) as ResourceValueImpl
         )
         appRes.forEach { it.setNamespaceResolver(appPrefixes) }
 

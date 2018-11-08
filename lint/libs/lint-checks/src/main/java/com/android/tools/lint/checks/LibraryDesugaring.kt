@@ -53,6 +53,8 @@ fun isApiDesugared(context: JavaContext, cls: String, name: String?): Boolean {
             "java.lang.Long" -> name == "sum" || name == "min" || name == "max"
             "java.lang.Double" -> name == "sum" || name == "min" || name == "max"
             "java.lang.Math" -> name == "toIntExact"
+
+            // See b/118489828
             "java.lang.annotation.Repeatable",
             "java.lang.annotation.ElementType" -> true
             else -> false

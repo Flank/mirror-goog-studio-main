@@ -13,6 +13,11 @@ iml_module(
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
+    exports = [
+        "//tools/base/deploy/proto:deploy_java_proto",
+        "//tools/idea/.idea/libraries:protobuf",
+    ],
+    # do not sort: must match IML order
     deps = [
         "//tools/base/common:studio.android.sdktools.common[module]",
         "//tools/base/ddmlib:studio.android.sdktools.ddmlib[module]",
@@ -25,6 +30,7 @@ iml_module(
         "//prebuilts/r8:d8-master",
         "//tools/base/deploy/deployer:java_version",
         "//tools/idea/.idea/libraries:sqlite",
+        "//tools/idea/.idea/libraries:mockito[test]",
     ],
 )
 
@@ -99,5 +105,6 @@ java_test(
         "//tools/base/deploy/proto:deploy_java_proto",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:junit_junit",
+        "//tools/base/third_party:org.mockito_mockito-core",
     ],
 )

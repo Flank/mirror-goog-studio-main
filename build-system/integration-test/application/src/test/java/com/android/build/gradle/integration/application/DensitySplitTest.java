@@ -33,8 +33,7 @@ public class DensitySplitTest {
 
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
-        project.executor().run("clean", "assembleDebug");
-        outputModel = project.model().fetch(ProjectBuildOutput.class);
+        outputModel = project.executeAndReturnOutputModel("clean", "assembleDebug");
     }
 
     @AfterClass

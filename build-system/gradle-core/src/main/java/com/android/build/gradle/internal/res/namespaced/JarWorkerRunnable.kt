@@ -36,11 +36,10 @@ class JarWorkerRunnable @Inject constructor(val params: JarRequest) : Runnable {
 }
 
 data class JarRequest(
-        val toFile: File,
-        val fromDirectories: List<File> = listOf(),
-        val fromJars: List<File> = listOf(),
-        val fromFiles: Map<String, File> = mapOf(),
-        val manifestProperties: Map<String, String> = mapOf(),
-        val filter: Predicate<String>? = null
+    val toFile: File,
+    val fromDirectories: List<File> = listOf(),
+    val fromJars: List<File> = listOf(),
+    val fromFiles: Map<String, File> = mapOf(),
+    val manifestProperties: Map<String, String> = mapOf(),
+    val filter: ((className: String) -> Boolean)? = null
 ): Serializable
-

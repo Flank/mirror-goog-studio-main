@@ -41,8 +41,15 @@ using std::string;
 
 namespace profiler {
 
-// Number of times we attempt to run the same atrace command.
-const int kRetryAttempts = 5;
+// Number of times we attempt to run the stop atrace command.
+const int kRetryStopAttempts = 5;
+const int kMbToKb = 1024;
+// If Atrace fails to start with our initial requested buffer size, each follow
+// up attempt is reduced by this amount. If our buffer is less than 2 times this
+// amount we start to divide by 2.
+const int kBufferSizeToStepReduceByKb = 8 * kMbToKb;
+// Minmum supported buffer size in MB.
+const int kBufferMinimumSizeMb = 1;
 
 AtraceManager::AtraceManager(std::unique_ptr<FileSystem> file_system,
                              Clock *clock, int dump_data_interval_ms,
@@ -57,10 +64,16 @@ AtraceManager::AtraceManager(std::unique_ptr<FileSystem> file_system,
 bool AtraceManager::StartProfiling(const std::string &app_pkg_name,
                                    int sampling_interval_us,
                                    int buffer_size_in_mb,
+                                   int *acquired_buffer_size_kb,
                                    std::string *trace_path,
                                    std::string *error) {
   std::lock_guard<std::mutex> lock(start_stop_mutex_);
+  *acquired_buffer_size_kb = 0;
   if (is_profiling_) {
+    return false;
+  }
+  if (buffer_size_in_mb < kBufferMinimumSizeMb) {
+    error->append("Requested buffer size is too small");
     return false;
   }
 
@@ -74,9 +87,17 @@ bool AtraceManager::StartProfiling(const std::string &app_pkg_name,
   *trace_path = profiled_app_.trace_path;
   // Check if atrace is already running, if it is its okay to use that instance.
   bool isRunning = atrace_->IsAtraceRunning();
-  for (int i = 0; i < kRetryAttempts && !isRunning; i++) {
+  int requested_buffer_size_kb = buffer_size_in_mb * kMbToKb;
+  int actual_buffer_size_kb = 0;
+  // Retry under the following conditions
+  // 1) We have not hit our retry attempts limit.
+  // 2) We are not running.
+  // 3) Our requested buffer size is greater than our minimum buffer size.
+  for (int i = 0; i < kRetryStartAttempts && !isRunning &&
+                  requested_buffer_size_kb >= kBufferMinimumSizeMb * kMbToKb;
+       i++) {
     std::ostringstream buffer_size_stream;
-    buffer_size_stream << "-b " << (buffer_size_in_mb * 1024);
+    buffer_size_stream << "-b " << requested_buffer_size_kb;
     buffer_size_arg_ = buffer_size_stream.str();
     atrace_->Run({app_pkg_name, profiled_app_.trace_path, "--async_start",
                   buffer_size_arg_});
@@ -86,8 +107,15 @@ bool AtraceManager::StartProfiling(const std::string &app_pkg_name,
     // half and try again. This can happen frequently due to the fact that
     // atrace must allocate a contiguous block of memory in the size
     // we are requesting.
-    if (atrace_->GetBufferSizeKb() != buffer_size_in_mb * 1024) {
-      buffer_size_in_mb /= 2;
+    actual_buffer_size_kb = atrace_->GetBufferSizeKb();
+    if (actual_buffer_size_kb != requested_buffer_size_kb) {
+      // If we can subtract a step from our buffer and still try again do that.
+      // Otherwise reduce the buffer in half and try.
+      if (requested_buffer_size_kb > 2 * kBufferSizeToStepReduceByKb) {
+        requested_buffer_size_kb -= kBufferSizeToStepReduceByKb;
+      } else {
+        requested_buffer_size_kb /= 2;
+      }
       if (isRunning) {
         atrace_->Stop();
         isRunning = false;
@@ -101,9 +129,14 @@ bool AtraceManager::StartProfiling(const std::string &app_pkg_name,
   if (!isRunning) {
     assert(error != nullptr);
     error->append("Failed to run atrace start.");
+    if (actual_buffer_size_kb < kBufferMinimumSizeMb) {
+      error->append(
+          " Atrace could not allocate enough memory to record a trace.");
+    }
   } else {
     atrace_thread_ = std::thread(&AtraceManager::DumpData, this);
   }
+  *acquired_buffer_size_kb = actual_buffer_size_kb;
   return isRunning;
 }
 
@@ -157,7 +190,7 @@ bool AtraceManager::StopProfiling(const std::string &app_pkg_name,
   atrace_thread_.join();
   bool isRunning = atrace_->IsAtraceRunning();
   string path = GetNextDumpPath();
-  for (int i = 0; i < kRetryAttempts && isRunning; i++) {
+  for (int i = 0; i < kRetryStopAttempts && isRunning; i++) {
     // For pre O devices, simply stopping atrace doesn't always write a file.
     // As such we need to create the file first. This allows atrace to
     // properly modify the contents of the file.

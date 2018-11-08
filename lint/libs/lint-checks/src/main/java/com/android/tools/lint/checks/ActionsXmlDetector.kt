@@ -120,7 +120,7 @@ class ActionsXmlDetector : ResourceXmlDetector() {
         if (localeNode != null) {
             val locales = localeNode.value
             var index = 0
-            locales.split(delimiters = ",").forEach { locale ->
+            locales.split(",").forEach { locale ->
                 val bcp = BCP_47_PREFIX + locale.trim().replace("-", "+")
                 LocaleQualifier.getQualifier(bcp) ?: run {
                     val loc = context.getValueLocation(localeNode)

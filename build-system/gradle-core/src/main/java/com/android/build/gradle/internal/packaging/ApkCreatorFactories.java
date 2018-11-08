@@ -54,22 +54,35 @@ public final class ApkCreatorFactories {
     }
 
     /**
-     * Creates an {@link ApkCreatorFactory} based on the definitions in the project. This is  only
-     * to be used with the incremental packager.
+     * Creates an {@link ApkCreatorFactory} based on the definitions in the project. This is only to
+     * be used with the incremental packager.
      *
-     * @param project the project whose properties will be checked
+     * @param project the project
      * @param debuggableBuild whether the {@link ApkCreatorFactory} will be used to create a
-     *                        debuggable archive
+     *     debuggable archive
      * @return the factory
      */
     @NonNull
     public static ApkCreatorFactory fromProjectProperties(
-            @NonNull Project project,
-            boolean debuggableBuild) {
-        boolean keepTimestamps = AndroidGradleOptions.keepTimestampsInApk(project);
+            @NonNull Project project, boolean debuggableBuild) {
+        return fromProjectProperties(
+                AndroidGradleOptions.keepTimestampsInApk(project), debuggableBuild);
+    }
 
+    /**
+     * Creates an {@link ApkCreatorFactory} based on the definitions in the project. This is only to
+     * be used with the incremental packager.
+     *
+     * @param keepTimestampsInApk whether the timestamps should be kept in the apk
+     * @param debuggableBuild whether the {@link ApkCreatorFactory} will be used to create a
+     *     debuggable archive
+     * @return the factory
+     */
+    @NonNull
+    public static ApkCreatorFactory fromProjectProperties(
+            boolean keepTimestampsInApk, boolean debuggableBuild) {
         ZFileOptions options = new ZFileOptions();
-        options.setNoTimestamps(!keepTimestamps);
+        options.setNoTimestamps(!keepTimestampsInApk);
         options.setCoverEmptySpaceUsingExtraField(true);
 
         ThreadPoolExecutor compressionExecutor =

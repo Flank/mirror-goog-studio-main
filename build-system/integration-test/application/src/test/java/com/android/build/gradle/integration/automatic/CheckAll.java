@@ -22,6 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestProjectPaths;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.options.BooleanOption;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -88,6 +89,8 @@ public class CheckAll {
         project
                 .executor()
                 .withEnableInfoLogging(false)
+                // allow dependency resolution at config time due to b/118644940
+                .with(BooleanOption.DISALLOW_DEPENDENCY_RESOLUTION_AT_CONFIGURATION, false)
                 .run("assembleDebug", "assembleAndroidTest", "lint");
     }
 
@@ -127,6 +130,7 @@ public class CheckAll {
                     "lintStandaloneVital", // Not an Android project
                     "lintStandaloneCustomRules", // Not an Android project
                     "lintCustomRules", // contains integ test for lint itself
+                    "lintCustomLocalAndPublishRules", // contains integ test for lint itself
                     "simpleCompositeBuild", // broken composite build project.
                     "multiCompositeBuild" // too complex composite build project to setup
                     );

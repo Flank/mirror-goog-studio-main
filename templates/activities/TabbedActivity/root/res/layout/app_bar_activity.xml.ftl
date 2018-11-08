@@ -1,69 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<${getMaterialComponentName('android.support.design.widget.CoordinatorLayout', useAndroidX)} xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<${getMaterialComponentName('android.support.design.widget.CoordinatorLayout', useAndroidX)}
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/main_content"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
     tools:context="${packageName}.${activityClass}">
 
     <${getMaterialComponentName('android.support.design.widget.AppBarLayout', useMaterial2)}
-        android:id="@+id/appbar"
-        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="@dimen/appbar_padding_top"
+        android:layout_width="match_parent"
         android:theme="@style/${themeNameAppBarOverlay}">
 
-        <${getMaterialComponentName('android.support.v7.widget.Toolbar', useAndroidX)}
-            android:id="@+id/toolbar"
-            app:title="@string/app_name"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:layout_weight="1"
-            android:background="?attr/colorPrimary"
-            app:popupTheme="@style/${themeNamePopupOverlay}"
-            app:layout_scrollFlags="scroll|enterAlways">
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:minHeight="?actionBarSize"
+            android:padding="@dimen/appbar_padding"
+            android:text="@string/app_name"
+            android:textAppearance="@style/TextAppearance.Widget.AppCompat.Toolbar.Title"/>
 
-            <#if features == 'spinner'>
-                <Spinner
-                    android:id="@+id/spinner"
-                    app:popupTheme="@style/${themeNamePopupOverlay}"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-            </#if>
-        </${getMaterialComponentName('android.support.v7.widget.Toolbar', useAndroidX)}>
-
-        <#if features == 'tabs'>
         <${getMaterialComponentName('android.support.design.widget.TabLayout', useMaterial2)}
             android:id="@+id/tabs"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <${getMaterialComponentName('android.support.design.widget.TabItem', useMaterial2)}
-                android:id="@+id/tabItem"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/tab_text_1" />
-
-            <${getMaterialComponentName('android.support.design.widget.TabItem', useMaterial2)}
-                android:id="@+id/tabItem2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/tab_text_2" />
-
-            <${getMaterialComponentName('android.support.design.widget.TabItem', useMaterial2)}
-                android:id="@+id/tabItem3"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/tab_text_3" />
-
-        </${getMaterialComponentName('android.support.design.widget.TabLayout', useMaterial2)}>
-        </#if>
+            android:layout_height="wrap_content"
+            android:background="?attr/colorPrimary"/>
     </${getMaterialComponentName('android.support.design.widget.AppBarLayout', useMaterial2)}>
 
-    <${viewContainer}
-        android:id="@+id/container"
+    <${getMaterialComponentName('android.support.v4.view.ViewPager', useAndroidX)}
+        android:id="@+id/view_pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
@@ -72,8 +39,7 @@
         android:id="@+id/fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="end|bottom"
+        android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
         app:srcCompat="@android:drawable/ic_dialog_email" />
-
 </${getMaterialComponentName('android.support.design.widget.CoordinatorLayout', useAndroidX)}>

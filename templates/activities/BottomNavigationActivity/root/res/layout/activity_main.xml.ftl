@@ -20,7 +20,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <${getMaterialComponentName('android.support.design.widget.BottomNavigationView', useMaterial2)}
-        android:id="@+id/navigation"
+        android:id="@+id/nav_view"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="0dp"
@@ -29,6 +29,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:menu="@menu/navigation" />
+        app:menu="@menu/bottom_nav_menu" />
 
 </${getMaterialComponentName('android.support.constraint.ConstraintLayout', useAndroidX)}>

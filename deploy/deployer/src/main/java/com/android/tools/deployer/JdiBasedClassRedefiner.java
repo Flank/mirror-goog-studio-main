@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
  * An implementation of the {@link ClassRedefiner} that invoke the Android Virtual Machine's class
  * redefinition API by using JDWP's RedefineClasses command.
  */
-class JdiBasedClassRedefiner extends ClassRedefiner {
+public class JdiBasedClassRedefiner implements ClassRedefiner {
 
     private static final long DEBUGGER_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
 
@@ -67,7 +67,7 @@ class JdiBasedClassRedefiner extends ClassRedefiner {
         return null;
     }
 
-    JdiBasedClassRedefiner(VirtualMachine vm) {
+    public JdiBasedClassRedefiner(VirtualMachine vm) {
         this.vm = vm;
     }
 

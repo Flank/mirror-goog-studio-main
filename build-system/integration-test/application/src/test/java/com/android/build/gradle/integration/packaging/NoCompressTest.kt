@@ -77,7 +77,7 @@ class NoCompressTest {
     }
 
     private fun verifyCompression(apk: File) {
-        ZFile(apk).use { zf ->
+        ZFile.openReadOnly(apk).use { zf ->
             zf.expectCompressionMethodOf("jres.yes").isEqualTo(CompressionMethod.DEFLATE)
             zf.expectCompressionMethodOf("jres.no").isEqualTo(CompressionMethod.STORE)
             zf.expectCompressionMethodOf("assets/a.yes").isEqualTo(CompressionMethod.DEFLATE)

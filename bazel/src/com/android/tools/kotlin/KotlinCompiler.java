@@ -22,6 +22,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -101,9 +103,10 @@ public class KotlinCompiler extends JarOutputCompiler {
                     }
                     File dirFile = new File(dir);
                     if (dirFile.exists()) {
-                        writer.print("<sources path=\"");
-                        writer.print(new File(dir).getAbsolutePath());
-                        writer.println("\"/>");
+                        // Workaround KT-27775: list all kt files in the directory
+                        Files.walk(dirFile.toPath())
+                                .filter(f -> isKt(f))
+                                .forEach(f -> writeSourcePath(writer, f));
                         writer.print("<javaSourceRoots path=\"");
                         writer.print(new File(dir).getAbsolutePath());
                         if (prefix != null) {
@@ -149,6 +152,16 @@ public class KotlinCompiler extends JarOutputCompiler {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    private boolean isKt(Path f) {
+        return Files.isRegularFile(f) && f.toString().endsWith(".kt");
+    }
+
+    private void writeSourcePath(PrintWriter writer, Path p) {
+        writer.print("<sources path=\"");
+        writer.print(p.toAbsolutePath());
+        writer.println("\"/>");
     }
 
     private void ensureManifestFile(File outDir) throws FileNotFoundException {

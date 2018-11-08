@@ -332,6 +332,13 @@ public class MergingReport {
                     message);
         }
 
+        void addMessage(
+                @NonNull XmlElement element,
+                @NonNull MergingReport.Record.Severity severity,
+                @NonNull String message) {
+            addMessage(element.getSourceFilePosition(), severity, message);
+        }
+
         @NonNull
         Builder addMessage(@NonNull SourceFilePosition sourceFilePosition,
                     @NonNull Record.Severity severity,

@@ -43,8 +43,6 @@ class ApplicationIdTextResourceTest {
                             def task = task("appId${"$"}variant.name")
                             task.dependsOn(variant.applicationIdTextResource)
                             task.doLast {
-                                assert variant.applicationId.equals(
-                                    "com.example.android.instantapp.instantappsimpleproject")
                                 assert variant.applicationIdTextResource.asString().equals(
                                     "newAppId")
                             }
@@ -69,8 +67,6 @@ class ApplicationIdTextResourceTest {
                             def task = task("appId${"$"}variant.name")
                             task.dependsOn(variant.applicationIdTextResource)
                             task.doLast {
-                                assert variant.applicationId.equals(
-                                    "com.example.android.instantapp.instantappsimpleproject.feature")
                                 assert variant.applicationIdTextResource.asString().equals(
                                     "newAppId")
                             }

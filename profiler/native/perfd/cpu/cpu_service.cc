@@ -220,9 +220,12 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
         app_pkg_name, request->abi_cpu_arch(),
         configuration.sampling_interval_us(), &trace_path, &error);
   } else if (configuration.profiler_type() == CpuProfilerType::ATRACE) {
+    int acquired_buffer_size_kb = 0;
     success = atrace_manager_->StartProfiling(
         app_pkg_name, configuration.sampling_interval_us(),
-        configuration.buffer_size_in_mb(), &trace_path, &error);
+        configuration.buffer_size_in_mb(), &acquired_buffer_size_kb,
+        &trace_path, &error);
+    response->set_buffer_size_acquired_kb(acquired_buffer_size_kb);
   } else {
     auto mode = ActivityManager::SAMPLING;
     if (configuration.profiler_mode() == CpuProfilerMode::INSTRUMENTED) {
@@ -340,6 +343,7 @@ grpc::Status CpuServiceImpl::StartStartupProfiling(
 
   CpuProfilerType profiler_type = app.configuration.profiler_type();
   string error;
+  bool success = false;
   // TODO: Art should be handled by Debug.startMethodTracing and
   // Debug.stopMethodTracing APIs instrumentation instead. Once our codebase
   // supports instrumenting them, this code should be removed.
@@ -348,19 +352,28 @@ grpc::Status CpuServiceImpl::StartStartupProfiling(
     if (app.configuration.profiler_mode() == CpuProfilerMode::INSTRUMENTED) {
       mode = ActivityManager::INSTRUMENTED;
     }
-    activity_manager_->StartProfiling(mode, app.app_pkg_name,
-                                      app.configuration.sampling_interval_us(),
-                                      &app.trace_path, &error, true);
+    success = activity_manager_->StartProfiling(
+        mode, app.app_pkg_name, app.configuration.sampling_interval_us(),
+        &app.trace_path, &error, true);
     response->set_file_path(app.trace_path);
   } else if (profiler_type == CpuProfilerType::SIMPLEPERF) {
-    simpleperf_manager_->StartProfiling(
+    success = simpleperf_manager_->StartProfiling(
         app.app_pkg_name, request->abi_cpu_arch(),
         app.configuration.sampling_interval_us(), &app.trace_path, &error,
         true);
   } else if (profiler_type == CpuProfilerType::ATRACE) {
-    atrace_manager_->StartProfiling(
+    int acquired_buffer_size_kb = 0;
+    success = atrace_manager_->StartProfiling(
         app.app_pkg_name, app.configuration.sampling_interval_us(),
-        app.configuration.buffer_size_in_mb(), &app.trace_path, &error);
+        app.configuration.buffer_size_in_mb(), &acquired_buffer_size_kb,
+        &app.trace_path, &error);
+    response->set_buffer_size_acquired_kb(acquired_buffer_size_kb);
+  }
+  if (success) {
+    response->set_status(proto::StartupProfilingResponse::SUCCESS);
+  } else {
+    response->set_status(proto::StartupProfilingResponse::FAILURE);
+    response->set_error_message(error);
   }
 
   cache_.AddStartupProfilingStart(app.app_pkg_name, app);

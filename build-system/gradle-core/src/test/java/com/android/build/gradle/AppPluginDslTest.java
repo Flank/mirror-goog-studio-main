@@ -215,6 +215,7 @@ public class AppPluginDslTest {
     public void testPostprocessingBlock_r8_noFeatures() throws Exception {
         BuildType release = android.getBuildTypes().getByName("release");
         release.getPostprocessing().setCodeShrinker("r8");
+        release.getPostprocessing().setRemoveUnusedCode(false);
 
         plugin.createAndroidTasks();
 

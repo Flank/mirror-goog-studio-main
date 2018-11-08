@@ -57,6 +57,7 @@ void EnqueueExpectedParams(TestInitializer& test_data, AtraceManager& manager,
 
 TEST(AtraceManagerTest, ProfilingStartStop) {
   TestInitializer test_data;
+  int allocated_buffer_size_kb = 0;
   AtraceManager manager(std::unique_ptr<FileSystem>(new MemoryFileSystem()),
                         &test_data.fake_clock, 200,
                         std::unique_ptr<Atrace>(test_data.atrace));
@@ -69,6 +70,7 @@ TEST(AtraceManagerTest, ProfilingStartStop) {
   EnqueueExpectedParams(test_data, manager, "2", "--async_stop", "", false);
   int dump_count = 2;
   EXPECT_TRUE(manager.StartProfiling(test_data.app_name, 1000, 8,
+                                     &allocated_buffer_size_kb,
                                      &test_data.trace_path, &test_data.error));
   EXPECT_TRUE(manager.IsProfiling());
   test_data.atrace->WaitUntilParamsSize(1);
@@ -80,6 +82,7 @@ TEST(AtraceManagerTest, ProfilingStartStop) {
 
 TEST(AtraceManagerTest, ProfilerReentrant) {
   TestInitializer test_data;
+  int allocated_buffer_size_kb = 0;
   AtraceManager manager(std::unique_ptr<FileSystem>(new MemoryFileSystem()),
                         &test_data.fake_clock, 200,
                         std::unique_ptr<Atrace>(test_data.atrace));
@@ -94,7 +97,8 @@ TEST(AtraceManagerTest, ProfilerReentrant) {
                           true);
     EnqueueExpectedParams(test_data, manager, "2", "--async_stop", "", false);
     EXPECT_TRUE(manager.StartProfiling(
-        test_data.app_name, 1000, 8, &test_data.trace_path, &test_data.error));
+        test_data.app_name, 1000, 8, &allocated_buffer_size_kb,
+        &test_data.trace_path, &test_data.error));
     EXPECT_TRUE(manager.IsProfiling());
     test_data.atrace->WaitUntilParamsSize(1);
     EXPECT_EQ(manager.GetDumpCount(), dump_count);
@@ -106,6 +110,7 @@ TEST(AtraceManagerTest, ProfilerReentrant) {
 
 TEST(AtraceManagerTest, ProfilingStartTwice) {
   TestInitializer test_data;
+  int allocated_buffer_size_kb = 0;
   AtraceManager manager(std::unique_ptr<FileSystem>(new MemoryFileSystem()),
                         &test_data.fake_clock, 200,
                         std::unique_ptr<Atrace>(test_data.atrace));
@@ -115,11 +120,13 @@ TEST(AtraceManagerTest, ProfilingStartTwice) {
                         true);
   EnqueueExpectedParams(test_data, manager, "1", "--async_stop", "", false);
   EXPECT_TRUE(manager.StartProfiling(test_data.app_name, 1000, 8,
+                                     &allocated_buffer_size_kb,
                                      &test_data.trace_path, &test_data.error));
   test_data.atrace->WaitUntilParamsSize(1);
   EXPECT_EQ(manager.GetDumpCount(), 1);
   EXPECT_TRUE(manager.IsProfiling());
   EXPECT_FALSE(manager.StartProfiling(test_data.app_name, 1000, 8,
+                                      &allocated_buffer_size_kb,
                                       &test_data.trace_path, &test_data.error));
   EXPECT_EQ(manager.GetDumpCount(), 1);
   EXPECT_TRUE(
@@ -128,20 +135,15 @@ TEST(AtraceManagerTest, ProfilingStartTwice) {
 
 TEST(AtraceManagerTest, StartStopFailsAndReturnsError) {
   TestInitializer test_data;
+  int allocated_buffer_size_kb = 0;
   AtraceManager manager(std::unique_ptr<FileSystem>(new MemoryFileSystem()),
                         &test_data.fake_clock, 200,
                         std::unique_ptr<Atrace>(test_data.atrace));
-  // Async start fails, so the manager retries 5 times.
-  EnqueueExpectedParams(test_data, manager, "", "--async_start", "-b 8192",
-                        false);
-  EnqueueExpectedParams(test_data, manager, "", "--async_start", "-b 8192",
-                        false);
-  EnqueueExpectedParams(test_data, manager, "", "--async_start", "-b 8192",
-                        false);
-  EnqueueExpectedParams(test_data, manager, "", "--async_start", "-b 8192",
-                        false);
-  EnqueueExpectedParams(test_data, manager, "", "--async_start", "-b 8192",
-                        false);
+  // Async start fails, so the manager retries kRetryStartTimes times.
+  for (int i = 0; i < AtraceManager::kRetryStartAttempts; i++) {
+    EnqueueExpectedParams(test_data, manager, "", "--async_start", "-b 8192",
+                          false);
+  }
   // Actually start the profiling
   EnqueueExpectedParams(test_data, manager, "", "--async_start", "-b 8192",
                         true);
@@ -152,10 +154,12 @@ TEST(AtraceManagerTest, StartStopFailsAndReturnsError) {
   EnqueueExpectedParams(test_data, manager, "0", "--async_stop", "", true);
   EnqueueExpectedParams(test_data, manager, "0", "--async_stop", "", true);
   EXPECT_FALSE(manager.StartProfiling(test_data.app_name, 1000, 8,
+                                      &allocated_buffer_size_kb,
                                       &test_data.trace_path, &test_data.error));
   EXPECT_THAT(test_data.error, Eq("Failed to run atrace start."));
   test_data.error.clear();
   EXPECT_TRUE(manager.StartProfiling(test_data.app_name, 1000, 8,
+                                     &allocated_buffer_size_kb,
                                      &test_data.trace_path, &test_data.error));
   EXPECT_FALSE(
       manager.StopProfiling(test_data.app_name, false, &test_data.error));
@@ -164,22 +168,28 @@ TEST(AtraceManagerTest, StartStopFailsAndReturnsError) {
 
 TEST(AtraceManagerTest, BufferAutoDownSamples) {
   TestInitializer test_data;
-  test_data.atrace->SetBufferSize(2048);
+  test_data.atrace->SetBufferSize(4096);
+  int allocated_buffer_size_kb = 0;
   AtraceManager manager(std::unique_ptr<FileSystem>(new MemoryFileSystem()),
                         &test_data.fake_clock, 200,
                         std::unique_ptr<Atrace>(test_data.atrace));
-  // Async start fails, so the manager retries
+  // Test buffer size gets reduced by some amount.
+  EnqueueExpectedParams(test_data, manager, "", "--async_start", "-b 24576",
+                        true);
+  EnqueueExpectedParams(test_data, manager, "", "--async_start", "-b 16384",
+                        true);
+  // Test we hit a min threashold and we divide the buffer in half.
   EnqueueExpectedParams(test_data, manager, "", "--async_start", "-b 8192",
                         true);
   EnqueueExpectedParams(test_data, manager, "", "--async_start", "-b 4096",
                         true);
-  EnqueueExpectedParams(test_data, manager, "", "--async_start", "-b 2048",
-                        true);
-  EnqueueExpectedParams(test_data, manager, "0", "--async_dump", "-b 2048",
+  EnqueueExpectedParams(test_data, manager, "0", "--async_dump", "-b 4096",
                         true);
   EnqueueExpectedParams(test_data, manager, "1", "--async_stop", "", false);
-  EXPECT_TRUE(manager.StartProfiling(test_data.app_name, 1000, 8,
+  EXPECT_TRUE(manager.StartProfiling(test_data.app_name, 1000, 24,
+                                     &allocated_buffer_size_kb,
                                      &test_data.trace_path, &test_data.error));
+  EXPECT_EQ(allocated_buffer_size_kb, 4096);
   EXPECT_TRUE(manager.IsProfiling());
   EXPECT_EQ(manager.GetDumpCount(), 0);
   test_data.atrace->WaitUntilParamsSize(1);
@@ -190,6 +200,7 @@ TEST(AtraceManagerTest, BufferAutoDownSamples) {
 
 TEST(AtraceManagerTest, StopProfilingCombinesFiles) {
   TestInitializer test_data;
+  int allocated_buffer_size_kb = 0;
   // Ownership of the file system is passed to atrace manager, but the test
   // still needs access to it. The access is used to create fake dump files, as
   // well as validate the output file.
@@ -216,7 +227,9 @@ TEST(AtraceManagerTest, StopProfilingCombinesFiles) {
                         true);
   EnqueueExpectedParams(test_data, manager, "2", "--async_stop", "", false);
   EXPECT_TRUE(manager.StartProfiling(test_data.app_name, 1000, 8,
+                                     &allocated_buffer_size_kb,
                                      &test_data.trace_path, &test_data.error));
+  EXPECT_EQ(allocated_buffer_size_kb, 8192);
   EXPECT_TRUE(manager.IsProfiling());
   test_data.atrace->WaitUntilParamsSize(1);
   EXPECT_TRUE(
@@ -228,5 +241,20 @@ TEST(AtraceManagerTest, StopProfilingCombinesFiles) {
   // Read files from the memory file system.
   std::string contents = file_system->GetFileContents(test_data.trace_path);
   EXPECT_EQ(contents, "012");
+}
+
+TEST(AtraceManagerTest, BufferSizeTooSmallReturnsError) {
+  TestInitializer test_data;
+  test_data.atrace->SetBufferSize(2048);
+  int allocated_buffer_size_kb = 0;
+  AtraceManager manager(std::unique_ptr<FileSystem>(new MemoryFileSystem()),
+                        &test_data.fake_clock, 200,
+                        std::unique_ptr<Atrace>(test_data.atrace));
+  // Async start fails, so the manager retries
+  EnqueueExpectedParams(test_data, manager, "", "--async_start", "-b 0", true);
+  EXPECT_FALSE(manager.StartProfiling(test_data.app_name, 1000, 0,
+                                      &allocated_buffer_size_kb,
+                                      &test_data.trace_path, &test_data.error));
+  EXPECT_THAT(test_data.error, Eq("Requested buffer size is too small"));
 }
 }  // namespace profiler

@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.tools.build.apkzlib.zip.StoredEntry;
 import com.android.tools.build.apkzlib.zip.StoredEntryType;
 import com.android.tools.build.apkzlib.zip.ZFile;
-import com.android.tools.build.apkzlib.zip.ZFileOptions;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableSet;
@@ -117,7 +116,7 @@ public final class RelativeFiles {
 
         Set<RelativeFile> files = Sets.newHashSet();
 
-        try (ZFile zipReader = new ZFile(zip, new ZFileOptions(), true)) {
+        try (ZFile zipReader = ZFile.openReadOnly(zip)) {
             for (StoredEntry entry : zipReader.entries()) {
                 if (entry.getType() == StoredEntryType.FILE) {
                     files.add(new RelativeFile(zip, entry.getCentralDirectoryHeader().getName()));

@@ -22,7 +22,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -43,8 +42,7 @@ public class AdbClient {
     public byte[] shell(String[] parameters, InputStream input) throws IOException {
         logger.info("SHELL: " + String.join(" ", parameters));
         ByteArrayOutputReceiver receiver;
-        try {
-            Trace.begin("adb shell" + Arrays.toString(parameters));
+        try (Trace ignored = Trace.begin("adb shell" + Arrays.toString(parameters))) {
             receiver = new ByteArrayOutputReceiver();
             device.executeShellCommand(
                     String.join(" ", parameters),
@@ -57,20 +55,12 @@ public class AdbClient {
                 | ShellCommandUnresponsiveException
                 | TimeoutException e) {
             throw new IOException(e);
-        } finally {
-            Trace.end();
         }
     }
 
-    public boolean installMultiple(List<String> apks, boolean kill) throws IOException {
+    public boolean installMultiple(List<String> apks, List<String> options) throws IOException {
         List<File> files = apks.stream().map(File::new).collect(Collectors.toList());
         try {
-            List<String> options = new ArrayList<>();
-            options.add("-t");
-            options.add("-r");
-            if (!kill) {
-                options.add("--dont-kill");
-            }
             device.installPackages(files, true, options, 10, TimeUnit.SECONDS);
             return true;
         } catch (InstallException e) {
@@ -83,13 +73,10 @@ public class AdbClient {
     }
 
     public void push(String from, String to) throws IOException {
-        try {
-            Trace.begin("adb push");
+        try (Trace ignored = Trace.begin("adb push")) {
             device.pushFile(from, to);
         } catch (SyncException | TimeoutException | AdbCommandRejectedException e) {
             throw new IOException(e);
-        } finally {
-            Trace.end();
         }
     }
 

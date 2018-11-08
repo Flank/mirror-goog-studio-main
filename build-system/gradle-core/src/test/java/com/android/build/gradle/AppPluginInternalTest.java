@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import junit.framework.TestCase;
+import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 import org.junit.Before;
 import org.junit.Rule;
@@ -474,10 +475,12 @@ public class AppPluginInternalTest {
     }
 
     @Test
-    public void testJavaCompileBootclasspath() {
+    public void testJava8CompileBootclasspath() {
         AppExtension android = project.getExtensions().getByType(AppExtension.class);
         android.setCompileSdkVersion(TestConstants.COMPILE_SDK_VERSION);
         android.setBuildToolsVersion(TestConstants.BUILD_TOOL_VERSION);
+        android.getCompileOptions().setSourceCompatibility(JavaVersion.VERSION_1_8);
+        android.getCompileOptions().setTargetCompatibility(JavaVersion.VERSION_1_8);
 
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
         plugin.createAndroidTasks();
@@ -488,5 +491,6 @@ public class AppPluginInternalTest {
                 compileDebugJavaWithJavac.getOptions().getBootstrapClasspath().getFiles();
         assertThat(bootclasspath.stream().map(File::getName).collect(Collectors.toSet()))
                 .containsExactly("android.jar", "core-lambda-stubs.jar");
+        assertThat(bootclasspath).containsExactlyElementsIn(android.getBootClasspath());
     }
 }

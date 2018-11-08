@@ -90,7 +90,7 @@ public class IncrementalRelativeFileSetsTest {
 
         Closer closer = Closer.create();
         try {
-            ZFile zf = closer.register(new ZFile(zipFile));
+            ZFile zf = closer.register(ZFile.openReadWrite(zipFile));
             zf.close();
         } catch (Throwable t) {
             throw closer.rethrow(t);
@@ -113,7 +113,7 @@ public class IncrementalRelativeFileSetsTest {
 
         Closer closer = Closer.create();
         try {
-            ZFile zf = closer.register(new ZFile(zipFile));
+            ZFile zf = closer.register(ZFile.openReadWrite(zipFile));
             zf.add("a/", new ByteArrayInputStream(new byte[0]));
             zf.add("a/b", new ByteArrayInputStream(new byte[0]));
             zf.add("a/c", new ByteArrayInputStream(new byte[0]));
@@ -156,7 +156,7 @@ public class IncrementalRelativeFileSetsTest {
 
         Closer closer = Closer.create();
         try {
-            ZFile zf1 = closer.register(new ZFile(zipFile));
+            ZFile zf1 = closer.register(ZFile.openReadWrite(zipFile));
             zf1.add("a/", new ByteArrayInputStream(new byte[0]));
             zf1.add("a/b", new ByteArrayInputStream(new byte[0]));
             zf1.add("d", new ByteArrayInputStream(new byte[0]));
@@ -167,7 +167,7 @@ public class IncrementalRelativeFileSetsTest {
             @SuppressWarnings("unused")
             boolean ignored = zipFile.delete();
 
-            ZFile zf2 = closer.register(new ZFile(zipFile));
+            ZFile zf2 = closer.register(ZFile.openReadWrite(zipFile));
             zf2.add("a/", new ByteArrayInputStream(new byte[0]));
             zf2.add("a/c", new ByteArrayInputStream(new byte[0]));
             zf2.add("d", new ByteArrayInputStream(new byte[0]));
@@ -237,11 +237,11 @@ public class IncrementalRelativeFileSetsTest {
         Closer closer = Closer.create();
 
         try {
-            ZFile foozZip = closer.register(new ZFile(fooz));
+            ZFile foozZip = closer.register(ZFile.openReadWrite(fooz));
             foozZip.add("f0z", new ByteArrayInputStream(new byte[0]));
             foozZip.close();
 
-            ZFile barzZip = closer.register(new ZFile(barz));
+            ZFile barzZip = closer.register(ZFile.openReadWrite(barz));
             barzZip.add("f0z", new ByteArrayInputStream(new byte[0]));
             barzZip.close();
         } catch (Throwable t) {
@@ -346,7 +346,7 @@ public class IncrementalRelativeFileSetsTest {
         FileCacheByPath cache = new FileCacheByPath(cacheDir);
 
         File foo = new File(temporaryFolder.getRoot(), "foo");
-        try (ZFile zffooz = new ZFile(foo)) {
+        try (ZFile zffooz = ZFile.openReadWrite(foo)) {
             zffooz.add("f0z", new ByteArrayInputStream(new byte[0]));
             zffooz.add("f1z", new ByteArrayInputStream(new byte[0]));
         }
@@ -375,7 +375,7 @@ public class IncrementalRelativeFileSetsTest {
         FileCacheByPath cache = new FileCacheByPath(cacheDir);
 
         File foo = new File(temporaryFolder.getRoot(), "foo");
-        try (ZFile zffooz = new ZFile(foo)) {
+        try (ZFile zffooz = ZFile.openReadWrite(foo)) {
             zffooz.add("f0z", new ByteArrayInputStream(new byte[0]));
             zffooz.add("f1z", new ByteArrayInputStream(new byte[0]));
         }
@@ -407,7 +407,7 @@ public class IncrementalRelativeFileSetsTest {
         FileCacheByPath cache = new FileCacheByPath(cacheDir);
 
         File foo = new File(temporaryFolder.getRoot(), "foo");
-        try (ZFile zffooz = new ZFile(foo)) {
+        try (ZFile zffooz = ZFile.openReadWrite(foo)) {
             zffooz.add("f0z/", new ByteArrayInputStream(new byte[0]));
             zffooz.add("f0z/a", new ByteArrayInputStream(new byte[0]));
             zffooz.add("f1z", new ByteArrayInputStream(new byte[0]));
@@ -415,7 +415,7 @@ public class IncrementalRelativeFileSetsTest {
 
         cache.add(foo);
 
-        try (ZFile zffooz = new ZFile(foo)) {
+        try (ZFile zffooz = ZFile.openReadWrite(foo)) {
             zffooz.add("f0z/a", new ByteArrayInputStream(new byte[] {1, 2, 3}));
         }
 

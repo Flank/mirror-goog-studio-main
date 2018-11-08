@@ -65,6 +65,7 @@ import com.google.common.collect.Maps
 import com.google.common.collect.Sets
 import com.google.common.io.Files
 import com.intellij.openapi.util.Computable
+import com.intellij.pom.java.LanguageLevel
 import com.intellij.pom.java.LanguageLevel.JDK_1_7
 import com.intellij.pom.java.LanguageLevel.JDK_1_8
 import org.kxml2.io.KXmlParser
@@ -976,28 +977,13 @@ abstract class LintClient {
 
     /** Returns the set of desugaring operations in effect for the given project. */
     open fun getDesugaring(project: Project): Set<Desugaring> {
-        return if (isUsingDesugar(project)) Desugaring.DEFAULT else Desugaring.NONE
-    }
-
-    private fun isUsingDesugar(project: Project): Boolean {
-        val version = project.gradleModelVersion ?: return true
-
         // If there's no gradle version, you're using some other build system;
         // the most likely candidate is bazel which already supports desugaring
         // so we default to true. (Proper lint integration should extend LintClient
         // anyway and override the getDesugaring method above; this is the default
         // handling.)
-
-        // Desugar runs if the Gradle plugin is 2.4.0 alpha 8 or higher...
-        if (!version.isAtLeast(2, 4, 0, "alpha", 8, true)) {
-            return false
-        }
-
-        // ... *and* the language level is at least 1.8
-        // NO: Try with resources applies to JDK_1_7, though in Gradle we don't
-        // kick in until Java 8!
-        val languageLevel = getLanguageLevel(project, JDK_1_7)
-        return languageLevel.isAtLeast(JDK_1_8)
+        val version = project.gradleModelVersion ?: return Desugaring.DEFAULT
+        return getGradleDesugaring(version, getLanguageLevel(project, JDK_1_7))
     }
 
     /**
@@ -1732,6 +1718,27 @@ abstract class LintClient {
         @JvmStatic
         val isUnitTest: Boolean
             get() = CLIENT_UNIT_TESTS == clientName
+
+        /**
+         * Returns the desugaring operations that the Gradle plugin will use for a
+         * given version of Gradle and a given configured language source level.
+         */
+        @JvmStatic
+        fun getGradleDesugaring(
+            version: GradleVersion,
+            languageLevel: LanguageLevel?
+        ): Set<Desugaring> {
+            // Desugar runs if the Gradle plugin is 2.4.0 alpha 8 or higher...
+            if (!version.isAtLeast(2, 4, 0, "alpha", 8, true)) {
+                return Desugaring.NONE
+            }
+
+            // ... *and* the language level is at least 1.8
+            // NO: Try with resources applies to JDK_1_7, though in Gradle we don't
+            // kick in until Java 8!
+            return if (languageLevel != null && languageLevel.isAtLeast(JDK_1_8))
+                Desugaring.DEFAULT else Desugaring.NONE
+        }
 
         /**
          * Reports an issue where we don't (necessarily) have a [Context] or [Project].

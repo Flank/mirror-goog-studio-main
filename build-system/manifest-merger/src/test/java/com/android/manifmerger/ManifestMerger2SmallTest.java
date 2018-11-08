@@ -556,16 +556,18 @@ public class ManifestMerger2SmallTest {
 
     @Test
     public void testFqcnsExtraction() throws Exception {
-        String xml = ""
-                + "<manifest\n"
-                + "    package=\"com.foo.example\""
-                + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
-                + "    <activity t:name=\"activityOne\"/>\n"
-                + "    <activity t:name=\"com.foo.bar.example.activityTwo\"/>\n"
-                + "    <activity t:name=\"com.foo.example.activityThree\"/>\n"
-                + "    <application t:name=\".applicationOne\" "
-                + "         t:backupAgent=\"com.foo.example.myBackupAgent\"/>\n"
-                + "</manifest>";
+        String xml =
+                ""
+                        + "<manifest\n"
+                        + "    package=\"com.foo.example\""
+                        + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
+                        + "    <activity t:name=\"activityOne\"/>\n"
+                        + "    <activity t:name=\"com.foo.bar.example.activityTwo\"/>\n"
+                        + "    <activity t:name=\"com.foo.example.activityThree\"/>\n"
+                        + "    <activity t:name=\"com.foo.example\"/>"
+                        + "    <application t:name=\".applicationOne\" "
+                        + "         t:backupAgent=\"com.foo.example.myBackupAgent\"/>\n"
+                        + "</manifest>";
 
         File inputFile = TestUtils.inputAsFile("testFcqnsExtraction", xml);
 
@@ -586,6 +588,14 @@ public class ManifestMerger2SmallTest {
         assertEquals(".activityThree",
                 xmlDocument.getElementsByTagName("activity").item(2).getAttributes()
                         .item(0).getNodeValue());
+        assertEquals(
+                "com.foo.example",
+                xmlDocument
+                        .getElementsByTagName("activity")
+                        .item(3)
+                        .getAttributes()
+                        .item(0)
+                        .getNodeValue());
         assertEquals(".applicationOne",
                 xmlDocument.getElementsByTagName("application").item(0).getAttributes()
                         .getNamedItemNS("http://schemas.android.com/apk/res/android", "name")

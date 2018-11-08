@@ -182,4 +182,13 @@ public class DslTest {
         assertThat(Iterables.getOnlyElement(flavoredSyncIssues).getMessage())
                 .contains("versionCode is set to -1 in product flavor red");
     }
+
+    @Test
+    public void testProjectConfigurationWithFlavorDimensionsButNoFlavors() throws Exception {
+        // Regression test for http://issuetracker.google.com/117751390
+        TestFileUtils.appendToFile(project.getBuildFile(), "android.flavorDimensions 'foo'");
+
+        // Configuration phase should complete successfully
+        project.executor().run("help");
+    }
 }

@@ -25,7 +25,7 @@ echo "Called with the following:  OUTDIR=%OUTDIR%, DISTDIR=%DISTDIR%, BUILDNUMBE
 echo "Command Log Location: %COMMANDLOGLOC%"
 
 @rem Run Bazel
-CALL %SCRIPTDIR%bazel.cmd --max_idle_secs=60 --bazelrc=/dev/null test --config=postsubmit --config=local --config=remote_common --build_tag_filters=-no_windows --test_tag_filters=-no_windows,-no_test_windows,-no_psq,-qa_sanity,-qa_fast,-qa_unreliable --auth_credentials=C:\buildbot\android-studio-alphasource.json -- //tools/base/...
+CALL %SCRIPTDIR%bazel.cmd --max_idle_secs=60 --bazelrc=%SCRIPTDIR%toplevel.bazel.rc test --config=postsubmit --config=local --config=remote_common --build_tag_filters=-no_windows --test_tag_filters=-no_windows,-no_test_windows,-no_psq,-qa_sanity,-qa_fast,-qa_unreliable --auth_credentials=C:\buildbot\android-studio-alphasource.json -- //tools/base/...
 
 SET EXITCODE=%errorlevel%
 
@@ -37,7 +37,7 @@ SET UPSALITEID=%%F
 )
 echo "<meta http-equiv="refresh" content="0; URL='https://source.cloud.google.com/results/invocations/%UPSALITEID%" />" > %DISTDIR%\upsalite_test_results.html
 
-FOR /F "tokens=*" %%F IN ('%SCRIPTDIR%bazel.cmd info bazel-testlogs --config=postsubmit --config=local --config=remote_common --auth_credentials=C:\buildbot\android-studio-alphasource.json') DO (
+FOR /F "tokens=*" %%F IN ('%SCRIPTDIR%bazel.cmd --bazelrc=%SCRIPTDIR%toplevel.bazel.rc info bazel-testlogs --config=postsubmit --config=local --config=remote_common --auth_credentials=C:\buildbot\android-studio-alphasource.json') DO (
   SET BAZEL_TESTLOGS=%%F
 )
 

@@ -320,7 +320,7 @@ public class DexArchiveBuilderTest {
             return;
         }
         if (outputFormat == DexArchiveFormat.JAR) {
-            try (ZFile jarFile = new ZFile(dexArchive.getRootPath().toFile())) {
+            try (ZFile jarFile = ZFile.openReadOnly(dexArchive.getRootPath().toFile())) {
                 classesInArchive =
                         jarFile.entries()
                                 .stream()

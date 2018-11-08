@@ -194,7 +194,17 @@ message StartupProfilingRequest {
 }
 
 message StartupProfilingResponse {
-  string file_path = 1;
+  enum Status {
+    UNSPECIFIED = 0;
+    SUCCESS = 1;
+    FAILURE = 2;
+  }
+  Status status = 1;
+  string error_message = 2;
+  // Buffer size (in KB) acquired by Atrace trace configs.
+  int32 buffer_size_acquired_kb = 3;
+  // Trace file path set only by ART trace configs.
+  string file_path = 4;
 }
 
 message CpuStopRequest {
@@ -232,6 +242,8 @@ message CpuProfilingAppStartResponse {
   }
   Status status = 1;
   string error_message = 2;
+  // Buffer size (in KB) acquired by Atrace trace configs.
+  int32 buffer_size_acquired_kb = 3;
 }
 
 message CpuProfilerConfiguration {

@@ -70,19 +70,13 @@ class ObsoleteApiTest(private val provider: TestProjectProvider) {
             .fetchAndroidProjects()
             .onlyModel
 
-        Truth.assertThat(model.syncIssues).hasSize(1)
-        val warningMsg = model.syncIssues.first().message
-
         when(provider.name) {
             "Kotlin" -> {
-                Truth.assertThat(warningMsg).isEqualTo(
-                        "API 'variant.getJavaCompile()' is obsolete and has been replaced with 'variant.getJavaCompileProvider()'.\n" +
-                        "It will be removed at the end of 2019.\n" +
-                        "For more information, see https://d.android.com/r/tools/task-configuration-avoidance.\n" +
-                        "REASON: The Kotlin plugin is currently calling this API. We are working to solve this.\n" +
-                        "WARNING: Debugging obsolete API calls can take time during configuration. It's recommended to not keep it on at all times.")
+                Truth.assertThat(model.syncIssues).hasSize(0)
             }
             "Java" -> {
+                Truth.assertThat(model.syncIssues).hasSize(1)
+                val warningMsg = model.syncIssues.first().message
                 Truth.assertThat(warningMsg).isEqualTo(
                     "API 'variant.getJavaCompile()' is obsolete and has been replaced with 'variant.getJavaCompileProvider()'.\n" +
                         "It will be removed at the end of 2019.\n" +
@@ -100,12 +94,7 @@ class ObsoleteApiTest(private val provider: TestProjectProvider) {
 
         when(provider.name) {
             "Kotlin" -> {
-                Truth.assertThat(result.stdout).contains(
-                    "API 'variant.getJavaCompile()' is obsolete and has been replaced with 'variant.getJavaCompileProvider()'.\n" +
-                            "It will be removed at the end of 2019.\n" +
-                            "For more information, see https://d.android.com/r/tools/task-configuration-avoidance.\n" +
-                            "REASON: The Kotlin plugin is currently calling this API. We are working to solve this.\n" +
-                            "WARNING: Debugging obsolete API calls can take time during configuration. It's recommended to not keep it on at all times.")
+                Truth.assertThat(result.stdout).doesNotContain("API 'variant.getJavaCompile()' is obsolete")
             }
             "Java" -> {
                 Truth.assertThat(result.stdout).contains(

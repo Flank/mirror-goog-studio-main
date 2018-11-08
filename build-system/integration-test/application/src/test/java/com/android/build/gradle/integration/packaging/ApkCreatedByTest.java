@@ -43,7 +43,7 @@ public class ApkCreatedByTest {
         Apk apk = project.getApk("debug");
         assertTrue(apk.exists());
 
-        try (ZFile zf = new ZFile(apk.getFile().toFile())) {
+        try (ZFile zf = ZFile.openReadOnly(apk.getFile().toFile())) {
             StoredEntry manifestEntry = zf.get("META-INF/MANIFEST.MF");
             assertNotNull(manifestEntry);
 

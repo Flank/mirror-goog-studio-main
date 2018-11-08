@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.core.Abi;
+import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConfiguration;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
@@ -86,52 +87,40 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
     /**
      * Returns the cache arguments for implemented strategy.
      *
-     * @param abi - ABI for which cache arguments needs to be created
-     * @param abiPlatformVersion - ABI's platform version
      * @return Returns the cache arguments
      */
     @NonNull
-    abstract List<String> getCacheArguments(@NonNull String abi, int abiPlatformVersion);
+    abstract List<String> getCacheArguments(@NonNull JsonGenerationAbiConfiguration abiConfig);
 
     /**
      * Executes the JSON generation process. Return the combination of STDIO and STDERR from running
      * the process.
      *
-     * @param abi - ABI for which JSON generation process needs to be executed
-     * @param abiPlatformVersion - ABI's platform version
-     * @param outputJsonDir - directory where the JSON file and other information needs to be
-     *     created
      * @return Returns the combination of STDIO and STDERR from running the process.
      */
     @NonNull
     public abstract String executeProcessAndGetOutput(
-            @NonNull String abi, int abiPlatformVersion, @NonNull File outputJsonDir)
-            throws ProcessException, IOException;
+            @NonNull JsonGenerationAbiConfiguration abiConfig) throws ProcessException, IOException;
 
     @NonNull
     @Override
-    public String executeProcess(
-            @NonNull String abi, int abiPlatformVersion, @NonNull File outputJsonDir)
+    public String executeProcess(@NonNull JsonGenerationAbiConfiguration abiConfig)
             throws ProcessException, IOException {
-        String output = executeProcessAndGetOutput(abi, abiPlatformVersion, outputJsonDir);
+        String output = executeProcessAndGetOutput(abiConfig);
         return correctMakefilePaths(output, getMakefile().getParentFile());
     }
 
     @Override
     void processBuildOutput(
-            @NonNull String buildOutput, @NonNull String abi, int abiPlatformVersion) {
-        // CMake doesn't need to process build output because it directly writes JSON file
-        // to specified location.
-    }
+            @NonNull String buildOutput, @NonNull JsonGenerationAbiConfiguration abiConfig) {}
 
     @NonNull
     @Override
-    ProcessInfoBuilder getProcessBuilder(@NonNull String abi, int abiPlatformVersion,
-            @NonNull File outputJson) {
+    ProcessInfoBuilder getProcessBuilder(@NonNull JsonGenerationAbiConfiguration abiConfig) {
         ProcessInfoBuilder builder = new ProcessInfoBuilder();
 
         builder.setExecutable(getCmakeExecutable());
-        builder.addArgs(getProcessBuilderArgs(abi, abiPlatformVersion, outputJson));
+        builder.addArgs(getProcessBuilderArgs(abiConfig));
 
         return builder;
     }
@@ -139,15 +128,13 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
     /** Returns the list of arguments to be passed to process builder. */
     @VisibleForTesting
     @NonNull
-    List<String> getProcessBuilderArgs(
-            @NonNull String abi, int abiPlatformVersion, @NonNull File outputJson) {
+    List<String> getProcessBuilderArgs(@NonNull JsonGenerationAbiConfiguration abiConfig) {
         List<String> processBuilderArgs = Lists.newArrayList();
         // CMake requires a folder. Trim the filename off.
         File cmakeListsFolder = getMakefile().getParentFile();
-
         processBuilderArgs.add(String.format("-H%s", cmakeListsFolder));
-        processBuilderArgs.add(String.format("-B%s", outputJson.getParentFile()));
-        processBuilderArgs.addAll(getCacheArguments(abi, abiPlatformVersion));
+        processBuilderArgs.add(String.format("-B%s", abiConfig.getExternalNativeBuildFolder()));
+        processBuilderArgs.addAll(getCacheArguments(abiConfig));
 
         // Add user provided build arguments
         processBuilderArgs.addAll(getBuildArguments());
@@ -157,17 +144,18 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
     /**
      * Returns a list of default cache arguments that the implementations may use.
      *
-     * @param abi - ABI for which cache arguments needs to be created
-     * @param abiPlatformVersion - ABI's platform version
      * @return list of default cache arguments
      */
-    protected List<String> getCommonCacheArguments(@NonNull String abi, int abiPlatformVersion) {
+    protected List<String> getCommonCacheArguments(
+            @NonNull JsonGenerationAbiConfiguration abiConfig) {
         List<String> cacheArguments = Lists.newArrayList();
-        cacheArguments.add(String.format("-DANDROID_ABI=%s", abi));
-        cacheArguments.add(String.format("-DANDROID_PLATFORM=android-%s", abiPlatformVersion));
+        cacheArguments.add(String.format("-DANDROID_ABI=%s", abiConfig.getAbiName()));
+        cacheArguments.add(
+                String.format("-DANDROID_PLATFORM=android-%s", abiConfig.getAbiPlatformVersion()));
         cacheArguments.add(
                 String.format(
-                        "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=%s", new File(getObjFolder(), abi)));
+                        "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=%s",
+                        new File(getObjFolder(), abiConfig.getAbiName())));
         cacheArguments.add(
                 String.format("-DCMAKE_BUILD_TYPE=%s", isDebuggable() ? "Debug" : "Release"));
         cacheArguments.add(String.format("-DANDROID_NDK=%s", getNdkFolder()));
@@ -204,16 +192,22 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
         File ndkBasePath = null;
         for (String argument : getBuildArguments()) {
             argument = argument.replace(" ", "");
-            if (argument.equals("-DANDROID_STL=stlport_shared")) {
-                stl = "stlport";
-                ndkBasePath = FileUtils.join(getNdkFolder(), "sources", "cxx-stl", "stlport");
-            } else if (argument.equals("-DANDROID_STL=gnustl_shared")) {
-                stl = "gnustl";
-                ndkBasePath = FileUtils.join(getNdkFolder(), "sources", "cxx-stl", "gnu-libstdc++",
-                        "4.9");
-            } else if (argument.equals("-DANDROID_STL=c++_shared")) {
-                stl = "c++";
-                ndkBasePath = FileUtils.join(getNdkFolder(), "sources", "cxx-stl", "llvm-libc++");
+            switch (argument) {
+                case "-DANDROID_STL=stlport_shared":
+                    stl = "stlport";
+                    ndkBasePath = FileUtils.join(getNdkFolder(), "sources", "cxx-stl", "stlport");
+                    break;
+                case "-DANDROID_STL=gnustl_shared":
+                    stl = "gnustl";
+                    ndkBasePath =
+                            FileUtils.join(
+                                    getNdkFolder(), "sources", "cxx-stl", "gnu-libstdc++", "4.9");
+                    break;
+                case "-DANDROID_STL=c++_shared":
+                    stl = "c++";
+                    ndkBasePath =
+                            FileUtils.join(getNdkFolder(), "sources", "cxx-stl", "llvm-libc++");
+                    break;
             }
         }
         Map<Abi, File> result = Maps.newHashMap();

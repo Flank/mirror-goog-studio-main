@@ -40,6 +40,7 @@ import com.android.builder.model.SigningConfig;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
 import com.android.repository.Revision;
+import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import org.gradle.api.Action;
@@ -637,4 +638,7 @@ public interface AndroidConfig {
      */
     @Nullable
     String getNdkVersion();
+
+    /** Returns the list of files that form bootClasspath used for compilation. */
+    List<File> getBootClasspath();
 }

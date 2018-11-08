@@ -34,8 +34,8 @@ namespace profiler {
 class FakeSampler final : public Sampler {
  public:
   FakeSampler(const Session& session, EventBuffer* buffer,
-              int64_t sampling_interval_ns, int64_t id, int32_t event_count)
-      : Sampler(session, buffer, sampling_interval_ns),
+              int64_t sampling_interval_ms, int64_t id, int32_t event_count)
+      : Sampler(session, buffer, sampling_interval_ms),
         event_count_(event_count),
         session_id_(id),
         event_id_(id),
@@ -78,8 +78,7 @@ TEST(FakeSampler, TestSamplerInsertion) {
   Session session(0, 0, 0, &daemon);
   std::vector<FakeSampler*> samplers;
   for (int i = 1; i < 11; i++) {
-    auto sampler =
-        new FakeSampler(session, &event_buffer, Clock::ms_to_ns(100), i, i);
+    auto sampler = new FakeSampler(session, &event_buffer, 100, i, i);
     samplers.push_back(sampler);
     sampler->Start();
   }

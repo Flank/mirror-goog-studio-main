@@ -25,6 +25,7 @@ public class DeployerException extends Exception {
         DUMP_FAILED,
         READ_HOST_APK_FAILED,
         CANNOT_SWAP,
+        CANNOT_SWAP_NEW_CLASS,
         REMOTE_APK_NOT_FOUND_ON_DB,
         REDEFINER_ERROR,
         DIFFERENT_NUMBER_OF_APKS,

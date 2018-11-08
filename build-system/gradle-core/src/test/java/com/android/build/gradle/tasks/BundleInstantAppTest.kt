@@ -160,7 +160,7 @@ class BundleInstantAppTest {
         val filesNames = ImmutableSet.of("1.apk", "2.apk", "3.apk")
 
         assertThat(
-            ZFile(zippedFile).entries().stream().map { it.centralDirectoryHeader.name }.collect(
+            ZFile.openReadOnly(zippedFile).entries().stream().map { it.centralDirectoryHeader.name }.collect(
                 Collectors.toSet()
             ) as Set<*>
         ).containsExactlyElementsIn(filesNames)

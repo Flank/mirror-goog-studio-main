@@ -19,10 +19,13 @@ package com.android.tools.lint.checks;
 import static com.android.SdkConstants.ATTR_LAYOUT_HEIGHT;
 import static com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX;
 import static com.android.SdkConstants.ATTR_LAYOUT_WIDTH;
+import static com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_BARRIER;
+import static com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_GROUP;
 import static com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_GUIDELINE;
 import static com.android.SdkConstants.CONSTRAINT_LAYOUT;
 import static com.android.SdkConstants.CONSTRAINT_LAYOUT_LIB_ARTIFACT_ID;
 import static com.android.SdkConstants.CONSTRAINT_LAYOUT_LIB_GROUP_ID;
+import static com.android.SdkConstants.TAG_INCLUDE;
 import static com.android.SdkConstants.VALUE_MATCH_PARENT;
 import static com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_LOWER;
 
@@ -140,8 +143,18 @@ public class ConstraintLayoutDetector extends LayoutDetector {
                 continue;
             }
 
+            if (CLASS_CONSTRAINT_LAYOUT_GROUP.isEquals(elementTagName)) {
+                // Groups do not need to be constrained
+                continue;
+            }
+
+            if (TAG_INCLUDE.equals(elementTagName)) {
+                // Don't flag includes; they might have the right constraints inside.
+                continue;
+            }
+
             if (!Strings.isNullOrEmpty(elementTagName)
-                    && element.getTagName().contains("Barrier")
+                    && CLASS_CONSTRAINT_LAYOUT_BARRIER.isEquals(elementTagName)
                     && scanForBarrierConstraint(element)) {
                 // The Barrier has the necessary layout constraints. This element is constrained correctly.
                 break;

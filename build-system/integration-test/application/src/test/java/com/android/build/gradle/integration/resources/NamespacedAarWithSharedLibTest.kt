@@ -164,7 +164,7 @@ class NamespacedAarWithSharedLibTest {
                         .getTargetFromHashString(GradleTestProject.getCompileSdkHash(), progress)!!
 
         // Take the aar and convert it in to a fake shared library.
-        ZFile(project.file("publishedLib/build/outputs/aar/publishedLib-release.aar")).use { previousAar ->
+        ZFile.openReadOnly(project.file("publishedLib/build/outputs/aar/publishedLib-release.aar")).use { previousAar ->
             // Extract bits needed for AAPT2 call
             val exploded = tempFolder.newFolder()
             val staticLib = File(exploded, "static.apk")
@@ -205,7 +205,7 @@ class NamespacedAarWithSharedLibTest {
             // Write new shared AAR
             Files.createDirectories(project.file("myFlatDir").toPath())
             val options = ZFileOptions().apply { noTimestamps = true; autoSortFiles = true }
-            ZFile(project.file("myFlatDir/sharedLib.aar"), options).use { sharedAar ->
+            ZFile.openReadWrite(project.file("myFlatDir/sharedLib.aar"), options).use { sharedAar ->
                 sharedAar.mergeFrom(previousAar) { false }
                 sharedAar.add(
                         SdkConstants.FN_SHARED_LIBRARY_ANDROID_MANIFEST_XML,
