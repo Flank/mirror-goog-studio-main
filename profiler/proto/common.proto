@@ -19,6 +19,7 @@ package profiler.proto;
 option java_package = "com.android.tools.profiler.proto";
 option java_outer_classname = "Common";
 
+import "cpu_data.proto";
 import "network_data.proto";
 
 // Note: stream_id should NOT be part of an |Event| message because a session
@@ -38,6 +39,7 @@ message Event {
     NETWORK_CONNECTION_COUNT = 102;
 
     // Cpu Profiler Prefix = 200
+    CPU_USAGE = 201;
 
     // Memory Profiler Prefix = 300
 
@@ -58,6 +60,8 @@ message Event {
     // Network Profiler Prefix = 100
 
     // Cpu Profiler Prefix = 200
+    CPU_SYSYTEM_USAGE = 201;
+    CPU_PROCESS_USAGE = 202;
 
     // Memory Profiler Prefix = 300
 
@@ -115,6 +119,9 @@ message Event {
     NetworkConnectionData network_connections = 102;
 
     // Cpu Profiler Prefix = 200
+    CpuPerCoreUsageData cpu_per_core_usage = 201;
+    CpuProcessUsageData cpu_process_usage = 202;
+
     // Memory Profiler Prefix = 300
     // Energy Profiler Prefix = 400
     // Event Profiler Prefix = 500
