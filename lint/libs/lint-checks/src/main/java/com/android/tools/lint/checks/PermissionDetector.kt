@@ -185,11 +185,25 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     }
                 }
 
+                val missingPermissions = requirement.getMissingPermissions(permissions)
+
+                if (method?.name == "getAllCellInfo" &&
+                    missingPermissions.size == 1 &&
+                    missingPermissions.first() == "android.permission.ACCESS_COARSE_LOCATION" &&
+                    permissions.hasPermission("android.permission.ACCESS_FINE_LOCATION")) {
+                    // Special case for issue 63962416:
+                    // TelephonyManager.getAllCellInfo is incorrectly annotated as requiring
+                    // ACCESS_COARSE_LOCATION or ACCESS_FINE_LOCATION; instead it's annotated
+                    // as just requiring ACCESS_COARSE_LOCATION but clearly holding
+                    // ACCESS_FINE_LOCATION is acceptable too.
+                    return
+                }
+
                 report(
                     context, MISSING_PERMISSION, node, location, message,
                     // Pass data to IDE quickfix: names to add, and max applicable API version
                     fix().data(
-                        requirement.getMissingPermissions(permissions),
+                        missingPermissions,
                         requirement.lastApplicableApi
                     )
                 )

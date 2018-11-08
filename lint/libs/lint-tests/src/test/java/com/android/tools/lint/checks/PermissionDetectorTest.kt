@@ -1082,4 +1082,47 @@ class PermissionDetectorTest : AbstractCheckTest() {
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
+
+    fun test63962416() {
+        // Regression test for
+        // 63962416: Android Lint incorrectly reports missing location permission
+        lint().files(
+            manifest(
+                "" +
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    package=\"test.pkg.permissiontest\">\n" +
+                        "\n" +
+                        "    <uses-sdk android:minSdkVersion=\"17\" android:targetSdkVersion=\"23\" />\n" +
+                        "\n" +
+                        "    <uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\"/>\n" +
+                        "\n" +
+                        "</manifest>\n"
+            ),
+            java(
+                "" +
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import android.Manifest;\n" +
+                        "import android.annotation.TargetApi;\n" +
+                        "import android.app.Activity;\n" +
+                        "import android.content.pm.PackageManager;\n" +
+                        "import android.os.Build;\n" +
+                        "import android.support.v4.app.ActivityCompat;\n" +
+                        "import android.telephony.TelephonyManager;\n" +
+                        "\n" +
+                        "public class CellInfoTest extends Activity {\n" +
+                        "    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)\n" +
+                        "    public void tet(TelephonyManager manager) {\n" +
+                        "        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {\n" +
+                        "            return;\n" +
+                        "        }\n" +
+                        "        manager.getAllCellInfo();\n" +
+                        "    }\n" +
+                        "}\n"
+            ),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
 }
