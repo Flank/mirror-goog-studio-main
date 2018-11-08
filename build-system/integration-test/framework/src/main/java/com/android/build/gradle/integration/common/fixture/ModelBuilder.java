@@ -24,7 +24,6 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.Option;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.android.utils.Pair;
 import com.google.common.base.Joiner;
@@ -177,7 +176,7 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
                         .action()
                         .projectsLoaded(
                                 new GetAndroidModelAction<>(
-                                        ParameterizedAndroidProject.class, true, true),
+                                        ParameterizedAndroidProject.class, true),
                                 models -> modelConsumer.accept(models.getOnlyModel()))
                         .build()
                         .forTasks(Collections.emptyList());
@@ -239,13 +238,7 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
     @NonNull
     private <T> ModelContainer<T> doQueryMultiContainer(@NonNull Class<T> modelClass)
             throws IOException {
-        // TODO: Make buildModel multithreaded all the time.
-        // Getting multigetMultiContainerple NativeAndroidProject results in duplicated class implemented error
-        // in a multithreaded environment.  This is due to issues in Gradle relating to the
-        // automatic generation of the implementation class of NativeSourceSet.  Make this
-        // multithreaded when the issue is resolved.
-        boolean isMultithreaded = modelClass != NativeAndroidProject.class;
-        return buildModel(new GetAndroidModelAction<>(modelClass, isMultithreaded));
+        return buildModel(new GetAndroidModelAction<>(modelClass));
     }
 
     /** Return a list of all task names of the project. */
