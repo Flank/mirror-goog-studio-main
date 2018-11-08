@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.SyncIssue;
-import org.jetbrains.annotations.NotNull;
 
 /** a Fake EvalIssueReporter that throws on all error/warnings. */
 public class ThrowingIssueReporter implements EvalIssueReporter {
@@ -56,16 +55,16 @@ public class ThrowingIssueReporter implements EvalIssueReporter {
         throw new RuntimeException("fake");
     }
 
-    @NotNull
+    @NonNull
     @Override
     public SyncIssue reportIssue(
-            @NotNull Type type, @NotNull Severity severity, @NotNull EvalIssueException exception) {
+            @NonNull Type type, @NonNull Severity severity, @NonNull EvalIssueException exception) {
         throw new RuntimeException("fake");
     }
 
-    @NotNull
+    @NonNull
     @Override
-    public SyncIssue reportError(@NotNull Type type, @NotNull EvalIssueException exception) {
+    public SyncIssue reportError(@NonNull Type type, @NonNull EvalIssueException exception) {
         throw new RuntimeException("fake");
     }
 }

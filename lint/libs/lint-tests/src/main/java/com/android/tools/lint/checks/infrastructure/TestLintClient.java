@@ -122,7 +122,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.uast.UFile;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -1149,9 +1148,9 @@ public class TestLintClient extends LintCliClient {
         return compileTarget;
     }
 
-    @NotNull
+    @NonNull
     @Override
-    public Set<Desugaring> getDesugaring(@NotNull Project project) {
+    public Set<Desugaring> getDesugaring(@NonNull Project project) {
         if (task.desugaring != null) {
             return task.desugaring;
         }

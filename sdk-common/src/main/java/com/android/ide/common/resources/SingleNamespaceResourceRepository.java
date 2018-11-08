@@ -21,7 +21,6 @@ import com.android.ide.common.rendering.api.ResourceNamespace;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * A resource repository that contains resources from a single app or library. This means that all
@@ -56,7 +55,7 @@ public interface SingleNamespaceResourceRepository extends ResourceRepository {
     }
 
     @Override
-    @NotNull
+    @NonNull
     default Collection<SingleNamespaceResourceRepository> getLeafResourceRepositories() {
         return Collections.singletonList(this);
     }

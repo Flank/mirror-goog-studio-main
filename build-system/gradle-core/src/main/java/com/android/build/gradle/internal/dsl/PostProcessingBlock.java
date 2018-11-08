@@ -38,7 +38,6 @@ import java.util.List;
 import javax.inject.Inject;
 import org.gradle.api.Incubating;
 import org.gradle.api.Project;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * DSL object for configuring postProcessing: removing dead code, obfuscating etc.
@@ -204,9 +203,9 @@ public class PostProcessingBlock implements ProguardFilesProvider {
         return codeShrinker;
     }
 
-    @NotNull
+    @NonNull
     @Override
-    public Collection<File> getProguardFiles(@NotNull ProguardFileType type) {
+    public Collection<File> getProguardFiles(@NonNull ProguardFileType type) {
         switch (type) {
             case EXPLICIT:
                 return proguardFiles;

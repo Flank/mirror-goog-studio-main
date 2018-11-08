@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.core.VariantConfiguration;
@@ -48,8 +49,6 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.workers.WorkerExecutor;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 /** Package each split resources into a specific signed apk file. */
 public class PackageSplitRes extends AndroidBuilderTask {
@@ -100,7 +99,7 @@ public class PackageSplitRes extends AndroidBuilderTask {
     private static class PackageSplitResTransformRunnable extends BuildElementsTransformRunnable {
 
         @Inject
-        public PackageSplitResTransformRunnable(@NotNull PackageSplitResTransformParams params) {
+        public PackageSplitResTransformRunnable(@NonNull PackageSplitResTransformParams params) {
             super(params);
         }
 
