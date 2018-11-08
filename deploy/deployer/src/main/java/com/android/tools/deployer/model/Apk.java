@@ -15,6 +15,8 @@
  */
 package com.android.tools.deployer.model;
 
+import com.android.tools.deployer.ZipUtils;
+import java.util.HashMap;
 import java.util.List;
 
 public class Apk {
@@ -22,11 +24,21 @@ public class Apk {
     public final String checksum;
     public final String path;
     public final List<String> processes;
+    // TODO: This should either be in the ApkEntry loosely connecte to this Apk
+    //       or we change the model and have a list of ApkEntry in the APK since
+    //       we spend
+    public final HashMap<String, ZipUtils.ZipEntry> zipEntries;
 
-    public Apk(String name, String checksum, String path, List<String> processes) {
+    public Apk(
+            String name,
+            String checksum,
+            String path,
+            List<String> processes,
+            HashMap<String, ZipUtils.ZipEntry> zipEntries) {
         this.name = name;
         this.checksum = checksum;
         this.path = path;
         this.processes = processes;
+        this.zipEntries = zipEntries;
     }
 }

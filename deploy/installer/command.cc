@@ -19,6 +19,7 @@
 #include <functional>
 #include <unordered_map>
 
+#include "tools/base/deploy/installer/delta_push.h"
 #include "tools/base/deploy/installer/dump.h"
 #include "tools/base/deploy/installer/swap.h"
 
@@ -30,7 +31,8 @@ std::unique_ptr<Command> GetCommand(const char* command_name) {
   static std::unordered_map<std::string, std::function<Command*(void)>>
       commandsRegister = {
           {"dump", []() { return new DumpCommand(); }},
-          {"swap", []() { return new SwapCommand(); }}
+          {"swap", []() { return new SwapCommand(); }},
+          {"deltaPush", []() { return new DeltapushCommand(); }}
           // Add here more commands (e.g: version, install, patch, agent, ...)
       };
 

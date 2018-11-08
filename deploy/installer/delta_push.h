@@ -13,16 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.deployer;
 
-import com.android.tools.deploy.proto.Deploy;
-import java.io.IOException;
+#ifndef DELTA_PUSH_H_
+#define DELTA_PUSH_H_
 
-public interface Installer {
+#include "tools/base/deploy/installer/command.h"
 
-    Deploy.DumpResponse dump(String packageName) throws IOException;
+#include <string>
 
-    Deploy.SwapResponse swap(Deploy.SwapRequest request) throws IOException;
+namespace deploy {
 
-    Deploy.DeltaPushResponse deltaPush(Deploy.DeltaPushRequest request) throws IOException;
-}
+class DeltapushCommand : public Command {
+ public:
+  DeltapushCommand();
+  virtual ~DeltapushCommand() {}
+  virtual void ParseParameters(int argc, char** argv);
+  virtual void Run(Workspace& workspace);
+
+ private:
+  proto::DeltaPushRequest request_;
+};
+
+}  // namespace deploy
+
+#endif  // DELTA_PUSH_H_
