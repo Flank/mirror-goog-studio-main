@@ -18,31 +18,30 @@ package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils
 import java.io.File
-import kotlin.coroutines.experimental.buildSequence
 
 /**
  * Logic responsible for determining whether configuration JSON for the given ABI should be
  * regenerated.
  */
 class JsonGenerationInvalidationState(
-        forceRegeneration: Boolean,
-        expectedJson : File,
-        commandFile : File,
-        currentBuildCommand: String,
-        previousBuildCommand: String,
-        dependentBuildFiles : List<File>) {
+    private val forceRegeneration: Boolean,
+    private val expectedJson: File,
+    private val commandFile: File,
+    currentBuildCommand: String,
+    previousBuildCommand: String,
+    private val dependentBuildFiles: List<File>) {
     private val rebuildDueToMissingJson = !expectedJson.exists()
     private val rebuildDueToMissingPreviousCommand = !commandFile.exists()
     private val rebuildDueToChangeInCommandFile = previousBuildCommand != currentBuildCommand
-    private val dependentBuildFilesChanged = (buildSequence {
-        if (expectedJson.exists()) {
-            for (buildFile in dependentBuildFiles) {
-                if (!ExternalNativeBuildTaskUtils.fileIsUpToDate(buildFile, expectedJson)) {
-                    yield(buildFile)
-                }
+    private val dependentBuildFilesChanged : List<File>
+        get() {
+            if (!expectedJson.exists()) {
+                return listOf()
+            }
+            return dependentBuildFiles.filter { buildFile ->
+                !ExternalNativeBuildTaskUtils.fileIsUpToDate(buildFile, expectedJson)
             }
         }
-    }).toList()
     private val rebuildDueToDependentBuildFileChanged = !dependentBuildFilesChanged.isEmpty()
     val softRegeneration = rebuildDueToDependentBuildFileChanged
             && !forceRegeneration
@@ -54,31 +53,34 @@ class JsonGenerationInvalidationState(
             || rebuildDueToMissingPreviousCommand
             || rebuildDueToChangeInCommandFile
             || rebuildDueToDependentBuildFileChanged
-    val rebuildReasons = (buildSequence {
-        val softRegenerateMessage =
+    val rebuildReasons: List<String>
+        get()  {
+            val messages = mutableListOf<String>()
+            val softRegenerateMessage =
                 if (softRegeneration) ""
                 else ", will remove stale json folder"
-        if (forceRegeneration) {
-            yield("- force flag, will remove stale json folder")
-        }
-
-        if (rebuildDueToMissingJson) {
-            yield("- expected json $expectedJson file is not present$softRegenerateMessage")
-        }
-
-        if (rebuildDueToMissingPreviousCommand) {
-            yield("- missing previous command file $commandFile$softRegenerateMessage")
-        }
-
-        if (rebuildDueToChangeInCommandFile) {
-            yield("- command changed from previous$softRegenerateMessage")
-        }
-
-        if (rebuildDueToDependentBuildFileChanged) {
-            yield("- a dependent build file changed")
-            for (dependentBuildFile in dependentBuildFilesChanged) {
-                yield("  - ${dependentBuildFile.absolutePath}")
+            if (forceRegeneration) {
+                messages += "- force flag, will remove stale json folder"
             }
+
+            if (rebuildDueToMissingJson) {
+                messages += "- expected json $expectedJson file is not present$softRegenerateMessage"
+            }
+
+            if (rebuildDueToMissingPreviousCommand) {
+                messages += "- missing previous command file $commandFile$softRegenerateMessage"
+            }
+
+            if (rebuildDueToChangeInCommandFile) {
+                messages += "- command changed from previous$softRegenerateMessage"
+            }
+
+            if (rebuildDueToDependentBuildFileChanged) {
+                messages += "- a dependent build file changed"
+                for (dependentBuildFile in dependentBuildFilesChanged) {
+                    messages += "  - ${dependentBuildFile.absolutePath}"
+                }
+            }
+            return messages
         }
-    }).toList()
 }
