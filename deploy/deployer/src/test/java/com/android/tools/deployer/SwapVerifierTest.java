@@ -118,8 +118,10 @@ public class SwapVerifierTest {
     }
 
     private FileDiff makeDiff(String name, FileDiff.Status status) {
-        ApkEntry left = new ApkEntry(name, 0, new Apk("apk1", "abcd", null, ImmutableList.of()));
-        ApkEntry right = new ApkEntry(name, 0, new Apk("apk2", "abcd", null, ImmutableList.of()));
+        ApkEntry left =
+                new ApkEntry(name, 0, new Apk("apk1", "abcd", null, ImmutableList.of(), null));
+        ApkEntry right =
+                new ApkEntry(name, 0, new Apk("apk2", "abcd", null, ImmutableList.of(), null));
         return new FileDiff(left, right, status);
     }
 }

@@ -38,6 +38,7 @@ struct Event {
 // of this project we must change the implementation of the method to protect
 // the event storage (e.g: using an std::lock_guard for example).
 void InitEventSystem();
+uint64_t GetTime() noexcept;
 void LogEvent(const std::string& text);
 void ErrEvent(const std::string& text);
 void BeginPhase(const std::string& text);

@@ -132,6 +132,9 @@ int CmdCommand::PreInstall(const std::vector<std::string>& apks,
     parameters.push_back(session);
     parameters.push_back(apk.substr(apk.rfind("/") + 1));
     Executor::RunWithInput(CMD_EXEC, parameters, &output, &error, apk);
+
+    // Delete this apk since it will never be needed again.
+    unlink(apk.c_str());
   }
   return atoi(session.c_str());
 }  // namespace deploy
