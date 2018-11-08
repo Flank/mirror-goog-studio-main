@@ -565,9 +565,13 @@ public class VariantManager implements VariantModel {
                             + "=true in your gradle.properties file.");
         }
 
-        // If Jetifier is enabled, replace old support libraries with new ones.
+        // If Jetifier is enabled, replace old support libraries with AndroidX.
         if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_JETIFIER)) {
             JetifyTransform.replaceOldSupportLibraries(project);
+
+            // Do not jetify libraries that have been blacklisted
+            JetifyTransform.setJetifierBlackList(
+                    globalScope.getProjectOptions().get(StringOption.JETIFIER_BLACKLIST));
         }
 
         /*

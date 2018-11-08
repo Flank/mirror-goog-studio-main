@@ -68,6 +68,9 @@ enum class StringOption(
     // The exact version of Android Studio used, e.g. 2.4.0.6
     IDE_ANDROID_STUDIO_VERSION(AndroidProject.PROPERTY_STUDIO_VERSION, status = STABLE),
 
+    // Jetifier: List of regular expressions for libraries that should not be jetified
+    JETIFIER_BLACKLIST("android.jetifier.blacklist"),
+
     ;
 
     override fun parse(value: Any): String {
