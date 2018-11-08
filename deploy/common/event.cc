@@ -55,12 +55,12 @@ static inline void AddEvent(Event::Type type, const std::string& text) {
 
 void LogEvent(const std::string& text) {
   AddEvent(Event::Type::Logging, text);
-  Log::E("%s", text.c_str());
+  Log::I("%s", text.c_str());
 }
 
 void ErrEvent(const std::string& text) {
   AddEvent(Event::Type::Error, text);
-  Log::I("%s", text.c_str());
+  Log::E("%s", text.c_str());
 }
 
 void BeginPhase(const std::string& text) {
