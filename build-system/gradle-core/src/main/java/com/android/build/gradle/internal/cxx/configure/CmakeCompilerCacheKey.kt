@@ -23,11 +23,15 @@ import com.google.gson.stream.JsonReader
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter
+import java.io.StringWriter
 
 /**
  * This is the key in the compiler settings cache.
  */
-data class CmakeCompilerCacheKey(val args: List<String>) {
+data class CmakeCompilerCacheKey(
+    val ndkInstallationFolder : File?,
+    val ndkSourceProperties : SdkSourceProperties?,
+    val args: List<String>) {
 
     /**
      * Write to a file.
@@ -36,6 +40,15 @@ data class CmakeCompilerCacheKey(val args: List<String>) {
         FileWriter(file).use { writer ->
             GSON_BUILDER.toJson(this, writer)
         }
+    }
+
+    /**
+     * Write to string.
+     */
+    fun toJsonString() : String {
+        val writer = StringWriter()
+        GSON_BUILDER.toJson(this, writer)
+        return writer.toString()
     }
 
     companion object {
@@ -47,13 +60,9 @@ data class CmakeCompilerCacheKey(val args: List<String>) {
          * Read from a file.
          */
         fun fromFile(file : File) : CmakeCompilerCacheKey {
-            try {
-                val reader = JsonReader(FileReader(file))
-                reader.isLenient = false
-                return ADAPTER.read(reader)
-            } catch (e: Exception) {
-                throw RuntimeException("Exception while reading $file", e)
-            }
+            val reader = JsonReader(FileReader(file))
+            reader.isLenient = false
+            return ADAPTER.read(reader)
         }
     }
 }

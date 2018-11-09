@@ -16,22 +16,26 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
+import com.android.build.gradle.internal.cxx.configure.SdkSourceProperties.Companion.SdkSourceProperty.*
 import com.google.common.truth.Truth.assertThat
 
 import org.junit.Test
 import java.io.File
 
-class CmakeCompilerCacheKeyTest {
+class SdkSourcePropertiesTest {
 
     @Test
-    fun toAndFromFile() {
-        val key = CmakeCompilerCacheKey(
-            null,
-            SdkSourceProperties(mapOf("x" to "y")),
-            listOf("a", "b"))
-        val file = File("file.json")
-        key.toFile(file)
-        val key2 = CmakeCompilerCacheKey.fromFile(file)
-        assertThat(key2).isEqualTo(key)
+    fun fromFile() {
+        val file = File("./my-folder/source.properties")
+        file.parentFile.mkdirs()
+        file.writeText("""
+            Pkg.Desc = Android NDK
+            Pkg.Revision = 17.2.4988734
+        """.trimIndent())
+        val properties = SdkSourceProperties.fromInstallFolder(file.parentFile)
+        assertThat(properties.getValue(SDK_PKG_DESC))
+            .isEqualTo("Android NDK")
+        assertThat(properties.getValue(SDK_PKG_REVISION))
+            .isEqualTo("17.2.4988734")
     }
 }
