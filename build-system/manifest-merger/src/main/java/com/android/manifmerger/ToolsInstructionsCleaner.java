@@ -108,6 +108,11 @@ public class ToolsInstructionsCleaner {
                                         XmlNode.unwrapName(element)));
                             return ERROR;
                         } else {
+                            // Remove leading comments
+                            for (Node comment : XmlElement.getLeadingComments(element)) {
+                                comment.getParentNode().removeChild(comment);
+                            }
+
                             element.getParentNode().removeChild(element);
                         }
                     } else {
