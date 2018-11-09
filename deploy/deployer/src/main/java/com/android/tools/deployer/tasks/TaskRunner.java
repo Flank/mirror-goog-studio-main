@@ -43,12 +43,12 @@ public class TaskRunner {
     }
 
     public <I, O> Task<O> submit(String name, ThrowingFunction<I, O> task, Task<I> input) {
+        phaser.register();
         ListenableFuture<O> future =
                 Futures.whenAllSucceed(ImmutableList.of(input.future))
                         .call(
                                 () -> {
                                     try {
-                                        phaser.register();
                                         Trace.begin("Task: " + name);
                                         // The input value is already done
                                         I value = input.future.get();
@@ -64,17 +64,45 @@ public class TaskRunner {
 
     public <T, U, O> Task<O> submit(
             String name, ThrowingBiFunction<T, U, O> task, Task<T> input1, Task<U> input2) {
+        phaser.register();
         ListenableFuture<O> future =
                 Futures.whenAllSucceed(ImmutableList.of(input1.future, input2.future))
                         .call(
                                 () -> {
                                     try {
-                                        phaser.register();
                                         // The input value is already done
                                         Trace.begin("Task: " + name);
                                         T value1 = input1.future.get();
                                         U value2 = input2.future.get();
                                         return task.apply(value1, value2);
+                                    } finally {
+                                        Trace.end();
+                                        phaser.arriveAndDeregister();
+                                    }
+                                },
+                                executor);
+        return new Task<>(future);
+    }
+
+    public <T, U, V, O> Task<O> submit(
+            String name,
+            ThrowingTriFunction<T, U, V, O> task,
+            Task<T> input1,
+            Task<U> input2,
+            Task<V> input3) {
+        phaser.register();
+        ListenableFuture<O> future =
+                Futures.whenAllSucceed(
+                                ImmutableList.of(input1.future, input2.future, input3.future))
+                        .call(
+                                () -> {
+                                    try {
+                                        // The input value is already done
+                                        Trace.begin("Task: " + name);
+                                        T value1 = input1.future.get();
+                                        U value2 = input2.future.get();
+                                        V value3 = input3.future.get();
+                                        return task.apply(value1, value2, value3);
                                     } finally {
                                         Trace.end();
                                         phaser.arriveAndDeregister();
@@ -92,6 +120,12 @@ public class TaskRunner {
             Trace.end();
         }
     }
+
+    public int getPendingTasks() {
+        // The runner is also registered so we need to subtract it
+        return phaser.getRegisteredParties() - 1;
+    }
+
 
     public static class Task<T> {
         private ListenableFuture<T> future;
@@ -115,5 +149,9 @@ public class TaskRunner {
 
     public interface ThrowingBiFunction<T, U, R> {
         R apply(T t, U u) throws Exception;
+    }
+
+    public interface ThrowingTriFunction<T, U, V, R> {
+        R apply(T t, U u, V v) throws Exception;
     }
 }

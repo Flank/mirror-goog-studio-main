@@ -15,6 +15,8 @@
  */
 package com.android.tools.deployer.tasks;
 
+import static junit.framework.TestCase.assertEquals;
+
 import com.android.tools.deployer.Trace;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -127,10 +129,9 @@ public class TaskRunnerTest {
                         },
                         start);
 
+        // Test that the first task is not blbocked by the second one.
         String output = task1.get();
-        // Test that run can return without task2
         task2Latch.countDown();
-        runner.join();
         Assert.assertEquals("text task1", output);
         Trace.end();
     }
@@ -166,6 +167,61 @@ public class TaskRunnerTest {
         String task2output = task2.get();
         Assert.assertEquals("text12", task2output);
         Trace.end();
+    }
+
+    @Test
+    public void testJoinWaitsForSubmitted() throws Exception {
+        Trace.begin("testJoinExecutesOthers");
+        String input = "text";
+
+        CountDownLatch task1Latch = new CountDownLatch(1);
+        CountDownLatch task2Latch = new CountDownLatch(1);
+        CountDownLatch task3Latch = new CountDownLatch(1);
+        ExecutorService service = Executors.newFixedThreadPool(2);
+
+        TaskRunner runner = new TaskRunner(service);
+        assertEquals(0, runner.getPendingTasks());
+        TaskRunner.Task<String> start = runner.submit(input);
+        assertEquals(0, runner.getPendingTasks());
+        TaskRunner.Task<String> task1 =
+                runner.submit(
+                        "task1",
+                        a -> {
+                            waitLatch(task1Latch);
+                            return a + " task2";
+                        },
+                        start);
+        assertEquals(1, runner.getPendingTasks());
+        TaskRunner.Task<String> task2 =
+                runner.submit(
+                        "task2",
+                        (a, b) -> {
+                            waitLatch(task2Latch);
+                            return a + b + " task2";
+                        },
+                        start,
+                        task1);
+        assertEquals(2, runner.getPendingTasks());
+        TaskRunner.Task<String> task3 =
+                runner.submit(
+                        "task2",
+                        (a, b, c) -> {
+                            waitLatch(task3Latch);
+                            return a + b + c + " task3";
+                        },
+                        start,
+                        task1,
+                        task2);
+        assertEquals(3, runner.getPendingTasks());
+        task1Latch.countDown();
+        task1.get();
+        assertEquals(2, runner.getPendingTasks());
+        task2Latch.countDown();
+        task2.get();
+        assertEquals(1, runner.getPendingTasks());
+        task3Latch.countDown();
+        runner.join();
+        assertEquals(0, runner.getPendingTasks());
     }
 
     @AfterClass
