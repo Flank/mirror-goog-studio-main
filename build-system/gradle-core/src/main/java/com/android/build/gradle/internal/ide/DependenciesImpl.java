@@ -24,6 +24,7 @@ import com.android.builder.model.JavaLibrary;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
@@ -34,11 +35,12 @@ import java.util.Set;
 /** Implementation of {@link com.android.builder.model.Dependencies} interface */
 @Immutable
 public class DependenciesImpl implements Dependencies, Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @NonNull
     public static final Dependencies EMPTY =
-            new DependenciesImpl(ImmutableList.of(), ImmutableList.of(), ImmutableList.of());
+            new DependenciesImpl(
+                    ImmutableList.of(), ImmutableList.of(), ImmutableList.of(), ImmutableList.of());
 
 
     @Immutable
@@ -88,14 +90,17 @@ public class DependenciesImpl implements Dependencies, Serializable {
     @NonNull private final List<JavaLibrary> javaLibraries;
     @NonNull private final Set<String> projects;
     @NonNull private final List<ProjectIdentifier> javaModules;
+    @NonNull private final List<File> runtimeOnlyClasses;
 
     public DependenciesImpl(
             @NonNull List<AndroidLibrary> libraries,
             @NonNull List<JavaLibrary> javaLibraries,
-            @NonNull List<ProjectIdentifier> javaModules) {
+            @NonNull List<ProjectIdentifier> javaModules,
+            @NonNull List<File> runtimeOnlyClasses) {
         this.libraries = libraries;
         this.javaLibraries = javaLibraries;
         this.javaModules = javaModules;
+        this.runtimeOnlyClasses = runtimeOnlyClasses;
         projects =
                 javaModules
                         .stream()
@@ -127,6 +132,12 @@ public class DependenciesImpl implements Dependencies, Serializable {
         return javaModules;
     }
 
+    @NonNull
+    @Override
+    public Collection<File> getRuntimeOnlyClasses() {
+        return runtimeOnlyClasses;
+    }
+
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
@@ -134,6 +145,7 @@ public class DependenciesImpl implements Dependencies, Serializable {
                 .add("javaLibraries", javaLibraries)
                 .add("javaModules", javaModules)
                 .add("projects", projects)
+                .add("runtimeOnlyClasses", runtimeOnlyClasses)
                 .toString();
     }
 
@@ -149,11 +161,12 @@ public class DependenciesImpl implements Dependencies, Serializable {
         return Objects.equals(libraries, that.libraries)
                 && Objects.equals(javaLibraries, that.javaLibraries)
                 && Objects.equals(projects, that.projects)
-                && Objects.equals(javaModules, that.javaModules);
+                && Objects.equals(javaModules, that.javaModules)
+                && Objects.equals(runtimeOnlyClasses, that.runtimeOnlyClasses);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(libraries, javaLibraries, projects, javaModules);
+        return Objects.hash(libraries, javaLibraries, projects, javaModules, runtimeOnlyClasses);
     }
 }

@@ -88,7 +88,7 @@ public class IdeDependenciesFactory {
         return createFromDependencies(artifact.getDependencies(), modelCache);
     }
 
-    /** Call this method on 3.0+ models. */
+    /** Call this method on level 4 DependencyGraphs. */
     @VisibleForTesting
     @NonNull
     IdeDependencies createFromDependencyGraphs(@NonNull DependencyGraphs graphs) {
@@ -96,10 +96,11 @@ public class IdeDependenciesFactory {
                 graphs.getCompileDependencies()
                         .stream()
                         .map(GraphItem::getArtifactAddress)
-                        .collect(Collectors.toList()));
+                        .collect(Collectors.toList()),
+                Collections.emptyList());
     }
 
-    /** Call this method on pre-3.0 models. */
+    /** Call this method on level 1 Dependencies model. */
     @NonNull
     private IdeDependencies createFromDependencies(
             @NonNull Dependencies dependencies, @NonNull ModelCache modelCache) {
@@ -107,7 +108,14 @@ public class IdeDependenciesFactory {
         populateAndroidLibraries(dependencies.getLibraries(), visited, modelCache);
         populateJavaLibraries(dependencies.getJavaLibraries(), visited, modelCache);
         populateModuleDependencies(dependencies, visited, modelCache);
-        return createInstance(visited);
+        Collection<File> jars;
+        try {
+            jars = dependencies.getRuntimeOnlyClasses();
+        } catch (UnsupportedOperationException e) {
+            // Gradle older than 3.4.
+            jars = Collections.emptyList();
+        }
+        return createInstance(visited, jars);
     }
 
     private void populateModuleDependencies(
@@ -194,7 +202,9 @@ public class IdeDependenciesFactory {
     }
 
     @NonNull
-    private IdeDependencies createInstance(@NonNull Collection<String> artifactAddresses) {
+    private IdeDependencies createInstance(
+            @NonNull Collection<String> artifactAddresses,
+            @NonNull Collection<File> runtimeOnlyJars) {
         ImmutableList.Builder<Library> androidLibraries = ImmutableList.builder();
         ImmutableList.Builder<Library> javaLibraries = ImmutableList.builder();
         ImmutableList.Builder<Library> moduleDependencies = ImmutableList.builder();
@@ -218,7 +228,10 @@ public class IdeDependenciesFactory {
             }
         }
         return new IdeDependenciesImpl(
-                androidLibraries.build(), javaLibraries.build(), moduleDependencies.build());
+                androidLibraries.build(),
+                javaLibraries.build(),
+                moduleDependencies.build(),
+                ImmutableList.copyOf(runtimeOnlyJars));
     }
 
     /**

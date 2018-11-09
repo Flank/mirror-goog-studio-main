@@ -17,6 +17,7 @@
 package com.android.builder.model;
 
 import com.android.annotations.NonNull;
+import java.io.File;
 import java.util.Collection;
 
 /**
@@ -78,4 +79,8 @@ public interface Dependencies {
     /** Returns the list of Java Modules. @Since 3.1 */
     @NonNull
     Collection<ProjectIdentifier> getJavaModules();
+
+    /** Returns the list of runtime only dependency classes. @Since 3.5 */
+    @NonNull
+    Collection<File> getRuntimeOnlyClasses();
 }

@@ -18,8 +18,10 @@ package com.android.ide.common.gradle.model.stubs.level2;
 import com.android.annotations.NonNull;
 import com.android.builder.model.level2.Library;
 import com.android.ide.common.gradle.model.level2.IdeDependencies;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 
 public class IdeDependenciesStub implements IdeDependencies {
     @NonNull private final Collection<Library> myAndroidLibraries;
@@ -55,6 +57,12 @@ public class IdeDependenciesStub implements IdeDependencies {
     @NonNull
     public Collection<Library> getModuleDependencies() {
         return myModuleDependencies;
+    }
+
+    @NonNull
+    @Override
+    public Collection<File> getRuntimeOnlyClasses() {
+        return Collections.emptyList();
     }
 
     public void addAndroidLibrary(@NonNull Library library) {
