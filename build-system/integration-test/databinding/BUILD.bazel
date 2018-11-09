@@ -22,6 +22,7 @@ TEST_DEPS = [
     "//tools/base/third_party:com.google.truth_truth",
     "//tools/base/third_party:commons-io_commons-io",
     "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
+    "//tools/base/third_party:org.jetbrains.kotlin_kotlin-test",
 ]
 
 #keep sorted
