@@ -317,4 +317,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     InternalArtifactType getManifestArtifactType();
+
+    @NonNull
+    FileCollection getSigningConfigFileCollection();
 }

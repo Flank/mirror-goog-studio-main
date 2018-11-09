@@ -27,11 +27,11 @@ import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
-import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.packaging.ApkCreatorFactories;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
+import com.android.build.gradle.internal.tasks.SigningConfigMetadata;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.internal.aapt.AaptOptions;
 import com.android.builder.packaging.PackagerException;
@@ -75,7 +75,7 @@ public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
             @NonNull AndroidBuilder androidBuilder,
             @Nullable FileCollection aapt2FromMaven,
             @NonNull Supplier<String> applicationIdSupplier,
-            @Nullable CoreSigningConfig signingConf,
+            @Nullable FileCollection signingConf,
             @NonNull AaptOptions aaptOptions,
             @NonNull File outputDirectory,
             @NonNull File supportDirectory,
@@ -261,7 +261,7 @@ public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
         androidBuilder.packageCodeSplitApk(
                 resPackageFile,
                 split.getDexFiles(),
-                signingConf,
+                SigningConfigMetadata.Companion.load(signingConf),
                 outputFile,
                 tempDir,
                 ApkCreatorFactories.fromProjectProperties(project, true));

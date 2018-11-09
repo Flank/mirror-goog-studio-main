@@ -91,6 +91,7 @@ public class AndroidArtifacts {
     private static final String TYPE_FEATURE_RESOURCE_PKG = "android-feature-res-ap_";
     private static final String TYPE_FEATURE_TRANSITIVE_DEPS = "android-feature-transitive-deps";
     private static final String TYPE_FEATURE_DEX = "android-feature-dex";
+    private static final String TYPE_FEATURE_SIGNING_CONFIG = "android-feature-signing-config";
 
     // types for metadata content.
     private static final String TYPE_METADATA_FEATURE_DECLARATION = "android-metadata-feature-decl";
@@ -232,6 +233,7 @@ public class AndroidArtifacts {
         // the res ID offset, both tied to the feature module path. Published by the base for the
         // other features to consume and find their own metadata.
         FEATURE_SET_METADATA(TYPE_FEATURE_SET_METADATA),
+        FEATURE_SIGNING_CONFIG(TYPE_FEATURE_SIGNING_CONFIG),
 
         // file containing the application ID to synchronize all base + dynamic feature. This is
         // published by the base feature and installed application module.

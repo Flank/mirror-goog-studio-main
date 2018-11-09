@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.api.artifact.singleFile
+import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -75,31 +76,16 @@ open class BundleToStandaloneApkTask @Inject constructor(workerExecutor: WorkerE
 
     private lateinit var tempDirectory: File
 
-    @get:InputFile
-    @get:org.gradle.api.tasks.Optional
-    var keystoreFile: File? = null
-        private set
-
-    @get:Input
-    @get:org.gradle.api.tasks.Optional
-    var keystorePassword: String? = null
-        private set
-
-    @get:Input
-    @get:org.gradle.api.tasks.Optional
-    var keyAlias: String? = null
-        private set
-
-    @get:Input
-    @get:org.gradle.api.tasks.Optional
-    var keyPassword: String? = null
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    lateinit var signingConfig: FileCollection
         private set
 
     private val workers = Workers.getWorker(workerExecutor)
 
     @TaskAction
     fun generateApk() {
-
+        val config = SigningConfigMetadata.load(signingConfig)
         workers.use {
             it.submit(
                 BundleToolRunnable::class.java,
@@ -108,10 +94,10 @@ open class BundleToStandaloneApkTask @Inject constructor(workerExecutor: WorkerE
                     File(aapt2FromMaven.singleFile, SdkConstants.FN_AAPT2),
                     outputFile.get().asFile,
                     tempDirectory,
-                    keystoreFile,
-                    keystorePassword,
-                    keyAlias,
-                    keyPassword
+                    config?.storeFile,
+                    config?.storePassword,
+                    config?.keyAlias,
+                    config?.keyPassword
                 )
             )
         }
@@ -212,12 +198,7 @@ open class BundleToStandaloneApkTask @Inject constructor(workerExecutor: WorkerE
             task.bundle = variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.BUNDLE)
             task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
             task.tempDirectory = variantScope.getIncrementalDir(name)
-            variantScope.variantConfiguration.signingConfig?.let {
-                task.keystoreFile = it.storeFile
-                task.keystorePassword = it.storePassword
-                task.keyAlias = it.keyAlias
-                task.keyPassword = it.keyPassword
-            }
+            task.signingConfig = variantScope.signingConfigFileCollection
         }
     }
 }

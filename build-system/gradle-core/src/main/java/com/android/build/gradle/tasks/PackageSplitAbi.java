@@ -21,7 +21,6 @@ import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.AndroidGradleOptions;
-import com.android.build.gradle.internal.core.CoreSigningConfigImpl;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
@@ -32,12 +31,12 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
+import com.android.build.gradle.internal.tasks.SigningConfigMetadata;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.internal.packaging.IncrementalPackager;
-import com.android.builder.model.SigningConfig;
 import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.resources.FileStatus;
 import com.android.ide.common.workers.WorkerExecutorFacade;
@@ -54,8 +53,6 @@ import javax.inject.Inject;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.Nested;
-import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
@@ -71,7 +68,7 @@ public class PackageSplitAbi extends AndroidBuilderTask {
 
     private boolean jniDebuggable;
 
-    private SigningConfig signingConfig;
+    private FileCollection signingConfig;
 
     private FileCollection jniFolders;
 
@@ -110,9 +107,8 @@ public class PackageSplitAbi extends AndroidBuilderTask {
         return jniDebuggable;
     }
 
-    @Nested
-    @Optional
-    public SigningConfig getSigningConfig() {
+    @InputFiles
+    public FileCollection getSigningConfig() {
         return signingConfig;
     }
 
@@ -158,7 +154,7 @@ public class PackageSplitAbi extends AndroidBuilderTask {
             try (IncrementalPackager pkg =
                     new IncrementalPackagerBuilder(IncrementalPackagerBuilder.ApkFormat.FILE)
                             .withOutputFile(params.getOutput())
-                            .withSigning(params.signingConfig)
+                            .withSigning(SigningConfigMetadata.Companion.load(params.signingConfig))
                             .withCreatedBy(params.createdBy)
                             .withMinSdk(params.minSdkVersion)
                             // .withManifest(manifest)
@@ -189,7 +185,7 @@ public class PackageSplitAbi extends AndroidBuilderTask {
         private final ApkInfo apkInfo;
         private final File output;
         private final File incrementalDir;
-        private final SigningConfig signingConfig;
+        private final FileCollection signingConfig;
         private final String createdBy;
         private final Collection<String> aaptOptionsNoCompress;
         private final Set<File> jniFolders;
@@ -280,11 +276,7 @@ public class PackageSplitAbi extends AndroidBuilderTask {
             task.processedAbiResources =
                     scope.getArtifacts()
                             .getFinalArtifactFiles(InternalArtifactType.ABI_PROCESSED_SPLIT_RES);
-            if (config.getSigningConfig() != null) {
-                task.signingConfig =
-                        new CoreSigningConfigImpl(config.getSigningConfig().getName())
-                                .initWith(config.getSigningConfig());
-            }
+            task.signingConfig = scope.getSigningConfigFileCollection();
             task.outputDirectory = outputDirectory;
             task.minSdkVersion = config.getMinSdkVersion();
             task.incrementalDir = scope.getIncrementalDir(task.getName());

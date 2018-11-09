@@ -21,7 +21,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.AndroidGradleOptions;
-import com.android.build.gradle.internal.core.CoreSigningConfigImpl;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.scope.BuildElementsTransformParams;
@@ -30,12 +29,12 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
+import com.android.build.gradle.internal.tasks.SigningConfigMetadata;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.internal.packaging.IncrementalPackager;
-import com.android.builder.model.SigningConfig;
 import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.utils.FileUtils;
@@ -43,9 +42,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import javax.inject.Inject;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.Nested;
-import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
@@ -54,7 +52,7 @@ import org.gradle.workers.WorkerExecutor;
 /** Package each split resources into a specific signed apk file. */
 public class PackageSplitRes extends AndroidBuilderTask {
 
-    private SigningConfig signingConfig;
+    private FileCollection signingConfig;
     private File incrementalDir;
     public BuildableArtifact processedResources;
     public File splitResApkOutputDirectory;
@@ -69,9 +67,8 @@ public class PackageSplitRes extends AndroidBuilderTask {
         return splitResApkOutputDirectory;
     }
 
-    @Nested
-    @Optional
-    public SigningConfig getSigningConfig() {
+    @InputFiles
+    public FileCollection getSigningConfig() {
         return signingConfig;
     }
 
@@ -119,7 +116,7 @@ public class PackageSplitRes extends AndroidBuilderTask {
 
             try (IncrementalPackager pkg =
                     new IncrementalPackagerBuilder(IncrementalPackagerBuilder.ApkFormat.FILE)
-                            .withSigning(params.signingConfig)
+                            .withSigning(SigningConfigMetadata.Companion.load(params.signingConfig))
                             .withOutputFile(params.output)
                             .withKeepTimestampsInApk(params.keepTimestampsInApk)
                             .withIntermediateDir(intDir)
@@ -136,7 +133,7 @@ public class PackageSplitRes extends AndroidBuilderTask {
         private final File input;
         private final File output;
         private final File incrementalDir;
-        private final SigningConfig signingConfig;
+        private final FileCollection signingConfig;
         private final boolean keepTimestampsInApk;
 
         PackageSplitResTransformParams(ApkInfo apkInfo, File input, PackageSplitRes task) {
@@ -223,11 +220,7 @@ public class PackageSplitRes extends AndroidBuilderTask {
 
             task.processedResources =
                     scope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES);
-            if (config.getSigningConfig() != null) {
-                task.signingConfig =
-                        new CoreSigningConfigImpl(config.getSigningConfig().getName())
-                                .initWith(config.getSigningConfig());
-            }
+            task.signingConfig = scope.getSigningConfigFileCollection();
             task.splitResApkOutputDirectory = splitResApkOutputDirectory;
             task.incrementalDir = scope.getIncrementalDir(getName());
         }
