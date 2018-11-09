@@ -88,6 +88,7 @@ import com.google.common.collect.Iterables
 import com.google.common.io.ByteStreams
 import com.intellij.ide.util.JavaAnonymousClassesHelper
 import com.intellij.lang.Language
+import com.intellij.lang.java.JavaLanguage
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.roots.LanguageLevelProjectExtension
 import com.intellij.pom.java.LanguageLevel
@@ -1974,9 +1975,19 @@ fun isKotlin(element: PsiElement?): Boolean {
     return element != null && isKotlin(element.language)
 }
 
+/** Returns true if the given element is written in Java  */
+fun isJava(element: PsiElement?): Boolean {
+    return element != null && isJava(element.language)
+}
+
 /** Returns true if the given language is Kotlin  */
 fun isKotlin(language: Language?): Boolean {
     return language == KotlinLanguage.INSTANCE
+}
+
+/** Returns true if the given language is Java  */
+fun isJava(language: Language?): Boolean {
+    return language == JavaLanguage.INSTANCE
 }
 
 /** Returns true if the given string contains only digits */

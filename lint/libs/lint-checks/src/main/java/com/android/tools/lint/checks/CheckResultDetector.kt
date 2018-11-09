@@ -30,6 +30,8 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils.containsAnnotation
 import com.android.tools.lint.detector.api.UastLintUtils.getAnnotationStringValue
+import com.android.tools.lint.detector.api.isJava
+import com.android.tools.lint.detector.api.isKotlin
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiType
@@ -173,7 +175,7 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
         @Suppress("RedundantIf")
         if (curr is UBlockExpression) {
-            if (curr.uastParent is ULambdaExpression) {
+            if (curr.uastParent is ULambdaExpression && isKotlin(curr.sourcePsi)) {
                 // Lambda block: for now assume used (e.g. parameter
                 // in call. Later consider recursing here to
                 // detect if the lambda itself is unused.
@@ -199,6 +201,11 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
             if (index < block.expressions.size - 1) {
                 // Not last child
+                return true
+            }
+
+            if (isJava(curr.sourcePsi)) {
+                // In Java there's no implicit passing to the parent
                 return true
             }
 
