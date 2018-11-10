@@ -1632,7 +1632,19 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             // Only androidTest APKs need a signing config
             Preconditions.checkState(
                     variantType.isApk(), "Unexpected variant type: " + variantType);
-            return getArtifacts().getFinalArtifactFiles(InternalArtifactType.SIGNING_CONFIG).get();
+            if (this.getTestedVariantData()
+                    .getVariantConfiguration()
+                    .getType()
+                    .isDynamicFeature()) {
+                return getArtifactFileCollection(
+                        ConsumedConfigType.COMPILE_CLASSPATH,
+                        AndroidArtifacts.ArtifactScope.MODULE,
+                        AndroidArtifacts.ArtifactType.FEATURE_SIGNING_CONFIG);
+            } else {
+                return getArtifacts()
+                        .getFinalArtifactFiles(InternalArtifactType.SIGNING_CONFIG)
+                        .get();
+            }
         } else {
             return variantType.isBaseModule()
                     ? getArtifacts()
