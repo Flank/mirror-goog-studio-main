@@ -31,17 +31,17 @@ class CompilationDatabaseIndexingVisitor(private val strings: StringTable) :
     CompilationDatabaseStreamingVisitor() {
     private var compiler = ""
     private var flags = ""
-    private var file = ""
+    private var file = File(".")
     private val map = mutableMapOf<String, Int>()
 
     override fun beginCommand() {
         compiler = ""
         flags = ""
-        file = ""
+        file = File(".")
     }
 
     override fun visitFile(file: String) {
-        this.file = file
+        this.file = File(file)
     }
 
     /**
@@ -67,7 +67,7 @@ class CompilationDatabaseIndexingVisitor(private val strings: StringTable) :
     }
 
     override fun endCommand() {
-        map[file] = strings.intern(flags)
+        map[file.path] = strings.intern(flags)
     }
 
     fun mappings(): Map<String, Int> = map
@@ -78,8 +78,9 @@ class CompilationDatabaseIndexingVisitor(private val strings: StringTable) :
  * The flags are stripped of -o and -c to make them more unique and then interned into a string
  * table.
  */
-fun indexCompilationDatabase(compilationDatabase: File, strings: StringTable): Map<String, Int> {
+fun indexCompilationDatabase(compilationDatabase: JsonReader, strings: StringTable):
+        Map<String, Int> {
     val visitor = CompilationDatabaseIndexingVisitor(strings)
-    CompilationDatabaseStreamingParser(JsonReader(FileReader(compilationDatabase)), visitor).parse()
+    CompilationDatabaseStreamingParser(compilationDatabase, visitor).parse()
     return visitor.mappings()
 }

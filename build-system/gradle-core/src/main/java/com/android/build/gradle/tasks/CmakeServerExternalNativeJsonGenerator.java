@@ -65,8 +65,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.UnsignedInts;
+import com.google.gson.stream.JsonReader;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Path;
@@ -484,14 +487,33 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
 
     @VisibleForTesting
     protected NativeLibraryValue getNativeLibraryValue(
-            @NonNull String abi, @NonNull Target target, StringTable strings) {
+            @NonNull String abi, @NonNull Target target, StringTable strings)
+            throws FileNotFoundException {
+        return getNativeLibraryValue(
+                getCmakeExecutable(),
+                getOutputFolder(getJsonFolder(), abi),
+                isDebuggable(),
+                new JsonReader(new FileReader(getCompileCommandsJson(abi))),
+                abi,
+                target,
+                strings);
+    }
+
+    @VisibleForTesting
+    static NativeLibraryValue getNativeLibraryValue(
+            @NonNull File cmakeExecutable,
+            @NonNull File outputFolder,
+            boolean isDebuggable,
+            @NonNull JsonReader compileCommandsJson,
+            @NonNull String abi,
+            @NonNull Target target,
+            @NonNull StringTable strings) {
         NativeLibraryValue nativeLibraryValue = new NativeLibraryValue();
         nativeLibraryValue.abi = abi;
         nativeLibraryValue.buildCommand =
-                CmakeUtils.getBuildCommand(
-                        getCmakeExecutable(), getOutputFolder(getJsonFolder(), abi), target.name);
+                CmakeUtils.getBuildCommand(cmakeExecutable, outputFolder, target.name);
         nativeLibraryValue.artifactName = target.name;
-        nativeLibraryValue.buildType = isDebuggable() ? "debug" : "release";
+        nativeLibraryValue.buildType = isDebuggable ? "debug" : "release";
         // We'll have only one output, so get the first one.
         if (target.artifacts.length > 0) {
             nativeLibraryValue.output = new File(target.artifacts[0]);
@@ -506,7 +528,6 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
             for (String source : fileGroup.sources) {
                 File sourceFile = new File(target.sourceDirectory, source);
                 if (hasCmakeHeaderFileExtensions(sourceFile)) {
-                    diagnostic("Choosing header file path for %s", sourceFile);
                     nativeLibraryValue.headers.add(
                             new NativeHeaderFileValue(sourceFile, workingDirectoryOrdinal));
                 } else {
@@ -521,12 +542,15 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                     // Reference b/116237485
                     if (compilationDatabaseFlags.isEmpty()) {
                         compilationDatabaseFlags =
-                                indexCompilationDatabase(getCompileCommandsJson(abi), strings);
+                                indexCompilationDatabase(compileCommandsJson, strings);
                     }
-                    if (compilationDatabaseFlags.containsKey(sourceFile.toString())) {
+                    if (compilationDatabaseFlags.containsKey(sourceFile.getPath())) {
                         nativeSourceFileValue.flagsOrdinal =
-                                compilationDatabaseFlags.get(sourceFile.toString());
+                                compilationDatabaseFlags.get(sourceFile.getPath());
                     } else {
+                        // TODO I think this path is always wrong because it won't have --targets
+                        // I don't want to make it an exception this late in 3.3 cycle so I'm
+                        // leaving it as-is for now.
                         String compileFlags = compileFlagsFromFileGroup(fileGroup);
                         if (!Strings.isNullOrEmpty(compileFlags)) {
                             nativeSourceFileValue.flagsOrdinal = strings.intern(compileFlags);

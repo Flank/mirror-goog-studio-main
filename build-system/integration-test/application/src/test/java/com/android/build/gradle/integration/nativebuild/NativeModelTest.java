@@ -655,6 +655,9 @@ public class NativeModelTest {
         checkProblematicCompilerFlags(model);
         checkNativeBuildOutputPath(config, project);
         checkIncludesPresent(model);
+        if (config.buildSystem != NativeBuildSystem.NDK_BUILD) {
+            checkTargetTriplePresent(model);
+        }
     }
 
     @Test
@@ -665,10 +668,6 @@ public class NativeModelTest {
         String[] buildTypes = {"debug", "release"};
         for (String buildType : buildTypes) {
             File jsonFile = getJsonFile(buildType, "x86_64");
-            if (jsonFile == null) {
-                continue;
-            }
-
             NativeBuildConfigValue nativeBuildConfigValue = getNativeBuildConfigValue(jsonFile);
             checkSourceFileValue(nativeBuildConfigValue);
         }
@@ -995,6 +994,22 @@ public class NativeModelTest {
             }
             assertThat(sawInclude).isTrue();
             assertThat(sawSystemInclude).isTrue();
+        }
+    }
+
+    /**
+     * Certain CMake server bugs cause specific C++ flags to disappear, this test tries to catch
+     * those cases. Check whether "--target" is present in the flags.
+     */
+    private static void checkTargetTriplePresent(NativeAndroidProject model) {
+        for (NativeSettings settings : model.getSettings()) {
+            boolean sawTargetTriple = false;
+            for (String flag : settings.getCompilerFlags()) {
+                if (flag.startsWith("--target")) {
+                    sawTargetTriple = true;
+                }
+            }
+            assertThat(sawTargetTriple).isTrue();
         }
     }
 
