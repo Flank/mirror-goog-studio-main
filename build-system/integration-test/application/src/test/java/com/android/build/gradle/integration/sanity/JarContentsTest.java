@@ -503,6 +503,7 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/coverage/",
                 "com/android/build/gradle/internal/crash/",
                 "com/android/build/gradle/internal/cxx/",
+                "com/android/build/gradle/internal/cxx/cmake/",
                 "com/android/build/gradle/internal/cxx/json/",
                 "com/android/build/gradle/internal/cxx/configure/",
                 "com/android/build/gradle/internal/cxx/process/",
