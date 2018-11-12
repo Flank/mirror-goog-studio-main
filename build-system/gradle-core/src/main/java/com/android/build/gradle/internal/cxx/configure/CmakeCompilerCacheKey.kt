@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
+import com.android.builder.model.Version
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
@@ -27,11 +28,21 @@ import java.io.StringWriter
 
 /**
  * This is the key in the compiler settings cache.
+ *
+ * This class is persisted as a Json file. Don't change names.
+ * Each of the values in the parameters list is required to make the key unique with the exception
+ * that ndkInstallationFolder may not be required in the future because it ndkSourceProperties
+ * should be enough to define the NDK version.
+ *
+ * gradlePluginVersion is included so that we don't have to worry about cache compatibility
+ * between different versions of gradle.
  */
 data class CmakeCompilerCacheKey(
     val ndkInstallationFolder : File?,
     val ndkSourceProperties : SdkSourceProperties?,
     val args: List<String>) {
+
+    val gradlePluginVersion : String = Version.ANDROID_GRADLE_PLUGIN_VERSION
 
     /**
      * Write to a file.

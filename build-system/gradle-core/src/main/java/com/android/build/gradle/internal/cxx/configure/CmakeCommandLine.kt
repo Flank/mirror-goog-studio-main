@@ -44,7 +44,17 @@ data class UnknownArgument(override val sourceArgument : String) : CommandLineAr
  */
 data class CmakeListsPath(
     override val sourceArgument: String,
-    val path : String) : CommandLineArgument
+    val path : String) : CommandLineArgument {
+    companion object {
+        /**
+         * Create a CmakeListsPath from a path.
+         * Don't use if you also have an an original sourceArgument.
+         */
+        fun from(path : String) : CmakeListsPath {
+            return CmakeListsPath("-H$path", path)
+        }
+    }
+}
 
 /**
  * For example, -B<path-to-binary-output-dir>
@@ -73,7 +83,17 @@ data class GeneratorName(
 data class DefineProperty(
     override val sourceArgument : String,
     val propertyName : String,
-    val propertyValue : String) : CommandLineArgument
+    val propertyValue : String) : CommandLineArgument {
+    companion object {
+        /**
+         * Create a DefineProperty from a name and value.
+         * Don't use if you also have an an original sourceArgument.
+         */
+        fun from(property : CmakeProperties, value : String) : DefineProperty {
+            return DefineProperty("-D${property.name}=$value", property.name, value)
+        }
+    }
+}
 
 /**
  * Given a list of flags that probably came from android.defaultConfig.cmake.arguments

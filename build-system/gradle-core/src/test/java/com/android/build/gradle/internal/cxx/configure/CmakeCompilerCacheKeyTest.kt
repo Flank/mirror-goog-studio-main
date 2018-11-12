@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
+import com.android.builder.model.Version
 import com.google.common.truth.Truth.assertThat
 
 import org.junit.Test
@@ -33,5 +34,6 @@ class CmakeCompilerCacheKeyTest {
         key.toFile(file)
         val key2 = CmakeCompilerCacheKey.fromFile(file)
         assertThat(key2).isEqualTo(key)
+        assertThat(key.gradlePluginVersion).isEqualTo(Version.ANDROID_GRADLE_PLUGIN_VERSION)
     }
 }
