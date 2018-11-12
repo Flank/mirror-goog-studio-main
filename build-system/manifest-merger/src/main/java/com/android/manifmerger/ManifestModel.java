@@ -47,6 +47,23 @@ import org.w3c.dom.Element;
 @Immutable
 public class ManifestModel implements DocumentModel<ManifestModel.NodeTypes> {
 
+    private final boolean autoReject;
+
+    /** Creates a DocumentModel to be used for merging Android manifest documents */
+    public ManifestModel() {
+        this(false);
+    }
+
+    /**
+     * Creates a DocumentModel to be used for merging Android manifest documents
+     *
+     * @param autoReject specifies whether model can ignore conflicts in attribute values when
+     *     merging manifest documents and simply reject value from the lower priority document
+     */
+    public ManifestModel(boolean autoReject) {
+        this.autoReject = autoReject;
+    }
+
     /**
      * Implementation of {@link NodeKeyResolver} that do not provide any key (the element has to be
      * unique in the xml document).
@@ -732,5 +749,10 @@ public class ManifestModel implements DocumentModel<ManifestModel.NodeTypes> {
             // extensibility is a must have feature.
             return NodeTypes.CUSTOM;
         }
+    }
+
+    @Override
+    public boolean autoRejectConflicts() {
+        return autoReject;
     }
 }

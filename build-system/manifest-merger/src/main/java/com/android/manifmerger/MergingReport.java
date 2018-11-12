@@ -285,17 +285,10 @@ public class MergingReport {
         @NonNull
         private ActionRecorder mActionRecorder = new ActionRecorder();
         @NonNull private final ILogger mLogger;
-        @Nullable private final ManifestMerger2 mManifestMerger;
         private String packageName;
 
-        @VisibleForTesting
         Builder(@NonNull ILogger logger) {
-            this(logger, null);
-        }
-
-        Builder(@NonNull ILogger logger, @Nullable ManifestMerger2 manifestMerger) {
             mLogger = logger;
-            mManifestMerger = manifestMerger;
         }
 
         Builder setMergedDocument(@NonNull MergedManifestKind mergedManifestKind, @NonNull String mergedDocument) {
@@ -410,11 +403,6 @@ public class MergingReport {
                     mIntermediaryStages.build(),
                     mActionRecorder.build(),
                     packageName);
-        }
-
-        @Nullable
-        public ManifestMerger2 getManifestMerger() {
-            return mManifestMerger;
         }
 
         @NonNull
