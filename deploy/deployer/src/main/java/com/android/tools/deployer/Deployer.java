@@ -22,7 +22,6 @@ import com.android.tools.deployer.model.FileDiff;
 import com.android.tools.deployer.tasks.TaskRunner;
 import com.android.tools.deployer.tasks.TaskRunner.Task;
 import com.google.common.collect.ImmutableMap;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -35,27 +34,35 @@ public class Deployer {
     private final ApkFileDatabase db;
     private final Installer installer;
     private final TaskRunner runner;
+    private final UIService service;
 
-    public Deployer(AdbClient adb, ApkFileDatabase db, TaskRunner runner, Installer installer) {
+    public Deployer(
+            AdbClient adb,
+            ApkFileDatabase db,
+            TaskRunner runner,
+            Installer installer,
+            UIService service) {
         this.adb = adb;
         this.db = db;
         this.runner = runner;
         this.installer = installer;
+        this.service = service;
     }
 
     /**
      * Installs the given apks. This method will register the APKs in the database for subsequent
      * swaps
      */
-    public void install(List<String> apks, InstallOptions options) throws IOException {
+    public void install(String packageName, List<String> apks, InstallOptions options)
+            throws DeployerException {
         try (Trace ignored = Trace.begin("install")) {
             // There could be tasks running from the previous cycle that were
             // left to complete in the background. We wait for them to finish
             // So that we don't accumulate them.
             runner.join();
 
-            // Run installation on the current thread.
-            adb.installMultiple(apks, options.getFlags());
+            ApkInstaller apkInstaller = new ApkInstaller(adb, service);
+            apkInstaller.install(packageName, apks, options);
 
 
             // Inputs

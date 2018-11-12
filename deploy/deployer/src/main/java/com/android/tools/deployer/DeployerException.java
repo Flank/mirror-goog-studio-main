@@ -40,6 +40,7 @@ public class DeployerException extends Exception {
         CANNOT_SWAP_RESOURCE,
         ERROR_PUSHING_APK,
         DIFFERENT_NAMES_OF_APKS,
+        INSTALL_FAILED,
     }
 
     public DeployerException(Error error, String message) {

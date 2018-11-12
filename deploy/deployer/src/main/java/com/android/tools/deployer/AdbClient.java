@@ -36,6 +36,19 @@ public class AdbClient {
         this.logger = logger;
     }
 
+    enum InstallResult {
+        OK,
+        INSTALL_FAILED_VERSION_DOWNGRADE,
+        UNKNOWN_ERROR,
+        DEVICE_NOT_RESPONDING,
+        INSTALL_FAILED_UPDATE_INCOMPATIBLE,
+        INCONSISTENT_CERTIFICATES,
+        INSTALL_FAILED_DEXOPT,
+        NO_CERTIFICATE,
+        INSTALL_FAILED_OLDER_SDK,
+        DEVICE_NOT_FOUND,
+    }
+
     /**
      * Executes the given command and sends {@code input} to stdin and returns stdout as a byte[]
      */
@@ -58,14 +71,30 @@ public class AdbClient {
         }
     }
 
-    public boolean installMultiple(List<String> apks, List<String> options) throws IOException {
+    public InstallResult install(List<String> apks, List<String> options) {
         List<File> files = apks.stream().map(File::new).collect(Collectors.toList());
         try {
             device.installPackages(files, true, options, 10, TimeUnit.SECONDS);
+            return InstallResult.OK;
+        } catch (InstallException e) {
+            System.err.println(e.getMessage());
+            String code = e.getErrorCode();
+            InstallResult result = InstallResult.UNKNOWN_ERROR;
+            try {
+                result = InstallResult.valueOf(code);
+            } catch (IllegalArgumentException | NullPointerException ignored) {
+            }
+            return result;
+        }
+    }
+
+    public boolean uninstall(String packageName) {
+        try {
+            device.uninstallPackage(packageName);
             return true;
         } catch (InstallException e) {
-            throw new IOException(e);
         }
+        return false;
     }
 
     public List<String> getAbis() {
