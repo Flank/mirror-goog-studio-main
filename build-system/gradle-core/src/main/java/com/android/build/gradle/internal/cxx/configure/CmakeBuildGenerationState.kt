@@ -49,10 +49,9 @@ data class CmakeBuildGenerationState(val properties : List<CmakePropertyValue>) 
          */
         fun fromFile(file : File) : CmakeBuildGenerationState {
             try {
-                JsonReader(FileReader(file)).use { reader ->
-                    reader.isLenient = false
-                    return ADAPTER.read(reader)
-                }
+                val reader = JsonReader(FileReader(file))
+                reader.isLenient = false
+                return ADAPTER.read(reader)
             } catch (e: Exception) {
                 throw RuntimeException("Exception while reading $file", e)
             }
