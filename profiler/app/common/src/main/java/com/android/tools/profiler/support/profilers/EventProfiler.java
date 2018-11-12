@@ -44,6 +44,15 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
 
     private static final int UNINITIALIZED_ROTATION = -1;
     private static final int MAX_SLEEP_BACKOFF_MS = 500;
+
+    /**
+     * Preset thread names for threads created by EventProfiler. They may be used to whitelist
+     * threads created.
+     */
+    private static final String THREAD_NAME_ACTIVITY_INITIALIZER = "Studio:ActvtIni";
+
+    private static final String THREAD_NAME_INPUT_CONNECTION_HANDLER = "Studio:InputCon";
+
     private Set<Activity> myActivities = new HashSet<Activity>();
     private int myCurrentRotation = UNINITIALIZED_ROTATION;
 
@@ -110,7 +119,7 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
         // we need to poll for the object.
         CountDownLatch latch = new CountDownLatch(1);
         ActivityInitialization initializer = new ActivityInitialization(profiler, latch);
-        Thread initThread = new Thread(initializer);
+        Thread initThread = new Thread(initializer, THREAD_NAME_ACTIVITY_INITIALIZER);
         initThread.start();
 
         // Due to a potential race condition we should wait for atleast one thread
@@ -130,7 +139,8 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
         // This setups a thread to poll for an active InputConnection, once we have one
         // We replace it with an override that acts as a passthorugh. This override allows us
         // to intercept strings / keys sent from the softkeybaord to the application.
-        Thread inputConnectionPoller = new Thread(new InputConnectionHandler());
+        Thread inputConnectionPoller =
+                new Thread(new InputConnectionHandler(), THREAD_NAME_INPUT_CONNECTION_HANDLER);
         inputConnectionPoller.start();
     }
 
