@@ -22,6 +22,8 @@ package com.android.ddmlib;
 public class InstallException extends CanceledException {
     private static final long serialVersionUID = 1L;
 
+    private String errorCode;
+
     public InstallException(Throwable cause) {
         super(cause.getMessage(), cause);
     }
@@ -30,8 +32,17 @@ public class InstallException extends CanceledException {
         super(message);
     }
 
+    public InstallException(String message, String errorCode) {
+        super(message);
+        this.errorCode = errorCode;
+    }
+
     public InstallException(String message, Throwable cause) {
         super(message, cause);
+    }
+
+    public String getErrorCode() {
+        return errorCode;
     }
 
     /**
