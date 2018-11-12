@@ -20,8 +20,6 @@ import com.android.SdkConstants
 import com.android.SdkConstants.FD_CMAKE
 import com.android.build.gradle.external.cmake.CmakeUtils
 import com.android.build.gradle.internal.SdkHandler
-import com.android.builder.errors.EvalIssueException
-import com.android.builder.errors.EvalIssueReporter
 import com.android.repository.Revision
 import com.android.repository.api.LocalPackage
 import com.android.sdklib.repository.AndroidSdkHandler
@@ -137,11 +135,7 @@ private val newline = System.lineSeparator()
  * Accumulated information about that is common to all search methodologies.
  */
 private class CmakeSearchContext(
-    val cmakeVersionFromDsl: String?,
-    error: (String) -> Unit,
-    val warn: (String) -> Unit,
-    val info: (String) -> Unit
-) {
+    val cmakeVersionFromDsl: String?) {
     var resultCmakeInstallFolder: File? = null
     var resultCmakeVersion: Revision? = null
 
@@ -506,13 +500,6 @@ private fun getSdkCmakePackages(
     return packages.getLocalPackagesForPrefix(FD_CMAKE).toList()
 }
 
-private fun errorReporter(issueReporter: EvalIssueReporter, message: String, variantName: String) {
-    issueReporter.reportError(
-        EvalIssueReporter.Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION,
-        EvalIssueException(message, variantName)
-    )
-}
-
 private fun getCmakeRevisionFromExecutable(cmakeFolder: File): Revision? {
     if (!cmakeFolder.exists()) {
         return null
@@ -529,17 +516,7 @@ private fun getCmakeRevisionFromExecutable(cmakeFolder: File): Revision? {
     return CmakeUtils.getVersion(cmakeFolder)
 }
 
-private fun warningReporter(
-    issueReporter: EvalIssueReporter,
-    message: String,
-    variantName: String
-) {
-    issueReporter.reportWarning(
-        EvalIssueReporter.Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION,
-        message,
-        variantName
-    )
-}
+
 
 /**
  * This is the correct find-path logic that has callback for external dependencies like errors,
@@ -548,19 +525,13 @@ private fun warningReporter(
 fun findCmakePathLogic(
     cmakeVersionFromDsl: String?,
     cmakePathFromLocalProperties: File?,
-    error: (String) -> Unit,
-    warn: (String) -> Unit,
-    info: (String) -> Unit,
     downloader: (String) -> Unit,
     environmentPaths: () -> List<File>,
     canarySdkPaths: () -> List<File>,
     cmakeVersion: (File) -> Revision?,
     repositoryPackages: () -> List<LocalPackage>
 ): File? {
-    return CmakeSearchContext(cmakeVersionFromDsl,
-        { message -> error(message) },
-        { message -> warn(message) },
-        { message -> info(message) })
+    return CmakeSearchContext(cmakeVersionFromDsl)
         .useDefaultCmakeVersionIfNecessary()
         .checkForCmakeVersionTooLow()
         .checkForCmakeVersionAdequatePrecision()
@@ -580,19 +551,13 @@ fun findCmakePathLogic(
 fun findCmakePath(
     cmakeVersionFromDsl: String?,
     sdkHandler: SdkHandler,
-    variantName: String,
-    issueReporter: EvalIssueReporter,
-    logger: ILogger
-): File? {
+    logger: ILogger) : File? {
     return findCmakePathLogic(
-        cmakeVersionFromDsl,
-        sdkHandler.cmakePathInLocalProp,
-        { message -> errorReporter(issueReporter, message, variantName) },
-        { message -> warningReporter(issueReporter, message, variantName) },
-        { message -> logger.info(message) },
-        { version -> sdkHandler.installCMake(version) },
-        { getEnvironmentPaths() },
-        { getCanarySdkPaths(sdkHandler.sdkFolder) },
-        { folder -> getCmakeRevisionFromExecutable(folder) },
-        { getSdkCmakePackages(sdkHandler, logger) })
+            cmakeVersionFromDsl,
+            sdkHandler.cmakePathInLocalProp,
+            { version -> sdkHandler.installCMake(version) },
+            { getEnvironmentPaths() },
+            { getCanarySdkPaths(sdkHandler.sdkFolder) },
+            { folder -> getCmakeRevisionFromExecutable(folder) },
+            { getSdkCmakePackages(sdkHandler, logger) })
 }

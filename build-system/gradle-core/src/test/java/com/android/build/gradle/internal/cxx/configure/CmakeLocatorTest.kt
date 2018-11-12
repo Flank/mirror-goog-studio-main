@@ -55,34 +55,48 @@ class CmakeLocatorTest {
         downloader: () -> Unit = {}
     ): FindCmakeEncounter {
         val encounter = FindCmakeEncounter()
-        val fileResult = findCmakePathLogic(
-            cmakeVersionFromDsl = cmakeVersionFromDsl,
-            cmakePathFromLocalProperties = cmakePathFromLocalProperties,
-            error = { message -> encounter.errors += message },
-            warn = { message -> encounter.warnings += message },
-            info = { message -> encounter.info += message },
-            environmentPaths = {
-                encounter.environmentPathsRetrieved = true
-                environmentPaths()
-            },
-            canarySdkPaths = { listOf() },
-            cmakeVersion = cmakeVersion,
-            repositoryPackages = {
-                encounter.sdkPackagesRetrieved = true
-                repositoryPackages()
-            },
-            downloader = {
-                encounter.downloadAttempts = encounter.downloadAttempts + 1
-                downloader()
+        val logging = object : ThreadLoggingEnvironment() {
+            override fun error(message: String) {
+                encounter.errors += message
             }
-        )
-        if (fileResult != null) {
-            encounter.result = fileResult.toString().replace("\\", "/")
+
+            override fun warn(message: String) {
+                encounter.warnings += message
+            }
+
+            override fun info(message: String) {
+                encounter.info += message
+            }
         }
-        if (encounter.result != null) {
-            // Should be the cmake install folder without the "bin"
-            assertThat(encounter.result!!.endsWith("bin")).isFalse()
+        logging.use {
+            val fileResult = findCmakePathLogic(
+                cmakeVersionFromDsl = cmakeVersionFromDsl,
+                cmakePathFromLocalProperties = cmakePathFromLocalProperties,
+
+                environmentPaths = {
+                    encounter.environmentPathsRetrieved = true
+                    environmentPaths()
+                },
+                canarySdkPaths = { listOf() },
+                cmakeVersion = cmakeVersion,
+                repositoryPackages = {
+                    encounter.sdkPackagesRetrieved = true
+                    repositoryPackages()
+                },
+                downloader = {
+                    encounter.downloadAttempts = encounter.downloadAttempts + 1
+                    downloader()
+                }
+            )
+            if (fileResult != null) {
+                encounter.result = fileResult.toString().replace("\\", "/")
+            }
+            if (encounter.result != null) {
+                // Should be the cmake install folder without the "bin"
+                assertThat(encounter.result!!.endsWith("bin")).isFalse()
+            }
         }
+
         return encounter
     }
 

@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.cxx.configure.AbiConfigurator;
 import com.android.build.gradle.internal.cxx.configure.CmakeLocatorKt;
+import com.android.build.gradle.internal.cxx.configure.GradleSyncLoggingEnvironment;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationInvalidationState;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConfiguration;
@@ -549,6 +550,37 @@ public abstract class ExternalNativeJsonGenerator {
             @NonNull AndroidBuilder androidBuilder,
             @NonNull SdkHandler sdkHandler,
             @NonNull VariantScope scope) {
+        try (GradleSyncLoggingEnvironment ignored =
+                new GradleSyncLoggingEnvironment(
+                        scope.getFullVariantName(),
+                        androidBuilder.getIssueReporter(),
+                        androidBuilder.getLogger())) {
+            return createImpl(
+                    rootBuildGradlePath,
+                    projectPath,
+                    projectDir,
+                    buildDir,
+                    externalNativeBuildDir,
+                    buildSystem,
+                    makefile,
+                    androidBuilder,
+                    sdkHandler,
+                    scope);
+        }
+    }
+
+    @NonNull
+    public static ExternalNativeJsonGenerator createImpl(
+            @NonNull File rootBuildGradlePath,
+            @NonNull String projectPath,
+            @NonNull File projectDir,
+            @NonNull File buildDir,
+            @Nullable File externalNativeBuildDir,
+            @NonNull NativeBuildSystem buildSystem,
+            @NonNull File makefile,
+            @NonNull AndroidBuilder androidBuilder,
+            @NonNull SdkHandler sdkHandler,
+            @NonNull VariantScope scope) {
         checkNotNull(sdkHandler.getSdkFolder(), "No Android SDK folder found");
         GlobalScope globalScope = scope.getGlobalScope();
         NdkHandler ndkHandler = globalScope.getNdkHandler();
@@ -708,8 +740,6 @@ public abstract class ExternalNativeJsonGenerator {
                     CmakeLocatorKt.findCmakePath(
                             externalNativeBuild.getCmake().getVersion(),
                             sdkHandler,
-                            variantData.getName(),
-                            variantData.getScope().getGlobalScope().getErrorHandler(),
                             androidBuilder.getLogger());
 
         } else {

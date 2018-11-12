@@ -25,6 +25,26 @@ class IdempotentFileWriterTest {
     private val folder = File("./folder")
     private val file = File("./folder/my-file")
 
+    private fun withTestLogging(action : () -> Unit) : List<String> {
+        val messages = mutableListOf<String>()
+        object : ThreadLoggingEnvironment() {
+            override fun error(message: String) {
+                messages += "error: $message"
+            }
+
+            override fun warn(message: String) {
+                messages += "warn: $message"
+            }
+
+            override fun info(message: String) {
+                messages += "info: $message"
+            }
+        }.use {
+            action()
+            return messages
+        }
+    }
+
     @Before
     fun before() {
         folder.deleteRecursively()
@@ -35,7 +55,10 @@ class IdempotentFileWriterTest {
     fun testWritingWorks() {
         val writer = IdempotentFileWriter()
         writer.addFile(file.path, "my-content")
-        assertThat(writer.write()).containsExactly(file.path)
+        val messages = withTestLogging {
+            assertThat(writer.write()).containsExactly(file.path)
+        }
+        assertThat(messages).containsExactly("info: Writing ./folder/my-file")
         assertThat(file.readText()).isEqualTo("my-content")
     }
 
@@ -44,7 +67,11 @@ class IdempotentFileWriterTest {
         val writer = IdempotentFileWriter()
         file.writeText("my-content")
         writer.addFile(file.path, "my-content")
-        assertThat(writer.write()).isEmpty()
+        val messages = withTestLogging {
+            assertThat(writer.write()).isEmpty()
+        }
+        assertThat(messages).containsExactly(
+            "info: Not writing ./folder/my-file because there was no change")
         assertThat(file.readText()).isEqualTo("my-content")
     }
 
