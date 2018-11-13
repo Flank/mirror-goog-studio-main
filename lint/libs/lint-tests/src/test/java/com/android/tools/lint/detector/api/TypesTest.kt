@@ -371,7 +371,7 @@ class TypesTest : TestCase() {
                     "        UField (name = resId) [@org.jetbrains.annotations.NotNull private final var resId: int]\n" +
                     "            UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
                     "        UAnnotationMethod (name = getResId) [public final fun getResId() : int = UastEmptyExpression]\n" +
-                    "        UAnnotationMethod (name = KotlinEnum) [protected fun KotlinEnum(@org.jetbrains.annotations.NotNull resId: int) = UastEmptyExpression]\n" +
+                    "        UAnnotationMethod (name = KotlinEnum) [private fun KotlinEnum(@org.jetbrains.annotations.NotNull resId: int) = UastEmptyExpression]\n" +
                     "            UParameter (name = resId) [@org.jetbrains.annotations.NotNull var resId: int]\n" +
                     "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n",
             file?.asLogTypes()
@@ -381,7 +381,7 @@ class TypesTest : TestCase() {
 }
 
 // From Kotlin's UAST unit test support, TypesTestBase
-private fun UFile.asLogTypes() = TypesLogger().apply {
+fun UFile.asLogTypes() = TypesLogger().apply {
     this@asLogTypes.accept(this)
 }.toString()
 

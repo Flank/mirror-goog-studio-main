@@ -178,7 +178,7 @@ class KotlinLintAnalyzerFacade {
                 compilerConfiguration.languageVersionSettings,
                 scope
             ).apply {
-                addRoots(allJavaRoots)
+                addRoots(allJavaRoots, compilerConfiguration.getNotNull(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY))
                 packagePartProviders += this
             }
         }
@@ -232,7 +232,7 @@ class KotlinLintAnalyzerFacade {
         val (initialRoots, javaModules) =
                 classpathRootsResolver.convertClasspathRoots(
                     compilerConfiguration.getList(
-                        JVMConfigurationKeys.CONTENT_ROOTS
+                        CLIConfigurationKeys.CONTENT_ROOTS
                     )
                 )
 

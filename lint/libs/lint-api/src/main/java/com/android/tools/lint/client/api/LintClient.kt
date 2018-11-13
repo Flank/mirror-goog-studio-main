@@ -456,8 +456,8 @@ abstract class LintClient {
             }
         }
 
-        val home = System.getenv(SdkConstants.ANDROID_SDK_ROOT_ENV) ?:
-                   System.getenv(SdkConstants.ANDROID_HOME_ENV) ?: return null
+        val home = System.getenv(SdkConstants.ANDROID_SDK_ROOT_ENV)
+            ?: System.getenv(SdkConstants.ANDROID_HOME_ENV) ?: return null
         return File(home)
     }
 
@@ -653,7 +653,8 @@ abstract class LintClient {
                 if (jars != null) {
                     for (jar in jars) {
                         if ((endsWith(jar.path, DOT_JAR) || endsWith(jar.path, DOT_SRCJAR)) &&
-                            !libraries.contains(jar)) {
+                            !libraries.contains(jar)
+                        ) {
                             libraries.add(jar)
                         }
                     }
@@ -1161,8 +1162,9 @@ abstract class LintClient {
                         // Soon we'll get these paths via the builder-model so we
                         // don't need to have hardcoded paths (b/66166521)
                         val lintPaths = arrayOf(
-                                Paths.get("intermediates", "lint"),
-                                Paths.get("intermediates", "lint_jar", "global", "prepareLintJar"))
+                            Paths.get("intermediates", "lint"),
+                            Paths.get("intermediates", "lint_jar", "global", "prepareLintJar")
+                        )
                         for (lintPath in lintPaths) {
                             val lintFolder = File(it, lintPath.toString())
                             if (lintFolder.exists()) {

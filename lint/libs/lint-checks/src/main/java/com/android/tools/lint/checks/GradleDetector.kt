@@ -604,7 +604,7 @@ open class GradleDetector : Detector(), GradleScanner {
                             cookie,
                             DEPENDENCY,
                             "Use Fabric Gradle plugin version 1.21.6 or later to " +
-                                "improve Instant Run performance (was $revision)",
+                                    "improve Instant Run performance (was $revision)",
                             fix
                         )
                     } else {
@@ -622,7 +622,7 @@ open class GradleDetector : Detector(), GradleScanner {
                             cookie,
                             DEPENDENCY,
                             "Use BugSnag Gradle plugin version 2.1.2 or later to " +
-                                "improve Instant Run performance (was $revision)",
+                                    "improve Instant Run performance (was $revision)",
                             fix
                         )
                     } else {
@@ -926,8 +926,8 @@ open class GradleDetector : Detector(), GradleScanner {
             // This specific version is actually a preview version which should
             // not be used (https://code.google.com/p/android/issues/detail?id=75292)
             val maxVersion = GradleVersion.max(
-              GradleVersion.parse("10.2.1"),
-              getGoogleMavenRepoVersion(context, dependency, null)
+                GradleVersion.parse("10.2.1"),
+                getGoogleMavenRepoVersion(context, dependency, null)
             )
 
             val fix = getUpdateDependencyFix(revision, maxVersion.toString())
@@ -1044,7 +1044,11 @@ open class GradleDetector : Detector(), GradleScanner {
             if (cookie != null) {
                 reportNonFatalCompatibilityIssue(context, cookie, message)
             } else {
-                reportNonFatalCompatibilityIssue(context, guessGradleLocation(context.project), message)
+                reportNonFatalCompatibilityIssue(
+                    context,
+                    guessGradleLocation(context.project),
+                    message
+                )
             }
         }
     }
