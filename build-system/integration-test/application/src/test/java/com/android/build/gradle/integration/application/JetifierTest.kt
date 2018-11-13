@@ -164,6 +164,42 @@ class JetifierTest(private val withKotlin: Boolean) {
         }
     }
 
+    @Test
+    fun testBlacklistedLibrariesAreNotJetified() {
+        // It's enough to test without Kotlin (to save test execution time)
+        assumeFalse(withKotlin)
+
+        // Regression test for https://issuetracker.google.com/119135578
+        prepareProjectForAndroidX()
+        TestFileUtils.appendToFile(
+            project.getSubproject(":app").buildFile,
+            """
+            dependencies {
+                implementation 'com.example.javalib:doNotJetifyLib:1.0'
+            }
+            """.trimIndent()
+        )
+
+        // We created doNotJetifyLib such that Jetifier would fail to jetify it.
+        val result = project.executor()
+            .with(BooleanOption.USE_ANDROID_X, true)
+            .with(BooleanOption.ENABLE_JETIFIER, true)
+            .expectFailure()
+            .run("assembleDebug")
+        val stacktrace = Throwables.getStackTraceAsString(checkNotNull(result.exception))
+        assertThat(stacktrace).contains("Transformation hasn't been executed yet")
+
+        // Add doNotJetifyLib to a blacklist, the build should succeed
+        TestFileUtils.appendToFile(
+            project.gradlePropertiesFile,
+            """android.jetifier.blacklist = doNot.*\\.jar, foo"""
+        )
+        project.executor()
+            .with(BooleanOption.USE_ANDROID_X, true)
+            .with(BooleanOption.ENABLE_JETIFIER, true)
+            .run("assembleDebug")
+    }
+
     private fun prepareProjectForAndroidX() {
         TestFileUtils.searchAndReplace(
             project.getSubproject(":app").buildFile,

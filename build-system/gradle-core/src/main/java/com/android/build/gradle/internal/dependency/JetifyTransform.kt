@@ -22,6 +22,7 @@ import com.android.tools.build.jetifier.core.config.ConfigParser
 import com.android.tools.build.jetifier.processor.FileMapping
 import com.android.tools.build.jetifier.processor.Processor
 import com.google.common.base.Preconditions
+import com.google.common.base.Splitter
 import com.google.common.base.Verify
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -58,6 +59,37 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
         @JvmField
         val androidXMappings: Map<String, String> =
             jetifyProcessor.getDependenciesMap(filterOutBaseLibrary = false)
+
+        /**
+         * List of regular expressions for libraries that should not be jetified.
+         *
+         * If a library's absolute path contains a substring that matches one of the regular
+         * expressions, the library won't be jetified.
+         *
+         * For example, if the regular expression is  "doNot.*\.jar", then
+         * "/path/to/doNotJetify.jar" won't be jetified.
+         */
+        private var jetifierBlackList: List<Regex> = listOf()
+
+        /**
+         * Computes the Jetifier blacklist of type [Regex] from a string containing a
+         * comma-separated list of regular expression.
+         */
+        @JvmStatic
+        fun setJetifierBlackList(jetifierBlackList: String?) {
+            val blackList = mutableListOf<String>()
+            if (jetifierBlackList != null) {
+                blackList.addAll(
+                    Splitter.on(",").trimResults().splitToList(jetifierBlackList))
+            }
+
+            // Jetifier should not jetify itself (http://issuetracker.google.com/119135578)
+            blackList.add("jetifier-.*\\.jar")
+
+            // The jetifierBlackList variable is static, that means it will live across builds, so
+            // we'll need to recompute it with every build in case the values have changed.
+            this.jetifierBlackList = blackList.map { Regex(it) }
+        }
 
         /**
          * Replaces old support libraries with new ones.
@@ -175,13 +207,14 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
         )
 
         /*
-         * The aars or jars can be categorized into 3 types:
-         *  - New support libraries
+         * The aars or jars can be categorized into 4 types:
+         *  - AndroidX libraries
          *  - Old support libraries
-         *  - Others
+         *  - Other libraries that are blacklisted
+         *  - Other libraries that are not blacklisted
          * In the following, we handle these cases accordingly.
          */
-        // Case 1: If this is a new support library, no need to jetify it
+        // Case 1: If this is an AndroidX library, no need to jetify it
         if (jetifyProcessor.isNewDependencyFile(aarOrJarFile)) {
             return listOf(aarOrJarFile)
         }
@@ -194,7 +227,12 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
             return listOf(aarOrJarFile)
         }
 
-        // Case 3: For the remaining, let's jetify them.
+        // Case 3: If the library is blacklisted, do not jetify it
+        if (jetifierBlackList.any { it.containsMatchIn(aarOrJarFile.absolutePath) }) {
+            return listOf(aarOrJarFile)
+        }
+
+        // Case 4: For the remaining libraries, let's jetify them
         val outputFile = File(outputDirectory, "jetified-" + aarOrJarFile.name)
         val maybeTransformedFile = try {
             jetifyProcessor.transform(
