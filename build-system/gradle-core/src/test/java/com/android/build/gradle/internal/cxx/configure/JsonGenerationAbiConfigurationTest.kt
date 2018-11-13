@@ -42,24 +42,22 @@ class JsonGenerationAbiConfigurationTest {
                 "./.externalNativeBuild/cmake/debug/x86/android_gradle_build.json"))
 
         assertThat(config.gradleBuildOutputFolder)
-            .isEqualTo(File("./.externalNativeBuild/gradle/debug/x86"))
+            .isEqualTo(File("./.externalNativeBuild/cxx/debug/x86"))
         assertThat(config.buildCommandFile)
             .isEqualTo(File(
                 "./.externalNativeBuild/cmake/debug/x86/cmake_build_command.txt"))
         assertThat(config.buildOutputFile)
             .isEqualTo(File(
                 "./.externalNativeBuild/cmake/debug/x86/cmake_build_output.txt"))
-        assertThat(config.cmake?.buildVariablesFile)
+        assertThat(config.cmake?.buildGenerationStateFile)
             .isEqualTo(File(
-                "./.externalNativeBuild/gradle/debug/x86/build-variables.txt"))
-        assertThat(config.cmake?.cmakeListsThunkingFile)
-            .isEqualTo(File("./.externalNativeBuild/gradle/debug/x86/CMakeLists.txt"))
-        assertThat(config.cmake?.toolchainThunkingFile)
+                "./.externalNativeBuild/cxx/debug/x86/build_generation_state.json"))
+        assertThat(config.cmake?.cmakeListsWrapperFile)
+            .isEqualTo(File("./.externalNativeBuild/cxx/debug/x86/CMakeLists.txt"))
+        assertThat(config.cmake?.toolchainWrapperFile)
             .isEqualTo(File(
-                "./.externalNativeBuild/gradle/debug/x86/android_gradle_build.toolchain.cmake"))
+                "./.externalNativeBuild/cxx/debug/x86/android_gradle_build.toolchain.cmake"))
         assertThat(config.cmake?.cacheKeyFile)
-            .isEqualTo(File("./.externalNativeBuild/gradle/debug/x86/cache-key.txt"))
-        assertThat(config.cmake?.cacheHashFile)
-            .isEqualTo(File("./.externalNativeBuild/gradle/debug/x86/cache-hash.txt"))
+            .isEqualTo(File("./.externalNativeBuild/cxx/debug/x86/compiler_cache_key.json"))
     }
 }

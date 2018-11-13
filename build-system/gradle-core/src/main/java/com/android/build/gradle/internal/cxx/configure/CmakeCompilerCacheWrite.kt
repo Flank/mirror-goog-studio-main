@@ -25,10 +25,12 @@ import java.io.FileReader
 import java.io.FileWriter
 
 /**
- * The class is the class for build_generation_state.json. It contains information from CMake
- * gathered as the Ninja project was generated.
+ * This contains a signal from the wrapper toolchain about whether the cache was written or not.
+ * If not written then diagnostic information is in status field.
  */
-data class CmakeBuildGenerationState(val properties : List<CmakePropertyValue>) {
+data class CmakeCompilerCacheWrite(
+    val cacheWritten : Boolean,
+    val status : String) {
 
     /**
      * Write to a file.
@@ -40,37 +42,18 @@ data class CmakeBuildGenerationState(val properties : List<CmakePropertyValue>) 
     }
 
     companion object {
-        private val TYPE_TOKEN = object : TypeToken<CmakeBuildGenerationState>() {}
-        private val ADAPTER = Gson().getAdapter<CmakeBuildGenerationState>(TYPE_TOKEN)
+        private val TYPE_TOKEN = object : TypeToken<CmakeCompilerCacheWrite>() {}
+        private val ADAPTER = Gson().getAdapter<CmakeCompilerCacheWrite>(TYPE_TOKEN)
         private val GSON_BUILDER = GsonBuilder().setPrettyPrinting().create()
 
         /**
          * Read from a file.
          */
-        fun fromFile(file : File) : CmakeBuildGenerationState {
-            try {
-                JsonReader(FileReader(file)).use { reader ->
-                    reader.isLenient = false
-                    return ADAPTER.read(reader)
-                }
-            } catch (e: Exception) {
-                throw RuntimeException("Exception while reading $file", e)
+        fun fromFile(file : File) : CmakeCompilerCacheWrite {
+            JsonReader(FileReader(file)).use { reader ->
+                reader.isLenient = false
+                return ADAPTER.read(reader)
             }
         }
-    }
-}
-
-/**
- * Represents a single CMake property
- */
-data class CmakePropertyValue(val name : String, val value : String) {
-    companion object {
-        /**
-         * Construct a CmakePropertyValue with CmakeProperty
-         */
-        fun from(property : CmakeProperty, value : String) : CmakePropertyValue {
-            return CmakePropertyValue(property.name, value)
-        }
-
     }
 }

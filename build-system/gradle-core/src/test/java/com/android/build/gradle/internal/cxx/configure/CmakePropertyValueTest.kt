@@ -16,24 +16,16 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
-import com.android.builder.model.Version
 import com.google.common.truth.Truth.assertThat
 
 import org.junit.Test
-import java.io.File
 
-class CmakeCompilerCacheKeyTest {
+class CmakePropertyValueTest {
 
     @Test
-    fun toAndFromFile() {
-        val key = CmakeCompilerCacheKey(
-            ndkInstallationFolder = File("./ndk"),
-            ndkSourceProperties = SdkSourceProperties(mapOf("x" to "y")),
-            args = listOf("a", "b"))
-        val file = File("file.json")
-        key.toFile(file)
-        val key2 = CmakeCompilerCacheKey.fromFile(file)
-        assertThat(key2).isEqualTo(key)
-        assertThat(key.gradlePluginVersion).isEqualTo(Version.ANDROID_GRADLE_PLUGIN_VERSION)
+    fun from() {
+        assertThat(
+            CmakePropertyValue.from(CmakeProperty.C_TEST_WAS_RUN, "x").name)
+            .isEqualTo("C_TEST_WAS_RUN")
     }
 }

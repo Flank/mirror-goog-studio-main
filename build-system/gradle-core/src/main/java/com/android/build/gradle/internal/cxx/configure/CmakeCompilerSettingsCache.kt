@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import java.io.File
-import java.io.FileNotFoundException
 import java.io.IOException
 
 /**

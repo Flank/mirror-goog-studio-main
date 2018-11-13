@@ -67,4 +67,12 @@ class CmakeWrappingKtTest {
         assertThat(result).contains(""""C:/path/to/build-generation-state.json"""")
         assertThat(result).contains("""\r\n""")
     }
+
+    @Test
+    fun substituteCmakePaths() {
+        val androidNdk = File("""C:\path\to\ndk""")
+        val replaced = substituteCmakePaths(
+            "set(CMAKE_ANDROID_NDK C:/path/to/ndk)", androidNdk)
+        assertThat(replaced).isEqualTo("set(CMAKE_ANDROID_NDK ${'$'}{ANDROID_NDK})")
+    }
 }
