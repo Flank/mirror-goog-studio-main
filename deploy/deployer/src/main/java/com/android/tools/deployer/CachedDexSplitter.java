@@ -46,13 +46,4 @@ public class CachedDexSplitter implements DexSplitter {
         }
         return classes;
     }
-
-    public boolean cache(List<ApkEntry> newFiles) throws DeployerException {
-        for (ApkEntry file : newFiles) {
-            if (file.name.endsWith(".dex")) {
-                split(file, null);
-            }
-        }
-        return true;
-    }
 }

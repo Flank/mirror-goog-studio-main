@@ -93,39 +93,52 @@ public class Deployer {
     }
 
     private void swap(
-            String packageName,
-            List<String> paths,
-            boolean restart,
+            String argPackageName,
+            List<String> argPaths,
+            boolean argRestart,
             Map<Integer, ClassRedefiner> redefiners)
             throws DeployerException {
+        runner.join();
 
-        CachedDexSplitter splitter = new CachedDexSplitter(db, new D8DexSplitter());
+        // Inputs
+        Task<List<String>> paths = runner.submit(argPaths);
+        Task<String> packageName = runner.submit(argPackageName);
+        Task<Boolean> restart = runner.submit(argRestart);
+        Task<DexSplitter> splitter = runner.submit(new CachedDexSplitter(db, new D8DexSplitter()));
 
         // Get the list of files from the local apks
-        List<ApkEntry> newFiles = new ApkParser().parsePaths(paths);
+        Task<List<ApkEntry>> newFiles =
+                runner.submit("parseApks", new ApkParser()::parsePaths, paths);
 
         // Get the list of files from the installed app
-        List<ApkEntry> dumps = new ApkDumper(installer).dump(packageName);
+        Task<List<ApkEntry>> dumps =
+                runner.submit("dump", new ApkDumper(installer)::dump, packageName);
 
         // Calculate the difference between them
-        List<FileDiff> diffs = new ApkDiffer().diff(dumps, newFiles);
+        Task<List<FileDiff>> diffs = runner.submit("diff", new ApkDiffer()::diff, dumps, newFiles);
 
         // Push the apks to device and get the remote paths
-        List<String> apkPaths = new ApkPusher(adb).push(newFiles);
+        Task<List<String>> apkPaths = runner.submit("push", new ApkPusher(adb)::push, newFiles);
 
         // Verify the changes are swappable and get only the dexes that we can change
-        List<FileDiff> dexDiffs = new SwapVerifier().verify(diffs, restart);
+        Task<List<FileDiff>> dexDiffs =
+                runner.submit("verify", new SwapVerifier()::verify, diffs, restart);
 
         // Compare the local vs remote dex files.
-        List<DexClass> toSwap = new DexComparator().compare(dexDiffs, splitter);
+        Task<List<DexClass>> toSwap =
+                runner.submit("compare", new DexComparator()::compare, dexDiffs, splitter);
+
+        // Do the swap
+        ApkSwapper swapper = new ApkSwapper(installer, argPackageName, argRestart, redefiners);
+        Task<Boolean> swap = runner.submit("swap", swapper::swap, newFiles, apkPaths, toSwap);
 
         // Update the database with the entire new apk. In the normal case this should
         // be a no-op because the dexes that were modified were extracted at comparison time.
         // However if the compare task doesn't get to execute we still update the database.
-        splitter.cache(newFiles);
+        // Note we artificially block this task until swap is done.
+        runner.submit("cache", DexSplitter::cache, runner.block(splitter, swap), newFiles);
 
-        // Do the swap
-        ApkSwapper swapper = new ApkSwapper(installer, packageName, restart, redefiners);
-        swapper.swap(newFiles, apkPaths, toSwap);
+        // Wait only for swap to finish
+        swap.get();
     }
 }

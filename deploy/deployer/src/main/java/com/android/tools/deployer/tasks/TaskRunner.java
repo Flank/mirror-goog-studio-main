@@ -126,6 +126,10 @@ public class TaskRunner {
         return phaser.getRegisteredParties() - 1;
     }
 
+    public <T, U> Task<T> block(Task<T> blocked, Task<U> on) {
+        return new Task<>(Futures.whenAllSucceed(on.future).call(blocked.future::get));
+    }
+
 
     public static class Task<T> {
         private ListenableFuture<T> future;

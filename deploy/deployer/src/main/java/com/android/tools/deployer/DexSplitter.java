@@ -22,4 +22,13 @@ import java.util.function.Predicate;
 
 public interface DexSplitter {
     List<DexClass> split(ApkEntry dex, Predicate<DexClass> keepCode) throws DeployerException;
+
+    default boolean cache(List<ApkEntry> dexes) throws DeployerException {
+        for (ApkEntry file : dexes) {
+            if (file.name.endsWith(".dex")) {
+                split(file, null);
+            }
+        }
+        return true;
+    }
 }
