@@ -21,6 +21,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.AndroidGradleOptions;
+import com.android.build.gradle.internal.core.CoreSigningConfigImpl;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.scope.BuildElementsTransformParams;
@@ -222,7 +223,11 @@ public class PackageSplitRes extends AndroidBuilderTask {
 
             task.processedResources =
                     scope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES);
-            task.signingConfig = config.getSigningConfig();
+            if (config.getSigningConfig() != null) {
+                task.signingConfig =
+                        new CoreSigningConfigImpl(config.getSigningConfig().getName())
+                                .initWith(config.getSigningConfig());
+            }
             task.splitResApkOutputDirectory = splitResApkOutputDirectory;
             task.incrementalDir = scope.getIncrementalDir(getName());
         }
