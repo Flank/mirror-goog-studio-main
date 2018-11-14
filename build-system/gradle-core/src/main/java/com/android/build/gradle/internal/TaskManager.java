@@ -124,6 +124,7 @@ import com.android.build.gradle.internal.tasks.PrepareLintJar;
 import com.android.build.gradle.internal.tasks.PrepareLintJarForPublish;
 import com.android.build.gradle.internal.tasks.ProcessJavaResTask;
 import com.android.build.gradle.internal.tasks.SigningConfigWriterTask;
+import com.android.build.gradle.internal.tasks.RecalculateStackFramesTask;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
 import com.android.build.gradle.internal.tasks.SourceSetsTask;
 import com.android.build.gradle.internal.tasks.TestServerTask;
@@ -155,7 +156,6 @@ import com.android.build.gradle.internal.transforms.DexMergerTransformCallable;
 import com.android.build.gradle.internal.transforms.DexSplitterTransform;
 import com.android.build.gradle.internal.transforms.ExternalLibsMergerTransform;
 import com.android.build.gradle.internal.transforms.ExtractJarsTransform;
-import com.android.build.gradle.internal.tasks.FixStackFramesDelegate;
 import com.android.build.gradle.internal.transforms.MergeClassesTransform;
 import com.android.build.gradle.internal.transforms.MergeJavaResourcesTransform;
 import com.android.build.gradle.internal.transforms.ProGuardTransform;
@@ -273,6 +273,7 @@ import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
@@ -582,6 +583,7 @@ public abstract class TaskManager {
 
         TransformManager transformManager = variantScope.getTransformManager();
 
+        // This might be consumed by RecalculateFixedStackFrames if that's created
         transformManager.addStream(
                 OriginalStream.builder(project, "ext-libs-classes")
                         .addContentTypes(TransformManager.CONTENT_CLASS)
@@ -693,16 +695,23 @@ public abstract class TaskManager {
             com.android.build.api.artifact.ArtifactType testedOutputType =
                     taskOutputSpec.getOutputType();
 
+            FileCollection testedCodeClasses =
+                    testedVariantScope
+                            .getArtifacts()
+                            .getFinalArtifactFiles(testedOutputType)
+                            .get();
+
+            variantScope.getArtifacts().createBuildableArtifact(
+                    InternalArtifactType.TESTED_CODE_CLASSES,
+                    BuildArtifactsHolder.OperationType.INITIAL,
+                    testedCodeClasses);
+
             // create two streams of different types.
             transformManager.addStream(
                     OriginalStream.builder(project, "tested-code-classes")
                             .addContentTypes(DefaultContentType.CLASSES)
                             .addScope(Scope.TESTED_CODE)
-                            .setFileCollection(
-                                    testedVariantScope
-                                            .getArtifacts()
-                                            .getFinalArtifactFiles(testedOutputType)
-                                            .get())
+                            .setFileCollection(testedCodeClasses)
                             .build());
 
             transformManager.addStream(
@@ -1405,9 +1414,9 @@ public abstract class TaskManager {
     /**
      * Add stream of classes compiled by javac to transform manager.
      *
-     * This should not be called for classes that will also be compiled from source by jack.
+     * <p>This should not be called for classes that will also be compiled from source by jack.
      */
-    public void addJavacClassesStream(VariantScope scope) {
+    protected void addJavacClassesStream(VariantScope scope) {
         BuildArtifactsHolder artifacts = scope.getArtifacts();
         FileCollection javaOutputs = artifacts.getFinalArtifactFiles(JAVAC).get();
         Preconditions.checkNotNull(javaOutputs);
@@ -1446,6 +1455,7 @@ public abstract class TaskManager {
 
         if (scope.getGlobalScope().getExtension().getAaptOptions().getNamespaced()
                 && projectOptions.get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
+            // This might be consumed by RecalculateFixedStackFrames if that's created
             scope.getTransformManager()
                     .addStream(
                             OriginalStream.builder(project, "auto-namespaced-dependencies-classes")
@@ -2097,7 +2107,8 @@ public abstract class TaskManager {
             createJacocoTask(variantScope);
         }
 
-        maybeCreateDesugarTask(variantScope, config.getMinSdkVersion(), transformManager);
+        maybeCreateDesugarTask(
+                variantScope, config.getMinSdkVersion(), transformManager, isTestCoverageEnabled);
 
         AndroidConfig extension = variantScope.getGlobalScope().getExtension();
 
@@ -2258,13 +2269,35 @@ public abstract class TaskManager {
     private void maybeCreateDesugarTask(
             @NonNull VariantScope variantScope,
             @NonNull AndroidVersion minSdk,
-            @NonNull TransformManager transformManager) {
+            @NonNull TransformManager transformManager,
+            boolean isTestCoverageEnabled) {
         if (variantScope.getJava8LangSupportType() == Java8LangSupport.DESUGAR) {
             FileCache userCache = getUserIntermediatesCache();
 
-            FixStackFramesDelegate fixFrames =
-                    new FixStackFramesDelegate(variantScope.getBootClasspath(), userCache);
-            transformManager.addTransform(taskFactory, variantScope, fixFrames);
+            variantScope
+                    .getTransformManager()
+                    .consumeStreams(
+                            ImmutableSet.of(Scope.EXTERNAL_LIBRARIES),
+                            TransformManager.CONTENT_CLASS);
+
+            taskFactory.register(
+                    new RecalculateStackFramesTask.CreationAction(
+                            variantScope, userCache, isTestCoverageEnabled));
+
+            variantScope
+                    .getTransformManager()
+                    .addStream(
+                            OriginalStream.builder(project, "fixed-stack-frames-classes")
+                                    .addContentTypes(TransformManager.CONTENT_CLASS)
+                                    .addScope(Scope.EXTERNAL_LIBRARIES)
+                                    .setFileCollection(
+                                            variantScope
+                                                    .getArtifacts()
+                                                    .getFinalArtifactFiles(
+                                                            InternalArtifactType.FIXED_STACK_FRAMES)
+                                                    .get()
+                                                    .getAsFileTree())
+                                    .build());
 
             DesugarTransform desugarTransform =
                     new DesugarTransform(

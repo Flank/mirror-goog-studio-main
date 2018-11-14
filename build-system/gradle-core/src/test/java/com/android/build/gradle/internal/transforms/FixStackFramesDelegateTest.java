@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,22 +35,22 @@ import static org.objectweb.asm.Opcodes.V1_8;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.build.api.transform.JarInput;
-import com.android.build.api.transform.QualifiedContent;
-import com.android.build.api.transform.Status;
-import com.android.build.api.transform.TransformException;
-import com.android.build.api.transform.TransformInput;
-import com.android.build.api.transform.TransformInvocation;
-import com.android.build.gradle.internal.fixtures.FakeFileCollection;
+import com.android.build.gradle.internal.fixtures.FakeGradleDirectory;
+import com.android.build.gradle.internal.fixtures.FakeGradleProvider;
 import com.android.build.gradle.internal.tasks.FixStackFramesDelegate;
 import com.android.builder.utils.FileCache;
+import com.android.ide.common.resources.FileStatus;
+import com.android.ide.common.workers.ExecutorServiceAdapter;
+import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.testutils.TestInputsGenerator;
 import com.android.testutils.TestUtils;
+import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
 import java.io.BufferedOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -60,13 +60,16 @@ import java.nio.file.Path;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ForkJoinPool;
 import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
 import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
-import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.Directory;
+import org.gradle.api.provider.Provider;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -78,183 +81,125 @@ import org.objectweb.asm.Opcodes;
 
 /**
  * Testing stack frame fixing in {@link
- * FixStackFramesDelegate}.
+ * com.android.build.gradle.internal.tasks.FixStackFramesDelegate}.
  */
 public class FixStackFramesDelegateTest {
 
-    private static final FileCollection ANDROID_JAR =
-            new FakeFileCollection(TestUtils.getPlatformFile("android.jar"));
+    private static final Set<File> ANDROID_JAR =
+            ImmutableSet.of(TestUtils.getPlatformFile("android.jar"));
+
+    private final WorkerExecutorFacade executor =
+            new ExecutorServiceAdapter(ForkJoinPool.commonPool());
+
     @Rule public TemporaryFolder tmp = new TemporaryFolder();
-    private TestTransformOutputProvider outputProvider;
-    private Path output;
+
+    private File output;
 
     @Before
     public void setUp() throws IOException {
-        output = tmp.newFolder("out").toPath();
-        outputProvider = new TestTransformOutputProvider(output);
+        output = tmp.newFolder("out");
     }
 
     @Test
-    public void testFramesAreFixed()
-            throws IOException, TransformException, InterruptedException, ClassNotFoundException {
-        Path jar = getJarWithBrokenClasses("input", ImmutableList.of("test/A"));
+    public void testFramesAreFixed() throws IOException, ClassNotFoundException {
+        Path jar = getJarWithBrokenClasses("input.jar", ImmutableList.of("test/A"));
 
-        JarInput jarInput =
-                TransformTestHelper.jarBuilder(jar.toFile())
-                        .setStatus(Status.ADDED)
-                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
-                        .build();
-        TransformInput input = TransformTestHelper.inputBuilder().addInput(jarInput).build();
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .setInputs(ImmutableSet.of(input))
-                        .addReferenceInput(input)
-                        .setTransformOutputProvider(outputProvider)
-                        .build();
+        Set<File> classesToFix = ImmutableSet.of(jar.toFile());
 
-        FixStackFramesDelegate transform = new FixStackFramesDelegate(ANDROID_JAR, null);
-        transform.transform(invocation);
+        FixStackFramesDelegate delegate =
+                new FixStackFramesDelegate(
+                        ANDROID_JAR, classesToFix, classesToFix, output, null);
 
-        assertAllClassesAreValid(output.resolve("input.jar"));
+        delegate.doFullRun(executor);
+
+        assertAllClassesAreValid(singleOutput().toPath());
     }
 
     @Test
-    public void testJarCaching() throws IOException, TransformException, InterruptedException {
-        Path jar = getJarWithBrokenClasses("input", ImmutableList.of("test/A"));
+    public void testJarCaching() throws IOException {
+        Path jar = getJarWithBrokenClasses("input.jar", ImmutableList.of("test/A"));
 
-        JarInput jarInput =
-                TransformTestHelper.jarBuilder(jar.toFile())
-                        .setStatus(Status.ADDED)
-                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
-                        .build();
-        TransformInput input = TransformTestHelper.inputBuilder().addInput(jarInput).build();
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .setInputs(ImmutableSet.of(input))
-                        .addReferenceInput(input)
-                        .setTransformOutputProvider(outputProvider)
-                        .build();
+        Set<File> classesToFix = ImmutableSet.of(jar.toFile());
 
         FileCache cache = FileCache.getInstanceWithSingleProcessLocking(tmp.newFolder());
-        FixStackFramesDelegate transform = new FixStackFramesDelegate(ANDROID_JAR, cache);
-        transform.transform(invocation);
+
+        FixStackFramesDelegate delegate =
+                new FixStackFramesDelegate(
+                        ANDROID_JAR, classesToFix, classesToFix, output, cache);
+
+        delegate.doFullRun(executor);
+
         assertThat(cache.getCacheDirectory().list()).hasLength(1);
 
-        transform.transform(invocation);
+        delegate.doFullRun(executor);
+
         assertThat(cache.getCacheDirectory().list()).hasLength(1);
     }
 
     @Test
-    public void testIncrementalBuilds()
-            throws IOException, TransformException, InterruptedException {
-        Path jar = getJarWithBrokenClasses("input", ImmutableList.of("test/A"));
+    public void testIncrementalBuilds() throws IOException {
+        Path jar = getJarWithBrokenClasses("input.jar", ImmutableList.of("test/A"));
 
-        JarInput jarInput =
-                TransformTestHelper.jarBuilder(jar.toFile())
-                        .setStatus(Status.NOTCHANGED)
-                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
-                        .build();
-        TransformInput input = TransformTestHelper.inputBuilder().addInput(jarInput).build();
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .setInputs(ImmutableSet.of(input))
-                        .addReferenceInput(input)
-                        .setTransformOutputProvider(outputProvider)
-                        .setIncremental(true)
-                        .build();
+        Set<File> classesToFix = ImmutableSet.of(jar.toFile());
 
-        FixStackFramesDelegate transform = new FixStackFramesDelegate(ANDROID_JAR, null);
-        transform.transform(invocation);
-        assertThat(output.toFile().list()).named("output artifacts").hasLength(0);
+        FixStackFramesDelegate delegate =
+                new FixStackFramesDelegate(
+                        ANDROID_JAR, classesToFix, classesToFix, output, null);
 
-        jarInput =
-                TransformTestHelper.jarBuilder(jar.toFile())
-                        .setStatus(Status.ADDED)
-                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
-                        .build();
-        input = TransformTestHelper.inputBuilder().addInput(jarInput).build();
-        invocation =
-                TransformTestHelper.invocationBuilder()
-                        .setInputs(ImmutableSet.of(input))
-                        .addReferenceInput(input)
-                        .setTransformOutputProvider(outputProvider)
-                        .setIncremental(true)
-                        .build();
-        transform.transform(invocation);
-        assertThat(output.toFile().list()).named("output artifacts").hasLength(1);
+        delegate.doIncrementalRun(executor, ImmutableMap.of());
 
-        jarInput =
-                TransformTestHelper.jarBuilder(jar.toFile())
-                        .setStatus(Status.REMOVED)
-                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
-                        .build();
-        input = TransformTestHelper.inputBuilder().addInput(jarInput).build();
-        invocation =
-                TransformTestHelper.invocationBuilder()
-                        .setInputs(ImmutableSet.of(input))
-                        .addReferenceInput(input)
-                        .setTransformOutputProvider(outputProvider)
-                        .setIncremental(true)
-                        .build();
-        transform.transform(invocation);
-        assertThat(output.toFile().list()).named("output artifacts").hasLength(0);
+        assertThat(output.list()).named("output artifacts").hasLength(0);
+
+        delegate.doIncrementalRun(executor, ImmutableMap.of(jar.toFile(), FileStatus.NEW));
+
+        assertThat(output.list()).named("output artifacts").hasLength(1);
+
+        FileUtils.delete(jar.toFile());
+        delegate.doIncrementalRun(executor, ImmutableMap.of(jar.toFile(), FileStatus.REMOVED));
+
+        assertThat(output.list()).named("output artifacts").hasLength(0);
     }
 
     @Test
     public void testResolvingType() throws Exception {
-        Path jar = getJarWithBrokenClasses("input", ImmutableMap.of("test/A", "test/Base"));
-        JarInput jarInput =
-                TransformTestHelper.jarBuilder(jar.toFile())
-                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
-                        .build();
-        TransformInput input = TransformTestHelper.inputBuilder().addInput(jarInput).build();
+        Path jar = getJarWithBrokenClasses("input.jar", ImmutableMap.of("test/A", "test/Base"));
+
+        Set<File> classesToFix = ImmutableSet.of(jar.toFile());
 
         Path referencedJar = tmp.getRoot().toPath().resolve("ref_input");
         TestInputsGenerator.jarWithEmptyClasses(referencedJar, ImmutableList.of("test/Base"));
-        JarInput refJarInput =
-                TransformTestHelper.jarBuilder(referencedJar.toFile())
-                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
-                        .build();
-        TransformInput refInput = TransformTestHelper.inputBuilder().addInput(refJarInput).build();
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .setInputs(ImmutableSet.of(input))
-                        .addReferenceInput(refInput)
-                        .setTransformOutputProvider(outputProvider)
-                        .build();
 
-        FixStackFramesDelegate transform = new FixStackFramesDelegate(ANDROID_JAR, null);
-        transform.transform(invocation);
+        Set<File> referencedClasses = ImmutableSet.of(referencedJar.toFile());
 
-        assertThat(output.toFile().list()).named("output artifacts").hasLength(1);
-        assertAllClassesAreValid(output.resolve("input.jar"), referencedJar);
+        FixStackFramesDelegate delegate =
+                new FixStackFramesDelegate(
+                        ANDROID_JAR, classesToFix, referencedClasses, output, null);
+
+        delegate.doFullRun(executor);
+
+        assertThat(output.list()).named("output artifacts").hasLength(1);
+        assertAllClassesAreValid(singleOutput().toPath(), referencedJar);
     }
 
     @Test
     public void testUnresolvedType() throws Exception {
-        Path jar = getJarWithBrokenClasses("input", ImmutableMap.of("test/A", "test/Base"));
-        JarInput jarInput =
-                TransformTestHelper.jarBuilder(jar.toFile())
-                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
-                        .build();
-        TransformInput input = TransformTestHelper.inputBuilder().addInput(jarInput).build();
+        Path jar = getJarWithBrokenClasses("input.jar", ImmutableMap.of("test/A", "test/Base"));
 
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .setInputs(ImmutableSet.of(input))
-                        .setTransformOutputProvider(outputProvider)
-                        .build();
+        Set<File> classesToFix = ImmutableSet.of(jar.toFile());
 
-        FixStackFramesDelegate transform = new FixStackFramesDelegate(ANDROID_JAR, null);
-        transform.transform(invocation);
+        FixStackFramesDelegate delegate =
+                new FixStackFramesDelegate(
+                        ANDROID_JAR, classesToFix, ImmutableSet.of(), output, null);
+
+        delegate.doFullRun(executor);
 
         assertThat(readZipEntry(jar, "test/A.class"))
-                .isEqualTo(readZipEntry(output.resolve("input.jar"), "test/A.class"));
+                .isEqualTo(readZipEntry(singleOutput().toPath(), "test/A.class"));
     }
 
     @Test
     public void testOnlyClassesProcessed() throws Exception {
-        Path jar = tmp.getRoot().toPath().resolve("input");
+        Path jar = tmp.getRoot().toPath().resolve("input.jar");
 
         try (ZipOutputStream outputZip =
                 new ZipOutputStream(new BufferedOutputStream(Files.newOutputStream(jar)))) {
@@ -272,37 +217,28 @@ public class FixStackFramesDelegateTest {
             outputZip.closeEntry();
         }
 
-        JarInput jarInput =
-                TransformTestHelper.jarBuilder(jar.toFile())
-                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
-                        .build();
-        TransformInput input = TransformTestHelper.inputBuilder().addInput(jarInput).build();
+        Set<File> classesToFix = ImmutableSet.of(jar.toFile());
 
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .setInputs(ImmutableSet.of(input))
-                        .setTransformOutputProvider(outputProvider)
-                        .build();
+        FixStackFramesDelegate delegate =
+                new FixStackFramesDelegate(
+                        ANDROID_JAR, classesToFix, ImmutableSet.of(), output, null);
 
-        FixStackFramesDelegate transform = new FixStackFramesDelegate(ANDROID_JAR, null);
-        transform.transform(invocation);
+        delegate.doFullRun(executor);
 
-        assertThatZip(output.resolve("input.jar").toFile()).doesNotContain("LICENSE");
+        assertThatZip(singleOutput()).doesNotContain("LICENSE");
     }
 
     @Test
-    public void testNonIncrementalClearsOutput()
-            throws IOException, TransformException, InterruptedException {
-        Files.write(output.resolve("to-be-removed"), "".getBytes());
+    public void testNonIncrementalClearsOutput() throws IOException {
+        Files.write(output.toPath().resolve("to-be-removed"), "".getBytes());
 
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .setTransformOutputProvider(outputProvider)
-                        .setIncremental(false)
-                        .build();
-        FixStackFramesDelegate transform = new FixStackFramesDelegate(ANDROID_JAR, null);
-        transform.transform(invocation);
-        assertThat(output.toFile().list()).named("output artifacts").hasLength(0);
+        FixStackFramesDelegate delegate =
+                new FixStackFramesDelegate(
+                        ANDROID_JAR, ImmutableSet.of(), ImmutableSet.of(), output, null);
+
+        delegate.doFullRun(executor);
+
+        assertThat(output.list()).named("output artifacts").hasLength(0);
     }
 
     /** Loads all classes from jars, to make sure no VerifyError is thrown. */
@@ -418,5 +354,12 @@ public class FixStackFramesDelegateTest {
 
         cw.visitEnd();
         return cw.toByteArray();
+    }
+
+    private File singleOutput() {
+        File[] outputs = output.listFiles();
+        assertThat(outputs).isNotNull();
+        assertThat(outputs).hasLength(1);
+        return outputs[0];
     }
 }
