@@ -42,6 +42,7 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.fixtures.FakeFileCollection;
+import com.android.build.gradle.internal.tasks.FixStackFramesDelegate;
 import com.android.builder.utils.FileCache;
 import com.android.testutils.TestInputsGenerator;
 import com.android.testutils.TestUtils;
@@ -77,9 +78,9 @@ import org.objectweb.asm.Opcodes;
 
 /**
  * Testing stack frame fixing in {@link
- * com.android.build.gradle.internal.transforms.FixStackFramesTransform}.
+ * FixStackFramesDelegate}.
  */
-public class FixStackFramesTransformTest {
+public class FixStackFramesDelegateTest {
 
     private static final FileCollection ANDROID_JAR =
             new FakeFileCollection(TestUtils.getPlatformFile("android.jar"));
@@ -111,7 +112,7 @@ public class FixStackFramesTransformTest {
                         .setTransformOutputProvider(outputProvider)
                         .build();
 
-        FixStackFramesTransform transform = new FixStackFramesTransform(ANDROID_JAR, null);
+        FixStackFramesDelegate transform = new FixStackFramesDelegate(ANDROID_JAR, null);
         transform.transform(invocation);
 
         assertAllClassesAreValid(output.resolve("input.jar"));
@@ -135,7 +136,7 @@ public class FixStackFramesTransformTest {
                         .build();
 
         FileCache cache = FileCache.getInstanceWithSingleProcessLocking(tmp.newFolder());
-        FixStackFramesTransform transform = new FixStackFramesTransform(ANDROID_JAR, cache);
+        FixStackFramesDelegate transform = new FixStackFramesDelegate(ANDROID_JAR, cache);
         transform.transform(invocation);
         assertThat(cache.getCacheDirectory().list()).hasLength(1);
 
@@ -162,7 +163,7 @@ public class FixStackFramesTransformTest {
                         .setIncremental(true)
                         .build();
 
-        FixStackFramesTransform transform = new FixStackFramesTransform(ANDROID_JAR, null);
+        FixStackFramesDelegate transform = new FixStackFramesDelegate(ANDROID_JAR, null);
         transform.transform(invocation);
         assertThat(output.toFile().list()).named("output artifacts").hasLength(0);
 
@@ -222,7 +223,7 @@ public class FixStackFramesTransformTest {
                         .setTransformOutputProvider(outputProvider)
                         .build();
 
-        FixStackFramesTransform transform = new FixStackFramesTransform(ANDROID_JAR, null);
+        FixStackFramesDelegate transform = new FixStackFramesDelegate(ANDROID_JAR, null);
         transform.transform(invocation);
 
         assertThat(output.toFile().list()).named("output artifacts").hasLength(1);
@@ -244,7 +245,7 @@ public class FixStackFramesTransformTest {
                         .setTransformOutputProvider(outputProvider)
                         .build();
 
-        FixStackFramesTransform transform = new FixStackFramesTransform(ANDROID_JAR, null);
+        FixStackFramesDelegate transform = new FixStackFramesDelegate(ANDROID_JAR, null);
         transform.transform(invocation);
 
         assertThat(readZipEntry(jar, "test/A.class"))
@@ -283,7 +284,7 @@ public class FixStackFramesTransformTest {
                         .setTransformOutputProvider(outputProvider)
                         .build();
 
-        FixStackFramesTransform transform = new FixStackFramesTransform(ANDROID_JAR, null);
+        FixStackFramesDelegate transform = new FixStackFramesDelegate(ANDROID_JAR, null);
         transform.transform(invocation);
 
         assertThatZip(output.resolve("input.jar").toFile()).doesNotContain("LICENSE");
@@ -299,7 +300,7 @@ public class FixStackFramesTransformTest {
                         .setTransformOutputProvider(outputProvider)
                         .setIncremental(false)
                         .build();
-        FixStackFramesTransform transform = new FixStackFramesTransform(ANDROID_JAR, null);
+        FixStackFramesDelegate transform = new FixStackFramesDelegate(ANDROID_JAR, null);
         transform.transform(invocation);
         assertThat(output.toFile().list()).named("output artifacts").hasLength(0);
     }

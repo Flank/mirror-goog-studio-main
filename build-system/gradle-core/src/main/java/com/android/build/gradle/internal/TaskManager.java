@@ -155,7 +155,7 @@ import com.android.build.gradle.internal.transforms.DexMergerTransformCallable;
 import com.android.build.gradle.internal.transforms.DexSplitterTransform;
 import com.android.build.gradle.internal.transforms.ExternalLibsMergerTransform;
 import com.android.build.gradle.internal.transforms.ExtractJarsTransform;
-import com.android.build.gradle.internal.transforms.FixStackFramesTransform;
+import com.android.build.gradle.internal.tasks.FixStackFramesDelegate;
 import com.android.build.gradle.internal.transforms.MergeClassesTransform;
 import com.android.build.gradle.internal.transforms.MergeJavaResourcesTransform;
 import com.android.build.gradle.internal.transforms.ProGuardTransform;
@@ -2262,8 +2262,8 @@ public abstract class TaskManager {
         if (variantScope.getJava8LangSupportType() == Java8LangSupport.DESUGAR) {
             FileCache userCache = getUserIntermediatesCache();
 
-            FixStackFramesTransform fixFrames =
-                    new FixStackFramesTransform(variantScope.getBootClasspath(), userCache);
+            FixStackFramesDelegate fixFrames =
+                    new FixStackFramesDelegate(variantScope.getBootClasspath(), userCache);
             transformManager.addTransform(taskFactory, variantScope, fixFrames);
 
             DesugarTransform desugarTransform =
