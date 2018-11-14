@@ -19,6 +19,7 @@ android {
     minSdkVersion 16
     //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
     targetSdkVersion 20
+    testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
     buildConfigField "String", "FOO", "\"bar\""
   }
@@ -30,6 +31,12 @@ android {
       compatibleScreens 'small', 'normal', 'large', 'xlarge'
     }
   }
+}
+
+dependencies {
+  testImplementation 'junit:junit:4.12'
+  androidTestImplementation "com.android.support.test:runner:${project.testSupportLibVersion}"
+  androidTestImplementation "com.android.support.test:rules:${project.testSupportLibVersion}"
 }
 
 // map for the version code

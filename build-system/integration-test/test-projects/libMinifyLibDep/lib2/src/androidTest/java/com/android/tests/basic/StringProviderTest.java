@@ -1,11 +1,17 @@
 package com.android.tests.basic;
 
+import static org.junit.Assert.*;
+
+import android.support.test.runner.AndroidJUnit4;
 import java.lang.reflect.Method;
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
-public class StringProviderTest extends TestCase {
+@RunWith(AndroidJUnit4.class)
+public class StringProviderTest {
 
-    public void testNonObfuscatedMethod() {
+    @Test
+    public void testNonObfuscatedMethod1() {
         // this should not be obfuscated
         String className = "com.android.tests.basic.StringProvider";
         String methodName = "getString";
@@ -13,6 +19,7 @@ public class StringProviderTest extends TestCase {
         searchMethod(className, methodName, true);
     }
 
+    @Test
     public void testObduscatedMethod() {
         // this should not be obfuscated, main sources are not obfuscated for library test APK
         String className = "com.android.tests.basic.StringProvider";

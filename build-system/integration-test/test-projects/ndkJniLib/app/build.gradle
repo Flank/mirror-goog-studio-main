@@ -4,6 +4,10 @@ import com.android.build.OutputFile;
 
 dependencies {
     api project(':lib')
+
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation "com.android.support.test:runner:${project.testSupportLibVersion}"
+    androidTestImplementation "com.android.support.test:rules:${project.testSupportLibVersion}"
 }
 
 // map for the version code for ABIs.
@@ -19,6 +23,7 @@ android {
         // This actual the app version code. Giving ourselves 100,000 values [0, 99999]
         versionCode 123
         minSdkVersion rootProject.supportLibMinSdk
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
     flavorDimensions 'version'

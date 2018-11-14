@@ -2,12 +2,24 @@ package com.android.tests.overlay2;
 
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.test.ActivityInstrumentationTestCase2;
-import android.test.suitebuilder.annotation.MediumTest;
 import android.widget.ImageView;
 
+import android.support.test.filters.MediumTest;
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
 
-public class MainTest extends ActivityInstrumentationTestCase2<Main> {
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import static org.junit.Assert.*;
+
+
+@RunWith(AndroidJUnit4.class)
+public class MainTest {
+    @Rule
+    public ActivityTestRule<Main> rule = new ActivityTestRule<>(Main.class);
     
     private final static int RED = 0xFFFF0000;
     private final static int GREEN = 0xFF00FF00;
@@ -18,17 +30,9 @@ public class MainTest extends ActivityInstrumentationTestCase2<Main> {
     private ImageView mFreeNormalOverlayIV;
     private ImageView mFreeBetaDebugOverlayIV;
 
-    /**
-     * Creates an {@link ActivityInstrumentationTestCase2} that tests the {@link Main} activity.
-     */
-    public MainTest() {
-        super(Main.class);
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        final Main a = getActivity();
+    @Before
+    public void setUp(){
+        final Main a = rule.getActivity();
         // ensure a valid handle to the activity has been returned
         assertNotNull(a);
         mNoOverlayIV = (ImageView) a.findViewById(R.id.no_overlay);
@@ -45,6 +49,7 @@ public class MainTest extends ActivityInstrumentationTestCase2<Main> {
      * to run before other tests, as junit uses reflection to find the tests.
      */
     @MediumTest
+    @Test
     public void testPreconditions() {
         assertNotNull(mNoOverlayIV);
         assertNotNull(mDebugOverlayIV);
@@ -53,10 +58,12 @@ public class MainTest extends ActivityInstrumentationTestCase2<Main> {
         assertNotNull(mFreeBetaDebugOverlayIV);
     }
 
+    @Test
     public void testNoOverlay() {
         pixelLooker(mNoOverlayIV, GREEN);
     }
 
+    @Test
     public void testDebugOverlay() {
         if ("debug".equals(BuildConfig.BUILD_TYPE)) {
             pixelLooker(mDebugOverlayIV, GREEN);
@@ -65,6 +72,7 @@ public class MainTest extends ActivityInstrumentationTestCase2<Main> {
         }
     }
 
+    @Test
     public void testBetaOverlay() {
         if ("beta".equals(BuildConfig.FLAVOR_releaseType)) {
             pixelLooker(mBetaOverlayIV, GREEN);
@@ -73,6 +81,7 @@ public class MainTest extends ActivityInstrumentationTestCase2<Main> {
         }
     }
 
+    @Test
     public void testFreeNormalOverlay() {
         if ("freeNormal".equals(BuildConfig.FLAVOR)) {
             pixelLooker(mFreeNormalOverlayIV, GREEN);
@@ -81,6 +90,7 @@ public class MainTest extends ActivityInstrumentationTestCase2<Main> {
         }
     }
 
+    @Test
     public void testFreeBetaDebugOverlay() {
         if ("freeBeta".equals(BuildConfig.FLAVOR) && "debug".equals(BuildConfig.BUILD_TYPE)) {
             pixelLooker(mFreeBetaDebugOverlayIV, GREEN);

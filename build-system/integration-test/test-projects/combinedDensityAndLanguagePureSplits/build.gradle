@@ -14,6 +14,7 @@ android {
     minSdkVersion 21
     //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
     targetSdkVersion 21
+    testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
   }
 
   splits {
@@ -28,3 +29,8 @@ android {
   }
 }
 
+dependencies {
+  testImplementation 'junit:junit:4.12'
+  androidTestImplementation "com.android.support.test:runner:${project.testSupportLibVersion}"
+  androidTestImplementation "com.android.support.test:rules:${project.testSupportLibVersion}"
+}

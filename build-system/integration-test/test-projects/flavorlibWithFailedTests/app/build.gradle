@@ -6,6 +6,7 @@ android {
 
     defaultConfig {
         minSdkVersion 15
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     flavorDimensions 'foo'
     productFlavors {
@@ -21,4 +22,8 @@ android {
 dependencies {
     flavor1Api project(':lib1')
     flavor2Api project(':lib2')
+
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation "com.android.support.test:runner:${project.testSupportLibVersion}"
+    androidTestImplementation "com.android.support.test:rules:${project.testSupportLibVersion}"
 }

@@ -2,6 +2,10 @@ apply plugin: 'com.android.library'
 
 dependencies {
     api project(':lib2')
+
+    implementation 'junit:junit:4.12'
+    implementation "com.android.support.test:runner:${project.testSupportLibVersion}"
+    implementation "com.android.support.test:rules:${project.testSupportLibVersion}"
 }
 
 android {
@@ -16,6 +20,7 @@ android {
         targetSdkVersion 16
         proguardFile 'config.pro'
         consumerProguardFiles 'consumerRules.pro'
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {

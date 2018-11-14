@@ -10,6 +10,10 @@ dependencies {
     debugApi "com.android.support:support-v13:${rootProject.supportLibVersion}"
 
     api "com.google.android.gms:play-services-base:${rootProject.playServicesVersion}"
+
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation "com.android.support.test:runner:${project.testSupportLibVersion}"
+    androidTestImplementation "com.android.support.test:rules:${project.testSupportLibVersion}"
 }
 
 android {
@@ -24,5 +28,6 @@ android {
         minSdkVersion 16
         //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
         targetSdkVersion 16
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 }

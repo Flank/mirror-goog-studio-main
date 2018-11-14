@@ -1,14 +1,24 @@
 package com.android.tests.overlay2;
 
+import static org.junit.Assert.*;
+
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.test.ActivityInstrumentationTestCase2;
-import android.test.suitebuilder.annotation.MediumTest;
+import android.support.test.filters.MediumTest;
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
 import android.widget.ImageView;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 
-public class MainTest extends ActivityInstrumentationTestCase2<Main> {
-    
+@RunWith(AndroidJUnit4.class)
+public class MainTest {
+    @Rule
+    public ActivityTestRule<Main> rule = new ActivityTestRule<>(Main.class);
+
     private final static int GREEN = 0xFF00FF00;
 
     private ImageView mNoOverlayIV;
@@ -17,17 +27,10 @@ public class MainTest extends ActivityInstrumentationTestCase2<Main> {
     private ImageView mTypeFlavorOverlayIV;
     private ImageView mVariantTypeFlavorOverlayIV;
 
-    /**
-     * Creates an {@link ActivityInstrumentationTestCase2} that tests the {@link Main} activity.
-     */
-    public MainTest() {
-        super(Main.class);
-    }
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        final Main a = getActivity();
+    @Before
+    public void setUp() {
+        final Main a = rule.getActivity();
         // ensure a valid handle to the activity has been returned
         assertNotNull(a);
         mNoOverlayIV = (ImageView) a.findViewById(R.id.no_overlay);
@@ -44,6 +47,7 @@ public class MainTest extends ActivityInstrumentationTestCase2<Main> {
      * to run before other tests, as junit uses reflection to find the tests.
      */
     @MediumTest
+    @Test
     public void testPreconditions() {
         assertNotNull(mNoOverlayIV);
         assertNotNull(mTypeOverlayIV);
@@ -52,26 +56,30 @@ public class MainTest extends ActivityInstrumentationTestCase2<Main> {
         assertNotNull(mVariantTypeFlavorOverlayIV);
     }
 
+    @Test
     public void testNoOverlay() {
         pixelLooker(mNoOverlayIV, GREEN);
     }
 
+    @Test
     public void testTypeOverlay() {
         pixelLooker(mTypeOverlayIV, GREEN);
     }
 
+    @Test
     public void testFlavorOverlay() {
         pixelLooker(mFlavorOverlayIV, GREEN);
     }
-
+    @Test
     public void testTypeFlavorOverlay() {
         pixelLooker(mTypeFlavorOverlayIV, GREEN);
     }
 
+    @Test
     public void testVariantTypeFlavorOverlay() {
         pixelLooker(mVariantTypeFlavorOverlayIV, GREEN);
     }
-    
+
     private void pixelLooker(ImageView iv, int expectedColor) {
         BitmapDrawable d = (BitmapDrawable) iv.getDrawable();
         Bitmap bitmap = d.getBitmap();

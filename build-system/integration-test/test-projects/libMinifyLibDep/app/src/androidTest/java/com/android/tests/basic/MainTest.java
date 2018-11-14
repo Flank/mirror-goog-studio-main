@@ -1,27 +1,28 @@
 package com.android.tests.basic;
 
-import android.test.ActivityInstrumentationTestCase2;
-import android.test.suitebuilder.annotation.MediumTest;
+import static org.junit.Assert.*;
+
+import android.support.test.filters.MediumTest;
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
 import android.widget.TextView;
-
 import java.lang.reflect.Method;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
-public class MainTest extends ActivityInstrumentationTestCase2<Main> {
+@RunWith(AndroidJUnit4.class)
+public class MainTest {
+    @Rule
+    public ActivityTestRule<Main> rule = new ActivityTestRule<>(Main.class);
 
     private Main mainActivity;
     private TextView mTextView;
 
-    /**
-     * Creates an {@link ActivityInstrumentationTestCase2} that tests the {@link Main} activity.
-     */
-    public MainTest() {
-        super(Main.class);
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        mainActivity = getActivity();
+    @Before
+    public void setUp() {
+        mainActivity = rule.getActivity();
         // ensure a valid handle to the activity has been returned
         assertNotNull(mainActivity);
         mTextView = (TextView) mainActivity.findViewById(R.id.dateText);
@@ -34,10 +35,12 @@ public class MainTest extends ActivityInstrumentationTestCase2<Main> {
      * to run before other tests, as junit uses reflection to find the tests.
      */
     @MediumTest
+    @Test
     public void testPreconditions() {
         assertNotNull(mTextView);
     }
 
+    @Test
     public void testNonObfuscatedMethod1() {
         // check we can call the method since it shouldn't be obfuscated.
         mainActivity.setUpTextView1();
@@ -49,6 +52,7 @@ public class MainTest extends ActivityInstrumentationTestCase2<Main> {
         searchMethod(className, methodName, true /*shouldExist*/);
     }
 
+    @Test
     public void testNonObfuscatedMethod2() {
         // check we can call the method since it shouldn't be obfuscated.
         mainActivity.setUpTextView2();
@@ -64,6 +68,7 @@ public class MainTest extends ActivityInstrumentationTestCase2<Main> {
     /**
      * use reflection to get a method that should be obfuscated
      */
+    @Test
     public void testConsumerProguardRules() {
         String className = "com.android.tests.basic.StringGetter";
         String methodName = "getString3";
@@ -74,6 +79,7 @@ public class MainTest extends ActivityInstrumentationTestCase2<Main> {
     /**
      * use reflection to get a class that should be obfuscated
      */
+    @Test
     public void testObfuscatedInternalClass() {
         // in this case the whole class has been obfuscated.
         String className = "com.android.tests.internal.StringGetterInternal";
@@ -85,6 +91,7 @@ public class MainTest extends ActivityInstrumentationTestCase2<Main> {
         }
     }
 
+    @Test
     public void testLib2ObfuscatedClass() {
         // in this case the whole class has been obfuscated.
         String className = "com.android.tests.basic.StringProvider";

@@ -1,6 +1,13 @@
 package com.example.hellojni.lib;
 
-import android.test.ActivityInstrumentationTestCase;
+import static org.junit.Assert.*;
+
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
+import android.widget.TextView;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.runner.RunWith;
 
 /**
  * This is a simple framework for a test of an Application.  See
@@ -12,15 +19,16 @@ import android.test.ActivityInstrumentationTestCase;
  * -e class com.example.hellojni.HelloJniTest \
  * com.example.hellojni.tests/android.test.InstrumentationTestRunner
  */
-public class HelloJniTest extends ActivityInstrumentationTestCase<HelloJni> {
+@RunWith(AndroidJUnit4.class)
+public class HelloJniTest {
+    @Rule
+    public ActivityTestRule<HelloJni> rule = new ActivityTestRule<>(HelloJni.class);
 
-    public HelloJniTest() {
-        super("com.example.hellojni", HelloJni.class);
-    }
+    private TextView mTextView;
 
-
-    public void testJniName() {
-        final HelloJni a = getActivity();
+    @Before
+    public void setUp() {
+        final HelloJni a = rule.getActivity();
         // ensure a valid handle to the activity has been returned
         assertNotNull(a);
 
