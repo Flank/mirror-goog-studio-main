@@ -137,7 +137,7 @@ public class BasicTest2 {
                 .setVersionName("2.0")
                 .setMinSdkVersion(16)
                 .setTargetSdkVersion(16)
-                .setTestInstrumentationRunner("android.test.InstrumentationTestRunner")
+                .setTestInstrumentationRunner("android.support.test.runner.AndroidJUnitRunner")
                 .setTestHandleProfiling(Boolean.FALSE)
                 .setTestFunctionalTest(null)
                 .test();

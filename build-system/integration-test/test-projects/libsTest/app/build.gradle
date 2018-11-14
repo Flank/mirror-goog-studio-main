@@ -3,7 +3,10 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
-    defaultConfig.minSdkVersion 15
+    defaultConfig {
+        minSdkVersion 15
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
 }
 
 //
@@ -13,4 +16,8 @@ dependencies {
     api project(':lib1')
     api project(':lib2b')
     api project(':libapp')
+
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation "com.android.support.test:runner:${project.testSupportLibVersion}"
+    androidTestImplementation "com.android.support.test:rules:${project.testSupportLibVersion}"
 }
