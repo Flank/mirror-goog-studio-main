@@ -181,7 +181,7 @@ public class PackagingUtils {
             @Nullable Collection<String> aaptOptionsNoCompress,
             @NonNull File manifest,
             @NonNull BooleanSupplier isInExecutionPhase,
-            @NonNull EvalIssueReporter issueReporter) {
+            @Nullable EvalIssueReporter issueReporter) {
         checkState(manifest.exists());
 
         NativeLibrariesPackagingMode packagingMode =
@@ -207,7 +207,7 @@ public class PackagingUtils {
     public static NativeLibrariesPackagingMode getNativeLibrariesLibrariesPackagingMode(
             @NonNull File manifest,
             @NonNull BooleanSupplier isInExecutionPhase,
-            @NonNull EvalIssueReporter issueReporter) {
+            @Nullable EvalIssueReporter issueReporter) {
         checkState(manifest.exists());
         DefaultManifestParser parser =
                 new DefaultManifestParser(manifest, isInExecutionPhase, issueReporter);

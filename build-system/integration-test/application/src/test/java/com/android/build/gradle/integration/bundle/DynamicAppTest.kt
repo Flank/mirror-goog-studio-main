@@ -125,7 +125,7 @@ class DynamicAppTest {
     @Test
     fun `test buildInstantApk task`() {
         project.executor()
-            .with(BooleanOption.DEPLOY_AS_INSTANT_APP, true)
+            .with(BooleanOption.IDE_DEPLOY_AS_INSTANT_APP, true)
             .run("assembleDebug")
 
 

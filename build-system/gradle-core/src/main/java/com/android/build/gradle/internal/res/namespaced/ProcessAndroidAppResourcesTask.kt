@@ -148,7 +148,7 @@ open class ProcessAndroidAppResourcesTask
             task.manifestFileDirectory =
                     if (artifacts.hasArtifact(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)) {
                         artifacts.getFinalArtifactFiles(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
-                    } else if (variantScope.globalScope.projectOptions.get(BooleanOption.DEPLOY_AS_INSTANT_APP)) {
+                    } else if (variantScope.globalScope.projectOptions.get(BooleanOption.IDE_DEPLOY_AS_INSTANT_APP)) {
                         artifacts.getFinalArtifactFiles(InternalArtifactType.INSTANT_APP_MANIFEST)
                     } else {
                         artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS)

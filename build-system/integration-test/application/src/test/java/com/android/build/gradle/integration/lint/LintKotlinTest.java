@@ -25,10 +25,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-/**
- * Integration test for lint analyzing Kotlin code from Gradle. Also verifies the lintFix target on
- * the synthetic accessor warnings found in the Kotlin project.
- */
+/** Integration test for lint analyzing Kotlin code from Gradle. */
 public class LintKotlinTest {
 
     @Rule
@@ -37,15 +34,12 @@ public class LintKotlinTest {
 
     @Before
     public void setUp() throws Exception {
-        @SuppressWarnings("ThrowableNotThrown")
-        Throwable exception =
-                project.executeExpectingFailure("clean", ":app:lintDebug", ":app:lintFix");
+        Throwable exception = project.executeExpectingFailure("clean", ":app:lintDebug");
         while (exception.getCause() != null && exception.getCause() != exception) {
             exception = exception.getCause();
         }
         assertThat(exception.getMessage())
-                .contains(
-                        "Aborting build since sources were modified to apply quickfixes after compilation");
+                .contains("Lint found errors in the project; aborting build");
     }
 
     @Test
@@ -56,20 +50,5 @@ public class LintKotlinTest {
                         "errorLine1=\"    public SampleFragment(String foo) { // Deliberate lint error\"");
         assertThat(lintReport).contains("id=\"ValidFragment\"");
         assertThat(lintReport).doesNotContain("id=\"CallSuper\"");
-
-        // Make sure quickfixes worked too
-        File source = project.file("app/src/main/kotlin/test/pkg/AccessTest2.kt");
-        // The original source has this:
-        //    private val field5 = arrayOfNulls<Inner>(100)
-        //    ...
-        //    private constructor()
-        //    ...
-        // After applying quickfixes, it contains this:
-        //    internal val field5 = arrayOfNulls<Inner>(100)
-        //    ...
-        //    internal constructor()
-        //    ...
-        assertThat(source).contains("internal val field5");
-        assertThat(source).contains("internal constructor()");
     }
 }

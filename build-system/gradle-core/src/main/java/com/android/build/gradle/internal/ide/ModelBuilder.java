@@ -988,9 +988,12 @@ public class ModelBuilder<Extension extends AndroidConfig>
                                                             .getVariantConfiguration()
                                                             .getType());
 
-                            // get the OutputPublishingSpec from the ArtifactType for this particular variant spec
+                            // get the OutputPublishingSpec from the ArtifactType for this
+                            // particular variant spec
                             PublishingSpecs.OutputSpec taskOutputSpec =
-                                    testedSpec.getSpec(AndroidArtifacts.ArtifactType.CLASSES);
+                                    testedSpec.getSpec(
+                                            AndroidArtifacts.ArtifactType.CLASSES,
+                                            AndroidArtifacts.PublishedConfigType.API_ELEMENTS);
                             // now get the output type
                             ArtifactType testedOutputType = taskOutputSpec.getOutputType();
 
@@ -1003,10 +1006,11 @@ public class ModelBuilder<Extension extends AndroidConfig>
                                             variantScope
                                                     .getArtifacts()
                                                     .getFinalArtifactFiles(testedOutputType)
-                                                    // We used to call .getSingleFile() but Kotlin projects
-                                                    // currently have 2 output dirs specified for test classes.
-                                                    // This supplier is going away in beta3, so this is obsolete
-                                                    // in any case.
+                                                    // We used to call .getSingleFile() but Kotlin
+                                                    // projects currently have 2 output dirs
+                                                    // specified for test classes. This supplier is
+                                                    // going away in beta3, so this is obsolete in
+                                                    // any case.
                                                     .iterator()
                                                     .next()));
                         };

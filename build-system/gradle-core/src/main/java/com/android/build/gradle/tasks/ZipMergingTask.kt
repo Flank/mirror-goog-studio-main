@@ -102,7 +102,7 @@ open class ZipMergingTask : AndroidVariantTask() {
 
             val buildArtifacts = variantScope.artifacts
             task.init(
-                    buildArtifacts.getOptionalFinalArtifactFiles(InternalArtifactType.LIBRARY_CLASSES),
+                    buildArtifacts.getOptionalFinalArtifactFiles(InternalArtifactType.RUNTIME_LIBRARY_CLASSES),
                     buildArtifacts.getOptionalFinalArtifactFiles(InternalArtifactType.LIBRARY_JAVA_RES),
                     mainFullJar)
         }

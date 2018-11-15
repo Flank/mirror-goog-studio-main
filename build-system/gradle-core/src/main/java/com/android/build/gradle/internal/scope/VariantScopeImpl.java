@@ -1419,8 +1419,10 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 VariantSpec testedSpec =
                         testedScope.getPublishingSpec().getTestingSpec(variantType);
 
-                // get the OutputPublishingSpec from the ArtifactType for this particular variant spec
-                OutputSpec taskOutputSpec = testedSpec.getSpec(artifactType);
+                // get the OutputPublishingSpec from the ArtifactType for this particular variant
+                // spec
+                OutputSpec taskOutputSpec =
+                        testedSpec.getSpec(artifactType, configType.getPublishedTo());
 
                 if (taskOutputSpec != null) {
                     Collection<PublishedConfigType> publishedConfigs =
@@ -1615,7 +1617,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public InternalArtifactType getManifestArtifactType() {
-        return globalScope.getProjectOptions().get(BooleanOption.DEPLOY_AS_INSTANT_APP)
+        return globalScope.getProjectOptions().get(BooleanOption.IDE_DEPLOY_AS_INSTANT_APP)
                 ? InternalArtifactType.INSTANT_APP_MANIFEST
                 : instantRunBuildContext.isInInstantRunMode()
                         ? InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS

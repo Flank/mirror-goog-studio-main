@@ -96,7 +96,7 @@ public abstract class SplitApkInstallerBase {
                 message += String.format(" Error: %s", receiver.getErrorMessage());
             }
             Log.e(LOG_TAG, message);
-            throw new InstallException(message);
+            throw new InstallException(message, receiver.getErrorMessage());
         }
     }
 

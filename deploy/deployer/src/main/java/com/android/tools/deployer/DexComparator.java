@@ -35,7 +35,7 @@ public class DexComparator {
      * @param splitter the splitter to use to split a dex into classes
      * @return the classes that have changed.
      */
-    public List<DexClass> compare(List<FileDiff> dexDiffs, CachedDexSplitter splitter)
+    public List<DexClass> compare(List<FileDiff> dexDiffs, DexSplitter splitter)
             throws DeployerException {
         // Iterate through the list of .dex files which have changed. We cannot trust dex filenames to be stable
         // since there have been instances where we receive:
@@ -59,7 +59,7 @@ public class DexComparator {
                 if (diff.status == FileDiff.Status.CREATED) {
                     continue;
                 }
-                List<DexClass> klasses = splitter.split(diff.oldFile, false, null);
+                List<DexClass> klasses = splitter.split(diff.oldFile, null);
                 for (DexClass clz : klasses) {
                     oldChecksums.put(clz.name, clz.checksum);
                 }
@@ -68,13 +68,13 @@ public class DexComparator {
             List<DexClass> toSwap = new ArrayList<>();
             for (FileDiff diff : dexDiffs) {
                 // Memory optimization to discard not needed code
-                Predicate<DexClass> needsCode =
+                Predicate<DexClass> keepCode =
                         (DexClass clz) -> {
                             Long oldChecksum = oldChecksums.get(clz.name);
                             return oldChecksum != null && clz.checksum != oldChecksum;
                         };
 
-                List<DexClass> newClasses = splitter.split(diff.newFile, true, needsCode);
+                List<DexClass> newClasses = splitter.split(diff.newFile, keepCode);
                 for (DexClass klass : newClasses) {
                     if (!oldChecksums.containsKey(klass.name)) {
                         // This is a new class. This is not supported.

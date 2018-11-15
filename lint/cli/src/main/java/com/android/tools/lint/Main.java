@@ -1414,7 +1414,7 @@ public class Main {
                             + "target to resolve Android API call to",
                     ARG_SDK_HOME + " <dir>",
                     "Use the given SDK instead of attempting to find it "
-                            + "relative to the lint installation or via $ANDROID_HOME",
+                            + "relative to the lint installation or via $ANDROID_SDK_ROOT",
                     "",
                     "\nExit Status:",
                     "0",

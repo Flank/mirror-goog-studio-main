@@ -48,12 +48,6 @@ public class LintInferredAnnotationsManager extends InferredAnnotationsManager {
         return null;
     }
 
-    @Override
-    public boolean ignoreInference(
-            @NonNull PsiModifierListOwner psiModifierListOwner, @Nullable String s) {
-        return false;
-    }
-
     @NonNull
     @Override
     public PsiAnnotation[] findInferredAnnotations(

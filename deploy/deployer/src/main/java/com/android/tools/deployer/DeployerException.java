@@ -34,13 +34,13 @@ public class DeployerException extends Exception {
         DUMP_UNKNOWN_PACKAGE,
         INVALID_APK,
         FAILED_TO_SPLIT_DEXES,
-        ADDING_CLASSES_NOT_SUPPORTED,
         INTERRUPTED,
         CANNOT_SWAP_STATIC_LIB,
         CANNOT_SWAP_MANIFEST,
         CANNOT_SWAP_RESOURCE,
         ERROR_PUSHING_APK,
         DIFFERENT_NAMES_OF_APKS,
+        INSTALL_FAILED,
     }
 
     public DeployerException(Error error, String message) {

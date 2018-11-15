@@ -16,11 +16,11 @@
 package com.android.ide.common.repository;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.utils.HashCodes;
 import com.google.common.base.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.jetbrains.annotations.Nullable;
 
 public class GradleVersionRange {
     private static final Pattern RANGE_PATTERN = Pattern.compile("\\[([^,)]+),([^,)]+)\\)");

@@ -97,19 +97,13 @@ public class LibraryIntermediateArtifactPublishingTest {
         assertThatZip(fullJar).contains("com/example/helloworld/HelloWorld.class");
         assertThatZip(fullJar).contains("foo.txt");
 
-        File classesJar = getOldLocationJar("classes.jar");
+        File classesJar = project.getSubproject(":lib").getIntermediateFile("runtime_library_classes/debug/classes.jar");
         assertThatZip(classesJar).contains("com/example/helloworld/HelloWorld.class");
         assertThatZip(classesJar).doesNotContain("foo.txt");
 
-        File resJar = getOldLocationJar("res.jar");
+        File resJar = project.getSubproject(":lib").getIntermediateFile("library_java_res/debug/res.jar");
         assertThatZip(resJar).doesNotContain("com/example/helloworld/HelloWorld.class");
         assertThatZip(resJar).contains("foo.txt");
-    }
-
-    // use the "old" location until everything is moved to BuildArtifact.
-    private File getOldLocationJar(String fileName) {
-        return project.getSubproject(":lib")
-                .file("build/intermediates/intermediate-jars/debug/" + fileName);
     }
 
     private File getJar(String fileName) {

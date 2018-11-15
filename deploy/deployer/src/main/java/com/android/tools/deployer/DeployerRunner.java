@@ -23,10 +23,11 @@ import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableMap;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class DeployerRunner {
+public class DeployerRunner implements UIService {
 
     private static final ILogger LOGGER = Logger.getLogger();
     private static final String DB_PATH = "/tmp/studio.db";
@@ -83,24 +84,24 @@ public class DeployerRunner {
         Installer installer = new AdbInstaller(adb, LOGGER);
         ExecutorService service = Executors.newFixedThreadPool(5);
         TaskRunner runner = new TaskRunner(service);
-        Deployer deployer = new Deployer(adb, db, runner, installer);
-        if (command.equals("install")) {
-            InstallOptions.Builder options = InstallOptions.builder().setAllowDebuggable();
-            if (device.supportsFeature(IDevice.HardwareFeature.EMBEDDED)) {
-                options.setGrantAllPermissions();
-            }
-            deployer.install(apks, options.build());
-        } else {
-            try {
+        Deployer deployer = new Deployer(adb, db, runner, installer, this);
+        try {
+            if (command.equals("install")) {
+                InstallOptions.Builder options = InstallOptions.builder().setAllowDebuggable();
+                if (device.supportsFeature(IDevice.HardwareFeature.EMBEDDED)) {
+                    options.setGrantAllPermissions();
+                }
+                deployer.install(packageName, apks, options.build());
+            } else {
                 if (command.equals("fullswap")) {
                     deployer.fullSwap(packageName, apks);
                 } else if (command.equals("codeswap")) {
                     deployer.codeSwap(packageName, apks, ImmutableMap.of());
                 }
-            } catch (DeployerException e) {
-                e.printStackTrace(System.out);
-                LOGGER.error(e, "Error executing the deployer");
             }
+        } catch (DeployerException e) {
+            e.printStackTrace(System.out);
+            LOGGER.error(e, "Error executing the deployer");
         }
         runner.join();
         service.shutdown();
@@ -126,5 +127,18 @@ public class DeployerRunner {
 
     private static void printUsage() {
         LOGGER.info("Usage: DeployerRunner packageName [packageBase,packageSplit1,...]");
+    }
+
+    @Override
+    public boolean prompt(String message) {
+        System.err.println(message + ". Y/N?");
+        try (Scanner scanner = new Scanner(System.in)) {
+            return scanner.nextLine().equalsIgnoreCase("y");
+        }
+    }
+
+    @Override
+    public void message(String message) {
+        System.err.println(message);
     }
 }

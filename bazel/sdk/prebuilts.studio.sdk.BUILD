@@ -152,55 +152,6 @@ filegroup(
 )
 
 filegroup(
-    name = "support_latest",
-    srcs = [":support_25.3.1"],
-    visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "support_25.3.1",
-    srcs = sdk_glob([
-        "extras/android/m2repository/com/android/support/*/25.3.1/**",
-    ]),
-)
-
-filegroup(
-    name = "uiautomator_latest",
-    srcs = [":uiautomator_2.1.1"],
-    visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "uiautomator_2.1.1",
-    srcs = sdk_glob([
-        "extras/android/m2repository/com/android/support/test/uiautomator/uiautomator-v18/2.1.1/**",
-    ]),
-)
-
-filegroup(
-    name = "gms_latest",
-    srcs = [":gms_9.6.1"],
-    visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "gms_9.6.1",
-    srcs = sdk_glob(["extras/google/m2repository/com/google/android/gms/*/9.6.1/**"]),
-)
-
-filegroup(
-    name = "databinding_latest",
-    srcs = sdk_glob(["extras/android/m2repository/com/android/databinding/*/1.3.1/**"]),
-    visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "multidex",
-    srcs = sdk_glob(["extras/android/m2repository/com/android/support/multidex*/1.0.1/**"]),
-    visibility = ["//visibility:public"],
-)
-
-filegroup(
     name = "platforms/latest",
     srcs = [":platforms/android-27"],
     visibility = ["//visibility:public"],
@@ -245,7 +196,7 @@ platform_filegroup(
 
 platform_filegroup(
     name = "platforms/android-28",
-    visibility = ["//visibility:public"], # TODO: revert visibility when platforms/latest becomes android-28
+    visibility = ["//visibility:public"],  # TODO: revert visibility when platforms/latest becomes android-28
 )
 
 platform_filegroup(
@@ -290,54 +241,6 @@ filegroup(
 filegroup(
     name = "add-ons/addon-google_apis-google-24",
     srcs = sdk_glob(["add-ons/addon-google_apis-google-24/**"]),
-)
-
-filegroup(
-    name = "espresso_latest",
-    srcs = [":espresso-2.2.2"],
-    visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "espresso-2.2.2",
-    srcs = sdk_glob(
-        include = [
-            "extras/android/m2repository/com/android/support/test/espresso/espresso-core/2.2.2/**",
-            "extras/android/m2repository/com/android/support/test/espresso/espresso-idling-resource/2.2.2/**",
-        ],
-    ),
-)
-
-filegroup(
-    name = "test-runner_latest",
-    srcs = [":test-runner-0.5"],
-    visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "test-runner-0.5",
-    srcs = sdk_glob(
-        include = [
-            "extras/android/m2repository/com/android/support/test/exposed-instrumentation-api-publish/0.5/**",
-            "extras/android/m2repository/com/android/support/test/rules/0.5/**",
-            "extras/android/m2repository/com/android/support/test/runner/0.5/**",
-        ],
-    ),
-)
-
-filegroup(
-    name = "wearable_latest",
-    srcs = [":wearable-2.0.1"],
-    visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "wearable-2.0.1",
-    srcs = sdk_glob(
-        include = [
-            "extras/google/m2repository/com/google/android/*/wearable/2.0.1/**",
-        ],
-    ),
 )
 
 filegroup(

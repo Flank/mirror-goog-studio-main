@@ -579,6 +579,68 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
         ).run().expectClean()
     }
 
+    fun test119270148() {
+        // Regression test for 119270148
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                public class Test {
+                    public Completable clear(KeyValueStore keyValueStore) {
+                        return Completable.create(subscriber -> {
+                            keyValueStore.clear();
+                        });
+                    }
+                }
+                """
+            ),
+            java(
+                """
+                package test.pkg;
+
+                public interface Other {
+                    void something(Object o);
+                }
+                """
+            ),
+            java(
+                """
+                package test.pkg;
+
+                public class Completable {
+                    public static Completable create(Other o) {
+                        return null;
+                    }
+                }
+                """
+            ),
+            kotlin(
+                """
+                package test.pkg
+
+                import android.support.annotation.CheckResult
+
+                interface Clearable {
+                    @CheckResult
+                    fun clear(): Completable
+                }
+
+                interface KeyValueStore : Clearable {
+                    override fun clear(): Completable
+                }
+                """
+            ),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect("""
+            src/test/pkg/Test.java:7: Warning: The result of clear is not used [CheckResult]
+                                        keyValueStore.clear();
+                                        ~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+        """)
+    }
+
     private val javaxCheckReturnValueSource = java(
         """
         package javax.annotation;

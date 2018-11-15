@@ -36,9 +36,14 @@ public enum InternalArtifactType implements ArtifactType {
     // --- Published classes ---
     // Class-type task output for tasks that generate published classes.
 
-    // Packaged classes for AAR intermediate publishing
+    // Packaged classes for library intermediate publishing
     // This is for external usage. For usage inside a module use ALL_CLASSES
-    LIBRARY_CLASSES,
+    RUNTIME_LIBRARY_CLASSES(Kind.FILE),
+
+    // Packaged library classes published only to compile configuration. This is to allow other
+    // projects to compile again classes that were not additionally processed e.g. classes with
+    // Jacoco instrumentation (b/109771903).
+    COMPILE_LIBRARY_CLASSES(Kind.FILE),
 
     // External libraries' dex files only.
     EXTERNAL_LIBS_DEX,
@@ -52,7 +57,7 @@ public enum InternalArtifactType implements ArtifactType {
     // java processing output
     JAVA_RES,
     // packaged java res for aar intermediate publishing
-    LIBRARY_JAVA_RES,
+    LIBRARY_JAVA_RES(Kind.FILE),
 
     // Full jar with both classes and java res.
     FULL_JAR,

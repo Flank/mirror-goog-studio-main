@@ -109,6 +109,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(DeletedProviderDetector.ISSUE);
         issues.add(DeprecationDetector.ISSUE);
         issues.add(DetectMissingPrefix.MISSING_NAMESPACE);
+        issues.add(DiffUtilDetector.ISSUE);
         issues.add(DosLineEndingDetector.ISSUE);
         issues.add(DuplicateIdDetector.CROSS_LAYOUT);
         issues.add(DuplicateIdDetector.WITHIN_LAYOUT);

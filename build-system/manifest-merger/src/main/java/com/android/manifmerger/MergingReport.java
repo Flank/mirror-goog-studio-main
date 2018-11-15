@@ -340,6 +340,27 @@ public class MergingReport {
         }
 
         @NonNull
+        Builder addMessage(
+                @NonNull XmlAttribute attribute,
+                @NonNull MergingReport.Record.Severity severity,
+                @NonNull String message) {
+            return addMessage(attribute, attribute.getPosition(), severity, message);
+        }
+
+        @NonNull
+        Builder addMessage(
+                @NonNull XmlAttribute attribute,
+                @NonNull SourcePosition position,
+                @NonNull MergingReport.Record.Severity severity,
+                @NonNull String message) {
+            return addMessage(
+                    new SourceFilePosition(
+                            attribute.getOwnerElement().getDocument().getSourceFile(), position),
+                    severity,
+                    message);
+        }
+
+        @NonNull
         Builder addMessage(@NonNull SourceFilePosition sourceFilePosition,
                     @NonNull Record.Severity severity,
                     @NonNull String message) {

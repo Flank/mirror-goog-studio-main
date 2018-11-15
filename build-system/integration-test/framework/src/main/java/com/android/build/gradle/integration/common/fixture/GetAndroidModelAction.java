@@ -32,8 +32,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.Objects;
 import org.gradle.tooling.BuildAction;
 import org.gradle.tooling.BuildController;
 import org.gradle.tooling.model.BuildIdentifier;
@@ -51,22 +50,12 @@ public class GetAndroidModelAction<T> implements BuildAction<ModelContainer<T>> 
 
     private final boolean shouldGenerateSources;
 
-    // Determines whether models are fetched with multiple threads.
-    private final boolean isMultiThreaded;
-
     public GetAndroidModelAction(Class<T> type) {
-        this(type, true);
+        this(type, false);
     }
 
-    public GetAndroidModelAction(Class<T> type, boolean isMultiThreaded) {
-        this(type, isMultiThreaded, false);
-    }
-
-    public GetAndroidModelAction(
-            Class<T> type, boolean isMultiThreaded, boolean shouldGenerateSource) {
+    public GetAndroidModelAction(Class<T> type, boolean shouldGenerateSource) {
         this.type = type;
-        // parallelization hit a change in Gradle 3.2 which makes it not work.
-        this.isMultiThreaded = false; //isMultiThreaded;
         this.shouldGenerateSources = shouldGenerateSource;
     }
 
@@ -82,73 +71,23 @@ public class GetAndroidModelAction<T> implements BuildAction<ModelContainer<T>> 
         BuildIdentifier rootBuildId = rootBuild.getBuildIdentifier();
 
         // add the root project.
-        projects.addAll(
-                rootBuild
-                        .getProjects()
-                        .stream()
-                        .map(
-                                (Function<
-                                                BasicGradleProject,
-                                                Pair<BuildIdentifier, BasicGradleProject>>)
-                                        basicGradleProject ->
-                                                Pair.of(rootBuildId, basicGradleProject))
-                        .collect(Collectors.toList()));
+        for (BasicGradleProject gradleProject : rootBuild.getProjects()) {
+            projects.add(Pair.of(rootBuildId, gradleProject));
+        }
 
         // and the included builds
         for (GradleBuild gradleBuild : rootBuild.getIncludedBuilds()) {
             BuildIdentifier buildId = gradleBuild.getBuildIdentifier();
-            projects.addAll(
-                    gradleBuild
-                            .getProjects()
-                            .stream()
-                            .map(
-                                    (Function<
-                                                    BasicGradleProject,
-                                                    Pair<BuildIdentifier, BasicGradleProject>>)
-                                            basicGradleProject ->
-                                                    Pair.of(buildId, basicGradleProject))
-                            .collect(Collectors.toList()));
+            for (BasicGradleProject basicGradleProject : gradleBuild.getProjects()) {
+                projects.add(Pair.of(buildId, basicGradleProject));
+            }
         }
 
-        final int projectCount = projects.size();
-        Map<BuildIdentifier, Map<String, T>> modelMap =
-                Maps.newHashMapWithExpectedSize(projectCount);
-
-        List<Thread> threads = Lists.newArrayListWithCapacity(CPU_COUNT);
-        List<ModelQuery> queries = Lists.newArrayListWithCapacity(CPU_COUNT);
-
-        if (isMultiThreaded) {
-            for (int i = 0; i < CPU_COUNT; i++) {
-                ModelQuery modelQuery = new ModelQuery(projects, buildController);
-                queries.add(modelQuery);
-                Thread t = new Thread(modelQuery);
-                threads.add(t);
-                t.start();
-            }
-
-            for (int i = 0; i < CPU_COUNT; i++) {
-                try {
-                    threads.get(i).join();
-                    ModelQuery modelQuery = queries.get(i);
-                    mergeMap(modelMap, modelQuery.getModelMaps());
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-        } else {
-            ModelQuery modelQuery = new ModelQuery(projects, buildController);
-            modelQuery.run();
-            modelMap.putAll(modelQuery.getModelMaps());
-        }
+        Map<BuildIdentifier, Map<String, T>> modelMap = getModelMap(projects, buildController);
 
         GlobalLibraryMap globalLibraryMap = null;
-        for (BasicGradleProject project :
-                projects.stream().map(Pair::getSecond).collect(Collectors.toList())) {
-            globalLibraryMap = buildController.findModel(project, GlobalLibraryMap.class);
-            //noinspection VariableNotUsedInsideIf
-            if (globalLibraryMap != null) {
-                break;
-            }
+        if (type == AndroidProject.class) {
+            globalLibraryMap = getGlobalLibraryMap(buildController, projects);
         }
 
         long t2 = System.currentTimeMillis();
@@ -157,125 +96,97 @@ public class GetAndroidModelAction<T> implements BuildAction<ModelContainer<T>> 
         return new ModelContainer<>(rootBuildId, modelMap, globalLibraryMap);
     }
 
-    private void mergeMap(
-            @NonNull Map<BuildIdentifier, Map<String, T>> to,
-            @NonNull Map<BuildIdentifier, Map<String, T>> from) {
-        for (Map.Entry<BuildIdentifier, Map<String, T>> entry : from.entrySet()) {
-            if (to.containsKey(entry.getKey())) {
-                Map<String, T> map = to.get(entry.getKey());
-                map.putAll(entry.getValue());
+    @NonNull
+    private static GlobalLibraryMap getGlobalLibraryMap(
+            BuildController buildController,
+            List<Pair<BuildIdentifier, BasicGradleProject>> projects) {
+        return projects.stream()
+                .map(Pair::getSecond)
+                .map(project -> buildController.findModel(project, GlobalLibraryMap.class))
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("No GlobalLibraryMap model found."));
+    }
+
+    private Map<BuildIdentifier, Map<String, T>> getModelMap(
+            @NonNull List<Pair<BuildIdentifier, BasicGradleProject>> projects,
+            @NonNull BuildController buildController) {
+        Map<BuildIdentifier, Map<String, T>> models =
+                Maps.newHashMapWithExpectedSize(projects.size() / CPU_COUNT);
+
+        for (Pair<BuildIdentifier, BasicGradleProject> pair : projects) {
+            BasicGradleProject project = pair.getSecond();
+            T model;
+            if (type != ParameterizedAndroidProject.class) {
+                model = buildController.findModel(project, type);
             } else {
-                to.put(entry.getKey(), entry.getValue());
+                //noinspection unchecked
+                model = (T) getParameterizedAndroidProject(project, buildController);
+            }
+            if (model != null) {
+                Map<String, T> perBuildMap =
+                        models.computeIfAbsent(pair.getFirst(), id -> new HashMap<>());
+                perBuildMap.put(project.getPath(), model);
             }
         }
+        return models;
     }
 
-    // index used by threads to get the new project to query.
-    private volatile int currentIndex = 0;
-
-    protected synchronized int getNextIndex() {
-        return currentIndex++;
-    }
-
-    class ModelQuery implements Runnable {
-
-        @NonNull private final Map<BuildIdentifier, Map<String, T>> models;
-        @NonNull private final List<Pair<BuildIdentifier, BasicGradleProject>> projects;
-        @NonNull private final BuildController buildController;
-
-        public ModelQuery(
-                @NonNull List<Pair<BuildIdentifier, BasicGradleProject>> projects,
-                @NonNull BuildController buildController) {
-            this.projects = projects;
-            this.buildController = buildController;
-
-            models = Maps.newHashMapWithExpectedSize(projects.size() / CPU_COUNT);
-        }
-
-        @NonNull
-        public Map<BuildIdentifier, Map<String, T>> getModelMaps() {
-            return models;
-        }
-
-        @Override
-        public void run() {
-            final int count = projects.size();
-
-            int index;
-            while ((index = getNextIndex()) < count) {
-                Pair<BuildIdentifier, BasicGradleProject> pair = projects.get(index);
-                BasicGradleProject project = pair.getSecond();
-                T model;
-                if (type != ParameterizedAndroidProject.class) {
-                    model = buildController.findModel(project, type);
-                } else {
-                    //noinspection unchecked
-                    model = (T) getParameterizedAndroidProject(project);
-                }
-                if (model != null) {
-                    Map<String, T> perBuildMap =
-                            models.computeIfAbsent(pair.getFirst(), id -> new HashMap<>());
-                    perBuildMap.put(project.getPath(), model);
-                }
-            }
-        }
-
-        @Nullable
-        private ParameterizedAndroidProject getParameterizedAndroidProject(
-                @NonNull BasicGradleProject project) {
-            AndroidProject androidProject =
+    @Nullable
+    private ParameterizedAndroidProject getParameterizedAndroidProject(
+            @NonNull BasicGradleProject project, BuildController buildController) {
+        AndroidProject androidProject =
+                buildController.findModel(
+                        project,
+                        AndroidProject.class,
+                        ModelBuilderParameter.class,
+                        p -> p.setShouldBuildVariant(false));
+        if (androidProject != null) {
+            NativeAndroidProject nativeAndroidProject =
                     buildController.findModel(
                             project,
-                            AndroidProject.class,
+                            NativeAndroidProject.class,
                             ModelBuilderParameter.class,
                             p -> p.setShouldBuildVariant(false));
-            if (androidProject != null) {
-                NativeAndroidProject nativeAndroidProject =
+            List<Variant> variants = new ArrayList<>();
+            List<NativeVariantAbi> nativeVariantAbis = new ArrayList<>();
+            for (String variantName : androidProject.getVariantNames()) {
+                Variant variant =
                         buildController.findModel(
                                 project,
-                                NativeAndroidProject.class,
+                                Variant.class,
                                 ModelBuilderParameter.class,
-                                p -> p.setShouldBuildVariant(false));
-                List<Variant> variants = new ArrayList<>();
-                List<NativeVariantAbi> nativeVariantAbis = new ArrayList<>();
-                for (String variantName : androidProject.getVariantNames()) {
-                    Variant variant =
-                            buildController.findModel(
-                                    project,
-                                    Variant.class,
-                                    ModelBuilderParameter.class,
-                                    p -> {
-                                        p.setVariantName(variantName);
-                                        p.setShouldGenerateSources(shouldGenerateSources);
-                                    });
-                    if (variant != null) {
-                        variants.add(variant);
-                        if (nativeAndroidProject != null) {
-                            NativeVariantInfo variantinfo =
-                                    nativeAndroidProject.getVariantInfos().get(variantName);
-                            assert variantinfo
-                                    != null; // This should exist if the variant exists in AndroidProject
-                            for (String abi : variantinfo.getAbiNames()) {
-                                NativeVariantAbi nativeVariantAbi =
-                                        buildController.findModel(
-                                                project,
-                                                NativeVariantAbi.class,
-                                                ModelBuilderParameter.class,
-                                                p -> {
-                                                    p.setVariantName(variantName);
-                                                    p.setAbiName(abi);
-                                                });
-                                if (nativeVariantAbi != null) {
-                                    nativeVariantAbis.add(nativeVariantAbi);
-                                }
+                                p -> {
+                                    p.setVariantName(variantName);
+                                    p.setShouldGenerateSources(shouldGenerateSources);
+                                });
+                if (variant != null) {
+                    variants.add(variant);
+                    if (nativeAndroidProject != null) {
+                        NativeVariantInfo variantinfo =
+                                nativeAndroidProject.getVariantInfos().get(variantName);
+                        // This variantinfo should exist if the variant exists in AndroidProject
+                        assert variantinfo != null;
+                        for (String abi : variantinfo.getAbiNames()) {
+                            NativeVariantAbi nativeVariantAbi =
+                                    buildController.findModel(
+                                            project,
+                                            NativeVariantAbi.class,
+                                            ModelBuilderParameter.class,
+                                            p -> {
+                                                p.setVariantName(variantName);
+                                                p.setAbiName(abi);
+                                            });
+                            if (nativeVariantAbi != null) {
+                                nativeVariantAbis.add(nativeVariantAbi);
                             }
                         }
                     }
                 }
-                return new ParameterizedAndroidProject(
-                        androidProject, variants, nativeAndroidProject, nativeVariantAbis);
             }
-            return null;
+            return new ParameterizedAndroidProject(
+                    androidProject, variants, nativeAndroidProject, nativeVariantAbis);
         }
+        return null;
     }
 }

@@ -1153,14 +1153,14 @@ class LintDriver
                 return
             }
             for (file in files) {
-                // Gradle Kotlin Script? Use Java parsing mechanism instead
-                if (file.path.endsWith(DOT_KTS)) {
-                    val context = JavaContext(this, project, main, file)
-                    val uastParser = client.getUastParser(currentProject)
-                    context.uastParser = uastParser
+                client.runReadAction(Runnable {
+                    // Gradle Kotlin Script? Use Java parsing mechanism instead
+                    if (file.path.endsWith(DOT_KTS)) {
+                        val context = JavaContext(this, project, main, file)
+                        val uastParser = client.getUastParser(currentProject)
+                        context.uastParser = uastParser
 
-                    uastParser.prepare(listOf(context), emptyList())
-                    client.runReadAction(Runnable {
+                        uastParser.prepare(listOf(context), emptyList())
                         val uFile = uastParser.parse(context)
                         if (uFile != null) {
                             context.setJavaFile(uFile.psi) // needed for getLocation
@@ -1187,25 +1187,26 @@ class LintDriver
                             context.setJavaFile(null)
                             context.uastFile = null
                         }
-                    })
-                    uastParser.dispose()
-                    fileCount++
-                } else {
-                    val gradleVisitor = project.client.getGradleVisitor()
-                    val context = GradleContext(gradleVisitor, this, project, main, file)
-                    fireEvent(EventType.SCANNING_FILE, context)
-                    for (detector in detectors) {
-                        detector.beforeCheckFile(context)
+
+                        uastParser.dispose()
+                        fileCount++
+                    } else {
+                        val gradleVisitor = project.client.getGradleVisitor()
+                        val context = GradleContext(gradleVisitor, this, project, main, file)
+                        fireEvent(EventType.SCANNING_FILE, context)
+                        for (detector in detectors) {
+                            detector.beforeCheckFile(context)
+                        }
+                        gradleVisitor.visitBuildScript(context, gradleScanners)
+                        for (scanner in customVisitedGradleScanners) {
+                            scanner.visitBuildScript(context)
+                        }
+                        for (detector in detectors) {
+                            detector.afterCheckFile(context)
+                        }
+                        fileCount++
                     }
-                    gradleVisitor.visitBuildScript(context, gradleScanners)
-                    for (scanner in customVisitedGradleScanners) {
-                        scanner.visitBuildScript(context)
-                    }
-                    for (detector in detectors) {
-                        detector.afterCheckFile(context)
-                    }
-                    fileCount++
-                }
+                })
             }
         }
     }

@@ -33,7 +33,6 @@ import com.android.ide.common.repository.GradleCoordinate
 import com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_HIGHER
 import com.android.ide.common.repository.GradleVersion
 import com.android.ide.common.repository.MavenRepositories
-import com.android.ide.common.repository.SdkMavenRepository
 import com.android.repository.io.FileOpUtils
 import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.SdkVersionInfo
@@ -548,55 +547,10 @@ open class GradleDetector : Detector(), GradleScanner {
         val filter = getUpgradeVersionFilter(groupId, artifactId)
 
         when (groupId) {
-            SUPPORT_LIB_GROUP_ID, "com.android.support.test" -> {
-                // Check to make sure you have the Android support repository installed.
-                val sdkHome = context.client.getSdkHome()
-                val repository = SdkMavenRepository.ANDROID.getRepositoryLocation(
-                    sdkHome, true, FileOpUtils.create()
-                )
-                if (repository != null) {
-                    val max = MavenRepositories.getHighestInstalledVersionNumber(
-                        groupId,
-                        artifactId,
-                        repository,
-                        filter,
-                        false,
-                        FileOpUtils.create()
-                    )
-                    if (max != null &&
-                        version < max &&
-                        context.isEnabled(DEPENDENCY)
-                    ) {
-                        newerVersion = max
-                    }
-                }
-            }
-
             GMS_GROUP_ID, FIREBASE_GROUP_ID, GOOGLE_SUPPORT_GROUP_ID, ANDROID_WEAR_GROUP_ID -> {
                 // Play services
 
                 checkPlayServices(context, dependency, version, revision, cookie)
-
-                val sdkHome = context.client.getSdkHome()
-                val repository = SdkMavenRepository.GOOGLE.getRepositoryLocation(
-                    sdkHome, true, FileOpUtils.create()
-                )
-                if (repository != null) {
-                    val max = MavenRepositories.getHighestInstalledVersionNumber(
-                        groupId,
-                        artifactId,
-                        repository,
-                        filter,
-                        false,
-                        FileOpUtils.create()
-                    )
-                    if (max != null &&
-                        version < max &&
-                        context.isEnabled(DEPENDENCY)
-                    ) {
-                        newerVersion = max
-                    }
-                }
             }
 
             "com.android.tools.build" -> {
@@ -650,7 +604,7 @@ open class GradleDetector : Detector(), GradleScanner {
                             cookie,
                             DEPENDENCY,
                             "Use Fabric Gradle plugin version 1.21.6 or later to " +
-                                "improve Instant Run performance (was $revision)",
+                                    "improve Instant Run performance (was $revision)",
                             fix
                         )
                     } else {
@@ -668,7 +622,7 @@ open class GradleDetector : Detector(), GradleScanner {
                             cookie,
                             DEPENDENCY,
                             "Use BugSnag Gradle plugin version 2.1.2 or later to " +
-                                "improve Instant Run performance (was $revision)",
+                                    "improve Instant Run performance (was $revision)",
                             fix
                         )
                     } else {
@@ -971,23 +925,12 @@ open class GradleDetector : Detector(), GradleScanner {
         if ("5.2.08" == revision && context.isEnabled(COMPATIBILITY)) {
             // This specific version is actually a preview version which should
             // not be used (https://code.google.com/p/android/issues/detail?id=75292)
-            var maxVersion = "10.2.1"
-            // Try to find a more recent available version, if one is available
-            val sdkHome = context.client.getSdkHome()
-            val repository = SdkMavenRepository.GOOGLE.getRepositoryLocation(
-                sdkHome, true, FileOpUtils.create()
+            val maxVersion = GradleVersion.max(
+                GradleVersion.parse("10.2.1"),
+                getGoogleMavenRepoVersion(context, dependency, null)
             )
-            if (repository != null) {
-                val max = MavenRepositories.getHighestInstalledVersion(
-                    groupId, artifactId, repository, null, false, FileOpUtils.create()
-                )
-                if (max != null) {
-                    if (COMPARE_PLUS_HIGHER.compare(dependency, max) < 0) {
-                        maxVersion = max.revision
-                    }
-                }
-            }
-            val fix = getUpdateDependencyFix(revision, maxVersion)
+
+            val fix = getUpdateDependencyFix(revision, maxVersion.toString())
             val message =
                 "Version `5.2.08` should not be used; the app " +
                         "can not be published with this version. Use version `$maxVersion` " +
@@ -1101,7 +1044,11 @@ open class GradleDetector : Detector(), GradleScanner {
             if (cookie != null) {
                 reportNonFatalCompatibilityIssue(context, cookie, message)
             } else {
-                reportNonFatalCompatibilityIssue(context, guessGradleLocation(context.project), message)
+                reportNonFatalCompatibilityIssue(
+                    context,
+                    guessGradleLocation(context.project),
+                    message
+                )
             }
         }
     }

@@ -61,6 +61,7 @@ kotlin_library(
         "//tools/base/third_party:com.google.code.gson_gson",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:com.google.protobuf_protobuf-java",
+        "//tools/base/third_party:com.sun.istack_istack-commons-runtime",
         "//tools/base/third_party:commons-io_commons-io",  # TODO: remove?
         "//tools/base/third_party:net.sf.jopt-simple_jopt-simple",
         "//tools/base/third_party:net.sf.proguard_proguard-gradle",

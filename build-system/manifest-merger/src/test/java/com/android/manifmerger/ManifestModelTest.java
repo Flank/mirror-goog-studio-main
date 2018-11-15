@@ -87,10 +87,12 @@ public class ManifestModelTest extends TestCase {
         when(xmlAttribute.getId()).thenReturn(new NodeKey(AndroidManifest.ATTRIBUTE_GLESVERSION));
 
         ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
-        Mockito.doNothing().when(xmlAttribute).addMessage(
-                Mockito.any(MergingReport.Builder.class),
-                eq(MergingReport.Record.Severity.ERROR),
-                argumentCaptor.capture());
+        Mockito.doReturn(mergingReport)
+                .when(mergingReport)
+                .addMessage(
+                        Mockito.any(XmlAttribute.class),
+                        eq(MergingReport.Record.Severity.ERROR),
+                        argumentCaptor.capture());
         when(xmlAttribute.printPosition()).thenReturn("unknown");
         assertFalse(validator.validates(mergingReport, xmlAttribute, "0xFFFFFFFFFFFF"));
         assertEquals("Attribute glEsVersion at unknown is not a valid hexadecimal "
@@ -107,10 +109,12 @@ public class ManifestModelTest extends TestCase {
         MergingReport.Builder mergingReport = Mockito.mock(MergingReport.Builder.class);
 
         ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
-        Mockito.doNothing().when(xmlAttribute).addMessage(
-                Mockito.any(MergingReport.Builder.class),
-                eq(MergingReport.Record.Severity.ERROR),
-                argumentCaptor.capture());
+        Mockito.doReturn(mergingReport)
+                .when(mergingReport)
+                .addMessage(
+                        Mockito.any(XmlAttribute.class),
+                        eq(MergingReport.Record.Severity.ERROR),
+                        argumentCaptor.capture());
 
         when(xmlAttribute.getId()).thenReturn(new NodeKey(AndroidManifest.ATTRIBUTE_GLESVERSION));
         when(xmlAttribute.printPosition()).thenReturn("unknown");
@@ -143,10 +147,12 @@ public class ManifestModelTest extends TestCase {
         MergingReport.Builder mergingReport = Mockito.mock(MergingReport.Builder.class);
 
         ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
-        Mockito.doNothing().when(xmlAttribute).addMessage(
-                Mockito.any(MergingReport.Builder.class),
-                eq(MergingReport.Record.Severity.ERROR),
-                argumentCaptor.capture());
+        Mockito.doReturn(mergingReport)
+                .when(mergingReport)
+                .addMessage(
+                        Mockito.any(XmlAttribute.class),
+                        eq(MergingReport.Record.Severity.ERROR),
+                        argumentCaptor.capture());
 
         when(xmlAttribute.getId()).thenReturn(new NodeKey(AndroidManifest.ATTRIBUTE_GLESVERSION));
         when(xmlAttribute.printPosition()).thenReturn("unknown");

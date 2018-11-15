@@ -42,7 +42,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -115,9 +114,9 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
         mCheckDuplicates = value;
     }
 
-    @NotNull
+    @NonNull
     @Override
-    protected DataSet<ResourceMergerItem, ResourceFile> createSet(@NotNull String name) {
+    protected DataSet<ResourceMergerItem, ResourceFile> createSet(@NonNull String name) {
         return new ResourceSet(name, mNamespace, mLibraryName, true);
     }
 

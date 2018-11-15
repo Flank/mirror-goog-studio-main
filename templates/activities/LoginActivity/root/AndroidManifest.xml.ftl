@@ -1,13 +1,7 @@
 <#import "../../common/shared_manifest_macros.ftl" as manifestMacros>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <!-- To auto-complete the email text field in the login form with the user's emails -->
-    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
-    <uses-permission android:name="android.permission.READ_PROFILE" />
-    <uses-permission android:name="android.permission.READ_CONTACTS" />
-
     <application>
-        <activity android:name=".${activityClass}"
+        <activity android:name=".ui.login.${activityClass}"
             <#if isNewProject>
             android:label="@string/app_name"
             <#else>

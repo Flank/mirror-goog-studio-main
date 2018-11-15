@@ -213,12 +213,11 @@ class AttributeModel {
         boolean shouldMergeDefaultValues();
 
         /**
-         * Returns an XmlDocument.Type EnumSet which contains the types of lower priority
-         * XmlDocuments this attribute can be merged from.
+         * Returns true if this attribute can be merged from the provided {@link XmlDocument}, false
+         * otherwise
          */
-        @NonNull
-        default EnumSet<XmlDocument.Type> getMergeableLowerPriorityTypes() {
-            return EnumSet.allOf(XmlDocument.Type.class);
+        default boolean canMergeWithLowerPriority(@NonNull XmlDocument document) {
+            return EnumSet.allOf(XmlDocument.Type.class).contains(document.getFileType());
         }
 
         /**
@@ -344,15 +343,13 @@ class AttributeModel {
             boolean matches = TRUE_PATTERN.matcher(value).matches() ||
                     FALSE_PATTERN.matcher(value).matches();
             if (!matches) {
-                attribute.addMessage(mergingReport, MergingReport.Record.Severity.ERROR,
+                mergingReport.addMessage(
+                        attribute,
+                        MergingReport.Record.Severity.ERROR,
                         String.format(
                                 "Attribute %1$s at %2$s has an illegal value=(%3$s), "
                                         + "expected 'true' or 'false'",
-                                attribute.getId(),
-                                attribute.printPosition(),
-                                value
-                        )
-                );
+                                attribute.getId(), attribute.printPosition(), value));
             }
             return matches;
         }
@@ -382,16 +379,13 @@ class AttributeModel {
                     return true;
                 }
             }
-            attribute.addMessage(mergingReport, MergingReport.Record.Severity.ERROR,
+            mergingReport.addMessage(
+                    attribute,
+                    MergingReport.Record.Severity.ERROR,
                     String.format(
                             "Invalid value for attribute %1$s at %2$s, value=(%3$s), "
                                     + "acceptable values are (%4$s)",
-                            attribute.getId(),
-                            attribute.printPosition(),
-                            value,
-                            allValues
-                    )
-            );
+                            attribute.getId(), attribute.printPosition(), value, allValues));
             return false;
         }
     }
@@ -428,8 +422,8 @@ class AttributeModel {
                 }
             }
             if (!result) {
-                attribute.addMessage(
-                        mergingReport,
+                mergingReport.addMessage(
+                        attribute,
                         MergingReport.Record.Severity.ERROR,
                         String.format(
                                 "Invalid value for attribute %1$s at %2$s, value=(%3$s), "
@@ -455,13 +449,12 @@ class AttributeModel {
             try {
                 return Integer.parseInt(value) > 0;
             } catch (NumberFormatException e) {
-                attribute.addMessage(mergingReport, MergingReport.Record.Severity.ERROR,
+                mergingReport.addMessage(
+                        attribute,
+                        MergingReport.Record.Severity.ERROR,
                         String.format(
                                 "Attribute %1$s at %2$s must be an integer, found %3$s",
-                                attribute.getId(),
-                                attribute.printPosition(),
-                                value)
-                );
+                                attribute.getId(), attribute.printPosition(), value));
                 return false;
             }
         }
@@ -480,14 +473,13 @@ class AttributeModel {
             Matcher matcher = PATTERN.matcher(value);
             boolean valid = matcher.matches() && matcher.group(1).length() <= 8;
             if (!valid) {
-                attribute.addMessage(mergingReport, MergingReport.Record.Severity.ERROR,
+                mergingReport.addMessage(
+                        attribute,
+                        MergingReport.Record.Severity.ERROR,
                         String.format(
                                 "Attribute %1$s at %2$s is not a valid hexadecimal 32 bit value,"
                                         + " found %3$s",
-                                attribute.getId(),
-                                attribute.printPosition(),
-                                value
-                        ));
+                                attribute.getId(), attribute.printPosition(), value));
             }
             return valid;
         }
@@ -517,7 +509,9 @@ class AttributeModel {
                     valid = false;
                 }
                 if (!valid) {
-                    attribute.addMessage(mergingReport, MergingReport.Record.Severity.ERROR,
+                    mergingReport.addMessage(
+                            attribute,
+                            MergingReport.Record.Severity.ERROR,
                             String.format(
                                     "Attribute %1$s at %2$s is not a valid hexadecimal value,"
                                             + " minimum is 0x%3$08X, maximum is 0x%4$08X, found %5$s",
@@ -525,8 +519,7 @@ class AttributeModel {
                                     attribute.printPosition(),
                                     mMinimumValue,
                                     Integer.MAX_VALUE,
-                                    value
-                            ));
+                                    value));
                 }
                 return valid;
             }

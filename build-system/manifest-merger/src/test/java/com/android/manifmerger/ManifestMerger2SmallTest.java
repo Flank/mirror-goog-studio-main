@@ -2014,6 +2014,74 @@ public class ManifestMerger2SmallTest {
         }
     }
 
+    @Test
+    public void testToolsCommentRemovalForLibraries() throws Exception {
+        MockLog mockLog = new MockLog();
+        String overlay =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                        + "    package=\"com.example.app1\">\n"
+                        + "\n"
+                        + "    <application android:label=\"@string/lib_name\">\n"
+                        + "       <!-- This comment should NOT be removed 1 -->\n"
+                        + "       <!-- This comment should NOT be removed 2 -->\n"
+                        + "       <meta-data android:name=\"foo\"/>"
+                        + "       <!-- This comment should be removed 1 -->\n"
+                        + "       <!-- This comment should be removed 2 -->\n"
+                        + "       <meta-data android:name=\"bar\" tools:node=\"remove\"/>"
+                        + "       <!-- This comment should be removed 3 -->\n"
+                        + "       <!-- This comment should be removed 4 -->\n"
+                        + "       <activity tools:node=\"removeAll\">\n"
+                        + "       </activity>\n"
+                        + "    </application>"
+                        + "\n"
+                        + "</manifest>";
+
+        File overlayFile = TestUtils.inputAsFile("testToolsAnnotationRemoval", overlay);
+        assertTrue(overlayFile.exists());
+
+        String libraryInput =
+                ""
+                        + "<manifest\n"
+                        + "xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "package=\"com.example.app1\">\n"
+                        + "\n"
+                        + "<application android:name=\"TheApp\" >\n"
+                        + "    <meta-data android:name=\"foo\"/>"
+                        + "    <meta-data android:name=\"bar\"/>"
+                        + "    <!-- Activity to configure widget -->\n"
+                        + "    <activity\n"
+                        + "            android:icon=\"@drawable/widget_icon\"\n"
+                        + "            android:label=\"Configure Widget\"\n"
+                        + "            android:name=\"com.example.lib1.WidgetConfigurationUI\"\n"
+                        + "            android:theme=\"@style/Theme.WidgetConfigurationUI\" >\n"
+                        + "        <intent-filter >\n"
+                        + "            <action android:name=\"android.appwidget.action.APPWIDGET_CONFIGURE\" />\n"
+                        + "        </intent-filter>\n"
+                        + "    </activity>\n"
+                        + "</application>\n"
+                        + "\n"
+                        + "</manifest>";
+        File libFile = TestUtils.inputAsFile("testToolsCommentRemoval", libraryInput);
+
+        try {
+            MergingReport mergingReport =
+                    ManifestMerger2.newMerger(libFile, mockLog, ManifestMerger2.MergeType.LIBRARY)
+                            .withFeatures(ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS)
+                            .addFlavorAndBuildTypeManifest(overlayFile)
+                            .merge();
+            assertThat(mergingReport.getResult()).isEqualTo(MergingReport.Result.SUCCESS);
+            String mergedDocument = mergingReport.getMergedDocument(MergedManifestKind.MERGED);
+            assertThat(mergedDocument).contains("This comment should NOT be removed");
+            assertThat(mergedDocument).doesNotContain("This comment should be removed");
+        } finally {
+            assertThat(overlayFile.delete()).named("Overlay was deleted").isTrue();
+            assertThat(libFile.delete()).named("Lib file was deleted").isTrue();
+        }
+    }
+
     public static void validateFeatureName(
             ManifestMerger2.Invoker invoker, String featureName, boolean isValid) throws Exception {
         try {

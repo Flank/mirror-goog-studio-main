@@ -56,7 +56,7 @@ public class ApkSwapper {
      * @param apkPaths the paths where the new apk's are already on device.
      * @param toSwap the actual dex classes to swap.
      */
-    public void swap(List<ApkEntry> newFiles, List<String> apkPaths, List<DexClass> toSwap)
+    public boolean swap(List<ApkEntry> newFiles, List<String> apkPaths, List<DexClass> toSwap)
             throws DeployerException {
         // Builds the Request Protocol Buffer.
         Deploy.SwapRequest request =
@@ -71,6 +71,7 @@ public class ApkSwapper {
         for (ClassRedefiner r : redefiners.values()) {
             sendSwapRequest(request, r);
         }
+        return true;
     }
 
     private static Deploy.SwapRequest buildSwapRequest(

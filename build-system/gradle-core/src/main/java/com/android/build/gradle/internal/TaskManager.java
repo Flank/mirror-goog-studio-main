@@ -686,7 +686,9 @@ public abstract class TaskManager {
 
             // get the OutputPublishingSpec from the ArtifactType for this particular variant spec
             PublishingSpecs.OutputSpec taskOutputSpec =
-                    testedSpec.getSpec(AndroidArtifacts.ArtifactType.CLASSES);
+                    testedSpec.getSpec(
+                            AndroidArtifacts.ArtifactType.CLASSES,
+                            AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS);
             // now get the output type
             com.android.build.api.artifact.ArtifactType testedOutputType =
                     taskOutputSpec.getOutputType();

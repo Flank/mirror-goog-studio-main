@@ -20,14 +20,12 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.blame.SourceFile;
-import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
-import java.util.EnumSet;
 import org.w3c.dom.Attr;
 
 /**
@@ -270,8 +268,8 @@ public class XmlAttribute extends XmlNode {
                             printPosition(),
                             getValue());
 
-            higherPriority.addMessage(
-                    report,
+            report.addMessage(
+                    higherPriority,
                     attributeRecord != null
                             ? attributeRecord.getActionLocation().getPosition()
                             : SourcePosition.UNKNOWN,
@@ -366,9 +364,10 @@ public class XmlAttribute extends XmlNode {
                 || !mAttributeModel.getMergingPolicy().shouldMergeDefaultValues()) {
             return;
         }
-        // check that implicitNode's XmlDocument.Type is mergeable.
-        XmlDocument.Type type = implicitNode.getDocument().getFileType();
-        if (!mAttributeModel.getMergingPolicy().getMergeableLowerPriorityTypes().contains(type)) {
+        // check that this attribute can be merged from implicitNode
+        if (!mAttributeModel
+                .getMergingPolicy()
+                .canMergeWithLowerPriority(implicitNode.getDocument())) {
             return;
         }
         // if this value has been explicitly set to replace the implicit default value, just
@@ -401,7 +400,7 @@ public class XmlAttribute extends XmlNode {
                 printPosition(),
                 attributeModel.getDefaultValue(),
                 implicitNode.printPosition());
-        addMessage(mergingReport, MergingReport.Record.Severity.ERROR, error);
+        mergingReport.addMessage(this, MergingReport.Record.Severity.ERROR, error);
     }
 
     private void addConflictingValueMessage(
@@ -442,40 +441,23 @@ public class XmlAttribute extends XmlNode {
                     getOwnerElement().getType().toXmlName(),
                     higherPriority.getOwnerElement().printPosition());
         }
-        higherPriority.addMessage(report,
+        report.addMessage(
+                higherPriority,
                 attributeRecord != null
                         ? attributeRecord.getActionLocation().getPosition()
                         : SourcePosition.UNKNOWN,
-                MergingReport.Record.Severity.ERROR, error);
+                MergingReport.Record.Severity.ERROR,
+                error);
     }
 
-    /**
-     * Returns whether this xmlAttribute can be merged from a lower priority node, based on its
-     * XmlDocument.Type and it's AttributeModel::getMergeableLowerPriorityTypes
-     */
+    /** Returns whether this xmlAttribute can be merged from a lower priority node */
     private boolean isMergeableFromLowerPriorityNode() {
-        XmlDocument.Type type = getOwnerElement().getDocument().getFileType();
         if (mAttributeModel != null) {
-            EnumSet<XmlDocument.Type> mergeableTypes =
-                    mAttributeModel.getMergingPolicy().getMergeableLowerPriorityTypes();
-            return mergeableTypes.contains(type);
+            return mAttributeModel
+                    .getMergingPolicy()
+                    .canMergeWithLowerPriority(mOwnerElement.getDocument());
         }
         return true;
-    }
-
-    void addMessage(@NonNull MergingReport.Builder report,
-            @NonNull MergingReport.Record.Severity severity,
-            @NonNull String message) {
-        addMessage(report, getPosition(), severity, message);
-    }
-
-    void addMessage(@NonNull MergingReport.Builder report,
-            @NonNull SourcePosition position,
-            @NonNull MergingReport.Record.Severity severity,
-            @NonNull String message) {
-        report.addMessage(
-                new SourceFilePosition(getOwnerElement().getDocument().getSourceFile(), position),
-                severity, message);
     }
 
     @NonNull

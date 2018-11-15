@@ -158,40 +158,25 @@ open class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
         }
 
         /*
-         * HACK: The following are workarounds for known issues.
+         * HACK: The following is to work around a known issue.
+         *
+         * If Kapt or ProcessAnnotationTask has done annotation processing earlier, this task does
+         * not need to run annotation processing again.
+         *
+         * However, if the Lombok annotation processor is used, this task still needs to run
+         * annotation processing again as Lombok requires annotation processing and compilation to
+         * be done in the same invocation of the Java compiler.
+         *
+         * Note that in that case, even though this task runs annotation processing again, it should
+         * run Lombok only, to avoid running the other annotation processors twice.
+         *
+         * Also note that the version of Lombok being used may or may not be incremental. Related
+         * bugs: https://github.com/rzwitserloot/lombok/pull/1680 and
+         * https://github.com/rzwitserloot/lombok/issues/1817.
          */
-        if (incrementalFromDslOrByDefault
-            && !hasKapt
-            && !separateAnnotationProcessingFlag
-            && !allAPsAreIncremental
-        ) {
-            // If incremental compilation is requested and annotation processing is performed by
-            // this task, but not all of the annotation processors are incremental, then compilation
-            // should not be incremental. However, there is a Gradle bug that if a non-incremental
-            // annotation processor changes a resource, Gradle will mistakenly remain in incremental
-            // mode, and may not even perform any recompilation at all even though this task is not
-            // UP-TO-DATE. See http://issuetracker.google.com/113054294. Before the fix is available
-            // in Gradle 5.0, we need to disable incremental mode explicitly here.
-            this.options.isIncremental = false
-        }
         if (hasKapt
             || incrementalFromDslOrByDefault && separateAnnotationProcessingFlag
         ) {
-            /*
-             * If Kapt or ProcessAnnotationTask has done annotation processing earlier, this task
-             * does not need to run annotation processing again.
-             *
-             * However, if the Lombok annotation processor is used, this task still needs to run
-             * annotation processing again as Lombok requires annotation processing and compilation
-             * to be done in the same invocation of the Java compiler.
-             *
-             * Note that in that case, even though this task runs annotation processing again, it
-             * should run Lombok only, to avoid running the other annotation processors twice.
-             *
-             * Also note that the version of Lombok being used may or may not be incremental.
-             * Related bugs: https://github.com/rzwitserloot/lombok/pull/1680 and
-             * https://github.com/rzwitserloot/lombok/issues/1817.
-             */
             val lomboks = annotationProcessors.filter { it -> it.key.contains(LOMBOK) }
             if (lomboks.isNotEmpty()) {
                 this.options.compilerArgs.removeIf { it -> it == PROC_NONE }
@@ -208,10 +193,6 @@ open class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
                                 " as the following annotation processors are not incremental:" +
                                 " ${Joiner.on(", ").join(nonIncrementalLomboks.keys)}."
                     )
-
-                    // Because of the Gradle bug mentioned in the previous hack, we need to disable
-                    // incremental mode explicitly here
-                    this.options.isIncremental = false
                 }
             }
         }
