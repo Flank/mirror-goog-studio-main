@@ -106,6 +106,9 @@ public class XmlUtils {
     private static final String DISALLOW_DOCTYPE_DECL =
             "http://apache.org/xml/features/disallow-doctype-decl";
 
+    /** The first byte of a proto XML file is always 0x0A. */
+    private static final byte PROTO_XML_LEAD_BYTE = 0x0A;
+
     /**
      * Returns the namespace prefix matching the requested namespace URI.
      * If no such declaration is found, returns the default "android" prefix for
@@ -1195,5 +1198,55 @@ public class XmlUtils {
         }
 
         return childCount;
+    }
+
+    /**
+     * Checks if the given array of bytes is likely to represent XML in a proto format.
+     *
+     * @param bytes the candidate XML contents to check
+     * @return true if the bytes are likely to represent proto XML
+     */
+    public static boolean isProtoXml(@NonNull byte[] bytes) {
+        for (int i = 0; i < bytes.length; i++) {
+            byte c = bytes[i];
+            if (i == 0 && c != PROTO_XML_LEAD_BYTE) {
+                return false;
+            } else if (!Character.isWhitespace(c)) {
+                return c != '<';
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Checks if the given input stream is likely to represent XML in a proto format.
+     *
+     * @param stream the candidate XML stream to check
+     * @return true if the stream is likely to represent proto XML
+     */
+    public static boolean isProtoXml(@NonNull InputStream stream) {
+        boolean isProto = false;
+        int readLimit = 100;
+        if (stream.markSupported()) {
+            stream.mark(readLimit);
+            try {
+                try {
+                    int c;
+                    for (int i = 0; i < readLimit && (c = stream.read()) >= 0; i++) {
+                        if (i == 0 && c != PROTO_XML_LEAD_BYTE) {
+                            break;
+                        } else if (!Character.isWhitespace(c)) {
+                            isProto = c != '<';
+                            break;
+                        }
+                    }
+                } finally {
+                    stream.reset();
+                }
+            } catch (IOException e) {
+                // Ignore and assume text XML.
+            }
+        }
+        return isProto;
     }
 }
