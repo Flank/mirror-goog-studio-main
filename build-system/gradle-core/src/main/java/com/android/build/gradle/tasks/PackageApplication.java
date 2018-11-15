@@ -22,22 +22,30 @@ import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.Workers;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.utils.FileCache;
 import com.google.common.collect.ImmutableList;
 import com.google.wireless.android.sdk.stats.GradleBuildProjectMetrics;
 import java.io.File;
 import java.io.IOException;
+import javax.inject.Inject;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.TaskProvider;
+import org.gradle.workers.WorkerExecutor;
 
 /** Task to package an Android application (APK). */
 public class PackageApplication extends PackageAndroidArtifact {
 
     InternalArtifactType expectedOutputType;
+
+    @Inject
+    public PackageApplication(WorkerExecutor workerExecutor) {
+        super(Workers.INSTANCE.getWorker(workerExecutor));
+    }
 
     @Override
     @Internal
