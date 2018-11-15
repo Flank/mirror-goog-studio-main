@@ -59,6 +59,13 @@ class BundleTestDataImpl(
         deviceConfigProvider: DeviceConfigProvider,
         logger: ILogger
     ): ImmutableList<File> {
+        if (moduleName != null && deviceConfigProvider.apiLevel < 21) {
+            // Bundle tool fuses APKs below 21, requesting a module will return an error even if that
+            // module is fused.
+            // TODO(https://issuetracker.google.com/119663247): Return the fused APK if the requested module was fused.
+            logger.warning("Testing dynamic features on devices API < 21 is not currently supported.")
+            return ImmutableList.of<File>()
+        }
         return getApkFiles(apkBundle.singleFile.toPath(), deviceConfigProvider, moduleName).map{it.toFile()}.toImmutableList()
     }
 
