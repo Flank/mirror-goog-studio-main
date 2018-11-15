@@ -105,35 +105,6 @@ public enum SdkMavenRepository {
     }
 
     /**
-     * Find the best matching {@link GradleCoordinate}
-     *
-     * @param sdkHome      the SDK installation
-     * @param groupId      the artifact group id
-     * @param artifactId   the artifact id
-     * @param filter       an optional filter which the matched coordinate's version name must start
-     *                     with
-     * @param allowPreview whether preview versions are allowed to match
-     * @param fileOp       To allow mocking of filesystem operations.
-     * @return the best (highest version) matching coordinate, or null if none were found
-     */
-    @Nullable
-    public GradleCoordinate getHighestInstalledVersion(
-            @Nullable File sdkHome,
-            @NonNull String groupId,
-            @NonNull String artifactId,
-            @Nullable Predicate<GradleVersion> filter,
-            boolean allowPreview,
-            @NonNull FileOp fileOp) {
-        File repository = getRepositoryLocation(sdkHome, true, fileOp);
-        if (repository != null) {
-            return MavenRepositories.getHighestInstalledVersion(
-                    groupId, artifactId, repository, filter, allowPreview, fileOp);
-        }
-
-        return null;
-    }
-
-    /**
      * Returns the SDK repository which contains the given artifact, of null if a matching directory
      * cannot be found in any SDK directory.
      */
