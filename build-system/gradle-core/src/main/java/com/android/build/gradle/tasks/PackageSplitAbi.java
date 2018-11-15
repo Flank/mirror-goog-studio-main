@@ -154,7 +154,8 @@ public class PackageSplitAbi extends AndroidBuilderTask {
             try (IncrementalPackager pkg =
                     new IncrementalPackagerBuilder(IncrementalPackagerBuilder.ApkFormat.FILE)
                             .withOutputFile(params.getOutput())
-                            .withSigning(SigningConfigMetadata.Companion.load(params.signingConfig))
+                            .withSigning(
+                                    SigningConfigMetadata.Companion.load(params.signingConfigFile))
                             .withCreatedBy(params.createdBy)
                             .withMinSdk(params.minSdkVersion)
                             // .withManifest(manifest)
@@ -185,7 +186,7 @@ public class PackageSplitAbi extends AndroidBuilderTask {
         private final ApkInfo apkInfo;
         private final File output;
         private final File incrementalDir;
-        private final FileCollection signingConfig;
+        private final File signingConfigFile;
         private final String createdBy;
         private final Collection<String> aaptOptionsNoCompress;
         private final Set<File> jniFolders;
@@ -207,7 +208,7 @@ public class PackageSplitAbi extends AndroidBuilderTask {
                                                     .get("archivesBaseName"),
                                     task.signingConfig != null));
             incrementalDir = task.incrementalDir;
-            signingConfig = task.signingConfig;
+            signingConfigFile = SigningConfigMetadata.Companion.getOutputFile(task.signingConfig);
             createdBy = task.getBuilder().getCreatedBy();
             aaptOptionsNoCompress = task.aaptOptionsNoCompress;
             jniFolders = task.getJniFolders().getFiles();

@@ -16,10 +16,8 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor
 import com.android.build.gradle.internal.dsl.SigningConfig
-import com.google.common.collect.Iterators
 import com.google.gson.GsonBuilder
 import java.io.File
 import java.io.FileReader
@@ -37,8 +35,7 @@ class SigningConfigMetadata {
 
         @Throws(IOException::class)
         fun load(input: FileCollection?): SigningConfig? {
-            val persistedFile = if (input != null) getOutputFile(input) else null
-            return  if (persistedFile != null) load(persistedFile) else null
+            return load(getOutputFile(input))
         }
 
         @Throws(IOException::class)
@@ -51,7 +48,8 @@ class SigningConfigMetadata {
         }
 
         @Throws(IOException::class)
-        fun load(input: File): SigningConfig? {
+        fun load(input: File?): SigningConfig? {
+            if (input == null) return null
             val gsonBuilder = GsonBuilder()
             gsonBuilder.registerTypeAdapter(File::class.java, PlainFileGsonTypeAdaptor())
             val gson = gsonBuilder.create()
@@ -63,7 +61,8 @@ class SigningConfigMetadata {
             }
         }
 
-        private fun getOutputFile(input: FileCollection): File? {
+        fun getOutputFile(input: FileCollection?): File? {
+            if (input == null) return null
             if (input.asFileTree.isEmpty) return null
             val file = input.asFileTree.singleFile
             if (file.name != PERSISTED_FILE_NAME) return null

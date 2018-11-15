@@ -116,7 +116,8 @@ public class PackageSplitRes extends AndroidBuilderTask {
 
             try (IncrementalPackager pkg =
                     new IncrementalPackagerBuilder(IncrementalPackagerBuilder.ApkFormat.FILE)
-                            .withSigning(SigningConfigMetadata.Companion.load(params.signingConfig))
+                            .withSigning(
+                                    SigningConfigMetadata.Companion.load(params.signingConfigFile))
                             .withOutputFile(params.output)
                             .withKeepTimestampsInApk(params.keepTimestampsInApk)
                             .withIntermediateDir(intDir)
@@ -133,7 +134,7 @@ public class PackageSplitRes extends AndroidBuilderTask {
         private final File input;
         private final File output;
         private final File incrementalDir;
-        private final FileCollection signingConfig;
+        private final File signingConfigFile;
         private final boolean keepTimestampsInApk;
 
         PackageSplitResTransformParams(ApkInfo apkInfo, File input, PackageSplitRes task) {
@@ -153,7 +154,8 @@ public class PackageSplitRes extends AndroidBuilderTask {
                                                     .get("archivesBaseName"),
                                     task.signingConfig != null));
             incrementalDir = task.incrementalDir;
-            signingConfig = task.signingConfig;
+            signingConfigFile =
+                    SigningConfigMetadata.Companion.getOutputFile(task.getSigningConfig());
             keepTimestampsInApk = AndroidGradleOptions.keepTimestampsInApk(task.getProject());
         }
 
