@@ -1565,8 +1565,14 @@ abstract class LintClient {
         return parser
     }
 
-    /** Returns the version number of this lint client, if known  */
+    /** Returns the version number of this lint client, if known */
     open fun getClientRevision(): String? = null
+
+    /** Returns the version number of this lint client, if known. This is the one
+     * meant to be displayed to users; e.g. for Studio, client revision may be
+     * "3.4.0.0" and display revision might be "3.4 Canary 1".
+     */
+    open fun getClientDisplayRevision(): String? = getClientRevision()
 
     /**
      * Runs the given runnable under a read lock such that it can access the PSI

@@ -1203,7 +1203,7 @@ public class Main {
     }
 
     private static void printVersion(LintCliClient client) {
-        String revision = client.getClientRevision();
+        String revision = client.getClientDisplayRevision();
         if (revision != null) {
             System.out.println(String.format("lint: version %1$s", revision));
         } else {

@@ -390,7 +390,7 @@ public class LintCliClient extends LintClient {
             // the possibility that newer versions of lint have newer checks not included in
             // older ones, have existing checks that cover more areas, etc.
             if (stats.getBaselineFixedCount() > 0) {
-                String checkVersion = getClientRevision();
+                String checkVersion = getClientDisplayRevision();
                 String checkClient = LintClient.Companion.getClientName();
                 String creationVersion = baseline.getAttribute("version");
                 String creationClient = baseline.getAttribute("client");
@@ -419,7 +419,7 @@ public class LintCliClient extends LintClient {
         }
     }
 
-    protected String getTargetName(@NonNull String baselineVariantName) {
+    protected static String getTargetName(@NonNull String baselineVariantName) {
         if (LintClient.isGradle()) {
             if (VARIANT_ALL.equals(baselineVariantName)) {
                 return "lint";

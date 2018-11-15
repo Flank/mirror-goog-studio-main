@@ -182,5 +182,8 @@ public class LintClientTest extends TestCase {
         String revision = client.getClientRevision();
         Truth.assertThat(revision).isNotNull();
         Truth.assertThat(revision).isNotEmpty();
+        String displayRevision = client.getClientDisplayRevision();
+        Truth.assertThat(displayRevision).isNotNull();
+        Truth.assertThat(displayRevision).isNotEmpty();
     }
 }

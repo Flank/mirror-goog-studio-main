@@ -415,7 +415,7 @@ class LintBaseline(
                     writer.write("<")
                     writer.write(TAG_ISSUES)
                     writer.write(" format=\"5\"")
-                    val revision = client!!.getClientRevision()
+                    val revision = client!!.getClientDisplayRevision()
                     if (revision != null) {
                         writer.write(String.format(" by=\"lint %1\$s\"", revision))
                     }
