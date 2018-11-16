@@ -127,10 +127,11 @@ class JavaEvaluator {
      * both [.extendsClass] and [ ][.implementsInterface].
      */
     open fun inheritsFrom(
-        cls: PsiClass,
+        cls: PsiClass?,
         className: String,
         strict: Boolean
     ): Boolean {
+        cls ?: return false
         return extendsClass(cls, className, strict) || implementsInterface(cls, className, strict)
     }
 

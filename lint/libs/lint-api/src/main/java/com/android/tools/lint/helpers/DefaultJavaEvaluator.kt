@@ -86,7 +86,8 @@ open class DefaultJavaEvaluator(
         return InheritanceUtil.isInheritor(cls, strict, interfaceName)
     }
 
-    override fun inheritsFrom(cls: PsiClass, className: String, strict: Boolean): Boolean {
+    override fun inheritsFrom(cls: PsiClass?, className: String, strict: Boolean): Boolean {
+        cls ?: return false
         return InheritanceUtil.isInheritor(cls, strict, className)
     }
 

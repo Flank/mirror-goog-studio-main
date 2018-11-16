@@ -296,6 +296,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(RtlDetector.ENABLED);
         issues.add(RtlDetector.SYMMETRY);
         issues.add(RtlDetector.USE_START);
+        issues.add(SamDetector.ISSUE);
         issues.add(SQLiteDetector.ISSUE);
         issues.add(ScrollViewChildDetector.ISSUE);
         issues.add(SdCardDetector.ISSUE);
