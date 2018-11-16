@@ -1,4 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
+load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
 
 # managed by go/iml_to_build
 iml_module(
@@ -30,7 +31,7 @@ java_library(
     ],
 )
 
-java_test(
+coverage_java_test(
     name = "tools.tests",
     srcs = glob(["binary-resources/src/test/java/**"]),
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],

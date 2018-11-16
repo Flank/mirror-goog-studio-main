@@ -1,5 +1,6 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
+load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
 
 # managed by go/iml_to_build
 iml_module(
@@ -53,7 +54,7 @@ maven_pom(
     source = "//tools/buildSrc/base:base_version",
 )
 
-java_test(
+coverage_java_test(
     name = "tools.tests",
     srcs = glob(["src/test/java/**"]),
     data = ["//prebuilts/studio/sdk:platform-tools"],
