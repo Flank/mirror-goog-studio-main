@@ -124,14 +124,23 @@ class JavaModelBuilder : ToolingModelBuilder {
       else {
         sourceSet.compileConfigurationName
       }
-      @Suppress("DEPRECATION")
       return SourceSetImpl(
         sourceSet.name,
         sourceSet.allJava.srcDirs,
         sourceSet.resources.srcDirs,
-        sourceSet.output.classesDirs.files,
+        getClassesDirs(sourceSet, project),
         sourceSet.output.resourcesDir,
         getLibrariesForConfiguration(project, compileConfigurationName, buildMapping))
+    }
+
+    private fun getClassesDirs(sourceSet: org.gradle.api.tasks.SourceSet, project: Project): Collection<File> {
+      // SourceSetOutput::getClassesDir was removed from Gradle 5.0.
+      // SourceSetOutput::getClassesDirs was added since Gradle 4.0. For pre-4.0 Gradle, use Reflection to call getClassesDir.
+      return if (isGradleAtLeast(project.gradle.gradleVersion, "4.0"))
+        sourceSet.output.classesDirs.files
+      else listOf(Class.forName("org.gradle.api.tasks.SourceSetOutput")
+                    .getDeclaredMethod("getClassesDir")
+                    .invoke(sourceSet.output) as File)
     }
 
     @VisibleForTesting
