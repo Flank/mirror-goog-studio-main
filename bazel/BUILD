@@ -159,6 +159,13 @@ java_library(
 )
 
 java_binary(
+    name = "matryoshka",
+    srcs = ["src/com/android/tools/binaries/Matryoshka.java"],
+    main_class = "com.android.tools.binaries.Matryoshka",
+    visibility = ["//visibility:public"],
+)
+
+java_binary(
     name = "pom_generator",
     srcs = ["src/com/android/tools/binaries/PomGenerator.java"],
     jvm_flags = ["-Xmx1g"],

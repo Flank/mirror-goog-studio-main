@@ -51,6 +51,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":agent_header",
+        "//tools/base/bazel/native/matryoshka:libmatryoshka",
         "//tools/base/deploy/common:common_lib",
         "//tools/base/deploy/common:log",
         "//tools/base/deploy/proto:cc_proto",
@@ -73,11 +74,13 @@ genrule(
     ],
     cmd = "$(location //tools/base/bazel:bin2c) -lang=cxx -embed=false -variable=kVersion " +
           " -output=$(location version.cc)" +
-          " $(locations //tools/base/deploy/installer:unversioned_installer)",
+          " $(locations //tools/base/deploy/installer:unversioned_installer)" +
+          " $(location //tools/base/deploy/agent/native:libswap.so)",
     tags = ["no_windows"],
     tools = [
         ":unversioned_installer",  # Used as hash function input. This is built for HOST arch.
         "//tools/base/bazel:bin2c",
+        "//tools/base/deploy/agent/native:libswap.so",
     ],
     visibility = ["//visibility:private"],
 )
@@ -117,7 +120,7 @@ cc_binary(
 )
 
 android_cc_binary(
-    name = "android",
+    name = "android-no-matryoshka",
     abis = [
         "x86",
         "armeabi-v7a",
@@ -126,13 +129,47 @@ android_cc_binary(
     binary = ":versioned_installer",
     filename = "installer",
     tags = ["no_windows"],
+)
+
+genrule(
+    name = "android",
+    srcs = [
+        ":android-no-matryoshka/x86/installer",
+        ":android-no-matryoshka/armeabi-v7a/installer",
+        ":android-no-matryoshka/arm64-v8a/installer",
+        "//tools/base/deploy/agent/native:android/x86/libswap.so",
+        "//tools/base/deploy/agent/native:android/armeabi-v7a/libswap.so",
+        "//tools/base/deploy/agent/native:android/arm64-v8a/libswap.so",
+    ],
+    outs = [
+        "android/x86/installer",
+        "android/armeabi-v7a/installer",
+        "android/arm64-v8a/installer",
+    ],
+    cmd = """
+       $(location //tools/base/bazel:matryoshka) \
+           -i $(location //tools/base/deploy/installer:android-no-matryoshka/x86/installer) \
+           -o $(location android/x86/installer) \
+           -p agent.so=$(location //tools/base/deploy/agent/native:android/x86/libswap.so);
+
+       $(location //tools/base/bazel:matryoshka) \
+           -i $(location //tools/base/deploy/installer:android-no-matryoshka/armeabi-v7a/installer) \
+           -o $(location android/armeabi-v7a/installer) \
+           -p agent.so=$(location //tools/base/deploy/agent/native:android/armeabi-v7a/libswap.so);
+
+       $(location //tools/base/bazel:matryoshka) \
+           -i $(location //tools/base/deploy/installer:android-no-matryoshka/arm64-v8a/installer) \
+           -o $(location android/arm64-v8a/installer) \
+           -p agent.so=$(location //tools/base/deploy/agent/native:android/arm64-v8a/libswap.so) \
+           -p agent-alt.so=$(location //tools/base/deploy/agent/native:android/armeabi-v7a/libswap.so);
+    """,
+    tools = ["//tools/base/bazel:matryoshka"],
     visibility = ["//visibility:public"],
 )
 
 cc_library(
     name = "agent_header",
     srcs = [
-        ":agent.so.cc",
         ":agent_server.cc",
     ],
     hdrs = [
@@ -149,12 +186,10 @@ genrule(
         "//tools/base/deploy/agent/native:libswap.so",
     ],
     outs = [
-        "agent.so.cc",
         "agent.so.h",
     ],
-    cmd = "$(location //tools/base/bazel:bin2c) -lang=cxx -variable=agent_so" +
-          " -output=$(location agent.so.cc)" +
-          " -header=$(location agent.so.h)" +
+    cmd = "$(location //tools/base/bazel:bin2c) -lang=cxx -embed=false -variable=agent_so" +
+          " -output=$(location agent.so.h)" +
           " $(location //tools/base/deploy/agent/native:libswap.so)",
     tags = ["no_windows"],
     tools = [

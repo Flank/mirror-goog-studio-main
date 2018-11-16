@@ -16,13 +16,16 @@
 
 package com.android.tools.binaries;
 
+import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Hashtable;
+import java.util.List;
 
 class Bin2C {
     private static final int LINE_SIZE = 12;
@@ -43,7 +46,7 @@ class Bin2C {
     private String header = null;
     private String variableBaseName = null;
     private String namespace = null;
-    private String input = null;
+    private final List<String> inputs = Lists.newArrayList();
     private boolean embed = true;
 
     public static Language lookupLanguage(String lan) {
@@ -95,10 +98,9 @@ class Bin2C {
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
 
-            // Inputs files
+            // Input files
             if (arg.charAt(0) != '-') {
-                input = arg;
-                return;
+                inputs.add(arg);
             } else {
                 String[] tokens = arg.split("=");
                 if (tokens.length != 2) {
@@ -117,7 +119,7 @@ class Bin2C {
     }
 
     private void printUsage() {
-        System.err.println("Usage bin2c [parameters] inputs_files");
+        System.err.println("Usage bin2c [parameters] input_files");
         System.err.println("List of parameters:");
         System.err.println("    -lang=X        : language [java, cxx]. Default is 'cxx'.");
         System.err.println("    -output=X      : The generated cc file");
@@ -143,13 +145,21 @@ class Bin2C {
             headerFile = new File(header);
             headerFile.getParentFile().mkdirs();
         }
-        ;
 
-        byte[] buffer = Files.readAllBytes(Paths.get(input));
+        if (inputs.isEmpty()) {
+            throw new RuntimeException("No input files");
+        }
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        for (String input : inputs) {
+            bos.write(Files.readAllBytes(Paths.get(input)));
+        }
+        bos.close();
+
         if (language == Language.CXX) {
-            generateCXX(outputFile, headerFile, buffer);
+            generateCXX(outputFile, headerFile, bos.toByteArray());
         } else {
-            generateJava(outputFile, buffer);
+            generateJava(outputFile, bos.toByteArray());
         }
     }
 

@@ -79,6 +79,7 @@ android_cc_binary(
     tags = [
         "no_windows",
     ],
+    visibility = ["//tools/base/deploy:__subpackages__"],
 )
 
 cc_binary(

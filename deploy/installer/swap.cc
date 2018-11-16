@@ -15,6 +15,7 @@
  */
 
 #include "tools/base/deploy/installer/swap.h"
+#include "tools/base/bazel/native/matryoshka/doll.h"
 
 #include <algorithm>
 #include <fstream>
@@ -43,6 +44,7 @@ namespace deploy {
 
 namespace {
 const std::string kAgentFilename = "agent-"_s + agent_so_hash + ".so";
+const std::string kAgentAltFilename = "agent-alt-"_s + agent_so_hash + ".so";
 const std::string kServerFilename = "server-"_s + agent_server_hash + ".so";
 const int kRwFileMode =
     S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR | S_IWGRP | S_IWOTH;
@@ -232,6 +234,9 @@ bool SwapCommand::CopyBinaries(const std::string& src_path,
   std::string agent_src_path = src_path + kAgentFilename;
   std::string agent_dst_path = dst_path + kAgentFilename;
 
+  std::string agent_alt_src_path = src_path + kAgentAltFilename;
+  std::string agent_alt_dst_path = dst_path + kAgentAltFilename;
+
   std::string server_src_path = src_path + kServerFilename;
   std::string server_dst_path = dst_path + kServerFilename;
 
@@ -250,15 +255,34 @@ bool SwapCommand::CopyBinaries(const std::string& src_path,
   // update" case.
 
   std::vector<std::string> copy_args;
+  std::vector<std::unique_ptr<matryoshka::Doll>> dolls;
+  if (!matryoshka::Open(dolls)) {
+    ErrEvent("Installer binary does not contain any agent binaries.");
+    return false;
+  }
 
   if (!RunCmd("stat", User::APP_PACKAGE, {agent_dst_path}, nullptr)) {
     // If the agent library is not already on disk, write it there now.
     if (access(agent_src_path.c_str(), F_OK) == -1) {
-      WriteArrayToDisk(agent_so, agent_so_len, agent_src_path);
+      matryoshka::Doll* agent = matryoshka::FindByName(dolls, "agent.so");
+      if (!agent) {
+        ErrEvent("Installer binary does not contain agent.so");
+        return false;
+      }
+      WriteArrayToDisk(agent->content, agent->content_len, agent_src_path);
     }
 
     // Done using agent_src_path, so its safe to use emplace().
     copy_args.emplace_back(agent_src_path);
+  }
+
+  matryoshka::Doll* agent_alt = matryoshka::FindByName(dolls, "agent-alt.so");
+  if (agent_alt) {
+    if (!RunCmd("stat", User::APP_PACKAGE, {agent_alt_dst_path}, nullptr)) {
+      WriteArrayToDisk(agent_alt->content, agent_alt->content_len,
+                       agent_alt_src_path);
+      copy_args.emplace_back(agent_alt_src_path);
+    }
   }
 
   if (!RunCmd("stat", User::APP_PACKAGE, {server_dst_path}, nullptr)) {
@@ -385,8 +409,20 @@ bool SwapCommand::AttachAgents(const std::vector<int>& process_ids) const {
   CmdCommand cmd;
   for (int pid : process_ids) {
     std::string output;
-    if (!cmd.AttachAgent(pid, target_dir_ + kAgentFilename,
-                         {Socket::kDefaultAddress}, &output)) {
+    std::string agent = kAgentFilename;
+#if defined(__aarch64__)
+    // TODO: This is a temp solution, we are going to get this info from dump
+    // and read that from the request PB anyways.
+    //
+    // readlink doesn't seem to work. Using ls -l should also do the trick.
+    RunCmd("ls", User::APP_PACKAGE, {"-l", "/proc/" + to_string(pid) + "/exe"},
+           &output);
+    if (output.find("app_process32") != std::string::npos) {
+      agent = kAgentAltFilename;
+    }
+#endif
+    if (!cmd.AttachAgent(pid, target_dir_ + agent, {Socket::kDefaultAddress},
+                         &output)) {
       ErrEvent("Could not attach agent to process: "_s + output);
       return false;
     }
