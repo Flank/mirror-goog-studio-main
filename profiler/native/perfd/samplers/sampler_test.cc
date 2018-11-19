@@ -38,7 +38,7 @@ class FakeSampler final : public Sampler {
       : Sampler(session, buffer, sampling_interval_ms),
         event_count_(event_count),
         session_id_(id),
-        event_id_(id),
+        group_id_(id),
         latch_(event_count) {}
 
   virtual void Sample() override {
@@ -48,21 +48,21 @@ class FakeSampler final : public Sampler {
 
     proto::Event event;
     event.set_session_id(session_id_);
-    event.set_event_id(event_id_);
+    event.set_group_id(group_id_);
     buffer()->Add(event);
     latch_.CountDown();
   }
 
   void WaitForSampleCompletion() const { latch_.Await(); }
   int32_t event_count() const { return event_count_; }
-  int64_t event_id() const { return event_id_; }
+  int64_t group_id() const { return group_id_; }
 
  private:
   virtual const char* name() override { return "FakeSampler"; }
 
   int32_t event_count_;
   int64_t session_id_;
-  int64_t event_id_;
+  int64_t group_id_;
   CountDownLatch latch_;
 };
 
@@ -89,7 +89,7 @@ TEST(FakeSampler, TestSamplerInsertion) {
     sampler->WaitForSampleCompletion();
 
     proto::EventGroup group;
-    ASSERT_TRUE(event_buffer.GetGroup(sampler->event_id(), &group));
+    ASSERT_TRUE(event_buffer.GetGroup(sampler->group_id(), &group));
     ASSERT_EQ(sampler->event_count(), group.events_size());
 
     delete sampler;

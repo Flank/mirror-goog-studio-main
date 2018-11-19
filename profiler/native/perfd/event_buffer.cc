@@ -29,7 +29,7 @@ void EventBuffer::Add(proto::Event& event) {
   proto::EventGroup* group = nullptr;
   for (size_t i = 0; i < groups_.size(); i++) {
     auto& g = groups_.Get(i);
-    if (g.event_id() == event.event_id()) {
+    if (g.group_id() == event.group_id()) {
       group = &g;
       break;
     }
@@ -37,7 +37,7 @@ void EventBuffer::Add(proto::Event& event) {
   if (!group) {
     groups_.Add(proto::EventGroup());
     group = &groups_.back();
-    group->set_event_id(event.event_id());
+    group->set_group_id(event.group_id());
   }
   group->add_events()->CopyFrom(event);
   events_cv_.notify_all();
@@ -80,7 +80,7 @@ std::vector<proto::EventGroup> EventBuffer::Get(int64_t session_id,
                                                 proto::Event::Type end,
                                                 int64_t from, int64_t to) {
   std::lock_guard<std::mutex> lock(mutex_);
-  std::set<int64_t> event_ids;
+  std::set<int64_t> group_ids;
   for (size_t i = 0; i < groups_.size(); i++) {
     const auto& g = groups_.Get(i);
     for (int j = 0; j < g.events_size(); j++) {
@@ -88,12 +88,12 @@ std::vector<proto::EventGroup> EventBuffer::Get(int64_t session_id,
       if (event.kind() == kind) {
         if (event.timestamp() < from) {
           if (event.type() == end) {
-            event_ids.erase(event.event_id());
+            group_ids.erase(event.group_id());
           } else {
-            event_ids.insert(event.event_id());
+            group_ids.insert(event.group_id());
           }
         } else if (event.timestamp() <= to) {
-          event_ids.insert(event.event_id());
+          group_ids.insert(event.group_id());
         }
       }
     }
@@ -102,7 +102,7 @@ std::vector<proto::EventGroup> EventBuffer::Get(int64_t session_id,
   std::vector<proto::EventGroup> groups;
   for (size_t i = 0; i < groups_.size(); i++) {
     const auto& g = groups_.Get(i);
-    if (event_ids.count(g.event_id())) {
+    if (group_ids.count(g.group_id())) {
       groups.push_back(g);
     }
   }
@@ -110,11 +110,11 @@ std::vector<proto::EventGroup> EventBuffer::Get(int64_t session_id,
   return groups;
 }
 
-bool EventBuffer::GetGroup(int64_t event_id, proto::EventGroup* group) {
+bool EventBuffer::GetGroup(int64_t group_id, proto::EventGroup* group) {
   std::lock_guard<std::mutex> lock(mutex_);
   for (size_t i = 0; i < groups_.size(); i++) {
     const auto& g = groups_.Get(i);
-    if (g.event_id() == event_id) {
+    if (g.group_id() == group_id) {
       group->CopyFrom(g);
       return true;
     }

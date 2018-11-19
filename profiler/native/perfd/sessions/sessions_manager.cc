@@ -40,7 +40,7 @@ void SessionsManager::BeginSession(int64_t device_id,
 
   std::unique_ptr<Session> session(new Session(device_id, pid, now, daemon_));
   proto::Event event;
-  event.set_event_id(session->info().session_id());
+  event.set_group_id(session->info().session_id());
   event.set_session_id(session->info().session_id());
   event.set_timestamp(now);
   event.set_kind(proto::Event::SESSION);
@@ -82,7 +82,7 @@ void SessionsManager::DoEndSession(profiler::Session* session, int64_t time) {
   if (session->End(time)) {
     proto::Event event;
     event.set_timestamp(time);
-    event.set_event_id(session->info().session_id());
+    event.set_group_id(session->info().session_id());
     event.set_session_id(session->info().session_id());
     event.set_kind(proto::Event::SESSION);
     event.set_type(proto::Event::SESSION_ENDED);

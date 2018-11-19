@@ -30,7 +30,7 @@ void NetworkSpeedSampler::Sample() {
 
   Event tx_event;
   tx_event.set_session_id(session().info().session_id());
-  tx_event.set_event_id(Event::NETWORK_TX);
+  tx_event.set_group_id(Event::NETWORK_TX);
   tx_event.set_kind(Event::NETWORK_SPEED);
   auto speed = tx_event.mutable_network_speed();
   speed->set_throughput(data.speed_data().sent());
@@ -38,7 +38,7 @@ void NetworkSpeedSampler::Sample() {
 
   Event rx_event;
   rx_event.set_session_id(session().info().session_id());
-  rx_event.set_event_id(Event::NETWORK_RX);
+  rx_event.set_group_id(Event::NETWORK_RX);
   rx_event.set_kind(Event::NETWORK_SPEED);
   speed = rx_event.mutable_network_speed();
   speed->set_throughput(data.speed_data().received());

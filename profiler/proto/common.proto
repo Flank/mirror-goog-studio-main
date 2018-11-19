@@ -90,13 +90,13 @@ message Event {
   }
 
   // The session the event belongs to. For session events this is the same as
-  // |event_id|
+  // |group_id|
   int64 session_id = 1;
 
-  // The id of this event. This is not unique, for concepts that span across a
-  // range of time (network requests, threads, etc), they will all share the
-  // same |event_id|.
-  int64 event_id = 2;
+  // The id of the group this event belongs to. This is not unique, for concepts
+  // that span across a range of time (network requests, threads, etc), they will
+  // all share the same |group_id|.
+  int64 group_id = 2;
 
   // The kind of event (a higher level grouping of events that belong to the
   // same area) Useful for queries such as "all the groups of "kind" SESSION.
