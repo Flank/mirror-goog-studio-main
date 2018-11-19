@@ -518,7 +518,16 @@ public class MainTest extends AbstractCheckTest {
                         xml(
                                 "lint.xml",
                                 ""
-                                        + "<lint><issue id=\"SomeUnknownId\" severity=\"fatal\" /></lint>"),
+                                        + "<lint>\n"
+                                        + "    <issue id=\"all\" severity=\"warning\" />\n"
+                                        + "    <issue id=\"LintError\" severity=\"error\" />\n"
+                                        + "    <issue id=\"SomeUnknownId\" severity=\"fatal\" />\n"
+                                        + "    <issue id=\"IconLauncherFormat\">\n"
+                                        + "        <ignore path=\"src/main/res/mipmap-anydpi-v26/ic_launcher.xml\" />\n"
+                                        + "        <ignore path=\"src/main/res/drawable/ic_launcher_foreground.xml\" />\n"
+                                        + "        <ignore path=\"src/main/res/drawable/ic_launcher_background.xml\" />\n"
+                                        + "    </issue>"
+                                        + "</lint>"),
                         // dummy to ensure we have .class files
                         source("bin/classes/foo/bar/ApiCallTest.class", ""));
         checkDriver(
