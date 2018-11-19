@@ -57,12 +57,9 @@ public class AdbClient {
         ByteArrayOutputReceiver receiver;
         try (Trace ignored = Trace.begin("adb shell" + Arrays.toString(parameters))) {
             receiver = new ByteArrayOutputReceiver();
+            // Use 8000ms timeout since dex2oat on O can make install timeout.
             device.executeShellCommand(
-                    String.join(" ", parameters),
-                    receiver,
-                    DdmPreferences.getTimeOut(),
-                    TimeUnit.MILLISECONDS,
-                    input);
+                    String.join(" ", parameters), receiver, 8000, TimeUnit.MILLISECONDS, input);
             return receiver.toByteArray();
         } catch (AdbCommandRejectedException
                 | ShellCommandUnresponsiveException
