@@ -18,7 +18,11 @@ package com.android.build.gradle.tasks;
 
 import static com.android.SdkConstants.CURRENT_PLATFORM;
 import static com.android.SdkConstants.PLATFORM_WINDOWS;
+import static com.android.build.gradle.internal.cxx.configure.ConstantsKt.CXX_DEFAULT_CONFIGURATION_SUBFOLDER;
+import static com.android.build.gradle.internal.cxx.configure.ConstantsKt.CXX_LOCAL_PROPERTIES_CACHE_DIR;
+import static com.android.build.gradle.internal.cxx.configure.GradleLocalPropertiesKt.gradleLocalProperties;
 import static com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfigurationKt.createJsonGenerationAbiConfiguration;
+import static com.android.build.gradle.internal.cxx.configure.LoggingEnvironmentKt.error;
 import static com.android.build.gradle.internal.cxx.configure.NativeBuildSystemVariantConfigurationKt.createNativeBuildSystemVariantConfig;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -76,6 +80,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -195,30 +200,25 @@ public abstract class ExternalNativeJsonGenerator {
     @Nullable
     private Void buildForOneConfigurationConvertExceptions(
             boolean forceJsonGeneration, JsonGenerationAbiConfiguration configuration) {
-        try {
-            buildForOneConfiguration(forceJsonGeneration, configuration);
-        } catch (@NonNull IOException | GradleException e) {
-            synchronized (androidBuilder.getIssueReporter()) {
-                androidBuilder
-                        .getIssueReporter()
-                        .reportError(
-                                Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION,
-                                new EvalIssueException(e, config.variantName));
+        try (GradleSyncLoggingEnvironment ignore =
+                new GradleSyncLoggingEnvironment(
+                        getVariantName(),
+                        configuration.getAbiName(),
+                        androidBuilder.getIssueReporter(),
+                        androidBuilder.getLogger())) {
+            try {
+                buildForOneConfiguration(forceJsonGeneration, configuration);
+            } catch (@NonNull IOException | GradleException e) {
+                error(String.format("exception while building Json $%s", e.getMessage()));
+            } catch (ProcessException e) {
+                error(
+                        String.format(
+                                "executing external native build for %s %s",
+                                getNativeBuildSystem().getName(), config.makefile));
             }
-        } catch (ProcessException e) {
-            synchronized (androidBuilder.getIssueReporter()) {
-                androidBuilder
-                        .getIssueReporter()
-                        .reportError(
-                                Type.EXTERNAL_NATIVE_BUILD_PROCESS_EXCEPTION,
-                                new EvalIssueException(
-                                        String.format(
-                                                "executing external native build for %s %s",
-                                                getNativeBuildSystem().getName(), config.makefile),
-                                        e.getMessage()));
-            }
+            return null;
         }
-        return null;
+
     }
 
     @NonNull
@@ -550,9 +550,10 @@ public abstract class ExternalNativeJsonGenerator {
             @NonNull AndroidBuilder androidBuilder,
             @NonNull SdkHandler sdkHandler,
             @NonNull VariantScope scope) {
-        try (GradleSyncLoggingEnvironment ignored =
+        try (GradleSyncLoggingEnvironment ignore =
                 new GradleSyncLoggingEnvironment(
                         scope.getFullVariantName(),
+                        "native",
                         androidBuilder.getIssueReporter(),
                         androidBuilder.getLogger())) {
             return createImpl(
@@ -684,8 +685,17 @@ public abstract class ExternalNativeJsonGenerator {
         }
 
         assert ndkHandler.getRevision() != null;
+        File cacheFolder = new File(rootBuildGradlePath, CXX_DEFAULT_CONFIGURATION_SUBFOLDER);
+        Properties localProperties = gradleLocalProperties(rootBuildGradlePath);
+        String userSpecifiedCxxCacheFolder =
+                localProperties.getProperty(CXX_LOCAL_PROPERTIES_CACHE_DIR);
+        if (userSpecifiedCxxCacheFolder != null) {
+            cacheFolder = new File(userSpecifiedCxxCacheFolder);
+        }
+
         JsonGenerationVariantConfiguration config =
                 new JsonGenerationVariantConfiguration(
+                        rootBuildGradlePath,
                         nativeBuildVariantConfig,
                         variantData.getName(),
                         makefile,
@@ -698,7 +708,7 @@ public abstract class ExternalNativeJsonGenerator {
                         abiConfigurations,
                         ndkHandler.getRevision(),
                         expectedJsons,
-                        new File(rootBuildGradlePath, ".externalNativeBuild"),
+                        cacheFolder,
                         globalScope
                                 .getProjectOptions()
                                 .get(BooleanOption.ENABLE_NATIVE_COMPILER_SETTINGS_CACHE));

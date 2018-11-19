@@ -34,7 +34,7 @@ class CmakeCompilerSettingsCache(
     cacheRootFolder: File,
     private val hashAlgorithm: (Any) -> String =
         { key -> hashCodeRadix36Hash(key) }) {
-    private val cacheFolder = File(cacheRootFolder, "cache")
+    private val cacheFolder = File(cacheRootFolder, CXX_CMAKE_COMPILER_SETTINGS_CACHE_SUBFOLDER)
 
     /**
      * Try to get the value for the given key.
@@ -98,15 +98,15 @@ class CmakeCompilerSettingsCache(
     /**
      * The name of the file that holds a key for a particular hash.
      */
-    private fun keyFile(combinedHash: String): File {
-        return File(cacheFolder, "${combinedHash}_key.json")
+    private fun keyFile(hash: String): File {
+        return File(cacheFolder, "${hash}_key.json")
     }
 
     /**
      * The name of the file that holds the value for a particular key.
      */
-    private fun valueFile(combinedHash: String): File {
-        return File(cacheFolder, "${combinedHash}_value.cmake")
+    private fun valueFile(hash: String): File {
+        return File(cacheFolder, "${hash}_value.cmake")
     }
 
     /**

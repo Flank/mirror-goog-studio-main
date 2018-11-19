@@ -23,6 +23,7 @@ import java.io.File
  * Configuration information for generating C++ android_gradle_build.json.
  */
 data class JsonGenerationVariantConfiguration(
+    @JvmField val rootBuildGradlePath : File,
     @JvmField val buildSystem : NativeBuildSystemVariantConfig,
     @JvmField val variantName : String,
     @JvmField val makefile: File,

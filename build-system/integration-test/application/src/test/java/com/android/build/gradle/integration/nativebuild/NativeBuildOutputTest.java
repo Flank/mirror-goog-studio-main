@@ -113,7 +113,7 @@ public class NativeBuildOutputTest {
                 project.file("CMakeLists.txt"),
                 cmakeLists
                         + "\n"
-                        + "set_target_properties(hello-jni PROPERTIES LIBRARY_OUTPUT_DIRECTORY ./custom-output)");
+                        + "set_target_properties(hello-jni PROPERTIES LIBRARY_OUTPUT_DIRECTORY ../../../custom-output/debug/${ANDROID_ABI})");
 
         checkSucceeded(
                 ImmutableList.of("external build set its own library output location"),
@@ -129,7 +129,7 @@ public class NativeBuildOutputTest {
         original =
                 new File(
                         original,
-                        ".externalNativeBuild/cmake/debug/arm64-v8a/custom-output/libhello-jni.so");
+                        ".externalNativeBuild/custom-output/debug/arm64-v8a/libhello-jni.so");
         assertThat(original).isFile();
     }
 

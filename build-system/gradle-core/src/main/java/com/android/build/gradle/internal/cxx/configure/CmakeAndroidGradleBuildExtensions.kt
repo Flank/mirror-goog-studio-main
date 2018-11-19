@@ -98,7 +98,7 @@ fun wrapCmakeListsForCompilerSettingsCaching(
     if (commandLine.getCmakeBooleanProperty(
             ANDROID_GRADLE_BUILD_COMPILER_SETTINGS_CACHE_ENABLED) == false) {
         info("Not using cached compiler settings because " +
-                "$ANDROID_GRADLE_BUILD_COMPILER_SETTINGS_CACHE_ENABLED was set")
+                "$ANDROID_GRADLE_BUILD_COMPILER_SETTINGS_CACHE_ENABLED was set to false")
         // Remove ANDROID_GRADLE_BUILD_COMPILER_SETTINGS_CACHE_ENABLED so user doesn't get warning
         // about unused property
         return CmakeExecutionConfiguration(cmakeListsFolder,

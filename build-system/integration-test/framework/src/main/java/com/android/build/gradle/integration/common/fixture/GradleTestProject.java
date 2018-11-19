@@ -641,6 +641,21 @@ public final class GradleTestProject implements TestRule {
         return cmakeVersionFolderInSdk;
     }
 
+
+    /**
+     * The ninja in 3.6 cmake folder does not support long file paths. This function returns the
+     * version that does handle them.
+     */
+    @NonNull
+    public static File getPreferredNinja() {
+        File cmakeFolder = getCmakeVersionFolder("3.10.4819442");
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+            return new File(cmakeFolder, "bin/ninja.exe");
+        } else {
+            return new File(cmakeFolder, "bin/ninja");
+        }
+    }
+
     public String generateCommonBuildScript() {
         return BuildSystem.get()
                 .getCommonBuildScriptContent(

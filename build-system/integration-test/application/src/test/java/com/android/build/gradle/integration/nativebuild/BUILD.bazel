@@ -84,6 +84,14 @@ single_gradle_integration_test(
 )
 
 single_gradle_integration_test(
+    name = "CmakeAndroidGradleBuildExtensionsTest",
+    data = DATA + CMAKE,
+    maven_repos = MAVEN_REPOS,
+    tags = TAGS,
+    deps = DEPS,
+)
+
+single_gradle_integration_test(
     name = "CmakeBasicProjectTest",
     data = DATA + CMAKE,
     maven_repos = MAVEN_REPOS,

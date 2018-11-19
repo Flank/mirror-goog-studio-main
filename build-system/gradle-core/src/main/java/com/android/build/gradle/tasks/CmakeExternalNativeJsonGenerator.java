@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.tasks;
 
+import static com.android.build.gradle.internal.cxx.configure.CmakeAndroidGradleBuildExtensionsKt.wrapCmakeListsForCompilerSettingsCaching;
+import static com.android.build.gradle.internal.cxx.configure.CmakeAndroidGradleBuildExtensionsKt.writeCompilerSettingsToCache;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
@@ -112,7 +114,11 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
 
     @Override
     void processBuildOutput(
-            @NonNull String buildOutput, @NonNull JsonGenerationAbiConfiguration abiConfig) {}
+            @NonNull String buildOutput, @NonNull JsonGenerationAbiConfiguration abiConfig) {
+        if (config.enableCmakeCompilerSettingsCache) {
+            writeCompilerSettingsToCache(config.compilerSettingsCacheFolder, abiConfig);
+        }
+    }
 
     @NonNull
     @Override
@@ -138,6 +144,14 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
 
         // Add user provided build arguments
         processBuilderArgs.addAll(getBuildArguments());
+        if (config.enableCmakeCompilerSettingsCache) {
+            return wrapCmakeListsForCompilerSettingsCaching(
+                            config.compilerSettingsCacheFolder,
+                            abiConfig,
+                            cmakeListsFolder,
+                            processBuilderArgs)
+                    .getArgs();
+        }
         return processBuilderArgs;
     }
 
