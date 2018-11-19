@@ -25,19 +25,19 @@ class LeakDetectorTest : AbstractCheckTest() {
 
     fun testStaticFields() {
         val expected = """
-            src/test/pkg/LeakTest.java:18: Warning: Do not place Android context classes in static fields; this is a memory leak (and also breaks Instant Run) [StaticFieldLeak]
+            src/test/pkg/LeakTest.java:18: Warning: Do not place Android context classes in static fields; this is a memory leak [StaticFieldLeak]
                 private static Activity sField7; // LEAK!
                         ~~~~~~
-            src/test/pkg/LeakTest.java:19: Warning: Do not place Android context classes in static fields; this is a memory leak (and also breaks Instant Run) [StaticFieldLeak]
+            src/test/pkg/LeakTest.java:19: Warning: Do not place Android context classes in static fields; this is a memory leak [StaticFieldLeak]
                 private static Fragment sField8; // LEAK!
                         ~~~~~~
-            src/test/pkg/LeakTest.java:20: Warning: Do not place Android context classes in static fields; this is a memory leak (and also breaks Instant Run) [StaticFieldLeak]
+            src/test/pkg/LeakTest.java:20: Warning: Do not place Android context classes in static fields; this is a memory leak [StaticFieldLeak]
                 private static Button sField9; // LEAK!
                         ~~~~~~
-            src/test/pkg/LeakTest.java:21: Warning: Do not place Android context classes in static fields (static reference to MyObject which has field mActivity pointing to Activity); this is a memory leak (and also breaks Instant Run) [StaticFieldLeak]
+            src/test/pkg/LeakTest.java:21: Warning: Do not place Android context classes in static fields (static reference to MyObject which has field mActivity pointing to Activity); this is a memory leak [StaticFieldLeak]
                 private static MyObject sField10;
                         ~~~~~~
-            src/test/pkg/LeakTest.java:30: Warning: Do not place Android context classes in static fields; this is a memory leak (and also breaks Instant Run) [StaticFieldLeak]
+            src/test/pkg/LeakTest.java:30: Warning: Do not place Android context classes in static fields; this is a memory leak [StaticFieldLeak]
                 private static Activity sAppContext1; // LEAK
                         ~~~~~~
             0 errors, 5 warnings
@@ -303,7 +303,7 @@ class LeakDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expect(
             """
-            src/test/pkg/StaticFieldTest.java:6: Warning: Do not place Android context classes in static fields; this is a memory leak (and also breaks Instant Run) [StaticFieldLeak]
+            src/test/pkg/StaticFieldTest.java:6: Warning: Do not place Android context classes in static fields; this is a memory leak [StaticFieldLeak]
                 public static Context context;
                        ~~~~~~
             0 errors, 1 warnings
@@ -428,6 +428,66 @@ class LeakDetectorTest : AbstractCheckTest() {
                 @SuppressLint("StaticFieldLeak")
                 @Suppress("ObjectPropertyName")
                 lateinit var _globalContext: Context
+                """
+            ).indented()
+        ).run().expectClean()
+    }
+
+    fun testAppContextReference() {
+        // Regression test for 119440194
+        lint().files(
+            java(
+                "src/test/pkg/LeakTest.java",
+                """
+                package test.pkg;
+
+                import android.annotation.SuppressLint;
+                import android.app.Activity;
+                import android.content.Context;
+                import android.app.Fragment;
+                import android.widget.Button;
+                import java.util.List;
+
+                @SuppressWarnings("unused")
+                public class LeakTest {
+                    private static MyObject sField10;
+
+                    private static class MyObject {
+                        private int mKey;
+                        private Context applicationCtx;
+                    }
+                }
+                """
+            ).indented()
+        ).run().expectClean()
+    }
+
+    fun testAppContextInitialization() {
+        // Regression test for 70510835
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.content.Context;
+
+                public class LeakTest {
+                    private static StaticFieldLeak sInstance;
+                    public static synchronized StaticFieldLeak getInstance(final Context context) {
+                        if (sInstance == null) {
+                            sInstance = new StaticFieldLeak(context.getApplicationContext());
+                        }
+                        return sInstance;
+                    }
+
+                    private static class StaticFieldLeak {
+                        private final Context mContext;
+
+                        private StaticFieldLeak(Context context) {
+                            mContext = context.getApplicationContext();
+                        }
+                    }
+                }
                 """
             ).indented()
         ).run().expectClean()

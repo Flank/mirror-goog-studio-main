@@ -52,6 +52,7 @@ import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UResolvable
 import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.getParentOfType
+import org.jetbrains.uast.toUElement
 import org.jetbrains.uast.util.isAssignment
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 import java.util.Locale
@@ -163,11 +164,11 @@ class LeakDetector : Detector(), SourceCodeScanner {
             if (fqn.startsWith("android.")) {
                 if (isLeakCandidate(cls, context.evaluator) &&
                     !isAppContextName(cls, node) &&
-                    !isInitializedToAppContext(node)
+                    !isInitializedToAppContext(node, cls)
                 ) {
                     val message =
                         "Do not place Android context classes in static fields; " +
-                                "this is a memory leak (and also breaks Instant Run)"
+                                "this is a memory leak"
                     report(node, modifierList, message)
                 }
             } else {
@@ -187,14 +188,16 @@ class LeakDetector : Detector(), SourceCodeScanner {
                         continue
                     }
                     val innerCls = innerType.resolve() ?: continue
+
                     if (canonical.startsWith("android.")) {
                         if (isLeakCandidate(innerCls, context.evaluator) &&
-                            !isAppContextName(innerCls, node)
+                            !isAppContextName(innerCls, referenced) &&
+                            !isInitializedToAppContext(context, referenced, innerCls)
                         ) {
                             val message = "Do not place Android context classes in static " +
                                     "fields (static reference to `${cls.name}` which has field " +
                                     "`${referenced.name}` pointing to `${innerCls.name}`); this " +
-                                    "is a memory leak (and also breaks Instant Run)"
+                                    "is a memory leak"
                             report(node, modifierList, message)
                             break
                         }
@@ -203,12 +206,31 @@ class LeakDetector : Detector(), SourceCodeScanner {
             }
         }
 
+        private fun isInitializedToAppContext(
+            context: JavaContext,
+            field: PsiField,
+            typeClass: PsiClass
+        ): Boolean {
+            if (!context.evaluator.extendsClass(typeClass, CLASS_CONTEXT, false)) {
+                return false
+            }
+
+            val uField = field.toUElement(UField::class.java) ?: return true
+            return isInitializedToAppContext(uField, typeClass)
+        }
+
         /**
          * If it's a static field see if it's initialized to an app context in one of the
          * constructors
          */
-        private fun isInitializedToAppContext(field: UField): Boolean {
+        private fun isInitializedToAppContext(field: UField, typeClass: PsiClass): Boolean {
             val containingClass = field.containingClass ?: return false
+
+            // Only check for app context if we're dealing with a Context field -- there's
+            // no chance Fragments, Views etc will be the app context.
+            if (!context.evaluator.extendsClass(typeClass, CLASS_CONTEXT, false)) {
+                return false
+            }
 
             for (method in containingClass.constructors) {
                 val methodBody = context.uastContext.getMethodBody(method) ?: continue
