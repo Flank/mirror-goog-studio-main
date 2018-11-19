@@ -132,6 +132,11 @@ public class MinifyLibAndAppKeepRules {
 
         assertThat(libraryJars)
                 .named("keep rules libraryjars")
-                .containsExactly("android.jar", "org.apache.http.legacy.jar");
+                .containsExactly(
+                        "android.jar",
+                        "org.apache.http.legacy.jar",
+                        "android.test.mock.jar",
+                        "android.test.base.jar",
+                        "android.test.runner.jar");
     }
 }

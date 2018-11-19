@@ -15,7 +15,7 @@ buildDir = new File(System.getenv("BUILD_DIR"))
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 27
+    compileSdkVersion 28
 
     lintOptions {
         abortOnError false

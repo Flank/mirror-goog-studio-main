@@ -85,12 +85,27 @@ public class BasicTest2 {
                     "com.google.android.gms:play-services-basement:"
                             + PLAY_SERVICES_VERSION
                             + "@aar",
+                    "com.android.support:loader:" + SUPPORT_LIB_VERSION + "@aar",
+                    "com.android.support:viewpager:" + SUPPORT_LIB_VERSION + "@aar",
+                    "com.android.support:coordinatorlayout:" + SUPPORT_LIB_VERSION + "@aar",
+                    "com.android.support:drawerlayout:" + SUPPORT_LIB_VERSION + "@aar",
+                    "com.android.support:slidingpanelayout:" + SUPPORT_LIB_VERSION + "@aar",
+                    "com.android.support:customview:" + SUPPORT_LIB_VERSION + "@aar",
+                    "com.android.support:swiperefreshlayout:" + SUPPORT_LIB_VERSION + "@aar",
+                    "com.android.support:asynclayoutinflater:" + SUPPORT_LIB_VERSION + "@aar",
+                    "com.android.support:versionedparcelable:" + SUPPORT_LIB_VERSION + "@aar",
+                    "com.android.support:documentfile:" + SUPPORT_LIB_VERSION + "@aar",
+                    "com.android.support:localbroadcastmanager:" + SUPPORT_LIB_VERSION + "@aar",
+                    "com.android.support:print:" + SUPPORT_LIB_VERSION + "@aar",
+                    "com.android.support:interpolator:" + SUPPORT_LIB_VERSION + "@aar",
+                    "com.android.support:cursoradapter:" + SUPPORT_LIB_VERSION + "@aar",
                     "com.android.support:support-fragment:" + SUPPORT_LIB_VERSION + "@aar",
                     "com.android.support:support-media-compat:" + SUPPORT_LIB_VERSION + "@aar",
                     "com.android.support:support-core-ui:" + SUPPORT_LIB_VERSION + "@aar",
                     "com.android.support:support-core-utils:" + SUPPORT_LIB_VERSION + "@aar",
                     "com.android.support:support-compat:" + SUPPORT_LIB_VERSION + "@aar",
                     "android.arch.lifecycle:runtime:" + ANDROID_ARCH_VERSION + "@aar",
+                    "android.arch.lifecycle:livedata:" + ANDROID_ARCH_VERSION + "@aar",
                     "android.arch.lifecycle:livedata-core:" + ANDROID_ARCH_VERSION + "@aar",
                     "android.arch.core:runtime:" + ANDROID_ARCH_VERSION + "@aar",
                     "android.arch.lifecycle:viewmodel:" + ANDROID_ARCH_VERSION + "@aar");
@@ -185,8 +200,9 @@ public class BasicTest2 {
                 .named("debug compile java libs")
                 .containsExactly(
                         "com.android.support:support-annotations:" + SUPPORT_LIB_VERSION + "@jar",
-                        "android.arch.lifecycle:common:1.1.0@jar",
-                        "android.arch.core:common:1.1.0@jar");
+                        "com.android.support:collections:" + SUPPORT_LIB_VERSION + "@jar",
+                        "android.arch.lifecycle:common:" + ANDROID_ARCH_VERSION + "@jar",
+                        "android.arch.core:common:" + ANDROID_ARCH_VERSION + "@jar");
 
         LibraryGraphHelper.Items androidItems = helper.on(compileGraph).withType(ANDROID);
 
@@ -342,8 +358,9 @@ public class BasicTest2 {
                 .named("release compile java libs")
                 .containsExactly(
                         "com.android.support:support-annotations:" + SUPPORT_LIB_VERSION + "@jar",
-                        "android.arch.lifecycle:common:1.1.0@jar",
-                        "android.arch.core:common:1.1.0@jar");
+                        "com.android.support:collections:" + SUPPORT_LIB_VERSION + "@jar",
+                        "android.arch.lifecycle:common:" + ANDROID_ARCH_VERSION + "@jar",
+                        "android.arch.core:common:" + ANDROID_ARCH_VERSION + "@jar");
 
         LibraryGraphHelper.Items androidItems = helper.on(releaseGraph).withType(ANDROID);
         Set<String> coordinateCopies = Sets.newHashSet(coordinates);

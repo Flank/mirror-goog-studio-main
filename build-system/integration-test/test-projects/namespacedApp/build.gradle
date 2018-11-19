@@ -4,12 +4,13 @@ buildscript { apply from: "../commonBuildScript.gradle" }
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 27
+    compileSdkVersion rootProject.latestCompileSdk
+    buildToolsVersion = rootProject.buildToolsVersion
     defaultConfig {
         applicationId "com.example.namespacedApp"
         minSdkVersion 15
         //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
-        targetSdkVersion 27
+        targetSdkVersion rootProject.latestCompileSdk
         versionCode 1
         versionName "1.0"
     }

@@ -107,6 +107,7 @@ kotlin_test(
         "//prebuilts/studio/sdk:build-tools/latest",
         "//prebuilts/studio/sdk:platform-tools",
         "//prebuilts/studio/sdk:platforms/android-24",
+        "//prebuilts/studio/sdk:platforms/android-27",
         "//prebuilts/studio/sdk:platforms/latest",
     ],
     friends = [":gradle-core"],

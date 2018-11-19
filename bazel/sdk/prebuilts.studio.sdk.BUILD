@@ -137,19 +137,19 @@ filegroup(
 
 filegroup(
     name = "platforms/latest",
-    srcs = [":platforms/android-27"],
+    srcs = [":platforms/android-28"],
     visibility = ["//visibility:public"],
 )
 
 filegroup(
     name = "platforms/latest-preview",
-    srcs = [":platforms/android-27"],
+    srcs = [":platforms/android-28"],
     visibility = ["//visibility:public"],
 )
 
 java_import(
     name = "platforms/latest_jar",
-    jars = sdk_path(["platforms/android-27/android.jar"]),
+    jars = sdk_path(["platforms/android-28/android.jar"]),
     neverlink = 1,
     visibility = [
         "//tools/base/build-system/instant-run-instrumentation:__pkg__",
