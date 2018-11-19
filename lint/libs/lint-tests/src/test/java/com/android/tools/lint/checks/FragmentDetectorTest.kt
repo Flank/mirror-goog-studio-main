@@ -139,4 +139,56 @@ class FragmentDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expect(expected)
     }
+
+    fun testAndroidXFragment() {
+        // Regression test for
+        // 119675579: Remove the Fragments must have a no-arg constructor warning when using 1.1.0+
+        val expected = """
+            src/test/pkg/Parent.java:5: Error: This fragment should provide a default constructor (a public constructor with no arguments) (test.pkg.FragmentTest.Fragment1) [ValidFragment]
+                public static class Fragment1 extends android.support.v4.app.Fragment {
+                                    ~~~~~~~~~
+            src/test/pkg/Parent.java:6: Error: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
+                    private Fragment1(int dummy) { // ERROR
+                            ~~~~~~~~~
+            2 errors, 0 warnings
+        """
+
+        lint().files(
+            java(
+                "src/test/pkg/Parent.java",
+                """
+                    package test.pkg;
+
+                    public class FragmentTest {
+                        // Should have a public constructor with no arguments
+                        public static class Fragment1 extends android.support.v4.app.Fragment {
+                            private Fragment1(int dummy) { // ERROR
+                            }
+                        }
+                        // androidx is okay
+                        public static class Fragment2 extends androidx.fragment.app.Fragment {
+                            private Fragment2(int dummy) { // OK
+                            }
+                        }
+                    }
+                    """
+            ).indented(),
+            java(
+                """
+                package android.support.v4.app;
+                // Dummy stub
+                public class Fragment {
+                }
+                """
+            ),
+            java(
+                """
+                package androidx.fragment.app;
+                // Dummy stub
+                public class Fragment {
+                }
+                """
+            )
+        ).run().expect(expected)
+    }
 }

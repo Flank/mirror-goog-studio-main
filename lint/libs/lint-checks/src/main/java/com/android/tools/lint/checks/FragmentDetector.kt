@@ -52,6 +52,10 @@ class FragmentDetector : Detector(), SourceCodeScanner {
                 not be called when the fragment is re-instantiated; instead, arguments can be \
                 supplied by the caller with `setArguments(Bundle)` and later retrieved by the \
                 Fragment with `getArguments()`.
+
+                Note that this is no longer true when you are using \
+                `androidx.fragment.app.Fragment`; with the `FragmentFactory` you can supply \
+                any arguments you want (as of version androidx version 1.1).
                 """,
             category = Category.CORRECTNESS,
             androidSpecific = true,
@@ -65,9 +69,9 @@ class FragmentDetector : Detector(), SourceCodeScanner {
     // ---- implements SourceCodeScanner ----
 
     override fun applicableSuperClasses(): List<String>? {
-        return listOf(
-            CLASS_FRAGMENT, CLASS_V4_FRAGMENT.oldName(), CLASS_V4_FRAGMENT.newName()
-        )
+        // Note: We are deliberately NOT including: CLASS_V4_FRAGMENT.newName() here:
+        // androidx Fragments are allowed to use non-default constructors (see issue 119675579)
+        return listOf(CLASS_FRAGMENT, CLASS_V4_FRAGMENT.oldName())
     }
 
     override fun visitClass(context: JavaContext, declaration: UClass) {
