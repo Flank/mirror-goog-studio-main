@@ -30,12 +30,17 @@ import "network_data.proto";
 message Event {
   enum Kind {
     NONE = 0;
+    // group_id: stream id
     STREAM = 1;
+    // group_id: process id
     PROCESS = 2;
+    // group_id: session id
     SESSION = 3;
 
     // Network Profiler Prefix = 100
+    // group_id: |NETWORK_TX| or |NETWORK_RX|
     NETWORK_SPEED = 101;
+    // No specified group_id
     NETWORK_CONNECTION_COUNT = 102;
 
     // Cpu Profiler Prefix = 200
