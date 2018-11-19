@@ -24,6 +24,7 @@ import static com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.model.Version;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.AccessibilityDetector;
@@ -614,6 +615,23 @@ public class MainTest extends AbstractCheckTest {
                 new String[] {
                     "--text", new File(outputDir, "foo.text").getPath(), project.getPath(),
                 });
+    }
+
+    public void testVersion() throws Exception {
+        File project =
+                getProjectDir(
+                        null,
+                        manifest().minSdk(1));
+        checkDriver(
+                "lint: version " + Version.ANDROID_TOOLS_BASE_VERSION
+                        + "\n",
+                "",
+
+                // Expected exit code
+                ERRNO_SUCCESS,
+
+                // Args
+                new String[] {"--version", "--check", "HardcodedText", project.getPath()});
     }
 
     @Override

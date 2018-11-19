@@ -41,6 +41,7 @@ import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.Variant;
+import com.android.builder.model.Version;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.manifmerger.ManifestMerger2.Invoker.Feature;
@@ -1496,6 +1497,11 @@ public class LintCliClient extends LintClient {
     @Override
     @Nullable
     public String getClientRevision() {
+        String plugin = Version.ANDROID_TOOLS_BASE_VERSION;
+        if (plugin != null) {
+            return plugin;
+        }
+
         AndroidSdkHandler sdk = getSdk();
         if (sdk != null) {
             NullLogger empty = new NullLogger();
