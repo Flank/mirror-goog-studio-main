@@ -20,6 +20,7 @@ option java_package = "com.android.tools.profiler.proto";
 option java_outer_classname = "CpuProfiler";
 
 import "common.proto";
+import "cpu_data.proto";
 
 service CpuService {
   rpc GetData(CpuDataRequest) returns (CpuDataResponse) {
@@ -315,42 +316,6 @@ message CpuCoreConfigResponse {
     int32 min_frequency_in_khz = 2;
     int32 max_frequency_in_khz = 3;
   }
-}
-
-// CPU usage data of an app process and the entire system at a given point.
-//
-// CPU usage data is most valuable when app data is combined with system data,
-// e.g., showing the CPU usage percentage number. One data consumer (e.g., an
-// Android Studio instance) would request an app's data, and another consumer
-// (e.g., another Android Studio instance) would request another app's. Both of
-// them need system data. Therefore, we put system data together with every
-// piece of app specific data.
-//
-// The absolute values of fields in this message are not very interesting.
-// The difference of two instances is more useful. It can show the system-
-// wide CPU utilization percentage and an app's CPU utilization percentage.
-// The values of the fields may overflow their type, but the usefulness stays
-// the same.
-message CpuUsageData {
-  // Timestamp(ns) when the data sample was collected.
-  int64 end_timestamp = 1;
-  // Amount of time that this process has been using CPU, measured in
-  // milliseconds.
-  int64 app_cpu_time_in_millisec = 2;
-  // Amount of time that the entire system (including applications) has been
-  // using CPU, measured in milliseconds.
-  int64 system_cpu_time_in_millisec = 3;
-  // Amount of time since the system start, measured in milliseconds.
-  int64 elapsed_time_in_millisec = 4;
-  // System usage per core.
-  repeated CpuCoreUsageData cores = 5;
-}
-
-message CpuCoreUsageData {
-  int32 core = 1;
-  int64 system_cpu_time_in_millisec = 2;
-  int64 elapsed_time_in_millisec = 3;
-  int32 frequency_in_khz = 4;
 }
 
 // Requests the state of all the threads in the given time range.

@@ -24,7 +24,7 @@
 #include "perfd/cpu/profiling_app.h"
 #include "perfd/cpu/threads_sample.h"
 #include "proto/cpu.grpc.pb.h"
-#include "proto/cpu.pb.h"
+#include "proto/cpu_data.pb.h"
 #include "utils/clock.h"
 #include "utils/file_cache.h"
 #include "utils/time_value_buffer.h"

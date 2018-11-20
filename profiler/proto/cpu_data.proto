@@ -19,29 +19,43 @@
  option java_package = "com.android.tools.profiler.proto";
  option java_outer_classname = "Cpu";
 
-// Per core CPU usage data of the entire system at a given point.
-// CPU system usage data is most valuable when app combined with process data,
-// e.g., showing the CPU usage percentage number.
-// The absolute values of fields in these messages are not very interesting.
+// CPU usage data of an app process and the entire system at a given point.
+//
+// CPU usage data is most valuable when app data is combined with system data,
+// e.g., showing the CPU usage percentage number. One data consumer (e.g., an
+// Android Studio instance) would request an app's data, and another consumer
+// (e.g., another Android Studio instance) would request another app's. Both of
+// them need system data. Therefore, we put system data together with every
+// piece of app specific data.
+//
+// The absolute values of fields in this message are not very interesting.
 // The difference of two instances is more useful. It can show the system-
 // wide CPU utilization percentage and an app's CPU utilization percentage.
 // The values of the fields may overflow their type, but the usefulness stays
 // the same.
-message CpuPerCoreUsageData {
-  // Index of the CPU core. When set to -1, this represents overall CPU usage.
-  int32 core = 1;
+message CpuUsageData {
+  // Timestamp(ns) when the data sample was collected.
+  int64 end_timestamp = 1;
+  // Amount of time that this process has been using CPU, measured in
+  // milliseconds.
+  int64 app_cpu_time_in_millisec = 2;
   // Amount of time that the entire system (including applications) has been
   // using CPU, measured in milliseconds.
-  int64 cpu_time_in_millisec = 2;
+  int64 system_cpu_time_in_millisec = 3;
+  // Amount of time since the system start, measured in milliseconds.
+  int64 elapsed_time_in_millisec = 4;
+  // System usage per core.
+  repeated CpuCoreUsageData cores = 5;
+}
+
+message CpuCoreUsageData {
+  // Index of the CPU core.
+  int32 core = 1;
+  // Amount of time that the entire system (including applications) has been
+  // using this CPU core, measured in milliseconds.
+  int64 system_cpu_time_in_millisec = 2;
   // Amount of time since the system start, measured in milliseconds.
   int64 elapsed_time_in_millisec = 3;
   // Current CPU frequency in kHz. Used for energy usage estimation.
   int32 frequency_in_khz = 4;
-}
-
-// CPU usage data of an app process at a given point.
-message CpuProcessUsageData {
-  // Amount of time that this process has been using CPU, measured in
-  // milliseconds.
-  int64 cpu_time_in_millisec = 1;
 }
