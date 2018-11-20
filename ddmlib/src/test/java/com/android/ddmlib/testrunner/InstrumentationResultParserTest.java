@@ -594,7 +594,6 @@ public class InstrumentationResultParserTest extends TestCase {
         addLine(output,  "");
         addLine(output,  "INSTRUMENTATION_CODE: -1");
 
-
         mMockListener.testRunStarted(RUN_NAME, 3);
         final TestIdentifier IGNORED_ANNOTATION = new TestIdentifier(
                 "com.example.helloworld.FailureAssumptionTest",
@@ -615,6 +614,77 @@ public class InstrumentationResultParserTest extends TestCase {
         mMockListener.testStarted(HELLO_WORLD);
         mMockListener.testEnded(HELLO_WORLD, Collections.EMPTY_MAP);
         mMockListener.testRunEnded(EasyMock.eq(676L), EasyMock.anyObject());
+
+        injectAndVerifyTestString(output.toString());
+    }
+
+    /**
+     * It's possible for an instrumentation to report several failures for some exception if they
+     * happen to cause an instrumentation crash. In this case we should avoid reporting a second set
+     * of testFailure/testEnded after the original testStarted/Failed/Ended because the events would
+     * be inconsistent.
+     */
+    public void testParseRepeatedFailure() {
+        StringBuilder output = new StringBuilder();
+        addLine(
+                output,
+                "INSTRUMENTATION_STATUS: class=android.autofillservice.cts.AuthenticationTest");
+        addLine(output, "INSTRUMENTATION_STATUS: current=1");
+        addLine(output, "INSTRUMENTATION_STATUS: id=AndroidJUnitRunner");
+        addLine(output, "INSTRUMENTATION_STATUS: numtests=1");
+        addLine(output, "INSTRUMENTATION_STATUS: stream=");
+        addLine(
+                output,
+                "INSTRUMENTATION_STATUS: test="
+                        + "testDatasetAuthClientStateSetOnIntentAndFillResponse");
+        addLine(output, "INSTRUMENTATION_STATUS_CODE: 1");
+        addLine(
+                output,
+                "INSTRUMENTATION_STATUS: class=android.autofillservice.cts.AuthenticationTest");
+        addLine(output, "INSTRUMENTATION_STATUS: current=1");
+        addLine(output, "INSTRUMENTATION_STATUS: id=AndroidJUnitRunner");
+        addLine(output, "INSTRUMENTATION_STATUS: numtests=1");
+        addLine(
+                output,
+                "INSTRUMENTATION_STATUS: stack=java.lang.IllegalStateException: ATEST, Y U NO "
+                        + "RECOVER?");
+        addLine(output, "INSTRUMENTATION_STATUS: stream=");
+        addLine(
+                output,
+                "INSTRUMENTATION_STATUS: test="
+                        + "testDatasetAuthClientStateSetOnIntentAndFillResponse");
+        addLine(output, "INSTRUMENTATION_STATUS_CODE: -2");
+        addLine(
+                output,
+                "INSTRUMENTATION_STATUS: class=android.autofillservice.cts.AuthenticationTest");
+        addLine(output, "INSTRUMENTATION_STATUS: current=1");
+        addLine(output, "INSTRUMENTATION_STATUS: id=AndroidJUnitRunner");
+        addLine(output, "INSTRUMENTATION_STATUS: numtests=1");
+        addLine(
+                output,
+                "INSTRUMENTATION_STATUS: stack=java.lang.RuntimeException: Unable to start "
+                        + "activity ComponentInfo{android.autofillservice.cts/"
+                        + "android.autofillservice.cts.AuthenticationActivity}: "
+                        + "java.lang.IllegalStateException: ATEST, Y U NO RECOVER?");
+        addLine(output, "INSTRUMENTATION_STATUS: stream=");
+        addLine(
+                output,
+                "INSTRUMENTATION_STATUS: test=testDatasetAuthClientStateSetOnIntentAndFillResponse");
+        addLine(output, "INSTRUMENTATION_STATUS_CODE: -2");
+        addLine(output, "INSTRUMENTATION_RESULT: shortMsg=Process crashed.");
+        addLine(output, "INSTRUMENTATION_CODE: 0");
+
+        mMockListener.testRunStarted(RUN_NAME, 1);
+        final TestIdentifier failedTest =
+                new TestIdentifier(
+                        "android.autofillservice.cts.AuthenticationTest",
+                        "testDatasetAuthClientStateSetOnIntentAndFillResponse");
+        mMockListener.testStarted(failedTest);
+        mMockListener.testFailed(
+                failedTest, "java.lang.IllegalStateException: ATEST, Y U NO RECOVER?");
+        mMockListener.testEnded(failedTest, Collections.emptyMap());
+        mMockListener.testRunFailed("Instrumentation run failed due to 'Process crashed.'");
+        mMockListener.testRunEnded(0L, Collections.emptyMap());
 
         injectAndVerifyTestString(output.toString());
     }
