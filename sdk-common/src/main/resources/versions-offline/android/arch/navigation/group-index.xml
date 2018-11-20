@@ -3,7 +3,7 @@
   <navigation-common versions="1.0.0-alpha07"/>
   <navigation-safe-args-gradle-plugin versions="1.0.0-alpha07"/>
   <navigation-runtime versions="1.0.0-alpha07"/>
-  <navigation-testing-ktx versions="1.0.0-alpha07"/>
+  <navigation-testing-ktx versions="1.0.0-alpha06"/>
   <navigation-common-ktx versions="1.0.0-alpha07"/>
   <navigation-ui versions="1.0.0-alpha07"/>
   <navigation-fragment-ktx versions="1.0.0-alpha07"/>

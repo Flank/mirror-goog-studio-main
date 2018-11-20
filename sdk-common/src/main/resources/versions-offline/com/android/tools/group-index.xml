@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <com.android.tools>
-  <dvlib versions="26.1.4,26.3.0-alpha11"/>
-  <sdklib versions="26.1.4,26.3.0-alpha11"/>
-  <repository versions="26.1.4,26.3.0-alpha11"/>
-  <annotations versions="26.1.4,26.3.0-alpha11"/>
-  <devicelib versions="26.1.4,26.3.0-alpha11"/>
-  <sdk-common versions="26.1.4,26.3.0-alpha11"/>
-  <testutils versions="26.1.4,26.3.0-alpha11"/>
-  <common versions="26.1.4,26.3.0-alpha11"/>
-  <r8 versions="1.0.37"/>
+  <dvlib versions="26.2.1,26.4.0-alpha04"/>
+  <sdklib versions="26.2.1,26.4.0-alpha04"/>
+  <repository versions="26.2.1,26.4.0-alpha04"/>
+  <annotations versions="26.2.1,26.4.0-alpha04"/>
+  <devicelib versions="26.2.1,26.4.0-alpha04"/>
+  <sdk-common versions="26.2.1,26.4.0-alpha04"/>
+  <testutils versions="26.2.1,26.4.0-alpha04"/>
+  <common versions="26.2.1,26.4.0-alpha04"/>
+  <r8 versions="1.2.52"/>
 </com.android.tools>
 

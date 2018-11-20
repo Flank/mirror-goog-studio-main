@@ -636,6 +636,8 @@ public class JarContentsTest {
                 "versions-offline/android/arch/work/",
                 "versions-offline/android/arch/work/group-index.xml",
                 "versions-offline/androidx/",
+                "versions-offline/androidx/activity/",
+                "versions-offline/androidx/activity/group-index.xml",
                 "versions-offline/androidx/annotation/",
                 "versions-offline/androidx/annotation/group-index.xml",
                 "versions-offline/androidx/appcompat/",

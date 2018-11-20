@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <androidx.vectordrawable>
-  <vectordrawable-animated versions="1.0.0-rc02"/>
-  <vectordrawable versions="1.0.0-rc02"/>
+  <vectordrawable-animated versions="1.0.0"/>
+  <vectordrawable versions="1.0.1"/>
 </androidx.vectordrawable>
 
