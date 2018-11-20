@@ -1345,6 +1345,8 @@ public final class SdkConstants {
     public static final String ATTR_BACKGROUND = "background"; //$NON-NLS-1$
     public static final String ATTR_ORIENTATION = "orientation"; //$NON-NLS-1$
     public static final String ATTR_BARRIER_DIRECTION = "barrierDirection"; //$NON-NLS-1$
+    public static final String ATTR_BARRIER_ALLOWS_GONE_WIDGETS = "barrierAllowsGoneWidgets";  //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_OPTIMIZATION_LEVEL = "layout_optimizationLevel";  //$NON-NLS-1$
     public static final String ATTR_TRANSITION = "transition"; //$NON-NLS-1$
     public static final String ATTR_TRANSITION_SHOW_PATHS = "showPaths"; //$NON-NLS-1$
     public static final String ATTR_TRANSITION_STATE = "transitionState"; //$NON-NLS-1$
@@ -1433,6 +1435,69 @@ public final class SdkConstants {
     public static final String ATTR_NULLABLE = "nullable";
     public static final String ATTR_ARG_TYPE = "argType";
 
+    // android.view.View
+    public static final String ATTR_NEXT_CLUSTER_FORWARD = "nextClusterForward";
+    public static final String ATTR_NEXT_FOCUS_DOWN = "nextFocusDown";
+    public static final String ATTR_NEXT_FOCUS_FORWARD = "nextFocusForward";
+    public static final String ATTR_NEXT_FOCUS_LEFT = "nextFocusLeft";
+    public static final String ATTR_NEXT_FOCUS_RIGHT = "nextFocusRight";
+    public static final String ATTR_NEXT_FOCUS_UP = "nextFocusUp";
+    public static final String ATTR_SCROLLBAR_THUMB_HORIZONTAL = "scrollbarThumbHorizontal";
+    public static final String ATTR_SCROLLBAR_THUMB_VERTICAL = "scrollbarThumbVertical";
+    public static final String ATTR_SCROLLBAR_TRACK_HORIZONTAL = "scrollbarTrackHorizontal";
+    public static final String ATTR_SCROLLBAR_TRACK_VERTICAL = "scrollbarTrackVertical";
+
+    // AutoCompleteTextView
+    public static final String ATTR_DROP_DOWN_ANCHOR = "dropDownAnchor";
+
+    // ProgressBar
+    public static final String ATTR_INTERPOLATOR = "interpolator";
+
+    // AppCompatSeekBar
+    public static final String ATTR_TICK_MARK = "tickMark";
+
+    // AbsSeekBar
+    public static final String ATTR_TICK_MARK_TINT = "tickMarkTint";
+
+    // Toolbar
+    public static final String ATTR_COLLAPSE_ICON = "collapseIcon";
+    public static final String ATTR_LOGO = "logo";
+    public static final String ATTR_TITLE_TEXT_COLOR = "titleTextColor";
+    public static final String ATTR_SUBTITLE_TEXT_COLOR = "subtitleTextColor";
+
+    // ViewAnimator
+    public static final String ATTR_IN_ANIMATION = "inAnimation";
+    public static final String ATTR_OUT_ANIMATION = "outAnimation";
+
+    // TabWidget
+    public static final String ATTR_TAB_STRIP_LEFT = "tabStripLeft";
+    public static final String ATTR_TAB_STRIP_RIGHT = "tabStripRight";
+
+    // DatePicker
+    public static final String ATTR_CALENDAR_TEXT_COLOR = "calendarTextColor";
+    public static final String ATTR_DAY_OF_WEEK_BACKGROUND = "dayOfWeekBackground";
+    public static final String ATTR_YEAR_LIST_SELECTOR_COLOR = "yearListSelectorColor";
+    public static final String ATTR_HEADER_BACKGROUND = "headerBackground";
+
+    // TimePicker
+    public static final String ATTR_AM_PM_BACKGROUND_COLOR = "amPmBackgroundColor";
+    public static final String ATTR_AM_PM_TEXT_COLOR = "amPmTextColor";
+    public static final String ATTR_NUMBERS_INNER_TEXT_COLOR = "numbersInnerTextColor";
+    public static final String ATTR_NUMBERS_SELECTOR_COLOR = "numbersSelectorColor";
+    public static final String ATTR_NUMBERS_TEXT_COLOR = "numbersTextColor";
+    public static final String ATTR_NUMBERS_BACKGROUND_COLOR = "numbersBackgroundColor";
+
+    // RelativeLayout
+    public static final String ATTR_IGNORE_GRAVITY = "ignoreGravity";
+
+    // AnalogClock
+    public static final String ATTR_DIAL = "dial";
+    public static final String ATTR_HAND_HOUR = "hand_hour";
+    public static final String ATTR_HAND_MINUTE = "hand_minute";
+
+    // CalendarView
+    public static final String ATTR_SELECTED_DATE_VERTICAL_BAR = "selectedDateVerticalBar";
+
     // TextView attributes
     public static final String ATTR_TEXT_APPEARANCE = "textAppearance"; //$NON-NLS-1$
     public static final String ATTR_FONT_FAMILY = "fontFamily"; //$NON-NLS-1$
@@ -1442,7 +1507,11 @@ public final class SdkConstants {
     public static final String ATTR_TEXT_ALIGNMENT = "textAlignment"; //$NON-NLS-1$
     public static final String ATTR_TEXT_COLOR = "textColor"; //$NON-NLS-1$
     public static final String ATTR_TEXT_COLOR_HINT = "textColorHint"; //$NON-NLS-1$
+    public static final String ATTR_TEXT_COLOR_LINK = "textColorLink"; //$NON-NLS-1$
     public static final String ATTR_TEXT_ALL_CAPS = "textAllCaps"; //$NON-NLS-1$
+    public static final String ATTR_SHADOW_COLOR = "shadowColor";
+    public static final String ATTR_TEXT_COLOR_HIGHLIGHT = "textColorHighlight";
+    public static final String ATTR_AUTO_SIZE_PRESET_SIZES = "autoSizePresetSizes";
 
     // Tools attributes for AdapterView inheritors
     public static final String ATTR_LISTFOOTER = "listfooter"; //$NON-NLS-1$
@@ -1472,6 +1541,9 @@ public final class SdkConstants {
     public static final String ATTR_PROGRESS = "progress"; //$NON-NLS-1$
     public static final String ATTR_PROGRESS_DRAWABLE = "progressDrawable"; //$NON-NLS-1$
     public static final String ATTR_PROGRESS_TINT = "progressTint"; //$NON-NLS-1$
+    public static final String ATTR_PROGRESS_BACKGROUND_TINT =
+            "progressBackgroundTint"; //$NON-NLS-1$
+    public static final String ATTR_SECONDARY_PROGRESS_TINT = "secondaryProgressTint"; //$NON-NLS-1$
     public static final String ATTR_INDETERMINATE = "indeterminate"; //$NON-NLS-1$
     public static final String ATTR_INDETERMINATE_DRAWABLE = "indeterminateDrawable"; //$NON-NLS-1$
     public static final String ATTR_INDETERMINATE_TINT = "indeterminateTint"; //$NON-NLS-1$
@@ -1565,8 +1637,10 @@ public final class SdkConstants {
             "layout_constraintHeight_default"; //$NON-NLS-1$
     public static final String ATTR_LAYOUT_WIDTH_MIN = "layout_constraintWidth_min"; //$NON-NLS-1$
     public static final String ATTR_LAYOUT_WIDTH_MAX = "layout_constraintWidth_max"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_WIDTH_PERCENT = "layout_constraintWidth_percent"; //$NON-NLS-1$=
     public static final String ATTR_LAYOUT_HEIGHT_MIN = "layout_constraintHeight_min"; //$NON-NLS-1$
     public static final String ATTR_LAYOUT_HEIGHT_MAX = "layout_constraintHeight_max"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_HEIGHT_PERCENT = "layout_constraintHeight_percent"; //$NON-NLS-1$=
 
     public static final String ATTR_LAYOUT_DIMENSION_RATIO =
             "layout_constraintDimensionRatio"; //$NON-NLS-1$
@@ -1583,6 +1657,7 @@ public final class SdkConstants {
     public static final String ATTR_LAYOUT_CHAIN_PACKED = "packed"; //$NON_NLS-1$
     public static final String ATTR_LAYOUT_CHAIN_HELPER_USE_RTL = "chainUseRtl"; //$NON_NLS-1$
     public static final String ATTR_LAYOUT_CONSTRAINTSET = "constraintSet"; //$NON_NLS-1$
+    public static final String ATTR_LAYOUT_CONSTRAINT_CIRCLE = "layout_constraintCircle"; //$NON_NLS-1$
 
     public static final String ATTR_GUIDELINE_ORIENTATION_HORIZONTAL = "horizontal"; //$NON-NLS-1$
     public static final String ATTR_GUIDELINE_ORIENTATION_VERTICAL = "vertical"; //$NON-NLS-1$
@@ -1595,6 +1670,18 @@ public final class SdkConstants {
     public static final String LAYOUT_CONSTRAINT_DEPRECATED_GUIDE_PERCENT =
             "layout_constraintGuide_Percent"; //$NON-NLS-1$
     public static final String ATTR_LOCKED = "locked"; //$NON-NLS-1$
+
+    // AbsListView
+    public static final String ATTR_LIST_SELECTOR = "listSelector";
+
+    // ListView
+    public static final String ATTR_OVER_SCROLL_FOOTER = "overScrollFooter";
+    public static final String ATTR_OVER_SCROLL_HEADER = "overScrollHeader";
+    public static final String ATTR_CHILD_DIVIDER = "childDivider";
+
+    // SearchView
+    public static final String ATTR_QUERY_BACKGROUND = "queryBackground";
+    public static final String ATTR_SUBMIT_BACKGROUND = "submitBackground";
 
     // SimpleExoPlayerView
     public static final String ATTR_RESIZE_MODE = "resize_mode";
@@ -1654,6 +1741,11 @@ public final class SdkConstants {
     public static final String ATTR_LAYOUT_BELOW = "layout_below"; //$NON-NLS-1$
     public static final String ATTR_LAYOUT_ABOVE = "layout_above"; //$NON-NLS-1$
 
+    // Spinner
+    public static final String ATTR_DROPDOWN_SELECTOR = "dropDownSelector"; //$NON-NLS-1$
+    public static final String ATTR_POPUP_BACKGROUND = "popupBackground"; //$NON-NLS-1$
+    public static final String ATTR_SPINNER_MODE = "spinnerMode"; //$NON-NLS-1$
+
     // Margins
     public static final String ATTR_LAYOUT_MARGIN = "layout_margin"; //$NON-NLS-1$
     public static final String ATTR_LAYOUT_MARGIN_LEFT = "layout_marginLeft"; //$NON-NLS-1$
@@ -1673,6 +1765,9 @@ public final class SdkConstants {
     public static final String ATTR_LAYOUT_KEYLINE = "layout_keyline"; //$NON-NLS-1$
     public static final String ATTR_BACKGROUND_TINT = "backgroundTint"; //$NON-NLS-1$
     public static final String ATTR_BACKGROUND_TINT_MODE = "backgroundTintMode"; //$NON-NLS-1$
+    public static final String ATTR_DRAWABLE_TINT = "drawableTint"; //$NON-NLS-1$
+    public static final String ATTR_FOREGROUND_TINT = "foregroundTint"; //$NON-NLS-1$
+    public static final String ATTR_FOREGROUND_TINT_MODE = "foregroundTintMode"; //$NON-NLS-1$
     public static final String ATTR_RIPPLE_COLOR = "rippleColor"; //$NON-NLS-1$
     public static final String ATTR_TINT = "tint"; //$NON-NLS-1$
     public static final String ATTR_FAB_SIZE = "fabSize"; //$NON-NLS-1$
@@ -1696,7 +1791,6 @@ public final class SdkConstants {
     public static final String ATTR_MIN_HEIGHT = "minHeight"; //$NON-NLS-1$
     public static final String ATTR_MAX_HEIGHT = "maxHeight"; //$NON-NLS-1$
     public static final String ATTR_ACTION_BAR = "actionBar"; //$NON-NLS-1$
-    public static final String ATTR_CONTENT_SCRIM = "contentScrim"; //$NON-NLS-1$
     public static final String ATTR_TOOLBAR_ID = "toolbarId"; //$NON-NLS-1$
     public static final String ATTR_CACHE_COLOR_HINT = "cacheColorHint"; //$NON-NLS-1$
     public static final String ATTR_DIVIDER = "divider"; //$NON-NLS-1$
@@ -1711,9 +1805,7 @@ public final class SdkConstants {
     public static final String ATTR_CARD_PREVENT_CORNER_OVERLAP =
             "cardPreventCornerOverlap"; //$NON-NLS-1$
     public static final String ATTR_CARD_USE_COMPAT_PADDING = "cardUseCompatPadding"; //$NON-NLS-1$
-    public static final String ATTR_SPINNER_MODE = "spinnerMode"; //$NON-NLS-1$
     public static final String ATTR_ENTRIES = "entries"; //$NON-NLS-1$
-    public static final String ATTR_POPUP_BACKGROUND = "popupBackground"; //$NON-NLS-1$
     public static final String ATTR_MIN_WIDTH = "minWidth"; //$NON-NLS-1$
     public static final String ATTR_MAX_WIDTH = "maxWidth"; //$NON-NLS-1$
     public static final String ATTR_DROPDOWN_HEIGHT = "dropDownHeight"; //$NON-NLS-1$
@@ -1721,6 +1813,7 @@ public final class SdkConstants {
     public static final String ATTR_DRAW_SELECTOR_ON_TOP = "drawSelectorOnTop"; //$NON-NLS-1$
     public static final String ATTR_SCROLLBARS = "scrollbars"; //$NON-NLS-1$
     public static final String ATTR_COMPLETION_HINT = "completionHint"; //$NON-NLS-1$
+    public static final String ATTR_COMPLETION_HINT_VIEW = "completionHintView"; //$NON-NLS-1$
     public static final String ATTR_LAYOUT_MANAGER = "layoutManager"; //$NON-NLS-1$
     public static final String ATTR_SPAN_COUNT = "spanCount";
     public static final String ATTR_NAVIGATION_ICON = "navigationIcon";
@@ -1748,6 +1841,10 @@ public final class SdkConstants {
     public static final String ATTR_STROKE_WIDTH = "strokeWidth";
     public static final String ATTR_CORNER_RADIUS = "cornerRadius";
 
+    // Material CollapsingToolbarLayout
+    public static final String ATTR_CONTENT_SCRIM = "contentScrim";
+    public static final String ATTR_STATUS_BAR_SCRIM = "statusBarScrim";
+
     // Material FloatingActionButton Attributes
     public static final String ATTR_FAB_CUSTOM_SIZE = "fabCustomSize";
     public static final String ATTR_HOVERED_FOCUSED_TRANSLATION_Z = "hoveredFocusedTranslationZ";
@@ -1757,6 +1854,10 @@ public final class SdkConstants {
     public static final String ATTR_MAX_IMAGE_SIZE = "maxImageSize";
     public static final String ATTR_SHOW_MOTION_SPEC = "showMotionSpec";
     public static final String ATTR_HIDE_MOTION_SPEC = "hideMotionSpec";
+
+    // Material NavigationView
+    public static final String ATTR_INSET_BACKGROUND = "insetBackground";
+    public static final String ATTR_INSET_FOREGROUND = "insetForeground";
 
     // Material BottomNavigationView Attributes
     public static final String ATTR_ITEM_HORIZONTAL_TRANSLATION_ENABLED =
@@ -1806,6 +1907,7 @@ public final class SdkConstants {
     public static final String ATTR_TAB_ICON_TINT_MODE = "tabIconTintMode";
     public static final String ATTR_TAB_RIPPLE_COLOR = "tabRippleColor";
     public static final String ATTR_TAB_UNBOUNDED_RIPPLE = "tabUnboundedRipple";
+    public static final String ATTR_LAYOUT_SCROLL_INTERPOLATOR = "layout_scrollInterpolator";
 
     // Material TextInputLayout Attributes
     public static final String ATTR_HINT_ENABLED = "hintEnabled";
@@ -2159,6 +2261,7 @@ public final class SdkConstants {
     public static final String ATTR_SHOW_TEXT = "showText"; //$NON-NLS-1$
     public static final String ATTR_SPLIT_TRACK = "splitTrack"; //$NON-NLS-1$
     public static final String ATTR_STATE_LIST_ANIMATOR = "stateListAnimator"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_ANIMATION = "layoutAnimation";
 
     // TextView
     public static final String ATTR_DRAWABLE_RIGHT = "drawableRight"; //$NON-NLS-1$
