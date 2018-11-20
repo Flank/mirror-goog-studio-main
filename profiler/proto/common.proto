@@ -42,6 +42,8 @@ message Event {
     NETWORK_SPEED = 101;
     // No specified group_id
     NETWORK_CONNECTION_COUNT = 102;
+    // group_id: connection id
+    NETWORK_HTTP_CONNECTION = 103;
 
     // Cpu Profiler Prefix = 200
     // group_id: process id
@@ -101,8 +103,12 @@ message Event {
     SessionData session = 8;
 
     // Network Profiler Prefix = 100
+    // Populated when |kind| is |NETWORK_SPEED|
     NetworkSpeedData network_speed = 101;
+    // Populated when |kind| is |NETWORK_CONNECTION_COUNT|
     NetworkConnectionData network_connections = 102;
+    // Populated when |kind| is |NETWORK_HTTP_CONNECTION|
+    NetworkHttpConnectionData network_http_connection = 103;
 
     // Cpu Profiler Prefix = 200
     CpuUsageData cpu_usage = 201;
@@ -283,4 +289,3 @@ message SessionData {
     // Note - the ended event contains no payload.
   }
 }
-

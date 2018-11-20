@@ -26,3 +26,47 @@ message NetworkSpeedData {
 message NetworkConnectionData {
   int32 num_connections = 1;
 }
+
+message NetworkHttpConnectionData {
+  message HttpRequestStarted {
+    string url = 1;
+    string trace = 2;
+    // Header fields associated with this request. See also:
+    // https://en.wikipedia.org/wiki/List_of_HTTP_header_fields#Request_fields.
+    string fields = 3;
+    string method = 4;  
+  }
+
+  message HttpRequestCompleted {
+    // An unique ID for metching the contents of the http request body.
+    string payload_id = 1;
+    // The size of the request body in bytes.
+    int32 payload_size = 2;
+  }
+
+  message HttpResponseStarted {
+    // Header fields associated with this response. See also:
+    // https://en.wikipedia.org/wiki/List_of_HTTP_header_fields#Response_fields.
+    string fields = 1;
+  }
+
+  message HttpResponseCompleted {
+    // An unique ID for metching the contents of the http response body.
+    string payload_id = 1;
+    // The size of the request body in bytes.
+    int32 payload_size = 2;
+  }
+
+  message HttpClosed {
+    // Indicates whether the http connection was completed or aborted.
+    bool completed = 1;
+  }
+
+  oneof union {
+    HttpRequestStarted http_request_started = 1;
+    HttpRequestCompleted http_request_completed = 2;
+    HttpResponseStarted http_response_started = 3;
+    HttpResponseCompleted http_response_completed = 4;
+    HttpClosed http_closed = 5;
+  }
+}
