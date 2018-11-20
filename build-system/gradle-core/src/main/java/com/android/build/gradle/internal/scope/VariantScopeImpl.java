@@ -60,6 +60,7 @@ import com.android.build.gradle.internal.dependency.AndroidTestResourceArtifactC
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact;
 import com.android.build.gradle.internal.dependency.FilteredArtifactCollection;
 import com.android.build.gradle.internal.dependency.FilteringSpec;
+import com.android.build.gradle.internal.dependency.ProvidedClasspath;
 import com.android.build.gradle.internal.dependency.SubtractingArtifactCollection;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
@@ -997,9 +998,10 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public FileCollection getProvidedOnlyClasspath() {
-        FileCollection compile = getArtifactFileCollection(COMPILE_CLASSPATH, ALL, CLASSES);
-        FileCollection pkg = getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, CLASSES);
-        return compile.minus(pkg);
+        ArtifactCollection compile = getArtifactCollection(COMPILE_CLASSPATH, ALL, CLASSES);
+        ArtifactCollection runtime = getArtifactCollection(RUNTIME_CLASSPATH, ALL, CLASSES);
+
+        return ProvidedClasspath.getProvidedClasspath(compile, runtime);
     }
 
     /**
