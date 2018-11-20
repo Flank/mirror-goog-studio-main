@@ -100,7 +100,6 @@ enum class BooleanOption(
     ENABLE_SIDE_BY_SIDE_CMAKE("android.enableSideBySideCmake", true),
     ENABLE_NATIVE_COMPILER_SETTINGS_CACHE("android.enableNativeCompilerSettingsCache", true),
     ENABLE_PROGUARD_RULES_EXTRACTION("android.proguard.enableRulesExtraction", true),
-    INJECT_SDK_MAVEN_REPOS("android.injectSdkMavenRepos", true),
     ENABLE_UNCOMPRESSED_NATIVE_LIBS_IN_BUNDLE("android.bundle.enableUncompressedNativeLibs", true),
     USE_DEPENDENCY_CONSTRAINTS("android.dependency.useConstraints", true),
     ENABLE_DEXING_ARTIFACT_TRANSFORM("android.enableDexingArtifactTransform", true, status=Option.Status.STABLE),
@@ -111,6 +110,10 @@ enum class BooleanOption(
     ENABLE_DESUGAR(
         "android.enableDesugar", true, DeprecationReporter.DeprecationTarget.DESUGAR_TOOL),
     ENABLE_D8("android.enableD8", true, DeprecationReporter.DeprecationTarget.LEGACY_DEXER),
+    INJECT_SDK_MAVEN_REPOS(
+        "android.injectSdkMavenRepos",
+        false,
+        Option.Status.Deprecated(DeprecationReporter.DeprecationTarget.SDK_MAVEN_REPOS)),
 
     ;
     constructor(
