@@ -19,6 +19,7 @@
 package com.android.builder.dexing
 
 import com.android.SdkConstants
+import com.android.builder.dexing.r8.ClassFileProviderFactory
 import com.android.ide.common.blame.MessageReceiver
 import com.android.tools.r8.ArchiveProgramResourceProvider
 import com.android.tools.r8.ClassFileConsumer
@@ -63,6 +64,17 @@ fun runR8(
     messageReceiver: MessageReceiver,
     useFullR8: Boolean = false
 ) {
+    val logger: Logger = Logger.getLogger("R8")
+    if (logger.isLoggable(Level.FINE)) {
+        logger.fine("*** Using R8 to process code ***")
+        logger.fine("Main dex list config: $mainDexListConfig")
+        logger.fine("Proguard config: $proguardConfig")
+        logger.fine("Tool config: $toolConfig")
+        logger.fine("Program classes: $inputClasses")
+        logger.fine("Java resources: $inputJavaResources")
+        logger.fine("Library classes: $libraries")
+    }
+
     val r8CommandBuilder = CompatProguardCommandBuilder(!useFullR8, D8DiagnosticsHandler(messageReceiver))
 
     if (toolConfig.minSdkVersion < 21) {
@@ -167,20 +179,10 @@ fun runR8(
 
     r8CommandBuilder.addProgramResourceProvider(r8ProgramResourceProvider)
 
-    r8CommandBuilder.addLibraryFiles(libraries)
-
-    val logger: Logger = Logger.getLogger("R8")
-    if (logger.isLoggable(Level.FINE)) {
-        logger.fine("*** Using R8 to process code ***")
-        logger.fine("Main dex list config: $mainDexListConfig")
-        logger.fine("Proguard config: $proguardConfig")
-        logger.fine("Tool config: $toolConfig")
-        logger.fine("Program classes: $inputClasses")
-        logger.fine("Java resources: $inputJavaResources")
-        logger.fine("Library classes: $libraries")
+    ClassFileProviderFactory(libraries).use { libClasspath ->
+        r8CommandBuilder.addLibraryResourceProvider(libClasspath.orderedProvider)
+        R8.run(r8CommandBuilder.build())
     }
-
-    R8.run(r8CommandBuilder.build())
 
     proguardConfig.proguardMapOutput?.let {
         if (Files.notExists(it)) {
