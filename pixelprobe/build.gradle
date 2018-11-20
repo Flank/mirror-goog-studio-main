@@ -26,3 +26,13 @@ dependencies {
 sourceSets {
     main.java.srcDir      'src/main/generated'
 }
+
+project.ext.pomName = 'Pixel Probe'
+project.ext.pomDesc = 'library to read pixel data and metadata from various image formats'
+group = 'com.android.tools.pixelprobe'
+archivesBaseName = 'pixelprobe'
+version = rootProject.ext.baseVersion
+
+apply from: "$rootDir/buildSrc/base/publish.gradle"
+apply from: "$rootDir/buildSrc/base/bintray.gradle"
+apply from: "$rootDir/buildSrc/base/javadoc.gradle"
