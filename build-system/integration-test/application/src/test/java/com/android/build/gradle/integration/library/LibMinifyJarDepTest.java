@@ -17,21 +17,35 @@
 package com.android.build.gradle.integration.library;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.internal.scope.CodeShrinker;
+import com.android.build.gradle.options.BooleanOption;
 import java.io.IOException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /** Assemble tests for libMinifyJarDep. */
+@RunWith(FilterableParameterized.class)
 public class LibMinifyJarDepTest {
+    @Parameterized.Parameters(name = "codeShrinker = {0}")
+    public static CodeShrinker[] getShrinkers() {
+        return new CodeShrinker[] {CodeShrinker.PROGUARD, CodeShrinker.R8};
+    }
+
+    @Parameterized.Parameter public CodeShrinker codeShrinker;
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("libMinifyJarDep").create();
 
     @Before
     public void setUp() throws IOException, InterruptedException {
-        project.execute("clean", "assembleDebug");
+        project.executor()
+                .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .run("clean", "assembleDebug", "assembleAndroidTest");
     }
 
     @After

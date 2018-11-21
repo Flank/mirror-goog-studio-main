@@ -30,6 +30,7 @@ android {
 
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'config.pro'
+            testProguardFiles 'config_test.pro'
         }
     }
 
