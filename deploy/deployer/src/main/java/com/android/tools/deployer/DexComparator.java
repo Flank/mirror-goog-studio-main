@@ -15,6 +15,7 @@
  */
 package com.android.tools.deployer;
 
+import com.android.annotations.Trace;
 import com.android.tools.deployer.model.DexClass;
 import com.android.tools.deployer.model.FileDiff;
 import java.util.ArrayList;
@@ -35,6 +36,7 @@ public class DexComparator {
      * @param splitter the splitter to use to split a dex into classes
      * @return the classes that have changed.
      */
+    @Trace
     public List<DexClass> compare(List<FileDiff> dexDiffs, DexSplitter splitter)
             throws DeployerException {
         // Iterate through the list of .dex files which have changed. We cannot trust dex filenames to be stable
@@ -50,47 +52,42 @@ public class DexComparator {
         //
         // To solve this, we flatten all classes in the old apk into a single list and compare it with each dex list
         // received
-        try (Trace ignored = Trace.begin("compare")) {
 
-            // Flatten the list of old files.
-            Map<String, Long> oldChecksums = new HashMap<>();
-            for (FileDiff diff : dexDiffs) {
-                // If the dex is new, there is no old dex to open.
-                if (diff.status == FileDiff.Status.CREATED) {
-                    continue;
-                }
-                List<DexClass> klasses = splitter.split(diff.oldFile, null);
-                for (DexClass clz : klasses) {
-                    oldChecksums.put(clz.name, clz.checksum);
-                }
+        // Flatten the list of old files.
+        Map<String, Long> oldChecksums = new HashMap<>();
+        for (FileDiff diff : dexDiffs) {
+            // If the dex is new, there is no old dex to open.
+            if (diff.status == FileDiff.Status.CREATED) {
+                continue;
             }
-
-            List<DexClass> toSwap = new ArrayList<>();
-            for (FileDiff diff : dexDiffs) {
-                // Memory optimization to discard not needed code
-                Predicate<DexClass> keepCode =
-                        (DexClass clz) -> {
-                            Long oldChecksum = oldChecksums.get(clz.name);
-                            return oldChecksum != null && clz.checksum != oldChecksum;
-                        };
-
-                List<DexClass> newClasses = splitter.split(diff.newFile, keepCode);
-                for (DexClass klass : newClasses) {
-                    if (!oldChecksums.containsKey(klass.name)) {
-                        // This is a new class. This is not supported.
-                        throw new DeployerException(
-                                DeployerException.Error.CANNOT_SWAP_NEW_CLASS,
-                                "Unable to swap new class '" + klass.name + "'");
-                    }
-                }
-
-                toSwap.addAll(
-                        newClasses
-                                .stream()
-                                .filter(c -> c.code != null)
-                                .collect(Collectors.toList()));
+            List<DexClass> klasses = splitter.split(diff.oldFile, null);
+            for (DexClass clz : klasses) {
+                oldChecksums.put(clz.name, clz.checksum);
             }
-            return toSwap;
         }
+
+        List<DexClass> toSwap = new ArrayList<>();
+        for (FileDiff diff : dexDiffs) {
+            // Memory optimization to discard not needed code
+            Predicate<DexClass> keepCode =
+                    (DexClass clz) -> {
+                        Long oldChecksum = oldChecksums.get(clz.name);
+                        return oldChecksum != null && clz.checksum != oldChecksum;
+                    };
+
+            List<DexClass> newClasses = splitter.split(diff.newFile, keepCode);
+            for (DexClass klass : newClasses) {
+                if (!oldChecksums.containsKey(klass.name)) {
+                    // This is a new class. This is not supported.
+                    throw new DeployerException(
+                            DeployerException.Error.CANNOT_SWAP_NEW_CLASS,
+                            "Unable to swap new class '" + klass.name + "'");
+                }
+            }
+
+            toSwap.addAll(
+                    newClasses.stream().filter(c -> c.code != null).collect(Collectors.toList()));
+        }
+        return toSwap;
     }
 }

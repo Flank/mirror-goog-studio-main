@@ -17,11 +17,9 @@ package com.android.tools.deployer.tasks;
 
 import static junit.framework.TestCase.assertEquals;
 
-import com.android.tools.deployer.Trace;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -30,7 +28,6 @@ public class TaskRunnerTest {
     @Test
     public void testRunningSimpleTask() throws Exception {
         String input = "text";
-        Trace.begin("testRunningSimpleTask");
 
         ExecutorService service = Executors.newFixedThreadPool(2);
 
@@ -40,13 +37,11 @@ public class TaskRunnerTest {
         String output = add.get();
 
         Assert.assertEquals("text added", output);
-        Trace.end();
     }
 
     @Test
     public void testJoiningTasksOneThread() throws Exception {
         String input = "text";
-        Trace.begin("testJoiningTasksOneThread");
 
         // We test with one thread, they should run sequentially
         ExecutorService service = Executors.newFixedThreadPool(1);
@@ -59,12 +54,10 @@ public class TaskRunnerTest {
         String output = add.get();
 
         Assert.assertEquals("text task1.text task2", output);
-        Trace.end();
     }
 
     @Test
     public void testParallelTasks() throws Exception {
-        Trace.begin("testParallelTasks");
         String input = "text";
 
         // Two threads for the two parallel tasks
@@ -106,12 +99,10 @@ public class TaskRunnerTest {
         String output = add.get();
 
         Assert.assertEquals("text task1.text task2", output);
-        Trace.end();
     }
 
     @Test
     public void testJoinExecutesOthers() throws Exception {
-        Trace.begin("testJoinExecutesOthers");
         String input = "text";
 
         CountDownLatch task2Latch = new CountDownLatch(1);
@@ -133,12 +124,10 @@ public class TaskRunnerTest {
         String output = task1.get();
         task2Latch.countDown();
         Assert.assertEquals("text task1", output);
-        Trace.end();
     }
 
     @Test
     public void testNotReadyDoesNotBlock() throws Exception {
-        Trace.begin("testJoinExecutesOthers");
         String input = "text";
 
         ExecutorService service = Executors.newFixedThreadPool(2);
@@ -166,12 +155,10 @@ public class TaskRunnerTest {
         task1Latch.countDown(); // we let the first task complete
         String task2output = task2.get();
         Assert.assertEquals("text12", task2output);
-        Trace.end();
     }
 
     @Test
     public void testJoinWaitsForSubmitted() throws Exception {
-        Trace.begin("testJoinExecutesOthers");
         String input = "text";
 
         CountDownLatch task1Latch = new CountDownLatch(1);
@@ -222,11 +209,6 @@ public class TaskRunnerTest {
         task3Latch.countDown();
         runner.join();
         assertEquals(0, runner.getPendingTasks());
-    }
-
-    @AfterClass
-    public static void dumpTrace() {
-        Trace.reset();
     }
 
     private static void waitLatch(CountDownLatch latch) {

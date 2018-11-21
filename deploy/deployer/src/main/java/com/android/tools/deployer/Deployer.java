@@ -21,6 +21,7 @@ import com.android.tools.deployer.model.DexClass;
 import com.android.tools.deployer.model.FileDiff;
 import com.android.tools.deployer.tasks.TaskRunner;
 import com.android.tools.deployer.tasks.TaskRunner.Task;
+import com.android.tools.tracer.Trace;
 import com.google.common.collect.ImmutableMap;
 import java.util.List;
 import java.util.Map;

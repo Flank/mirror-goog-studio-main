@@ -32,6 +32,7 @@ iml_module(
         "//tools/base/deploy/deployer:java_version",
         "//tools/idea/.idea/libraries:sqlite",
         "//tools/idea/.idea/libraries:mockito[test]",
+        "//tools/base/tracer:studio.android.sdktools.tracer[module]",
     ],
 )
 
@@ -77,12 +78,15 @@ java_library(
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/deploy/proto:deploy_java_proto",
+        "//tools/base/tracer:tools.tracer",
         "//tools/idea/.idea/libraries:sqlite",
     ],
 )
 
 java_binary(
     name = "deployer.runner",
+    data = ["//tools/base/tracer:trace_agent"],
+    jvm_flags = ["-javaagent:$(location //tools/base/tracer:trace_agent)"],
     main_class = "com.android.tools.deployer.DeployerRunner",
     runtime_deps = [
         ":tools.deployer",

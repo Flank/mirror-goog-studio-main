@@ -72,6 +72,8 @@
       <module fileurl="file://$PROJECT_DIR$/pixelprobe/android.sdktools.pixelprobe.iml" filepath="$PROJECT_DIR$/pixelprobe/android.sdktools.pixelprobe.iml" />
       <module fileurl="file://$PROJECT_DIR$/repository/android.sdktools.repository.iml" filepath="$PROJECT_DIR$/repository/android.sdktools.repository.iml" />
       <module fileurl="file://$PROJECT_DIR$/testutils/android.sdktools.testutils.iml" filepath="$PROJECT_DIR$/testutils/android.sdktools.testutils.iml" />
+      <module fileurl="file://$PROJECT_DIR$/tracer/agent/android.sdktools.trace_agent.iml" filepath="$PROJECT_DIR$/tracer/agent/android.sdktools.trace_agent.iml" />
+      <module fileurl="file://$PROJECT_DIR$/tracer/android.sdktools.tracer.iml" filepath="$PROJECT_DIR$/tracer/android.sdktools.tracer.iml" />
       <module fileurl="file://$PROJECT_DIR$/../data-binding/baseLibrary/db-baseLibrary.iml" filepath="$PROJECT_DIR$/../data-binding/baseLibrary/db-baseLibrary.iml" />
       <module fileurl="file://$PROJECT_DIR$/../data-binding/baseLibrarySupport/db-baseLibrarySupport.iml" filepath="$PROJECT_DIR$/../data-binding/baseLibrarySupport/db-baseLibrarySupport.iml" />
       <module fileurl="file://$PROJECT_DIR$/../data-binding/compilerCommon/db-compilerCommon.iml" filepath="$PROJECT_DIR$/../data-binding/compilerCommon/db-compilerCommon.iml" />

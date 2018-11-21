@@ -23,6 +23,7 @@ import com.android.tools.r8.D8Command;
 import com.android.tools.r8.DexFilePerClassFileConsumer;
 import com.android.tools.r8.DiagnosticsHandler;
 import com.android.tools.r8.origin.Origin;
+import com.android.tools.tracer.Trace;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.UncheckedIOException;

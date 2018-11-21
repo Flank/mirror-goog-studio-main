@@ -17,7 +17,7 @@
 package com.android.tools.deployer.tasks;
 
 import com.android.tools.deployer.DeployerException;
-import com.android.tools.deployer.Trace;
+import com.android.tools.tracer.Trace;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;

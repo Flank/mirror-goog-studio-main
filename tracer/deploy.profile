@@ -1,0 +1,10 @@
+Trace: com.android.build.gradle.BasePlugin
+Trace: org.gradle.internal.buildevents.BuildResultLogger
+Trace: com.android.tools.build.apkzlib.zfile.ApkZFileCreator
+Trace: com.android.tools.build.apkzlib.zfile.ApkZFileCreatorFactory
+Trace: com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder
+Trace: com.android.tools.deployer.Deployer
+Trace: com.android.tools.deployer.Installer
+Trace: com.android.tools.build.apkzlib.zip.ZFile::update
+Flush: org.gradle.internal.buildevents.BuildResultLogger::buildFinished
+Flush: com.android.tools.tracer.MainTest::main

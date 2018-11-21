@@ -17,6 +17,7 @@
 package com.android.tools.deployer;
 
 import com.android.ddmlib.*;
+import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
 import java.io.ByteArrayOutputStream;
 import java.io.File;

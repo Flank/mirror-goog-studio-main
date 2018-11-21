@@ -1,0 +1,9 @@
+Output: report.json
+Trace: com.android.tools.tracer.MainTest::simple
+Trace: com.android.tools.tracer.MainTest::twoReturns
+Trace: com.android.tools.tracer.MainTest::itThrows
+Trace: com.android.tools.tracer.MainTest::itCatches
+Trace: com.android.tools.tracer.MainTest::callsAThrow
+Trace: com.android.tools.tracer.Other
+Trace: com.android.tools.tracer.pkg.*
+Flush: com.android.tools.tracer.MainTest::main

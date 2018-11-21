@@ -19,6 +19,7 @@ package com.android.tools.deployer;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
 import com.android.tools.deployer.tasks.TaskRunner;
+import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableMap;
 import java.io.*;
@@ -40,7 +41,7 @@ public class DeployerRunner implements UIService {
         Trace.begin("main");
         tracedMain(args);
         Trace.end();
-        Trace.consume(new SystraceConsumer("/tmp/report.json", LOGGER));
+        Trace.flush();
     }
 
     public static void tracedMain(String[] args) throws IOException {

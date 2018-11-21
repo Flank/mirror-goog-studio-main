@@ -16,6 +16,7 @@
 package com.android.tools.deployer;
 
 import com.android.tools.deploy.proto.Deploy;
+import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
 import com.google.common.collect.ObjectArrays;
 import com.google.protobuf.CodedInputStream;
@@ -115,9 +116,35 @@ public class AdbInstaller implements Installer {
     private Deploy.InstallerResponse invokeRemoteCommand(String[] cmd, InputStream inputStream)
             throws IOException {
         Trace.begin("./installer " + cmd[2]);
+        long start = System.nanoTime();
         Deploy.InstallerResponse response = invokeRemoteCommand(cmd, inputStream, OnFail.RETRY);
         logEvents(response.getEventsList());
-        Trace.endtWithRemoteEvents(response.getEventsList());
+        long end = System.nanoTime();
+
+        long maxNs = Long.MIN_VALUE;
+        long minNs = Long.MAX_VALUE;
+        for (Deploy.Event event : response.getEventsList()) {
+            maxNs = Math.max(maxNs, event.getTimestampNs());
+            minNs = Math.min(minNs, event.getTimestampNs());
+        }
+        long delta = ((maxNs + minNs) - (end + start)) / 2;
+        for (Deploy.Event event : response.getEventsList()) {
+            switch (event.getType()) {
+                case TRC_BEG:
+                    Trace.begin(
+                            event.getPid(),
+                            event.getTid(),
+                            event.getTimestampNs() - delta,
+                            event.getText());
+                    break;
+                case TRC_END:
+                    Trace.end(event.getPid(), event.getTid(), event.getTimestampNs() - delta);
+                    break;
+                default:
+                    break;
+            }
+        }
+        Trace.end();
         return response;
     }
 
