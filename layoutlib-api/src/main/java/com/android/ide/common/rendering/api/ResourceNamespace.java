@@ -13,6 +13,8 @@
 // limitations under the License.
 package com.android.ide.common.rendering.api;
 
+import static com.android.SdkConstants.URI_DOMAIN_PREFIX;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -50,7 +52,7 @@ public class ResourceNamespace implements Comparable<ResourceNamespace>, Seriali
     public static final ResourceNamespace APPCOMPAT = fromPackageName("androidx.appcompat");
     /** The namespace of the old appcompat library when namespaces are used. */
     public static final ResourceNamespace APPCOMPAT_LEGACY =
-            fromPackageName("android.support.v7.appcompat"); //
+            fromPackageName("android.support.v7.appcompat");
 
     private static final Logger LOG = Logger.getLogger(ResourceNamespace.class.getSimpleName());
 
@@ -289,7 +291,7 @@ public class ResourceNamespace implements Comparable<ResourceNamespace>, Seriali
 
     @Override
     public String toString() {
-        return uri.substring("http://schemas.android.com/".length());
+        return uri.substring(URI_DOMAIN_PREFIX.length());
     }
 
     @Override
