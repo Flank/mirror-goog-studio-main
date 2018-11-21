@@ -120,20 +120,6 @@ enum class BooleanOption(
             this(propertyName, defaultValue, Option.Status.Deprecated(deprecationTarget))
 
     override fun parse(value: Any): Boolean {
-        return when (value) {
-            is Boolean -> value
-            is CharSequence -> java.lang.Boolean.parseBoolean(value.toString())
-            is Number -> value.toInt() != 0
-            else -> throw IllegalArgumentException(
-                "Cannot parse project property "
-                        + this.propertyName
-                        + "='"
-                        + value
-                        + "' of type '"
-                        + value.javaClass
-                        + "' as boolean."
-            )
-        }
+        return parseBoolean(propertyName, value)
     }
-
 }
