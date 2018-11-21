@@ -79,12 +79,12 @@ public class MainActivityTest {
     @MediumTest
     @Test
     public void testAndroidStrings() {
-        assertEquals("SUCCESS-LIB1", mTextView1.getText().toString());
+        assertEquals("SUCCESS-LIB2", mTextView1.getText().toString());
     }
 
     @MediumTest
     @Test
     public void testJavaStrings() {
-        assertEquals("SUCCESS-LIB1", mTextView2.getText().toString());
+        assertEquals("SUCCESS-LIB2", mTextView2.getText().toString());
     }
 }

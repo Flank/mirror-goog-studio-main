@@ -26,7 +26,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import android.widget.TextView;
 
 /**
  * An example of an {@link ActivityInstrumentationTestCase2} of a specific activity {@link Focus2}.
@@ -79,12 +78,12 @@ public class MainActivityFlavorTest {
     @MediumTest
     @Test
     public void testAndroidStrings() {
-        assertEquals("SUCCESS-LIB1", mLibTextView1.getText().toString());
+        assertEquals("SUCCESS-LIB2", mLibTextView1.getText().toString());
     }
 
     @MediumTest
     @Test
     public void testJavaStrings() {
-        assertEquals("SUCCESS-LIB1", mLibTextView2.getText().toString());
+        assertEquals("SUCCESS-LIB2", mLibTextView2.getText().toString());
     }
 }
