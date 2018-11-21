@@ -61,7 +61,6 @@ message SwapResponse {
     UNKNOWN = 0;
     OK = 1; // The swap completed successfully.
     ERROR = 2; // The swap did not succeed.
-    INSTALLATION_FAILED = 3;
   }
 
   Status status = 1;
@@ -85,7 +84,6 @@ message InstallerResponse {
   oneof extra {
     SwapResponse swap_response = 3;
     DumpResponse dump_response = 4;
-    DeltaPushResponse deltapush_response = 5;
   }
 }
 
@@ -108,7 +106,6 @@ message ApkDump{
   string name = 1;
   bytes cd = 2;
   bytes signature = 3;
-  string absolute_path = 4;
 }
 
 message DumpResponse {
@@ -120,35 +117,4 @@ message DumpResponse {
 
   Status status = 1;
   repeated ApkDump dumps = 3;
-}
-
-message PatchInstruction {
-  string src_absolute_path = 1;
-  // A stream of:
-  // (int32 offset, int32 length) referring to the offset to patch in the
-  // destination file and the length of data to consume from the patches
-  // stream in this proto object.
-  bytes instructions = 2;
-  bytes patches = 3;
-  int64 dst_filesize = 4;
-}
-
-message DeltaPushRequest {
-   enum Status {
-    UNKNOWN = 0;
-    OK = 1;
-    ERROR = 2;
-  }
-  Status status = 1;
-  repeated PatchInstruction patchInstructions = 2;
-}
-
-message DeltaPushResponse{
-  enum Status {
-    UNKNOWN = 0;
-    OK = 1;
-    ERROR = 2;
-  }
-  Status status = 1;
-  repeated string apks_absolute_paths = 2;
 }

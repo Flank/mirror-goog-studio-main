@@ -15,6 +15,7 @@
  */
 package com.android.tools.deployer;
 
+import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
 import com.google.common.collect.ImmutableList;
@@ -83,13 +84,13 @@ public class ApkParser {
         MappedByteBuffer mmap;
         String absolutePath = file.getAbsolutePath();
         String digest;
-        HashMap<String, ZipUtils.ZipEntry> zipEntries;
+        HashMap<String, Long> crcs;
         try (RandomAccessFile raf = new RandomAccessFile(absolutePath, "r");
                 FileChannel fileChannel = raf.getChannel()) {
             mmap = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, fileChannel.size());
             ApkArchiveMap map = parse(mmap);
             digest = generateDigest(raf, map);
-            zipEntries = readZipEntries(raf, map);
+            crcs = readCrcs(raf, map);
         }
         ApkDetails apkDetails;
         try (ZipFile zipFile = new ZipFile(absolutePath)) {
@@ -99,15 +100,9 @@ public class ApkParser {
         }
 
         List<ApkEntry> files = new ArrayList<>();
-        Apk apk =
-                new Apk(
-                        apkDetails.fileName,
-                        digest,
-                        absolutePath,
-                        apkDetails.processNames,
-                        zipEntries);
-        for (Map.Entry<String, ZipUtils.ZipEntry> entry : zipEntries.entrySet()) {
-            files.add(new ApkEntry(entry.getKey(), entry.getValue().crc, apk));
+        Apk apk = new Apk(apkDetails.fileName, digest, absolutePath, apkDetails.processNames);
+        for (Map.Entry<String, Long> entry : crcs.entrySet()) {
+            files.add(new ApkEntry(entry.getKey(), entry.getValue(), apk));
         }
         return files;
     }
@@ -180,13 +175,13 @@ public class ApkParser {
         return map;
     }
 
-    private HashMap<String, ZipUtils.ZipEntry> readZipEntries(
-            RandomAccessFile randomAccessFile, ApkArchiveMap map) throws IOException {
+    private HashMap<String, Long> readCrcs(RandomAccessFile randomAccessFile, ApkArchiveMap map)
+            throws IOException {
         byte[] cdContent = new byte[(int) map.cdSize];
         randomAccessFile.seek(map.cdOffset);
         randomAccessFile.readFully(cdContent);
         ByteBuffer buffer = ByteBuffer.wrap(cdContent);
-        return ZipUtils.readZipEntries(buffer);
+        return ZipUtils.readCrcs(buffer);
     }
 
     private String generateDigest(RandomAccessFile randomAccessFile, ApkArchiveMap map)

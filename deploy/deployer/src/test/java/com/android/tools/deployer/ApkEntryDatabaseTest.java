@@ -41,7 +41,7 @@ public class ApkEntryDatabaseTest {
     public void testSimple01() throws Exception {
         SqlApkFileDatabase db = createTestDb("1.0", 10);
 
-        Apk apk = new Apk("a.apk", "ABCD", null, ImmutableList.of("com.example"), null);
+        Apk apk = new Apk("a.apk", "ABCD", null, ImmutableList.of("com.example"));
         ApkEntry classes01 = new ApkEntry("01.dex", 1234, apk);
         ApkEntry classes02 = new ApkEntry("02.dex", 1235, apk);
         DexClass c1 = new DexClass("A.1", 0xA1, null, classes01);
@@ -73,7 +73,7 @@ public class ApkEntryDatabaseTest {
         SqlApkFileDatabase db = new SqlApkFileDatabase(file, "OUTDATED", 100);
 
         // Initialize the DB
-        Apk apk = new Apk("a.apk", "ABCD", null, ImmutableList.of("com.example"), null);
+        Apk apk = new Apk("a.apk", "ABCD", null, ImmutableList.of("com.example"));
         ApkEntry classes01 = new ApkEntry("01.dex", 1234, apk);
         ApkEntry classes02 = new ApkEntry("02.dex", 1235, apk);
         DexClass c1 = new DexClass("A.1", 0xA1, null, classes01);
@@ -95,7 +95,7 @@ public class ApkEntryDatabaseTest {
     public void testFlushOldCache() throws Exception {
         SqlApkFileDatabase db = createTestDb("1.0", 2);
 
-        Apk apk = new Apk("a.apk", "ABCD", null, ImmutableList.of("com.example"), null);
+        Apk apk = new Apk("a.apk", "ABCD", null, ImmutableList.of("com.example"));
         ApkEntry classes01 = new ApkEntry("01.dex", 1234, apk);
         ApkEntry classes02 = new ApkEntry("02.dex", 1235, apk);
         ApkEntry classes03 = new ApkEntry("03.dex", 1236, apk);

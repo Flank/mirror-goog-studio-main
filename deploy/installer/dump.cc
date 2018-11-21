@@ -66,7 +66,6 @@ void DumpCommand::Run(Workspace& workspace) {
     Dump dump = archive.ExtractMetadata();
 
     proto::ApkDump* apk_dump = response->add_dumps();
-    apk_dump->set_absolute_path(apkPath);
     if (dump.cd != nullptr || dump.signature != nullptr) {
       std::string apkFilename = std::string(strrchr(apkPath.c_str(), '/') + 1);
       apk_dump->set_name(apkFilename);

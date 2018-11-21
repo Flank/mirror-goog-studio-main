@@ -28,6 +28,12 @@
 namespace deploy {
 
 namespace {
+inline uint64_t GetTime() noexcept {
+  struct timespec tp;
+  clock_gettime(CLOCK_MONOTONIC, &tp);
+  uint64_t time = ((uint64_t)tp.tv_sec * 1000 * 1000 * 1000) + tp.tv_nsec;
+  return time;
+}
 
 inline int64_t gettid() noexcept {
   long tid;
@@ -37,13 +43,6 @@ inline int64_t gettid() noexcept {
 
 std::vector<Event>* events = new std::vector<Event>();
 }  // namespace
-
-uint64_t GetTime() noexcept {
-  struct timespec tp;
-  clock_gettime(CLOCK_MONOTONIC, &tp);
-  uint64_t time = ((uint64_t)tp.tv_sec * 1000 * 1000 * 1000) + tp.tv_nsec;
-  return time;
-}
 
 void InitEventSystem() {
   Trace::Init();

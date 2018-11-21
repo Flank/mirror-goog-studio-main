@@ -28,95 +28,48 @@ public class ZipUtils {
 
     private static final int CENTRAL_DIRECTORY_FILE_HEADER_MAGIC = 0x02014b50;
     private static final int CENTRAL_DIRECTORY_FILE_HEADER_SIZE = 46;
-    private static final int LOCAL_DIRECTORY_FILE_HEADER_SIZE = 30;
     private static final String DIGEST_ALGORITHM = "SHA-1";
 
-    public static class ZipEntry {
-        public final long crc;
-        public final String name;
-        public final long start; // Offset in the archive to the Local File Header location
-        public final long end; // Offset in the archive to the last byte of the payload.
-        public final long payloadStart; // Offset in the archive to the first byte of the payload.
-        public final int extraLength; // Size of the extra field.
-
-        // Array with all attributes of an entry in the Local File Header. Used for deltaPushing.
-        public final byte[] localFileHeader;
-
-        ZipEntry(
-                long crc,
-                String name,
-                long start,
-                long end,
-                long payloadStart,
-                int extraLength,
-                byte[] localFileHeader) {
-            this.crc = crc;
-            this.name = name;
-            this.start = start;
-            this.end = end;
-            this.payloadStart = payloadStart;
-            this.extraLength = extraLength;
-            this.localFileHeader = localFileHeader;
-        }
-    }
-
-    public static HashMap<String, ZipEntry> readZipEntries(byte[] buf) {
+    public static HashMap<String, Long> readCrcs(byte[] buf) {
         ByteBuffer buffer = ByteBuffer.wrap(buf);
-        return readZipEntries(buffer);
+        return readCrcs(buffer);
     }
 
-    public static HashMap<String, ZipEntry> readZipEntries(ByteBuffer buf) {
+    public static HashMap<String, Long> readCrcs(ByteBuffer buf) {
         buf.order(ByteOrder.LITTLE_ENDIAN);
-        HashMap<String, ZipEntry> entries = new HashMap<>();
+        HashMap<String, Long> crcs = new HashMap<>();
         while (buf.remaining() >= CENTRAL_DIRECTORY_FILE_HEADER_SIZE
                 && buf.getInt() == CENTRAL_DIRECTORY_FILE_HEADER_MAGIC) {
-            // Read all the data
-            short version = buf.getShort();
-            short versionNeeded = buf.getShort();
-            short flags = buf.getShort();
-            short compression = buf.getShort();
-            short modTime = buf.getShort();
-            short modDate = buf.getShort();
-            long crc = buf.getInt() & 0xFFFFFFFFL;
-            int compressedSize = buf.getInt();
-            int decompressedSize = buf.getInt();
-            short pathLength = buf.getShort();
-            int extraLength = buf.getShort();
-            short commentLength = buf.getShort();
-            // Skip 2 (disk number) + 2 (internal attributes)+ 4 (external attributes)
+
+            buf.position(buf.position() + 12);
+            // short version = buf.getShort();
+            // short versionNeeded = buf.getShort();
+            // short flags = buf.getShort();
+            // short compression = buf.getShort();
+            // short modTime = buf.getShort();
+            // short modDate = buf.getShort();
+
+            long crc32 = buf.getInt() & 0xFFFFFFFFL;
+
             buf.position(buf.position() + 8);
-            long start = buf.getInt(); // offset to local file entry header
+            // int compressedSize = buf.getInt();
+            // int decompressedSize = buf.getInt();
+            short pathLength = buf.getShort();
+            short extraLength = buf.getShort();
+            short commentLength = buf.getShort();
 
-            // Read the filename
-            byte[] pathBytes = new byte[pathLength];
-            buf.get(pathBytes);
-            String name = new String(pathBytes, Charset.forName("UTF-8"));
+            buf.position(buf.position() + 12);
+            // buf.getShort();
+            // buf.getShort();
+            // buf.getInt();
+            // buf.getInt();
+            byte[] string = new byte[pathLength];
+            buf.get(string);
+            String name = new String(string, Charset.forName("UTF-8"));
             buf.position(buf.position() + extraLength + commentLength);
-
-            // Create a fake zip file entry header which will be used to build a dirtyMap while
-            // delta pushing.
-            byte[] localFileHeader = new byte[LOCAL_DIRECTORY_FILE_HEADER_SIZE + pathBytes.length];
-            ByteBuffer fakeEntry = ByteBuffer.wrap(localFileHeader).order(ByteOrder.LITTLE_ENDIAN);
-            fakeEntry.putLong(start);
-            fakeEntry.putShort(versionNeeded);
-            fakeEntry.putShort(modTime);
-            fakeEntry.putShort(modDate);
-            fakeEntry.putInt((int) crc);
-            fakeEntry.putInt(compression);
-            fakeEntry.putInt(decompressedSize);
-            fakeEntry.putShort((short) name.length());
-            fakeEntry.putShort((short) extraLength);
-            fakeEntry.put(pathBytes);
-
-            // Keep track of boundaries of the entry in the zip archive since those are used while
-            // deltaPushing.
-            long payloadStart = start + LOCAL_DIRECTORY_FILE_HEADER_SIZE + pathLength + extraLength;
-            long end = payloadStart - 1 + compressedSize;
-            ZipEntry entry =
-                    new ZipEntry(crc, name, start, end, payloadStart, extraLength, localFileHeader);
-            entries.put(entry.name, entry);
+            crcs.put(name, crc32);
         }
-        return entries;
+        return crcs;
     }
 
     public static String digest(ByteBuffer buffer) {

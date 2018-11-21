@@ -42,12 +42,12 @@ public class DexComparatorTest {
         DexComparator comparator = new DexComparator();
         List<FileDiff> diffs = new ArrayList<>();
 
-        Apk oldApk = new Apk("base.apk", "abcd", null, ImmutableList.of(), null);
+        Apk oldApk = new Apk("base.apk", "abcd", null, ImmutableList.of());
         ApkEntry oldFile = new ApkEntry("a.dex", 1, oldApk);
 
         // A similar apk that contains a dex with different checksum
         // but actually the same classes (different order for example)
-        Apk newApk = new Apk("base.apk", "efgh", null, ImmutableList.of(), null);
+        Apk newApk = new Apk("base.apk", "efgh", null, ImmutableList.of());
         ApkEntry newFile = new ApkEntry("a.dex", 2, newApk);
 
         diffs.add(new FileDiff(oldFile, newFile, FileDiff.Status.MODIFIED));
@@ -61,10 +61,10 @@ public class DexComparatorTest {
         DexComparator comparator = new DexComparator();
         List<FileDiff> diffs = new ArrayList<>();
 
-        Apk oldApk = new Apk("base.apk", "abcd", null, ImmutableList.of(), null);
+        Apk oldApk = new Apk("base.apk", "abcd", null, ImmutableList.of());
         ApkEntry oldFile = new ApkEntry("a.dex", 1, oldApk);
 
-        Apk newApk = new Apk("base.apk", "efgh", null, ImmutableList.of(), null);
+        Apk newApk = new Apk("base.apk", "efgh", null, ImmutableList.of());
         ApkEntry newFile = new ApkEntry("a.dex", 3, newApk);
 
         diffs.add(new FileDiff(oldFile, newFile, FileDiff.Status.MODIFIED));
@@ -80,10 +80,10 @@ public class DexComparatorTest {
         DexComparator comparator = new DexComparator();
         List<FileDiff> diffs = new ArrayList<>();
 
-        Apk oldApk = new Apk("base.apk", "abcd", null, ImmutableList.of(), null);
+        Apk oldApk = new Apk("base.apk", "abcd", null, ImmutableList.of());
         ApkEntry oldFile = new ApkEntry("a.dex", 1, oldApk);
 
-        Apk newApk = new Apk("base.apk", "efgh", null, ImmutableList.of(), null);
+        Apk newApk = new Apk("base.apk", "efgh", null, ImmutableList.of());
         ApkEntry newFile = new ApkEntry("a.dex", 4, newApk);
 
         diffs.add(new FileDiff(oldFile, newFile, FileDiff.Status.MODIFIED));

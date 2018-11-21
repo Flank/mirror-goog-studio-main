@@ -54,18 +54,12 @@ public class ApkDumper {
         for (Deploy.ApkDump dump : protoDumps) {
             ByteBuffer cd = dump.getCd().asReadOnlyByteBuffer();
             ByteBuffer signature = dump.getSignature().asReadOnlyByteBuffer();
-            HashMap<String, ZipUtils.ZipEntry> zipEntries = ZipUtils.readZipEntries(cd);
+            HashMap<String, Long> crcs = ZipUtils.readCrcs(cd);
             cd.rewind();
             String digest = ZipUtils.digest(signature.remaining() != 0 ? signature : cd);
-            Apk apk =
-                    new Apk(
-                            dump.getName(),
-                            digest,
-                            dump.getAbsolutePath(),
-                            ImmutableList.of(),
-                            zipEntries);
-            for (Map.Entry<String, ZipUtils.ZipEntry> entry : zipEntries.entrySet()) {
-                dumps.add(new ApkEntry(entry.getKey(), entry.getValue().crc, apk));
+            Apk apk = new Apk(dump.getName(), digest, null, ImmutableList.of());
+            for (Map.Entry<String, Long> entry : crcs.entrySet()) {
+                dumps.add(new ApkEntry(entry.getKey(), entry.getValue(), apk));
             }
         }
         return dumps;

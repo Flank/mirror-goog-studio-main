@@ -290,7 +290,7 @@ public class SqlApkFileDatabase implements ApkFileDatabase {
                 ResultSet result = s.executeQuery("SELECT DISTINCT checksum from archives")) {
             List<Apk> apks = new ArrayList<>();
             while (result.next()) {
-                apks.add(new Apk("", result.getString("checksum"), null, ImmutableList.of(), null));
+                apks.add(new Apk("", result.getString("checksum"), null, ImmutableList.of()));
             }
             return apks;
         } catch (SQLException e) {

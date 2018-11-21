@@ -193,10 +193,7 @@ void SwapCommand::Run(Workspace& workspace) {
     return;
   }
 
-  if (!cmd.CommitInstall(install_session, &output)) {
-    response_->set_status(proto::SwapResponse::INSTALLATION_FAILED);
-    return;
-  }
+  cmd.CommitInstall(install_session, &output);
 
   // Cleanup zombi agent-server status from the kernel.
   int status;
