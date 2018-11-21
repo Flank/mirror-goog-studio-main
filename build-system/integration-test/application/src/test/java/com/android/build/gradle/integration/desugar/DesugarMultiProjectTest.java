@@ -18,23 +18,18 @@ package com.android.build.gradle.integration.desugar;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.desugar.DesugaringProjectConfigurator.configureR8Desugaring;
-import static com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport.D8;
-import static com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport.DESUGAR;
-import static com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport.R8;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -45,12 +40,19 @@ import org.junit.runners.Parameterized;
 @RunWith(FilterableParameterized.class)
 public class DesugarMultiProjectTest {
 
-    @Parameterized.Parameters(name = "{0}")
-    public static Collection<VariantScope.Java8LangSupport> getParams() {
-        return ImmutableList.of(R8, D8, DESUGAR);
+    private enum Tool {
+        D8_WITH_ARTIFACT_TRANSFORMS,
+        D8_WITHOUT_ARTIFACT_TRANSFORMS,
+        R8,
+        DESUGAR
     }
 
-    @Parameterized.Parameter public VariantScope.Java8LangSupport tool;
+    @Parameterized.Parameters(name = "{0}")
+    public static Tool[] getParams() {
+        return Tool.values();
+    }
+
+    @Parameterized.Parameter public Tool tool;
 
     @Rule
     public GradleTestProject project =
@@ -58,7 +60,7 @@ public class DesugarMultiProjectTest {
 
     @Before
     public void setUp() throws IOException {
-        if (tool == R8) {
+        if (tool == Tool.R8) {
             configureR8Desugaring(project.getSubproject("app"));
         }
         compileWithJava8Target();
@@ -257,9 +259,15 @@ public class DesugarMultiProjectTest {
 
     @NonNull
     private GradleTaskExecutor executor() {
+        boolean enableD8Desugaring =
+                tool == Tool.D8_WITH_ARTIFACT_TRANSFORMS
+                        || tool == Tool.D8_WITHOUT_ARTIFACT_TRANSFORMS;
         return project.executor()
-                .with(BooleanOption.ENABLE_D8_DESUGARING, tool == D8)
-                .with(BooleanOption.ENABLE_R8, tool == R8)
-                .with(BooleanOption.ENABLE_R8_DESUGARING, tool == R8);
+                .with(BooleanOption.ENABLE_D8_DESUGARING, enableD8Desugaring)
+                .with(BooleanOption.ENABLE_R8, tool == Tool.R8)
+                .with(BooleanOption.ENABLE_R8_DESUGARING, tool == Tool.R8)
+                .with(
+                        BooleanOption.ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM,
+                        tool == Tool.D8_WITH_ARTIFACT_TRANSFORMS);
     }
 }

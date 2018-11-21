@@ -155,12 +155,24 @@ class DexingArtifactTransformTest {
     }
 
     @Test
-    fun testDesugaringDoesNotUseNewPipeline() {
+    fun testDesugaringDoesUseNewPipeline() {
         project.buildFile.appendText("\nandroid.compileOptions.targetCompatibility 1.8")
         val result = executor().run("assembleDebug")
+        assertThat(result.tasks).containsAllIn(listOf(":mergeExtDexDebug", ":mergeDexDebug"))
+    }
+
+    @Test
+    fun testDesugaringDoesNotUseNewPipeline() {
+        project.buildFile.appendText("\nandroid.compileOptions.targetCompatibility 1.8")
+        val result =
+            project.executor()
+                .with(BooleanOption.ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM, false)
+                .run("assembleDebug")
         assertThat(result.tasks).doesNotContain(":mergeExtDexDebug")
     }
 
     private fun executor() =
-        project.executor().with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, true)
+        project.executor()
+            .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, true)
+            .with(BooleanOption.ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM, true)
 }

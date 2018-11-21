@@ -16,16 +16,23 @@
 
 package com.android.build.gradle.internal.dependency
 
+import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeTransformOutputs
-import com.android.dex.Dex
+import com.android.build.gradle.internal.transforms.testdata.Animal
+import com.android.build.gradle.internal.transforms.testdata.CarbonForm
+import com.android.build.gradle.internal.transforms.testdata.Cat
+import com.android.build.gradle.internal.transforms.testdata.Toy
 import com.android.testutils.TestClassesGenerator
 import com.android.testutils.TestInputsGenerator
-import com.android.testutils.truth.MoreTruth.assertThatDex
 import com.google.common.truth.Truth.assertThat
+import com.android.testutils.apk.Dex
+import com.android.testutils.truth.DexSubject.assertThat
+import com.android.testutils.truth.MoreTruth.assertThatDex
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.objectweb.asm.Type
 import java.io.File
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
@@ -86,21 +93,82 @@ class DexingTransformTest {
         transform.transform(outputs)
 
         assertThat(
-            Dex(outputs.outputDirectory.resolve("classes.dex")).classDefs().count() +
-                    Dex(outputs.outputDirectory.resolve("classes2.dex")).classDefs().count()
+            Dex(outputs.outputDirectory.resolve("classes.dex")).classes.size +
+                    Dex(outputs.outputDirectory.resolve("classes2.dex")).classes.size
         ).isEqualTo(totalMethods / methodsPerClass)
     }
 
+    @Test
+    fun testDexingWithDesugaring() {
+        val input = tmp.newFolder("classes")
+        val classes =
+            listOf(Animal::class.java, CarbonForm::class.java, Toy::class.java, Cat::class.java)
+        TestInputsGenerator.pathWithClasses(input.toPath(), classes)
+        val dexingTransform = TestDexingTransform(
+            input,
+            classpath = listOf(),
+            parameters = TestDexingTransform.TestParameters(12, true, listOf()),
+            desugaring = true
+        )
+        val outputs = FakeTransformOutputs(tmp)
+        dexingTransform.transform(outputs)
+        val dex = Dex(outputs.outputDirectory.resolve("classes.dex"))
+        assertThat(dex).containsClassesIn(classes.map { Type.getDescriptor(it) })
+        assertThat(dex.classes).hasSize(classes.size + 1)
+        val synthesizedLambdas = dex.classes.keys.filter { it.contains("\$\$Lambda\$") }
+        assertThat(synthesizedLambdas).hasSize(1)
 
-    private class TestDexingTransform(override val primaryInput: File, private val parameters: TestParameters) : DexingTransform() {
+    }
+
+    @Test
+    fun testDexingWithDesugaringBootclasspath() {
+        val bootclasspath = tmp.newFile("bootclasspath.jar")
+        TestInputsGenerator.pathWithClasses(
+            bootclasspath.toPath(),
+            listOf(Animal::class.java, CarbonForm::class.java, Toy::class.java)
+        )
+
+        val input = tmp.newFile("classes.jar")
+        val classes = listOf(Cat::class.java)
+        TestInputsGenerator.pathWithClasses(input.toPath(), classes)
+        val dexingTransform = TestDexingTransform(
+            input,
+            classpath = listOf(),
+            parameters = TestDexingTransform.TestParameters(12, true, listOf(bootclasspath)),
+            desugaring = true
+        )
+        val outputs = FakeTransformOutputs(tmp)
+        dexingTransform.transform(outputs)
+
+        val dex = Dex(outputs.outputDirectory.resolve("classes.dex"))
+        assertThat(dex).containsClassesIn(classes.map { Type.getDescriptor(it) })
+        assertThat(dex.classes).hasSize(classes.size + 1)
+
+        val synthesizedLambdas = dex.classes.keys.filter { it.contains("\$\$Lambda\$") }
+        assertThat(synthesizedLambdas).hasSize(1)
+
+    }
+
+
+    private class TestDexingTransform(
+        override val primaryInput: File,
+        private val parameters: TestParameters,
+        private val desugaring: Boolean = false,
+        private val classpath: List<File> = listOf()
+    ) : BaseDexingTransform() {
+
+        override fun computeClasspathFiles() = classpath.map(File::toPath)
+
+        override fun enableDesugaring() = desugaring
 
         class TestParameters(
             minSdkVersion: Int,
-            debuggable: Boolean
-        ) : DexingTransform.Parameters {
+            debuggable: Boolean,
+            bootClasspath: List<File> = listOf()
+        ) : BaseDexingTransform.Parameters {
             override var debuggable = FakeGradleProperty(debuggable)
             override val minSdkVersion = FakeGradleProperty(minSdkVersion)
-
+            override val bootClasspath = FakeConfigurableFileCollection(bootClasspath)
         }
 
         override fun getParameters(): Parameters {

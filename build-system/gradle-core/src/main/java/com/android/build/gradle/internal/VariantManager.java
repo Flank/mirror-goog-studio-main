@@ -51,8 +51,6 @@ import com.android.build.gradle.internal.dependency.AndroidTypeAttrCompatRule;
 import com.android.build.gradle.internal.dependency.AndroidTypeAttrDisambRule;
 import com.android.build.gradle.internal.dependency.AndroidXDepedencySubstitution;
 import com.android.build.gradle.internal.dependency.DexingArtifactConfiguration;
-import com.android.build.gradle.internal.dependency.DexingTransform;
-import com.android.build.gradle.internal.dependency.DexingTransformKt;
 import com.android.build.gradle.internal.dependency.ExtractAarTransform;
 import com.android.build.gradle.internal.dependency.ExtractProGuardRulesTransform;
 import com.android.build.gradle.internal.dependency.IdentityTransform;
@@ -795,36 +793,8 @@ public class VariantManager implements VariantModel {
 
             for (DexingArtifactConfiguration artifactConfiguration :
                     getDexingArtifactConfigurations(variantScopes)) {
-                dependencies.registerTransform(
-                        DexingTransform.class,
-                        reg -> {
-                            reg.getFrom().attribute(ARTIFACT_FORMAT, PROCESSED_JAR.getType());
-                            reg.getTo().attribute(ARTIFACT_FORMAT, ArtifactType.DEX.getType());
-
-                            reg.getFrom()
-                                    .attribute(
-                                            DexingTransformKt.ATTR_IS_DEBUGGABLE,
-                                            Boolean.toString(artifactConfiguration.isDebuggable()));
-                            reg.getTo()
-                                    .attribute(
-                                            DexingTransformKt.ATTR_IS_DEBUGGABLE,
-                                            Boolean.toString(artifactConfiguration.isDebuggable()));
-                            reg.getFrom()
-                                    .attribute(
-                                            DexingTransformKt.ATTR_MIN_SDK,
-                                            Integer.toString(artifactConfiguration.getMinSdk()));
-                            reg.getTo()
-                                    .attribute(
-                                            DexingTransformKt.ATTR_MIN_SDK,
-                                            Integer.toString(artifactConfiguration.getMinSdk()));
-                            reg.parameters(
-                                    params -> {
-                                        params.getDebuggable()
-                                                .set(artifactConfiguration.isDebuggable());
-                                        params.getMinSdkVersion()
-                                                .set(artifactConfiguration.getMinSdk());
-                                    });
-                        });
+                artifactConfiguration.registerTransform(
+                        dependencies, globalScope.getBootClasspath());
             }
         }
     }

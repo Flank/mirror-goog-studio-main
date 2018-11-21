@@ -2269,12 +2269,18 @@ public abstract class TaskManager {
             dexOptions = extension.getDexOptions();
         }
 
+        Java8LangSupport java8SLangSupport = variantScope.getJava8LangSupportType();
         boolean minified = variantScope.getCodeShrinker() != null;
+        boolean supportsDesugaring =
+                java8SLangSupport == Java8LangSupport.UNUSED
+                        || (java8SLangSupport == Java8LangSupport.D8
+                                && projectOptions.get(
+                                        BooleanOption.ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM));
         boolean enableDexingArtifactTransform =
                 globalScope.getProjectOptions().get(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM)
                         && extension.getTransforms().isEmpty()
                         && !minified
-                        && variantScope.getJava8LangSupportType() == Java8LangSupport.UNUSED
+                        && supportsDesugaring
                         && getAdvancedProfilingTransforms(projectOptions).isEmpty();
         FileCache userLevelCache = getUserDexCache(minified, dexOptions.getPreDexLibraries());
         DexArchiveBuilderTransform preDexTransform =
@@ -2298,7 +2304,7 @@ public abstract class TaskManager {
                                         .getVariantConfiguration()
                                         .getBuildType()
                                         .isDebuggable())
-                        .setJava8LangSupportType(variantScope.getJava8LangSupportType())
+                        .setJava8LangSupportType(java8SLangSupport)
                         .setProjectVariant(getProjectVariantId(variantScope))
                         .setNumberOfBuckets(
                                 projectOptions.get(IntegerOption.DEXING_NUMBER_OF_BUCKETS))

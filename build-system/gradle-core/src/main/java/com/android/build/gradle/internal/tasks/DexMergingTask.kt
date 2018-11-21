@@ -22,7 +22,7 @@ import com.android.build.api.transform.TransformException
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.crash.PluginCrashReporter
-import com.android.build.gradle.internal.dependency.getAttributeMap
+import com.android.build.gradle.internal.dependency.getDexingArtifactConfiguration
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -204,9 +204,7 @@ open class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor) :
         }
 
         private fun getDexFiles(action: DexMergingAction): FileCollection {
-            val minSdk = variantScope.minSdkVersion.featureLevel
-            val isDebuggable = variantScope.variantConfiguration.buildType.isDebuggable
-            val attributes = getAttributeMap(minSdk, isDebuggable)
+            val attributes = getDexingArtifactConfiguration(variantScope).getAttributes()
 
             fun forAction(action: DexMergingAction): FileCollection {
                 when (action) {

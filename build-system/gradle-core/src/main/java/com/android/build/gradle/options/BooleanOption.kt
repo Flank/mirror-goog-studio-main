@@ -82,6 +82,7 @@ enum class BooleanOption(
     KEEP_SERVICES_BETWEEN_BUILDS("android.keepWorkerActionServicesBetweenBuilds", false),
     USE_NON_FINAL_RES_IDS_IN_TESTS("android.androidTest.nonFinalResIds", false),
     ENABLE_SIDE_BY_SIDE_NDK("android.enableSideBySideNdk", true),
+    ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM("android.enableDexingArtifactTransform.desugaring", false),
 
     // ---------------
     // Lifecycle flags: Stable stage, Enabled by default, can be disabled
