@@ -16,20 +16,5 @@
       <entry name="?*.css" />
       <entry name="?*.trace" />
     </wildcardResourcePatterns>
-    <annotationProcessing>
-      <profile default="true" name="Default">
-        <outputRelativeToContentRoot value="true" />
-        <processorPath useClasspath="false">
-          <entry name="$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/auto/value/auto-value/1.3/auto-value-1.3.jar" />
-        </processorPath>
-      </profile>
-      <profile name="aaptjlib_auto_value" enabled="true">
-        <sourceOutputDir name="src" />
-        <outputRelativeToContentRoot value="true" />
-        <processorPath useClasspath="false">
-          <entry name="$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/auto/value/auto-value/1.3/auto-value-1.3.jar" />
-        </processorPath>
-      </profile>
-    </annotationProcessing>
   </component>
 </project>

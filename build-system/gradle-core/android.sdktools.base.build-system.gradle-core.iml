@@ -64,7 +64,6 @@
     <orderEntry type="library" name="jacoco-core" level="project" />
     <orderEntry type="module" module-name="android.sdktools.testutils" scope="TEST" />
     <orderEntry type="module" module-name="android.sdktools.dx" />
-    <orderEntry type="library" scope="PROVIDED" name="auto-value-1.3" level="project" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="module" module-name="android.sdktools.ddmlib" />
     <orderEntry type="module" module-name="android.sdktools.base.lint.gradle-api" exported="" />
