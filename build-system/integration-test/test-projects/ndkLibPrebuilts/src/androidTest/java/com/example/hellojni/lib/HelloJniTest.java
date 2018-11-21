@@ -5,8 +5,8 @@ import static org.junit.Assert.*;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.widget.TextView;
-import org.junit.Before;
 import org.junit.Rule;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
@@ -26,8 +26,8 @@ public class HelloJniTest {
 
     private TextView mTextView;
 
-    @Before
-    public void setUp() {
+    @Test
+    public void testJniName() {
         final HelloJni a = rule.getActivity();
         // ensure a valid handle to the activity has been returned
         assertNotNull(a);
