@@ -22,6 +22,7 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.options.BooleanOption;
 import java.io.IOException;
+import org.junit.AssumptionViolatedException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -45,6 +46,9 @@ public class LibMinifyLibDepConnectedTest {
     @Test
     @Category(DeviceTests.class)
     public void connectedCheck() throws IOException, InterruptedException {
+        if (codeShrinker == CodeShrinker.PROGUARD) {
+            throw new AssumptionViolatedException("Broken with proguard b/119862821");
+        }
         project.executor()
                 .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
                 .executeConnectedCheck();
