@@ -92,8 +92,6 @@ public class GrpcUtils {
      * agentAttachPort.
      */
     public Session beginSessionWithAgent(int pid, int agentAttachPort) {
-        Session session = beginSession(pid);
-
         // The test infra calls attach-agent via the communication port instead of the app's pid.
         // So here we are making an extra beginSession call with the attachPid (aka communication port) to allow the
         // agent to attach.
@@ -107,9 +105,12 @@ public class GrpcUtils {
                                         .setAgentLibFileName("libperfa.so")
                                         .build());
         myProfilerServiceStub.beginSession(requestBuilder.build());
+
+        // Actually begin the session with the pid. Note that a beginSession call would end the previous active
+        // session, so we put this after the beginSession call that was used specifically to attach the agent.
+        Session session = beginSession(pid);
         // Block until we can verify the agent was fully attached, which takes a while.
         assertThat(myMockApp.waitForInput("Perfa connected to Perfd.")).isTrue();
-
         return session;
     }
 

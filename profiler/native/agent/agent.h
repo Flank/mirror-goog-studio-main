@@ -81,6 +81,8 @@ class Agent {
   // value of |config|.
   static Agent& Instance(const profiler::Config* config);
 
+  const proto::AgentConfig& agent_config() const { return agent_config_; }
+
   // In O+, this method will block until the Agent is connected to Perfd for the
   // very first time (e.g. when Perfd sends the client socket fd for the agent
   // to connect to). If/when perfd dies, the memory service stub inside can also
@@ -91,6 +93,8 @@ class Agent {
   // Tell the agent to start sending heartbeats back to perfd to signal
   // that the app agent is alive.
   void StartHeartbeat();
+
+  void SubmitAgentTasks(const std::vector<AgentServiceTask>& tasks);
 
   void SubmitNetworkTasks(const std::vector<NetworkServiceTask>& tasks);
 
@@ -147,6 +151,8 @@ class Agent {
    * message at a time after which the socket connection will be closed.
    */
   void RunSocketThread();
+
+  proto::AgentConfig agent_config_;
 
   // Used for |connect_cv_| and protects |agent_stub_|, |event_stub_|,
   // |io_stub_|, |network_stub_| and |memory_component_|
