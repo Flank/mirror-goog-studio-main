@@ -32,10 +32,13 @@ import java.util.Set;
 
 class TraceProfile {
 
+    private final MethodSet start;
     private final MethodSet trace;
     private final MethodSet flush;
     private String outputFile;
+    private final Set<String> annotations;
     private String jvmArgs;
+    private boolean traceAgent;
 
     /**
      * Creates a tracing profile bassed on a configuration file. The file can have the following
@@ -43,10 +46,13 @@ class TraceProfile {
      * <p>Please see tools/base/tracer/README.md for a full description of the file.
      */
     public TraceProfile(String configFile) {
+        start = new MethodSet();
         trace = new MethodSet();
         flush = new MethodSet();
         outputFile = "/tmp/report.json";
         jvmArgs = initJvmArgs(configFile);
+        annotations = new HashSet<>();
+        annotations.add("Lcom/android/annotations/Trace;");
 
         if (configFile == null || !Files.exists(Paths.get(configFile))) {
             return;
@@ -68,8 +74,16 @@ class TraceProfile {
                 } else if (key.equals("Flush")) {
                     trace.add(value);
                     flush.add(value);
+                } else if (key.equals("Start")) {
+                    trace.add(value);
+                    start.add(value);
                 } else if (key.equals("Output")) {
                     outputFile = value;
+                } else if (key.equals("Annotation")) {
+                    value = "L" + value.replaceAll("\\.", "/") + ";";
+                    annotations.add(value);
+                } else if (key.equals("Trace-Agent")) {
+                    traceAgent = Boolean.valueOf(value);
                 }
             }
         } catch (IOException e) {
@@ -107,6 +121,10 @@ class TraceProfile {
         return "";
     }
 
+    public boolean shouldInstrument(String annotation) {
+        return annotations.contains(annotation);
+    }
+
     public boolean shouldInstrument(String className, String method) {
         return trace.contains(className, method);
     }
@@ -115,12 +133,20 @@ class TraceProfile {
         return flush.contains(className, method);
     }
 
+    public boolean start(String className, String method) {
+        return start.contains(className, method);
+    }
+
     public String getOutputFile() {
         return outputFile;
     }
 
     public String getJvmArgs() {
         return jvmArgs;
+    }
+
+    public boolean traceAgent() {
+        return traceAgent;
     }
 
     /**

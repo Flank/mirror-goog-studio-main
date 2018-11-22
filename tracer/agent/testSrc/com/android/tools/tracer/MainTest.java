@@ -21,16 +21,14 @@ public class MainTest {
 
     public static void main(String[] args) {
         System.out.println(">main");
-        Trace.begin("should not exist");
-        Trace.end();
-
-        Trace.start();
 
         MainTest main = new MainTest();
         main.simple();
         main.twoReturns(true);
         main.twoReturns(false);
         main.itCatches();
+        main.isAnnotated();
+        main.isNotAnnotated();
         main.nestedCatches();
         try {
             main.itThrows();
@@ -128,4 +126,9 @@ public class MainTest {
             System.out.println("<nestedCatches");
         }
     }
+
+    public void isNotAnnotated() {}
+
+    @Deprecated
+    public void isAnnotated() {}
 }

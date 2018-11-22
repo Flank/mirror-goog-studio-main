@@ -22,5 +22,14 @@ public class TraceAgent {
         TraceProfile profile = new TraceProfile(agentArgs);
         inst.addTransformer(new TraceTransformer(profile));
         Tracer.profile = profile;
+        if (profile.traceAgent()) {
+            traceVMLifetime();
+        }
+    }
+
+    private static void traceVMLifetime() {
+        Tracer.begin(Tracer.pid, 0, System.nanoTime(), "TraceAgent");
+        Runtime.getRuntime()
+                .addShutdownHook(new Thread(() -> Tracer.end(Tracer.pid, 0, System.nanoTime())));
     }
 }

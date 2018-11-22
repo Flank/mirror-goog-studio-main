@@ -50,7 +50,7 @@ public class Tracer {
 
     private static ArrayList<Event> events;
     private static final ExecutorService writer;
-    private static final int pid;
+    public static final int pid;
 
     static {
         events = new ArrayList<>();

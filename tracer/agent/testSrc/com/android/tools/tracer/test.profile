@@ -1,4 +1,7 @@
 Output: report.json
+Trace-Agent: false
+Annotation: java.lang.Deprecated
+Start: com.android.tools.tracer.MainTest::main
 Trace: com.android.tools.tracer.MainTest::simple
 Trace: com.android.tools.tracer.MainTest::twoReturns
 Trace: com.android.tools.tracer.MainTest::itThrows

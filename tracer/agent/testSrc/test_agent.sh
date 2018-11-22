@@ -51,6 +51,7 @@ fi
 
 EXPECTED_JSON=$(cat <<EOF
 [
+"MainTest.main"},
 "MainTest.simple"},
 ""},
 "MainTest.twoReturns"},
@@ -58,6 +59,8 @@ EXPECTED_JSON=$(cat <<EOF
 "MainTest.twoReturns"},
 ""},
 "MainTest.itCatches"},
+""},
+"MainTest.isAnnotated"},
 ""},
 "MainTest.nestedCatches"},
 ""},

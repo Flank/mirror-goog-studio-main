@@ -46,7 +46,7 @@ class TraceMethodVisitor extends AdviceAdapter {
 
     @Override
     public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-        enabled = enabled || desc.equals("Lcom/android/annotations/Trace;");
+        enabled = enabled || profile.shouldInstrument(desc);
         return super.visitAnnotation(desc, visible);
     }
 
@@ -55,6 +55,9 @@ class TraceMethodVisitor extends AdviceAdapter {
         super.visitCode();
         if (!enabled) {
             return;
+        }
+        if (profile.start(className, name)) {
+            invoke("start", "()V");
         }
         invoke("begin", "(Ljava/lang/String;)V", buildTag(className, name));
     }
