@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-<#if appCompat>
     xmlns:app="http://schemas.android.com/apk/res-auto"
-</#if>
     android:layout_width="match_parent"
     android:layout_height="@dimen/nav_header_height"
     android:background="@drawable/side_nav_bar"
@@ -20,13 +18,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingTop="@dimen/nav_header_vertical_spacing"
-<#if appCompat && buildApi gte 25 && targetApi gte 25>
+    <#if buildApi gte 25 && targetApi gte 25>
         app:srcCompat="@mipmap/ic_launcher_round"
-<#elseif appCompat>
+    <#else>
         app:srcCompat="@mipmap/ic_launcher"
-<#else>
-        android:src="@mipmap/ic_launcher"
-</#if>
+    </#if>
         android:contentDescription="@string/nav_header_desc"
         android:id="@+id/imageView" />
 </#if>

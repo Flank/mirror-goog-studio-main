@@ -12,7 +12,7 @@
             </#if>
             <#if hasNoActionBar>
                 android:theme="@style/${themeNameNoActionBar}"
-            <#elseif (requireTheme!false) && !hasApplicationTheme && appCompat>
+            <#elseif (requireTheme!false) && !hasApplicationTheme >
                 android:theme="@style/${themeName}"
             </#if>
             <#if buildApi gte 16 && parentActivityClass != "">

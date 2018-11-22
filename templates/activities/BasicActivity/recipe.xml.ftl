@@ -10,9 +10,7 @@
     <#include "../common/recipe_simple.xml.ftl" />
 </#if>
 
-<#if hasAppBar>
     <#include "../common/recipe_app_bar.xml.ftl" />
-</#if>
 
     <instantiate from="root/src/app_package/SimpleActivity.${ktOrJavaExt}.ftl"
                    to="${escapeXmlAttribute(srcOut)}/${activityClass}.${ktOrJavaExt}" />

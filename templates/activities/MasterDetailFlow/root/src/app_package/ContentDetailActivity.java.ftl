@@ -2,12 +2,10 @@ package ${packageName};
 
 import android.content.Intent;
 import android.os.Bundle;
-<#if hasAppBar>
 import ${getMaterialComponentName('android.support.design.widget.FloatingActionButton', useMaterial2)};
 import ${getMaterialComponentName('android.support.design.widget.Snackbar', useMaterial2)};
 import ${getMaterialComponentName('android.support.v7.widget.Toolbar', useAndroidX)};
 import android.view.View;
-</#if>
 import ${superClassFqcn};
 import ${actionBarClassFqcn};
 <#if minApiLevel lt 16>
@@ -30,7 +28,6 @@ public class ${DetailName}Activity extends ${superClass} {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_${detail_name});
-<#if hasAppBar>
         Toolbar toolbar = (Toolbar) findViewById(R.id.detail_toolbar);
         setSupportActionBar(toolbar);
 
@@ -42,7 +39,6 @@ public class ${DetailName}Activity extends ${superClass} {
                         .setAction("Action", null).show();
             }
         });
-</#if>
 
         // Show the Up button in the action bar.
         ActionBar actionBar = getSupportActionBar();

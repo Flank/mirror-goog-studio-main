@@ -8,7 +8,7 @@
         <item name="metaButtonBarButtonStyle">?android:attr/buttonBarButtonStyle</item>
     </style>
 
-    <style name="FullscreenActionBarStyle" parent="<#if appCompat>Widget.AppCompat.ActionBar<#else>android:Widget.Holo.ActionBar</#if>">
+    <style name="FullscreenActionBarStyle" parent="Widget.AppCompat.ActionBar">
         <item name="android:background">@color/black_overlay</item>
     </style>
 

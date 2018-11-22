@@ -6,11 +6,9 @@ import android.os.Bundle;
 import ${getMaterialComponentName('android.support.annotation.NonNull', useAndroidX)};
 import ${superClassFqcn};
 import ${getMaterialComponentName('android.support.v7.widget.RecyclerView', useAndroidX)};
-<#if hasAppBar>
 import ${getMaterialComponentName('android.support.v7.widget.Toolbar', useAndroidX)};
 import ${getMaterialComponentName('android.support.design.widget.FloatingActionButton', useMaterial2)};
 import ${getMaterialComponentName('android.support.design.widget.Snackbar', useMaterial2)};
-</#if>
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -47,7 +45,6 @@ public class ${CollectionName}Activity extends ${superClass} {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-<#if hasAppBar>
         setContentView(R.layout.activity_${item_list_layout});
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -62,9 +59,6 @@ public class ${CollectionName}Activity extends ${superClass} {
                         .setAction("Action", null).show();
             }
         });
-<#else>
-        setContentView(R.layout.${item_list_layout});
-</#if>
 <#if parentActivityClass != "">
         // Show the Up button in the action bar.
         ActionBar actionBar = getSupportActionBar();

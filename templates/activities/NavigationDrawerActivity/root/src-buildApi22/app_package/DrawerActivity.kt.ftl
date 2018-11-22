@@ -1,10 +1,8 @@
 package ${escapeKotlinIdentifiers(packageName)}
 
 import android.os.Bundle
-<#if hasAppBar>
 import ${getMaterialComponentName('android.support.design.widget.FloatingActionButton', useMaterial2)}
 import ${getMaterialComponentName('android.support.design.widget.Snackbar', useMaterial2)}
-</#if>
 <#if useNavController>
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
@@ -34,13 +32,11 @@ class ${activityClass} : ${superClass}()<#if !useNavController>, NavigationView.
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
 
-<#if hasAppBar>
         val fab: FloatingActionButton = findViewById(R.id.fab)
         fab.setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show()
         }
-</#if>
         val drawerLayout: DrawerLayout = findViewById(R.id.drawer_layout)
         val navView: NavigationView = findViewById(R.id.nav_view)
 <#if useNavController>

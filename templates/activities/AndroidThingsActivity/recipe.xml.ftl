@@ -2,17 +2,21 @@
 <#import "root://activities/common/kotlin_macros.ftl" as kt>
 <recipe>
 
-  <#if requireTheme!false>
-  <#include "../common/recipe_theme.xml.ftl" />
-  </#if>
+<#if requireTheme!false>
+    <#include "../common/recipe_theme.xml.ftl" />
+</#if>
 
-  <@kt.addAllKotlinDependencies />
-  <merge from="root/AndroidManifest.xml.ftl"
-           to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
+    <@kt.addAllKotlinDependencies />
+    <merge from="root/AndroidManifest.xml.ftl"
+             to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
 
 <#if generateLayout>
     <#include "../common/recipe_simple.xml.ftl" />
     <open file="${escapeXmlAttribute(resOut)}/layout/${layoutName}.xml" />
+</#if>
+
+<#if !(hasDependency('com.android.support:appcompat-v7'))>
+    <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+"/>
 </#if>
 
     <instantiate from="root/src/app_package/SimpleActivity.${ktOrJavaExt}.ftl"

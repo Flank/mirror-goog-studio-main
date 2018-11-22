@@ -1,7 +1,5 @@
 <?xml version="1.0"?>
 <globals>
-    <#assign backwardsCompatibility=false>
-
     <global id="hasNoActionBar" type="boolean" value="false" />
     <global id="parentActivityClass" value="" />
     <global id="simpleLayoutName" value="${layoutName}" />
