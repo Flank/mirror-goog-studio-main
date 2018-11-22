@@ -517,7 +517,7 @@ public final class SdkConstants {
      * </pre>
      *
      * Note: if you need an URI specifically for the "android" namespace, consider using {@link
-     * SdkConstants#NS_RESOURCES} instead.
+     * #ANDROID_URI} instead.
      */
     public static final String NS_CUSTOM_RESOURCES_S =
             "http://schemas.android.com/apk/res/%1$s"; //$NON-NLS-1$
