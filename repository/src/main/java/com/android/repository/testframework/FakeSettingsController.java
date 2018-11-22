@@ -25,6 +25,7 @@ import com.android.repository.api.SettingsController;
 public class FakeSettingsController implements SettingsController {
 
     private boolean mForceHttp;
+    private boolean mDisableSdkPatches;
     private Channel myChannel;
 
     public FakeSettingsController(boolean forceHttp) {
@@ -39,6 +40,16 @@ public class FakeSettingsController implements SettingsController {
     @Override
     public void setForceHttp(boolean force) {
         mForceHttp = force;
+    }
+
+    @Override
+    public boolean getDisableSdkPatches() {
+        return mDisableSdkPatches;
+    }
+
+    @Override
+    public void setDisableSdkPatches(boolean disable) {
+        mDisableSdkPatches = disable;
     }
 
     public void setChannel(Channel channel) {

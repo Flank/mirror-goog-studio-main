@@ -79,6 +79,15 @@ public class OfflineRepoCreator {
             public void setForceHttp(boolean force) {
             }
 
+            @Override
+            public boolean getDisableSdkPatches() {
+                return true;
+            }
+
+            @Override
+            public void setDisableSdkPatches(boolean disable) {
+            }
+
             @Nullable
             @Override
             public Channel getChannel() {
