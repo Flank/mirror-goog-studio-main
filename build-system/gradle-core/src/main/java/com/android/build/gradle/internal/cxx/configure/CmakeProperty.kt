@@ -16,12 +16,12 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
-import com.android.build.gradle.internal.cxx.configure.CmakeProperties.*
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.*
 
 /**
  * A subset of possible CMake properties.
  */
-enum class CmakeProperties {
+enum class CmakeProperty {
     ANDROID_GRADLE_BUILD_COMPILER_SETTINGS_CACHE_ENABLED,
     ANDROID_GRADLE_BUILD_COMPILER_SETTINGS_CACHE_RECORDED_VERSION,
     ANDROID_GRADLE_BUILD_COMPILER_SETTINGS_CACHE_USED,
@@ -114,4 +114,28 @@ private val CMAKE_COMPILER_CHECK_CACHE_VALUE_WHITELIST = listOf(
  */
 val CMAKE_COMPILER_CHECK_CACHE_VALUE_WHITELIST_STRINGS =
     CMAKE_COMPILER_CHECK_CACHE_VALUE_WHITELIST.map { it.name }
+
+/**
+ * These are values that *must* be in the cache for the cache to be valid.
+ * If all of these properties are not in the prospective cache settings then we don't save the
+ * settings so the cache won't be used.
+ */
+private val CMAKE_COMPILER_CHECK_CACHE_VALUE_REQUIRED = listOf(
+    C_TEST_WAS_RUN,
+    CMAKE_CXX_ABI_COMPILED,
+    CMAKE_CXX_COMPILER_ABI,
+    CMAKE_C_ABI_COMPILED,
+    CMAKE_C_COMPILER_ABI,
+    CMAKE_CXX_SIZEOF_DATA_PTR,
+    CMAKE_C_SIZEOF_DATA_PTR,
+    CMAKE_SIZEOF_VOID_P,
+    CXX_TEST_WAS_RUN
+)
+
+/**
+ * String version of CMAKE_COMPILER_CHECK_CACHE_VALUE_REQUIRED
+ */
+val CMAKE_COMPILER_CHECK_CACHE_VALUE_REQUIRED_STRINGS =
+    CMAKE_COMPILER_CHECK_CACHE_VALUE_REQUIRED.map { it.name }
+
 

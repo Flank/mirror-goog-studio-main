@@ -607,20 +607,20 @@ public class AndroidManifestParser {
 
         /**
          * Searches through the attributes list for a particular one and returns its value.
+         *
          * @param attributes the attribute list to search through
          * @param attributeName the name of the attribute to look for.
-         * @param hasNamespace Indicates whether the attribute has an android namespace.
+         * @param hasNamespace indicates whether the attribute has an android namespace.
          * @return a String with the value or null if the attribute was not found.
-         * @see SdkConstants#NS_RESOURCES
+         * @see SdkConstants#ANDROID_URI
          */
-        private String getAttributeValue(Attributes attributes, String attributeName,
-                boolean hasNamespace) {
+        private String getAttributeValue(
+                Attributes attributes, String attributeName, boolean hasNamespace) {
             int count = attributes.getLength();
             for (int i = 0 ; i < count ; i++) {
-                if (attributeName.equals(attributes.getLocalName(i)) &&
-                        ((hasNamespace &&
-                                SdkConstants.NS_RESOURCES.equals(attributes.getURI(i))) ||
-                                (hasNamespace == false && attributes.getURI(i).isEmpty()))) {
+                if (attributeName.equals(attributes.getLocalName(i))
+                        && ((hasNamespace && SdkConstants.ANDROID_URI.equals(attributes.getURI(i)))
+                                || (!hasNamespace && attributes.getURI(i).isEmpty()))) {
                     return attributes.getValue(i);
                 }
             }
@@ -631,20 +631,20 @@ public class AndroidManifestParser {
         /**
          * Searches through the attributes list for a particular one and returns its value as a
          * Boolean. If the attribute is not present, this will return null.
+         *
          * @param attributes the attribute list to search through
          * @param attributeName the name of the attribute to look for.
-         * @param hasNamespace Indicates whether the attribute has an android namespace.
+         * @param hasNamespace indicates whether the attribute has an android namespace.
          * @return a String with the value or null if the attribute was not found.
-         * @see SdkConstants#NS_RESOURCES
+         * @see SdkConstants#ANDROID_URI
          */
-        private Boolean getAttributeBooleanValue(Attributes attributes, String attributeName,
-                boolean hasNamespace) {
+        private Boolean getAttributeBooleanValue(
+                Attributes attributes, String attributeName, boolean hasNamespace) {
             int count = attributes.getLength();
             for (int i = 0 ; i < count ; i++) {
-                if (attributeName.equals(attributes.getLocalName(i)) &&
-                        ((hasNamespace &&
-                                SdkConstants.NS_RESOURCES.equals(attributes.getURI(i))) ||
-                                (hasNamespace == false && attributes.getURI(i).isEmpty()))) {
+                if (attributeName.equals(attributes.getLocalName(i))
+                        && ((hasNamespace && SdkConstants.ANDROID_URI.equals(attributes.getURI(i)))
+                                || (!hasNamespace && attributes.getURI(i).isEmpty()))) {
                     String attr = attributes.getValue(i);
                     if (attr != null) {
                         return Boolean.valueOf(attr);

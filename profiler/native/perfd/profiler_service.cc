@@ -166,7 +166,7 @@ Status ProfilerServiceImpl::GetSessions(
   for (auto& group : daemon_->GetEventGroups(&req)) {
     profiler::proto::Session session;
     // group ids are sessions id for session events
-    session.set_session_id(group.event_id());
+    session.set_session_id(group.group_id());
     for (int i = 0; i < group.events_size(); i++) {
       const auto& event = group.events(i);
       if (event.has_session_started()) {

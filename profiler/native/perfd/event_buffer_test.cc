@@ -57,7 +57,7 @@ void CreateTestData(FakeClock& clock, EventBuffer& buffer) {
   Event event;
   clock.Elapse(1);
   // Add 2 events to the same event group.
-  event.set_event_id(1);
+  event.set_group_id(1);
   event.set_session_id(1);
   event.set_kind(Event::SESSION);
   event.set_type(Event::SESSION_STARTED);
@@ -68,7 +68,7 @@ void CreateTestData(FakeClock& clock, EventBuffer& buffer) {
   buffer.Add(event);
   clock.Elapse(1);
   // Add 1 event to a new event group.
-  event.set_event_id(2);
+  event.set_group_id(2);
   event.set_session_id(2);
   event.set_kind(Event::PROCESS);
   event.set_type(Event::PROCESS_STARTED);
@@ -85,7 +85,7 @@ TEST(EventBuffer, GettingEventGroup) {
   buffer.GetGroup(1, &group);
 
   // Validate
-  EXPECT_EQ(1, group.event_id());
+  EXPECT_EQ(1, group.group_id());
   EXPECT_EQ(2, group.events_size());
   EXPECT_EQ(Event::SESSION_STARTED, group.events().Get(0).type());
   EXPECT_EQ(Event::SESSION_ENDED, group.events().Get(1).type());
@@ -186,9 +186,9 @@ TEST(EventBuffer, ConcurrentWrite) {
   EventGroup group2;
   buffer.GetGroup(1, &group1);
   buffer.GetGroup(2, &group2);
-  EXPECT_EQ(1, group1.event_id());
+  EXPECT_EQ(1, group1.group_id());
   EXPECT_EQ(10, group1.events_size());
-  EXPECT_EQ(2, group2.event_id());
+  EXPECT_EQ(2, group2.group_id());
   EXPECT_EQ(5, group2.events_size());
 }
 }  // namespace profiler

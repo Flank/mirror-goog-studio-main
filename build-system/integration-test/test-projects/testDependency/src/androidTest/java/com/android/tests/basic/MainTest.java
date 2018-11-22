@@ -1,35 +1,35 @@
 package com.android.tests.basic;
 
-import android.test.ActivityInstrumentationTestCase2;
-import android.test.suitebuilder.annotation.MediumTest;
+import static org.junit.Assert.*;
+
+import android.support.test.filters.MediumTest;
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
 import android.widget.TextView;
-
 import com.google.common.collect.Lists;
-
 import java.util.List;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
-public class MainTest extends ActivityInstrumentationTestCase2<Main> {
+@RunWith(AndroidJUnit4.class)
+public class MainTest {
+    @Rule
+    public ActivityTestRule<Main> rule = new ActivityTestRule<>(Main.class);
 
     private TextView mTextView;
 
-    /**
-     * Creates an {@link ActivityInstrumentationTestCase2} that tests the {@link Main} activity.
-     */
-    public MainTest() {
-        super(Main.class);
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        final Main a = getActivity();
+    @Before
+    public void setUp() {
+        final Main a = rule.getActivity();
         // ensure a valid handle to the activity has been returned
         assertNotNull(a);
         mTextView = (TextView) a.findViewById(R.id.text);
-
     }
 
     @MediumTest
+    @Test
     public void testTextView() {
         List<String> list = Lists.newArrayList("foo", "bar");
 
@@ -37,9 +37,8 @@ public class MainTest extends ActivityInstrumentationTestCase2<Main> {
     }
 
     @MediumTest
+    @Test
     public void testPreconditions() {
         assertNotNull(mTextView);
     }
-
 }
-

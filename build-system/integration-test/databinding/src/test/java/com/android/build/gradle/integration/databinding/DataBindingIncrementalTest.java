@@ -127,7 +127,7 @@ public class DataBindingIncrementalTest {
                 "debug",
                 "android",
                 "databinding",
-                "layouts",
+                "testapp",
                 "DataBindingInfo.java");
     }
 

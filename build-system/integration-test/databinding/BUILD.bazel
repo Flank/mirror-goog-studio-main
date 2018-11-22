@@ -1,5 +1,6 @@
 load("//tools/base/bazel:maven.bzl", "maven_repo")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test", "kotlin_jar")
+load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
 
 #keep sorted
 TEST_DEPS = [
@@ -22,6 +23,7 @@ TEST_DEPS = [
     "//tools/base/third_party:com.google.truth_truth",
     "//tools/base/third_party:commons-io_commons-io",
     "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
+    "//tools/base/third_party:org.jetbrains.kotlin_kotlin-test",
 ]
 
 #keep sorted
@@ -62,7 +64,7 @@ kotlin_jar(
     deps = TEST_DEPS,
 )
 
-java_test(
+coverage_java_test(
     name = "tests",
     timeout = "eternal",
     data = TEST_DATA,

@@ -41,6 +41,7 @@ import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.Variant;
+import com.android.builder.model.Version;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.manifmerger.ManifestMerger2.Invoker.Feature;
@@ -390,7 +391,7 @@ public class LintCliClient extends LintClient {
             // the possibility that newer versions of lint have newer checks not included in
             // older ones, have existing checks that cover more areas, etc.
             if (stats.getBaselineFixedCount() > 0) {
-                String checkVersion = getClientRevision();
+                String checkVersion = getClientDisplayRevision();
                 String checkClient = LintClient.Companion.getClientName();
                 String creationVersion = baseline.getAttribute("version");
                 String creationClient = baseline.getAttribute("client");
@@ -419,7 +420,7 @@ public class LintCliClient extends LintClient {
         }
     }
 
-    protected String getTargetName(@NonNull String baselineVariantName) {
+    protected static String getTargetName(@NonNull String baselineVariantName) {
         if (LintClient.isGradle()) {
             if (VARIANT_ALL.equals(baselineVariantName)) {
                 return "lint";
@@ -1496,6 +1497,11 @@ public class LintCliClient extends LintClient {
     @Override
     @Nullable
     public String getClientRevision() {
+        String plugin = Version.ANDROID_TOOLS_BASE_VERSION;
+        if (plugin != null) {
+            return plugin;
+        }
+
         AndroidSdkHandler sdk = getSdk();
         if (sdk != null) {
             NullLogger empty = new NullLogger();

@@ -1,24 +1,27 @@
 package com.android.tests.basic;
 
-import android.test.ActivityInstrumentationTestCase2;
-import android.test.suitebuilder.annotation.MediumTest;
+import android.support.test.filters.MediumTest;
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
 import android.widget.TextView;
 
-public class MainTest extends ActivityInstrumentationTestCase2<Main> {
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import static org.junit.Assert.*;
+
+@RunWith(AndroidJUnit4.class)
+public class MainTest {
+    @Rule
+    public ActivityTestRule<Main> rule = new ActivityTestRule<>(Main.class);
 
     private TextView mTextView;
 
-    /**
-     * Creates an {@link ActivityInstrumentationTestCase2} that tests the {@link Main} activity.
-     */
-    public MainTest() {
-        super(Main.class);
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        final Main a = getActivity();
+    @Before
+    public void setUp() {
+        final Main a = rule.getActivity();
         // ensure a valid handle to the activity has been returned
         assertNotNull(a);
         mTextView = (TextView) a.findViewById(R.id.dateText);
@@ -31,10 +34,12 @@ public class MainTest extends ActivityInstrumentationTestCase2<Main> {
      * to run before other tests, as junit uses reflection to find the tests.
      */
     @MediumTest
+    @Test
     public void testPreconditions() {
         assertNotNull(mTextView);
     }
 
+    @Test
     public void testTextViewContent() {
         assertEquals("FredBarney", mTextView.getText().toString());
     }

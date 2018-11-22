@@ -17,11 +17,11 @@ filegroup(
     for project_name in
     #keep sorted
     [
-        "databindingAndKotlin",
         "databinding",
-        "databindingIncremental",
         "databindingAndDagger",
         "databindingAndJetifier",
+        "databindingAndKotlin",
+        "databindingIncremental",
         "databindingMultiModule",
         "databindingWithFeatures",
     ]
@@ -74,6 +74,16 @@ ANDROID_ARCH_DEPS = [
     "android/arch/persistence/db/1.0.0:aar",
     "android/arch/persistence/room/common/1.0.0:jar",
     "android/arch/persistence/room/runtime/1.0.0:aar",
+]
+
+#keep sorted
+ANDROID_TEST_DEPS = [
+    "com/android/support/support-annotations/27.1.1:jar",
+    "com/android/support/test/monitor/1.0.2:aar",
+    "com/android/support/test/rules/1.0.2:aar",
+    "com/android/support/test/runner/1.0.2:aar",
+    "junit/junit/4.12:jar",
+    "org/hamcrest/hamcrest-core/1.3:jar",
 ]
 
 LATEST_ANDROID_X_SUPPORT = "1.0.0-alpha1"
@@ -153,6 +163,7 @@ maven_repo(
                  LATEST_SUPPORT + ":aar" for name in SUPPORT_LIBRARY_AARS] +
                 ["//prebuilts/tools/common/m2/repository/com/android/support/" + name + "/" +
                  LATEST_SUPPORT + ":jar" for name in SUPPORT_LIBRARY_JARS] +
+                ["//prebuilts/tools/common/m2/repository/" + name for name in ANDROID_TEST_DEPS] +
                 ["//prebuilts/tools/common/m2/repository/" + name for name in ANDROID_ARCH_DEPS],
     visibility = [":__subpackages__"],
 )

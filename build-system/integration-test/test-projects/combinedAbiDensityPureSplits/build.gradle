@@ -10,6 +10,7 @@ android {
 
     defaultConfig {
         minSdkVersion 21
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         ndk {
             moduleName "hello-jni"
         }
@@ -37,3 +38,10 @@ android {
         }
     }
 }
+
+dependencies {
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation "com.android.support.test:runner:${project.testSupportLibVersion}"
+    androidTestImplementation "com.android.support.test:rules:${project.testSupportLibVersion}"
+}
+

@@ -17,7 +17,6 @@ package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_WIDTH;
-import static com.android.SdkConstants.NS_RESOURCES;
 import static com.android.SdkConstants.TAG_VECTOR;
 import static com.android.SdkConstants.UNIT_DIP;
 import static com.android.SdkConstants.UNIT_DP;
@@ -233,7 +232,7 @@ public class VectorDetector extends ResourceXmlDetector {
     }
 
     private static boolean containsFillType(Document document) {
-        return findElement(document, element -> element.hasAttributeNS(NS_RESOURCES, "fillType"))
+        return findElement(document, element -> element.hasAttributeNS(ANDROID_URI, "fillType"))
                 != null;
     }
 

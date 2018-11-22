@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <com.google.ar.sceneform>
-  <filament-android versions="1.4.0"/>
-  <core versions="1.4.0"/>
-  <rendering versions="1.4.0"/>
-  <plugin versions="1.4.0"/>
-  <sceneform-base versions="1.4.0"/>
+  <filament-android versions="1.5.1"/>
+  <core versions="1.5.1"/>
+  <rendering versions="1.5.1"/>
+  <plugin versions="1.5.1"/>
+  <sceneform-base versions="1.5.1"/>
+  <assets versions="1.5.1"/>
 </com.google.ar.sceneform>
 

@@ -1,3 +1,5 @@
+load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
+
 java_library(
     name = "java_tests",
     srcs = glob(["**/*.java"]),
@@ -13,7 +15,7 @@ java_library(
     ],
 )
 
-java_test(
+coverage_java_test(
     name = "tests",
     data = [
         "//tools/base:gmaven.zip",

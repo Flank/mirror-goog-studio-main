@@ -27,9 +27,9 @@ class CmakeCompilerCacheKeyTest {
     @Test
     fun toAndFromFile() {
         val key = CmakeCompilerCacheKey(
-            null,
-            SdkSourceProperties(mapOf("x" to "y")),
-            listOf("a", "b"))
+            ndkInstallationFolder = File("./ndk"),
+            ndkSourceProperties = SdkSourceProperties(mapOf("x" to "y")),
+            args = listOf("a", "b"))
         val file = File("file.json")
         key.toFile(file)
         val key2 = CmakeCompilerCacheKey.fromFile(file)

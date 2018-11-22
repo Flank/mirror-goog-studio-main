@@ -102,6 +102,16 @@ public class AdbInstaller implements Installer {
         return response;
     }
 
+    @Override
+    public Deploy.DeltaPushResponse deltaPush(Deploy.DeltaPushRequest request) throws IOException {
+        String[] cmd = buildCmd(new String[] {"deltaPush"});
+        InputStream inputStream = wrap(request);
+        Deploy.InstallerResponse installerResponse = invokeRemoteCommand(cmd, inputStream);
+        Deploy.DeltaPushResponse response = installerResponse.getDeltapushResponse();
+        logger.info("DeltaPush response:" + response.getStatus().toString());
+        return response;
+    }
+
     private Deploy.InstallerResponse invokeRemoteCommand(String[] cmd, InputStream inputStream)
             throws IOException {
         Trace.begin("./installer " + cmd[2]);

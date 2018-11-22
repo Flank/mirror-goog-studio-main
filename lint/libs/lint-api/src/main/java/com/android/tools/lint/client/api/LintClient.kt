@@ -464,7 +464,6 @@ abstract class LintClient {
     /**
      * Locates an SDK resource (relative to the SDK root directory).
      *
-     *
      * TODO: Consider switching to a [URL] return type instead.
      *
      * @param relativePath A relative path (using [File.separator] to
@@ -474,11 +473,13 @@ abstract class LintClient {
      *         exist
      */
     open fun findResource(relativePath: String): File? {
-        val top = getSdkHome() ?: throw IllegalArgumentException(
-            "Lint must be invoked with " +
-                    "\$ANDROID_HOME set to point to the SDK, or the System property " +
-                    PROP_BIN_DIR + " pointing to the ANDROID_SDK tools directory"
-        )
+        val top = getSdkHome() ?: run {
+            val file = File(relativePath)
+            return when {
+                file.exists() -> file.absoluteFile
+                else -> null
+            }
+        }
 
         // Files looked up by ExternalAnnotationRepository and ApiLookup, respectively
         val isAnnotationZip = "annotations.zip" == relativePath
@@ -1565,8 +1566,14 @@ abstract class LintClient {
         return parser
     }
 
-    /** Returns the version number of this lint client, if known  */
+    /** Returns the version number of this lint client, if known */
     open fun getClientRevision(): String? = null
+
+    /** Returns the version number of this lint client, if known. This is the one
+     * meant to be displayed to users; e.g. for Studio, client revision may be
+     * "3.4.0.0" and display revision might be "3.4 Canary 1".
+     */
+    open fun getClientDisplayRevision(): String? = getClientRevision()
 
     /**
      * Runs the given runnable under a read lock such that it can access the PSI

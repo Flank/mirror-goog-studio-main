@@ -227,7 +227,8 @@ class GradleDetectorTest : AbstractCheckTest() {
 
         // Also ensure we don't have a stale cache on disk.
         val cacheDir =
-            TestLintClient().getCacheDir(MAVEN_GOOGLE_CACHE_DIR_KEY, true)
+            com.android.tools.lint.checks.infrastructure.TestLintClient()
+                .getCacheDir(MAVEN_GOOGLE_CACHE_DIR_KEY, true)
         if (cacheDir != null && cacheDir.isDirectory) {
             try {
                 FileUtils.deleteDirectoryContents(cacheDir)
@@ -262,7 +263,8 @@ class GradleDetectorTest : AbstractCheckTest() {
         task.client(client)
 
         val cacheDir2 =
-            TestLintClient().getCacheDir(DEPRECATED_SDK_CACHE_DIR_KEY, true)
+            com.android.tools.lint.checks.infrastructure.TestLintClient()
+                .getCacheDir(DEPRECATED_SDK_CACHE_DIR_KEY, true)
         if (cacheDir2 != null && cacheDir2.isDirectory) {
             try {
                 FileUtils.deleteDirectoryContents(cacheDir2)
@@ -541,6 +543,123 @@ class GradleDetectorTest : AbstractCheckTest() {
                         "}\n"
             )
         ).issues(GRADLE_PLUGIN_COMPATIBILITY).run().expect(expected)
+    }
+
+    fun testTooRecentVersion() {
+        // Regression test for https://issuetracker.google.com/119210741
+        // Don't offer Gradle plugin versions newer than the IDE (when running in the IDE)
+        // Same (older) version of Studio and Gradle:
+        // Studio 3.0, gradle: 3.0.0-alpha4: Offer latest 3.0.0, not 3.1 or 3.2 etc
+        val expected = "" +
+                "build.gradle:6: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha4 is available: 3.0.0 [GradleDependency]\n" +
+                "    classpath 'com.android.tools.build:gradle:3.0.0-alpha4'\n" +
+                "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "0 errors, 1 warnings"
+
+        lint().files(
+            gradle(
+                """
+                buildscript {
+                  repositories {
+                    mavenCentral()
+                  }
+                  dependencies {
+                    classpath 'com.android.tools.build:gradle:3.0.0-alpha4'
+                  }
+                }
+
+                allprojects {
+                  repositories {
+                    mavenCentral()
+                  }
+                }
+                """
+            ).indented()
+        ).issues(DEPENDENCY)
+            .client(object :
+                com.android.tools.lint.checks.infrastructure.TestLintClient(CLIENT_STUDIO) {
+                // Studio 3.0.0
+                override fun getClientRevision(): String? = "3.0.0.0"
+            })
+            .run().expect(expected)
+    }
+
+    fun testTooRecentVersion2() {
+        // Regression test for https://issuetracker.google.com/119210741
+        // Don't offer Gradle plugin versions newer than the IDE (when running in the IDE)
+        // Newer Studio than Gradle:
+        // Studio 3.1, Gradle 3.0: Offer 3.1
+        lint().files(
+            gradle(
+                """
+                buildscript {
+                  repositories {
+                    mavenCentral()
+                  }
+                  dependencies {
+                    classpath 'com.android.tools.build:gradle:3.0.0-alpha01'
+                  }
+                }
+
+                allprojects {
+                  repositories {
+                    mavenCentral()
+                  }
+                }
+                """
+            ).indented()
+        ).issues(DEPENDENCY)
+            .client(object :
+                com.android.tools.lint.checks.infrastructure.TestLintClient(CLIENT_STUDIO) {
+                // Studio 3.0.0
+                override fun getClientRevision(): String? = "3.1.0"
+            })
+            .run().expect(
+                "" +
+                        "build.gradle:6: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha01 is available: 3.1.0 [GradleDependency]\n" +
+                        "    classpath 'com.android.tools.build:gradle:3.0.0-alpha01'\n" +
+                        "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                        "0 errors, 1 warnings"
+            )
+    }
+
+    fun testTooRecentVersion3() {
+        // Regression test for https://issuetracker.google.com/119210741
+        // Older Studio than Gradle:
+        // Studio 2.3, gradle: 3.0.0-alpha4: Already using Gradle 3.0: offer latest version of it
+        lint().files(
+            gradle(
+                """
+                buildscript {
+                  repositories {
+                    mavenCentral()
+                  }
+                  dependencies {
+                    classpath 'com.android.tools.build:gradle:3.0.0-alpha4'
+                  }
+                }
+
+                allprojects {
+                  repositories {
+                    mavenCentral()
+                  }
+                }
+                """
+            ).indented()
+        ).issues(DEPENDENCY)
+            .client(object :
+                com.android.tools.lint.checks.infrastructure.TestLintClient(CLIENT_STUDIO) {
+                // Studio 3.0.0
+                override fun getClientRevision(): String? = "2.3.0.0"
+            })
+            .run().expect(
+                """
+                build.gradle:6: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha4 is available: 3.0.0 [GradleDependency]
+                    classpath 'com.android.tools.build:gradle:3.0.0-alpha4'
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                0 errors, 1 warnings
+                """
+            )
     }
 
     fun testSetter() {
@@ -2481,7 +2600,8 @@ class GradleDetectorTest : AbstractCheckTest() {
             .expect(expected, TestResultTransformer {
                 it.replace(
                     Regex("found .* and .* incompatible"),
-                    "found __ and __ incompatible")
+                    "found __ and __ incompatible"
+                )
             })
     }
 

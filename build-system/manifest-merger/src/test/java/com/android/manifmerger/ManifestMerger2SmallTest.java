@@ -1489,7 +1489,7 @@ public class ManifestMerger2SmallTest {
                 xmlDocument
                         .getDocumentElement()
                         .getAttributeNS(
-                                SdkConstants.NS_RESOURCES,
+                                SdkConstants.ANDROID_URI,
                                 SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
     }
 
@@ -1663,7 +1663,7 @@ public class ManifestMerger2SmallTest {
                 xmlDocument
                         .getDocumentElement()
                         .getAttributeNS(
-                                SdkConstants.NS_RESOURCES,
+                                SdkConstants.ANDROID_URI,
                                 SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
 
         Document mergedDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
@@ -1680,7 +1680,7 @@ public class ManifestMerger2SmallTest {
                         .getDocumentElement()
                         .getAttributes()
                         .getNamedItemNS(
-                                SdkConstants.NS_RESOURCES,
+                                SdkConstants.ANDROID_URI,
                                 SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
     }
 
@@ -1715,7 +1715,7 @@ public class ManifestMerger2SmallTest {
                 xmlDocument
                         .getDocumentElement()
                         .getAttributeNS(
-                                SdkConstants.NS_RESOURCES,
+                                SdkConstants.ANDROID_URI,
                                 SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
 
         Document mergedDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
@@ -1724,7 +1724,7 @@ public class ManifestMerger2SmallTest {
                 mergedDocument
                         .getDocumentElement()
                         .getAttributeNS(
-                                SdkConstants.NS_RESOURCES,
+                                SdkConstants.ANDROID_URI,
                                 SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
     }
 
@@ -1852,7 +1852,7 @@ public class ManifestMerger2SmallTest {
                             .getDocumentElement()
                             .getAttributes()
                             .getNamedItemNS(
-                                    SdkConstants.NS_RESOURCES,
+                                    SdkConstants.ANDROID_URI,
                                     SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
 
             Document instantAppDocument =
@@ -1870,7 +1870,7 @@ public class ManifestMerger2SmallTest {
                     instantAppDocument
                             .getDocumentElement()
                             .getAttributeNS(
-                                    SdkConstants.NS_RESOURCES,
+                                    SdkConstants.ANDROID_URI,
                                     SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
         } finally {
             assertTrue(appFile.delete());
@@ -1928,7 +1928,7 @@ public class ManifestMerger2SmallTest {
                     xmlDocument
                             .getDocumentElement()
                             .getAttributeNS(
-                                    SdkConstants.NS_RESOURCES,
+                                    SdkConstants.ANDROID_URI,
                                     SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
 
             Document instantAppDocument =
@@ -1938,7 +1938,7 @@ public class ManifestMerger2SmallTest {
                     instantAppDocument
                             .getDocumentElement()
                             .getAttributeNS(
-                                    SdkConstants.NS_RESOURCES,
+                                    SdkConstants.ANDROID_URI,
                                     SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
 
             Document bundleDocument =
@@ -1948,7 +1948,7 @@ public class ManifestMerger2SmallTest {
                     bundleDocument
                             .getDocumentElement()
                             .getAttributeNS(
-                                    SdkConstants.NS_RESOURCES,
+                                    SdkConstants.ANDROID_URI,
                                     SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
         } finally {
             assertTrue(appFile.delete());

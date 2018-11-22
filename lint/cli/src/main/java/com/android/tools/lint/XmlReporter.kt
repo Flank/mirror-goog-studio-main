@@ -70,7 +70,7 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
 
     fun setBaselineAttributes(client: LintClient, variant: String?) {
         setAttribute("client", LintClient.clientName)
-        val revision = client.getClientRevision()
+        val revision = client.getClientDisplayRevision()
         if (revision != null) {
             setAttribute("version", revision)
         }
@@ -84,7 +84,7 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
         writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
         // Format 4: added urls= attribute with all more info links, comma separated
         writer.write("<issues format=\"5\"")
-        val revision = client.getClientRevision()
+        val revision = client.getClientDisplayRevision()
         if (revision != null) {
             writer.write(String.format(" by=\"lint %1\$s\"", revision))
         }

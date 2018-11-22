@@ -278,11 +278,14 @@ public enum InternalArtifactType implements ArtifactType {
     // The java resources for a feature and all of its runtime dependencies.
     FEATURE_AND_RUNTIME_DEPS_JAVA_RES,
 
+    // The signing configuration the feature module should be using, which is taken from the
+    // application module. Also used for androidTest variants (bug 118611693).
+    SIGNING_CONFIG,
+
     // Project metadata
     METADATA_FEATURE_DECLARATION,
     METADATA_FEATURE_MANIFEST,
     METADATA_INSTALLED_BASE_DECLARATION,
-    METADATA_SIGNING_CONFIG,
 
     INSTANT_RUN_APP_INFO_OUTPUT_FILE;
 

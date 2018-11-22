@@ -59,3 +59,7 @@ project.ext.pomDesc = 'Library for parsing and analyzing information from APK fi
 group = 'com.android.tools.apkparser'
 archivesBaseName = 'apkanalyzer'
 version = rootProject.ext.baseVersion
+
+apply from: "$rootDir/buildSrc/base/publish.gradle"
+apply from: "$rootDir/buildSrc/base/bintray.gradle"
+apply from: "$rootDir/buildSrc/base/javadoc.gradle"

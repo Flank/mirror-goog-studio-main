@@ -18,9 +18,16 @@ package com.android.tests.testprojecttest.lib;
 
 import com.android.tests.testprojecttest.app.R;
 
-import android.test.ActivityInstrumentationTestCase2;
-import android.test.suitebuilder.annotation.MediumTest;
+import android.support.test.filters.MediumTest;
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
 import android.widget.TextView;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import static org.junit.Assert.*;
 
 /**
  * An example of an {@link ActivityInstrumentationTestCase2} of a specific activity {@link Focus2}.
@@ -39,21 +46,16 @@ import android.widget.TextView;
  * See {@link com.example.android.apis.AllTests} for documentation on running
  * all tests and individual tests in this application.
  */
-public class LibActivityTest extends ActivityInstrumentationTestCase2<LibActivity> {
+@RunWith(AndroidJUnit4.class)
+public class LibActivityTest {
+    @Rule
+    public ActivityTestRule<LibActivity> rule = new ActivityTestRule<>(LibActivity.class);
 
     private TextView mTextView;
 
-    /**
-     * Creates an {@link ActivityInstrumentationTestCase2} that tests the {@link Focus2} activity.
-     */
-    public LibActivityTest() {
-        super(LibActivity.class);
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        final LibActivity a = getActivity();
+    @Before
+    public void setUp() {
+        final LibActivity a = rule.getActivity();
         // ensure a valid handle to the activity has been returned
         assertNotNull(a);
         mTextView = (TextView) a.findViewById(R.id.text);
@@ -66,6 +68,7 @@ public class LibActivityTest extends ActivityInstrumentationTestCase2<LibActivit
      * to run before other tests, as junit uses reflection to find the tests.
      */
     @MediumTest
+    @Test
     public void testPreconditions() {
         assertNotNull(mTextView);
     }

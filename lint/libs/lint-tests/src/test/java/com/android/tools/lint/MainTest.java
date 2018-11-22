@@ -24,6 +24,7 @@ import static com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.model.Version;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.AccessibilityDetector;
@@ -518,7 +519,16 @@ public class MainTest extends AbstractCheckTest {
                         xml(
                                 "lint.xml",
                                 ""
-                                        + "<lint><issue id=\"SomeUnknownId\" severity=\"fatal\" /></lint>"),
+                                        + "<lint>\n"
+                                        + "    <issue id=\"all\" severity=\"warning\" />\n"
+                                        + "    <issue id=\"LintError\" severity=\"error\" />\n"
+                                        + "    <issue id=\"SomeUnknownId\" severity=\"fatal\" />\n"
+                                        + "    <issue id=\"IconLauncherFormat\">\n"
+                                        + "        <ignore path=\"src/main/res/mipmap-anydpi-v26/ic_launcher.xml\" />\n"
+                                        + "        <ignore path=\"src/main/res/drawable/ic_launcher_foreground.xml\" />\n"
+                                        + "        <ignore path=\"src/main/res/drawable/ic_launcher_background.xml\" />\n"
+                                        + "    </issue>"
+                                        + "</lint>"),
                         // dummy to ensure we have .class files
                         source("bin/classes/foo/bar/ApiCallTest.class", ""));
         checkDriver(
@@ -605,6 +615,23 @@ public class MainTest extends AbstractCheckTest {
                 new String[] {
                     "--text", new File(outputDir, "foo.text").getPath(), project.getPath(),
                 });
+    }
+
+    public void testVersion() throws Exception {
+        File project =
+                getProjectDir(
+                        null,
+                        manifest().minSdk(1));
+        checkDriver(
+                "lint: version " + Version.ANDROID_TOOLS_BASE_VERSION
+                        + "\n",
+                "",
+
+                // Expected exit code
+                ERRNO_SUCCESS,
+
+                // Args
+                new String[] {"--version", "--check", "HardcodedText", project.getPath()});
     }
 
     @Override

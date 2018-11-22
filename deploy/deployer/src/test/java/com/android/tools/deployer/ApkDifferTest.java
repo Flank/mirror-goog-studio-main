@@ -33,11 +33,11 @@ public class ApkDifferTest {
     ApkDiffer differ = new ApkDiffer();
 
     List<ApkEntry> before = new ArrayList<>();
-    Apk apk0 = new Apk("apk.apk", "abcd", "", ImmutableList.of());
+        Apk apk0 = new Apk("apk.apk", "abcd", "", ImmutableList.of(), null);
     before.add(new ApkEntry("dex0", 0x01, apk0));
 
     List<ApkEntry> after = new ArrayList<>();
-    Apk apk1 = new Apk("apk.apk", "efgh", "", ImmutableList.of());
+        Apk apk1 = new Apk("apk.apk", "efgh", "", ImmutableList.of(), null);
     after.add(new ApkEntry("dex0", 0x01, apk1));
 
     List<FileDiff> diff = differ.diff(before, after);
@@ -52,13 +52,13 @@ public class ApkDifferTest {
     ApkDiffer differ = new ApkDiffer();
 
     List<ApkEntry> before = new ArrayList<>();
-    Apk apk1 = new Apk("apk1.apk", "abcd", "", ImmutableList.of());
+        Apk apk1 = new Apk("apk1.apk", "abcd", "", ImmutableList.of(), null);
     before.add(new ApkEntry("dex0", 0x01, apk1));
-    Apk apk2 = new Apk("apk2.apk", "abcd", "", ImmutableList.of());
+        Apk apk2 = new Apk("apk2.apk", "abcd", "", ImmutableList.of(), null);
     before.add(new ApkEntry("dex0", 0x01, apk2));
 
     List<ApkEntry> after = new ArrayList<>();
-    Apk apk3 = new Apk("apk1.apk", "efgh", "", ImmutableList.of());
+        Apk apk3 = new Apk("apk1.apk", "efgh", "", ImmutableList.of(), null);
     after.add(new ApkEntry("dex0", 0x01, apk3));
     try {
       differ.diff(before, after);
@@ -83,11 +83,11 @@ public class ApkDifferTest {
     ApkDiffer differ = new ApkDiffer();
 
     List<ApkEntry> before = new ArrayList<>();
-    Apk apk1 = new Apk("apk1.apk", "abcd", "", ImmutableList.of());
+        Apk apk1 = new Apk("apk1.apk", "abcd", "", ImmutableList.of(), null);
     before.add(new ApkEntry("dex0", 0x01, apk1));
 
     List<ApkEntry> after = new ArrayList<>();
-    Apk apk2 = new Apk("apk.apk", "efgh", "", ImmutableList.of());
+        Apk apk2 = new Apk("apk.apk", "efgh", "", ImmutableList.of(), null);
     after.add(new ApkEntry("dex0", 0x01, apk2));
     try {
       differ.diff(before, after);
@@ -113,14 +113,14 @@ public class ApkDifferTest {
     ApkDiffer differ = new ApkDiffer();
 
     List<ApkEntry> before = new ArrayList<>();
-    Apk apk1 = new Apk("apk.apk", "abcd", "", ImmutableList.of());
+        Apk apk1 = new Apk("apk.apk", "abcd", "", ImmutableList.of(), null);
     before.add(new ApkEntry("dex0", 0x00, apk1));
     before.add(new ApkEntry("dex1", 0x01, apk1));
     before.add(new ApkEntry("dex2", 0x02, apk1));
     before.add(new ApkEntry("dex3", 0x03, apk1));
 
     List<ApkEntry> after = new ArrayList<>();
-    Apk apk2 = new Apk("apk.apk", "efgh", "", ImmutableList.of());
+        Apk apk2 = new Apk("apk.apk", "efgh", "", ImmutableList.of(), null);
     after.add(new ApkEntry("dex1", 0x01, apk2));
     after.add(new ApkEntry("dex2", 0x12, apk2));
     after.add(new ApkEntry("dex3", 0x13, apk2));

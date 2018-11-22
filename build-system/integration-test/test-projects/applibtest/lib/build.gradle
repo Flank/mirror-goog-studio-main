@@ -8,6 +8,8 @@ android {
 
     defaultConfig {
         testApplicationId = "com.android.tests.testprojecttest.testlib"
+        minSdkVersion rootProject.supportLibMinSdk
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -15,4 +17,10 @@ android {
             testCoverageEnabled true
         }
     }
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation "com.android.support.test:runner:${project.testSupportLibVersion}"
+    androidTestImplementation "com.android.support.test:rules:${project.testSupportLibVersion}"
 }

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.*
 import com.google.common.truth.Truth.assertThat
 
 import org.junit.Test
@@ -70,5 +71,53 @@ class CmakeCommandLineKtTest {
             UnknownArgument("-X"))
         val arg = parsed.single() as UnknownArgument
         assertThat(arg.sourceArgument).isEqualTo("-X")
+    }
+
+    @Test
+    fun definePropertyFrom() {
+        val property = DefineProperty.from(ANDROID_NDK, "xyz")
+        assertThat(property.sourceArgument).isEqualTo("-DANDROID_NDK=xyz")
+    }
+
+    @Test
+    fun cmakeListsFrom() {
+        val property = CmakeListsPath.from("xyz")
+        assertThat(property.sourceArgument).isEqualTo("-Hxyz")
+    }
+
+    @Test
+    fun hasBooleanPropertySet() {
+        val prop = ANDROID_GRADLE_BUILD_COMPILER_SETTINGS_CACHE_ENABLED
+        val definedTrue = DefineProperty.from(prop, "true")
+        val definedFalse = DefineProperty.from(prop, "false")
+        assertThat(listOf<CommandLineArgument>().getCmakeBooleanProperty(prop)).isNull()
+        assertThat(listOf(definedTrue).getCmakeBooleanProperty(prop)).isTrue()
+        assertThat(listOf(definedFalse).getCmakeBooleanProperty(prop)).isFalse()
+        assertThat(listOf(definedFalse, definedTrue).getCmakeBooleanProperty(prop)).isTrue()
+        assertThat(listOf(definedTrue, definedFalse).getCmakeBooleanProperty(prop)).isFalse()
+    }
+
+    @Test
+    fun getCmakeProperty() {
+        val toolchain = CmakeListsPath.from("path")
+        val buildType = DefineProperty.from(CMAKE_BUILD_TYPE, "type")
+        val got = listOf(toolchain, buildType).getCmakeProperty(CMAKE_BUILD_TYPE)
+        assertThat(got).isEqualTo("type")
+    }
+
+    @Test
+    fun getCmakeListsPathValue() {
+        val toolchain = CmakeListsPath.from("path")
+        val buildType = DefineProperty.from(CMAKE_BUILD_TYPE, "type")
+        val got = listOf(toolchain, buildType).getCmakeListsPathValue()
+        assertThat(got).isEqualTo("path")
+    }
+
+    @Test
+    fun removeProperty() {
+        val toolchain = CmakeListsPath.from("path")
+        val buildType = DefineProperty.from(CMAKE_BUILD_TYPE, "type")
+        val got = listOf(toolchain, buildType).removeProperty(CMAKE_BUILD_TYPE)
+        assertThat(got).isEqualTo(listOf(toolchain))
     }
 }

@@ -1,24 +1,26 @@
 package com.android.tests.flavored;
 
-import android.test.ActivityInstrumentationTestCase2;
-import android.test.suitebuilder.annotation.MediumTest;
-import android.widget.TextView;
+import static org.junit.Assert.*;
 
-public class MainTest extends ActivityInstrumentationTestCase2<Main> {
+import android.support.test.filters.MediumTest;
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
+import android.widget.TextView;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+@RunWith(AndroidJUnit4.class)
+public class MainTest {
+    @Rule
+    public ActivityTestRule<Main> rule = new ActivityTestRule<>(Main.class);
 
     private TextView mTextView;
 
-    /**
-     * Creates an {@link ActivityInstrumentationTestCase2} that tests the {@link Main} activity.
-     */
-    public MainTest() {
-        super(Main.class);
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        final Main a = getActivity();
+    @Before
+    public void setUp() {
+        final Main a = rule.getActivity();
         // ensure a valid handle to the activity has been returned
         assertNotNull(a);
         mTextView = (TextView) a.findViewById(R.id.text);
@@ -31,11 +33,13 @@ public class MainTest extends ActivityInstrumentationTestCase2<Main> {
      * to run before other tests, as junit uses reflection to find the tests.
      */
     @MediumTest
+    @Test
     public void testPreconditions() {
         assertNotNull(mTextView);
     }
 
     @MediumTest
+    @Test
     public void testStagingText() {
         if ("f1".equals(BuildConfig.FLAVOR)) {
             assertEquals("F1-Staging text", mTextView.getText().toString());

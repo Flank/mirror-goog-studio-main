@@ -31,15 +31,17 @@ import java.io.StringWriter
  *
  * This class is persisted as a Json file. Don't change names.
  * Each of the values in the parameters list is required to make the key unique with the exception
- * that ndkInstallationFolder may not be required in the future because it ndkSourceProperties
+ * that ndkInstallationFolder may not be required in the future because ndkSourceProperties
  * should be enough to define the NDK version.
  *
  * gradlePluginVersion is included so that we don't have to worry about cache compatibility
  * between different versions of gradle.
+ *
+ * TODO this should probably include the CMake version as well. Ninja version shouldn't be needed.
  */
 data class CmakeCompilerCacheKey(
-    val ndkInstallationFolder : File?,
-    val ndkSourceProperties : SdkSourceProperties?,
+    val ndkInstallationFolder : File,
+    val ndkSourceProperties : SdkSourceProperties,
     val args: List<String>) {
 
     val gradlePluginVersion : String = Version.ANDROID_GRADLE_PLUGIN_VERSION

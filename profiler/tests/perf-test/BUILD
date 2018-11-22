@@ -1,5 +1,6 @@
 load("//tools/base/bazel:android.bzl", "dex_library")
 load("//tools/base/profiler:perf_test.bzl", "perf_test")
+load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
 
 package(
     default_testonly = True,
@@ -48,7 +49,7 @@ java_library(
     ],
 )
 
-java_test(
+coverage_java_test(
     name = "NativeBinarySizeTest",
     srcs = ["testSrcs/com/android/tools/profiler/performance/NativeBinarySizeTest.java"],
     data = [

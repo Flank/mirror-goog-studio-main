@@ -23,4 +23,6 @@ public interface Installer {
     Deploy.DumpResponse dump(String packageName) throws IOException;
 
     Deploy.SwapResponse swap(Deploy.SwapRequest request) throws IOException;
+
+    Deploy.DeltaPushResponse deltaPush(Deploy.DeltaPushRequest request) throws IOException;
 }

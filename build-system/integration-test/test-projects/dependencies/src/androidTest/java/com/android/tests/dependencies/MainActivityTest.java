@@ -1,24 +1,27 @@
 package com.android.tests.dependencies;
 
-import android.test.ActivityInstrumentationTestCase2;
-import android.test.suitebuilder.annotation.SmallTest;
-import android.widget.TextView;
+import static org.junit.Assert.*;
 
-public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActivity> {
+import android.support.test.filters.MediumTest;
+import android.support.test.filters.SmallTest;
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
+import android.widget.TextView;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+@RunWith(AndroidJUnit4.class)
+public class MainActivityTest {
+    @Rule
+    public ActivityTestRule<MainActivity> rule = new ActivityTestRule<>(MainActivity.class);
 
     private TextView mTextView;
 
-    /**
-     * Creates an {@link ActivityInstrumentationTestCase2} that tests the {@link MainActivity} activity.
-     */
-    public MainActivityTest() {
-        super(MainActivity.class);
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        final MainActivity a = getActivity();
+    @Before
+    public void setUp() {
+        final MainActivity a = rule.getActivity();
         // ensure a valid handle to the activity has been returned
         assertNotNull(a);
         mTextView = (TextView) a.findViewById(R.id.text);
@@ -30,20 +33,23 @@ public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActiv
      * explain any and all failures in other tests.  This is not guaranteed
      * to run before other tests, as junit uses reflection to find the tests.
      */
-    @SmallTest
+    @MediumTest
+    @Test
     public void testPreconditions() {
         assertNotNull(mTextView);
     }
 
     @SmallTest
+    @Test
     public void testPackageOnly() {
         assertEquals("Foo-helper", mTextView.getText().toString());
     }
 
+    @Test
     public void testProvided() {
         boolean exception = false;
         try {
-             getActivity().getString2("foo");
+             rule.getActivity().getString2("foo");
         } catch (Throwable t) {
             exception = true;
         }

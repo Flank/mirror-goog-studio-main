@@ -1,3 +1,7 @@
+load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
+load("//tools/base/bazel:coverage_report.bzl", "coverage_report")
+load("//tools/base/bazel:bazel.bzl", "iml_module")
+
 java_library(
     name = "utils",
     srcs = glob(["src/com/android/tools/utils/*.java"]),
@@ -385,7 +389,7 @@ config_setting(
     visibility = ["//visibility:public"],
 )
 
-java_test(
+coverage_java_test(
     name = "iml_to_build_tests",
     srcs = ["testSrc/com/android/tools/binaries/ImlToBazelTest.java"],
     data = ["//tools/base/bazel/test:iml_to_bazel"],
@@ -401,7 +405,7 @@ java_test(
     ],
 )
 
-java_test(
+coverage_java_test(
     name = "bin2c_tests",
     srcs = ["testSrc/com/android/tools/binaries/Bin2CTest.java"],
     test_class = "com.android.tools.binaries.Bin2CTest",

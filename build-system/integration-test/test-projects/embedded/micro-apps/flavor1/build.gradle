@@ -8,9 +8,13 @@ android {
         minSdkVersion rootProject.supportLibMinSdk
         versionCode 42
         versionName "flavor1"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 }
 
 dependencies {
     api "com.android.support:support-v4:${rootProject.supportLibVersion}"
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation "com.android.support.test:runner:${project.testSupportLibVersion}"
+    androidTestImplementation "com.android.support.test:rules:${project.testSupportLibVersion}"
 }

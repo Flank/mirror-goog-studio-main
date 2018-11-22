@@ -132,6 +132,7 @@ public class CmakeExternalNativeJsonGeneratorFactoryTest {
         stats = GradleBuildVariant.newBuilder();
         JsonGenerationVariantConfiguration config =
                 new JsonGenerationVariantConfiguration(
+                        new File("."),
                         new NativeBuildSystemVariantConfig(
                                 new HashSet<>(), new HashSet<>(), buildArguments, cFlags, cppFlags),
                         variantName,

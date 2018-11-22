@@ -5,6 +5,7 @@ android {
     buildToolsVersion = rootProject.buildToolsVersion
     defaultConfig {
         minSdkVersion 15
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
     flavorDimensions 'foo'
@@ -25,4 +26,8 @@ android {
 
 dependencies {
     api project(path: ':lib')
+
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation "com.android.support.test:runner:${project.testSupportLibVersion}"
+    androidTestImplementation "com.android.support.test:rules:${project.testSupportLibVersion}"
 }

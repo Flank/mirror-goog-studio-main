@@ -1,3 +1,5 @@
+load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
+
 java_library(
     name = "tools.analyzer-cli",
     srcs = glob(["src/main/java/**"]),
@@ -14,7 +16,7 @@ java_library(
     ],
 )
 
-java_test(
+coverage_java_test(
     name = "tools.tests",
     srcs = glob(["src/test/java/**"]),
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],

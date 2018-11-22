@@ -20,6 +20,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.tools.apk.analyzer.Archive;
 import com.android.utils.FileUtils;
+import com.android.utils.XmlUtils;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
@@ -31,9 +32,6 @@ import java.nio.file.Path;
  * method is called.
  */
 public class AppBundleArchive extends AbstractArchive {
-    /** The first byte of a proto XML file is always 0x0A. */
-    public static final byte PROTO_XML_LEAD_BYTE = 0x0A;
-
     @NonNull private final FileSystem zipFileSystem;
 
     private AppBundleArchive(@NonNull Path path) throws IOException {
@@ -76,7 +74,7 @@ public class AppBundleArchive extends AbstractArchive {
             return false;
         }
 
-        return (content.length > 0) && (content[0] == PROTO_XML_LEAD_BYTE);
+        return XmlUtils.isProtoXml(content);
     }
 
     private static boolean isManifestFile(@NonNull Path p) {

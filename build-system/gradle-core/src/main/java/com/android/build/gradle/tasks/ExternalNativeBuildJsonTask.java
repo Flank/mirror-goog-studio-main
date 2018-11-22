@@ -17,6 +17,7 @@
 package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.cxx.configure.GradleBuildLoggingEnvironment;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
@@ -32,7 +33,10 @@ public class ExternalNativeBuildJsonTask extends AndroidVariantTask {
 
     @TaskAction
     public void build() throws ProcessException, IOException {
-        generator.build();
+        try (GradleBuildLoggingEnvironment ignore =
+                new GradleBuildLoggingEnvironment(getVariantName(), getLogger())) {
+            generator.build();
+        }
     }
 
     @Nested

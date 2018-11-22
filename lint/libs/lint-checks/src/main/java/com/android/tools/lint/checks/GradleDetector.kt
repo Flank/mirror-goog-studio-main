@@ -544,7 +544,7 @@ open class GradleDetector : Detector(), GradleScanner {
         }
         var newerVersion: GradleVersion? = null
 
-        val filter = getUpgradeVersionFilter(groupId, artifactId)
+        val filter = getUpgradeVersionFilter(context, groupId, artifactId, revision)
 
         when (groupId) {
             GMS_GROUP_ID, FIREBASE_GROUP_ID, GOOGLE_SUPPORT_GROUP_ID, ANDROID_WEAR_GROUP_ID -> {
@@ -728,8 +728,10 @@ open class GradleDetector : Detector(), GradleScanner {
      * there are no constraints.
      */
     private fun getUpgradeVersionFilter(
+        context: GradleContext,
         groupId: String,
-        artifactId: String
+        artifactId: String,
+        revision: String
     ): Predicate<GradleVersion>? {
         // Logic here has to match checkSupportLibraries method to avoid creating contradictory
         // warnings.
@@ -738,6 +740,21 @@ open class GradleDetector : Detector(), GradleScanner {
                 return Predicate { version -> version.major == compileSdkVersion }
             } else if (targetSdkVersion > 0) {
                 return Predicate { version -> version.major >= targetSdkVersion }
+            }
+        }
+
+        if (groupId == "com.android.tools.build" && LintClient.isStudio) {
+            val clientRevision = context.client.getClientRevision() ?: return null
+            val ideVersion = GradleVersion.parse(clientRevision)
+            val version = GradleVersion.parse(revision)
+            return Predicate { v ->
+                // Any higher IDE version that matches major and minor
+                // (e.g. from 3.3.0 offer 3.3.2 but not 3.4.0)
+                (v.major == ideVersion.major &&
+                        v.minor == ideVersion.minor) ||
+                        // Also allow matching latest current existing major/minor version
+                        (v.major == version.major &&
+                                v.minor == version.minor)
             }
         }
         return null

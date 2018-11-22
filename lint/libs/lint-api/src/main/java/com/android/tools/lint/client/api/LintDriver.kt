@@ -2174,6 +2174,8 @@ class LintDriver
 
         override fun getClientRevision(): String? = delegate.getClientRevision()
 
+        override fun getClientDisplayRevision(): String? = delegate.getClientDisplayRevision()
+
         override fun runReadAction(runnable: Runnable) = delegate.runReadAction(runnable)
 
         override fun <T> runReadAction(computable: Computable<T>): T =

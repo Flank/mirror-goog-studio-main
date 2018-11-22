@@ -6,6 +6,10 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
+    defaultConfig {
+        minSdkVersion rootProject.supportLibMinSdk
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
 
     sourceSets {
         main {
@@ -50,4 +54,10 @@ android {
         //main.resources.srcDir 'src'
         //androidTest.java.srcDir 'tests/src'
     }
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation "com.android.support.test:runner:${project.testSupportLibVersion}"
+    androidTestImplementation "com.android.support.test:rules:${project.testSupportLibVersion}"
 }

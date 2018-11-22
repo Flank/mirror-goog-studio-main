@@ -4,6 +4,11 @@ android {
   compileSdkVersion rootProject.latestCompileSdk
   buildToolsVersion = rootProject.buildToolsVersion
 
+  defaultConfig {
+    minSdkVersion rootProject.supportLibMinSdk
+    testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+  }
+
   flavorDimensions 'foo'
   productFlavors {
      flavor1 {
@@ -34,5 +39,9 @@ dependencies {
   flavor2ReleaseWearApp project(':micro-apps:default')
   flavor1CustomWearApp project(':micro-apps:custom')
   flavor2CustomWearApp project(':micro-apps:custom')
+
+  testImplementation 'junit:junit:4.12'
+  androidTestImplementation "com.android.support.test:runner:${project.testSupportLibVersion}"
+  androidTestImplementation "com.android.support.test:rules:${project.testSupportLibVersion}"
 }
 

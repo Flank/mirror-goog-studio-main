@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <android.arch.work>
-  <work-runtime-ktx versions="1.0.0-alpha09"/>
-  <work-firebase versions="1.0.0-alpha09"/>
-  <work-runtime versions="1.0.0-alpha09"/>
-  <work-testing versions="1.0.0-alpha09"/>
+  <work-runtime-ktx versions="1.0.0-alpha11"/>
+  <work-firebase versions="1.0.0-alpha11"/>
+  <work-runtime versions="1.0.0-alpha11"/>
+  <work-testing versions="1.0.0-alpha11"/>
 </android.arch.work>
 

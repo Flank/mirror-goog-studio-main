@@ -17,11 +17,9 @@
 package com.android.xml;
 
 import com.android.SdkConstants;
-
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-
 import javax.xml.XMLConstants;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.xpath.XPath;
@@ -64,7 +62,7 @@ public class AndroidXPathFactory {
         public String getNamespaceURI(String prefix) {
             if (prefix != null) {
                 if (prefix.equals(mAndroidPrefix)) {
-                    return SdkConstants.NS_RESOURCES;
+                    return SdkConstants.ANDROID_URI;
                 }
             }
 
@@ -73,7 +71,7 @@ public class AndroidXPathFactory {
 
         @Override
         public String getPrefix(String namespaceURI) {
-            if (SdkConstants.NS_RESOURCES.equals(namespaceURI)) {
+            if (SdkConstants.ANDROID_URI.equals(namespaceURI)) {
                 return mAndroidPrefix;
             }
 
@@ -82,7 +80,7 @@ public class AndroidXPathFactory {
 
         @Override
         public Iterator<?> getPrefixes(String namespaceURI) {
-            if (SdkConstants.NS_RESOURCES.equals(namespaceURI)) {
+            if (SdkConstants.ANDROID_URI.equals(namespaceURI)) {
                 return mAndroidPrefixes.iterator();
             }
 

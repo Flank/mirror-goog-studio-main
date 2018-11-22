@@ -1,24 +1,26 @@
 package com.android.tests.libstest.lib.test;
 
-import android.test.ActivityInstrumentationTestCase2;
-import android.test.suitebuilder.annotation.MediumTest;
-import android.widget.TextView;
+import static org.junit.Assert.*;
 
-public class TestActivityTest extends ActivityInstrumentationTestCase2<TestActivity> {
+import android.support.test.filters.MediumTest;
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
+import android.widget.TextView;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+@RunWith(AndroidJUnit4.class)
+public class TestActivityTest {
+    @Rule
+    public ActivityTestRule<TestActivity> rule = new ActivityTestRule<>(TestActivity.class);
 
     private TextView mTextView;
 
-    /**
-     * Creates an {@link android.test.ActivityInstrumentationTestCase2} that tests the {@link TestActivity} activity.
-     */
-    public TestActivityTest() {
-        super(TestActivity.class);
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        final TestActivity a = getActivity();
+    @Before
+    public void setUp() {
+        final TestActivity a = rule.getActivity();
         // ensure a valid handle to the activity has been returned
         assertNotNull(a);
         mTextView = (TextView) a.findViewById(R.id.text);
@@ -31,13 +33,15 @@ public class TestActivityTest extends ActivityInstrumentationTestCase2<TestActiv
      * to run before other tests, as junit uses reflection to find the tests.
      */
     @MediumTest
+    @Test
     public void testPreconditions() {
         assertNotNull(mTextView);
     }
 
-   @MediumTest
-   public void testText() {
+    @Test
+    @MediumTest
+    public void testText() {
         assertEquals("Hello, world!", mTextView.getText().toString());
-   }
+    }
 }
 

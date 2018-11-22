@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
+import com.android.build.gradle.internal.cxx.cmake.isCmakeConstantTruthy
+
 /**
  * Classes and functions in this file are for dealing with CMake command-line parameters.
  * This is complete enough for compiler settings cache purposes. Any unrecognized flags are
@@ -89,7 +91,7 @@ data class DefineProperty(
          * Create a DefineProperty from a name and value.
          * Don't use if you also have an an original sourceArgument.
          */
-        fun from(property : CmakeProperties, value : String) : DefineProperty {
+        fun from(property : CmakeProperty, value : String) : DefineProperty {
             return DefineProperty("-D${property.name}=$value", property.name, value)
         }
     }
@@ -132,3 +134,56 @@ fun parseCmakeArguments(args : List<String>) : List<CommandLineArgument> {
     }
 }
 
+/**
+ * Returns true when a set of args contains a property whose value would be considered true by
+ * CMake. If a property is set more than one time then CMake behavior is to use the last. If
+ * the property isn't in the list then returns null.
+ */
+fun List<CommandLineArgument>.getCmakeBooleanProperty(property : CmakeProperty) : Boolean? {
+    val value = getCmakeProperty(property) ?: return null
+    return isCmakeConstantTruthy(value)
+}
+
+/**
+ * Returns the value of the property. Null if not present. If the value is present more than once
+ * then the last value is taken.
+ */
+fun List<CommandLineArgument>.getCmakeProperty(property : CmakeProperty) : String? {
+    var result : String? = null
+    onEach { arg ->
+        when(arg) {
+            is DefineProperty -> {
+                if (arg.propertyName == property.name) {
+                    result = arg.propertyValue
+                }
+            }
+        }
+    }
+    return result
+}
+
+/**
+ * Returns the value CMakeLists.txt folder (the -H arg). Null if not present. If the value is
+ * present more than once then the last value is taken.
+ */
+fun List<CommandLineArgument>.getCmakeListsPathValue() : String? {
+    var result : String? = null
+    onEach { arg ->
+        when(arg) {
+            is CmakeListsPath -> {
+                result = arg.path
+            }
+        }
+    }
+    return result
+}
+
+/**
+ * Remove all instances of the given property from the list of args
+ */
+fun List<CommandLineArgument>.removeProperty(property : CmakeProperty)
+        : List<CommandLineArgument> {
+    return filter {
+        !(it is DefineProperty &&  it.propertyName == property.name)
+    }
+}

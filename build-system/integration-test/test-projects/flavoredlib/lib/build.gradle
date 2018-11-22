@@ -4,6 +4,11 @@ android {
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
 
+    defaultConfig {
+        minSdkVersion rootProject.supportLibMinSdk
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
     defaultPublishConfig "flavor1Release"
     publishNonDefault true
 
@@ -16,4 +21,10 @@ android {
     libraryVariants.all { variant ->
         assert variant.productFlavors.size() != 0
     }
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation "com.android.support.test:runner:${project.testSupportLibVersion}"
+    androidTestImplementation "com.android.support.test:rules:${project.testSupportLibVersion}"
 }

@@ -63,7 +63,7 @@ def main():
     report_name = coverage_target[2:].replace(':', '/')
     # generate the coverage report
     subprocess.check_call(
-        [bazel, 'run', coverage_target, '--', report_name, production_targets_file.name, test_logs_dir])
+        [bazel, 'run', coverage_target, '--config=remote', '--', report_name, production_targets_file.name, test_logs_dir])
   print('Done.')
 
 

@@ -1,4 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
+load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
 
 java_library(
     name = "instant-run-runtime",
@@ -14,7 +15,7 @@ java_library(
     ],
 )
 
-java_test(
+coverage_java_test(
     name = "tests",
     srcs = glob(["src/test/java/**/*.java"]),
     javacopts = [

@@ -18,6 +18,7 @@ package com.android.tools.lint.client.api;
 
 import static com.android.SdkConstants.CURRENT_PLATFORM;
 import static com.android.SdkConstants.PLATFORM_WINDOWS;
+import static com.android.SdkConstants.SUPPRESS_ALL;
 import static com.android.SdkConstants.VALUE_FALSE;
 import static com.android.SdkConstants.VALUE_TRUE;
 import static com.android.utils.SdkUtils.globToRegexp;
@@ -819,6 +820,14 @@ public class DefaultConfiguration extends Configuration {
             @NonNull IssueRegistry registry,
             Collection<String> ids) {
         for (String id : ids) {
+            if (id.equals(SUPPRESS_ALL)) {
+                // builtin special "id" which means all id's
+                continue;
+            }
+            if (id.equals("IconLauncherFormat")) {
+                // Deleted issue, no longer flagged
+                continue;
+            }
             if (registry.getIssue(id) == null) {
                 reportNonExistingIssueId(client, driver, project, id);
             }

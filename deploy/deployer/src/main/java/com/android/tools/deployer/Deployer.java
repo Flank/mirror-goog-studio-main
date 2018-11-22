@@ -118,7 +118,8 @@ public class Deployer {
         Task<List<FileDiff>> diffs = runner.submit("diff", new ApkDiffer()::diff, dumps, newFiles);
 
         // Push the apks to device and get the remote paths
-        Task<List<String>> apkPaths = runner.submit("push", new ApkPusher(adb)::push, newFiles);
+        Task<List<String>> apkPaths =
+                runner.submit("push", new ApkPusher(adb, installer)::push, dumps, newFiles);
 
         // Verify the changes are swappable and get only the dexes that we can change
         Task<List<FileDiff>> dexDiffs =

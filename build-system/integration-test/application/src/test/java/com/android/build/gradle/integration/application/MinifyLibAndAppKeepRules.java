@@ -28,6 +28,8 @@ import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.File;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -89,5 +91,42 @@ public class MinifyLibAndAppKeepRules {
                 .run(":app:assembleRelease");
         assertThat(project.getSubproject("app").getApk("release"))
                 .containsClass("LNoPackage;");
+    }
+
+    /** Regression test for b/119758914. */
+    @Test
+    public void testKeepRulesGeneratedCorrectly() throws Exception {
+        File confOutput = new File(project.getTestDir(), "conf.out");
+        // add the proguard rule to print configuration
+        TestFileUtils.appendToFile(
+                FileUtils.join(project.getSubproject("app").getTestDir(), "proguard-rules.pro"),
+                "-printconfiguration \"" + confOutput + "\"");
+
+        TestFileUtils.appendToFile(
+                project.getSubproject("app").getBuildFile(),
+                "android {\n"
+                        + "    buildTypes {\n"
+                        + "        release {\n"
+                        + "           proguardFiles getDefaultProguardFile('proguard-android.txt'),"
+                        + "'proguard-rules.pro'\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}");
+
+        project.executor()
+                .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .run(":app:assembleRelease");
+        assertThat(confOutput).exists();
+
+        List<String> libraryJars =
+                Files.readLines(confOutput, Charsets.UTF_8)
+                        .stream()
+                        .filter(i -> i.startsWith("-libraryjar"))
+                        .map(i -> new File(i).getName())
+                        .collect(Collectors.toList());
+
+        assertThat(libraryJars)
+                .named("keep rules libraryjars")
+                .containsExactly("android.jar", "org.apache.http.legacy.jar");
     }
 }

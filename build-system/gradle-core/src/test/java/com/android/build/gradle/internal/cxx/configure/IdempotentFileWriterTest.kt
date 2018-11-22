@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.google.common.truth.Truth.assertThat
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import java.io.File
@@ -24,26 +25,7 @@ import java.io.File
 class IdempotentFileWriterTest {
     private val folder = File("./folder")
     private val file = File("./folder/my-file")
-
-    private fun withTestLogging(action : () -> Unit) : List<String> {
-        val messages = mutableListOf<String>()
-        object : ThreadLoggingEnvironment() {
-            override fun error(message: String) {
-                messages += "error: $message"
-            }
-
-            override fun warn(message: String) {
-                messages += "warn: $message"
-            }
-
-            override fun info(message: String) {
-                messages += "info: $message"
-            }
-        }.use {
-            action()
-            return messages
-        }
-    }
+    private val logging = TestLoggingEnvironment()
 
     @Before
     fun before() {
@@ -51,14 +33,16 @@ class IdempotentFileWriterTest {
         folder.mkdirs()
     }
 
+    @After
+    fun after() {
+        logging.close()
+    }
+
     @Test
     fun testWritingWorks() {
         val writer = IdempotentFileWriter()
         writer.addFile(file.path, "my-content")
-        val messages = withTestLogging {
-            assertThat(writer.write()).containsExactly(file.path)
-        }
-        assertThat(messages).containsExactly("info: Writing ./folder/my-file")
+        assertThat(writer.write()).containsExactly(file.path)
         assertThat(file.readText()).isEqualTo("my-content")
     }
 
@@ -67,11 +51,7 @@ class IdempotentFileWriterTest {
         val writer = IdempotentFileWriter()
         file.writeText("my-content")
         writer.addFile(file.path, "my-content")
-        val messages = withTestLogging {
-            assertThat(writer.write()).isEmpty()
-        }
-        assertThat(messages).containsExactly(
-            "info: Not writing ./folder/my-file because there was no change")
+        assertThat(writer.write()).isEmpty()
         assertThat(file.readText()).isEqualTo("my-content")
     }
 

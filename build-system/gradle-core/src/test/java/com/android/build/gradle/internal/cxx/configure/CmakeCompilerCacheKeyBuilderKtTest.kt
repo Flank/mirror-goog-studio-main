@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
-import com.android.build.gradle.internal.cxx.configure.CmakeProperties.ANDROID_NDK
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.ANDROID_NDK
 import com.android.build.gradle.internal.cxx.configure.SdkSourceProperties.Companion.SdkSourceProperty.*
 import com.android.builder.model.Version
 import com.google.common.truth.Truth.assertThat
@@ -61,7 +61,7 @@ class CmakeCompilerCacheKeyBuilderKtTest {
                 listOf(
                     DefineProperty.from(ANDROID_NDK, ndkFolder.path)
                 )
-            )
+            )!!
             assertThat(key.gradlePluginVersion).isEqualTo(Version.ANDROID_GRADLE_PLUGIN_VERSION)
         }
         assertThat(messages).isEmpty()
@@ -76,9 +76,7 @@ class CmakeCompilerCacheKeyBuilderKtTest {
                     DefineProperty.from(ANDROID_NDK, ndkFolder.path)
                 )
             )
-            assertThat(key.ndkInstallationFolder).isEqualTo(ndkFolder)
-            assertThat(key.args).isEmpty()
-            assertThat(key.ndkSourceProperties).isNull()
+            assertThat(key).isNull()
         }
         assertThat(messages).containsExactly(
             "warn: ANDROID_NDK location (./my-ndk) had no source.properties")
@@ -94,9 +92,7 @@ class CmakeCompilerCacheKeyBuilderKtTest {
                     DefineProperty.from(ANDROID_NDK, ndkFolder.path)
                 )
             )
-            assertThat(key.ndkInstallationFolder).isEqualTo(ndkFolder)
-            assertThat(key.args).isEmpty()
-            assertThat(key.ndkSourceProperties).isNull()
+            assertThat(key).isNull()
         }
         assertThat(messages).containsExactly(
             "warn: ANDROID_NDK location (./my-ndk) had no source.properties")
@@ -115,7 +111,7 @@ class CmakeCompilerCacheKeyBuilderKtTest {
                 listOf(
                     DefineProperty.from(ANDROID_NDK, ndkFolder.path)
                 )
-            )
+            )!!
             assertThat(key.ndkInstallationFolder).isNotNull()
             assertThat(key.args).isEmpty()
             assertThat(key.ndkSourceProperties).isNotNull()
@@ -154,7 +150,7 @@ class CmakeCompilerCacheKeyBuilderKtTest {
             -DCMAKE_MAKE_PROGRAM=C:\Users\jomof\AppData\Local\Android\Sdk\cmake\3.10.2.4988404\bin\ninja.exe"""
             .trimIndent().split("\n")
         val commandLine = parseCmakeArguments(args)
-        val key = makeCmakeCompilerCacheKey(commandLine)
+        val key = makeCmakeCompilerCacheKey(commandLine)!!
         println(key.toJsonString())
         assertThat(key.ndkInstallationFolder).isNotNull()
         assertThat(key.args).containsExactly(

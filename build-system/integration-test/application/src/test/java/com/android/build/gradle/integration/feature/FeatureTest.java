@@ -279,7 +279,7 @@ public class FeatureTest {
                 assertThatZip(project.getSubproject(":bundle").getInstantAppBundle("release"))) {
             instantAppBundle.exists();
             instantAppBundle.contains("baseFeature-release-unsigned.apk");
-            instantAppBundle.contains("feature-release-unsigned.apk");
+            instantAppBundle.contains("feature-release.apk");
         }
     }
 

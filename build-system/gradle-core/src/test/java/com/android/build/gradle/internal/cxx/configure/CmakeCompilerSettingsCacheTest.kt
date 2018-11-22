@@ -25,22 +25,30 @@ import kotlin.concurrent.thread
 class CmakeCompilerSettingsCacheTest {
     private val ndkProperties = SdkSourceProperties(mapOf("x" to "y"))
 
+    private fun makeKey(vararg properties: String) : CmakeCompilerCacheKey {
+        return CmakeCompilerCacheKey(
+            ndkInstallationFolder = File("."),
+            ndkSourceProperties = ndkProperties,
+            args = properties.toList()
+        )
+    }
+
     @Test
     fun testCacheMiss() {
         val cacheFolder = cacheFolder("withCacheMiss")
         val cache = CmakeCompilerSettingsCache(cacheFolder)
 
-        val key = CmakeCompilerCacheKey(null, ndkProperties, listOf("abc"))
+        val key = makeKey("abc")
         val initial = cache.tryGetValue(key)
         assertThat(initial).isNull()
     }
 
     @Test
     fun testCacheHit() {
+        val key = makeKey("abc")
         val cacheFolder = cacheFolder("withCacheHit")
         val cache = CmakeCompilerSettingsCache(cacheFolder)
 
-        val key = CmakeCompilerCacheKey(null, ndkProperties, listOf("abc"))
         cache.saveKeyValue(key, "My Value")
         val final = cache.tryGetValue(key)!!
         assertThat(final).isEqualTo("My Value")
@@ -54,8 +62,8 @@ class CmakeCompilerSettingsCacheTest {
         val cache = CmakeCompilerSettingsCache(cacheFolder) { _ ->
             "A"
         }
-        val key1 = CmakeCompilerCacheKey(null, ndkProperties, listOf("abc"))
-        val key2 = CmakeCompilerCacheKey(null, ndkProperties, listOf("abd"))
+        val key1 = makeKey("abc")
+        val key2 = makeKey("abd")
 
         cache.saveKeyValue(key1, "ABC")
         assertThat(cache.tryGetValue(key1)).isEqualTo("ABC")

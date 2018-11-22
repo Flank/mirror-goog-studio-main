@@ -457,6 +457,7 @@ public final class SdkConstants {
     public static final String FD_NDK = "ndk-bundle"; //$NON-NLS-1$
     public static final String FD_LLDB = "lldb"; //$NON-NLS-1$
     public static final String FD_CMAKE = "cmake"; //$NON-NLS-1$
+    public static final String FD_NDK_SIDE_BY_SIDE = "ndk"; //$NON-NLS-1$
     public static final String FD_GAPID = "gapid"; //$NON-NLS-1$
     /** Sample data for the project sample data */
     public static final String FD_SAMPLE_DATA = "sampledata";
@@ -505,10 +506,6 @@ public final class SdkConstants {
     /** API codename of a release (non preview) system image or platform. */
     public static final String CODENAME_RELEASE = "REL"; //$NON-NLS-1$
 
-    /** Namespace for the resource XML, i.e. "http://schemas.android.com/apk/res/android" */
-    public static final String NS_RESOURCES =
-            "http://schemas.android.com/apk/res/android"; //$NON-NLS-1$
-
     /**
      * Namespace pattern for the custom resource XML, i.e. "http://schemas.android.com/apk/res/%s"
      *
@@ -520,7 +517,7 @@ public final class SdkConstants {
      * </pre>
      *
      * Note: if you need an URI specifically for the "android" namespace, consider using {@link
-     * SdkConstants#NS_RESOURCES} instead.
+     * #ANDROID_URI} instead.
      */
     public static final String NS_CUSTOM_RESOURCES_S =
             "http://schemas.android.com/apk/res/%1$s"; //$NON-NLS-1$
@@ -1020,11 +1017,15 @@ public final class SdkConstants {
 
     // ---- Elements and Attributes ----
 
-    /** Namespace prefix used for all resources */
+    /** Namespace URI prefix used for all resources. */
+    public static final String URI_DOMAIN_PREFIX = "http://schemas.android.com/";
+    /** Namespace URI prefix used together with a package names. */
     public static final String URI_PREFIX = "http://schemas.android.com/apk/res/"; //$NON-NLS-1$
     /** Namespace used in XML files for Android attributes */
     public static final String ANDROID_URI =
             "http://schemas.android.com/apk/res/android"; //$NON-NLS-1$
+    /** @deprecated Use {@link #ANDROID_URI}. */
+    @Deprecated public static final String NS_RESOURCES = ANDROID_URI;
     /** Namespace used in XML files for Android Tooling attributes */
     public static final String TOOLS_URI = "http://schemas.android.com/tools"; //$NON-NLS-1$
     /** Namespace used for auto-adjusting namespaces */

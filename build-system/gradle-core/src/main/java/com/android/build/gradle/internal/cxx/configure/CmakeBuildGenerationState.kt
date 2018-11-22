@@ -63,4 +63,14 @@ data class CmakeBuildGenerationState(val properties : List<CmakePropertyValue>) 
 /**
  * Represents a single CMake property
  */
-data class CmakePropertyValue(val name : String, val value : String)
+data class CmakePropertyValue(val name : String, val value : String) {
+    companion object {
+        /**
+         * Construct a CmakePropertyValue with CmakeProperty
+         */
+        fun from(property : CmakeProperty, value : String) : CmakePropertyValue {
+            return CmakePropertyValue(property.name, value)
+        }
+
+    }
+}

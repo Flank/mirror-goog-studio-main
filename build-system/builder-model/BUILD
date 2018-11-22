@@ -1,5 +1,6 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module", "fileset")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
+load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
 
 # do not generate: resources and test_srcs removed manually
 iml_module(
@@ -49,7 +50,7 @@ maven_pom(
     source = "//tools/buildSrc/base:build_version",
 )
 
-java_test(
+coverage_java_test(
     name = "tests",
     size = "small",
     srcs = glob(["src/test/java/**"]),

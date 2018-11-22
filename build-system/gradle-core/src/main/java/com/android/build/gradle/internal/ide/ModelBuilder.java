@@ -787,10 +787,32 @@ public class ModelBuilder<Extension extends AndroidConfig>
         return result;
     }
 
+    private void checkSigningConfig(
+            @NonNull VariantScope scope, @NonNull GradleVariantConfiguration configuration) {
+
+        if (scope.getType().isDynamicFeature()) {
+            if (configuration.getMergedFlavor().getSigningConfig() != null
+                    || configuration.getBuildType().getSigningConfig() != null) {
+                String message =
+                        "Signing configuration should not be declared in the "
+                                + "dynamic-feature. Dynamic-features use the signing configuration "
+                                + "declared in the application module.";
+                syncIssues.add(
+                        new SyncIssueImpl(
+                                Type.SIGNING_CONFIG_DECLARED_IN_DYNAMIC_FEATURE,
+                                EvalIssueReporter.Severity.WARNING,
+                                null,
+                                message));
+            }
+        }
+    }
+
     private AndroidArtifact createAndroidArtifact(
             @NonNull String name, @NonNull BaseVariantData variantData) {
         VariantScope scope = variantData.getScope();
         GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
+
+        checkSigningConfig(scope, variantConfiguration);
 
         SigningConfig signingConfig = variantConfiguration.getSigningConfig();
         String signingConfigName = null;

@@ -314,10 +314,10 @@ message GetEventGroupsResponse {
   repeated EventGroup groups = 1;
 }
 
-// An event group is a collection of events that share the same event_id.
+// An event group is a collection of events that share the same group_id.
 // The events in a group should have the same |session_id| and |kind|.
 message EventGroup {
-  int64 event_id = 1;
+  int64 group_id = 1;
   repeated Event events = 2;
 }
 

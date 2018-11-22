@@ -17,3 +17,10 @@ sourceSets {
 jar {
   from 'NOTICE'
 }
+
+project.ext.pomName = 'NinePatch'
+project.ext.pomDesc = 'draws a bitmap in nine or more sections'
+
+apply from: "$rootDir/buildSrc/base/publish.gradle"
+apply from: "$rootDir/buildSrc/base/bintray.gradle"
+apply from: "$rootDir/buildSrc/base/javadoc.gradle"

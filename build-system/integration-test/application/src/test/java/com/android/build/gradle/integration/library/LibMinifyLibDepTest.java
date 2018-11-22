@@ -19,28 +19,17 @@ package com.android.build.gradle.integration.library;
 import static com.android.testutils.truth.FileSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.options.BooleanOption;
 import java.io.File;
 import java.io.IOException;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /** Assemble tests for libMinifyLibDep. */
 public class LibMinifyLibDepTest {
-    @ClassRule
-    public static GradleTestProject project =
+    @Rule
+    public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("libMinifyLibDep").create();
-
-    @BeforeClass
-    public static void setUp() throws IOException, InterruptedException {
-        project.execute("clean", "assembleDebug");
-    }
-
-    @AfterClass
-    public static void cleanUp() {
-        project = null;
-    }
 
     @Test
     public void lint() throws IOException, InterruptedException {
@@ -48,12 +37,23 @@ public class LibMinifyLibDepTest {
     }
 
     @Test
-    public void checkProguard() {
+    public void checkProguard() throws Exception {
+        project.executor().run("assembleDebug");
         File mapping = project.getSubproject("lib").file("build/outputs/mapping/debug/mapping.txt");
         // Check classes are obfuscated unless it is kept by the proguard configuration.
         assertThat(mapping)
                 .containsAllOf(
                         "com.android.tests.basic.StringGetter -> com.android.tests.basic.StringGetter",
                         "com.android.tests.internal.StringGetterInternal -> com.android.tests.a.a");
+    }
+
+    @Test
+    public void checkTestAssemblyWithR8() throws Exception {
+        project.executor().with(BooleanOption.ENABLE_R8, true).run("assembleAndroidTest");
+    }
+
+    @Test
+    public void checkTestAssemblyWithProguard() throws Exception {
+        project.executor().with(BooleanOption.ENABLE_R8, false).run("assembleAndroidTest");
     }
 }

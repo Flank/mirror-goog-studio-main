@@ -258,7 +258,8 @@ public class CoverageReportGenerator {
                 sourcePackages.contains(packageName)
                         //TODO: once we have source attachments, we should get this automatically.
                         | packageName.startsWith("com.android")
-                        | packageName.startsWith("org.jetbrains.android");
+                        | packageName.startsWith("org.jetbrains.android")
+                        | packageName.startsWith("org.jetbrains.kotlin.android");
 
         if (!include) {
             return false;

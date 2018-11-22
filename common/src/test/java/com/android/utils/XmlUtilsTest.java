@@ -26,6 +26,7 @@ import com.android.ide.common.blame.SourcePosition;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -582,5 +583,17 @@ public class XmlUtilsTest extends TestCase {
         Element next = iterator.next();
         assertThat(next).isNotSameAs(child1);
         assertThat(next.getTagName()).isEqualTo(child1.getTagName());
+    }
+
+    public void testIsProtoXml() {
+        byte[] proto = new byte[] {0x0A, (byte) 0x96, 0x04, 0x0A};
+        byte[] text = new byte[] {'\n', '\n', '\n', '\t', '<'};
+        byte[] textWithBom = new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF, '\n'};
+        assertThat(XmlUtils.isProtoXml(proto)).isTrue();
+        assertThat(XmlUtils.isProtoXml(text)).isFalse();
+        assertThat(XmlUtils.isProtoXml(textWithBom)).isFalse();
+        assertThat(XmlUtils.isProtoXml(new ByteArrayInputStream(proto))).isTrue();
+        assertThat(XmlUtils.isProtoXml(new ByteArrayInputStream(text))).isFalse();
+        assertThat(XmlUtils.isProtoXml(new ByteArrayInputStream(textWithBom))).isFalse();
     }
 }

@@ -42,38 +42,47 @@ data class JsonGenerationAbiConfiguration(
      */
     data class Cmake(
         /**
+         * Per-ABI folder for gradle-specific files like CMakeLists.txt wrapper.
+         */
+        val gradleBuildOutputFolder: File,
+        /**
          * Used by CMake compiler settings cache. This is the generated CMakeLists.txt file that
          * calls back to the user's CMakeLists.txt. The wrapping of CMakeLists.txt allows us
          * to insert additional functionality like save compiler settings to a file.
          */
-        val cmakeListsThunkingFile : File,
+        val cmakeListsWrapperFile : File,
         /**
          * Used by CMake compiler settings cache. This is the generated toolchain file that
          * calls back to the user's original toolchain file. The wrapping of toolchain allows us
          * to insert additional functionality such as looking for pre-existing cached compiler
          * settings and using them.
          */
-        val toolchainThunkingFile : File,
+        val toolchainWrapperFile : File,
         /**
          * Each of the user's CMake properties are written to a file so that they can be
          * introspected after the configuration. For example, this is how we get the user's
          * compiler settings.
          */
-        val buildVariablesFile : File,
+        val buildGenerationStateFile : File,
         /**
-         * Compiler settings cache key. This will have content from the most recent configuration
-         * like:
-         *   -DANDROID_ABI=x86
-         *   -DANDROID_PLATFORM=android-19
-         *   -DCMAKE_ANDROID_ARCH_ABI=x86
-         *   -DCMAKE_SYSTEM_VERSION=19
-         * It should contain everything that describes how compiler settings are chosen.
+         * Compiler settings cache key. It should contain everything that describes how compiler
+         * settings are chosen.
          */
         val cacheKeyFile : File,
         /**
-         * This contains the hash of the cache-key.txt file above.
+         * Contains information about whether the compiler settings cache was used by CMake.
          */
-        val cacheHashFile : File)
+        val compilerCacheUseFile : File,
+        /**
+         * Contains information about whether the compiler settings cache was written by gradle
+         * plugin.
+         */
+        val compilerCacheWriteFile : File,
+        /**
+         * Contains toolchain settings copied from the cache.
+         */
+        val toolchainSettingsFromCache : File
+        )
 }
 
 fun createJsonGenerationAbiConfiguration(
@@ -103,18 +112,21 @@ fun createJsonGenerationAbiConfiguration(
 
     // Build up .externalNativeBuild/gradle/debug/x86
     val externalNativeBuildGradleFolder =
-        File(externalNativeBuildBaseFolder, "gradle")
+        File(externalNativeBuildBaseFolder, "cxx")
     val externalNativeBuildGradleVariantFolder =
         File(externalNativeBuildGradleFolder, variantName)
-    val gradleBuildOutput = File(externalNativeBuildGradleVariantFolder, abiName)
+    val gradleBuildOutputFolder = File(externalNativeBuildGradleVariantFolder, abiName)
 
     val cmake : JsonGenerationAbiConfiguration.Cmake? = if (nativeBuildSystem == NativeBuildSystem.CMAKE) {
         JsonGenerationAbiConfiguration.Cmake(
-            File(gradleBuildOutput, "CMakeLists.txt"),
-            File(gradleBuildOutput,"android_gradle_build.toolchain.cmake"),
-            File(gradleBuildOutput, "build-variables.txt"),
-            File(gradleBuildOutput, "cache-key.txt"),
-            File(gradleBuildOutput, "cache-hash.txt")
+            gradleBuildOutputFolder,
+            File(gradleBuildOutputFolder, "CMakeLists.txt"),
+            File(gradleBuildOutputFolder,"android_gradle_build.toolchain.cmake"),
+            File(gradleBuildOutputFolder, "build_generation_state.json"),
+            File(gradleBuildOutputFolder, "compiler_cache_key.json"),
+            File(gradleBuildOutputFolder, "compiler_cache_use.json"),
+            File(gradleBuildOutputFolder, "compiler_cache_write.json"),
+            File(gradleBuildOutputFolder, "compiler_settings_cache.cmake")
         )
     } else {
         null
@@ -126,10 +138,9 @@ fun createJsonGenerationAbiConfiguration(
         abiPlatformVersion,
         externalNativeBuildFolder,
         jsonFile,
-        gradleBuildOutput,
+        gradleBuildOutputFolder,
         objFolder,
         buildCommandFile,
         buildOutputFile,
         cmake)
-
 }

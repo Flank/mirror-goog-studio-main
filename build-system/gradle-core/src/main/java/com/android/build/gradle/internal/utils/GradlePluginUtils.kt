@@ -30,6 +30,17 @@ private const val INTERNAL__CHECKED_MINIMUM_PLUGIN_VERSIONS =
     "INTERNAL__CHECKED_MINIMUM_PLUGIN_VERSIONS"
 
 private val pluginList = listOf(
+    /**
+     *  https://issuetracker.google.com/116747159
+     *  (task generateDebugR2 fails on 3.3a12 when generating separate R classes)
+     */
+    DependencyInfo(
+        "Butterknife",
+        "com.jakewharton",
+        "butterknife-gradle-plugin",
+        GradleVersion.parse("9.0.0-rc2")
+    ),
+
     // https://issuetracker.google.com/79997489
     DependencyInfo(
         "Crashlytics",

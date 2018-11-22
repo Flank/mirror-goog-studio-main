@@ -31,8 +31,16 @@ import org.junit.Test;
 public class ProjectOptionsTest {
 
     private static boolean parseBoolean(Object input) {
-        return new ProjectOptions(ImmutableMap.of("android.injected.invoked.from.ide", input))
-                .get(BooleanOption.IDE_INVOKED_FROM_IDE);
+        return OptionParsers.parseBoolean("myproperty", input);
+    }
+
+    private static void assertFailsToParseBoolean(Object input) {
+        try {
+            parseBoolean(input);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected.
+        }
     }
 
     private static Integer parseInteger(@NonNull Object input) {
@@ -47,23 +55,42 @@ public class ProjectOptionsTest {
     }
 
     @Test
+    public void booleanParseTest() {
+        assertThat(parseBoolean("true")).isTrue();
+        assertThat(parseBoolean("false")).isFalse();
+        assertFailsToParseBoolean("foo");
+        assertThat(parseBoolean(asGroovyString("true"))).isTrue();
+        assertThat(parseBoolean(asGroovyString("false"))).isFalse();
+        assertFailsToParseBoolean(asGroovyString("foo"));
+        assertThat(parseBoolean(true)).isTrue();
+        assertThat(parseBoolean(false)).isFalse();
+        assertThat(parseBoolean(1)).isTrue();
+        assertThat(parseBoolean(0)).isFalse();
+        assertFailsToParseBoolean(-1);
+    }
+
+    @Test
     public void booleanSanity() {
         assertThat(BooleanOption.IDE_INVOKED_FROM_IDE.getDefaultValue()).isFalse();
 
         assertThat(new ProjectOptions(ImmutableMap.of()).get(BooleanOption.IDE_INVOKED_FROM_IDE))
                 .isFalse();
 
-        assertThat(parseBoolean("true")).isTrue();
-        assertThat(parseBoolean("false")).isFalse();
-        assertThat(parseBoolean(asGroovyString("true"))).isTrue();
-        assertThat(parseBoolean(asGroovyString("false"))).isFalse();
-        assertThat(parseBoolean(true)).isTrue();
-        assertThat(parseBoolean(false)).isFalse();
-        assertThat(parseBoolean(1)).isTrue();
-        assertThat(parseBoolean(0)).isFalse();
+        assertThat(
+                        new ProjectOptions(
+                                        ImmutableMap.of(
+                                                "android.injected.invoked.from.ide", "true"))
+                                .get(BooleanOption.IDE_INVOKED_FROM_IDE))
+                .isTrue();
+        assertThat(
+                        new ProjectOptions(
+                                        ImmutableMap.of(
+                                                "android.injected.invoked.from.ide", "false"))
+                                .get(BooleanOption.IDE_INVOKED_FROM_IDE))
+                .isFalse();
         try {
             //noinspection ResultOfObjectAllocationIgnored
-            new ProjectOptions(ImmutableMap.of("android.injected.invoked.from.ide", new Object()));
+            new ProjectOptions(ImmutableMap.of("android.injected.invoked.from.ide", "?"));
             fail("Expected IllegalArgumentException");
         } catch (IllegalArgumentException expected) {
             assertThat(expected.getMessage()).contains("android.injected.invoked.from.ide");
