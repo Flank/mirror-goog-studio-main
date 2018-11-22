@@ -124,7 +124,6 @@ import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.gradle.api.Action;
-import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
@@ -709,24 +708,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 mainCollection,
                 variantData.getGeneratedBytecode(generatedBytecodeKey),
                 getProject().getPath());
-    }
-
-    @Override
-    public boolean keepDefaultBootstrap() {
-        // javac 1.8 may generate code that uses class not available in android.jar.  This is fine
-        // if desugar is used to compile code for the app or compile task is created only
-        // for unit test. In those cases, we want to keep the default bootstrap classpath.
-        if (!JavaVersion.current().isJava8Compatible()) {
-            return false;
-        }
-
-        VariantScope.Java8LangSupport java8LangSupport = getJava8LangSupportType();
-
-        // only if target and source is explicitly specified to 1.8 (and above), we keep the
-        // default bootclasspath with Desugar. Otherwise, we use android.jar.
-        return java8LangSupport == VariantScope.Java8LangSupport.DESUGAR
-                || java8LangSupport == VariantScope.Java8LangSupport.D8
-                || java8LangSupport == VariantScope.Java8LangSupport.R8;
     }
 
     @NonNull
