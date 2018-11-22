@@ -16,9 +16,9 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
+import com.android.builder.core.DefaultApiVersion
 import com.android.sdklib.AndroidVersion
 import com.google.common.truth.Truth.assertThat
-import org.junit.After
 import org.junit.Test
 import java.io.File
 import java.io.StringReader
@@ -45,12 +45,7 @@ class PlatformConfiguratorTest {
             "    \"P\": 28\n" +
             "  }\n" +
             "}"
-    private val logger = RecordingLoggingEnvironment()
-    @After
-    fun after() {
-        logger.close()
-    }
-    
+
     private fun expectedNdkR17MetaPlatforms() : NdkMetaPlatforms {
         return NdkMetaPlatforms.fromReader(StringReader(expectedNdkR17MetaPlatforms))
     }
@@ -124,22 +119,34 @@ class PlatformConfiguratorTest {
         return PlatformConfigurator(root)
     }
 
+    data class FindSuitablePlatformVersionInteraction(
+        val version : Int,
+        val messages : List<String>)
+
     private fun findSuitablePlatformVersion(
         platformConfigurator: PlatformConfigurator,
         abiName: String,
         minSdkVersion: Int?,
         codeName: String?,
-        ndkMetaPlatforms: NdkMetaPlatforms? = null) : Int {
+        ndkMetaPlatforms: NdkMetaPlatforms? = null) : FindSuitablePlatformVersionInteraction {
+        val messages = mutableListOf<String>()
         val androidVersion = if (minSdkVersion == null && codeName == null) {
             null
         } else {
             AndroidVersion(minSdkVersion ?: 0, codeName)
         }
-
-        return platformConfigurator.findSuitablePlatformVersionLogged(
-                abiName,
-                androidVersion,
-                ndkMetaPlatforms)
+        val version = platformConfigurator.findSuitablePlatformVersionLogged(
+            abiName,
+            androidVersion,
+            ndkMetaPlatforms,
+            "debug",
+            error = { message -> messages += "ERROR: $message"},
+            warn = { message -> messages += "WARN: $message"},
+            info = { message -> messages += "INFO: $message"})
+        return FindSuitablePlatformVersionInteraction(
+            version = version,
+            messages = messages
+        )
     }
 
     @Test
@@ -150,8 +157,8 @@ class PlatformConfiguratorTest {
             "x86",
             27,
             null)
-        assertThat(platform).isEqualTo(27)
-        assertThat(logger.messageCount).isEqualTo(0)
+        assertThat(platform.version).isEqualTo(27)
+        assertThat(platform.messages).hasSize(0)
     }
 
     @Test
@@ -162,8 +169,8 @@ class PlatformConfiguratorTest {
             "x86",
             28,
             null)
-        assertThat(platform).isEqualTo(27)
-        assertThat(logger.errors).containsExactly("Platform version " +
+        assertThat(platform.version).isEqualTo(27)
+        assertThat(platform.messages).containsExactly("ERROR: Platform version " +
                 "'28' is beyond '27', the maximum API level supported by this NDK.")
     }
 
@@ -175,8 +182,8 @@ class PlatformConfiguratorTest {
             "x86",
             13,
             null)
-        assertThat(platform).isEqualTo(14)
-        assertThat(logger.messageCount).isEqualTo(0)
+        assertThat(platform.version).isEqualTo(14)
+        assertThat(platform.messages).hasSize(0)
     }
 
     @Test
@@ -187,8 +194,8 @@ class PlatformConfiguratorTest {
             "x86",
             28,
             null)
-        assertThat(platform).isEqualTo(28)
-        assertThat(logger.messageCount).isEqualTo(0)
+        assertThat(platform.version).isEqualTo(28)
+        assertThat(platform.messages).hasSize(0)
     }
 
     @Test
@@ -199,8 +206,8 @@ class PlatformConfiguratorTest {
             "x86",
             29,
             null)
-        assertThat(platform).isEqualTo(28)
-        assertThat(logger.errors).containsExactly("Platform version '29' " +
+        assertThat(platform.version).isEqualTo(28)
+        assertThat(platform.messages).containsExactly("ERROR: Platform version '29' " +
                 "is beyond '28', the maximum API level supported by this NDK.")
     }
 
@@ -212,8 +219,8 @@ class PlatformConfiguratorTest {
             "x86",
             13,
             null)
-        assertThat(platform).isEqualTo(14)
-        assertThat(logger.messageCount).isEqualTo(0)
+        assertThat(platform.version).isEqualTo(14)
+        assertThat(platform.messages).hasSize(0)
     }
 
     @Test
@@ -224,9 +231,9 @@ class PlatformConfiguratorTest {
             "x86",
             defaultApiLevelFromDsl,
             "P")
-        assertThat(platform).isEqualTo(28)
-        assertThat(logger.infos).containsExactly(
-            "Version minSdkVersion='P' is mapped to '28'.")
+        assertThat(platform.version).isEqualTo(28)
+        assertThat(platform.messages).containsExactly(
+            "INFO: Version minSdkVersion='P' is mapped to '28'.")
     }
 
     @Test
@@ -237,9 +244,9 @@ class PlatformConfiguratorTest {
             "x86",
             20,
             null)
-        assertThat(logger.infos).containsExactly("Version minSdkVersion='20' " +
+        assertThat(platform.messages).containsExactly("INFO: Version minSdkVersion='20' " +
                 "is mapped to '19'.")
-        assertThat(platform).isEqualTo(19)
+        assertThat(platform.version).isEqualTo(19)
     }
 
     @Test
@@ -251,11 +258,12 @@ class PlatformConfiguratorTest {
             defaultApiLevelFromDsl,
             "O-MR2" // <- doesn't exist
            )
-        assertThat(platform).isEqualTo(28)
-        assertThat(logger.errors).containsExactly("API codeName 'O-MR2' " +
+        assertThat(platform.version).isEqualTo(28)
+        assertThat(platform.messages).containsExactly("ERROR: API codeName 'O-MR2' " +
                 "is not recognized.")
     }
 
+    // ------------------
     @Test
     fun testNoVersionSpecifiedNdk17PlatformsMeta() {
         val configurator = platformConfiguratorNdk17()
@@ -265,8 +273,8 @@ class PlatformConfiguratorTest {
             defaultApiLevelFromDsl,
             null,
             expectedNdkR17MetaPlatforms())
-        assertThat(platform).isEqualTo(16)
-        assertThat(logger.infos).containsExactly("Neither codeName nor " +
+        assertThat(platform.version).isEqualTo(16)
+        assertThat(platform.messages).containsExactly("INFO: Neither codeName nor " +
                 "minSdkVersion specified. Using minimum platform version for 'x86'.")
     }
 
@@ -279,8 +287,8 @@ class PlatformConfiguratorTest {
             28,
             null,
             expectedNdkR17MetaPlatforms())
-        assertThat(platform).isEqualTo(28)
-        assertThat(logger.messageCount).isEqualTo(0)
+        assertThat(platform.version).isEqualTo(28)
+        assertThat(platform.messages).hasSize(0)
     }
 
     @Test
@@ -292,8 +300,8 @@ class PlatformConfiguratorTest {
             29,
             null,
             expectedNdkR17MetaPlatforms())
-        assertThat(platform).isEqualTo(28)
-        assertThat(logger.errors).containsExactly("Platform version '29' " +
+        assertThat(platform.version).isEqualTo(28)
+        assertThat(platform.messages).containsExactly("ERROR: Platform version '29' " +
                 "is beyond '28', the maximum API level supported by this NDK.")
     }
 
@@ -306,8 +314,8 @@ class PlatformConfiguratorTest {
             13,
             null,
             expectedNdkR17MetaPlatforms())
-        assertThat(platform).isEqualTo(16)
-        assertThat(logger.messageCount).isEqualTo(0)
+        assertThat(platform.version).isEqualTo(16)
+        assertThat(platform.messages).hasSize(0)
     }
 
     @Test
@@ -319,9 +327,9 @@ class PlatformConfiguratorTest {
             defaultApiLevelFromDsl,
             "P",
             expectedNdkR17MetaPlatforms())
-        assertThat(platform).isEqualTo(28)
-        assertThat(logger.infos).containsExactly(
-            "Version minSdkVersion='P' is mapped to '28'.")
+        assertThat(platform.version).isEqualTo(28)
+        assertThat(platform.messages).containsExactly(
+            "INFO: Version minSdkVersion='P' is mapped to '28'.")
     }
 
     @Test
@@ -333,9 +341,9 @@ class PlatformConfiguratorTest {
             20,
             null,
             expectedNdkR17MetaPlatforms())
-        assertThat(logger.infos).containsExactly("Version minSdkVersion='20' " +
+        assertThat(platform.messages).containsExactly("INFO: Version minSdkVersion='20' " +
                 "is mapped to '19'.")
-        assertThat(platform).isEqualTo(19)
+        assertThat(platform.version).isEqualTo(19)
     }
 
     @Test
@@ -347,9 +355,9 @@ class PlatformConfiguratorTest {
             defaultApiLevelFromDsl,
             "O-MR1",
             expectedNdkR17MetaPlatforms())
-        assertThat(platform).isEqualTo(27)
-        assertThat(logger.infos).containsExactly(
-            "Version minSdkVersion='O-MR1' is mapped to '27'.")
+        assertThat(platform.version).isEqualTo(27)
+        assertThat(platform.messages).containsExactly(
+            "INFO: Version minSdkVersion='O-MR1' is mapped to '27'.")
     }
 
     @Test
@@ -361,10 +369,12 @@ class PlatformConfiguratorTest {
             defaultApiLevelFromDsl,
             "O-MR2", // <- doesn't exist
             expectedNdkR17MetaPlatforms())
-        assertThat(platform).isEqualTo(28)
-        assertThat(logger.errors).containsExactly("API codeName 'O-MR2' " +
+        assertThat(platform.version).isEqualTo(28)
+        assertThat(platform.messages).containsExactly("ERROR: API codeName 'O-MR2' " +
                 "is not recognized.")
     }
+
+    // ------------------
 
     @Test
     fun testWeirdABI() {
@@ -374,8 +384,8 @@ class PlatformConfiguratorTest {
             "bob",
             13,
             null)
-        assertThat(platform).isEqualTo(AndroidVersion.MIN_RECOMMENDED_API)
-        assertThat(logger.errors).containsExactly("Specified abi='bob' " +
+        assertThat(platform.version).isEqualTo(AndroidVersion.MIN_RECOMMENDED_API)
+        assertThat(platform.messages).containsExactly("ERROR: Specified abi='bob' " +
                 "is not recognized.")
     }
 
@@ -387,11 +397,10 @@ class PlatformConfiguratorTest {
             "x86",
             28,
             "P")
-        assertThat(platform).isEqualTo(28)
-        assertThat(logger.infos).containsExactly(
-            "Version minSdkVersion='P' is mapped to '28'.")
-        assertThat(logger.warnings).containsExactly(
-            "Both codeName and minSdkVersion specified. They agree but only " +
+        assertThat(platform.version).isEqualTo(28)
+        assertThat(platform.messages).containsExactly(
+            "INFO: Version minSdkVersion='P' is mapped to '28'.",
+            "WARN: Both codeName and minSdkVersion specified. They agree but only " +
                     "one should be specified.")
     }
 
@@ -403,12 +412,11 @@ class PlatformConfiguratorTest {
             "x86",
             27,
             "P")
-        assertThat(logger.errors).containsExactly(
-            "Disagreement between codeName='P' and minSdkVersion='27'. " +
+        assertThat(platform.messages).containsExactly(
+            "INFO: Version minSdkVersion='P' is mapped to '28'.",
+            "ERROR: Disagreement between codeName='P' and minSdkVersion='27'. " +
                     "Only one should be specified.")
-        assertThat(logger.infos).containsExactly(
-            "Version minSdkVersion='P' is mapped to '28'.")
-        assertThat(platform).isEqualTo(27)
+        assertThat(platform.version).isEqualTo(27)
     }
 
     @Test
@@ -419,8 +427,8 @@ class PlatformConfiguratorTest {
             "x86",
             27,
             "P")
-        assertThat(platform).isEqualTo(AndroidVersion.MIN_RECOMMENDED_API)
-        val message = logger.errors.first()
+        assertThat(platform.version).isEqualTo(AndroidVersion.MIN_RECOMMENDED_API)
+        val message = platform.messages.first()
         assertThat(message).contains("does not contain 'platforms'.")
     }
 
@@ -432,8 +440,8 @@ class PlatformConfiguratorTest {
             "x86",
             20,
             null)
-        assertThat(platform).isEqualTo(19)
-        assertThat(logger.infos).containsExactly("Version minSdkVersion='20' " +
+        assertThat(platform.version).isEqualTo(19)
+        assertThat(platform.messages).containsExactly("INFO: Version minSdkVersion='20' " +
                 "is mapped to '19'.")
     }
 
@@ -445,8 +453,8 @@ class PlatformConfiguratorTest {
             "x86",
             defaultApiLevelFromDsl,
             "J")
-        assertThat(platform).isEqualTo(16)
-        assertThat(logger.infos).containsExactly("Version " +
+        assertThat(platform.version).isEqualTo(16)
+        assertThat(platform.messages).containsExactly("INFO: Version " +
                 "minSdkVersion='J' is mapped to '16'.")
     }
 
@@ -458,8 +466,8 @@ class PlatformConfiguratorTest {
             "x86",
             defaultApiLevelFromDsl,
             "Z")
-        assertThat(platform).isEqualTo(28)
-        assertThat(logger.errors).containsExactly("API codeName 'Z' is not recognized.")
+        assertThat(platform.version).isEqualTo(28)
+        assertThat(platform.messages).containsExactly("ERROR: API codeName 'Z' is not recognized.")
     }
 
     @Test
@@ -470,8 +478,8 @@ class PlatformConfiguratorTest {
             "x86",
             null,
             null)
-        assertThat(platform).isEqualTo(22)
-        assertThat(logger.messageCount).isEqualTo(0)
+        assertThat(platform.version).isEqualTo(22)
+        assertThat(platform.messages).isEmpty()
     }
 
     @Test
@@ -482,8 +490,8 @@ class PlatformConfiguratorTest {
             "x86",
             null,
             null)
-        assertThat(platform).isEqualTo(19)
-        assertThat(logger.errors).containsExactly("Expected platform " +
+        assertThat(platform.version).isEqualTo(19)
+        assertThat(platform.messages).containsExactly("ERROR: Expected platform " +
                 "folder platforms/android-22, using platform API 19 instead.")
     }
 }

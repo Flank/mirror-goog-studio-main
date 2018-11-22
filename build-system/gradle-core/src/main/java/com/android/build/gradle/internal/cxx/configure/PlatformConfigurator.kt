@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.cxx.configure
 import com.android.build.gradle.internal.core.Abi
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
+import org.gradle.api.logging.Logging
 import java.io.File
 import java.io.FileFilter
 import java.io.FileReader
@@ -89,7 +90,23 @@ class PlatformConfigurator(private val ndkRoot: File) {
     fun findSuitablePlatformVersionLogged(
         abiName: String,
         androidVersionOrNull: AndroidVersion?,
-        ndkMetaPlatforms: NdkMetaPlatforms?
+        ndkMetaPlatforms: NdkMetaPlatforms?,
+        variantName: String,
+        error: (String) -> Unit = { message ->
+            Logging.getLogger("findSuitablePlatformVersionLogged").error(
+                "$message [$variantName-$abiName]"
+            )
+        },
+        warn: (String) -> Unit = { message ->
+            Logging.getLogger("findSuitablePlatformVersionLogged").warn(
+                "$message [$variantName-$abiName]"
+            )
+        },
+        info: (String) -> Unit = { message ->
+            Logging.getLogger("findSuitablePlatformVersionLogged").info(
+                "$message [$variantName-$abiName]"
+            )
+        }
     ): Int {
 
         val abi = Abi.getByName(abiName) ?: run {
@@ -115,13 +132,18 @@ class PlatformConfigurator(private val ndkRoot: File) {
             val minSdkVersion = computeMinSdkVersion(
                 abiName,
                 androidVersionOrNull,
-                platformNameAliases
+                platformNameAliases,
+                error,
+                info,
+                warn
             )
             return findPlatformConfiguratorLegacy(
                 abi,
                 minSdkVersion,
                 androidVersionOrNull,
-                platformDir
+                platformDir,
+                error,
+                info
             )
         }
 
@@ -132,13 +154,17 @@ class PlatformConfigurator(private val ndkRoot: File) {
         val minSdkVersion = computeMinSdkVersion(
             abiName,
             androidVersionOrNull,
-            ndkMetaPlatforms.aliases
+            ndkMetaPlatforms.aliases,
+            error,
+            info,
+            warn
         )
         return clamp(
             minSdkVersion,
             androidVersionOrNull,
             ndkMetaPlatforms.min,
-            ndkMetaPlatforms.max
+            ndkMetaPlatforms.max,
+            error
         )
     }
 
@@ -150,7 +176,10 @@ class PlatformConfigurator(private val ndkRoot: File) {
     private fun computeMinSdkVersion(
         abiName: String,
         androidVersionOrNull: AndroidVersion?,
-        platformNameAliases: Map<String, Int>): Int {
+        platformNameAliases: Map<String, Int>,
+        error: (String) -> Unit,
+        info: (String) -> Unit,
+        warn: (String) -> Unit): Int {
 
         val minSdkVersionOrNull = androidVersionOrNull?.apiLevel
         val codeNameOrNull = androidVersionOrNull?.codename
@@ -233,7 +262,9 @@ class PlatformConfigurator(private val ndkRoot: File) {
         abi: Abi,
         minSdkVersion: Int,
         displayVersion: AndroidVersion?,
-        platformDir: File
+        platformDir: File,
+        error: (String) -> Unit,
+        info: (String) -> Unit
     ): Int {
 
         val linkerSysrootPath = getLinkerSysrootPath(
@@ -264,7 +295,7 @@ class PlatformConfigurator(private val ndkRoot: File) {
         }
         val min = versions.min()!!
         val max = versions.max()!!
-        val clamped = clamp(minSdkVersion, displayVersion, min, max)
+        val clamped = clamp(minSdkVersion, displayVersion, min, max, error)
         if (!versions.contains(clamped)) {
             // We've seen some users remove unused platforms folders. If we matched a missing
             // folder then warn and then take the highest platform version.
@@ -282,7 +313,8 @@ class PlatformConfigurator(private val ndkRoot: File) {
         minSdkVersion: Int,
         displayVersion: AndroidVersion?,
         min: Int,
-        max: Int
+        max: Int,
+        error: (String) -> Unit
     ): Int {
         return when {
             minSdkVersion < min -> min
@@ -318,6 +350,7 @@ class PlatformConfigurator(private val ndkRoot: File) {
 
     fun findSuitablePlatformVersion(
         abiName: String,
+        variantName: String,
         androidVersion: AndroidVersion? ): Int {
         val ndkMetaPlatformsFile = NdkMetaPlatforms.jsonFile(ndkRoot)
         val ndkMetaPlatforms = if (ndkMetaPlatformsFile.isFile) {
@@ -329,7 +362,8 @@ class PlatformConfigurator(private val ndkRoot: File) {
         return findSuitablePlatformVersionLogged(
             abiName,
             androidVersion,
-            ndkMetaPlatforms
+            ndkMetaPlatforms,
+            variantName
         )
     }
 

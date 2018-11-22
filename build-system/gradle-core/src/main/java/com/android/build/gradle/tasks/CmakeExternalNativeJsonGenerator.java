@@ -18,7 +18,6 @@ package com.android.build.gradle.tasks;
 
 import static com.android.build.gradle.internal.cxx.configure.CmakeAndroidGradleBuildExtensionsKt.wrapCmakeListsForCompilerSettingsCaching;
 import static com.android.build.gradle.internal.cxx.configure.CmakeAndroidGradleBuildExtensionsKt.writeCompilerSettingsToCache;
-import static com.android.build.gradle.internal.cxx.configure.LoggingEnvironmentKt.error;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
@@ -40,7 +39,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -56,11 +54,10 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
 
     CmakeExternalNativeJsonGenerator(
             @NonNull JsonGenerationVariantConfiguration config,
-            @NonNull Set<String> configurationFailures,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull File cmakeInstallFolder,
             @NonNull GradleBuildVariant.Builder stats) {
-        super(config, configurationFailures, androidBuilder, stats);
+        super(config, androidBuilder, stats);
         this.cmakeInstallFolder = cmakeInstallFolder;
         this.stats.setNativeBuildSystemType(GradleNativeAndroidModule.NativeBuildSystemType.CMAKE);
 
@@ -68,18 +65,24 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
         // recordConfigurationError will later cause the generation of json to fail.
         File cmakelists = getMakefile();
         if (cmakelists.isDirectory()) {
-            error(
-                    "Gradle project cmake.path %s is a folder. It must be CMakeLists.txt",
-                    cmakelists);
+            recordConfigurationError(
+                    String.format(
+                            "Gradle project cmake.path %s is a folder. "
+                                    + "It must be CMakeLists.txt",
+                            cmakelists));
         } else if (cmakelists.isFile()) {
             String filename = cmakelists.getName();
             if (!filename.equals("CMakeLists.txt")) {
-                error(
-                        "Gradle project cmake.path specifies %s but it must be CMakeLists.txt",
-                        filename);
+                recordConfigurationError(
+                        String.format(
+                                "Gradle project cmake.path specifies %s but it must be CMakeLists.txt",
+                                filename));
             }
         } else {
-            error("Gradle project cmake.path is %s but that file doesn't exist", cmakelists);
+            recordConfigurationError(
+                    String.format(
+                            "Gradle project cmake.path is %s but that file doesn't exist",
+                            cmakelists));
         }
     }
 

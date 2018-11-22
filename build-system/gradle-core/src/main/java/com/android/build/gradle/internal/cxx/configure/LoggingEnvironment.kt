@@ -18,11 +18,11 @@ package com.android.build.gradle.internal.cxx.configure
 
 import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter
-import com.android.builder.errors.EvalIssueReporter.Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION
+import com.android.builder.errors.EvalIssueReporter.Type.*
 import com.android.utils.ILogger
 import org.gradle.api.GradleException
 import org.gradle.api.logging.Logger
-import org.gradle.api.logging.Logging
+import java.lang.RuntimeException
 
 /**
  * This file exposes functions for logging where the logger is held in a stack on thread-local
@@ -51,8 +51,18 @@ private val loggerStack = ThreadLocal.withInitial { mutableListOf<ThreadLoggingE
  * intentional logging environment so throw print a callstack to the console and throw a
  * RuntimeException.
  */
-private val BOTTOM_LOGGING_ENVIRONMENT = GradleBuildLoggingEnvironment(
-    Logging.getLogger(GradleBuildLoggingEnvironment::class.java))
+private val BOTTOM_LOGGING_ENVIRONMENT = object : ThreadLoggingEnvironment() {
+    override fun error(message: String) = fail("error", message)
+    override fun warn(message: String) = fail("warn", message)
+    override fun info(message: String) = fail("info", message)
+    private fun fail(tag : String, message : String) {
+        val tagged = "$tag cxx: $message"
+        println(tagged)
+        val e = RuntimeException(tagged)
+        println(e.stackTrace.joinToString("\n"))
+        throw e
+    }
+}
 
 /**
  * The current logger.
@@ -60,48 +70,14 @@ private val BOTTOM_LOGGING_ENVIRONMENT = GradleBuildLoggingEnvironment(
 private val logger : ThreadLoggingEnvironment
     get() = loggerStack.get().firstOrNull() ?: BOTTOM_LOGGING_ENVIRONMENT
 
-/**
- * Report an error.
- */
-fun error(format: String, vararg args: Any) = logger.error(checkedFormat(format, args))
-
-/**
- * Report a warning.
- */
-fun warn(format: String, vararg args: Any) = logger.warn(checkedFormat(format, args))
-
-/**
- * Report diagnostic/informational message.
- */
-fun info(format: String, vararg args: Any) = logger.info(checkedFormat(format, args))
-
-/**
- * If caller from Java side misuses %s-style formatting (too many %s for example), the exception
- * from String.format can be concealed by Gradle's logging system. It will appear as
- * "Invalid format (%s)" with no other indication about the source of the problem. Since this is
- * effectively a code bug not a build error this method catches those exceptions and provides a
- * prominent message about the problem.
- */
-private fun checkedFormat(format: String, args: Array<out Any>): String {
-    try {
-        return String.format(format, *args)
-    } catch (e: Throwable) {
-        println(
-            """
-            ${e.message}
-            format = $format
-            args[${args.size}] = ${args.joinToString("\n")}
-            stacktrace = ${e.stackTrace.joinToString("\n")}"""
-                .trimIndent()
-        )
-        throw e
-    }
-}
+fun error(message : String) = logger.error(message)
+fun warn(message : String) = logger.warn(message)
+fun info(message : String) = logger.info(message)
 
 /**
  * Push a new logging environment onto the stack of environments.
  */
-private fun push(logger: ThreadLoggingEnvironment) = loggerStack.get().add(0, logger)
+private fun push(logger : ThreadLoggingEnvironment) = loggerStack.get().add(0, logger)
 
 /**
  * Pop the top logging environment.
@@ -129,20 +105,14 @@ abstract class ThreadLoggingEnvironment : AutoCloseable {
 /**
  * A logger suitable for the gradle sync environment. Warnings and errors are reported so that they
  * can be seen in Android Studio.
- *
- * Configuration errors are also recorded in a set. The purpose is to be able to replay errors at
- * sync time if Android Studio requests the model multiple times.
  */
 class GradleSyncLoggingEnvironment(
     private val variantName: String,
     private val tag: String,
-    private val errors: MutableSet<String>,
     private val issueReporter: EvalIssueReporter,
-    private val logger: ILogger
-) : ThreadLoggingEnvironment() {
+    private val logger: ILogger) : ThreadLoggingEnvironment() {
 
     override fun error(message: String) {
-        errors += message
         val e = GradleException(message)
         issueReporter
             .reportError(
@@ -165,8 +135,8 @@ class GradleSyncLoggingEnvironment(
  * decides to show at command-line and in Android Studio.
  */
 class GradleBuildLoggingEnvironment(
-    private val logger: Logger,
-    private val variantName: String = ""
+    private val variantName: String,
+    private val logger: Logger
 ) : ThreadLoggingEnvironment() {
 
     override fun error(message: String) {
@@ -178,11 +148,7 @@ class GradleBuildLoggingEnvironment(
     }
 
     override fun info(message: String) {
-        if (variantName.isEmpty()) {
-            logger.info(message)
-        } else {
-            logger.info("$variantName $message")
-        }
+        logger.info("$variantName $message")
     }
 }
 

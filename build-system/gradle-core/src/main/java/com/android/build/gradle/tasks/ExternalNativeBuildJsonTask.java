@@ -34,7 +34,7 @@ public class ExternalNativeBuildJsonTask extends AndroidVariantTask {
     @TaskAction
     public void build() throws ProcessException, IOException {
         try (GradleBuildLoggingEnvironment ignore =
-                new GradleBuildLoggingEnvironment(getLogger(), getVariantName())) {
+                new GradleBuildLoggingEnvironment(getVariantName(), getLogger())) {
             generator.build();
         }
     }

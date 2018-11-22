@@ -204,7 +204,7 @@ public class NativeBuildOutputTest {
                         "ABIs [-unrecognized-abi-] are not supported for platform. Supported ABIs are ["),
                 ImmutableList.of(
                         "ABIs [-unrecognized-abi-] are not supported for platform. Supported ABIs are ["),
-                1);
+                2);
     }
 
     @Test
@@ -222,7 +222,7 @@ public class NativeBuildOutputTest {
                         "ABIs [-unrecognized-abi-] are not supported for platform. Supported ABIs are ["),
                 ImmutableList.of(
                         "ABIs [-unrecognized-abi-] are not supported for platform. Supported ABIs are ["),
-                1);
+                2);
     }
 
     // In this test, ndk.abiFilters and ndkBuild.abiFilters only have "x86" in common.
@@ -280,7 +280,7 @@ public class NativeBuildOutputTest {
                         "ABIs [-unrecognized-abi-] are not supported for platform. Supported ABIs are ["),
                 ImmutableList.of(
                         "ABIs [-unrecognized-abi-] are not supported for platform. Supported ABIs are ["),
-                1);
+                2);
     }
 
     @Test

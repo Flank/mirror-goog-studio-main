@@ -42,10 +42,16 @@ class CmakeAndroidGradleBuildExtensionsKtTest {
     private val ndkFolder = File(base,"ndk")
     private val toolchain = File(ndkFolder,"toolchain.cmake")
     private val sourceProperties = File(ndkFolder,"source.properties")
+    private val logging = TestLoggingEnvironment()
 
     @Before
     fun setup() {
         base.deleteRecursively()
+    }
+
+    @After
+    fun after() {
+        logging.close()
     }
 
     @Test

@@ -89,8 +89,10 @@ public class DefaultNdkInfo implements NdkInfo {
     @Override
     public int findSuitablePlatformVersion(
             @NonNull String abiName,
+            @NonNull String variantName,
             @Nullable AndroidVersion androidVersion) {
-        return platformConfigurator.findSuitablePlatformVersion(abiName, androidVersion);
+        return platformConfigurator.findSuitablePlatformVersion(
+                abiName, variantName, androidVersion);
     }
 
     // Will return 0 if no platform found

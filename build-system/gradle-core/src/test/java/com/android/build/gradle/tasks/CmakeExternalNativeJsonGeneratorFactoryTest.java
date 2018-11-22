@@ -87,7 +87,7 @@ public class CmakeExternalNativeJsonGeneratorFactoryTest {
         soFolder = Mockito.mock(File.class);
         objFolder = new File("./obj");
         jsonFolder = new File("./json");
-        makeFile = new File("./folder/CMakeLists.txt");
+        makeFile = Mockito.mock(File.class);
         cmakeFolder = Mockito.mock(File.class);
         ninjaFolder = Mockito.mock(File.class);
         stats = GradleBuildVariant.newBuilder();
@@ -150,7 +150,7 @@ public class CmakeExternalNativeJsonGeneratorFactoryTest {
                         true);
         ExternalNativeJsonGenerator generator =
                 CmakeExternalNativeJsonGeneratorFactory.createCmakeStrategy(
-                        config, new HashSet<>(), cmakeRevision, androidBuilder, cmakeFolder, stats);
+                        config, cmakeRevision, androidBuilder, cmakeFolder, stats);
         assertThat(stats.getNativeCmakeVersion()).isEqualTo(cmakeRevision.toShortString());
         return generator;
     }

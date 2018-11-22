@@ -17,10 +17,11 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
 import com.android.build.gradle.internal.ndk.NdkHandler
+import com.android.builder.errors.EvalIssueReporter
 import com.google.common.collect.Sets
 import com.google.common.truth.Truth.assertThat
-import org.junit.After
 import org.junit.Test
 
 class AbiConfiguratorTest {
@@ -30,20 +31,23 @@ class AbiConfiguratorTest {
         val ALL_ABI_COMMA_STRING = ALL_ABI_AS_STRING.sorted().joinToString(", ")
     }
 
-    private val logger = RecordingLoggingEnvironment()
+    private val evalIssueReporter = FakeEvalIssueReporter()
 
     fun configure(
-        ndkHandlerSupportedAbis: Collection<Abi> = ALL_ABI,
-        ndkHandlerDefaultAbis: Collection<Abi> = ALL_ABI,
-        externalNativeBuildAbiFilters: Set<String> = setOf(),
-        ndkConfigAbiFilters: Set<String> = setOf(),
-        splitsFilterAbis: Set<String> = NdkHandler
-            .getDefaultAbiList()
-            .map { abi: Abi -> abi.getName() }
-            .toSet(),
-        ideBuildOnlyTargetAbi: Boolean = false,
-        ideBuildTargetAbi: String? = null): AbiConfigurator {
-        return AbiConfigurator(
+            evalIssueReporter: EvalIssueReporter,
+            variantName: String = "MyVariant",
+            ndkHandlerSupportedAbis: Collection<Abi> = AbiConfiguratorTest.ALL_ABI,
+            ndkHandlerDefaultAbis: Collection<Abi> = AbiConfiguratorTest.ALL_ABI,
+            externalNativeBuildAbiFilters: Set<String> = setOf(),
+            ndkConfigAbiFilters: Set<String> = setOf(),
+            splitsFilterAbis: Set<String> = NdkHandler
+                    .getDefaultAbiList()
+                    .map { abi : Abi -> abi.getName() }
+                    .toSet(),
+            ideBuildOnlyTargetAbi: Boolean = false,
+            ideBuildTargetAbi: String? = null): AbiConfigurator {
+        return AbiConfigurator(evalIssueReporter,
+                variantName,
                 ndkHandlerSupportedAbis,
                 ndkHandlerDefaultAbis,
                 externalNativeBuildAbiFilters,
@@ -53,15 +57,10 @@ class AbiConfiguratorTest {
                 ideBuildTargetAbi)
     }
 
-    @After
-    fun after() {
-        logger.close()
-    }
-
     @Test
     fun testBaseline() {
-        val configurator = configure()
-        assertThat(logger.errors).isEmpty()
+        val configurator = configure(evalIssueReporter)
+        assertThat(evalIssueReporter.messages).isEmpty()
         // Should be no messages reported
         assertThat(configurator.validAbis).containsExactlyElementsIn(ALL_ABI)
         assertThat(configurator.allAbis).containsExactlyElementsIn(ALL_ABI_AS_STRING)
@@ -70,8 +69,9 @@ class AbiConfiguratorTest {
     @Test
     fun testValidAbiInBuildGradleDsl() {
         val configurator = configure(
-            externalNativeBuildAbiFilters = setOf("x86"))
-        assertThat(logger.errors).isEmpty()
+                evalIssueReporter,
+                externalNativeBuildAbiFilters = setOf("x86"))
+        assertThat(evalIssueReporter.messages).isEmpty()
         // Should be no messages reported
         assertThat(configurator.validAbis).containsExactly(Abi.X86)
         assertThat(configurator.allAbis).containsExactly("x86")
@@ -81,8 +81,9 @@ class AbiConfiguratorTest {
     @Test
     fun testInvalidAbiInBuildGradleDsl() {
         val configurator = configure(
-            externalNativeBuildAbiFilters = setOf("x87"))
-        assertThat(logger.errors.first()).isEqualTo(
+                evalIssueReporter,
+                externalNativeBuildAbiFilters = setOf("x87"))
+        assertThat(evalIssueReporter.messages.first()).isEqualTo(
                 "ABIs [x87] are not supported for platform. Supported ABIs " +
                 "are [$ALL_ABI_COMMA_STRING].")
         assertThat(configurator.validAbis).isEmpty()
@@ -92,8 +93,9 @@ class AbiConfiguratorTest {
     @Test
     fun testSplitsEnabled() {
         val configurator = configure(
-            splitsFilterAbis = setOf("x86"))
-        assertThat(logger.errors).isEmpty()
+                evalIssueReporter,
+                splitsFilterAbis = setOf("x86"))
+        assertThat(evalIssueReporter.messages).isEmpty()
         // Should be no messages reported
         assertThat(configurator.validAbis).containsExactly(Abi.X86)
         assertThat(configurator.allAbis).containsExactly("x86")
@@ -102,8 +104,9 @@ class AbiConfiguratorTest {
     @Test
     fun testSplitsEnabledInvalidAbi() {
         val configurator = configure(
-            splitsFilterAbis = setOf("x87"))
-        assertThat(logger.errors).containsExactly(
+                evalIssueReporter,
+                splitsFilterAbis = setOf("x87"))
+        assertThat(evalIssueReporter.messages).containsExactly(
                 "ABIs [x87] are not supported for platform. Supported ABIs are "
                 + "[$ALL_ABI_COMMA_STRING].")
         assertThat(configurator.validAbis).isEmpty()
@@ -113,10 +116,11 @@ class AbiConfiguratorTest {
     @Test
     fun testValidAbiThatIsNotInNdk() {
         val configurator = configure(
-            ndkHandlerSupportedAbis = listOf(Abi.X86_64),
-            externalNativeBuildAbiFilters = setOf("x86"),
-            splitsFilterAbis = setOf())
-        assertThat(logger.errors).containsExactly(
+                evalIssueReporter,
+                splitsFilterAbis = setOf(),
+                ndkHandlerSupportedAbis = listOf(Abi.X86_64),
+                externalNativeBuildAbiFilters = setOf("x86"))
+        assertThat(evalIssueReporter.messages).containsExactly(
                 "ABIs [x86] are not supported for platform. " +
                 "Supported ABIs are [x86_64].")
         assertThat(configurator.validAbis).containsExactly(Abi.X86)
@@ -126,9 +130,10 @@ class AbiConfiguratorTest {
     @Test
     fun testExternalNativeBuildAbiFiltersAndNdkAbiFiltersAreTheSame() {
         val configurator = configure(
-            externalNativeBuildAbiFilters = setOf("x86"),
-            ndkConfigAbiFilters = setOf("x86"))
-        assertThat(logger.errors).isEmpty()
+                evalIssueReporter,
+                ndkConfigAbiFilters = setOf("x86"),
+                externalNativeBuildAbiFilters = setOf("x86"))
+        assertThat(evalIssueReporter.messages).isEmpty()
         // Should be no messages reported
         assertThat(configurator.validAbis).containsExactly(Abi.X86)
         assertThat(configurator.allAbis).containsExactly("x86")
@@ -137,8 +142,9 @@ class AbiConfiguratorTest {
     @Test
     fun testExternalNativeBuildAbiFiltersAndNdkAbiFiltersAreNonIntersecting() {
         val configurator = configure(
-            externalNativeBuildAbiFilters = setOf("x86_64"),
-            ndkConfigAbiFilters = setOf("x86"))
+                evalIssueReporter,
+                ndkConfigAbiFilters = setOf("x86"),
+                externalNativeBuildAbiFilters = setOf("x86_64"))
         assertThat(configurator.validAbis).isEmpty()
         assertThat(configurator.allAbis).isEmpty()
     }
@@ -146,9 +152,10 @@ class AbiConfiguratorTest {
     @Test
     fun testValidInjectedAbi() {
         val configurator = configure(
-            ideBuildOnlyTargetAbi = true,
-            ideBuildTargetAbi = "x86")
-        assertThat(logger.errors).isEmpty()
+                evalIssueReporter,
+                ideBuildOnlyTargetAbi = true,
+                ideBuildTargetAbi = "x86")
+        assertThat(evalIssueReporter.messages).isEmpty()
         // Should be no messages reported
         assertThat(configurator.validAbis).containsExactly(Abi.X86)
         assertThat(configurator.allAbis).containsExactlyElementsIn(ALL_ABI_AS_STRING)
@@ -157,23 +164,26 @@ class AbiConfiguratorTest {
     @Test
     fun testValidBogusAndValidInjectedAbi() {
         val configurator = configure(
-            ideBuildOnlyTargetAbi = true,
-            ideBuildTargetAbi = "bogus,x86")
+                evalIssueReporter,
+                ideBuildOnlyTargetAbi = true,
+                ideBuildTargetAbi = "bogus,x86")
 
-        assertThat(logger.warnings).containsExactly(
+        assertThat(evalIssueReporter.warnings).containsExactly(
             "ABIs [bogus,x86] set by 'android.injected.build.abi' gradle flag contained " +
                     "'bogus' which is invalid.")
-        assertThat(logger.errors).isEmpty()
+        assertThat(evalIssueReporter.errors).isEmpty()
         assertThat(configurator.validAbis).containsExactly(Abi.X86)
         assertThat(configurator.allAbis).containsExactlyElementsIn(ALL_ABI_AS_STRING)
+
     }
 
     @Test
     fun testBogusInjectedAbi() {
         val configurator = configure(
-            ideBuildOnlyTargetAbi = true,
-            ideBuildTargetAbi = "bogus")
-        assertThat(logger.errors).containsExactly(
+                evalIssueReporter,
+                ideBuildOnlyTargetAbi = true,
+                ideBuildTargetAbi = "bogus")
+        assertThat(evalIssueReporter.errors).containsExactly(
                 "ABIs [bogus] set by 'android.injected.build.abi' gradle " +
                 "flag is not supported. Supported ABIs are " +
                 "[$ALL_ABI_COMMA_STRING].")
@@ -185,8 +195,9 @@ class AbiConfiguratorTest {
     fun testValidEmptyInjectedAbi() {
         // Empty list should not error
         val configurator = configure(
-            ideBuildOnlyTargetAbi = true,
-            ideBuildTargetAbi = "")
+                evalIssueReporter,
+                ideBuildOnlyTargetAbi = true,
+                ideBuildTargetAbi = "")
         assertThat(configurator.validAbis).containsExactlyElementsIn(ALL_ABI)
         assertThat(configurator.allAbis).containsExactlyElementsIn(ALL_ABI_AS_STRING)
     }
@@ -195,8 +206,9 @@ class AbiConfiguratorTest {
     fun testValidNullInjectedAbi() {
         // Empty list should not error
         val configurator = configure(
-            ideBuildOnlyTargetAbi = true,
-            ideBuildTargetAbi = null)
+                evalIssueReporter,
+                ideBuildOnlyTargetAbi = true,
+                ideBuildTargetAbi = null)
         assertThat(configurator.validAbis).containsExactlyElementsIn(ALL_ABI)
         assertThat(configurator.allAbis).containsExactlyElementsIn(ALL_ABI_AS_STRING)
     }
@@ -205,8 +217,9 @@ class AbiConfiguratorTest {
     fun testAbiSplitsLookDefaulted() {
         // Empty list should not error
         val configurator = configure(
-            ideBuildOnlyTargetAbi = true,
-            ideBuildTargetAbi = null)
+                evalIssueReporter,
+                ideBuildOnlyTargetAbi = true,
+                ideBuildTargetAbi = null)
         assertThat(configurator.validAbis).containsExactlyElementsIn(ALL_ABI)
         assertThat(configurator.allAbis).containsExactlyElementsIn(ALL_ABI_AS_STRING)
     }
@@ -215,9 +228,10 @@ class AbiConfiguratorTest {
     fun testPeopleCanSpecifyMipsIfTheyReallyWantTo() {
         // Empty list should not error
         val configurator = configure(
-            splitsFilterAbis = setOf("mips"),
-            ideBuildOnlyTargetAbi = true,
-            ideBuildTargetAbi = null)
+                evalIssueReporter,
+                splitsFilterAbis = setOf("mips"),
+                ideBuildOnlyTargetAbi = true,
+                ideBuildTargetAbi = null)
         assertThat(configurator.validAbis).containsExactly(Abi.MIPS)
         assertThat(configurator.allAbis).containsExactly("mips")
     }
@@ -226,13 +240,14 @@ class AbiConfiguratorTest {
     fun testMisspelledMips() {
         // Empty list should not error
         val configurator = configure(
-            splitsFilterAbis = setOf("misp"),
-            ideBuildOnlyTargetAbi = true,
-            ideBuildTargetAbi = null)
-        assertThat(logger.errors).containsExactly(
+                evalIssueReporter,
+                splitsFilterAbis = setOf("misp"),
+                ideBuildOnlyTargetAbi = true,
+                ideBuildTargetAbi = null)
+        assertThat(evalIssueReporter.errors).containsExactly(
             "ABIs [misp] are not supported for platform. Supported ABIs are [arm64-v8a, " +
                     "armeabi-v7a, x86, x86_64].")
-        assertThat(logger.warnings).isEmpty()
+        assertThat(evalIssueReporter.warnings).isEmpty()
         assertThat(configurator.validAbis).isEmpty()
         assertThat(configurator.allAbis).containsExactly("misp")
     }
@@ -241,11 +256,12 @@ class AbiConfiguratorTest {
     @Test
     fun testIdeSelectedAbiDoesntIntersectWithNdkConfigAbiFilters() {
         val configurator = configure(
+            evalIssueReporter,
             ndkConfigAbiFilters = setOf("arm64-v8a", "x86_64"),
             ideBuildOnlyTargetAbi = true,
             ideBuildTargetAbi = "armeabi-v7a,armeabi")
-        assertThat(logger.errors).isEmpty()
-        assertThat(logger.warnings).containsExactly(
+        assertThat(evalIssueReporter.errors).isEmpty()
+        assertThat(evalIssueReporter.warnings).containsExactly(
             "ABIs [armeabi-v7a,armeabi] set by 'android.injected.build.abi' gradle flag " +
                     "contained 'ARMEABI, ARMEABI_V7A' not targeted by this project.")
         assertThat(configurator.validAbis).containsExactly()
@@ -255,11 +271,12 @@ class AbiConfiguratorTest {
     @Test
     fun testIdeSelectedAbiDoesntIntersectWithExternalNativeBuildAbiFilters() {
         val configurator = configure(
+            evalIssueReporter,
             externalNativeBuildAbiFilters = setOf("arm64-v8a", "x86_64"),
             ideBuildOnlyTargetAbi = true,
             ideBuildTargetAbi = "armeabi-v7a,armeabi")
-        assertThat(logger.errors).isEmpty()
-        assertThat(logger.warnings).containsExactly(
+        assertThat(evalIssueReporter.errors).isEmpty()
+        assertThat(evalIssueReporter.warnings).containsExactly(
             "ABIs [armeabi-v7a,armeabi] set by 'android.injected.build.abi' gradle flag " +
                     "contained 'ARMEABI, ARMEABI_V7A' not targeted by this project.")
         assertThat(configurator.validAbis).containsExactly()
@@ -272,11 +289,12 @@ class AbiConfiguratorTest {
     @Test
     fun testIdeSelectedAbiDoesntIntersectWithSplitsFilterAbis() {
         val configurator = configure(
+            evalIssueReporter,
             splitsFilterAbis = setOf("arm64-v8a", "x86_64"),
             ideBuildOnlyTargetAbi = true,
             ideBuildTargetAbi = "armeabi-v7a,x86_64")
-        assertThat(logger.errors).isEmpty()
-        assertThat(logger.warnings).containsExactly(
+        assertThat(evalIssueReporter.errors).isEmpty()
+        assertThat(evalIssueReporter.warnings).containsExactly(
             "ABIs [armeabi-v7a,x86_64] set by 'android.injected.build.abi' gradle flag " +
                     "contained 'ARMEABI_V7A' not targeted by this project.")
         assertThat(configurator.validAbis).containsExactly(Abi.X86_64)
@@ -285,10 +303,11 @@ class AbiConfiguratorTest {
     @Test
     fun testAllowSpaceInInjectedAbi() {
         val configurator = configure(
+            evalIssueReporter,
             ideBuildOnlyTargetAbi = true,
             ideBuildTargetAbi = " x86, x86_64 ")
-        assertThat(logger.errors).isEmpty()
-        assertThat(logger.warnings).isEmpty()
+        assertThat(evalIssueReporter.errors).isEmpty()
+        assertThat(evalIssueReporter.warnings).isEmpty()
         assertThat(configurator.validAbis).containsExactly(Abi.X86, Abi.X86_64)
     }
 }

@@ -20,7 +20,6 @@ import com.android.build.gradle.internal.cxx.configure.CmakeProperty.ANDROID_NDK
 import com.android.build.gradle.internal.cxx.configure.SdkSourceProperties.Companion.SdkSourceProperty.*
 import com.android.builder.model.Version
 import com.google.common.truth.Truth.assertThat
-import org.junit.After
 
 import org.junit.Test
 import java.io.File
@@ -28,11 +27,25 @@ import java.io.File
 class CmakeCompilerCacheKeyBuilderKtTest {
     private val ndkFolder = File("./my-ndk")
     private val sourceProperties = File(ndkFolder, "source.properties")
-    private val logger = RecordingLoggingEnvironment()
 
-    @After
-    fun after() {
-        logger.close()
+    private fun withTestLogging(action : () -> Unit) : List<String> {
+        val messages = mutableListOf<String>()
+        object : ThreadLoggingEnvironment() {
+            override fun error(message: String) {
+                messages += "error: $message"
+            }
+
+            override fun warn(message: String) {
+                messages += "warn: $message"
+            }
+
+            override fun info(message: String) {
+                messages += "info: $message"
+            }
+        }.use {
+            action()
+            return messages
+        }
     }
 
     @Test
@@ -43,44 +56,46 @@ class CmakeCompilerCacheKeyBuilderKtTest {
             Pkg.Desc = Android NDK
             Pkg.Revision = 17.2.4988734
         """.trimIndent())
-        val key = makeCmakeCompilerCacheKey(
-            listOf(
-                DefineProperty.from(ANDROID_NDK, ndkFolder.path)
-            )
-        )!!
-        assertThat(key.gradlePluginVersion).isEqualTo(Version.ANDROID_GRADLE_PLUGIN_VERSION)
-        assertThat(logger.messageCount).isEqualTo(0)
+        val messages = withTestLogging {
+            val key = makeCmakeCompilerCacheKey(
+                listOf(
+                    DefineProperty.from(ANDROID_NDK, ndkFolder.path)
+                )
+            )!!
+            assertThat(key.gradlePluginVersion).isEqualTo(Version.ANDROID_GRADLE_PLUGIN_VERSION)
+        }
+        assertThat(messages).isEmpty()
     }
 
     @Test
     fun androidNdkFolderDoesntExist() {
         ndkFolder.deleteRecursively()
-        val key = makeCmakeCompilerCacheKey(
-            listOf(
-                DefineProperty.from(ANDROID_NDK, ndkFolder.path)
+        val messages = withTestLogging {
+            val key = makeCmakeCompilerCacheKey(
+                listOf(
+                    DefineProperty.from(ANDROID_NDK, ndkFolder.path)
+                )
             )
-        )
-        assertThat(key).isNull()
-        assertThat(logger.errors).isEmpty()
-        assertThat(logger.warnings).containsExactly(
-            "ANDROID_NDK location (./my-ndk) had no source.properties")
-        assertThat(logger.infos).isEmpty()
+            assertThat(key).isNull()
+        }
+        assertThat(messages).containsExactly(
+            "warn: ANDROID_NDK location (./my-ndk) had no source.properties")
     }
 
     @Test
     fun sourcePropertiesDoesntExist() {
         ndkFolder.deleteRecursively()
         ndkFolder.mkdirs()
-        val key = makeCmakeCompilerCacheKey(
-            listOf(
-                DefineProperty.from(ANDROID_NDK, ndkFolder.path)
+        val messages = withTestLogging {
+            val key = makeCmakeCompilerCacheKey(
+                listOf(
+                    DefineProperty.from(ANDROID_NDK, ndkFolder.path)
+                )
             )
-        )
-        assertThat(key).isNull()
-        assertThat(logger.errors).isEmpty()
-        assertThat(logger.warnings).containsExactly(
-            "ANDROID_NDK location (./my-ndk) had no source.properties")
-        assertThat(logger.infos).isEmpty()
+            assertThat(key).isNull()
+        }
+        assertThat(messages).containsExactly(
+            "warn: ANDROID_NDK location (./my-ndk) had no source.properties")
     }
 
     @Test
@@ -91,19 +106,21 @@ class CmakeCompilerCacheKeyBuilderKtTest {
             Pkg.Desc = Android NDK
             Pkg.Revision = 17.2.4988734
         """.trimIndent())
-        val key = makeCmakeCompilerCacheKey(
-            listOf(
-                DefineProperty.from(ANDROID_NDK, ndkFolder.path)
-            )
-        )!!
-        assertThat(key.ndkInstallationFolder).isNotNull()
-        assertThat(key.args).isEmpty()
-        assertThat(key.ndkSourceProperties).isNotNull()
-        assertThat(key.ndkSourceProperties.getValue(SDK_PKG_DESC))
-            .isEqualTo("Android NDK")
-        assertThat(key.ndkSourceProperties.getValue(SDK_PKG_REVISION))
-            .isEqualTo("17.2.4988734")
-        assertThat(logger.messageCount).isEqualTo(0)
+        val messages = withTestLogging {
+            val key = makeCmakeCompilerCacheKey(
+                listOf(
+                    DefineProperty.from(ANDROID_NDK, ndkFolder.path)
+                )
+            )!!
+            assertThat(key.ndkInstallationFolder).isNotNull()
+            assertThat(key.args).isEmpty()
+            assertThat(key.ndkSourceProperties).isNotNull()
+            assertThat(key.ndkSourceProperties!!.getValue(SDK_PKG_DESC))
+                .isEqualTo("Android NDK")
+            assertThat(key.ndkSourceProperties!!.getValue(SDK_PKG_REVISION))
+                .isEqualTo("17.2.4988734")
+        }
+        assertThat(messages).isEmpty()
     }
 
     @Test
@@ -146,9 +163,9 @@ class CmakeCompilerCacheKeyBuilderKtTest {
             "-DCMAKE_ANDROID_NDK\u003d\${ANDROID_NDK}"
         )
         assertThat(key.ndkSourceProperties).isNotNull()
-        assertThat(key.ndkSourceProperties.getValue(SDK_PKG_DESC))
+        assertThat(key.ndkSourceProperties!!.getValue(SDK_PKG_DESC))
             .isEqualTo("Android NDK")
-        assertThat(key.ndkSourceProperties.getValue(SDK_PKG_REVISION))
+        assertThat(key.ndkSourceProperties!!.getValue(SDK_PKG_REVISION))
             .isEqualTo("17.2.4988734")
     }
 }

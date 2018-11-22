@@ -32,6 +32,7 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConfiguration;
 import com.android.build.gradle.internal.cxx.configure.NativeBuildSystemVariantConfig;
+import com.android.build.gradle.internal.cxx.configure.TestLoggingEnvironment;
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValue;
 import com.android.build.gradle.internal.cxx.json.NativeSourceFileValue;
 import com.android.build.gradle.internal.cxx.json.StringTable;
@@ -61,6 +62,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
@@ -87,6 +89,7 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
     List<String> cppFlags;
     List<File> nativeBuildConfigurationsJsons;
     GradleBuildVariant.Builder stats;
+    AutoCloseable logging = new TestLoggingEnvironment();
 
     @Before
     public void setUp() throws Exception {
@@ -133,6 +136,11 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
         Mockito.when(androidBuilder.getLogger()).thenReturn(Mockito.mock(ILogger.class));
         Mockito.when(androidBuilder.getIssueReporter())
                 .thenReturn(Mockito.mock(EvalIssueReporter.class));
+    }
+
+    @After
+    public void after() throws Exception {
+        logging.close();
     }
 
     @Test
@@ -494,7 +502,7 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
                         new File("./compiler-settings-cache"),
                         true);
         return new CmakeServerExternalNativeJsonGenerator(
-                config, new HashSet<>(), androidBuilder, cmakeFolder, stats);
+                config, androidBuilder, cmakeFolder, stats);
     }
 
     /**

@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConfiguration;
 import com.android.build.gradle.internal.cxx.configure.NativeBuildSystemVariantConfig;
+import com.android.build.gradle.internal.cxx.configure.TestLoggingEnvironment;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.repository.Revision;
@@ -41,6 +42,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -66,6 +68,8 @@ public class CmakeAndroidNinjaExternalNativeJsonGeneratorTest {
     List<String> cppFlags;
     List<File> nativeBuildConfigurationsJsons;
     GradleBuildVariant.Builder stats;
+    @SuppressWarnings("resource")
+    AutoCloseable logging = new TestLoggingEnvironment();
 
     @Before
     public void setUp() throws Exception {
@@ -111,6 +115,11 @@ public class CmakeAndroidNinjaExternalNativeJsonGeneratorTest {
         nativeBuildConfigurationsJsons = Mockito.mock(List.class);
     }
 
+    @After
+    public void after() throws Exception {
+        logging.close();
+    }
+
     @Test
     public void testGetCacheArguments() {
         JsonGenerationVariantConfiguration config =
@@ -135,7 +144,7 @@ public class CmakeAndroidNinjaExternalNativeJsonGeneratorTest {
         Mockito.when(androidBuilder.getIssueReporter()).thenReturn(issueReporter);
         CmakeAndroidNinjaExternalNativeJsonGenerator cmakeAndroidNinjaStrategy =
                 new CmakeAndroidNinjaExternalNativeJsonGenerator(
-                        config, new HashSet<>(), androidBuilder, cmakeFolder, stats);
+                        config, androidBuilder, cmakeFolder, stats);
         JsonGenerationAbiConfiguration abiConfig =
                 createJsonGenerationAbiConfiguration(
                         Abi.X86,

@@ -38,6 +38,7 @@ public interface NdkInfo {
 
     int findSuitablePlatformVersion(
             @NonNull String abi,
+            @NonNull String variantName,
             @Nullable AndroidVersion androidVersion);
 
     /** Return the executable for removing debug symbols from a shared object. */

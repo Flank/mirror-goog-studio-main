@@ -22,7 +22,6 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.repository.Revision;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.io.File;
-import java.util.Set;
 
 /** Factory class to create Cmake strategy object based on Cmake version. */
 class CmakeExternalNativeJsonGeneratorFactory {
@@ -32,7 +31,6 @@ class CmakeExternalNativeJsonGeneratorFactory {
      */
     public static ExternalNativeJsonGenerator createCmakeStrategy(
             @NonNull JsonGenerationVariantConfiguration config,
-            @NonNull Set<String> configurationFailures,
             @NonNull Revision cmakeRevision,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull File cmakeInstallFolder,
@@ -47,7 +45,7 @@ class CmakeExternalNativeJsonGeneratorFactory {
                         ExternalNativeBuildTaskUtils.CUSTOM_FORK_CMAKE_VERSION,
                         Revision.Precision.MICRO))) {
             return new CmakeAndroidNinjaExternalNativeJsonGenerator(
-                    config, configurationFailures, androidBuilder, cmakeInstallFolder, stats);
+                    config, androidBuilder, cmakeInstallFolder, stats);
         }
 
         if (cmakeRevision.getMajor() < 3
@@ -59,6 +57,6 @@ class CmakeExternalNativeJsonGeneratorFactory {
         }
 
         return new CmakeServerExternalNativeJsonGenerator(
-                config, configurationFailures, androidBuilder, cmakeInstallFolder, stats);
+                config, androidBuilder, cmakeInstallFolder, stats);
     }
 }
