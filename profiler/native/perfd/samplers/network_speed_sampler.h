@@ -19,6 +19,7 @@
 #include "perfd/network/network_constants.h"
 #include "perfd/network/speed_sampler.h"
 #include "perfd/samplers/sampler.h"
+#include "perfd/sessions/session.h"
 #include "utils/uid_fetcher.h"
 
 namespace profiler {

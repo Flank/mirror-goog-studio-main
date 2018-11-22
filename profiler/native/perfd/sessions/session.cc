@@ -31,23 +31,24 @@ Session::Session(int64_t device_id, int32_t pid, int64_t start_timestamp,
   info_.set_end_timestamp(LLONG_MAX);
 
   if (daemon->config()->GetAgentConfig().unified_pipeline()) {
+    samplers_.push_back(std::unique_ptr<Sampler>(
+        new profiler::NetworkConnectionCountSampler(*this, daemon->buffer())));
     samplers_.push_back(
-        new profiler::NetworkConnectionCountSampler(*this, daemon->buffer()));
-    samplers_.push_back(new profiler::NetworkSpeedSampler(
-        *this, daemon->clock(), daemon->buffer()));
+        std::unique_ptr<Sampler>(new profiler::NetworkSpeedSampler(
+            *this, daemon->clock(), daemon->buffer())));
   }
 }
 
 bool Session::IsActive() const { return info_.end_timestamp() == LLONG_MAX; }
 
 void Session::StartSamplers() {
-  for (auto sampler : samplers_) {
+  for (auto& sampler : samplers_) {
     sampler->Start();
   }
 }
 
 void Session::StopSamplers() {
-  for (auto sampler : samplers_) {
+  for (auto& sampler : samplers_) {
     sampler->Stop();
   }
 }

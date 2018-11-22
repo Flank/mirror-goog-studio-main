@@ -16,14 +16,15 @@
 #ifndef PERFD_SESSIONS_SESSION_H
 #define PERFD_SESSIONS_SESSION_H
 
-#include "proto/common.pb.h"
-
+#include <memory>
 #include <vector>
+
+#include "perfd/samplers/sampler.h"
+#include "proto/common.pb.h"
 
 namespace profiler {
 
 class Daemon;
-class Sampler;
 
 // A profiling session on a specific process on a specific device.
 class Session final {
@@ -42,12 +43,15 @@ class Session final {
   const proto::Session& info() const { return info_; }
 
   // Visible for testing.
-  const std::vector<Sampler*>& samplers() const { return samplers_; }
+  const std::vector<std::unique_ptr<Sampler>>& samplers() const {
+    return samplers_;
+  }
+  std::vector<std::unique_ptr<Sampler>>& samplers() { return samplers_; }
 
  private:
   proto::Session info_;
   // Samplers used for the unified data pipeline.
-  std::vector<Sampler*> samplers_;
+  std::vector<std::unique_ptr<Sampler>> samplers_;
 };
 
 }  // namespace profiler
