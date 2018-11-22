@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.transforms;
+package com.android.build.gradle.internal.tasks;
 
 import static com.android.testutils.truth.MoreTruth.assertThatZip;
 import static com.google.common.truth.Truth.assertThat;
@@ -35,9 +35,6 @@ import static org.objectweb.asm.Opcodes.V1_8;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.fixtures.FakeGradleDirectory;
-import com.android.build.gradle.internal.fixtures.FakeGradleProvider;
-import com.android.build.gradle.internal.tasks.FixStackFramesDelegate;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.resources.FileStatus;
 import com.android.ide.common.workers.ExecutorServiceAdapter;
@@ -68,8 +65,6 @@ import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
-import org.gradle.api.file.Directory;
-import org.gradle.api.provider.Provider;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
