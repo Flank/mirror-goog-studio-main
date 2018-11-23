@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.transforms
 
 import com.android.build.api.transform.Context
-import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
 import com.android.build.api.transform.TransformOutputProvider
@@ -30,6 +29,7 @@ import com.android.build.gradle.internal.transforms.testdata.CarbonForm
 import com.android.build.gradle.internal.transforms.testdata.Cat
 import com.android.build.gradle.internal.transforms.testdata.Toy
 import com.android.builder.core.VariantTypeImpl
+import com.android.builder.dexing.R8OutputType
 import com.android.testutils.TestClassesGenerator
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
@@ -44,24 +44,39 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import org.mockito.Mockito
+import org.objectweb.asm.AnnotationVisitor
+import org.objectweb.asm.ClassReader
+import org.objectweb.asm.ClassVisitor
+import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Type
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 import kotlin.streams.toList
 
 /**
- * Testing the basic scenarios for R8 transform processing class files.
+ * Testing the basic scenarios for R8 transform processing class files. Both dex and class file
+ * backend are tested.
  */
-class R8TransformTest {
+@RunWith(Parameterized::class)
+class R8TransformTest(val r8OutputType: R8OutputType) {
     @get: Rule
     val tmp: TemporaryFolder = TemporaryFolder()
     private lateinit var context: Context
     private lateinit var outputProvider: TransformOutputProvider
     private lateinit var outputDir: Path
+
+    companion object {
+        @Parameterized.Parameters
+        @JvmStatic
+        fun setups() = R8OutputType.values().map { arrayOf(it) }
+    }
 
     @Before
     fun setUp() {
@@ -71,7 +86,7 @@ class R8TransformTest {
     }
 
     @Test
-    fun testClassesDexed() {
+    fun testClassesProcessed() {
         val classes = tmp.root.toPath().resolve("classes.jar")
         TestInputsGenerator.jarWithEmptyClasses(classes, listOf("test/A", "test/B"))
 
@@ -86,14 +101,13 @@ class R8TransformTest {
                 .setTransformOutputProvider(outputProvider)
                 .build()
 
-        val transform = getTransform()
+        val transform = createTransform()
         transform.keep("class **")
 
         transform.transform(invocation)
 
-        val dex = getDex()
-        assertThat(dex).containsClass("Ltest/A;")
-        assertThat(dex).containsClass("Ltest/B;")
+        assertClassExists("test/A")
+        assertClassExists("test/B")
     }
 
     @Test
@@ -118,14 +132,13 @@ class R8TransformTest {
                 .setTransformOutputProvider(outputProvider)
                 .build()
 
-        val transform = getTransform()
+        val transform = createTransform()
         transform.keep("class test.A")
 
         transform.transform(invocation)
 
-        val dex = getDex()
-        assertThat(dex).containsClass("Ltest/A;")
-        assertThat(dex).doesNotContainClasses("Ltest/B;")
+        assertClassExists("test/A")
+        assertClassDoesNotExist("test/B")
     }
 
     // This test verifies that R8 transform does NOT extract the rules from the jars if these jars
@@ -156,14 +169,13 @@ class R8TransformTest {
                 .setTransformOutputProvider(outputProvider)
                 .build()
 
-        val transform = getTransform()
+        val transform = createTransform()
         transform.keep("class test.A")
 
         transform.transform(invocation)
 
-        val dex = getDex()
-        assertThat(dex).containsClass("Ltest/A;")
-        assertThat(dex).doesNotContainClasses("Ltest/B;")
+        assertClassExists("test/A")
+        assertClassDoesNotExist("test/B")
     }
 
     // This test verifies that R8 transform does NOT extract the rules from the jars if these jars
@@ -194,14 +206,13 @@ class R8TransformTest {
                 .setTransformOutputProvider(outputProvider)
                 .build()
 
-        val transform = getTransform()
+        val transform = createTransform()
         transform.keep("class test.A")
 
         transform.transform(invocation)
 
-        val dex = getDex()
-        assertThat(dex).containsClass("Ltest/A;")
-        assertThat(dex).doesNotContainClasses("Ltest/B;")
+        assertClassExists("test/A")
+        assertClassDoesNotExist("test/B")
     }
 
     @Test
@@ -216,143 +227,109 @@ class R8TransformTest {
         val jarLibrary = TransformTestHelper.singleJarBuilder(libraryClasses.toFile()).build()
 
         val invocation =
-                TransformTestHelper
-                    .invocationBuilder()
-                    .addInput(jarInput)
-                    .addReferenceInput(jarLibrary)
-                    .setContext(this.context)
-                    .setTransformOutputProvider(outputProvider)
-                    .build()
+            TransformTestHelper
+                .invocationBuilder()
+                .addInput(jarInput)
+                .addReferenceInput(jarLibrary)
+                .setContext(this.context)
+                .setTransformOutputProvider(outputProvider)
+                .build()
 
-        val transform = getTransform()
+        val transform = createTransform()
         transform.keep("class **")
 
         transform.transform(invocation)
 
-        val dex = getDex()
-        assertThat(dex).containsClass(Type.getDescriptor(Animal::class.java))
-        assertThat(dex).doesNotContainClasses(Type.getDescriptor(CarbonForm::class.java))
-    }
-
-    @Test
-    fun testMainDexRules() {
-        val classes = tmp.root.toPath().resolve("classes.jar")
-        TestInputsGenerator.pathWithClasses(
-                classes,
-                listOf(Animal::class.java, CarbonForm::class.java, Toy::class.java)
-        )
-        val jarInput =
-            TransformTestHelper.singleJarBuilder(classes.toFile()).setContentTypes(CLASSES).build()
-
-        val invocation =
-                TransformTestHelper
-                    .invocationBuilder()
-                    .addInput(jarInput)
-                    .setContext(this.context)
-                    .setTransformOutputProvider(outputProvider)
-                    .build()
-
-        val mainDexRuleFile = tmp.newFile()
-        mainDexRuleFile.printWriter().use {
-            it.println("-keep class " + Animal::class.java.name)
-        }
-        val mainDexRulesFileCollection = FakeFileCollection(setOf(mainDexRuleFile))
-
-        val transform =
-                getTransform(mainDexRulesFiles = mainDexRulesFileCollection, minSdkVersion = 19)
-        transform.keep("class **")
-
-        transform.transform(invocation)
-        val mainDex = Dex(outputDir.resolve("main").resolve("classes.dex"))
-        assertThat(mainDex)
-            .containsExactlyClassesIn(
-                listOf(
-                        Type.getDescriptor(CarbonForm::class.java),
-                        Type.getDescriptor(Animal::class.java)))
-
-        val secondaryDex = Dex(outputDir.resolve("main").resolve("classes2.dex"))
-        assertThat(secondaryDex).containsExactlyClassesIn(listOf(Type.getDescriptor(Toy::class.java)))
+        assertClassExists(Animal::class.java)
+        assertClassDoesNotExist(CarbonForm::class.java)
     }
 
     @Test
     fun testDesugaring() {
         val classes = tmp.root.toPath().resolve("classes.jar")
         TestInputsGenerator.pathWithClasses(
-                classes,
-                listOf(Animal::class.java, CarbonForm::class.java, Cat::class.java, Toy::class.java)
+            classes,
+            listOf(Animal::class.java, CarbonForm::class.java, Cat::class.java, Toy::class.java)
         )
         val jarInput =
             TransformTestHelper.singleJarBuilder(classes.toFile()).setContentTypes(CLASSES).build()
 
         val invocation =
-                TransformTestHelper
-                    .invocationBuilder()
-                    .addInput(jarInput)
-                    .setContext(this.context)
-                    .setTransformOutputProvider(outputProvider)
-                    .build()
-        val transform = getTransform(java8Support = VariantScope.Java8LangSupport.R8)
-        transform.keep("class **")
+            TransformTestHelper
+                .invocationBuilder()
+                .addInput(jarInput)
+                .setContext(this.context)
+                .setTransformOutputProvider(outputProvider)
+                .build()
+        val transform =
+            createTransform(java8Support = VariantScope.Java8LangSupport.R8, disableTreeShaking = true)
+        transform.keep("class ***")
 
         transform.transform(invocation)
 
-        val dex = getDex()
-        assertThat(dex).containsClass(Type.getDescriptor(Animal::class.java))
-        assertThat(dex).containsClass(Type.getDescriptor(CarbonForm::class.java))
-        assertThat(dex).containsClass(Type.getDescriptor(Cat::class.java))
-        assertThat(dex).containsClass(Type.getDescriptor(Toy::class.java))
-        assertThat(dex.version).isEqualTo(35)
+        assertClassExists(Animal::class.java)
+        assertClassExists(CarbonForm::class.java)
+        assertClassExists(Cat::class.java)
+        assertClassExists(Toy::class.java)
+
+        if (r8OutputType == R8OutputType.DEX) {
+            val dex = getDex()
+            assertThat(dex.version).isEqualTo(35)
+            // desugared classes are synthesized
+            assertThat(dex.classes.size).isGreaterThan(4)
+        } else {
+            // no desugared classes are synthesized
+            assertThat(Zip(outputDir.resolve("main.jar")).entries).hasSize(4)
+        }
     }
 
     @Test
     fun testProguardConfiguration() {
         val classes = tmp.root.toPath().resolve("classes.jar")
         TestInputsGenerator.pathWithClasses(
-                classes,
-                listOf(Animal::class.java, CarbonForm::class.java, Cat::class.java, Toy::class.java)
+            classes,
+            listOf(Animal::class.java, CarbonForm::class.java, Cat::class.java, Toy::class.java)
         )
         val jarInput =
             TransformTestHelper.singleJarBuilder(classes.toFile()).setContentTypes(CLASSES).build()
 
         val invocation =
-                TransformTestHelper
-                    .invocationBuilder()
-                    .addInput(jarInput)
-                    .setContext(this.context)
-                    .setTransformOutputProvider(outputProvider)
-                    .build()
+            TransformTestHelper
+                .invocationBuilder()
+                .addInput(jarInput)
+                .setContext(this.context)
+                .setTransformOutputProvider(outputProvider)
+                .build()
 
         val proguardConfiguration = tmp.newFile()
         proguardConfiguration.printWriter().use {
             it.println("-keep class " + Cat::class.java.name + " {*;}")
         }
-        val proguardConfigurationFileCollection = FakeConfigurableFileCollection(setOf(proguardConfiguration))
-        val transform = getTransform(
-                java8Support = VariantScope.Java8LangSupport.R8,
-                proguardRulesFiles = proguardConfigurationFileCollection)
+        val proguardConfigurationFileCollection =
+            FakeConfigurableFileCollection(setOf(proguardConfiguration))
+        val transform = createTransform(
+            java8Support = VariantScope.Java8LangSupport.R8,
+            proguardRulesFiles = proguardConfigurationFileCollection
+        )
 
         transform.transform(invocation)
 
-        val dex = getDex()
-        assertThat(dex).containsClass(Type.getDescriptor(Animal::class.java))
-        assertThat(dex).containsClass(Type.getDescriptor(CarbonForm::class.java))
-        assertThat(dex).containsClass(Type.getDescriptor(Cat::class.java))
-        assertThat(dex).containsClass(Type.getDescriptor(Toy::class.java))
+        assertClassExists(Animal::class.java)
+        assertClassExists(CarbonForm::class.java)
+        assertClassExists(Cat::class.java)
+        assertClassExists(Toy::class.java)
         // Check proguard compatibility mode
-        assertThat(dex).containsClass(Type.getDescriptor(Toy::class.java)).that().hasAnnotations()
-        assertThat(dex.version).isEqualTo(35)
+        assertClassHasAnnotations(Type.getInternalName(Toy::class.java))
 
-        val transform2 = getTransform(java8Support = VariantScope.Java8LangSupport.R8)
+        val transform2 = createTransform(java8Support = VariantScope.Java8LangSupport.R8)
         transform2.keep("class " + CarbonForm::class.java.name)
 
         transform2.transform(invocation)
 
-        val dex2 = getDex()
-        assertThat(dex2).containsClass(Type.getDescriptor(CarbonForm::class.java))
-        assertThat(dex2).doesNotContainClasses(Type.getDescriptor(Animal::class.java))
-        assertThat(dex2).doesNotContainClasses(Type.getDescriptor(Cat::class.java))
-        assertThat(dex2).doesNotContainClasses(Type.getDescriptor(Toy::class.java))
-        assertThat(dex2.version).isEqualTo(35)
+        assertClassExists(CarbonForm::class.java)
+        assertClassDoesNotExist(Animal::class.java)
+        assertClassDoesNotExist(Cat::class.java)
+        assertClassDoesNotExist(Toy::class.java)
     }
 
     @Test
@@ -377,36 +354,35 @@ class R8TransformTest {
         proguardConfiguration.printWriter().use {
             it.println("-keep class " + Cat::class.java.name + " {*;}")
         }
-        val proguardConfigurationFileCollection = FakeConfigurableFileCollection(setOf(proguardConfiguration))
-        val transform = getTransform(
+        val proguardConfigurationFileCollection =
+            FakeConfigurableFileCollection(setOf(proguardConfiguration))
+        val transform = createTransform(
             java8Support = VariantScope.Java8LangSupport.R8,
             proguardRulesFiles = proguardConfigurationFileCollection,
-            useFullR8 = true)
+            useFullR8 = true
+        )
 
         transform.transform(invocation)
 
-        val dex = getDex()
-        assertThat(dex).containsClass(Type.getDescriptor(Animal::class.java))
-        assertThat(dex).containsClass(Type.getDescriptor(CarbonForm::class.java))
-        assertThat(dex).containsClass(Type.getDescriptor(Cat::class.java))
-        assertThat(dex).containsClass(Type.getDescriptor(Toy::class.java))
+        assertClassExists(Animal::class.java)
+        assertClassExists(CarbonForm::class.java)
+        assertClassExists(Cat::class.java)
+        assertClassExists(Toy::class.java)
         // Check full R8 mode
-        assertThat(dex).containsClass(Type.getDescriptor(Toy::class.java)).that().doesNotHaveAnnotations()
-        assertThat(dex.version).isEqualTo(35)
+        assertClassDoesNotHaveAnnotations(Type.getInternalName(Toy::class.java))
 
-        val transform2 = getTransform(
+        val transform2 = createTransform(
             java8Support = VariantScope.Java8LangSupport.R8,
-            useFullR8 = true)
+            useFullR8 = true
+        )
         transform2.keep("class " + CarbonForm::class.java.name)
 
         transform2.transform(invocation)
 
-        val dex2 = getDex()
-        assertThat(dex2).containsClass(Type.getDescriptor(CarbonForm::class.java))
-        assertThat(dex2).doesNotContainClasses(Type.getDescriptor(Animal::class.java))
-        assertThat(dex2).doesNotContainClasses(Type.getDescriptor(Cat::class.java))
-        assertThat(dex2).doesNotContainClasses(Type.getDescriptor(Toy::class.java))
-        assertThat(dex2.version).isEqualTo(35)
+        assertClassExists(CarbonForm::class.java)
+        assertClassDoesNotExist(Animal::class.java)
+        assertClassDoesNotExist(Cat::class.java)
+        assertClassDoesNotExist(Toy::class.java)
     }
 
     @Test
@@ -419,20 +395,18 @@ class R8TransformTest {
             TransformTestHelper.singleJarBuilder(classes.toFile()).setContentTypes(CLASSES).build()
 
         val invocation =
-                TransformTestHelper
-                    .invocationBuilder()
-                    .addInput(jarInput)
-                    .setContext(this.context)
-                    .setTransformOutputProvider(outputProvider)
-                    .build()
-        val transform = getTransform()
+            TransformTestHelper
+                .invocationBuilder()
+                .addInput(jarInput)
+                .setContext(this.context)
+                .setTransformOutputProvider(outputProvider)
+                .build()
+        val transform = createTransform()
         transform.keep("class " + nonAsciiName.replace("/", "."))
 
         transform.transform(invocation)
 
-        val dex = getDex()
-        assertThat(dex).containsClass("L$nonAsciiName;")
-        assertThat(dex.version).isEqualTo(35)
+        assertClassExists(nonAsciiName)
     }
 
     @Test
@@ -443,15 +417,15 @@ class R8TransformTest {
             TransformTestHelper.singleJarBuilder(classes.toFile()).setContentTypes(CLASSES).build()
 
         val invocation =
-                TransformTestHelper
-                    .invocationBuilder()
-                    .addInput(jarInput)
-                    .setContext(this.context)
-                    .setTransformOutputProvider(outputProvider)
-                    .build()
+            TransformTestHelper
+                .invocationBuilder()
+                .addInput(jarInput)
+                .setContext(this.context)
+                .setTransformOutputProvider(outputProvider)
+                .build()
         val outputMapping = tmp.newFile()
         val transform =
-                getTransform(disableMinification = false, outputProguardMapping = outputMapping)
+            createTransform(disableMinification = false, outputProguardMapping = outputMapping)
         transform.keep("class **")
 
         transform.transform(invocation)
@@ -495,20 +469,86 @@ class R8TransformTest {
                 .setTransformOutputProvider(outputProvider)
                 .build()
 
-        val transform = getTransform()
+        val transform = createTransform()
         transform.keep("class **")
         transform.transform(invocation)
 
-        val dex = getDex()
-        assertThat(dex).containsClass("Ltest/A;")
+        assertClassExists("test/A")
 
-        val resourcesCopied =
-            Files.walk(outputDir).filter { it.toString().endsWith(".jar") }.toList().single()
-        assertThat(Zip(resourcesCopied)).containsFileWithContent("metadata1.txt", "")
-        assertThat(Zip(resourcesCopied)).containsFileWithContent("metadata2.txt", "")
-        assertThat(Zip(resourcesCopied)).containsFileWithContent("data/metadata.txt", "")
-        assertThat(Zip(resourcesCopied)).containsFileWithContent("a/b/c//metadata.txt", "")
-        assertThat(Zip(resourcesCopied)).doesNotContain("test/A.class")
+        Zip(outputDir.resolve("java_res.jar")).use {
+            assertThat(it).containsFileWithContent("metadata1.txt", "")
+            assertThat(it).containsFileWithContent("metadata2.txt", "")
+            assertThat(it).containsFileWithContent("data/metadata.txt", "")
+            assertThat(it).containsFileWithContent("a/b/c//metadata.txt", "")
+            assertThat(it).doesNotContain("test/A.class")
+        }
+    }
+
+    private fun assertClassExists(clazz: Class<*>) {
+       assertClassExists(Type.getInternalName(clazz))
+    }
+
+    private fun assertClassExists(className: String) {
+        if (r8OutputType == R8OutputType.DEX) {
+            val dex = getDex()
+            assertThat(dex).containsClass("L$className;")
+        } else {
+            Zip(outputDir.resolve("main.jar")).use {
+                assertThat(it).contains("$className.class")
+            }
+        }
+    }
+
+    private fun assertClassDoesNotExist(clazz: Class<*>) {
+        assertClassDoesNotExist(Type.getInternalName(clazz))
+    }
+
+    private fun assertClassDoesNotExist(className: String) {
+        if (r8OutputType == R8OutputType.DEX) {
+            val dex = getDex()
+            assertThat(dex).doesNotContainClasses("L$className;")
+        } else {
+            Zip(outputDir.resolve("main.jar")).use {
+                assertThat(it).doesNotContain("$className.class")
+            }
+        }
+    }
+
+    private fun assertClassHasAnnotations(className: String) {
+        if (r8OutputType == R8OutputType.DEX) {
+            assertThat(getDex()).containsClass(Type.getDescriptor(Toy::class.java)).that()
+                .hasAnnotations()
+        } else {
+            assertThat(hasAnnotations(className)).named("class has annotations").isTrue()
+        }
+    }
+
+    private fun assertClassDoesNotHaveAnnotations(className: String) {
+        if (r8OutputType == R8OutputType.DEX) {
+            // Check proguard compatibility mode
+            assertThat(getDex()).containsClass("L$className;").that()
+                .doesNotHaveAnnotations()
+        } else {
+            assertThat(hasAnnotations(className)).named("class does not have annotations").isFalse()
+        }
+    }
+
+    private fun hasAnnotations(className: String): Boolean {
+        var foundAnnotation = false
+        ZipFile(outputDir.resolve("main.jar").toFile()).use {
+            val input =
+                it.getInputStream(it.getEntry("$className.class"))
+            ClassReader(input).accept(object : ClassVisitor(Opcodes.ASM5) {
+                override fun visitAnnotation(
+                    desc: String?,
+                    visible: Boolean
+                ): AnnotationVisitor? {
+                    foundAnnotation = true
+                    return super.visitAnnotation(desc, visible)
+                }
+            }, ClassReader.SKIP_CODE or ClassReader.SKIP_DEBUG)
+        }
+        return foundAnnotation
     }
 
     @Test
@@ -532,7 +572,7 @@ class R8TransformTest {
         val invocation = TransformTestHelper.invocationBuilder().setInputs(jarInput, dirInput)
             .setContext(this.context).setTransformOutputProvider(outputProvider).build()
 
-        getTransform().transform(invocation)
+        createTransform().transform(invocation)
 
         assertThat(outputDir.resolve("main/classes.dex")).doesNotExist()
         Zip(outputDir.resolve("java_res.jar")).use {
@@ -548,33 +588,38 @@ class R8TransformTest {
         return Dex(dexFiles.single())
     }
 
-    private fun getTransform(
+    private fun createTransform(
         mainDexRulesFiles: FileCollection = FakeFileCollection(),
         java8Support: VariantScope.Java8LangSupport = VariantScope.Java8LangSupport.UNUSED,
         proguardRulesFiles: ConfigurableFileCollection = FakeConfigurableFileCollection(),
-        typesToOutput: MutableSet<QualifiedContent.ContentType> = TransformManager.CONTENT_DEX,
         outputProguardMapping: File = tmp.newFile(),
         disableMinification: Boolean = true,
+        disableTreeShaking: Boolean = false,
         minSdkVersion: Int = 21,
         useFullR8: Boolean = false
     ): R8Transform {
+        val variantType =
+            if (r8OutputType == R8OutputType.DEX)
+                VariantTypeImpl.BASE_APK
+            else
+                VariantTypeImpl.LIBRARY
+
         return R8Transform(
-                bootClasspath = lazy { listOf(TestUtils.getPlatformFile("android.jar")) },
-                minSdkVersion = minSdkVersion,
-                isDebuggable = true,
-                java8Support = java8Support,
-                disableTreeShaking = false,
-                disableMinification = disableMinification,
-                mainDexListFiles = FakeFileCollection(),
-                mainDexRulesFiles = mainDexRulesFiles,
-                inputProguardMapping = FakeFileCollection(),
-                outputProguardMapping = outputProguardMapping,
-                typesToOutput = typesToOutput,
-                proguardConfigurationFiles = proguardRulesFiles,
-                variantType = VariantTypeImpl.BASE_APK,
-                includeFeaturesInScopes = false,
-                messageReceiver = NoOpMessageReceiver(),
-                useFullR8 = useFullR8
+            bootClasspath = lazy { listOf(TestUtils.getPlatformFile("android.jar")) },
+            minSdkVersion = minSdkVersion,
+            isDebuggable = true,
+            java8Support = java8Support,
+            disableTreeShaking = disableTreeShaking,
+            disableMinification = disableMinification,
+            mainDexListFiles = FakeFileCollection(),
+            mainDexRulesFiles = mainDexRulesFiles,
+            inputProguardMapping = FakeFileCollection(),
+            outputProguardMapping = outputProguardMapping,
+            proguardConfigurationFiles = proguardRulesFiles,
+            variantType = variantType,
+            includeFeaturesInScopes = false,
+            messageReceiver = NoOpMessageReceiver(),
+            useFullR8 = useFullR8
         )
     }
 }

@@ -74,20 +74,22 @@ fun runR8(
         logger.fine("Java resources: $inputJavaResources")
         logger.fine("Library classes: $libraries")
     }
-
     val r8CommandBuilder = CompatProguardCommandBuilder(!useFullR8, D8DiagnosticsHandler(messageReceiver))
 
-    if (toolConfig.minSdkVersion < 21) {
-        // specify main dex related options only when minSdkVersion is below 21
-        r8CommandBuilder
-            .addMainDexRulesFiles(mainDexListConfig.mainDexRulesFiles)
-            .addMainDexListFiles(mainDexListConfig.mainDexListFiles)
+    if (toolConfig.r8OutputType == R8OutputType.DEX) {
+        r8CommandBuilder.minApiLevel = toolConfig.minSdkVersion
+        if (toolConfig.minSdkVersion < 21) {
+            // specify main dex related options only when minSdkVersion is below 21
+            r8CommandBuilder
+                .addMainDexRulesFiles(mainDexListConfig.mainDexRulesFiles)
+                .addMainDexListFiles(mainDexListConfig.mainDexListFiles)
 
-        if (mainDexListConfig.mainDexRules.isNotEmpty()) {
-            r8CommandBuilder.addMainDexRules(mainDexListConfig.mainDexRules, Origin.unknown())
-        }
-        mainDexListConfig.mainDexListOutput?.let {
-            r8CommandBuilder.setMainDexListConsumer(StringConsumer.FileConsumer(it))
+            if (mainDexListConfig.mainDexRules.isNotEmpty()) {
+                r8CommandBuilder.addMainDexRules(mainDexListConfig.mainDexRules, Origin.unknown())
+            }
+            mainDexListConfig.mainDexListOutput?.let {
+                r8CommandBuilder.setMainDexListConsumer(StringConsumer.FileConsumer(it))
+            }
         }
     }
 
@@ -146,7 +148,6 @@ fun runR8(
         .setDisableMinification(toolConfig.disableMinification)
         .setDisableTreeShaking(toolConfig.disableTreeShaking)
         .setDisableDesugaring(toolConfig.disableDesugaring)
-        .setMinApiLevel(toolConfig.minSdkVersion)
         .setMode(compilationMode)
         .setProgramConsumer(programConsumer)
 

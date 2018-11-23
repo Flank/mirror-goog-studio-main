@@ -192,7 +192,6 @@ class DexSplitterTransformTest {
         mainDexRulesFiles: FileCollection = FakeFileCollection(),
         java8Support: VariantScope.Java8LangSupport = VariantScope.Java8LangSupport.UNUSED,
         proguardRulesFiles: ConfigurableFileCollection = FakeConfigurableFileCollection(),
-        typesToOutput: MutableSet<QualifiedContent.ContentType> = TransformManager.CONTENT_DEX,
         outputProguardMapping: File = tmp.newFile(),
         disableMinification: Boolean = true,
         minSdkVersion: Int = 21
@@ -208,7 +207,6 @@ class DexSplitterTransformTest {
                 mainDexRulesFiles = mainDexRulesFiles,
                 inputProguardMapping = FakeFileCollection(),
                 outputProguardMapping = outputProguardMapping,
-                typesToOutput = typesToOutput,
                 proguardConfigurationFiles = proguardRulesFiles,
                 variantType = VariantTypeImpl.BASE_APK,
                 includeFeaturesInScopes = false,

@@ -62,7 +62,6 @@ class R8Transform(
     private val mainDexRulesFiles: FileCollection,
     private val inputProguardMapping: FileCollection,
     private val outputProguardMapping: File,
-    private val typesToOutput: MutableSet<out QualifiedContent.ContentType>,
     proguardConfigurationFiles: ConfigurableFileCollection,
     variantType: VariantType,
     includeFeaturesInScopes: Boolean,
@@ -94,7 +93,6 @@ class R8Transform(
                 mainDexRulesFiles,
                 inputProguardMapping,
                 outputProguardMapping,
-                if (scope.variantData.type.isAar) CONTENT_JARS else CONTENT_DEX_WITH_RESOURCES,
                 scope.globalScope.project.files(),
                 scope.variantData.type,
                 scope.consumesFeatureJars(),
@@ -106,7 +104,13 @@ class R8Transform(
 
     override fun getInputTypes(): MutableSet<out QualifiedContent.ContentType> = CONTENT_JARS
 
-    override fun getOutputTypes(): MutableSet<out QualifiedContent.ContentType> = typesToOutput
+    override fun getOutputTypes(): MutableSet<out QualifiedContent.ContentType> {
+        return if (variantType.isAar) {
+            CONTENT_JARS
+        } else {
+            CONTENT_DEX_WITH_RESOURCES
+        }
+    }
 
     override fun isIncremental(): Boolean = false
 
@@ -169,20 +173,22 @@ class R8Transform(
 
         val r8OutputType: R8OutputType
         val outputFormat: Format
-        if (typesToOutput == TransformManager.CONTENT_JARS) {
+        if (variantType.isAar) {
             r8OutputType = R8OutputType.CLASSES
             outputFormat = Format.JAR
         } else {
             r8OutputType = R8OutputType.DEX
             outputFormat = Format.DIRECTORY
         }
+        val enableDesugaring = java8Support == VariantScope.Java8LangSupport.R8
+                && r8OutputType == R8OutputType.DEX
         val toolConfig = ToolConfig(
-                minSdkVersion = minSdkVersion,
-                isDebuggable = isDebuggable,
-                disableTreeShaking = disableTreeShaking,
-                disableDesugaring = java8Support != VariantScope.Java8LangSupport.R8,
-                disableMinification = disableMinification,
-                r8OutputType = r8OutputType
+            minSdkVersion = minSdkVersion,
+            isDebuggable = isDebuggable,
+            disableTreeShaking = disableTreeShaking,
+            disableDesugaring = !enableDesugaring,
+            disableMinification = disableMinification,
+            r8OutputType = r8OutputType
         )
 
         val proguardMappingInput =
@@ -203,11 +209,15 @@ class R8Transform(
 
         val output = outputProvider.getContentLocation(
                 "main",
-                TransformManager.CONTENT_DEX,
+                if (variantType.isAar) TransformManager.CONTENT_CLASS else TransformManager.CONTENT_DEX ,
                 scopes,
                 outputFormat
         )
-        Files.createDirectories(output.toPath())
+
+        when (outputFormat) {
+            Format.JAR -> Files.createDirectories(output.parentFile.toPath())
+            Format.DIRECTORY -> Files.createDirectories(output.toPath())
+        }
 
         val inputJavaResources = mutableListOf<Path>()
         val inputClasses = mutableListOf<Path>()

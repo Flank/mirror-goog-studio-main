@@ -3280,8 +3280,8 @@ public abstract class TaskManager {
                 transformTask = createProguardTransform(variantScope, mappingFileCollection);
                 break;
             case R8:
-                if (variantScope.getVariantConfiguration().getType().isAar()) {
-                    // R8 class backend is not fully supported yet
+                if (variantScope.getVariantConfiguration().getType().isAar()
+                        && !projectOptions.get(BooleanOption.ENABLE_R8_LIBRARIES)) {
                     transformTask = createProguardTransform(variantScope, mappingFileCollection);
                     createdShrinker = CodeShrinker.PROGUARD;
                 } else {

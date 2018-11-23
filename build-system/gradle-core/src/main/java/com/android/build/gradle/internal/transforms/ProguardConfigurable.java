@@ -37,7 +37,7 @@ import org.gradle.api.file.FileCollection;
 public abstract class ProguardConfigurable extends Transform {
     private final ConfigurableFileCollection configurationFiles;
 
-    private final VariantType variantType;
+    protected final VariantType variantType;
 
     private final boolean includeFeaturesInScopes;
 
