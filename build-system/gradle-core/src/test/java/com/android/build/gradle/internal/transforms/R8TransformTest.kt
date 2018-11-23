@@ -127,6 +127,9 @@ class R8TransformTest {
         assertThat(dex).doesNotContainClasses("Ltest/B;")
     }
 
+    // This test verifies that R8 transform does NOT extract the rules from the jars if these jars
+    // are not explicitly set as a source for rule extraction. This is done in order to control
+    // the proguard rules, being able to filter out undesired ones in a non-command-line scenario
     @Test
     fun testOneClassIsKept_hasExtractableRulesInResources() {
         val classes = tmp.root.toPath().resolve("classes.jar")
@@ -162,6 +165,9 @@ class R8TransformTest {
         assertThat(dex).doesNotContainClasses("Ltest/B;")
     }
 
+    // This test verifies that R8 transform does NOT extract the rules from the jars if these jars
+    // are not explicitly set as a source for rule extraction. This is done in order to control
+    // the proguard rules, being able to filter out undesired ones in a non-command-line scenario
     @Test
     fun testOneClassIsKept_hasExtractableRulesInClasses() {
         val classes = tmp.root.toPath().resolve("classes.jar")
