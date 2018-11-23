@@ -30,7 +30,6 @@ TEST_DEPS = [
 TEST_DATA = [
     ":prebuilts.zip",
     "//prebuilts/studio/sdk:build-tools/latest",
-    "//prebuilts/studio/sdk:constraint-layout_latest",
     "//prebuilts/studio/sdk:platforms/android-27_build_only",
     "//prebuilts/studio/sdk:platforms/android-28_build_only",
     "//prebuilts/tools/common/kotlin-plugin:Kotlin/kotlinc/build.txt",
@@ -161,6 +160,8 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/com/android/support/appcompat-v7/26.1.0:aar",
         "//prebuilts/tools/common/m2/repository/com/android/support/appcompat-v7/27.1.1:aar",
         "//prebuilts/tools/common/m2/repository/com/android/support/cardview-v7/26.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/constraint/constraint-layout-solver/1.0.2:jar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/constraint/constraint-layout/1.0.2:aar",
         "//prebuilts/tools/common/m2/repository/com/android/support/design/27.1.1:aar",
         "//prebuilts/tools/common/m2/repository/com/android/support/preference-v7/27.1.1:aar",
         "//prebuilts/tools/common/m2/repository/com/android/support/recyclerview-v7/27.1.1:aar",

@@ -17,9 +17,9 @@
 package com.android.build.gradle.integration.dependencies;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
@@ -55,7 +55,9 @@ public class AppWithAndroidTestDependencyOnLibTest {
                         + "}\n"
                         + "dependencies {\n"
                         + "    implementation project(':library2')\n"
-                        + "    implementation 'com.android.support.constraint:constraint-layout:1.0.2'\n"
+                        + "    implementation 'com.android.support.constraint:constraint-layout:"
+                        + TestVersions.TEST_CONSTRAINT_LAYOUT_VERSION
+                        + "'\n"
                         + "    androidTestImplementation project(':library')\n"
                         + "}\n");
 
@@ -68,7 +70,9 @@ public class AppWithAndroidTestDependencyOnLibTest {
                         + "    }\n"
                         + "}\n"
                         + "dependencies {\n"
-                        + "    implementation 'com.android.support.constraint:constraint-layout:1.0.2'"
+                        + "    implementation 'com.android.support.constraint:constraint-layout:"
+                        + TestVersions.TEST_CONSTRAINT_LAYOUT_VERSION
+                        + "'\n"
                         + "}\n");
 
         // Use the constraint layout dependency to check it is included in the app android test
