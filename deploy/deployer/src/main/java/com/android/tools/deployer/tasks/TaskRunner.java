@@ -141,8 +141,14 @@ public class TaskRunner {
         public T get() throws DeployerException {
             try {
                 return future.get();
-            } catch (InterruptedException | ExecutionException e) {
+            } catch (InterruptedException e) {
                 throw new DeployerException(DeployerException.Error.INTERRUPTED, e);
+            } catch (ExecutionException e) {
+                if (e.getCause() instanceof DeployerException) {
+                    throw (DeployerException) e.getCause();
+                } else {
+                    throw new IllegalStateException(e);
+                }
             }
         }
     }

@@ -16,7 +16,9 @@
 package com.android.tools.deployer.tasks;
 
 import static junit.framework.TestCase.assertEquals;
+import static org.junit.Assert.fail;
 
+import com.android.tools.deployer.DeployerException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -209,6 +211,57 @@ public class TaskRunnerTest {
         task3Latch.countDown();
         runner.join();
         assertEquals(0, runner.getPendingTasks());
+    }
+
+    @Test
+    public void testExceptionIsThrown() {
+        String input = "text";
+
+        ExecutorService service = Executors.newFixedThreadPool(2);
+        TaskRunner runner = new TaskRunner(service);
+        TaskRunner.Task<String> start = runner.submit(input);
+        TaskRunner.Task<String> task1 =
+                runner.submit(
+                        "task1",
+                        a -> {
+                            throw new DeployerException(
+                                    DeployerException.Error.INSTALL_FAILED, "failed");
+                        },
+                        start);
+
+        try {
+            task1.get();
+            fail("Exception should have been thrown");
+        } catch (DeployerException e) {
+            assertEquals(DeployerException.Error.INSTALL_FAILED, e.getError());
+            assertEquals("failed", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testExceptionIsPropagated() {
+        String input = "text";
+
+        ExecutorService service = Executors.newFixedThreadPool(2);
+        TaskRunner runner = new TaskRunner(service);
+        TaskRunner.Task<String> start = runner.submit(input);
+        TaskRunner.Task<String> task1 =
+                runner.submit(
+                        "task1",
+                        a -> {
+                            throw new DeployerException(
+                                    DeployerException.Error.INSTALL_FAILED, "failed");
+                        },
+                        start);
+        TaskRunner.Task<String> task2 = runner.submit("task2", a -> a + "2", task1);
+
+        try {
+            task2.get();
+            fail("Exception should have been thrown");
+        } catch (DeployerException e) {
+            assertEquals(DeployerException.Error.INSTALL_FAILED, e.getError());
+            assertEquals("failed", e.getMessage());
+        }
     }
 
     private static void waitLatch(CountDownLatch latch) {
