@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.transforms;
 
-import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 import static com.android.utils.FileUtils.mkdirs;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -40,8 +39,8 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.tasks.SimpleWorkQueue;
 import com.android.builder.tasks.Job;
 import com.android.builder.tasks.JobContext;
+import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -83,14 +82,9 @@ public class ProGuardTransform extends BaseProguardAction {
         super(variantScope);
         this.variantScope = variantScope;
 
-        GlobalScope globalScope = variantScope.getGlobalScope();
-        proguardOut = new File(Joiner.on(File.separatorChar).join(
-                String.valueOf(globalScope.getBuildDir()),
-                FD_OUTPUTS,
-                "mapping",
-                variantScope.getVariantConfiguration().getDirName()));
+        printMapping = variantScope.getOutputProguardMappingFile();
 
-        printMapping = new File(proguardOut, "mapping.txt");
+        proguardOut = printMapping.getParentFile();
         printSeeds = new File(proguardOut, "seeds.txt");
         printUsage = new File(proguardOut, "usage.txt");
         secondaryFileOutputs = ImmutableList.of(printMapping, printSeeds, printUsage);
@@ -259,7 +253,7 @@ public class ProGuardTransform extends BaseProguardAction {
 
             // proguard doesn't verify that the seed/mapping/usage folders exist and will fail
             // if they don't so create them.
-            mkdirs(proguardOut);
+            FileUtils.cleanOutputDir(proguardOut);
 
             for (File configFile : getAllConfigurationFiles()) {
                 LOG.info("Applying ProGuard configuration file {}", configFile);

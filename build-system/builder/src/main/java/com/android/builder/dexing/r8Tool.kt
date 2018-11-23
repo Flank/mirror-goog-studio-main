@@ -107,6 +107,7 @@ fun runR8(
     }
 
     if (proguardConfig.proguardMapOutput != null) {
+        Files.deleteIfExists(proguardConfig.proguardMapOutput)
         Files.createDirectories(proguardConfig.proguardMapOutput.parent)
         r8CommandBuilder.setProguardMapOutputPath(proguardConfig.proguardMapOutput)
     }

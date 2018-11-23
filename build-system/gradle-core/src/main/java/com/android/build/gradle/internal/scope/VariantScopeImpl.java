@@ -1586,7 +1586,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 globalScope.getBuildDir(),
                 FD_OUTPUTS,
                 "mapping",
-                "r8",
                 getVariantConfiguration().getDirName(),
                 "mapping.txt");
     }

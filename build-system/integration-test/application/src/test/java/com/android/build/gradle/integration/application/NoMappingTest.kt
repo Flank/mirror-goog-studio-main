@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import org.junit.Rule
@@ -31,9 +32,12 @@ class NoMappingTest {
     @Test
     fun checkEmptyMapping() {
         File(project.testDir, "proguard-rules.pro").appendText("\n-dontobfuscate")
-        project.execute("assembleMinified")
 
-        val mappingFile = FileUtils.find(project.file("build/outputs/mapping"), "mapping.txt").get()
-        assertThat(mappingFile).isFile()
+        project.executor().with(BooleanOption.ENABLE_R8, true).run("assembleMinified")
+        val mappingFile = project.file("build/outputs/mapping/minified/mapping.txt")
+        assertThat(mappingFile).contains("com.android.tests.basic.Main -> com.android.tests.basic.Main")
+
+        project.executor().with(BooleanOption.ENABLE_R8, false).run("assembleMinified")
+        assertThat(mappingFile).hasContents("")
     }
 }
