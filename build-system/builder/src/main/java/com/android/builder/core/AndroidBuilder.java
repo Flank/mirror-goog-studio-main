@@ -82,12 +82,11 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.security.PrivateKey;
-import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -1128,10 +1127,7 @@ public class AndroidBuilder {
             @NonNull ApkCreatorFactory apkCreatorFactory)
             throws KeytoolException, PackagerException, IOException {
 
-        PrivateKey key;
-        X509Certificate certificate;
-        boolean v1SigningEnabled;
-        boolean v2SigningEnabled;
+        Optional<SigningOptions> signingOptions;
 
         if (signingConfig != null && signingConfig.isSigningReady()) {
             CertificateInfo certificateInfo = KeystoreHelper.getCertificateInfo(
@@ -1140,20 +1136,18 @@ public class AndroidBuilder {
                     Preconditions.checkNotNull(signingConfig.getStorePassword()),
                     Preconditions.checkNotNull(signingConfig.getKeyPassword()),
                     Preconditions.checkNotNull(signingConfig.getKeyAlias()));
-            key = certificateInfo.getKey();
-            certificate = certificateInfo.getCertificate();
-            v1SigningEnabled = signingConfig.isV1SigningEnabled();
-            v2SigningEnabled = signingConfig.isV2SigningEnabled();
+            signingOptions =
+                    Optional.of(
+                            SigningOptions.create(
+                                    certificateInfo.getKey(),
+                                    certificateInfo.getCertificate(),
+                                    signingConfig.isV1SigningEnabled(),
+                                    signingConfig.isV2SigningEnabled(),
+                                    API_LEVEL_SPLIT_APK));
         } else {
-            key = null;
-            certificate = null;
-            v1SigningEnabled = false;
-            v2SigningEnabled = false;
+            signingOptions = Optional.empty();
         }
 
-        SigningOptions signingOptions =
-                SigningOptions.create(
-                        key, certificate, v1SigningEnabled, v2SigningEnabled, API_LEVEL_SPLIT_APK);
         ApkCreatorFactory.CreationData creationData =
                 new ApkCreatorFactory.CreationData(
                         outApkLocation,
