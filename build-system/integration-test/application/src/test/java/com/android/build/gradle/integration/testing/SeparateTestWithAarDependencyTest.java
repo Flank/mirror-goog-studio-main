@@ -187,9 +187,6 @@ public class SeparateTestWithAarDependencyTest {
                         "com.android.support:support-v4:"
                                 + TestVersions.SUPPORT_LIB_VERSION
                                 + "@aar",
-                        "com.android.support:support-annotations:"
-                                + TestVersions.SUPPORT_LIB_VERSION
-                                + "@jar",
                         "com.android.support:animated-vector-drawable:"
                                 + TestVersions.SUPPORT_LIB_VERSION
                                 + "@aar",
