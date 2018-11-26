@@ -8,6 +8,7 @@ android {
 
     defaultConfig {
         minSdkVersion 16
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -21,4 +22,8 @@ android {
 
 dependencies {
     api project(':lib')
+
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation "com.android.support.test:runner:${project.testSupportLibVersion}"
+    androidTestImplementation "com.android.support.test:rules:${project.testSupportLibVersion}"
 }

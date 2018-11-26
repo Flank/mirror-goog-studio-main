@@ -1,11 +1,16 @@
 package com.android.tests.basic;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
 
+import android.support.test.runner.AndroidJUnit4;
 import java.lang.reflect.Method;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
-public class StringGetterTest extends TestCase {
+@RunWith(AndroidJUnit4.class)
+public class StringGetterTest {
 
+    @Test
     public void testNonObfuscatedMethod1() {
         // this should not be obfuscated
         String className = "com.android.tests.basic.StringGetter";
@@ -14,6 +19,7 @@ public class StringGetterTest extends TestCase {
         searchMethod(className, methodName, true /*shouldExist*/);
     }
 
+    @Test
     public void testNonObfuscatedMethod2() {
         // this should not be obfuscated
         String className = "com.android.tests.basic.StringGetter";
@@ -21,6 +27,7 @@ public class StringGetterTest extends TestCase {
         searchMethod(className, methodName, true /*shouldExist*/);
     }
 
+    @Test
     public void testObduscatedMethod() {
         String className = "com.android.tests.basic.StringGetter";
         String methodName = "getStringInternal";
@@ -43,6 +50,5 @@ public class StringGetterTest extends TestCase {
             }
         }
     }
-
 }
 

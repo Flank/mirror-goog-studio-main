@@ -2,11 +2,8 @@ package com.android.build.gradle.integration.testing;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
-import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
-import java.io.IOException;
 import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
