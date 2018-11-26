@@ -36,7 +36,7 @@ import com.android.testutils.TestUtils
 import com.android.testutils.apk.Dex
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.MoreTruth.assertThat
-import com.android.testutils.truth.PathSubject
+import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
@@ -75,7 +75,9 @@ class R8TransformTest {
         val classes = tmp.root.toPath().resolve("classes.jar")
         TestInputsGenerator.jarWithEmptyClasses(classes, listOf("test/A", "test/B"))
 
-        val jarInput = TransformTestHelper.singleJarBuilder(classes.toFile()).build()
+        val jarInput = TransformTestHelper.singleJarBuilder(classes.toFile())
+            .setContentTypes(CLASSES)
+            .build()
         val invocation =
             TransformTestHelper
                 .invocationBuilder()
@@ -107,8 +109,7 @@ class R8TransformTest {
         }
 
         val jarInput = TransformTestHelper.singleJarBuilder(classes.toFile())
-            .setContentTypes(CLASSES)
-            .setContentTypes(RESOURCES).build()
+            .setContentTypes(CLASSES, RESOURCES).build()
         val invocation =
             TransformTestHelper
                 .invocationBuilder()
@@ -146,7 +147,7 @@ class R8TransformTest {
         }
 
         val jarInput = TransformTestHelper.singleJarBuilder(classes.toFile())
-            .setContentTypes(RESOURCES).build()
+            .setContentTypes(RESOURCES, CLASSES).build()
         val invocation =
             TransformTestHelper
                 .invocationBuilder()
@@ -207,7 +208,8 @@ class R8TransformTest {
     fun testLibraryClassesPassedToR8() {
         val classes = tmp.root.toPath().resolve("classes.jar")
         TestInputsGenerator.pathWithClasses(classes, listOf(Animal::class.java))
-        val jarInput = TransformTestHelper.singleJarBuilder(classes.toFile()).build()
+        val jarInput = TransformTestHelper.singleJarBuilder(classes.toFile())
+            .setContentTypes(CLASSES).build()
 
         val libraryClasses = tmp.root.toPath().resolve("library_classes.jar")
         TestInputsGenerator.pathWithClasses(libraryClasses, listOf(CarbonForm::class.java))
@@ -239,7 +241,8 @@ class R8TransformTest {
                 classes,
                 listOf(Animal::class.java, CarbonForm::class.java, Toy::class.java)
         )
-        val jarInput = TransformTestHelper.singleJarBuilder(classes.toFile()).build()
+        val jarInput =
+            TransformTestHelper.singleJarBuilder(classes.toFile()).setContentTypes(CLASSES).build()
 
         val invocation =
                 TransformTestHelper
@@ -278,7 +281,8 @@ class R8TransformTest {
                 classes,
                 listOf(Animal::class.java, CarbonForm::class.java, Cat::class.java, Toy::class.java)
         )
-        val jarInput = TransformTestHelper.singleJarBuilder(classes.toFile()).build()
+        val jarInput =
+            TransformTestHelper.singleJarBuilder(classes.toFile()).setContentTypes(CLASSES).build()
 
         val invocation =
                 TransformTestHelper
@@ -307,7 +311,8 @@ class R8TransformTest {
                 classes,
                 listOf(Animal::class.java, CarbonForm::class.java, Cat::class.java, Toy::class.java)
         )
-        val jarInput = TransformTestHelper.singleJarBuilder(classes.toFile()).build()
+        val jarInput =
+            TransformTestHelper.singleJarBuilder(classes.toFile()).setContentTypes(CLASSES).build()
 
         val invocation =
                 TransformTestHelper
@@ -357,7 +362,8 @@ class R8TransformTest {
             classes,
             listOf(Animal::class.java, CarbonForm::class.java, Cat::class.java, Toy::class.java)
         )
-        val jarInput = TransformTestHelper.singleJarBuilder(classes.toFile()).build()
+        val jarInput =
+            TransformTestHelper.singleJarBuilder(classes.toFile()).setContentTypes(CLASSES).build()
 
         val invocation =
             TransformTestHelper
@@ -409,7 +415,8 @@ class R8TransformTest {
         val nonAsciiName = "com/android/tests/basic/Ubicación"
         val classes = tmp.root.toPath().resolve("classes.jar")
         TestInputsGenerator.jarWithEmptyClasses(classes, listOf(nonAsciiName))
-        val jarInput = TransformTestHelper.singleJarBuilder(classes.toFile()).build()
+        val jarInput =
+            TransformTestHelper.singleJarBuilder(classes.toFile()).setContentTypes(CLASSES).build()
 
         val invocation =
                 TransformTestHelper
@@ -432,7 +439,8 @@ class R8TransformTest {
     fun testMappingProduced() {
         val classes = tmp.root.toPath().resolve("classes.jar")
         TestInputsGenerator.jarWithEmptyClasses(classes, listOf("test/A"))
-        val jarInput = TransformTestHelper.singleJarBuilder(classes.toFile()).build()
+        val jarInput =
+            TransformTestHelper.singleJarBuilder(classes.toFile()).setContentTypes(CLASSES).build()
 
         val invocation =
                 TransformTestHelper
@@ -447,7 +455,7 @@ class R8TransformTest {
         transform.keep("class **")
 
         transform.transform(invocation)
-        PathSubject.assertThat(outputMapping).exists()
+        assertThat(outputMapping).exists()
     }
 
     @Test
@@ -501,6 +509,38 @@ class R8TransformTest {
         assertThat(Zip(resourcesCopied)).containsFileWithContent("data/metadata.txt", "")
         assertThat(Zip(resourcesCopied)).containsFileWithContent("a/b/c//metadata.txt", "")
         assertThat(Zip(resourcesCopied)).doesNotContain("test/A.class")
+    }
+
+    @Test
+    fun testClassesIgnoredFromResources() {
+        val resDir = tmp.root.resolve("res_dir").also {
+            it.mkdir()
+            it.resolve("res.txt").createNewFile()
+            it.resolve("A.class").createNewFile()
+        }
+        val resJar = tmp.root.resolve("res.jar")
+            ZipOutputStream(resJar.outputStream()).use {
+                it.putNextEntry(ZipEntry("data.txt"))
+                it.closeEntry()
+                it.putNextEntry(ZipEntry("B.class"))
+                it.closeEntry()
+            }
+
+        val dirInput = TransformTestHelper.directoryBuilder(resDir).setContentType(RESOURCES).build()
+        val jarInput = TransformTestHelper.singleJarBuilder(resJar).setContentTypes(RESOURCES).build()
+
+        val invocation = TransformTestHelper.invocationBuilder().setInputs(jarInput, dirInput)
+            .setContext(this.context).setTransformOutputProvider(outputProvider).build()
+
+        getTransform().transform(invocation)
+
+        assertThat(outputDir.resolve("main/classes.dex")).doesNotExist()
+        Zip(outputDir.resolve("java_res.jar")).use {
+            assertThat(it).contains("res.txt")
+            assertThat(it).contains("data.txt")
+            assertThat(it).doesNotContain("A.class")
+            assertThat(it).doesNotContain("B.class")
+        }
     }
 
     private fun getDex(): Dex {

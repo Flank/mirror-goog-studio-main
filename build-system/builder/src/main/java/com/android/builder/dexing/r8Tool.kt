@@ -167,9 +167,9 @@ fun runR8(
 
     val dirResources = inputJavaResources.filter {
         if (!Files.isDirectory(it)) {
-            // API is missing to create java resources jars, but this works
-            r8ProgramResourceProvider.addProgramResourceProvider(
-                ArchiveResourceProvider.fromArchive(it, false))
+            val resourceOnlyProvider =
+                ResourceOnlyProvider(ArchiveResourceProvider.fromArchive(it, true))
+            r8ProgramResourceProvider.dataResourceProviders.add(resourceOnlyProvider.dataResourceProvider)
             false
         } else {
             true
@@ -271,7 +271,9 @@ private class R8DataResourceProvider(val dirResources: Collection<Path>) : DataR
             Files.walk(resourceBase).use {
                 it.forEach {
                     val relative = resourceBase.relativize(it)
-                    if (it != resourceBase && seen.add(relative)) {
+                    if (it != resourceBase
+                        && !it.toString().endsWith(SdkConstants.DOT_CLASS)
+                        && seen.add(relative)) {
                         when {
                             Files.isDirectory(it) -> visitor!!.visit(
                                 DataDirectoryResource.fromFile(
@@ -285,10 +287,16 @@ private class R8DataResourceProvider(val dirResources: Collection<Path>) : DataR
                             )
                         }
                     } else {
-                        logger.fine { "Ignoring duplicate Java resources $relative" }
+                        logger.fine { "Ignoring entry $relative from $resourceBase" }
                     }
                 }
             }
         }
     }
+}
+
+private class ResourceOnlyProvider(val originalProvider: ProgramResourceProvider): ProgramResourceProvider {
+    override fun getProgramResources() = listOf<ProgramResource>()
+
+    override fun getDataResourceProvider() = originalProvider.getDataResourceProvider()
 }

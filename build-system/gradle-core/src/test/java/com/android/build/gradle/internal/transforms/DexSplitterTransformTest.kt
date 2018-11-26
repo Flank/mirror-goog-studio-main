@@ -19,14 +19,14 @@ package com.android.build.gradle.internal.transforms
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.api.transform.Context
 import com.android.build.api.transform.QualifiedContent
+import com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES
+import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
 import com.android.build.api.transform.TransformOutputProvider
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeFileCollection
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.core.VariantTypeImpl
-import com.android.builder.packaging.JarMerger
-import com.android.builder.packaging.JarMerger.MODULE_PATH
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
 import com.android.testutils.apk.Dex
@@ -153,7 +153,10 @@ class DexSplitterTransformTest {
 
 
     private fun runR8(jars: List<File>, r8Keep: String? = null) {
-        val jarInputs = jars.map {TransformTestHelper.singleJarBuilder(it).build() }.toSet()
+        val jarInputs =
+            jars.asSequence().map {
+                TransformTestHelper.singleJarBuilder(it).setContentTypes(RESOURCES, CLASSES).build()
+            }.toSet()
         val r8Invocation =
                 TransformTestHelper
                         .invocationBuilder()

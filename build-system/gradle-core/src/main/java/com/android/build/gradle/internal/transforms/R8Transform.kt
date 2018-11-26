@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.transforms
 
 import com.android.build.api.transform.Format
 import com.android.build.api.transform.QualifiedContent
+import com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
 import com.android.build.api.transform.SecondaryFile
 import com.android.build.api.transform.TransformInvocation
@@ -212,16 +213,18 @@ class R8Transform(
         val inputClasses = mutableListOf<Path>()
         transformInvocation.inputs.forEach {
             it.directoryInputs.forEach { dirInput ->
-                if (dirInput.contentTypes.contains(QualifiedContent.DefaultContentType.RESOURCES)) {
+                if (dirInput.contentTypes.contains(RESOURCES)) {
                     inputJavaResources.add(dirInput.file.toPath())
-                } else {
+                }
+                if (dirInput.contentTypes.contains(CLASSES)){
                     inputClasses.add(dirInput.file.toPath())
                 }
             }
             it.jarInputs.forEach { jarInput ->
-                if (jarInput.contentTypes.contains(QualifiedContent.DefaultContentType.RESOURCES)) {
+                if (jarInput.contentTypes.contains(RESOURCES)) {
                     inputJavaResources.add(jarInput.file.toPath())
-                } else {
+                }
+                if (jarInput.contentTypes.contains(CLASSES)) {
                     inputClasses.add(jarInput.file.toPath())
                 }
             }
