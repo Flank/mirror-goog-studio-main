@@ -136,22 +136,6 @@ filegroup(
 )
 
 filegroup(
-    name = "constraint-layout_latest",
-    srcs = [":constraint-layout_1.0.2"],
-    visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "constraint-layout_1.0.2",
-    srcs = sdk_glob(
-        [
-            "extras/m2repository/com/android/support/constraint/constraint-layout/1.0.2/**",
-            "extras/m2repository/com/android/support/constraint/constraint-layout-solver/1.0.2/**",
-        ],
-    ),
-)
-
-filegroup(
     name = "platforms/latest",
     srcs = [":platforms/android-27"],
     visibility = ["//visibility:public"],
