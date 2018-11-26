@@ -19,14 +19,9 @@ package com.android.tools.lint;
 import static com.android.SdkConstants.FN_ANNOTATIONS_ZIP;
 
 import com.android.annotations.NonNull;
-import com.android.builder.model.AndroidLibrary;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Dependencies;
-import com.android.builder.model.Variant;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Project;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.intellij.codeInsight.BaseExternalAnnotationsManager;
 import com.intellij.openapi.vfs.StandardFileSystems;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -36,13 +31,11 @@ import com.intellij.util.io.URLUtil;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 public class LintExternalAnnotationsManager extends BaseExternalAnnotationsManager {
     public static final String SDK_ANNOTATIONS_PATH = "annotations.zip";
-    public static final String FN_ANNOTATIONS_XML = "annotations.xml";
 
     private final List<VirtualFile> roots = Lists.newArrayList();
 
@@ -74,20 +67,8 @@ public class LintExternalAnnotationsManager extends BaseExternalAnnotationsManag
                 }
             }
         }
-        HashSet<AndroidLibrary> seen = Sets.newHashSet();
-        List<File> files = Lists.newArrayListWithExpectedSize(2);
-        for (Project project : projects) {
-            if (project.isGradleProject()) {
-                Variant variant = project.getCurrentVariant();
-                AndroidProject model = project.getGradleProjectModel();
-                if (model != null && variant != null) {
-                    Dependencies dependencies = variant.getMainArtifact().getDependencies();
-                    for (AndroidLibrary library : dependencies.getLibraries()) {
-                        addLibraries(files, library, seen);
-                    }
-                }
-            }
-        }
+
+        List<File> files = client.getExternalAnnotations(projects);
 
         File sdkAnnotations = client.findResource(SDK_ANNOTATIONS_PATH);
         if (sdkAnnotations == null) {
@@ -102,7 +83,12 @@ public class LintExternalAnnotationsManager extends BaseExternalAnnotationsManag
             }
         }
         if (sdkAnnotations != null) {
-            files.add(sdkAnnotations);
+            if (files.isEmpty()) {
+                files = Collections.singletonList(sdkAnnotations);
+            } else {
+                files = Lists.newArrayList(files);
+                files.add(sdkAnnotations);
+            }
         }
 
         List<VirtualFile> newRoots = new ArrayList<>(files.size());
@@ -144,34 +130,5 @@ public class LintExternalAnnotationsManager extends BaseExternalAnnotationsManag
         // TODO
         //ApplicationManager.getApplication().runWriteAction(
         //    () -> ((PsiModificationTrackerImpl)myPsiManager.getModificationTracker()).incCounter());
-    }
-
-    private static void addLibraries(
-            @NonNull List<File> result, @NonNull AndroidLibrary library, Set<AndroidLibrary> seen) {
-        if (seen.contains(library)) {
-            return;
-        }
-        seen.add(library);
-
-        // As of 1.2 this is available in the model:
-        //  https://android-review.googlesource.com/#/c/137750/
-        // Switch over to this when it's in more common usage
-        // (until it is, we'll pay for failed proxying errors)
-        try {
-            File zip = library.getExternalAnnotations();
-            if (zip.exists()) {
-                result.add(zip);
-            }
-        } catch (Throwable ignore) {
-            // Using some older version than 1.2
-            File zip = new File(library.getResFolder().getParent(), FN_ANNOTATIONS_ZIP);
-            if (zip.exists()) {
-                result.add(zip);
-            }
-        }
-
-        for (AndroidLibrary dependency : library.getLibraryDependencies()) {
-            addLibraries(result, dependency, seen);
-        }
     }
 }

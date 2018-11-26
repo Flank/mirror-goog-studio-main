@@ -652,20 +652,20 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
     }
 
     override fun getApplicableUastTypes(): List<Class<out UElement>>? {
-        val types = ArrayList<Class<out UElement>>(12)
-        types.add(USimpleNameReferenceExpression::class.java)
-        types.add(ULocalVariable::class.java)
-        types.add(UTryExpression::class.java)
-        types.add(UBinaryExpressionWithType::class.java)
-        types.add(UBinaryExpression::class.java)
-        types.add(UCallExpression::class.java)
-        types.add(UClass::class.java)
-        types.add(UMethod::class.java)
-        types.add(UForEachExpression::class.java)
-        types.add(UClassLiteralExpression::class.java)
-        types.add(USwitchExpression::class.java)
-        types.add(UCallableReferenceExpression::class.java)
-        return types
+        return listOf(
+            USimpleNameReferenceExpression::class.java,
+            ULocalVariable::class.java,
+            UTryExpression::class.java,
+            UBinaryExpressionWithType::class.java,
+            UBinaryExpression::class.java,
+            UCallExpression::class.java,
+            UClass::class.java,
+            UMethod::class.java,
+            UForEachExpression::class.java,
+            UClassLiteralExpression::class.java,
+            USwitchExpression::class.java,
+            UCallableReferenceExpression::class.java
+        )
     }
 
     private inner class ApiVisitor(private val context: JavaContext) : UElementHandler() {

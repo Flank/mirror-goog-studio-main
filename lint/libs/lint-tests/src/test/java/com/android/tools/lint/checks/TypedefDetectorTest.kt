@@ -1251,4 +1251,153 @@ class TypedefDetectorTest : AbstractCheckTest() {
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
+
+    fun test119753493() {
+        // Regression test for
+        // 119753493: False positive for WrongConstant after AndroidX Migration
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.content.Context;
+
+                import androidx.recyclerview.widget.LinearLayoutManager;
+
+                public class WrongConstantTest {
+                    static class MyLayoutManager extends LinearLayoutManager {
+
+                        public MyLayoutManager(Context context) {
+                            super(context);
+                        }
+
+                        public boolean isVertical() {
+                            return getOrientation() == VERTICAL;
+                        }
+                    }
+                }
+                """
+            ).indented(),
+
+            // Binary version of class files; sources are below. To reproduce
+            // this bug we need to use bytecode, not source resolution
+            // (since we want to verify what happens with field declarations
+            // where the initializer is not present.)
+            base64gzip("libs/recyclerview.jar", "" +
+                    "H4sIAAAAAAAAAAvwZmYRYeDg4GBgiaryZUACnAwsDL6uIY66nn5u+v9OMTAw" +
+                    "MwR4s3OApJigSgJwahYBYrhmX0c/TzfX4BA9X7fPvmdO+3jr6l3k9dbVOnfm" +
+                    "/OYggyvGD54W6Xn56nj6XixdxcIZ8ULyiHSUhFbGD3FVtedLtCyei4s+EVed" +
+                    "xnA1+1PRxyJGsCskPtrYugDtcIW6gouBAeiyX5GorpAF4sS8lKL8zJQK/aLU" +
+                    "5MrknNSisszUcv3yzJT01BJ9hAfQteoT0hoEFQsDiukl5yQWF/cG+nofdhCo" +
+                    "vXzNLfvqtV9/GeVc1jTtfOEp6LVWgoP3yoxm8ZvLuvM6pW8sy6qfpn6w2f6A" +
+                    "vKpfUmvVZ6PN78+emX383PPrv9kbknOiIzZviHNilBYz080RTLNdvMTPZVGS" +
+                    "r4Z1lPflniMJCuwtl6ZeL8zbu+1+AecTgWezNsqpOKk3drQZnV+l4MO+tu+9" +
+                    "iXReV2fA7oxYs7yY/33t0TavreNmB9gER6k+b/lTZ6sgMqvQX0gsZmlq9Y8b" +
+                    "U4+J3+2Y6WrO5yrCsTjIRo37ZHOSffu6C7bCq+9156ZYcClnzptSs21+6Ps4" +
+                    "tbL0M6xn5m76/boiw6lyZVDrq5SPK/TnsSQWr/lmPb9K8Jjo4ooZAq/+3ws9" +
+                    "xqTV4rUqy93p/u247frO1yx+bj/27ojshmaZ+xwnkmUvz3hor2d4KnFaYSXT" +
+                    "+UTez/UGhWnGc1b/2WS5/MyVg9Kf1keeVjqe5DYt4HHEv8wDQtM2//ISC09M" +
+                    "lT0yVaar2vg+KPpzE78vT2dkYHBhQk6E6HFoRigOfTLzUhOLfBIr80tLfBPz" +
+                    "EtNTiyBROTUo1lvaUcTWfHZKaWxy1lv3NVG1xpUvvD6eVfII4FnDlnSjfZ+v" +
+                    "mbPVpnOHLD4+tv+69ILSjwf8H9xF3+csitjQuu/OzOJv5yzLn735+/62NcPt" +
+                    "iO8bZRY08W/WSD56fFW/qVPBjbel+8r6f1cbNlq1/Cxbd37tBTPBmxFVNSIt" +
+                    "M1P2X3+/5XtSe6fAvNLeSbe4Vhf5rqgLjLoZe+hUms6XC0+yJJbu3HZHcOvd" +
+                    "qtTyWZwL75xrn7RBQFu3/3g6c+avpAmGmyWerzwhlDjlcPCmnP0riw89dz+5" +
+                    "+sSJL1Znl+wM+GS0K+TwxC0TLwupiV3/eUOOU9ft0huBPyVJ3hl/SpWceln/" +
+                    "7ejYfvOJOoffp42eTxuLgvfUH3xweeUOgZZn9uyvfXe27BT4/ENCqcX/xq/7" +
+                    "rwVendM/1SLnevfgSp9cw8wmXr9NhzorMhZw3Wc9uqIl8thBY5vjU/d226r3" +
+                    "SF1ndWPv8d7DtlZ6StTT+A91Iral60x3rGEuW7H5nkycYZX1y2NKcbv/N5V7" +
+                    "VxyOOhJ/z9d0MRPz1Gv+FffnP1nFujPmRMvktpU89oUXr1aAc3/+6tas2cDo" +
+                    "X4U3+q1JycIq/kWZqXkliSWZ+XnQ7Nx/0IvZUKDtf2bu9bzo3L2Vl5p1KgzF" +
+                    "bSsnLVLg0I5+Y3tX1svrjJPZ7Vvhnx8w/wh4tKYjVMDEYObJM/b28XH358Uz" +
+                    "zHmscEjhUF2LoOK8aVvP/zwWodZjfM58Z6q98R676FdT1WTStnI/m5i+zKj4" +
+                    "dPi5qY7swbu6CmquZ0y5mrfwy3WHVJkbpldVF26+tE3s9RP+l7WZvvsmtr4z" +
+                    "qT2hdl3wWAv3W674WY88f/pvmNqwcqummMyV8huTr0gb/jJQ/VK/h237uY3z" +
+                    "I2JDdS4s1vWwii+S43Dfvyl3v5fFX3NPJ4UtKrcy/KSti7ZfcAz/FPBr4hG9" +
+                    "xe0S1Ze6Lup8MfSpeg8KYTtueb6fwPBbyAgKYUYmEQbUch5WA4AqCVSAUmWg" +
+                    "a0UutkVQtNniqDBAJnAx4C7eEeAw4cIe4RiQUciFiD6KUf9IL/zRDUdOomYo" +
+                    "hh9iIrdUQrcDOZKsUew4yEJR0g/wZmUDGcMGhJ+AhiuDeQDkSQ9gKwgAAA=="),
+
+            /*
+               These are the source files for the two classes that are packaged into
+               the above libs/recyclerview.jar file:
+
+            java(
+                """
+                package androidx.recyclerview.widget;
+
+                import android.content.Context;
+
+                public class LinearLayoutManager {
+                    // Simulate classfile presence of these constants, where we can't
+                    // look at the right hand side (initialization)
+                    public static final int HORIZONTAL = RecyclerView.HORIZONTAL;
+                    public static final int VERTICAL = RecyclerView.VERTICAL;
+
+                    public LinearLayoutManager(Context context) {
+                    }
+
+                    @RecyclerView.Orientation
+                    int mOrientation = RecyclerView.DEFAULT_ORIENTATION;
+
+                    @RecyclerView.Orientation
+                    public int getOrientation() {
+                        return mOrientation;
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package androidx.recyclerview.widget;
+
+                import android.widget.LinearLayout;
+
+                import java.lang.annotation.Retention;
+                import java.lang.annotation.RetentionPolicy;
+
+                import android.support.annotation.IntDef;
+                import android.support.annotation.RestrictTo;
+
+                import static android.support.annotation.RestrictTo.Scope.LIBRARY_GROUP;
+
+                public class RecyclerView {
+                    /** @hide */
+                    @RestrictTo(LIBRARY_GROUP)
+                    @IntDef({HORIZONTAL, VERTICAL})
+                    @Retention(RetentionPolicy.SOURCE)
+                    public @interface Orientation {}
+
+                    public static final int HORIZONTAL = LinearLayout.HORIZONTAL;
+                    public static final int VERTICAL = LinearLayout.VERTICAL;
+
+                    static final int DEFAULT_ORIENTATION = VERTICAL;
+                }
+                """
+            ).indented(),
+            */
+
+            jar("annotations.zip", xml("androidx/recyclerview/widget/annotations.xml", "" +
+                    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                    "<root>\n" +
+                    "  <item name=\"androidx.recyclerview.widget.LinearLayoutManager int getOrientation()\">\n" +
+                    "    <annotation name=\"androidx.annotation.IntDef\">\n" +
+                    "      <val name=\"value\" val=\"{androidx.recyclerview.widget.RecyclerView.HORIZONTAL, androidx.recyclerview.widget.RecyclerView.VERTICAL}\" />\n" +
+                    "    </annotation>\n" +
+                    "  </item>\n" +
+                    "  <item name=\"androidx.recyclerview.widget.LinearLayoutManager mOrientation\">\n" +
+                    "    <annotation name=\"androidx.annotation.IntDef\">\n" +
+                    "      <val name=\"value\" val=\"{androidx.recyclerview.widget.RecyclerView.HORIZONTAL, androidx.recyclerview.widget.RecyclerView.VERTICAL}\" />\n" +
+                    "    </annotation>\n" +
+                    "  </item>\n" +
+                    "  <item name=\"androidx.recyclerview.widget.LinearLayoutManager void setOrientation(int) 0\">\n" +
+                    "    <annotation name=\"androidx.annotation.IntDef\">\n" +
+                    "      <val name=\"value\" val=\"{androidx.recyclerview.widget.RecyclerView.HORIZONTAL, androidx.recyclerview.widget.RecyclerView.VERTICAL}\" />\n" +
+                    "    </annotation>\n" +
+                    "  </item>\n" +
+                    "</root>\n")),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
 }

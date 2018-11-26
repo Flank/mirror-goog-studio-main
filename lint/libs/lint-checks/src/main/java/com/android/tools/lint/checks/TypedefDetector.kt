@@ -57,6 +57,7 @@ import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UPolyadicExpression
 import org.jetbrains.uast.UPrefixExpression
 import org.jetbrains.uast.UReferenceExpression
+import org.jetbrains.uast.UResolvable
 import org.jetbrains.uast.UReturnExpression
 import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UastBinaryOperator
@@ -549,6 +550,13 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             "Must be one or more of: $values"
         } else {
             "Must be one of: $values"
+        }
+
+        if (values == "RecyclerView.HORIZONTAL, RecyclerView.VERTICAL" &&
+            errorNode is UResolvable &&
+            (errorNode.resolve() as? PsiField)?.containingClass?.name == "LinearLayoutManager"
+        ) {
+            return
         }
 
         if (values.startsWith("MediaMetadataCompat.METADATA_KEY_")) {

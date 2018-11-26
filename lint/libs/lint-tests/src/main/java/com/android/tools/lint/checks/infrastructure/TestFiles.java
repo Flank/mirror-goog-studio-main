@@ -269,7 +269,8 @@ public class TestFiles {
     @NonNull
     public static TestFile.JarTestFile jar(
             @NonNull String to, @NonNull LintDetectorTest.TestFile... files) {
-        if (!to.endsWith("jar")) { // don't insist on .jar since we're also supporting .srcjar etc
+        if (!to.endsWith("jar") // don't insist on .jar since we're also supporting .srcjar etc
+                && !to.endsWith("zip")) {
             throw new IllegalArgumentException("Expected .jar suffix for jar test file");
         }
 

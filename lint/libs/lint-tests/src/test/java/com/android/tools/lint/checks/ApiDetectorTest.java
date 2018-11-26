@@ -4924,13 +4924,13 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "import android.graphics.drawable.Drawable\n"
                                         + "import android.text.style.ImageSpan\n"
                                         + "\n"
-                                        + "class SomeClass(val drawable: Drawable) {\n"
+                                        + "class SomeClass(val drawable: Drawable?) {\n"
                                         + "    constructor(context: Context, resourceId: Int) : this(context.getDrawable(resourceId)) {\n"
                                         + "        SomeClass(context.getDrawable(resourceId))\n"
                                         + "    }\n"
                                         + "}\n"
                                         + "\n"
-                                        + "class AnotherClass(context: Context, id: Int): ImageSpan(context.getDrawable(id)) {\n"
+                                        + "class AnotherClass(context: Context, id: Int): ImageSpan(context.getDrawable(id)!!) {\n"
                                         + "    init {\n"
                                         + "        val x = context.getDrawable(id)\n"
                                         + "    }\n"
@@ -4944,7 +4944,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "        SomeClass(context.getDrawable(resourceId))\n"
                                 + "                          ~~~~~~~~~~~\n"
                                 + "src/test/pkg/SomeClass.kt:13: Error: Call requires API level 21 (current min is 15): android.content.Context#getDrawable [NewApi]\n"
-                                + "class AnotherClass(context: Context, id: Int): ImageSpan(context.getDrawable(id)) {\n"
+                                + "class AnotherClass(context: Context, id: Int): ImageSpan(context.getDrawable(id)!!) {\n"
                                 + "                                                                 ~~~~~~~~~~~\n"
                                 + "src/test/pkg/SomeClass.kt:15: Error: Call requires API level 21 (current min is 15): android.content.Context#getDrawable [NewApi]\n"
                                 + "        val x = context.getDrawable(id)\n"
@@ -5002,14 +5002,14 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "package test.pkg\n"
                                         + "\n"
                                         + "import android.app.Activity\n"
-                                        + "import com.example.lint.library.myapplication.R\n"
+                                        + "import test.pkg.R\n"
                                         + "\n"
                                         + "class MainActivity2 : Activity() {\n"
                                         + "    val illegalColor1 by lazy {\n"
-                                        + "        resources.getColor(R.color.primary_text_default_material_light, theme)\n"
+                                        + "        resources.getColor(R.color.primary_text_default_material_light, null)\n"
                                         + "    }\n"
                                         + "\n"
-                                        + "    val illegalColor2 = resources.getColor(R.color.primary_text_default_material_light, theme)\n"
+                                        + "    val illegalColor2 = resources.getColor(R.color.primary_text_default_material_light, null)\n"
                                         + "}\n"),
                         java(
                                 ""
@@ -5021,13 +5021,14 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "}\n"))
                 .run()
                 .expect(
-                        "src/test/pkg/MainActivity2.kt:8: Error: Call requires API level 23 (current min is 1): android.content.res.Resources#getColor [NewApi]\n"
-                                + "        resources.getColor(R.color.primary_text_default_material_light, theme)\n"
+                        ""
+                                + "src/test/pkg/MainActivity2.kt:8: Error: Call requires API level 23 (current min is 1): android.content.res.Resources#getColor [NewApi]\n"
+                                + "        resources.getColor(R.color.primary_text_default_material_light, null)\n"
                                 + "                  ~~~~~~~~\n"
                                 + "src/test/pkg/MainActivity2.kt:11: Error: Call requires API level 23 (current min is 1): android.content.res.Resources#getColor [NewApi]\n"
-                                + "    val illegalColor2 = resources.getColor(R.color.primary_text_default_material_light, theme)\n"
+                                + "    val illegalColor2 = resources.getColor(R.color.primary_text_default_material_light, null)\n"
                                 + "                                  ~~~~~~~~\n"
-                                + "2 errors, 0 warnings\n");
+                                + "2 errors, 0 warnings");
     }
 
     public void testSupportLibrary() {

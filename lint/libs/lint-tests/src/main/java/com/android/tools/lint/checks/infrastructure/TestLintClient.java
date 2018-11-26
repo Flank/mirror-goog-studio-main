@@ -19,6 +19,8 @@ package com.android.tools.lint.checks.infrastructure;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.DOT_KT;
+import static com.android.SdkConstants.FN_ANNOTATIONS_JAR;
+import static com.android.SdkConstants.FN_ANNOTATIONS_ZIP;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.ide.common.rendering.api.ResourceNamespace.RES_AUTO;
 import static com.android.tools.lint.checks.infrastructure.KotlinClasspathKt.findKotlinStdlibPath;
@@ -122,6 +124,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.uast.UFile;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -1170,6 +1173,25 @@ public class TestLintClient extends LintCliClient {
         }
 
         return testSourceFolders;
+    }
+
+    @NotNull
+    @Override
+    public List<File> getExternalAnnotations(@NotNull Collection<? extends Project> projects) {
+        List<File> externalAnnotations = Lists.newArrayList(super.getExternalAnnotations(projects));
+
+        for (Project project : projects) {
+            File annotationsZip = new File(project.getDir(), FN_ANNOTATIONS_ZIP);
+            if (annotationsZip.isFile()) {
+                externalAnnotations.add(annotationsZip);
+            }
+            File annotationsJar = new File(project.getDir(), FN_ANNOTATIONS_JAR);
+            if (annotationsJar.isFile()) {
+                externalAnnotations.add(annotationsJar);
+            }
+        }
+
+        return externalAnnotations;
     }
 
     @Nullable

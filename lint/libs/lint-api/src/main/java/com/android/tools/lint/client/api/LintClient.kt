@@ -23,6 +23,7 @@ import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.DOT_SRCJAR
 import com.android.SdkConstants.DOT_XML
 import com.android.SdkConstants.FD_ASSETS
+import com.android.SdkConstants.FN_ANNOTATIONS_ZIP
 import com.android.SdkConstants.FN_BUILD_GRADLE
 import com.android.SdkConstants.GEN_FOLDER
 import com.android.SdkConstants.LIBS_FOLDER
@@ -61,6 +62,7 @@ import com.android.utils.XmlUtils
 import com.google.common.annotations.Beta
 import com.google.common.base.Charsets.UTF_8
 import com.google.common.base.Splitter
+import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.common.collect.Sets
 import com.google.common.io.Files
@@ -1592,6 +1594,57 @@ abstract class LintClient {
 
     /** Returns a repository logger used by this client.  */
     open fun getRepositoryLogger(): ProgressIndicator = RepoLogger()
+
+    /**
+     * Returns the external annotation zip files for the given projects (transitively), if any.
+     */
+    open fun getExternalAnnotations(projects: Collection<Project>): List<File> {
+        val seen = Sets.newHashSet<AndroidLibrary>()
+        val files = Lists.newArrayListWithExpectedSize<File>(2)
+        for (project in projects) {
+            if (project.isGradleProject) {
+                val variant = project.currentVariant ?: continue
+                val dependencies = variant.mainArtifact.dependencies
+                for (library in dependencies.libraries) {
+                    addLibraries(files, library, seen)
+                }
+            }
+        }
+
+        return files
+    }
+
+    private fun addLibraries(
+        result: MutableList<File>,
+        library: AndroidLibrary,
+        seen: MutableSet<AndroidLibrary>
+    ) {
+        if (seen.contains(library)) {
+            return
+        }
+        seen.add(library)
+
+        // As of 1.2 this is available in the model:
+        //  https://android-review.googlesource.com/#/c/137750/
+        // Switch over to this when it's in more common usage
+        // (until it is, we'll pay for failed proxying errors)
+        try {
+            val zip = library.externalAnnotations
+            if (zip.exists()) {
+                result.add(zip)
+            }
+        } catch (ignore: Throwable) {
+            // Using some older version than 1.2
+            val zip = File(library.resFolder.parent, FN_ANNOTATIONS_ZIP)
+            if (zip.exists()) {
+                result.add(zip)
+            }
+        }
+
+        for (dependency in library.libraryDependencies) {
+            addLibraries(result, dependency, seen)
+        }
+    }
 
     private class RepoLogger : ProgressIndicatorAdapter() {
         // Intentionally not logging these: the SDK manager is
