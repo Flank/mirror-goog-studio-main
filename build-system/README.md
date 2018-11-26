@@ -43,7 +43,7 @@ Additionally, you should connect a device to your workstation and run:
 
 To run a specific connectedIntegrationTest, run:
 
-```$ ./gradlew connectedIntegrationTest -D:base:build-system:integration-test:application:connectedIntegrationTest.single=MultiProjectConnectedTest```
+```$ ./gradlew connectedIntegrationTest --tests=MultiProjectConnectedTest```
 
 Ro run a specific integration test, run:
 
