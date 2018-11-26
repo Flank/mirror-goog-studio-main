@@ -22,6 +22,11 @@ android {
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
 
+    defaultConfig {
+        minSdkVersion rootProject.supportLibMinSdk
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
     targetProjectPath ':app'
 
     // create a minified build type
@@ -30,6 +35,13 @@ android {
         minified {
             minifyEnabled true
             useProguard true
+            testProguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+}
+
+dependencies {
+    implementation 'junit:junit:4.12'
+    implementation "com.android.support.test:runner:${project.testSupportLibVersion}"
+    implementation "com.android.support.test:rules:${project.testSupportLibVersion}"
 }
