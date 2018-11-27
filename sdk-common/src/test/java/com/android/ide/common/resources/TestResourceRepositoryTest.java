@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.android.annotations.NonNull;
 import com.android.ide.common.rendering.api.AttrResourceValue;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.StyleItemResourceValue;
@@ -44,21 +45,19 @@ public class TestResourceRepositoryTest extends BaseTestCase {
     public void testMergeByCount() throws Exception {
         TestResourceRepository repo = getResourceRepository();
 
-        ResourceTable items = repo.getFullTable();
-
-        assertEquals(6, items.get(RES_AUTO, ResourceType.DRAWABLE).size());
-        assertEquals(1, items.get(RES_AUTO, ResourceType.RAW).size());
-        assertEquals(4, items.get(RES_AUTO, ResourceType.LAYOUT).size());
-        assertEquals(1, items.get(RES_AUTO, ResourceType.COLOR).size());
-        assertEquals(7, items.get(RES_AUTO, ResourceType.STRING).size());
-        assertEquals(1, items.get(RES_AUTO, ResourceType.STYLE).size());
-        assertEquals(3, items.get(RES_AUTO, ResourceType.ARRAY).size());
-        assertEquals(7, items.get(RES_AUTO, ResourceType.ATTR).size());
-        assertEquals(1, items.get(RES_AUTO, ResourceType.STYLEABLE).size());
-        assertEquals(2, items.get(RES_AUTO, ResourceType.DIMEN).size());
-        assertEquals(1, items.get(RES_AUTO, ResourceType.ID).size());
-        assertEquals(1, items.get(RES_AUTO, ResourceType.INTEGER).size());
-        assertEquals(2, items.get(RES_AUTO, ResourceType.PLURALS).size());
+        assertEquals(6, repo.getResources(RES_AUTO, ResourceType.DRAWABLE).size());
+        assertEquals(1, repo.getResources(RES_AUTO, ResourceType.RAW).size());
+        assertEquals(4, repo.getResources(RES_AUTO, ResourceType.LAYOUT).size());
+        assertEquals(1, repo.getResources(RES_AUTO, ResourceType.COLOR).size());
+        assertEquals(7, repo.getResources(RES_AUTO, ResourceType.STRING).size());
+        assertEquals(1, repo.getResources(RES_AUTO, ResourceType.STYLE).size());
+        assertEquals(3, repo.getResources(RES_AUTO, ResourceType.ARRAY).size());
+        assertEquals(7, repo.getResources(RES_AUTO, ResourceType.ATTR).size());
+        assertEquals(1, repo.getResources(RES_AUTO, ResourceType.STYLEABLE).size());
+        assertEquals(2, repo.getResources(RES_AUTO, ResourceType.DIMEN).size());
+        assertEquals(1, repo.getResources(RES_AUTO, ResourceType.ID).size());
+        assertEquals(1, repo.getResources(RES_AUTO, ResourceType.INTEGER).size());
+        assertEquals(2, repo.getResources(RES_AUTO, ResourceType.PLURALS).size());
     }
 
     @Test
@@ -264,8 +263,8 @@ public class TestResourceRepositoryTest extends BaseTestCase {
         repo.update(resourceMerger);
 
         // checks the initial state of the repo
-        ResourceTable items = repo.getFullTable();
-        ListMultimap<String, ResourceItem> drawables = items.get(RES_AUTO, ResourceType.DRAWABLE);
+        ListMultimap<String, ResourceItem> drawables =
+                repo.getResources(RES_AUTO, ResourceType.DRAWABLE);
         assertNotNull("Drawable null check", drawables);
         assertEquals("Drawable size check", 6, drawables.size());
         verifyResourceExists(repo,
@@ -326,7 +325,7 @@ public class TestResourceRepositoryTest extends BaseTestCase {
         // check the new content.
         repo.update(resourceMerger);
 
-        drawables = items.get(RES_AUTO, ResourceType.DRAWABLE);
+        drawables = repo.getResources(RES_AUTO, ResourceType.DRAWABLE);
         assertNotNull("Drawable null check", drawables);
         assertEquals("Drawable size check", 5, drawables.size());
         verifyResourceExists(repo,
@@ -354,8 +353,8 @@ public class TestResourceRepositoryTest extends BaseTestCase {
         repo.update(resourceMerger);
 
         // checks the initial state of the repo
-        ResourceTable items = repo.getFullTable();
-        ListMultimap<String, ResourceItem> strings = items.get(RES_AUTO, ResourceType.STRING);
+        ListMultimap<String, ResourceItem> strings =
+                repo.getResources(RES_AUTO, ResourceType.STRING);
         assertNotNull("String null check", strings);
         assertEquals("String size check", 5, strings.size());
         verifyResourceExists(repo,
@@ -407,7 +406,7 @@ public class TestResourceRepositoryTest extends BaseTestCase {
         // check the new content.
         repo.update(resourceMerger);
 
-        strings = items.get(RES_AUTO, ResourceType.STRING);
+        strings = repo.getResources(RES_AUTO, ResourceType.STRING);
         assertNotNull("String null check", strings);
         assertEquals("String size check", 4, strings.size());
         verifyResourceExists(repo,
@@ -434,8 +433,8 @@ public class TestResourceRepositoryTest extends BaseTestCase {
         repo.update(resourceMerger);
 
         // checks the initial state of the repo
-        ResourceTable items = repo.getFullTable();
-        ListMultimap<String, ResourceItem> strings = items.get(RES_AUTO, ResourceType.STRING);
+        ListMultimap<String, ResourceItem> strings =
+                repo.getResources(RES_AUTO, ResourceType.STRING);
         assertNotNull("String null check", strings);
         assertEquals("String size check", 2, strings.size());
         verifyResourceExists(repo,
@@ -465,7 +464,7 @@ public class TestResourceRepositoryTest extends BaseTestCase {
         // check the new content.
         repo.update(resourceMerger);
 
-        strings = items.get(RES_AUTO, ResourceType.STRING);
+        strings = repo.getResources(RES_AUTO, ResourceType.STRING);
         assertNotNull("String null check", strings);
         assertEquals("String size check", 2, strings.size());
         verifyResourceExists(repo,
@@ -490,8 +489,8 @@ public class TestResourceRepositoryTest extends BaseTestCase {
         repo.update(resourceMerger);
 
         // checks the initial state of the repo
-        ResourceTable items = repo.getFullTable();
-        ListMultimap<String, ResourceItem> layouts = items.get(RES_AUTO, ResourceType.LAYOUT);
+        ListMultimap<String, ResourceItem> layouts =
+                repo.getResources(RES_AUTO, ResourceType.LAYOUT);
         assertNotNull("String null check", layouts);
         assertEquals("String size check", 3, layouts.size());
         verifyResourceExists(repo,
@@ -530,7 +529,7 @@ public class TestResourceRepositoryTest extends BaseTestCase {
         // check the new content.
         repo.update(resourceMerger);
 
-        layouts = items.get(RES_AUTO, ResourceType.LAYOUT);
+        layouts = repo.getResources(RES_AUTO, ResourceType.LAYOUT);
         assertNotNull("String null check", layouts);
         assertEquals("String size check", 3, layouts.size());
         verifyResourceExists(repo,
@@ -599,9 +598,7 @@ public class TestResourceRepositoryTest extends BaseTestCase {
     }
 
     private static void verifyResourceExists(
-            TestResourceRepository repository, String... dataItemKeys) {
-        ResourceTable items = repository.getFullTable();
-
+            @NonNull TestResourceRepository repository, @NonNull String... dataItemKeys) {
         for (String resKey : dataItemKeys) {
             String type, name, qualifier = "";
 
@@ -624,7 +621,7 @@ public class TestResourceRepositoryTest extends BaseTestCase {
             ResourceType resourceType = ResourceType.fromClassName(type);
             assertNotNull("Type check for " + resKey, resourceType);
 
-            Multimap<String, ResourceItem> map = items.get(RES_AUTO, resourceType);
+            Multimap<String, ResourceItem> map = repository.getResources(RES_AUTO, resourceType);
             assertNotNull("Map check for " + resKey, map);
 
             Collection<ResourceItem> list = map.get(name);
