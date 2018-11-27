@@ -2,6 +2,9 @@ apply plugin: 'com.android.application'
 
 dependencies {
     api project(':lib')
+
+    androidTestImplementation "com.android.support.test:runner:${project.testSupportLibVersion}"
+    androidTestImplementation "com.android.support.test:rules:${project.testSupportLibVersion}"
 }
 
 android {
@@ -14,6 +17,7 @@ android {
         minSdkVersion 16
         //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
         targetSdkVersion 16
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
     dexOptions {

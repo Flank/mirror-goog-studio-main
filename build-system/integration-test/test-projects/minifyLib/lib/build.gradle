@@ -13,6 +13,7 @@ android {
         //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
         targetSdkVersion 16
         consumerProguardFiles 'config.pro'
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 }
 
@@ -20,4 +21,7 @@ dependencies {
     // guava is intentionally defined to be compileOnly so that application using the library will
     // fail during proguard if it's not using the supplied config.pro.
     compileOnly "com.google.guava:guava:19.0"
+
+    androidTestImplementation "com.android.support.test:runner:${project.testSupportLibVersion}"
+    androidTestImplementation "com.android.support.test:rules:${project.testSupportLibVersion}"
 }
