@@ -1,5 +1,6 @@
 package com.android.build.gradle.integration.testing;
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 import static com.android.builder.core.BuilderConstants.DEBUG;
 
@@ -13,8 +14,8 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import java.io.IOException;
+import java.util.stream.Collectors;
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -39,13 +40,26 @@ public class TestWithDepTest {
     }
 
     @Test
-    public void checkThereIsADepOnTheTestVariant() throws Exception {
+    public void checkThereIsADepOnTheTestVariant() {
         LibraryGraphHelper helper = new LibraryGraphHelper(model);
         Variant debugVariant = AndroidProjectUtils.getVariantByName(model.getOnlyModel(), DEBUG);
 
         AndroidArtifact testArtifact = VariantUtils.getAndroidTestArtifact(debugVariant);
 
         DependencyGraphs graph = testArtifact.getDependencyGraphs();
-        Assert.assertEquals(1, helper.on(graph).withType(JAVA).asList().size());
+        assertThat(
+                        helper.on(graph)
+                                .withType(JAVA)
+                                .asList()
+                                .stream()
+                                .map(graphItem -> graphItem.getArtifactAddress())
+                                .map(dependency -> dependency.substring(0, dependency.indexOf(':')))
+                                .collect(Collectors.toList()))
+                .containsExactly(
+                        "com.google.guava",
+                        "junit",
+                        "org.hamcrest",
+                        "com.android.support",
+                        "net.sf.kxml");
     }
 }
