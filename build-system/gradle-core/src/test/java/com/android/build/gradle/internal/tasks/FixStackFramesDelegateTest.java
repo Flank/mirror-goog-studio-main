@@ -39,6 +39,7 @@ import com.android.builder.utils.FileCache;
 import com.android.ide.common.resources.FileStatus;
 import com.android.ide.common.workers.ExecutorServiceAdapter;
 import com.android.ide.common.workers.WorkerExecutorFacade;
+import com.android.testutils.Serialization;
 import com.android.testutils.TestInputsGenerator;
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
@@ -74,10 +75,7 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-/**
- * Testing stack frame fixing in {@link
- * com.android.build.gradle.internal.tasks.FixStackFramesDelegate}.
- */
+/** Testing stack frame fixing in {@link FixStackFramesDelegate}. */
 public class FixStackFramesDelegateTest {
 
     private static final Set<File> ANDROID_JAR =
@@ -234,6 +232,31 @@ public class FixStackFramesDelegateTest {
         delegate.doFullRun(executor);
 
         assertThat(output.list()).named("output artifacts").hasLength(0);
+    }
+
+    @Test
+    public void testClassLoaderKeySerializable() throws IOException, ClassNotFoundException {
+        FixStackFramesDelegate.ClassLoaderKey key =
+                new FixStackFramesDelegate.ClassLoaderKey("foo");
+
+        byte[] bytes = Serialization.serialize(key);
+
+        FixStackFramesDelegate.ClassLoaderKey deserializedKey =
+                (FixStackFramesDelegate.ClassLoaderKey) Serialization.deserialize(bytes);
+
+        assertThat(deserializedKey).isEqualTo(key);
+    }
+
+    @Test
+    public void testCacheKeySerializable() throws IOException, ClassNotFoundException {
+        FixStackFramesDelegate.CacheKey key = new FixStackFramesDelegate.CacheKey("foo");
+
+        byte[] bytes = Serialization.serialize(key);
+
+        FixStackFramesDelegate.CacheKey deserializedKey =
+                (FixStackFramesDelegate.CacheKey) Serialization.deserialize(bytes);
+
+        assertThat(deserializedKey).isEqualTo(key);
     }
 
     /** Loads all classes from jars, to make sure no VerifyError is thrown. */

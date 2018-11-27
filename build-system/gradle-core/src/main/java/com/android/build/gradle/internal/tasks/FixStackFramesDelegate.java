@@ -16,12 +16,13 @@
 
 package com.android.build.gradle.internal.tasks;
 
-import static com.android.utils.FileUtils.mkdirs;
+import static com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry.Manager;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LoggerWrapper;
+import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry;
 import com.android.builder.utils.ExceptionRunnable;
 import com.android.builder.utils.FileCache;
 import com.android.builder.utils.ZipEntryUtils;
@@ -45,10 +46,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.attribute.FileTime;
-import java.security.MessageDigest;
-import java.util.Base64;
 import java.util.Enumeration;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -57,9 +55,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 import javax.inject.Inject;
-import org.gradle.api.file.Directory;
-import org.gradle.api.file.FileCollection;
-import org.gradle.api.provider.Provider;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 
@@ -137,7 +132,6 @@ public class FixStackFramesDelegate {
     @NonNull private final Set<File> referencedClasses;
     @NonNull private final File outFolder;
     @Nullable private final FileCache userCache;
-    @Nullable private URLClassLoader classLoader = null;
 
     public FixStackFramesDelegate(
             @NonNull Set<File> bootClasspath,
@@ -153,25 +147,22 @@ public class FixStackFramesDelegate {
     }
 
     @NonNull
-    private URLClassLoader getClassLoader() throws MalformedURLException {
-        if (classLoader == null) {
-            ImmutableList.Builder<URL> urls = new ImmutableList.Builder<>();
-            for (File file : bootClasspath) {
-                if (file.exists()) {
-                    urls.add(file.toURI().toURL());
-                }
+    private URLClassLoader createClassLoader() throws MalformedURLException {
+        ImmutableList.Builder<URL> urls = new ImmutableList.Builder<>();
+        for (File file : bootClasspath) {
+            if (file.exists()) {
+                urls.add(file.toURI().toURL());
             }
-            for (File file : Iterables.concat(classesToFix, referencedClasses)) {
-                if (file.isDirectory() || file.isFile()) {
-                    urls.add(file.toURI().toURL());
-                }
-            }
-
-            ImmutableList<URL> allUrls = urls.build();
-            URL[] classLoaderUrls = allUrls.toArray(new URL[0]);
-            classLoader = new URLClassLoader(classLoaderUrls);
         }
-        return classLoader;
+        for (File file : Iterables.concat(classesToFix, referencedClasses)) {
+            if (file.isDirectory() || file.isFile()) {
+                urls.add(file.toURI().toURL());
+            }
+        }
+
+        ImmutableList<URL> allUrls = urls.build();
+        URL[] classLoaderUrls = allUrls.toArray(new URL[0]);
+        return new URLClassLoader(classLoaderUrls);
     }
 
     private String getUniqueName(@NonNull File input) {
@@ -180,20 +171,43 @@ public class FixStackFramesDelegate {
                 + ".jar";
     }
 
+    private void processFiles(
+            @NonNull WorkerExecutorFacade workers, @NonNull Map<File, FileStatus> changedInput)
+            throws IOException {
+        try (WorkerExecutorFacade facade = workers;
+                URLClassLoader classLoader = createClassLoader();
+                Manager<URLClassLoader, ClassLoaderKey> classLoaderManager =
+                        new Manager<>(classLoader, new ClassLoaderKey("classLoader" + hashCode()));
+                Manager<FileCache, CacheKey> cacheManager =
+                        new Manager<>(userCache, new CacheKey("userCache" + hashCode()))) {
+            for (Map.Entry<File, FileStatus> entry : changedInput.entrySet()) {
+                File out = new File(outFolder, getUniqueName(entry.getKey()));
+
+                Files.deleteIfExists(out.toPath());
+
+                if (entry.getValue() == FileStatus.NEW || entry.getValue() == FileStatus.CHANGED) {
+                    facade.submit(
+                            FixStackFramesRunnable.class,
+                            new Params(
+                                    entry.getKey(),
+                                    out,
+                                    classLoaderManager.getKey(),
+                                    cacheManager.getKey()));
+                }
+            }
+            // We keep waiting for all the workers to finnish so that all the work is done before
+            // we remove services in Manager.close()
+            facade.await();
+        }
+    }
+
     public void doFullRun(@NonNull WorkerExecutorFacade workers) throws IOException {
         FileUtils.cleanOutputDir(outFolder);
 
-        try (WorkerExecutorFacade facade = workers) {
-            for (File file : classesToFix) {
-                if (file.isFile()) {
-                    File out = new File(outFolder, getUniqueName(file));
+        Map<File, FileStatus> inputToProcess =
+                classesToFix.stream().collect(Collectors.toMap(f -> f, f -> FileStatus.NEW));
 
-                    facade.submit(
-                            FixStackFramesRunnable.class,
-                            new Params(file, out, getClassLoader(), userCache));
-                }
-            }
-        }
+        processFiles(workers, inputToProcess);
     }
 
     public void doIncrementalRun(
@@ -205,20 +219,63 @@ public class FixStackFramesDelegate {
         Set<File> jarsToProcess =
                 classesToFix.stream().filter(File::isFile).collect(Collectors.toSet());
 
-        try (WorkerExecutorFacade facade = workers) {
-            for (Map.Entry<File, FileStatus> entry : changedInput.entrySet()) {
-                File out = new File(outFolder, getUniqueName(entry.getKey()));
+        Map<File, FileStatus> inputToProcess =
+                changedInput
+                        .entrySet()
+                        .stream()
+                        .filter(
+                                e ->
+                                        e.getValue() == FileStatus.REMOVED
+                                                || jarsToProcess.contains(e.getKey()))
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-                Files.deleteIfExists(out.toPath());
+        processFiles(workers, inputToProcess);
+    }
 
-                if (jarsToProcess.contains(entry.getKey()) &&
-                        (entry.getValue() == FileStatus.NEW ||
-                                entry.getValue() == FileStatus.CHANGED)) {
-                    facade.submit(
-                            FixStackFramesRunnable.class,
-                            new Params(entry.getKey(), out, getClassLoader(), userCache));
-                }
+    private static class BaseKey implements Serializable {
+        private final String name;
+
+        public BaseKey(@NonNull String name) {
+            this.name = name;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (other instanceof BaseKey) {
+                return this.name.equals(((BaseKey) other).name);
             }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return name.hashCode();
+        }
+    }
+
+    static class ClassLoaderKey extends BaseKey
+            implements WorkerActionServiceRegistry.ServiceKey<URLClassLoader> {
+        public ClassLoaderKey(@NonNull String name) {
+            super(name);
+        }
+
+        @NonNull
+        @Override
+        public Class<URLClassLoader> getType() {
+            return URLClassLoader.class;
+        }
+    }
+
+    static class CacheKey extends BaseKey
+            implements WorkerActionServiceRegistry.ServiceKey<FileCache> {
+        public CacheKey(@NonNull String name) {
+            super(name);
+        }
+
+        @NonNull
+        @Override
+        public Class<FileCache> getType() {
+            return FileCache.class;
         }
     }
 
@@ -226,18 +283,18 @@ public class FixStackFramesDelegate {
     private static class Params implements Serializable {
         @NonNull private final File input;
         @NonNull private final File output;
-        @NonNull private final transient URLClassLoader classLoader;
-        @Nullable private final transient FileCache userCache;
+        @NonNull private final ClassLoaderKey classLoaderKey;
+        @Nullable private final CacheKey cacheKey;
 
         private Params(
                 @NonNull File input,
                 @NonNull File output,
-                @NonNull URLClassLoader classLoader,
-                @Nullable FileCache userCache) {
+                @NonNull ClassLoaderKey classLoaderKey,
+                @Nullable CacheKey cacheKey) {
             this.input = input;
             this.output = output;
-            this.classLoader = classLoader;
-            this.userCache = userCache;
+            this.classLoaderKey = classLoaderKey;
+            this.cacheKey = cacheKey;
         }
     }
 
@@ -252,9 +309,20 @@ public class FixStackFramesDelegate {
         @Override
         public void run() {
             try {
+                URLClassLoader classLoader =
+                        WorkerActionServiceRegistry.INSTANCE
+                                .getService(params.classLoaderKey)
+                                .getService();
+                FileCache userCache =
+                        params.cacheKey != null
+                                ? WorkerActionServiceRegistry.INSTANCE
+                                        .getService(params.cacheKey)
+                                        .getService()
+                                : null;
+
                 ExceptionRunnable fileCreator =
-                        createFile(params.input, params.output, params.classLoader);
-                if (params.userCache != null) {
+                        createFile(params.input, params.output, classLoader);
+                if (userCache != null) {
                     FileCache.Inputs key =
                             new FileCache.Inputs.Builder(FileCache.Command.FIX_STACK_FRAMES)
                                     .putFile(
@@ -263,7 +331,7 @@ public class FixStackFramesDelegate {
                                             FileCache.FileProperties.PATH_SIZE_TIMESTAMP)
                                     .putLong("version", CACHE_VERSION)
                                     .build();
-                    params.userCache.createFile(params.output, key, fileCreator);
+                    userCache.createFile(params.output, key, fileCreator);
                 } else {
                     fileCreator.run();
                 }
@@ -273,7 +341,7 @@ public class FixStackFramesDelegate {
         }
 
         @NonNull
-        private ExceptionRunnable createFile(
+        private static ExceptionRunnable createFile(
                 @NonNull File input, @NonNull File output, @NonNull URLClassLoader classLoader) {
             return () -> {
                 try (ZipFile inputZip = new ZipFile(input);
