@@ -1669,6 +1669,52 @@ open class GradleDetector : Detector(), GradleScanner {
         } else null
     }
 
+    private var googleMavenRepository: GoogleMavenRepository? = null
+    private var deprecatedSdkRegistry: DeprecatedSdkRegistry? = null
+
+    private fun getGoogleMavenRepoVersion(
+        context: GradleContext,
+        dependency: GradleCoordinate,
+        filter: Predicate<GradleVersion>?
+    ): GradleVersion? {
+        val repository = getGoogleMavenRepository(context.client)
+        return repository.findVersion(dependency, filter, dependency.isPreview)
+    }
+
+    private fun getGoogleMavenRepository(client: LintClient): GoogleMavenRepository {
+        return googleMavenRepository ?: run {
+            val cacheDir = client.getCacheDir(MAVEN_GOOGLE_CACHE_DIR_KEY, true)
+            val repository = object : GoogleMavenRepository(cacheDir) {
+
+                public override fun readUrlData(url: String, timeout: Int): ByteArray? =
+                    readUrlData(client, url, timeout)
+
+                public override fun error(throwable: Throwable, message: String?) =
+                    client.log(throwable, message)
+            }
+
+            googleMavenRepository = repository
+            repository
+        }
+    }
+
+    private fun getDeprecatedLibraryLookup(client: LintClient): DeprecatedSdkRegistry {
+        return deprecatedSdkRegistry ?: run {
+            val cacheDir = client.getCacheDir(DEPRECATED_SDK_CACHE_DIR_KEY, true)
+            val repository = object : DeprecatedSdkRegistry(cacheDir) {
+
+                public override fun readUrlData(url: String, timeout: Int) =
+                    readUrlData(client, url, timeout)
+
+                public override fun error(throwable: Throwable, message: String?) =
+                    client.log(throwable, message)
+            }
+
+            deprecatedSdkRegistry = repository
+            repository
+        }
+    }
+
     companion object {
         /** Calendar to use to look up the current time (used by tests to set specific time */
         var calendar: Calendar? = null
@@ -2385,65 +2431,6 @@ open class GradleDetector : Detector(), GradleScanner {
             }
 
             return latestBuildTools
-        }
-
-        @VisibleForTesting
-        @Suppress("unused")
-        @TestOnly
-        @JvmStatic
-        fun cleanUp() {
-            googleMavenRepository = null
-            deprecatedSdkRegistry = null
-        }
-
-        private var googleMavenRepository: GoogleMavenRepository? = null
-        private var deprecatedSdkRegistry: DeprecatedSdkRegistry? = null
-
-        private fun getGoogleMavenRepoVersion(
-            context: GradleContext,
-            dependency: GradleCoordinate,
-            filter: Predicate<GradleVersion>?
-        ): GradleVersion? {
-            val repository = getGoogleMavenRepository(context.client)
-            return repository.findVersion(dependency, filter, dependency.isPreview)
-        }
-
-        private fun getGoogleMavenRepository(client: LintClient): GoogleMavenRepository {
-            return synchronized(GradleDetector::class.java) {
-                googleMavenRepository ?: run {
-                    val cacheDir = client.getCacheDir(MAVEN_GOOGLE_CACHE_DIR_KEY, true)
-                    val repository = object : GoogleMavenRepository(cacheDir) {
-
-                        public override fun readUrlData(url: String, timeout: Int): ByteArray? =
-                            readUrlData(client, url, timeout)
-
-                        public override fun error(throwable: Throwable, message: String?) =
-                            client.log(throwable, message)
-                    }
-
-                    googleMavenRepository = repository
-                    repository
-                }
-            }
-        }
-
-        private fun getDeprecatedLibraryLookup(client: LintClient): DeprecatedSdkRegistry {
-            return synchronized(GradleDetector::class.java) {
-                deprecatedSdkRegistry ?: run {
-                    val cacheDir = client.getCacheDir(DEPRECATED_SDK_CACHE_DIR_KEY, true)
-                    val repository = object : DeprecatedSdkRegistry(cacheDir) {
-
-                        public override fun readUrlData(url: String, timeout: Int) =
-                            readUrlData(client, url, timeout)
-
-                        public override fun error(throwable: Throwable, message: String?) =
-                            client.log(throwable, message)
-                    }
-
-                    deprecatedSdkRegistry = repository
-                    repository
-                }
-            }
         }
     }
 }
