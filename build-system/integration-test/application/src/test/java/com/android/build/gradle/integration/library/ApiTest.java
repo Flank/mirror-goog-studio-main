@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.library;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -53,8 +52,8 @@ public class ApiTest {
         // ATTENTION Author and Reviewers - please make sure required changes to the build file
         // are backwards compatible before updating this test.
         assertThat(TestFileUtils.sha1NormalizedLineEndings(project.file("app/build.gradle")))
-                .isEqualTo("73f4266bf1cf99d3257112d4f46da19060079163");
+                .isEqualTo("615a3da978dfad628ba409bc050d110e9afcc45a");
         assertThat(TestFileUtils.sha1NormalizedLineEndings(project.file("lib/build.gradle")))
-                .isEqualTo("446a4840e3d4542e039a25267cd9a6ed726e3529");
+                .isEqualTo("1bbaf50d84cbd308538765aef021fba7e1a62d33");
     }
 }
