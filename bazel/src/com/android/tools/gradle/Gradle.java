@@ -11,7 +11,11 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -103,6 +107,7 @@ public class Gradle implements Closeable {
 
         List<String> arguments = new ArrayList<>();
         arguments.add("--offline");
+        arguments.add("--profile");
         arguments.add("--init-script");
         arguments.add(getInitScript().getAbsolutePath());
         arguments.add("-Dmaven.repo.local=" + tmpLocalMaven.getAbsolutePath());
@@ -146,6 +151,9 @@ public class Gradle implements Closeable {
         // Because this circumvents the connector we must set gradle.user.home for it to work
         System.setProperty("gradle.user.home", getGradleUserHome().getAbsolutePath());
         DefaultGradleConnector.close();
+
+        maybeCopyProfiles();
+
         try {
             FileUtils.cleanOutputDir(outDir);
         } catch (Exception e) {
@@ -154,6 +162,35 @@ public class Gradle implements Closeable {
             System.err.println(
                     "Failed to cleanup output directory. Will be cleaned up at next invocation");
         }
+    }
+
+    private void maybeCopyProfiles() throws IOException {
+        Path profiles = project.toPath().resolve("build").resolve("reports").resolve("profile");
+        if (!Files.isDirectory(profiles)) {
+            return;
+        }
+        Path destination = TestUtils.getTestOutputDir().toPath().resolve("gradle_profiles");
+        copyDirectory(profiles, destination);
+    }
+
+    private static void copyDirectory(Path from, Path to) throws IOException {
+        Files.walkFileTree(
+                from,
+                new SimpleFileVisitor<Path>() {
+                    @Override
+                    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+                            throws IOException {
+                        Files.createDirectory(to.resolve(from.relativize(dir)));
+                        return FileVisitResult.CONTINUE;
+                    }
+
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                            throws IOException {
+                        Files.copy(file, to.resolve(from.relativize(file)));
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
     }
 
     private File getGradleUserHome() {
