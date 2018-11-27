@@ -16,10 +16,9 @@
 
 package com.android.build.gradle.integration.library;
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 import static com.android.builder.core.BuilderConstants.DEBUG;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
@@ -32,11 +31,8 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
-import com.android.builder.model.level2.Library;
-import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
+import java.util.stream.Collectors;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -75,17 +71,25 @@ public class LibTestDepTest {
 
         Variant debugVariant = AndroidProjectUtils.getVariantByName(model.getOnlyModel(), DEBUG);
 
-        Collection<AndroidArtifact> extraAndroidArtifact = debugVariant.getExtraAndroidArtifacts();
         AndroidArtifact testArtifact = VariantUtils.getAndroidTestArtifact(debugVariant);
 
         DependencyGraphs testGraph = testArtifact.getDependencyGraphs();
-        List<Library> javaLibraries = helper.on(testGraph).withType(JAVA).asLibraries();
-        assertEquals(2, javaLibraries.size());
-        for (Library lib : javaLibraries) {
-            File f = lib.getArtifact();
-            assertTrue(
-                    f.getName().equals("guava-19.0.jar") || f.getName().equals("jsr305-1.3.9.jar"));
-        }
+
+        assertThat(
+                        helper.on(testGraph)
+                                .withType(JAVA)
+                                .asList()
+                                .stream()
+                                .map(graphItem -> graphItem.getArtifactAddress())
+                                .map(dependency -> dependency.substring(0, dependency.indexOf(':')))
+                                .collect(Collectors.toList()))
+                .containsExactly(
+                        "com.google.guava",
+                        "junit",
+                        "org.hamcrest",
+                        "com.android.support",
+                        "net.sf.kxml",
+                        "com.google.code.findbugs");
     }
 
     @Test
