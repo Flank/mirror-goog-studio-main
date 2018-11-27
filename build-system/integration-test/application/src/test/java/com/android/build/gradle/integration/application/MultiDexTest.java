@@ -203,7 +203,7 @@ public class MultiDexTest {
         Apk testApk = project.getTestApk("ics");
         assertThat(testApk).contains("classes.dex");
         assertThat(testApk).contains("classes2.dex");
-        assertThat(testApk).containsMainClass("Lcom/android/tests/basic/OtherActivityTest;");
+        assertThat(testApk).containsClass("Lcom/android/tests/basic/OtherActivityTest;");
     }
 
     @Test
