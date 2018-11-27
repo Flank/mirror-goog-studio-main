@@ -16,16 +16,17 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
-class TestLoggingEnvironment : ThreadLoggingEnvironment() {
-    override fun error(message: String) {
-        println("error: $message")
-    }
+/**
+ * A logging environment that records messages to be inspected by tests.
+ */
+class RecordingLoggingEnvironment : ThreadLoggingEnvironment() {
+    val errors = mutableListOf<String>()
+    val warnings = mutableListOf<String>()
+    val infos = mutableListOf<String>()
+    val messageCount : Int
+        get() = errors.size + warnings.size + infos.size
 
-    override fun warn(message: String) {
-        println("warn: $message")
-    }
-
-    override fun info(message: String) {
-        println("info: $message")
-    }
+    override fun error(message: String) { errors += message }
+    override fun warn(message: String) { warnings += message }
+    override fun info(message: String) { infos += message }
 }

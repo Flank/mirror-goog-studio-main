@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
-import com.android.builder.core.DefaultApiVersion
 import com.android.sdklib.AndroidVersion
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test

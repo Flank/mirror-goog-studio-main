@@ -55,20 +55,7 @@ class CmakeLocatorTest {
         downloader: () -> Unit = {}
     ): FindCmakeEncounter {
         val encounter = FindCmakeEncounter()
-        val logging = object : ThreadLoggingEnvironment() {
-            override fun error(message: String) {
-                encounter.errors += message
-            }
-
-            override fun warn(message: String) {
-                encounter.warnings += message
-            }
-
-            override fun info(message: String) {
-                encounter.info += message
-            }
-        }
-        logging.use {
+        RecordingLoggingEnvironment().use { logger ->
             val fileResult = findCmakePathLogic(
                 cmakeVersionFromDsl = cmakeVersionFromDsl,
                 cmakePathFromLocalProperties = cmakePathFromLocalProperties,
@@ -95,6 +82,9 @@ class CmakeLocatorTest {
                 // Should be the cmake install folder without the "bin"
                 assertThat(encounter.result!!.endsWith("bin")).isFalse()
             }
+            encounter.errors += logger.errors
+            encounter.warnings += logger.warnings
+            encounter.info += logger.infos
         }
 
         return encounter
