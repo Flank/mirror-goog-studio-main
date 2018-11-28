@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
+import com.android.build.api.variant.VariantInfo;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -28,6 +29,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import org.gradle.api.Incubating;
 
 /**
  * A Transform that processes intermediary build artifacts.
@@ -84,6 +86,18 @@ public abstract class Transform {
      */
     @NonNull
     public abstract String getName();
+
+    /**
+     * Whether this transform should be applied to a given variant.
+     *
+     * @since 3.4
+     * @return true if the transform should be applied to a given variant, false otherwise.
+     * @param variant information about the current variant.
+     */
+    @Incubating
+    public boolean applyToVariant(@NonNull VariantInfo variant) {
+        return true;
+    }
 
     /**
      * Returns the type(s) of data that is consumed by the Transform. This may be more than

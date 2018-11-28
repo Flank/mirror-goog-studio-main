@@ -24,7 +24,6 @@ import com.google.api.client.repackaged.com.google.common.base.Preconditions
 import com.google.api.client.repackaged.com.google.common.base.Throwables
 import com.google.common.base.Splitter
 import com.google.common.collect.ImmutableList
-import com.google.common.collect.Sets
 import com.google.common.truth.Truth.assert_
 import org.gradle.api.ProjectConfigurationException
 import org.gradle.api.tasks.TaskExecutionException
@@ -113,6 +112,9 @@ class GradleBuildResult @JvmOverloads constructor(
 
     val stdoutAsLines: List<String>
         get() = Splitter.on(System.lineSeparator()).omitEmptyStrings().split(stdout).toList()
+
+    val stderrAsLines: List<String>
+        get() = Splitter.on(System.lineSeparator()).omitEmptyStrings().split(stderr).toList()
 
     val tasks: List<String>
         get() = taskStates.tasks
