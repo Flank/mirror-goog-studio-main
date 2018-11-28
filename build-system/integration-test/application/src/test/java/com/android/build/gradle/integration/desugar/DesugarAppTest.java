@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.desugar;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_COMPILE_SDK_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.desugar.DesugaringProjectConfigurator.configureR8Desugaring;
@@ -217,8 +218,8 @@ public class DesugarAppTest {
     public void testAndroidMethodInvocationsNotRewritten()
             throws IOException, InterruptedException, ProcessException {
         enableJava8();
-        // using android-27 as ServiceConnection has a default method
-        TestFileUtils.appendToFile(project.getBuildFile(), "\nandroid.compileSdkVersion 27");
+        // using at least android-27 as ServiceConnection has a default method
+        TestFileUtils.appendToFile(project.getBuildFile(), "\nandroid.compileSdkVersion " + DEFAULT_COMPILE_SDK_VERSION);
 
         Path newSource = project.getMainSrcDir().toPath().resolve("test").resolve("MyService.java");
         Files.createDirectories(newSource.getParent());
