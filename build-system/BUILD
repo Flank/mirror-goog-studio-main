@@ -180,6 +180,16 @@ maven_repo(
     visibility = ["//visibility:public"],
 )
 
+# m2 repository used by performance tests
+maven_repo(
+    name = "performance_test_repo",
+    artifacts = GRADLE_PLUGIN_ARTIFACTS + [
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-gradle-plugin",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-android-extensions-runtime",
+    ],
+    visibility = ["//prebuilts/studio/buildbenchmarks:__subpackages__"],
+)
+
 # m2 repository packaged inside studio.
 maven_repo(
     name = "studio_repo",
