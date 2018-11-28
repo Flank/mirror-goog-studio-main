@@ -296,6 +296,12 @@ public enum InternalArtifactType implements ArtifactType {
     METADATA_FEATURE_DECLARATION,
     METADATA_FEATURE_MANIFEST,
     METADATA_INSTALLED_BASE_DECLARATION,
+    // The metadata for the library dependencies, direct and indirect, published for each module.
+    METADATA_LIBRARY_DEPENDENCIES_REPORT(Kind.FILE),
+
+    // The library dependencies report, direct and indirect, published for the entire app to
+    // package in the bundle.
+    BUNDLE_DEPENDENCY_REPORT(Kind.FILE),
 
     INSTANT_RUN_APP_INFO_OUTPUT_FILE;
 

@@ -60,7 +60,8 @@ class InstantAppBundleTest {
         "/feature2/dex/classes.dex",
         "/feature2/manifest/AndroidManifest.xml",
         "/feature2/res/layout/activity_main.xml",
-        "/feature2/resources.pb")
+        "/feature2/resources.pb",
+        "/BUNDLE-METADATA/com.android.tools.build.libraries/dependencies.pb")
 
     // Debuggable Bundles are always unsigned.
     private val debugUnsignedContent: Array<String> = bundleContent.plus(arrayOf(

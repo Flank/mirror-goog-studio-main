@@ -1,6 +1,7 @@
 load("//tools/base/bazel:bazel.bzl", "fileset")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+load("//tools/base/bazel:proto.bzl", "java_proto_library")
 
 fileset(
     name = "resources",
@@ -20,6 +21,13 @@ fileset(
     },
 )
 
+java_proto_library(
+    name = "proto",
+    srcs = glob(["src/main/proto/*.proto"]),
+    resource_strip_prefix = "tools/base/build-system/gradle-core/",
+    visibility = ["//visibility:public"],
+)
+
 kotlin_library(
     name = "gradle-core",
     srcs = [
@@ -28,6 +36,7 @@ kotlin_library(
     ],
     bundled_deps = [
         "//tools/base/build-system/instant-run-instrumentation",
+        ":proto",
     ],
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/gradle-core",

@@ -51,6 +51,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_PUBLISH
 import com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_METADATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_INSTALLED_BASE_DECLARATION
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_FEATURE_DECLARATION
+import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_FEATURE_MANIFEST
 import com.android.build.gradle.internal.scope.InternalArtifactType.SIGNING_CONFIG
 import com.android.build.gradle.internal.scope.InternalArtifactType.MODULE_BUNDLE
@@ -190,6 +191,7 @@ class PublishingSpecs {
                 // The intermediate bundle containing only this module. Input for bundle-tool
                 metadata(MODULE_BUNDLE, ArtifactType.MODULE_BUNDLE)
                 metadata(BUNDLE_MANIFEST, ArtifactType.BUNDLE_MANIFEST)
+                metadata(METADATA_LIBRARY_DEPENDENCIES_REPORT, ArtifactType.LIB_DEPENDENCIES)
 
                 // this is only for non-base modules.
                 metadata(METADATA_FEATURE_DECLARATION, ArtifactType.METADATA_FEATURE_DECLARATION)
@@ -284,6 +286,7 @@ class PublishingSpecs {
                 metadata(AAPT_PROGUARD_FILE, ArtifactType.AAPT_PROGUARD_RULES)
                 metadata(FEATURE_TRANSITIVE_DEPS, ArtifactType.FEATURE_TRANSITIVE_DEPS)
                 metadata(MODULE_BUNDLE, ArtifactType.MODULE_BUNDLE)
+                metadata(METADATA_LIBRARY_DEPENDENCIES_REPORT, ArtifactType.LIB_DEPENDENCIES)
 
                 api(FEATURE_RESOURCE_PKG, ArtifactType.FEATURE_RESOURCE_PKG)
                 api(APP_CLASSES, ArtifactType.CLASSES)

@@ -80,6 +80,7 @@ public class AndroidArtifacts {
             "android-databinding-class-log";
     private static final String TYPE_EXPLODED_AAR = "android-exploded-aar";
     private static final String TYPE_MODULE_BUNDLE = "android-module-bundle";
+    private static final String TYPE_LIB_DEPENDENCIES = "android-lib-dependencies";
 
     // types for additional artifacts to go with APK
     private static final String TYPE_MAPPING = "android-mapping";
@@ -226,6 +227,9 @@ public class AndroidArtifacts {
         APKS_FROM_BUNDLE(TYPE_APKS_FROM_BUNDLE),
         // the manifest to be used by bundle-tool
         BUNDLE_MANIFEST(TYPE_BUNDLE_MANIFEST),
+        // intermediate library dependencies on a per module basis for eventual packaging in the
+        // bundle.
+        LIB_DEPENDENCIES(TYPE_LIB_DEPENDENCIES),
 
         // Feature split related artifacts.
 

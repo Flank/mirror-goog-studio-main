@@ -68,6 +68,11 @@ open class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecutor)
         private set
 
     @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    lateinit var bundleDeps: BuildableArtifact
+        private set
+
+    @get:InputFiles
     @get:Optional
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
     var mainDexList: BuildableArtifact? = null
@@ -115,7 +120,8 @@ open class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecutor)
                     aaptOptionsNoCompress = aaptOptionsNoCompress,
                     bundleOptions = bundleOptions,
                     bundleFlags = bundleFlags,
-                    bundleFile = bundleFile.get().asFile
+                    bundleFile = bundleFile.get().asFile,
+                    bundleDeps = bundleDeps.singleFile()
                 )
             )
         }
@@ -129,7 +135,8 @@ open class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecutor)
         val aaptOptionsNoCompress: Collection<String>,
         val bundleOptions: BundleOptions,
         val bundleFlags: BundleFlags,
-        val bundleFile: File
+        val bundleFile: File,
+        val bundleDeps: File
     ) : Serializable
 
     private class BundleToolRunnable @Inject constructor(private val params: Params): Runnable {
@@ -164,10 +171,12 @@ open class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecutor)
                             .setSplitsConfig(splitsConfig)
                             .setUncompressNativeLibraries(uncompressNativeLibrariesConfig))
 
+
             val command = BuildBundleCommand.builder()
                 .setBundleConfig(bundleConfig.build())
                 .setOutputPath(bundleFile.toPath())
                 .setModulesPaths(builder.build())
+                .addMetadataFile("com.android.tools.build.libraries", "dependencies.pb", params.bundleDeps.toPath())
 
             params.mainDexList?.let {
                 command.setMainDexListFile(it.toPath())
@@ -245,6 +254,8 @@ open class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecutor)
                 AndroidArtifacts.ArtifactScope.ALL,
                 AndroidArtifacts.ArtifactType.MODULE_BUNDLE
             )
+
+            task.bundleDeps = variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.BUNDLE_DEPENDENCY_REPORT)
 
             task.aaptOptionsNoCompress =
                     variantScope.globalScope.extension.aaptOptions.noCompress ?: listOf()
