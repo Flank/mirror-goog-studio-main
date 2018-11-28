@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.transforms.testdata.CarbonForm
 import com.android.build.gradle.internal.transforms.testdata.Cat
 import com.android.build.gradle.internal.transforms.testdata.Toy
 import com.android.builder.core.VariantTypeImpl
+import com.android.builder.dexing.DexingType
 import com.android.builder.dexing.R8OutputType
 import com.android.testutils.TestClassesGenerator
 import com.android.testutils.TestInputsGenerator
@@ -619,6 +620,7 @@ class R8TransformTest(val r8OutputType: R8OutputType) {
             variantType = variantType,
             includeFeaturesInScopes = false,
             messageReceiver = NoOpMessageReceiver(),
+            dexingType = DexingType.NATIVE_MULTIDEX,
             useFullR8 = useFullR8
         )
     }

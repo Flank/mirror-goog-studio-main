@@ -21,16 +21,18 @@ import com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASS
 import com.android.build.api.transform.TransformOutputProvider
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeFileCollection
-import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm
 import com.android.build.gradle.internal.transforms.testdata.Toy
 import com.android.builder.core.VariantTypeImpl
+import com.android.builder.dexing.DexingType
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
 import com.android.testutils.apk.Dex
 import com.android.testutils.truth.MoreTruth.assertThat
+import com.android.testutils.truth.MoreTruth.assertThatDex
+import com.android.testutils.truth.PathSubject.assertThat
 import org.gradle.api.file.FileCollection
 import org.junit.Before
 import org.junit.Rule
@@ -100,8 +102,55 @@ class R8MainDexListTransformTest {
         assertThat(secondaryDex).containsExactlyClassesIn(listOf(Type.getDescriptor(Toy::class.java)))
     }
 
+    @Test
+    fun testMonoDex() {
+        val classes = tmp.root.toPath().resolve("classes.jar")
+        TestInputsGenerator.pathWithClasses(
+            classes,
+            listOf(Animal::class.java, CarbonForm::class.java, Toy::class.java)
+        )
+        val jarInput = TransformTestHelper.singleJarBuilder(classes.toFile())
+            .setContentTypes(CLASSES)
+            .build()
+
+        val invocation =
+            TransformTestHelper
+                .invocationBuilder()
+                .addInput(jarInput)
+                .setContext(this.context)
+                .setTransformOutputProvider(outputProvider)
+                .build()
+
+        val mainDexRuleFile = tmp.newFile()
+        mainDexRuleFile.printWriter().use {
+            it.println("-keep class " + CarbonForm::class.java.name)
+        }
+        val mainDexRulesFileCollection = FakeFileCollection(setOf(mainDexRuleFile))
+
+        val transform =
+            createTransform(
+                mainDexRulesFiles = mainDexRulesFileCollection,
+                minSdkVersion = 19,
+                dexingType = DexingType.MONO_DEX
+            )
+        transform.keep("class **")
+        transform.transform(invocation)
+
+        assertThatDex(outputDir.resolve("main/classes.dex").toFile())
+            .containsExactlyClassesIn(
+                listOf(
+                    Type.getDescriptor(CarbonForm::class.java),
+                    Type.getDescriptor(Animal::class.java),
+                    Type.getDescriptor(Toy::class.java)
+                )
+            )
+        assertThat(outputDir.resolve("main/classes2.dex")).doesNotExist()
+    }
+
     private fun createTransform(
-        mainDexRulesFiles: FileCollection = FakeFileCollection(), minSdkVersion: Int = 21
+        mainDexRulesFiles: FileCollection = FakeFileCollection(),
+        minSdkVersion: Int = 21,
+        dexingType: DexingType = DexingType.LEGACY_MULTIDEX
     ): R8Transform {
         return R8Transform(
             bootClasspath = lazy { listOf(TestUtils.getPlatformFile("android.jar")) },
@@ -118,6 +167,7 @@ class R8MainDexListTransformTest {
             variantType = VariantTypeImpl.BASE_APK,
             includeFeaturesInScopes = false,
             messageReceiver = NoOpMessageReceiver(),
+            dexingType = dexingType,
             useFullR8 = false
         )
     }

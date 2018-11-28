@@ -18,15 +18,14 @@ package com.android.build.gradle.internal.transforms
 
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.api.transform.Context
-import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
 import com.android.build.api.transform.TransformOutputProvider
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeFileCollection
-import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.core.VariantTypeImpl
+import com.android.builder.dexing.DexingType
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
 import com.android.testutils.apk.Dex
@@ -210,6 +209,7 @@ class DexSplitterTransformTest {
                 proguardConfigurationFiles = proguardRulesFiles,
                 variantType = VariantTypeImpl.BASE_APK,
                 includeFeaturesInScopes = false,
+                dexingType = DexingType.NATIVE_MULTIDEX,
                 messageReceiver= NoOpMessageReceiver()
         )
     }
