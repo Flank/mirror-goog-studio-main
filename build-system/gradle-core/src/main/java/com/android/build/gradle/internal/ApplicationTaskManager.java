@@ -159,9 +159,6 @@ public class ApplicationTaskManager extends TaskManager {
 
         createAidlTask(variantScope);
 
-        // Add NDK tasks
-        createNdkTasks(variantScope);
-
         // Add external native build tasks
         createExternalNativeBuildJsonGenerators(variantScope);
         createExternalNativeBuildTasks(variantScope);

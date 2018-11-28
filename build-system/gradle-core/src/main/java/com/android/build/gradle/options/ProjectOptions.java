@@ -45,7 +45,6 @@ public final class ProjectOptions {
     private final ImmutableMap<BooleanOption, Boolean> booleanOptions;
     private final ImmutableMap<OptionalBooleanOption, Boolean> optionalBooleanOptions;
     private final ImmutableMap<IntegerOption, Integer> integerOptions;
-    private final ImmutableMap<LongOption, Long> longOptions;
     private final ImmutableMap<StringOption, String> stringOptions;
     private final ImmutableMap<String, String> testRunnerArgs;
     private final ImmutableSet<Option<?>> deprecatedOptions;
@@ -76,12 +75,6 @@ public final class ProjectOptions {
         integerOptions =
                 readOptions(
                         IntegerOption.values(),
-                        properties,
-                        deprecatedOptionsBuilder,
-                        experimentalOptionsBuilder);
-        longOptions =
-                readOptions(
-                        LongOption.values(),
                         properties,
                         deprecatedOptionsBuilder,
                         experimentalOptionsBuilder);
@@ -196,11 +189,6 @@ public final class ProjectOptions {
     }
 
     @Nullable
-    public Long get(LongOption option) {
-        return longOptions.getOrDefault(option, option.getDefaultValue());
-    }
-
-    @Nullable
     public String get(StringOption option) {
         return stringOptions.getOrDefault(option, option.getDefaultValue());
     }
@@ -256,10 +244,6 @@ public final class ProjectOptions {
 
     public ImmutableMap<IntegerOption, Integer> getExplicitlySetIntegerOptions() {
         return integerOptions;
-    }
-
-    public ImmutableMap<LongOption, Long> getExplicitlySetLongOptions() {
-        return longOptions;
     }
 
     public ImmutableMap<StringOption, String> getExplicitlySetStringOptions() {
