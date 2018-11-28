@@ -59,6 +59,33 @@ public class TaskRunnerTest {
     }
 
     @Test
+    public void testPreviousTasksFailed() throws Exception {
+        String input = "text";
+
+        // We test with one thread, they should run sequentially
+        ExecutorService service = Executors.newFixedThreadPool(1);
+
+        TaskRunner runner = new TaskRunner(service);
+        TaskRunner.Task<String> start = runner.submit(input);
+        TaskRunner.Task<String> task1 =
+                runner.submit(
+                        "task1",
+                        a -> {
+                            throw new RuntimeException("abc");
+                        },
+                        start);
+        TaskRunner.Task<String> task2 = runner.submit("task2", a -> a + " task2", start);
+        TaskRunner.Task<String> add = runner.submit("join", (a, b) -> a + "." + b, task1, task2);
+        try {
+            String output = add.get();
+            fail();
+        } catch (Exception de) {
+            assertEquals("java.lang.RuntimeException: abc", de.getCause().getMessage());
+        }
+        runner.join();
+    }
+
+    @Test
     public void testParallelTasks() throws Exception {
         String input = "text";
 

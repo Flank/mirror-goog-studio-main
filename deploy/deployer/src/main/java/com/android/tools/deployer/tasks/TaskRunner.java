@@ -45,7 +45,7 @@ public class TaskRunner {
     public <I, O> Task<O> submit(String name, ThrowingFunction<I, O> task, Task<I> input) {
         phaser.register();
         ListenableFuture<O> future =
-                Futures.whenAllSucceed(ImmutableList.of(input.future))
+                Futures.whenAllComplete(ImmutableList.of(input.future))
                         .call(
                                 () -> {
                                     try {
@@ -66,7 +66,7 @@ public class TaskRunner {
             String name, ThrowingBiFunction<T, U, O> task, Task<T> input1, Task<U> input2) {
         phaser.register();
         ListenableFuture<O> future =
-                Futures.whenAllSucceed(ImmutableList.of(input1.future, input2.future))
+                Futures.whenAllComplete(ImmutableList.of(input1.future, input2.future))
                         .call(
                                 () -> {
                                     try {
@@ -92,7 +92,7 @@ public class TaskRunner {
             Task<V> input3) {
         phaser.register();
         ListenableFuture<O> future =
-                Futures.whenAllSucceed(
+                Futures.whenAllComplete(
                                 ImmutableList.of(input1.future, input2.future, input3.future))
                         .call(
                                 () -> {
