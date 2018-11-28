@@ -25,12 +25,15 @@ import static org.mockito.Mockito.when;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent;
+import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.errors.SyncIssueHandler;
 import com.android.build.gradle.internal.ide.SyncIssueImpl;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.TransformVariantScope;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.TaskFactory;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl;
+import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.errors.EvalIssueException;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
@@ -79,7 +82,7 @@ public class TaskTestUtils {
     protected static final String TASK_NAME = "task name";
 
     protected TaskFactory taskFactory;
-    protected TransformVariantScope scope;
+    protected VariantScope scope;
     protected TransformManager transformManager;
     protected FakeConfigurableErrorReporter errorReporter;
 
@@ -389,15 +392,25 @@ public class TaskTestUtils {
     }
 
     @NonNull
-    private static TransformVariantScope getScope() {
+    private static VariantScope getScope() {
         GlobalScope globalScope = mock(GlobalScope.class);
         when(globalScope.getBuildDir()).thenReturn(new File("build dir"));
 
-        TransformVariantScope scope = mock(TransformVariantScope.class);
+        VariantScope scope = mock(VariantScope.class);
         when(scope.getDirName()).thenReturn("config dir name");
         when(scope.getGlobalScope()).thenReturn(globalScope);
         when(scope.getTaskName(Mockito.anyString())).thenReturn(TASK_NAME);
         when(scope.getFullVariantName()).thenReturn("theVariantName");
+
+        CoreBuildType buildType = mock(CoreBuildType.class);
+        when(buildType.getName()).thenReturn("debug");
+        when(buildType.isDebuggable()).thenReturn(true);
+
+        GradleVariantConfiguration variantConfiguration = mock(GradleVariantConfiguration.class);
+        when(variantConfiguration.getType()).thenReturn(VariantTypeImpl.BASE_APK);
+        when(variantConfiguration.getBuildType()).thenReturn(buildType);
+        when(variantConfiguration.getProductFlavors()).thenReturn(ImmutableList.of());
+        when(scope.getVariantConfiguration()).thenReturn(variantConfiguration);
         return scope;
     }
 

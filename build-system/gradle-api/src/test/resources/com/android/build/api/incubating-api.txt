@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-68cb089593be10317e957fc5f9a17884737b8d5d5b6fbd3699cf8d571b60fc90
+8edb3f2408a3f0e6406542b14c413cccaa5dfbfad1bcc24d3b23d16a523cd6dd
 -------------------------------------------------------------------------
 com.android.build.api.artifact.ArtifactConfigurationException
 com.android.build.api.artifact.ArtifactConfigurationException.<init>: com.android.build.api.artifact.ArtifactConfigurationException (java.lang.String)
@@ -642,3 +642,10 @@ com.android.build.api.sourcesets.AndroidSourceSet.res: com.android.build.api.sou
 com.android.build.api.sourcesets.AndroidSourceSet.resources: com.android.build.api.sourcesets.AndroidSourceSet (org.gradle.api.Action<com.android.build.api.sourcesets.AndroidSourceDirectorySet>)
 com.android.build.api.sourcesets.AndroidSourceSet.setRoot: com.android.build.api.sourcesets.AndroidSourceSet (java.lang.String)
 com.android.build.api.sourcesets.AndroidSourceSet.shaders: com.android.build.api.sourcesets.AndroidSourceSet (org.gradle.api.Action<com.android.build.api.sourcesets.AndroidSourceDirectorySet>)
+com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.build.api.variant.VariantInfo)
+com.android.build.api.variant.VariantInfo
+com.android.build.api.variant.VariantInfo.getBuildTypeName: java.lang.String ()
+com.android.build.api.variant.VariantInfo.getFlavorNames: com.google.common.collect.ImmutableList<java.lang.String> ()
+com.android.build.api.variant.VariantInfo.getFullVariantName: java.lang.String ()
+com.android.build.api.variant.VariantInfo.isDebuggable: boolean ()
+com.android.build.api.variant.VariantInfo.isTest: boolean ()

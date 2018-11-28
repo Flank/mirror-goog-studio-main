@@ -109,8 +109,6 @@ public class InstantRunTaskManager {
             MessageReceiver messageReceiver) {
         final Project project = variantScope.getGlobalScope().getProject();
 
-        TransformVariantScope transformVariantScope = variantScope.getTransformVariantScope();
-
         buildInfoLoaderTask =
                 taskFactory.register(new BuildInfoLoaderTask.CreationAction(variantScope, logger));
 
@@ -122,7 +120,7 @@ public class InstantRunTaskManager {
                 transformManager
                         .addTransform(
                                 taskFactory,
-                                transformVariantScope,
+                                variantScope,
                                 verifierTransform,
                                 null,
                                 task -> {
@@ -146,7 +144,7 @@ public class InstantRunTaskManager {
         Optional<TaskProvider<TransformTask>> javaResourcesVerifierTask =
                 transformManager.addTransform(
                         taskFactory,
-                        transformVariantScope,
+                        variantScope,
                         javaResourcesVerifierTransform,
                         null,
                         task -> {
@@ -171,7 +169,7 @@ public class InstantRunTaskManager {
         Optional<TaskProvider<TransformTask>> instantRunTask =
                 transformManager.addTransform(
                         taskFactory,
-                        transformVariantScope,
+                        variantScope,
                         instantRunTransform,
                         null,
                         task ->
@@ -208,7 +206,7 @@ public class InstantRunTaskManager {
                             InstantRunVerifierStatus.DEPENDENCY_CHANGED);
             Optional<TaskProvider<TransformTask>> dependenciesVerifierTask =
                     transformManager.addTransform(
-                            taskFactory, transformVariantScope, dependenciesVerifierTransform);
+                            taskFactory, variantScope, dependenciesVerifierTransform);
 
             dependenciesVerifierTask.ifPresent(
                     t -> {
@@ -242,10 +240,7 @@ public class InstantRunTaskManager {
         // create the AppInfo.class for this variant.
         taskFactory.register(
                 new GenerateInstantRunAppInfoTask.CreationAction(
-                        transformVariantScope,
-                        variantScope,
-                        mergedManifests,
-                        instantRunMergedManifests));
+                        variantScope, variantScope, mergedManifests, instantRunMergedManifests));
 
         // also add a new stream for the injector task output.
         transformManager.addStream(
@@ -273,7 +268,7 @@ public class InstantRunTaskManager {
 
         reloadDexTask =
                 transformManager
-                        .addTransform(taskFactory, transformVariantScope, reloadDexTransform)
+                        .addTransform(taskFactory, variantScope, reloadDexTransform)
                         .orElse(null);
         if (reloadDexTask != null) {
             TaskFactoryUtils.dependsOn(anchorTask, reloadDexTask);
