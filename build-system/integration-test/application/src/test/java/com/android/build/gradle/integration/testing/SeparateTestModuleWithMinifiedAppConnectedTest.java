@@ -33,8 +33,7 @@ public class SeparateTestModuleWithMinifiedAppConnectedTest {
 
     @Parameterized.Parameters(name = "codeShrinker = {0}")
     public static CodeShrinker[] getShrinkers() {
-        // Disabled for R8 because of http://b/120067487.
-        return new CodeShrinker[] {CodeShrinker.PROGUARD};
+        return new CodeShrinker[] {CodeShrinker.PROGUARD, CodeShrinker.R8};
     }
 
     @Parameterized.Parameter public CodeShrinker codeShrinker;
