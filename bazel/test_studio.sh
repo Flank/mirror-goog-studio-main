@@ -27,7 +27,7 @@ if [[ ${build_number:0:1} == 'P' ]]; then
 fi
 
 # Run Bazel
-"${script_dir}/bazel" --max_idle_secs=60 --bazelrc=${script_dir}/toplevel.bazel.rc test --keep_going --nobuild_runfile_links --bes_backend=buildeventservice.googleapis.com --auth_credentials="$HOME"/.android-studio-alphasource.json --auth_scope=https://www.googleapis.com/auth/cloud-source-tools --project_id=908081808034 --config=remote --cache_test_results=no --build_tag_filters=-no_linux --test_tag_filters=${test_tag_filters} -- $(< "${script_dir}/targets") //tools/base/bazel/foundry:test
+"${script_dir}/bazel" --max_idle_secs=60 test --keep_going --nobuild_runfile_links --bes_backend=buildeventservice.googleapis.com --auth_credentials="$HOME"/.android-studio-alphasource.json --auth_scope=https://www.googleapis.com/auth/cloud-source-tools --project_id=908081808034 --config=remote --cache_test_results=no --build_tag_filters=-no_linux --test_tag_filters=${test_tag_filters} -- $(< "${script_dir}/targets") //tools/base/bazel/foundry:test
 
 readonly bazel_status=$?
 
