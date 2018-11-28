@@ -27,6 +27,7 @@ import com.android.build.gradle.tasks.GenerateBuildConfig
 import com.android.build.gradle.tasks.ManifestProcessorTask
 import com.android.build.gradle.tasks.MergeResources
 import com.android.build.gradle.tasks.MergeSourceSetFolders
+import com.android.build.gradle.tasks.NdkCompile
 import com.android.build.gradle.tasks.PackageAndroidArtifact
 import com.android.build.gradle.tasks.ProcessAndroidResources
 import com.android.build.gradle.tasks.RenderscriptCompile
@@ -65,6 +66,7 @@ class MutableTaskContainer : TaskContainer {
     override lateinit var mergeAssetsTask: TaskProvider<out MergeSourceSetFolders>
     override lateinit var processJavaResourcesTask: TaskProvider<out Sync>
     override var generateBuildConfigTask: TaskProvider<out GenerateBuildConfig>? = null
+    override var ndkCompileTask: TaskProvider<out NdkCompile>? = null
     override var processAndroidResTask: TaskProvider<out ProcessAndroidResources>? = null
     override var processManifestTask: TaskProvider<out ManifestProcessorTask>? = null
     override var packageAndroidTask: TaskProvider<out PackageAndroidArtifact>? = null

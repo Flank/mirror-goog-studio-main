@@ -38,6 +38,7 @@ import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
+import com.android.build.gradle.tasks.NdkCompile;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.errors.EvalIssueException;
@@ -449,6 +450,29 @@ public abstract class BaseVariantImpl implements BaseVariant {
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
         return variantData.getTaskContainer().getJavacTask().get();
+    }
+
+    @NonNull
+    @Override
+    public NdkCompile getNdkCompile() {
+        BaseVariantData variantData = getVariantData();
+        variantData
+                .getScope()
+                .getGlobalScope()
+                .getDslScope()
+                .getDeprecationReporter()
+                .reportDeprecatedApi(
+                        "variant.getNdkCompileProvider()",
+                        "variant.getNdkCompile()",
+                        TASK_ACCESS_DEPRECATION_URL,
+                        DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
+        return variantData.getTaskContainer().getNdkCompileTask().get();
+    }
+
+    @NonNull
+    @Override
+    public TaskProvider<NdkCompile> getNdkCompileProvider() {
+        return (TaskProvider<NdkCompile>) getVariantData().getTaskContainer().getNdkCompileTask();
     }
 
     @NonNull

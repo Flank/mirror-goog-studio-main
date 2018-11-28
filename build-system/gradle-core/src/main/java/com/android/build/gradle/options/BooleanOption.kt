@@ -89,6 +89,7 @@ enum class BooleanOption(
     /** Set to true by default, but has effect only if R8 is enabled. */
     ENABLE_R8_DESUGARING("android.enableR8.desugaring", true),
     // Marked as stable to avoid reporting deprecation twice.
+    ENABLE_DEPRECATED_NDK("android.useDeprecatedNdk", status = Option.Status.STABLE),
     CONVERT_NON_NAMESPACED_DEPENDENCIES("android.convertNonNamespacedDependencies", true),
     /** Set to true to build native .so libraries only for the device it will be run on. */
     BUILD_ONLY_TARGET_ABI("android.buildOnlyTargetAbi", true),

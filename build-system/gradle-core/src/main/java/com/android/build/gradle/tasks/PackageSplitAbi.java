@@ -293,6 +293,9 @@ public class PackageSplitAbi extends AndroidBuilderTask {
             task.splits = scope.getVariantData().getFilters(OutputFile.FilterType.ABI);
 
             MutableTaskContainer taskContainer = scope.getTaskContainer();
+            if (taskContainer.getNdkCompileTask() != null) {
+                task.dependsOn(taskContainer.getNdkCompileTask());
+            }
 
             if (taskContainer.getExternalNativeBuildTask() != null) {
                 task.dependsOn(taskContainer.getExternalNativeBuildTask());
