@@ -46,13 +46,11 @@ bool MessagePipeWrapper::Read(std::string* message) const {
   }
 
   size_t size = BufferToSize(size_bytes);
-  std::vector<char> buffer(size);
-
-  if (!ReadBytes(buffer.data(), size)) {
+  message->resize(size);
+  if (!ReadBytes((char*)message->data(), size)) {
     return false;
   }
 
-  message->append(buffer.data(), buffer.size());
   return true;
 }
 

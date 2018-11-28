@@ -107,8 +107,9 @@ TEST_F(MessagePipeWrapperTest, TestPoll) {
 
   std::string received;
   EXPECT_TRUE(read_1.Read(&received));
+  EXPECT_EQ(received, "\xEE");
   EXPECT_TRUE(read_2.Read(&received));
-  EXPECT_EQ(received, "\xEE\xFF");
+  EXPECT_EQ(received, "\xFF");
 
   ready = MessagePipeWrapper::Poll({&read_1, &read_2}, 1000);
   EXPECT_EQ(ready.size(), 0);
