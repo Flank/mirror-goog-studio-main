@@ -1447,6 +1447,12 @@ public final class SdkConstants {
     public static final String ATTR_SCROLLBAR_TRACK_HORIZONTAL = "scrollbarTrackHorizontal";
     public static final String ATTR_SCROLLBAR_TRACK_VERTICAL = "scrollbarTrackVertical";
 
+    // android.view.ViewGroup
+    public static final String ATTR_LAYOUT_MARGIN_HORIZONTAL = "layout_marginHorizontal"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_MARGIN_VERTICAL = "layout_marginVertical"; //$NON-NLS-1$
+    public static final String ATTR_PADDING_HORIZONTAL = "layout_paddingHorizontal"; //$NON-NLS-1$
+    public static final String ATTR_PADDING_VERTICAL = "layout_paddingVertical"; //$NON-NLS-1$
+
     // AutoCompleteTextView
     public static final String ATTR_DROP_DOWN_ANCHOR = "dropDownAnchor";
 
