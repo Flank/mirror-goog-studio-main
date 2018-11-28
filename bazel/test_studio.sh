@@ -19,7 +19,7 @@ test_tag_filters=-no_linux,-no_test_linux,-qa_sanity,-qa_fast,-qa_unreliable
 readonly script_dir="$(dirname "$0")"
 
 # Grab the location of the command_log file for bazel daemon so we can search it later.
-readonly command_log="$("${script_dir}"/bazel --bazelrc="${script_dir}"/toplevel.bazel.rc info --config=remote command_log)"
+readonly command_log="$("${script_dir}"/bazel info --config=remote command_log)"
 
 # If the build number starts with a 'P', this is a pre-submit builder.
 if [[ ${build_number:0:1} == 'P' ]]; then
@@ -37,7 +37,7 @@ if [[ -d "${dist_dir}" ]]; then
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${upsalite_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
 
   # follow conventions to use gtest-testlog-forwarding on ATP
-  readonly testlogs_dir="$(${script_dir}/bazel --bazelrc=${script_dir}/toplevel.bazel.rc info bazel-testlogs --config=remote)"
+  readonly testlogs_dir="$(${script_dir}/bazel info bazel-testlogs --config=remote)"
   mkdir "${dist_dir}"/gtest
   # This does not handle spaces in file names.
   for source_xml in $(cd "${testlogs_dir}" && find -name '*.xml' -printf '%P\n'); do
