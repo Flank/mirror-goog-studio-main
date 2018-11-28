@@ -85,7 +85,7 @@ public class DeployerRunner implements UIService {
         Installer installer = new AdbInstaller(adb, LOGGER);
         ExecutorService service = Executors.newFixedThreadPool(5);
         TaskRunner runner = new TaskRunner(service);
-        Deployer deployer = new Deployer(adb, db, runner, installer, this);
+        Deployer deployer = new Deployer(adb, db, runner, installer, this, LOGGER);
         try {
             if (command.equals("install")) {
                 InstallOptions.Builder options = InstallOptions.builder().setAllowDebuggable();

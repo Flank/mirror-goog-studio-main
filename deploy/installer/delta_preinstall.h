@@ -23,15 +23,17 @@
 
 namespace deploy {
 
-class DeltapushCommand : public Command {
+class DeltaPreinstallCommand : public Command {
  public:
-  DeltapushCommand();
-  virtual ~DeltapushCommand() {}
+  DeltaPreinstallCommand();
+  virtual ~DeltaPreinstallCommand() {}
   virtual void ParseParameters(int argc, char** argv);
   virtual void Run(Workspace& workspace);
 
  private:
-  proto::DeltaPushRequest request_;
+  bool SendApkToPackageManager(const proto::PatchInstruction& patch,
+                               const std::string& session_id);
+  proto::DeltaPreinstallRequest request_;
 };
 
 }  // namespace deploy

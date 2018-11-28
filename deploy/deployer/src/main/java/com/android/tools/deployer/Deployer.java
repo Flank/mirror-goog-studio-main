@@ -22,6 +22,7 @@ import com.android.tools.deployer.model.FileDiff;
 import com.android.tools.deployer.tasks.TaskRunner;
 import com.android.tools.deployer.tasks.TaskRunner.Task;
 import com.android.tools.tracer.Trace;
+import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableMap;
 import java.util.List;
 import java.util.Map;
@@ -36,18 +37,21 @@ public class Deployer {
     private final Installer installer;
     private final TaskRunner runner;
     private final UIService service;
+    private final ILogger logger;
 
     public Deployer(
             AdbClient adb,
             ApkFileDatabase db,
             TaskRunner runner,
             Installer installer,
-            UIService service) {
+            UIService service,
+            ILogger logger) {
         this.adb = adb;
         this.db = db;
         this.runner = runner;
         this.installer = installer;
         this.service = service;
+        this.logger = logger;
     }
 
     /**
@@ -119,8 +123,12 @@ public class Deployer {
         Task<List<FileDiff>> diffs = runner.submit("diff", new ApkDiffer()::diff, dumps, newFiles);
 
         // Push the apks to device and get the remote paths
-        Task<List<String>> apkPaths =
-                runner.submit("push", new ApkPusher(adb, installer)::push, dumps, newFiles);
+        Task<String> sessionId =
+                runner.submit(
+                        "preinstall",
+                        new ApkPreInstaller(adb, installer, logger)::preinstall,
+                        dumps,
+                        newFiles);
 
         // Verify the changes are swappable and get only the dexes that we can change
         Task<List<FileDiff>> dexDiffs =
@@ -132,7 +140,7 @@ public class Deployer {
 
         // Do the swap
         ApkSwapper swapper = new ApkSwapper(installer, argPackageName, argRestart, redefiners);
-        Task<Boolean> swap = runner.submit("swap", swapper::swap, newFiles, apkPaths, toSwap);
+        Task<Boolean> swap = runner.submit("swap", swapper::swap, newFiles, sessionId, toSwap);
 
         // Update the database with the entire new apk. In the normal case this should
         // be a no-op because the dexes that were modified were extracted at comparison time.

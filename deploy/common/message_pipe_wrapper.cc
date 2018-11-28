@@ -20,6 +20,7 @@
 #include <unistd.h>
 
 #include "tools/base/deploy/common/size_buffer.h"
+#include "tools/base/deploy/common/utils.h"
 
 namespace deploy {
 
@@ -90,6 +91,7 @@ std::vector<size_t> MessagePipeWrapper::Poll(
 
 template <typename T>
 bool MessagePipeWrapper::ReadBytes(T* array, size_t size) const {
+  Phase p("ReadBytes: " + to_string(size));
   size_t count = 0;
   while (count < size) {
     ssize_t len = read(fd_, array + count, size - count);
