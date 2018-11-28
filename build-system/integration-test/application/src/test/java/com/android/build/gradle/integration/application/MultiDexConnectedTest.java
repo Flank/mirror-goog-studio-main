@@ -21,7 +21,7 @@ import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.build.gradle.options.BooleanOption;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -44,6 +44,7 @@ public class MultiDexConnectedTest {
     @Parameterized.Parameter public MainDexListTool tool;
 
     @Test
+    @Ignore("b/78108767")
     @Category(DeviceTests.class)
     public void connectedCheck() throws Exception {
         project.executor()
@@ -53,7 +54,6 @@ public class MultiDexConnectedTest {
                         "assembleLollipopDebug",
                         "assembleLollipopDebugAndroidTest");
         adb.exclusiveAccess();
-        project.executor()
-                .run("connectedCheck");
+        project.executor().run("connectedCheck");
     }
 }
