@@ -109,7 +109,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import kotlin.Pair;
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
@@ -119,9 +118,7 @@ import org.gradle.api.attributes.AttributeMatchingStrategy;
 import org.gradle.api.attributes.AttributesSchema;
 import org.gradle.api.attributes.Usage;
 import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.model.ObjectFactory;
-import org.gradle.api.provider.Provider;
 
 /**
  * Class to create, manage variants.
@@ -502,37 +499,24 @@ public class VariantManager implements VariantModel {
                 variantScope.getPublishingSpec().getOutputs()) {
             com.android.build.api.artifact.ArtifactType buildArtifactType =
                     outputSpec.getOutputType();
-
-            // Gradle only support publishing single file.  Therefore, unless Gradle starts
-            // supporting publishing multiple files, PublishingSpecs should not contain any
-            // OutputSpec with an appendable ArtifactType.
-            if (BuildArtifactSpec.Companion.has(buildArtifactType)
-                    && BuildArtifactSpec.Companion.get(buildArtifactType).getAppendable()) {
-                throw new RuntimeException(
-                        String.format(
-                                "Appendable ArtifactType '%1s' cannot be published.",
-                                buildArtifactType.name()));
-            }
-
             if (buildArtifactsHolder.hasArtifact(buildArtifactType)) {
                 BuildableArtifact artifact =
                         buildArtifactsHolder.getFinalArtifactFiles(buildArtifactType);
+
+                // Gradle only support publishing single file.  Therefore, unless Gradle starts
+                // supporting publishing multiple files, PublishingSpecs should not contain any
+                // OutputSpec with an appendable ArtifactType.
+                if (BuildArtifactSpec.Companion.has(buildArtifactType)
+                        && BuildArtifactSpec.Companion.get(buildArtifactType).getAppendable()) {
+                    throw new RuntimeException(
+                            String.format(
+                                    "Appendable ArtifactType '%1s' cannot be published.",
+                                    buildArtifactType.name()));
+                }
                 variantScope.publishIntermediateArtifact(
                         artifact,
                         outputSpec.getArtifactType(),
                         outputSpec.getPublishedConfigTypes());
-            }
-
-            if (buildArtifactsHolder.hasFinalProduct(buildArtifactType)) {
-                Pair<Provider<String>, Provider<FileSystemLocation>> finalProduct =
-                        buildArtifactsHolder.getFinalProductWithTaskName(buildArtifactType);
-                if (finalProduct.getSecond().isPresent()) {
-                    variantScope.publishIntermediateArtifact(
-                            finalProduct.getSecond(),
-                            finalProduct.getFirst(),
-                            outputSpec.getArtifactType(),
-                            outputSpec.getPublishedConfigTypes());
-                }
             }
         }
     }

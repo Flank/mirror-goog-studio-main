@@ -61,10 +61,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.xml.parsers.ParserConfigurationException;
-import org.gradle.api.file.Directory;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
-import org.gradle.api.provider.Provider;
 import org.xml.sax.SAXException;
 
 /**
@@ -98,7 +96,7 @@ public class ShrinkResourcesTransform extends Transform {
     @NonNull private final BuildableArtifact sourceDir;
     @NonNull private final BuildableArtifact resourceDir;
     @Nullable private final BuildableArtifact mappingFileSrc;
-    @NonNull private final Provider<Directory> mergedManifests;
+    @NonNull private final BuildableArtifact mergedManifests;
     @NonNull private final BuildableArtifact uncompressedResources;
 
     @NonNull private final AaptOptions aaptOptions;
@@ -132,7 +130,8 @@ public class ShrinkResourcesTransform extends Transform {
                                 .getArtifacts()
                                 .getFinalArtifactFiles(InternalArtifactType.APK_MAPPING)
                         : null;
-        this.mergedManifests = artifacts.getFinalProduct(InternalArtifactType.MERGED_MANIFESTS);
+        this.mergedManifests =
+                artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS);
         this.uncompressedResources = uncompressedResources;
 
         this.aaptOptions = globalScope.getExtension().getAaptOptions();
@@ -188,7 +187,7 @@ public class ShrinkResourcesTransform extends Transform {
             secondaryFiles.add(SecondaryFile.nonIncremental(mappingFileSrc));
         }
 
-        secondaryFiles.add(SecondaryFile.nonIncremental(mergedManifests.get().getAsFile()));
+        secondaryFiles.add(SecondaryFile.nonIncremental(mergedManifests));
         secondaryFiles.add(SecondaryFile.nonIncremental(uncompressedResources));
 
         return secondaryFiles;

@@ -39,13 +39,10 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Nonnull;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.FileSystemLocation;
-import org.gradle.api.provider.Provider;
 
 /**
  * A scope containing data for a specific variant.
@@ -63,12 +60,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     void publishIntermediateArtifact(
             @NonNull BuildableArtifact artifact,
-            @NonNull ArtifactType artifactType,
-            @NonNull Collection<AndroidArtifacts.PublishedConfigType> configTypes);
-
-    void publishIntermediateArtifact(
-            @NonNull Provider<? extends FileSystemLocation> artifact,
-            @Nonnull Provider<String> lastProducerTaskName,
             @NonNull ArtifactType artifactType,
             @NonNull Collection<AndroidArtifacts.PublishedConfigType> configTypes);
 

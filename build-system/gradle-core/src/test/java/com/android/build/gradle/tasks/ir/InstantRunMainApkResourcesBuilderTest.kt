@@ -40,10 +40,8 @@ import com.google.common.collect.Iterables
 import com.google.common.truth.Truth.assertThat
 import org.apache.commons.io.FileUtils
 import org.gradle.api.Project
-import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
-import org.gradle.api.provider.Provider
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Rule
@@ -67,12 +65,9 @@ open class InstantRunMainApkResourcesBuilderTest {
     @Rule @JvmField
     var manifestFileFolder = TemporaryFolder()
 
-    @Rule @JvmField
-    var emptyFolder = TemporaryFolder()
-
     @Mock private lateinit var resources: BuildableArtifact
     @Mock private lateinit var fileCollection: FileCollection
-    private lateinit var manifestFiles: Provider<Directory>
+    private lateinit var manifestFiles: BuildableArtifact
     @Mock internal lateinit var fileTree: FileTree
     @Mock internal var buildContext: InstantRunBuildContext? = null
     @Mock internal var logger: ILogger? = null
@@ -125,8 +120,8 @@ open class InstantRunMainApkResourcesBuilderTest {
                 InternalArtifactType.MERGED_RES)
 
         val outDir = temporaryFolder.newFolder()
-        manifestFiles = project.layout.buildDirectory.dir(emptyFolder.root.absolutePath)
-        `when`(buildArtifactsHolder.getFinalProduct<Directory>(
+        manifestFiles = BuildableArtifactImpl(project.files(), dslScope)
+        `when`(buildArtifactsHolder.getFinalArtifactFiles(
             InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS)).thenReturn(manifestFiles)
         `when`(buildArtifactsHolder.appendArtifact(
             InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES,
@@ -173,8 +168,9 @@ open class InstantRunMainApkResourcesBuilderTest {
                 manifestFile)
                 .save(manifestFileFolder.root)
 
-        manifestFiles = project.layout.buildDirectory.dir(project.provider { manifestFileFolder.root.absolutePath })
-        `when`(buildArtifactsHolder.getFinalProduct<Directory>(
+        manifestFiles = BuildableArtifactImpl(
+            project.files(manifestFileFolder.root.listFiles()), dslScope)
+        `when`(buildArtifactsHolder.getFinalArtifactFiles(
             InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS)).thenReturn(manifestFiles)
         `when`(buildArtifactsHolder.appendArtifact(
             InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES,

@@ -55,11 +55,9 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.JavaBasePlugin;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
@@ -159,7 +157,7 @@ public abstract class LintBaseTask extends DefaultTask {
         @NonNull private final String name;
         @NonNull private final BuildableArtifact localLintJarCollection;
         @NonNull private final FileCollection dependencyLintJarCollection;
-        @NonNull private final Provider<? extends FileSystemLocation> mergedManifest;
+        @NonNull private final BuildableArtifact mergedManifest;
         @Nullable private final BuildableArtifact mergedManifestReport;
         private List<File> lintRuleJars;
 
@@ -180,17 +178,15 @@ public abstract class LintBaseTask extends DefaultTask {
                             variantScope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, LINT));
 
             BuildArtifactsHolder artifacts = variantScope.getArtifacts();
-            Provider<? extends FileSystemLocation> tmpMergedManifest =
-                    artifacts.getFinalProduct(MERGED_MANIFESTS);
-            if (!tmpMergedManifest.isPresent()) {
-                tmpMergedManifest = artifacts.getFinalProduct(LIBRARY_MANIFEST);
-            }
-            if (!tmpMergedManifest.isPresent()) {
+            if (artifacts.hasArtifact(MERGED_MANIFESTS)) {
+                mergedManifest = artifacts.getFinalArtifactFiles(MERGED_MANIFESTS);
+            } else if (artifacts.hasArtifact(LIBRARY_MANIFEST)) {
+                mergedManifest = artifacts.getFinalArtifactFiles(LIBRARY_MANIFEST);
+            } else {
                 throw new RuntimeException(
                         "VariantInputs initialized with no merged manifest on: "
                                 + variantScope.getVariantConfiguration().getType());
             }
-            mergedManifest = tmpMergedManifest;
             allInputs.from(mergedManifest);
 
             if (artifacts.hasArtifact(MANIFEST_MERGE_REPORT)) {
@@ -239,7 +235,7 @@ public abstract class LintBaseTask extends DefaultTask {
         @Override
         @NonNull
         public File getMergedManifest() {
-            File file = mergedManifest.get().getAsFile();
+            File file = Iterables.getOnlyElement(mergedManifest.getFiles());
             if (file.isFile()) {
                 return file;
             }

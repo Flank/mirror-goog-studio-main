@@ -18,7 +18,6 @@ package com.android.build.gradle.tasks;
 
 import static com.android.build.gradle.internal.scope.InternalArtifactType.APK_FOR_LOCAL_TEST;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_RES;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -46,8 +45,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.function.Supplier;
-import org.gradle.api.file.Directory;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
@@ -67,7 +64,7 @@ public class GenerateTestConfig extends AndroidVariantTask {
     Path sdkHome;
     File generatedJavaResourcesDirectory;
     ApkInfo mainApkInfo;
-    Provider<Directory> manifests;
+    BuildableArtifact manifests;
     BuildableArtifact compiledResourcesZip;
     Supplier<String> packageForR;
 
@@ -77,7 +74,7 @@ public class GenerateTestConfig extends AndroidVariantTask {
     }
 
     @InputFiles
-    public Provider<Directory> getManifests() {
+    public BuildableArtifact getManifests() {
         return manifests;
     }
 
@@ -228,7 +225,11 @@ public class GenerateTestConfig extends AndroidVariantTask {
 
             // we don't actually consume the task, only the path, so make a manual dependency
             // on the filecollections.
-            task.manifests = testedScope.getArtifacts().getFinalProduct(MERGED_MANIFESTS);
+
+            task.manifests =
+                    testedScope
+                            .getArtifacts()
+                            .getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS);
 
             boolean enableBinaryResources =
                     scope.getGlobalScope().getProjectOptions().get(

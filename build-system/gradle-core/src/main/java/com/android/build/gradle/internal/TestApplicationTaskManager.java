@@ -51,9 +51,7 @@ import java.util.Objects;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -62,6 +60,8 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
  * application.
  */
 public class TestApplicationTaskManager extends ApplicationTaskManager {
+
+    private FileCollection mTargetManifestConfiguration = null;
 
     public TestApplicationTaskManager(
             @NonNull GlobalScope globalScope,
@@ -196,18 +196,23 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
     /** Returns the manifest configuration of the tested application */
     @NonNull
     private FileCollection getTestedManifestMetadata(@NonNull BaseVariantData variantData) {
-        return variantData
-                .getVariantDependency()
-                .getCompileClasspath()
-                .getIncoming()
-                .artifactView(
-                        config ->
-                                config.attributes(
-                                        container ->
-                                                container.attribute(
-                                                        ARTIFACT_TYPE,
-                                                        MANIFEST_METADATA.getType())))
-                .getFiles();
+        if (mTargetManifestConfiguration == null) {
+            mTargetManifestConfiguration =
+                    variantData
+                            .getVariantDependency()
+                            .getCompileClasspath()
+                            .getIncoming()
+                            .artifactView(
+                                    config ->
+                                            config.attributes(
+                                                    container ->
+                                                            container.attribute(
+                                                                    ARTIFACT_TYPE,
+                                                                    MANIFEST_METADATA.getType())))
+                            .getFiles();
+        }
+
+        return mTargetManifestConfiguration;
     }
 
     /** Creates the merge manifests task. */
@@ -215,22 +220,12 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
     @NonNull
     protected TaskProvider<? extends ManifestProcessorTask> createMergeManifestTask(
             @NonNull VariantScope variantScope) {
-
-        Provider<Directory> directoryProperty =
-                project.provider(
-                        () ->
-                                project.getLayout()
-                                        .getBuildDirectory()
-                                        .dir(
-                                                getTestedManifestMetadata(
-                                                                variantScope.getVariantData())
-                                                        .getSingleFile()
-                                                        .getAbsolutePath())
-                                        .get());
-
-        // TODO : Investigate why there is no actual dependency embedded in the directoryProperty.
         return taskFactory.register(
-                new ProcessTestManifest.CreationAction(variantScope, directoryProperty));
+                new ProcessTestManifest.CreationAction(
+                        variantScope,
+                        new BuildableArtifactImpl(
+                                getTestedManifestMetadata(variantScope.getVariantData()),
+                                variantScope.getGlobalScope().getDslScope())));
     }
 
     @Override

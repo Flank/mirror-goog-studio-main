@@ -15,7 +15,6 @@
  */
 package com.android.build.gradle.tasks;
 
-import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
@@ -24,9 +23,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import java.io.File;
 import java.util.Map;
-import javax.annotation.Nonnull;
 import org.gradle.api.file.Directory;
-import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
@@ -39,26 +36,18 @@ import org.gradle.api.tasks.OutputFile;
  */
 public abstract class ManifestProcessorTask extends IncrementalTask {
 
-    public ManifestProcessorTask(@NonNull ObjectFactory objectFactory) {
-        manifestOutputDirectory = objectFactory.directoryProperty();
-        instantAppManifestOutputDirectory = objectFactory.directoryProperty();
-        instantRunManifestOutputDirectory = objectFactory.directoryProperty();
-        aaptFriendlyManifestOutputDirectory = objectFactory.directoryProperty();
-    }
-
     @SuppressWarnings("unused")
-    @Nonnull
-    private final Provider<Directory> manifestOutputDirectory;
+    private Provider<Directory> manifestOutputDirectory;
 
-    @Nonnull private final Provider<Directory> aaptFriendlyManifestOutputDirectory;
+    private File aaptFriendlyManifestOutputDirectory;
 
-    @Nonnull private final Provider<Directory> instantRunManifestOutputDirectory;
+    private File instantRunManifestOutputDirectory;
 
     private File metadataFeatureManifestOutputDirectory;
 
     private File bundleManifestOutputDirectory;
 
-    @Nonnull private final Provider<Directory> instantAppManifestOutputDirectory;
+    private File instantAppManifestOutputDirectory;
 
     private File reportFile;
 
@@ -82,17 +71,23 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
     public abstract File getAaptFriendlyManifestOutputFile();
 
     /** The processed Manifests files folder. */
-    @NonNull
     @OutputDirectory
     public Provider<Directory> getManifestOutputDirectory() {
         return manifestOutputDirectory;
     }
 
+    public void setManifestOutputDirectory(Provider<Directory> manifestOutputDirectory) {
+        this.manifestOutputDirectory = manifestOutputDirectory;
+    }
+
     @OutputDirectory
     @Optional
-    @NonNull
-    public Provider<Directory> getInstantRunManifestOutputDirectory() {
+    public File getInstantRunManifestOutputDirectory() {
         return instantRunManifestOutputDirectory;
+    }
+
+    public void setInstantRunManifestOutputDirectory(File instantRunManifestOutputDirectory) {
+        this.instantRunManifestOutputDirectory = instantRunManifestOutputDirectory;
     }
 
     /**
@@ -103,9 +98,12 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
      */
     @OutputDirectory
     @Optional
-    @NonNull
-    public Provider<Directory> getAaptFriendlyManifestOutputDirectory() {
+    public File getAaptFriendlyManifestOutputDirectory() {
         return aaptFriendlyManifestOutputDirectory;
+    }
+
+    public void setAaptFriendlyManifestOutputDirectory(File aaptFriendlyManifestOutputDirectory) {
+        this.aaptFriendlyManifestOutputDirectory = aaptFriendlyManifestOutputDirectory;
     }
 
     /**
@@ -141,9 +139,12 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
     /** The instant app manifest which is used if we are deploying the app as an instant app. */
     @OutputDirectory
     @Optional
-    @NonNull
-    public Provider<Directory> getInstantAppManifestOutputDirectory() {
+    public File getInstantAppManifestOutputDirectory() {
         return instantAppManifestOutputDirectory;
+    }
+
+    protected void setInstantAppManifestOutputDirectory(File bundleManifestOutputDirectory) {
+        this.instantAppManifestOutputDirectory = bundleManifestOutputDirectory;
     }
 
     @OutputFile

@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.scope
 
-import com.android.build.api.artifact.ArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_MANIFEST
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
@@ -28,23 +27,15 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder.OperationTyp
 import com.android.build.gradle.internal.variant2.DslScopeImpl
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
-import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.file.FileSystemLocation
-import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.TaskAction
 import org.gradle.testfixtures.ProjectBuilder
-import org.junit.Assert
 import org.junit.Assume
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.File
-import javax.inject.Inject
-import kotlin.test.fail
 
 /**
  * Test for [BuildArtifactsHolder]
@@ -101,151 +92,29 @@ class BuildArtifactsHolderTest(
 
     @Test
     fun earlyFinalOutput() {
-        val finalVersion = holder.getFinalArtifactFiles(MERGED_MANIFESTS)
+        val finalVersion = holder.getFinalArtifactFiles(artifactType)
         // no-one appends or replaces, we should be empty files if resolved.
         assertThat(finalVersion.files).isEmpty()
     }
 
-    val initializedTasks = mutableMapOf<String, TaskWithOuput>()
-
     @Test
     fun lateFinalOutput() {
         val newHolder = TestBuildArtifactsHolder(project, { root }, dslScope)
-        val taskProvider = registerTask("final")
-        newHolder.registerProducer(MERGED_MANIFESTS,
+        val task = project.tasks.create(artifactType.name + operationType.name)
+        artifactType.createOutputLocation(
+            newHolder,
             operationType,
-            taskProvider,
-            taskProvider.map { task -> task.output },
-            "finalFile")
+            task.name,
+            "finalFile"
+        )
 
-        val files = newHolder.getCurrentProduct(MERGED_MANIFESTS)
-        assertThat(files).isNotNull()
-        assertThat(files?.get()?.isPresent)
-        assertThat(files?.get()?.get()?.asFile?.name).isEqualTo("finalFile")
+        val files = newHolder.getArtifactFiles(artifactType)
+        assertThat(files.buildDependencies.getDependencies(null)).containsExactly(task)
 
         // now get final version.
-        val finalVersion = newHolder.getFinalProduct<FileSystemLocation>(MERGED_MANIFESTS)
-        assertThat(finalVersion.get().asFile.name).isEqualTo("finalFile")
-    }
-
-    @Test
-    fun appendProducerTest() {
-        val newHolder = TestBuildArtifactsHolder(project, { root }, dslScope)
-        val task1Provider = registerTask("original")
-        newHolder.registerProducer(MERGED_MANIFESTS,
-            OperationType.INITIAL,
-            task1Provider,
-            task1Provider.map { task -> task.output },
-            "initialFile")
-
-        val task2Provider = registerTask(operationType.name)
-        val appendShouldFail = operationType != OperationType.APPEND
-
-        try {
-            newHolder.registerProducer(
-                MERGED_MANIFESTS,
-                operationType,
-                task2Provider,
-                task2Provider.map { task -> task.output },
-                "appended"
-            )
-        } catch(e:RuntimeException) {
-            assertThat(appendShouldFail).isTrue()
-        }
-
-        val files = newHolder.getFinalProducts(MERGED_MANIFESTS)
-        assertThat(files).isNotNull()
-        assertThat(files).hasSize(if (appendShouldFail) 1 else 2)
-
-        try {
-            newHolder.getFinalProduct<FileSystemLocation>(MERGED_MANIFESTS)
-            if (!appendShouldFail) Assert.fail("Exception not raised")
-        } catch(e: RuntimeException) {
-            assertThat(e).hasMessageThat().contains(
-                if (appendShouldFail) "original" else "original,APPEND")
-        }
-
-        assertThat(initializedTasks).hasSize(0)
-
-        assertThat(files[0].get().asFile.name).isEqualTo(
-            if (operationType == OperationType.TRANSFORM) "appended" else "initialFile")
-        if (!appendShouldFail) {
-            assertThat(files[1].get().asFile.name).isEqualTo("appended")
-        }
-
-        assertThat(initializedTasks).hasSize(if (appendShouldFail) 1 else 2)
-        assertThat(initializedTasks.keys).containsExactly(*when(operationType) {
-            OperationType.TRANSFORM -> arrayOf(OperationType.TRANSFORM.name)
-            OperationType.INITIAL -> arrayOf("original")
-            OperationType.APPEND -> arrayOf("original", OperationType.APPEND.name)
-        })
-    }
-
-    @Test
-    fun finalProducerLocation() {
-        val newHolder = TestBuildArtifactsHolder(project, { root }, dslScope)
-        val taskProvider = registerTask("test")
-        newHolder.registerProducer(artifactType,
-            operationType,
-            taskProvider,
-            taskProvider.map { task -> task.output },
-            "finalFile"
-            )
-
-        val finalArtifactFiles = newHolder.getFinalProduct<FileSystemLocation>(artifactType)
-        val outputFile = finalArtifactFiles.get().asFile
-        val relativeFile = outputFile.relativeTo(project.buildDir)
-        assertThat(relativeFile).isNotNull()
-        assertThat(relativeFile.path).isEqualTo(
-            FileUtils.join(
-                InternalArtifactType.Category.INTERMEDIATES.name.toLowerCase(),
-                artifactType.name.toLowerCase(),
-                "test",
-                "finalFile"))
-    }
-
-    @Test
-    fun finalProducersLocation() {
-        val newHolder = TestBuildArtifactsHolder(project, { root }, dslScope)
-        val firstProvider = registerTask("first")
-        newHolder.registerProducer(artifactType,
-            operationType,
-            firstProvider,
-            firstProvider.map { task -> task.output },
-            "firstFile"
-        )
-
-        val secondProvider = registerTask("second")
-        newHolder.registerProducer(artifactType,
-            OperationType.APPEND,
-            secondProvider,
-            secondProvider.map { task -> task.output },
-            "secondFile"
-        )
-
-        val finalArtifactFiles = newHolder.getFinalProducts(artifactType)
-        assertThat(finalArtifactFiles).hasSize(2)
-        var outputFile = finalArtifactFiles[0].get().asFile
-        var relativeFile = outputFile.relativeTo(project.buildDir)
-        assertThat(relativeFile).isNotNull()
-        assertThat(relativeFile.path).isEqualTo(
-            FileUtils.join(
-                InternalArtifactType.Category.INTERMEDIATES.name.toLowerCase(),
-                artifactType.name.toLowerCase(),
-                "test",
-                firstProvider.name,
-                "firstFile"))
-
-        outputFile = finalArtifactFiles[1].get().asFile
-        relativeFile = outputFile.relativeTo(project.buildDir)
-        assertThat(relativeFile).isNotNull()
-        assertThat(relativeFile.path).isEqualTo(
-            FileUtils.join(
-                InternalArtifactType.Category.INTERMEDIATES.name.toLowerCase(),
-                artifactType.name.toLowerCase(),
-                "test",
-                secondProvider.name,
-                "secondFile"))
+        val finalVersion = newHolder.getFinalArtifactFiles(artifactType)
+        assertThat(finalVersion.files).hasSize(1)
+        assertThat(finalVersion.buildDependencies.getDependencies(null)).containsExactly(task)
     }
 
     @Test
@@ -291,17 +160,16 @@ class BuildArtifactsHolderTest(
                 "finalFile"))
     }
 
-
     @Test
     fun transformedBuildableIntermediatesAccess() {
-        holder.createBuildableArtifact(artifactType,
+        val files1 = holder.createBuildableArtifact(artifactType,
             OperationType.INITIAL,
             project.files(file(artifactType,"task1", "foo")).files, task1.name)
-        val files1 = holder.getArtifactFiles(artifactType)
-        holder.createBuildableArtifact(artifactType,
+        assertThat(holder.getArtifactFiles(artifactType)).isSameAs(files1)
+        val files2 = holder.createBuildableArtifact(artifactType,
             OperationType.TRANSFORM,
             project.files(file(artifactType,"task2", "bar")).files, task2.name)
-        val files2 = holder.getArtifactFiles(artifactType)
+        assertThat(holder.getArtifactFiles(artifactType)).isSameAs(files2)
         artifactType.createOutputLocation(holder, OperationType.APPEND,
             task3.name,
             "baz")
@@ -481,28 +349,6 @@ class BuildArtifactsHolderTest(
         )
     }
 
-    private fun registerTask(taskName: String) = project.tasks.register(taskName,
-        when (artifactType.kind) {
-            ArtifactType.Kind.DIRECTORY -> DirectoryProducerTask::class.java
-            ArtifactType.Kind.FILE -> RegularFileProducerTask::class.java
-            else -> fail("invalid artifact type kind : ${artifactType.kind}")
-        }) {
-            initializedTasks[taskName] = it
-    }
-
-    abstract class TaskWithOuput(val output: Provider<out FileSystemLocation>) : DefaultTask() {
-        @TaskAction
-        fun execute() {
-            assertThat(output).isNotNull()
-        }
-    }
-
-    open class DirectoryProducerTask @Inject constructor(objectFactory: ObjectFactory)
-        : TaskWithOuput(objectFactory.directoryProperty())
-
-    open class RegularFileProducerTask @Inject constructor(objectFactory: ObjectFactory)
-        : TaskWithOuput(objectFactory.fileProperty())
-
     private class TestBuildArtifactsHolder(
         project: Project,
         rootOutputDir: () -> File,
@@ -510,5 +356,4 @@ class BuildArtifactsHolderTest(
 
         override fun getIdentifier() = "test"
     }
-
 }

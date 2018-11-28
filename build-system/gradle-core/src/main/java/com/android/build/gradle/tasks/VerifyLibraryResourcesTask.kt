@@ -43,9 +43,7 @@ import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Iterables
-import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
@@ -82,8 +80,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
     }
 
     @get:InputFiles
-    lateinit var manifestFiles: Provider<Directory>
-        private set
+    lateinit var manifestFiles: BuildableArtifact private set
 
     @get:InputFiles
     @get:Optional
@@ -124,7 +121,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
      */
     private fun compileAndVerifyResources(inputs: Map<File, FileStatus>) {
 
-        val manifestsOutputs = ExistingBuildElements.from(taskInputType, manifestFiles.get().asFile)
+        val manifestsOutputs = ExistingBuildElements.from(taskInputType, manifestFiles)
         val manifestFile = Iterables.getOnlyElement(manifestsOutputs).outputFile
 
         val aapt2ServiceKey = registerAaptService(aapt2FromMaven, buildTools, iLogger)
@@ -179,7 +176,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
             task.mergeBlameLogFolder = variantScope.resourceBlameLogDir
 
             val aaptFriendlyManifestsFilePresent = variantScope.artifacts
-                    .hasFinalProduct(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
+                    .hasArtifact(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
             task.taskInputType = when {
                 aaptFriendlyManifestsFilePresent ->
                     InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS
@@ -189,7 +186,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
                     InternalArtifactType.MERGED_MANIFESTS
             }
             task.manifestFiles = variantScope.artifacts
-                    .getFinalProduct(task.taskInputType)
+                    .getFinalArtifactFiles(task.taskInputType)
         }
     }
 

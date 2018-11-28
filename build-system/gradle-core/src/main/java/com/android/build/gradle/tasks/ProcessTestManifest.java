@@ -24,6 +24,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.VariantOutput;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
@@ -50,12 +51,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
-import javax.inject.Inject;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
@@ -76,7 +75,7 @@ import org.gradle.api.tasks.TaskProvider;
  */
 public class ProcessTestManifest extends ManifestProcessorTask {
 
-    @NonNull private Provider<Directory> testTargetMetadata;
+    @Nullable private BuildableArtifact testTargetMetadata;
 
     @Nullable
     private File testManifestFile;
@@ -100,11 +99,6 @@ public class ProcessTestManifest extends ManifestProcessorTask {
 
     private OutputScope outputScope;
 
-    @Inject
-    public ProcessTestManifest(ObjectFactory objectFactory) {
-        super(objectFactory);
-    }
-
     public OutputScope getOutputScope() {
         return outputScope;
     }
@@ -117,8 +111,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         String testedApplicationId = this.getTestedApplicationId();
         if (!onlyTestApk && testTargetMetadata != null) {
             BuildElements manifestOutputs =
-                    ExistingBuildElements.from(
-                            MERGED_MANIFESTS, testTargetMetadata.get().getAsFile());
+                    ExistingBuildElements.from(MERGED_MANIFESTS, testTargetMetadata);
 
             java.util.Optional<BuildOutput> mainSplit =
                     manifestOutputs
@@ -253,7 +246,8 @@ public class ProcessTestManifest extends ManifestProcessorTask {
 
     @InputFiles
     @Optional
-    public Provider<Directory> getTestTargetMetadata() {
+    @Nullable
+    public BuildableArtifact getTestTargetMetadata() {
         return testTargetMetadata;
     }
 
@@ -286,11 +280,11 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         @NonNull
         private final VariantScope scope;
 
-        @NonNull private final Provider<Directory> testTargetMetadata;
+        @Nullable private final BuildableArtifact testTargetMetadata;
         private Provider<Directory> manifestOutputDirectory;
 
         public CreationAction(
-                @NonNull VariantScope scope, @NonNull Provider<Directory> testTargetMetadata) {
+                @NonNull VariantScope scope, @Nullable BuildableArtifact testTargetMetadata) {
             super(scope, scope.getTaskName("process", "Manifest"), ProcessTestManifest.class);
             this.scope = scope;
             this.testTargetMetadata = testTargetMetadata;
@@ -300,9 +294,11 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
             scope.getArtifacts()
-                    .republish(
-                            InternalArtifactType.MERGED_MANIFESTS,
-                            InternalArtifactType.MANIFEST_METADATA);
+                    .createBuildableArtifact(
+                            InternalArtifactType.MANIFEST_METADATA,
+                            BuildArtifactsHolder.OperationType.INITIAL,
+                            scope.getArtifacts()
+                                    .getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS));
 
             manifestOutputDirectory =
                     scope.getArtifacts()
@@ -318,20 +314,13 @@ public class ProcessTestManifest extends ManifestProcessorTask {
                 @NonNull TaskProvider<? extends ProcessTestManifest> taskProvider) {
             super.handleProvider(taskProvider);
             scope.getTaskContainer().setProcessManifestTask(taskProvider);
-
-            scope.getArtifacts()
-                    .registerProducer(
-                            InternalArtifactType.MERGED_MANIFESTS,
-                            BuildArtifactsHolder.OperationType.INITIAL,
-                            taskProvider,
-                            taskProvider.map(ManifestProcessorTask::getManifestOutputDirectory),
-                            "");
         }
 
         @Override
         public void configure(@NonNull final ProcessTestManifest task) {
             super.configure(task);
 
+            task.setManifestOutputDirectory(manifestOutputDirectory);
             task.checkManifestResult =
                     scope.getArtifacts()
                             .getFinalArtifactFilesIfPresent(

@@ -34,9 +34,7 @@ import com.android.sdklib.IAndroidTarget
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.Iterables
-import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -62,10 +60,11 @@ import javax.inject.Inject
 @CacheableTask
 open class ProcessAndroidAppResourcesTask
 @Inject constructor(workerExecutor: WorkerExecutor) : AndroidBuilderTask() {
+
     private val workers = Workers.getWorker(workerExecutor)
 
 
-    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFileDirectory: Provider<Directory> private set
+    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFileDirectory: BuildableArtifact private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var thisSubProjectStaticLibrary: BuildableArtifact private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var libraryDependencies: FileCollection private set
     @get:InputFiles
@@ -95,7 +94,8 @@ open class ProcessAndroidAppResourcesTask
         staticLibraries.add(thisSubProjectStaticLibrary.single())
         val config = AaptPackageConfig(
                 androidJarPath = builder.target.getPath(IAndroidTarget.ANDROID_JAR),
-                manifestFile = (File(manifestFileDirectory.get().asFile, SdkConstants.ANDROID_MANIFEST_XML)),
+                manifestFile = (File(Iterables.getOnlyElement(manifestFileDirectory),
+                        SdkConstants.ANDROID_MANIFEST_XML)),
                 options = AaptOptions(null, false, null),
                 staticLibraryDependencies = staticLibraries.build(),
                 imports = ImmutableList.copyOf(sharedLibraryDependencies.asIterable()),
@@ -146,12 +146,12 @@ open class ProcessAndroidAppResourcesTask
 
             val artifacts = variantScope.artifacts
             task.manifestFileDirectory =
-                    when {
-                        artifacts.hasArtifact(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
-                            -> artifacts.getFinalProduct(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
-                        variantScope.globalScope.projectOptions.get(BooleanOption.IDE_DEPLOY_AS_INSTANT_APP)
-                            -> artifacts.getFinalProduct(InternalArtifactType.INSTANT_APP_MANIFEST)
-                        else -> artifacts.getFinalProduct(InternalArtifactType.MERGED_MANIFESTS)
+                    if (artifacts.hasArtifact(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)) {
+                        artifacts.getFinalArtifactFiles(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
+                    } else if (variantScope.globalScope.projectOptions.get(BooleanOption.IDE_DEPLOY_AS_INSTANT_APP)) {
+                        artifacts.getFinalArtifactFiles(InternalArtifactType.INSTANT_APP_MANIFEST)
+                    } else {
+                        artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS)
                     }
             task.thisSubProjectStaticLibrary = variantScope.artifacts.getFinalArtifactFiles(
                 InternalArtifactType.RES_STATIC_LIBRARY)

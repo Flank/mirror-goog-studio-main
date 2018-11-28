@@ -20,6 +20,7 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTA
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.internal.incremental.BuildInfoLoaderTask;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
@@ -56,10 +57,8 @@ import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.execution.TaskExecutionAdapter;
-import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.TaskState;
 
@@ -100,8 +99,7 @@ public class InstantRunTaskManager {
             @Nullable TaskProvider<? extends Task> preTask,
             TaskProvider<? extends Task> anchorTask,
             Set<? super QualifiedContent.Scope> resMergingScopes,
-            Provider<Directory> mergedManifests,
-            Provider<Directory> instantRunMergedManifests,
+            BuildableArtifact instantRunMergedManifests,
             boolean addDependencyChangeChecker,
             int minSdkForDx,
             boolean enableDesugaring,
@@ -242,10 +240,7 @@ public class InstantRunTaskManager {
         // create the AppInfo.class for this variant.
         taskFactory.register(
                 new GenerateInstantRunAppInfoTask.CreationAction(
-                        transformVariantScope,
-                        variantScope,
-                        mergedManifests,
-                        instantRunMergedManifests));
+                        transformVariantScope, variantScope, instantRunMergedManifests));
 
         // also add a new stream for the injector task output.
         transformManager.addStream(

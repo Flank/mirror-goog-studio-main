@@ -36,9 +36,7 @@ import com.android.builder.core.VariantType;
 import java.io.File;
 import java.util.Objects;
 import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.Directory;
 import org.gradle.api.plugins.JavaBasePlugin;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.reporting.ConfigurableReport;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -51,7 +49,7 @@ import org.gradle.api.tasks.testing.TestTaskReports;
 public class AndroidUnitTest extends Test implements VariantAwareTask {
 
     private String sdkPlatformDirPath;
-    private Provider<Directory> mergedManifest;
+    private BuildableArtifact mergedManifest;
     private BuildableArtifact resCollection;
     private BuildableArtifact assetsCollection;
     private String variantName;
@@ -86,7 +84,7 @@ public class AndroidUnitTest extends Test implements VariantAwareTask {
     }
 
     @InputFiles
-    public Provider<Directory> getMergedManifest() {
+    public BuildableArtifact getMergedManifest() {
         return mergedManifest;
     }
 
@@ -165,7 +163,7 @@ public class AndroidUnitTest extends Test implements VariantAwareTask {
             task.mergedManifest =
                     testedScope
                             .getArtifacts()
-                            .getFinalProduct(InternalArtifactType.MERGED_MANIFESTS);
+                            .getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS);
 
             // Put the variant name in the report path, so that different testing tasks don't
             // overwrite each other's reports. For component model plugin, the report tasks are not

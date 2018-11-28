@@ -123,7 +123,6 @@ import java.util.concurrent.Callable;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
@@ -136,7 +135,6 @@ import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.specs.Spec;
 
@@ -262,29 +260,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 Preconditions.checkNotNull(
                         config, String.format(PUBLISH_ERROR_MSG, configType, getType()));
                 publishArtifactToConfiguration(config, file, artifact, artifactType);
-            }
-        }
-    }
-
-    @Override
-    public void publishIntermediateArtifact(
-            @NonNull Provider<? extends FileSystemLocation> artifact,
-            @Nonnull Provider<String> lastProducerTaskName,
-            @NonNull ArtifactType artifactType,
-            @NonNull Collection<PublishedConfigType> configTypes) {
-
-        Preconditions.checkState(!configTypes.isEmpty());
-
-        // FIXME this needs to be parameterized based on the variant's publishing type.
-        final VariantDependencies variantDependency = getVariantDependencies();
-
-        for (PublishedConfigType configType : PublishedConfigType.values()) {
-            if (configTypes.contains(configType)) {
-                Configuration config = variantDependency.getElements(configType);
-                Preconditions.checkNotNull(
-                        config, String.format(PUBLISH_ERROR_MSG, configType, getType()));
-                publishArtifactToConfiguration(
-                        config, artifact, lastProducerTaskName, artifactType);
             }
         }
     }

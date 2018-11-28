@@ -70,7 +70,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 import org.gradle.api.GradleException;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
@@ -79,8 +78,9 @@ import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
@@ -113,11 +113,6 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
 
     // supplier to read the file above to get the feature name for the current project.
     @Nullable private Supplier<String> featureNameSupplier = null;
-
-    @Inject
-    public ProcessApplicationManifest(ObjectFactory objectFactory) {
-        super(objectFactory);
-    }
 
     @Override
     protected void doFullTaskAction() throws IOException {
@@ -176,12 +171,10 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
                                     apkData.getDirName(), SdkConstants.ANDROID_MANIFEST_XML));
 
             File instantRunManifestOutputFile =
-                    getInstantRunManifestOutputDirectory().isPresent()
-                            ? FileUtils.join(
-                                    getInstantRunManifestOutputDirectory().get().getAsFile(),
-                                    apkData.getDirName(),
-                                    SdkConstants.ANDROID_MANIFEST_XML)
-                            : null;
+                    FileUtils.join(
+                            getInstantRunManifestOutputDirectory(),
+                            apkData.getDirName(),
+                            SdkConstants.ANDROID_MANIFEST_XML);
 
             File metadataFeatureManifestOutputFile =
                     FileUtils.join(
@@ -196,13 +189,10 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
                             SdkConstants.ANDROID_MANIFEST_XML);
 
             File instantAppManifestOutputFile =
-                    getInstantAppManifestOutputDirectory().isPresent()
-                            ? FileUtils.join(
-                                    getInstantAppManifestOutputDirectory().get().getAsFile(),
-                                    apkData.getDirName(),
-                                    SdkConstants.ANDROID_MANIFEST_XML)
-                            : null;
-
+                    FileUtils.join(
+                            getInstantAppManifestOutputDirectory(),
+                            apkData.getDirName(),
+                            SdkConstants.ANDROID_MANIFEST_XML);
             MergingReport mergingReport =
                     getBuilder()
                             .mergeManifestsForApplication(
@@ -226,14 +216,10 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
                                     manifestOutputFile.getAbsolutePath(),
                                     // no aapt friendly merged manifest file necessary for applications.
                                     null /* aaptFriendlyManifestOutputFile */,
-                                    instantRunManifestOutputFile != null
-                                            ? instantRunManifestOutputFile.getAbsolutePath()
-                                            : null,
+                                    instantRunManifestOutputFile.getAbsolutePath(),
                                     metadataFeatureManifestOutputFile.getAbsolutePath(),
                                     bundleManifestOutputFile.getAbsolutePath(),
-                                    instantAppManifestOutputFile != null
-                                            ? instantAppManifestOutputFile.getAbsolutePath()
-                                            : null,
+                                    instantAppManifestOutputFile.getAbsolutePath(),
                                     ManifestMerger2.MergeType.APPLICATION,
                                     variantConfiguration.getManifestPlaceholders(),
                                     getOptionalFeatures(),
@@ -259,15 +245,12 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
                             apkData,
                             manifestOutputFile,
                             properties));
-            if (instantRunManifestOutputFile != null) {
-                irMergedManifestOutputs.add(
-                        new BuildOutput(
-                                InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS,
-                                apkData,
-                                instantRunManifestOutputFile,
-                                properties));
-            }
-
+            irMergedManifestOutputs.add(
+                    new BuildOutput(
+                            InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS,
+                            apkData,
+                            instantRunManifestOutputFile,
+                            properties));
             metadataFeatureMergedManifestOutputs.add(
                     new BuildOutput(
                             InternalArtifactType.METADATA_FEATURE_MANIFEST,
@@ -279,29 +262,22 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
                             apkData,
                             bundleManifestOutputFile,
                             properties));
-            if (instantAppManifestOutputFile != null) {
-                instantAppManifestOutputs.add(
-                        new BuildOutput(
-                                InternalArtifactType.INSTANT_APP_MANIFEST,
-                                apkData,
-                                instantAppManifestOutputFile,
-                                properties));
-            }
+            instantAppManifestOutputs.add(
+                    new BuildOutput(
+                            InternalArtifactType.INSTANT_APP_MANIFEST,
+                            apkData,
+                            instantAppManifestOutputFile,
+                            properties));
         }
         new BuildElements(mergedManifestOutputs.build())
                 .save(getManifestOutputDirectory().get().getAsFile());
-        if (getInstantRunManifestOutputDirectory().isPresent()) {
-            new BuildElements(irMergedManifestOutputs.build())
-                    .save(getInstantRunManifestOutputDirectory().get().getAsFile());
-        }
+        new BuildElements(irMergedManifestOutputs.build())
+                .save(getInstantRunManifestOutputDirectory());
         new BuildElements(metadataFeatureMergedManifestOutputs.build())
                 .save(getMetadataFeatureManifestOutputDirectory());
         new BuildElements(bundleManifestOutputs.build()).save(getBundleManifestOutputDirectory());
-
-        if (getInstantAppManifestOutputDirectory().isPresent()) {
-            new BuildElements(instantAppManifestOutputs.build())
-                    .save(getInstantAppManifestOutputDirectory().get().getAsFile());
-        }
+        new BuildElements(instantAppManifestOutputs.build())
+                .save(getInstantAppManifestOutputDirectory());
     }
 
     @Nullable
@@ -581,8 +557,11 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
         protected final VariantScope variantScope;
         protected final boolean isAdvancedProfilingOn;
         private File reportFile;
+        private File instantRunManifestOutputDirectory;
         private File featureManifestOutputDirectory;
         private File bundleManifestOutputDirectory;
+        private File instantAppManifestOutputDirectory;
+        private Provider<Directory> manifestOutputDirectory;
 
         public CreationAction(
                 @NonNull VariantScope scope,
@@ -620,8 +599,24 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
             Preconditions.checkState(!variantType.isTestComponent());
             BuildArtifactsHolder artifacts = variantScope.getArtifacts();
 
-            artifacts.republish(
-                    InternalArtifactType.MERGED_MANIFESTS, InternalArtifactType.MANIFEST_METADATA);
+
+            artifacts.createBuildableArtifact(
+                    InternalArtifactType.MANIFEST_METADATA,
+                    BuildArtifactsHolder.OperationType.INITIAL,
+                    artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS));
+
+            manifestOutputDirectory =
+                    artifacts.createDirectory(
+                            InternalArtifactType.MERGED_MANIFESTS,
+                            BuildArtifactsHolder.OperationType.INITIAL,
+                            taskName,
+                            "");
+
+            instantRunManifestOutputDirectory =
+                    artifacts.appendArtifact(
+                            InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS,
+                            taskName,
+                            "instant-run");
 
             featureManifestOutputDirectory =
                     artifacts.appendArtifact(
@@ -633,6 +628,11 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
                     artifacts.appendArtifact(
                             InternalArtifactType.BUNDLE_MANIFEST, taskName, "bundle-manifest");
 
+            instantAppManifestOutputDirectory =
+                    artifacts.appendArtifact(
+                            InternalArtifactType.INSTANT_APP_MANIFEST,
+                            taskName,
+                            "instant-app-manifest");
         }
 
         @Override
@@ -640,35 +640,6 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
                 @NonNull TaskProvider<? extends ProcessApplicationManifest> taskProvider) {
             super.handleProvider(taskProvider);
             variantScope.getTaskContainer().setProcessManifestTask(taskProvider);
-
-            variantScope
-                    .getArtifacts()
-                    .registerProducer(
-                            InternalArtifactType.MERGED_MANIFESTS,
-                            BuildArtifactsHolder.OperationType.INITIAL,
-                            taskProvider,
-                            taskProvider.map(ManifestProcessorTask::getManifestOutputDirectory),
-                            "");
-
-            variantScope
-                    .getArtifacts()
-                    .registerProducer(
-                            InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS,
-                            BuildArtifactsHolder.OperationType.INITIAL,
-                            taskProvider,
-                            taskProvider.map(
-                                    ManifestProcessorTask::getInstantRunManifestOutputDirectory),
-                            "");
-
-            variantScope
-                    .getArtifacts()
-                    .registerProducer(
-                            InternalArtifactType.INSTANT_APP_MANIFEST,
-                            BuildArtifactsHolder.OperationType.INITIAL,
-                            taskProvider,
-                            taskProvider.map(
-                                    ManifestProcessorTask::getInstantAppManifestOutputDirectory),
-                            "");
         }
 
         @Override
@@ -737,8 +708,11 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
             task.maxSdkVersion =
                     TaskInputHelper.memoize(config.getMergedFlavor()::getMaxSdkVersion);
 
+            task.setManifestOutputDirectory(manifestOutputDirectory);
+            task.setInstantRunManifestOutputDirectory(instantRunManifestOutputDirectory);
             task.setMetadataFeatureManifestOutputDirectory(featureManifestOutputDirectory);
             task.setBundleManifestOutputDirectory(bundleManifestOutputDirectory);
+            task.setInstantAppManifestOutputDirectory(instantAppManifestOutputDirectory);
 
             task.setReportFile(reportFile);
             task.optionalFeatures =

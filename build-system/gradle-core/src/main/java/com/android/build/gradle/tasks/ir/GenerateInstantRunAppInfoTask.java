@@ -30,6 +30,7 @@ import static org.objectweb.asm.Opcodes.V1_6;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
@@ -48,8 +49,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
-import org.gradle.api.file.Directory;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
@@ -72,8 +71,7 @@ public class GenerateInstantRunAppInfoTask extends AndroidBuilderTask {
     private static final String SERVER_PACKAGE = "com/android/tools/ir/server";
 
     private File outputFile;
-    private Provider<Directory> mergedManifests;
-    private Provider<Directory> instantRunMergedManifests;
+    private BuildableArtifact mergedManifests;
     private InstantRunBuildContext buildContext;
 
     @OutputFile
@@ -87,18 +85,13 @@ public class GenerateInstantRunAppInfoTask extends AndroidBuilderTask {
     }
 
     @InputFiles
-    public Provider<Directory> getMergedManifests() {
+    public BuildableArtifact getMergedManifests() {
         return mergedManifests;
     }
 
-    @InputFiles
-    public Provider<Directory> getInstantRunMergedManifests() {
-        return instantRunMergedManifests;
-    }
-
     @VisibleForTesting
-    void setInstantRunMergedManifests(Provider<Directory> mergedManifests) {
-        this.instantRunMergedManifests = mergedManifests;
+    void setMergedManifests(BuildableArtifact mergedManifests) {
+        this.mergedManifests = mergedManifests;
     }
 
     @VisibleForTesting
@@ -116,8 +109,7 @@ public class GenerateInstantRunAppInfoTask extends AndroidBuilderTask {
 
         BuildElements buildElements =
                 ExistingBuildElements.from(
-                        InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS,
-                        getInstantRunMergedManifests());
+                        InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS, getMergedManifests());
 
         if (buildElements.isEmpty()) {
             throw new RuntimeException(
@@ -206,19 +198,16 @@ public class GenerateInstantRunAppInfoTask extends AndroidBuilderTask {
         @NonNull private final VariantScope variantScope;
         @NonNull
         private final TransformVariantScope transformVariantScope;
-        @NonNull private final Provider<Directory> mergedManifests;
-        @NonNull private final Provider<Directory> instantRunMergedManifests;
+        @NonNull private final BuildableArtifact manifests;
         private File outputFile;
 
         public CreationAction(
                 @NonNull TransformVariantScope transformVariantScope,
                 @NonNull VariantScope variantScope,
-                @NonNull Provider<Directory> mergedManifests,
-                @NonNull Provider<Directory> instantRunMergedManifests) {
+                @NonNull BuildableArtifact manifests) {
             this.transformVariantScope = transformVariantScope;
             this.variantScope = variantScope;
-            this.mergedManifests = mergedManifests;
-            this.instantRunMergedManifests = instantRunMergedManifests;
+            this.manifests = manifests;
         }
 
         @NonNull
@@ -251,8 +240,7 @@ public class GenerateInstantRunAppInfoTask extends AndroidBuilderTask {
             task.setVariantName(variantScope.getFullVariantName());
             task.buildContext = variantScope.getInstantRunBuildContext();
             task.outputFile = outputFile;
-            task.instantRunMergedManifests = instantRunMergedManifests;
-            task.mergedManifests = mergedManifests;
+            task.mergedManifests = manifests;
         }
     }
 }

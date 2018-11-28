@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputScope;
@@ -28,9 +29,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.wireless.android.sdk.stats.GradleBuildProjectMetrics;
 import java.io.File;
 import java.io.IOException;
-import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.TaskProvider;
 
@@ -98,7 +97,7 @@ public class PackageApplication extends PackageAndroidArtifact {
                 @NonNull VariantScope packagingScope,
                 @NonNull File outputDirectory,
                 @NonNull InternalArtifactType inputResourceFilesType,
-                @NonNull Provider<Directory> manifests,
+                @NonNull BuildableArtifact manifests,
                 @NonNull InternalArtifactType manifestType,
                 @NonNull OutputScope outputScope,
                 @Nullable FileCache fileCache,
@@ -160,7 +159,7 @@ public class PackageApplication extends PackageAndroidArtifact {
                 @NonNull File outputFile,
                 @NonNull VariantScope scope,
                 @NonNull InternalArtifactType inputResourceFilesType,
-                @NonNull Provider<Directory> manifests,
+                @NonNull BuildableArtifact manifests,
                 @NonNull InternalArtifactType manifestType,
                 @Nullable FileCache fileCache,
                 @NonNull OutputScope outputScope) {
