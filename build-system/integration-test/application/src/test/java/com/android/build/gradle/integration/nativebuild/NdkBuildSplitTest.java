@@ -82,7 +82,7 @@ public class NdkBuildSplitTest {
                         + "            versionCode = 2\n"
                         + "        }\n"
                         + "        current {\n"
-                        + "            minSdkVersion rootProject.latestCompileSdk\n"
+                        + "            minSdkVersion 24\n"
                         + "            versionCode = 3\n"
                         + "        }\n"
                         + "    }\n"
