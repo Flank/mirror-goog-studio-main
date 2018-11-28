@@ -23,7 +23,6 @@ import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
-import com.android.build.gradle.tasks.NdkCompile;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.ProductFlavor;
@@ -347,19 +346,6 @@ public interface BaseVariant {
      */
     @NonNull
     ArtifactCollection getCompileClasspathArtifacts(@Nullable Object key);
-
-    /** Returns the NDK Compilation task. @Deprecated Use {@link #getNdkCompileProvider()} */
-    @NonNull
-    @Deprecated
-    NdkCompile getNdkCompile();
-
-    /**
-     * Returns the NDK Compilation task.
-     *
-     * <p>Prefer this to {@link #getNdkCompile()} as it triggers eager configuration of the task.
-     */
-    @NonNull
-    TaskProvider<NdkCompile> getNdkCompileProvider();
 
     /**
      * Returns the tasks for building external native projects.

@@ -198,7 +198,6 @@ import com.android.build.gradle.tasks.MainApkListPersistence;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
-import com.android.build.gradle.tasks.NdkCompile;
 import com.android.build.gradle.tasks.PackageApplication;
 import com.android.build.gradle.tasks.PackageSplitAbi;
 import com.android.build.gradle.tasks.PackageSplitRes;
@@ -946,21 +945,6 @@ public abstract class TaskManager {
                                                 .get())
                                 .build());
 
-        // create a stream that contains the content of the local NDK build
-        if (shouldCreateNdkCompile()) {
-            variantScope
-                    .getTransformManager()
-                    .addStream(
-                            OriginalStream.builder(project, "local-ndk-build")
-                                    .addContentType(ExtendedContentType.NATIVE_LIBS)
-                                    .addScope(Scope.PROJECT)
-                                    .setFileCollection(
-                                            variantScope
-                                                    .getArtifacts()
-                                                    .getFinalArtifactFiles(NDK_LIBS)
-                                                    .get())
-                                    .build());
-        }
 
         // create a stream that contains the content of the local external native build
         if (taskContainer.getExternalNativeJsonGenerator() != null) {
@@ -1583,22 +1567,6 @@ public abstract class TaskManager {
                 taskFactory.register(new ExternalNativeCleanTask.CreationAction(generator, scope)));
     }
 
-    private boolean shouldCreateNdkCompile() {
-        return !ExternalNativeBuildTaskUtils.isExternalNativeBuildEnabled(
-                extension.getExternalNativeBuild());
-    }
-
-    public void createNdkTasks(@NonNull VariantScope scope) {
-        if (!shouldCreateNdkCompile()) {
-            return;
-        }
-
-        TaskProvider<NdkCompile> ndkCompileTask =
-                taskFactory.register(new NdkCompile.CreationAction(scope));
-
-        TaskFactoryUtils.dependsOn(scope.getTaskContainer().getCompileTask(), ndkCompileTask);
-    }
-
     /** Create transform for stripping debug symbols from native libraries before deploying. */
     public static void createStripNativeLibraryTask(
             @NonNull TaskFactory taskFactory, @NonNull VariantScope scope) {
@@ -1779,9 +1747,6 @@ public abstract class TaskManager {
         createProcessJavaResTask(variantScope);
 
         createAidlTask(variantScope);
-
-        // Add NDK tasks
-        createNdkTasks(variantScope);
 
         // add tasks to merge jni libs.
         createMergeJniLibFoldersTasks(variantScope);

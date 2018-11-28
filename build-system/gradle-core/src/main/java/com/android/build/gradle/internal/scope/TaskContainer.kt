@@ -25,7 +25,6 @@ import com.android.build.gradle.tasks.GenerateBuildConfig
 import com.android.build.gradle.tasks.ManifestProcessorTask
 import com.android.build.gradle.tasks.MergeResources
 import com.android.build.gradle.tasks.MergeSourceSetFolders
-import com.android.build.gradle.tasks.NdkCompile
 import com.android.build.gradle.tasks.PackageAndroidArtifact
 import com.android.build.gradle.tasks.ProcessAndroidResources
 import com.android.build.gradle.tasks.RenderscriptCompile
@@ -53,7 +52,6 @@ interface TaskContainer {
     val mergeAssetsTask: TaskProvider<out MergeSourceSetFolders>
     val processJavaResourcesTask: TaskProvider<out Sync>
     val generateBuildConfigTask: TaskProvider<out GenerateBuildConfig>?
-    val ndkCompileTask: TaskProvider<out NdkCompile>?
     val processAndroidResTask: TaskProvider<out ProcessAndroidResources>?
     val processManifestTask: TaskProvider<out ManifestProcessorTask>?
     val packageAndroidTask: TaskProvider<out PackageAndroidArtifact>?
