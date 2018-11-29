@@ -23,7 +23,9 @@ import com.android.ide.common.resources.ResourceVisitor.VisitResult;
 import com.android.resources.ResourceType;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
+import java.util.Collection;
 import java.util.Map;
+import org.jetbrains.annotations.NotNull;
 
 /** Simple repository implementation that just stores what the {@link ResourceMerger} emits. */
 public final class TestResourceRepository extends AbstractResourceRepository
@@ -69,6 +71,13 @@ public final class TestResourceRepository extends AbstractResourceRepository
     @Nullable
     public String getPackageName() {
         return namespace.getPackageName();
+    }
+
+    @Override
+    @NotNull
+    public Collection<ResourceItem> getPublicResources(
+            @NotNull ResourceNamespace namespace, @NotNull ResourceType type) {
+        throw new UnsupportedOperationException();
     }
 
     @VisibleForTesting
