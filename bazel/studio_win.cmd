@@ -7,13 +7,26 @@ set OUTDIR=%1
 set DISTDIR=%2
 set BUILDNUMBER=%3
 
+set TESTTAGFILTERSPOST=-no_windows,-no_test_windows,-qa_sanity,-qa_fast,-qa_unreliable
+set TESTTAGFILTERSPSQ=-no_windows,-no_test_windows,-qa_sanity,-qa_fast,-qa_unreliable,-no_psq
+set TESTTAGFILTERS=%TESTTAGFILTERSPOST%
+
+set CONFIGOPTIONSPOST=--config=local --config=remote_common --config=postsubmit
+set CONFIGOPTIONSPSQ=--config=local --config=remote_common --config=presubmit
+set CONFIGOPTIONS=%CONFIGOPTIONSPOST%
+
+IF "%BUILDNUMBER:~0,1%"=="P" (
+  set TESTTAGFILTERS=%TESTTAGFILTERSPSQ%
+  set CONFIGOPTIONS=%CONFIGOPTIONSPSQ%
+)
+
 @rem The current directory the executing script is in.
 set SCRIPTDIR=%~dp0
 CALL :NORMALIZE_PATH "%SCRIPTDIR%..\..\.."
 set BASEDIR=%RETVAL%
 
 @rem Capture location of command.log  Will be out as unix filepath
-FOR /F "tokens=*" %%F IN ('%SCRIPTDIR%bazel.cmd info command_log') DO (
+FOR /F "tokens=*" %%F IN ('%SCRIPTDIR%bazel.cmd info %CONFIGOPTIONS% command_log') DO (
 SET COMMANDLOG=%%F
 )
 @rem convert unix path to windows path using cygpath.
@@ -25,7 +38,7 @@ echo "Called with the following:  OUTDIR=%OUTDIR%, DISTDIR=%DISTDIR%, BUILDNUMBE
 echo "Command Log Location: %COMMANDLOGLOC%"
 
 @rem Run Bazel
-CALL %SCRIPTDIR%bazel.cmd --max_idle_secs=60 --bazelrc=%SCRIPTDIR%toplevel.bazel.rc test --config=postsubmit --config=local --config=remote_common --build_tag_filters=-no_windows --test_tag_filters=-no_windows,-no_test_windows,-no_psq,-qa_sanity,-qa_fast,-qa_unreliable --auth_credentials=C:\buildbot\android-studio-alphasource.json -- //tools/base/...
+CALL %SCRIPTDIR%bazel.cmd --max_idle_secs=60 test %CONFIGOPTIONS% --build_tag_filters=-no_windows --test_tag_filters=%TESTTAGFILTERS% --auth_credentials=C:\buildbot\android-studio-alphasource.json -- //tools/base/...
 
 SET EXITCODE=%errorlevel%
 
@@ -37,7 +50,7 @@ SET UPSALITEID=%%F
 )
 echo "<meta http-equiv="refresh" content="0; URL='https://source.cloud.google.com/results/invocations/%UPSALITEID%" />" > %DISTDIR%\upsalite_test_results.html
 
-FOR /F "tokens=*" %%F IN ('%SCRIPTDIR%bazel.cmd --bazelrc=%SCRIPTDIR%toplevel.bazel.rc info bazel-testlogs --config=postsubmit --config=local --config=remote_common --auth_credentials=C:\buildbot\android-studio-alphasource.json') DO (
+FOR /F "tokens=*" %%F IN ('%SCRIPTDIR%bazel.cmd info bazel-testlogs %CONFIGOPTIONS% --auth_credentials=C:\buildbot\android-studio-alphasource.json') DO (
   SET BAZEL_TESTLOGS=%%F
 )
 
