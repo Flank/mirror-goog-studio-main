@@ -23,6 +23,7 @@ import com.android.tools.lint.detector.api.computeKotlinArgumentMapping
 import com.android.tools.lint.detector.api.isKotlin
 import com.google.common.collect.Sets
 import com.intellij.codeInsight.AnnotationUtil
+import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.psi.JavaDirectoryService
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiAnnotation
@@ -193,6 +194,24 @@ open class DefaultJavaEvaluator(
         return MethodSignatureUtil.areSignaturesEqual(method1, method2)
     }
 
+    override fun getProject(element: PsiElement): Project? {
+        val projects = myLintProject?.client?.knownProjects ?: return null
+        if (projects.isEmpty()) {
+            return null
+        }
+
+        val virtualFile = element.containingFile?.virtualFile ?: return null
+        val file = VfsUtilCore.virtualToIoFile(virtualFile)
+        val path = file.path
+        for (project in projects) {
+            if (path.startsWith(project.dir.path)) {
+                return project
+            }
+        }
+
+        return null
+    }
+
     override fun findJarPath(element: PsiElement): String? {
         val containingFile = element.containingFile
         @Suppress("USELESS_CAST")
@@ -201,7 +220,7 @@ open class DefaultJavaEvaluator(
 
     override fun findJarPath(element: UElement): String? {
         val uFile = element.getContainingUFile()
-        return if (uFile != null) findJarPath(uFile.psi as PsiFile?) else null
+        return if (uFile != null) findJarPath(uFile.sourcePsi as PsiFile?) else null
     }
 
     private fun findJarPath(containingFile: PsiFile?): String? {
