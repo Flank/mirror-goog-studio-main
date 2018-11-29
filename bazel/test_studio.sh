@@ -6,17 +6,9 @@ readonly out_dir="$1"
 readonly dist_dir="$2"
 readonly build_number="$3"
 
-# We wish to set up a new Mac based build branch.  This initial check
-# is to allow a simple echo statement confirmation on the buildbot.
-unamestr=`uname`
-if [[ "$unamestr" == 'Darwin' ]]; then
-  echo "Mac Build Detected.  No Build to perform."
-  exit 0;
-fi
+readonly script_dir="$(dirname "$0")"
 
 test_tag_filters=-no_linux,-no_test_linux,-qa_sanity,-qa_fast,-qa_unreliable
-
-readonly script_dir="$(dirname "$0")"
 
 # If the build number starts with a 'P', this is a pre-submit builder.
 if [[ "${build_number:0:1}" == "P" ]]; then
