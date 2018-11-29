@@ -21,7 +21,6 @@ import com.android.SdkConstants.FD_BUILD_TOOLS
 import com.android.SdkConstants.GRADLE_PLUGIN_MINIMUM_VERSION
 import com.android.SdkConstants.GRADLE_PLUGIN_RECOMMENDED_VERSION
 import com.android.SdkConstants.SUPPORT_LIB_GROUP_ID
-import com.android.annotations.VisibleForTesting
 import com.android.builder.model.AndroidLibrary
 import com.android.builder.model.Dependencies
 import com.android.builder.model.JavaLibrary
@@ -63,7 +62,6 @@ import com.google.common.base.Charsets.UTF_8
 import com.google.common.base.Joiner
 import com.google.common.base.Splitter
 import com.google.common.collect.ArrayListMultimap
-import org.jetbrains.annotations.TestOnly
 import java.io.File
 import java.io.IOException
 import java.io.UnsupportedEncodingException
