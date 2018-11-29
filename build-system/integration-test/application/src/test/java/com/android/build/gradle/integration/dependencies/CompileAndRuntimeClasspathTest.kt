@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.dependencies
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
+import com.android.utils.toSystemLineSeparator
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -40,10 +41,10 @@ class CompileAndRuntimeClasspathTest {
         )
 
         val result = project.executor().expectFailure().run("preDebugBuild")
-        assertThat(result.stdout).contains("> Could not resolve all files for configuration ':debugCompileClasspath'.\n" +
-            "   > Could not resolve com.google.guava:guava:20.0.\n" +
-            "     Required by:\n" +
-            "         project :\n" +
+        assertThat(result.stdout).contains("> Could not resolve all files for configuration ':debugCompileClasspath'.\n".toSystemLineSeparator() +
+            "   > Could not resolve com.google.guava:guava:20.0.\n".toSystemLineSeparator() +
+            "     Required by:\n".toSystemLineSeparator() +
+            "         project :\n".toSystemLineSeparator() +
             "      > Cannot find a version of 'com.google.guava:guava' that satisfies the version constraints: \n" +
             "           Dependency path ':project:unspecified' --> 'com.google.guava:guava:20.0'\n" +
             "           Constraint path ':project:unspecified' --> 'com.google.guava:guava' strictly '19.0' because of the following reason: debugRuntimeClasspath uses version 19.0\n")
@@ -60,9 +61,9 @@ class CompileAndRuntimeClasspathTest {
         )
 
         val result = project.executor().run("dependencies")
-        assertThat(result.stdout).contains("debugCompileClasspath - Resolved configuration for compilation for variant: debug\n" +
-                "+--- com.google.guava:guava:19.0 -> 20.0\n" +
-                "\\--- com.google.guava:guava:20.0\n")
+        assertThat(result.stdout).contains("""debugCompileClasspath - Resolved configuration for compilation for variant: debug
++--- com.google.guava:guava:19.0 -> 20.0
+\--- com.google.guava:guava:20.0""".toSystemLineSeparator())
     }
 
 }

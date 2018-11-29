@@ -18,10 +18,10 @@ package com.android.build.gradle.integration.dependencies;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
-import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.utils.StringHelper;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -51,10 +51,10 @@ public class TestWithMismatchDep {
                     + "   Dependency path ':testDependency:unspecified' --> 'com.google.guava:guava:18.0'\n"
                     + "   Constraint path ':testDependency:unspecified' --> 'com.google.guava:guava' strictly '18.0' because of the following reason: debugRuntimeClasspath uses version 18.0\n";
     private static final String ERROR_MSG =
-            "Could not resolve all files for configuration ':debugAndroidTestRuntimeClasspath'.\n"
-                    + "   > Could not resolve com.google.guava:guava:19.0.\n"
-                    + "     Required by:\n"
-                    + "         project :\n"
+            StringHelper.toSystemLineSeparator("Could not resolve all files for configuration ':debugAndroidTestRuntimeClasspath'.\n")
+                    + StringHelper.toSystemLineSeparator("   > Could not resolve com.google.guava:guava:19.0.\n")
+                    + StringHelper.toSystemLineSeparator("     Required by:\n")
+                    + StringHelper.toSystemLineSeparator("         project :\n")
                     + "      > Cannot find a version of 'com.google.guava:guava' that satisfies the version constraints: \n"
                     + "           Dependency path ':testDependency:unspecified' --> 'com.google.guava:guava:19.0'\n"
                     + "           Dependency path ':testDependency:unspecified' --> 'com.google.guava:guava:18.0'\n"

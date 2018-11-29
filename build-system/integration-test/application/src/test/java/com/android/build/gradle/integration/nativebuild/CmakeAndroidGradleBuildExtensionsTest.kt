@@ -98,7 +98,8 @@ class CmakeAndroidGradleBuildExtensionsTest(
                 android.defaultConfig.ndk.abiFilters "x86"
                 """.trimIndent()
         )
-        val ninja = GradleTestProject.getPreferredNinja()
+        // any backslash in the path must be escaped.
+        val ninja = GradleTestProject.getPreferredNinja().absolutePath.replace("\\", "\\\\")
         when (enableCaching) {
             null -> TestFileUtils.appendToFile(
                 project.buildFile,
