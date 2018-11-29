@@ -721,13 +721,12 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             boolean aaptFriendlyManifestsFilePresent =
                     variantScope
                             .getArtifacts()
-                            .hasArtifact(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS);
+                            .hasFinalProduct(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS);
             task.taskInputType =
                     aaptFriendlyManifestsFilePresent
                             ? InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS
                             : variantScope.getManifestArtifactType();
-            task.setManifestFiles(
-                    variantScope.getArtifacts().getFinalArtifactFiles(task.taskInputType));
+            task.setManifestFiles(variantScope.getArtifacts().getFinalProduct(task.taskInputType));
 
             task.setType(config.getType());
             task.setDebuggable(config.getBuildType().isDebuggable());

@@ -206,7 +206,7 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
                 Strings.nullToEmpty(variantScope.variantConfiguration.originalApplicationId)
             }
 
-            task.manifestFiles = variantScope.artifacts.getFinalArtifactFiles(
+            task.manifestFiles = variantScope.artifacts.getFinalProduct(
                 InternalArtifactType.MERGED_MANIFESTS)
 
             task.inputResourcesDir = variantScope.artifacts.getFinalArtifactFiles(

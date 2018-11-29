@@ -42,9 +42,11 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
+import javax.inject.Inject;
 import org.apache.tools.ant.BuildException;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.RegularFile;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
@@ -69,9 +71,16 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
             variantConfiguration;
     private OutputScope outputScope;
 
-    private Provider<RegularFile> manifestOutputFile;
+    private final Provider<RegularFile> manifestOutputFile;
+
+    @Inject
+    public ProcessLibraryManifest(ObjectFactory objectFactory) {
+        super(objectFactory);
+        manifestOutputFile = objectFactory.fileProperty();
+    }
 
     @OutputFile
+    @NonNull
     public Provider<RegularFile> getManifestOutputFile() {
         return manifestOutputFile;
     }
@@ -94,7 +103,9 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
                                 getTargetSdkVersion(),
                                 getMaxSdkVersion(),
                                 manifestOutputFile.get().getAsFile().getAbsolutePath(),
-                                aaptFriendlyManifestOutputFile.getAbsolutePath(),
+                                aaptFriendlyManifestOutputFile != null
+                                        ? aaptFriendlyManifestOutputFile.getAbsolutePath()
+                                        : null,
                                 null /* outInstantRunManifestLocation */,
                                 null, /*outMetadataFeatureManifestLocation */
                                 null /* outBundleManifestLocation */,
@@ -115,19 +126,23 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
                         : ImmutableMap.of();
 
         try {
-            new BuildOutput(
-                            InternalArtifactType.MERGED_MANIFESTS,
-                            outputScope.getMainSplit(),
-                            manifestOutputFile.get().getAsFile(),
-                            properties)
-                    .save(getManifestOutputDirectory().get().getAsFile());
+            if (getManifestOutputDirectory().isPresent()) {
+                new BuildOutput(
+                                InternalArtifactType.MERGED_MANIFESTS,
+                                outputScope.getMainSplit(),
+                                manifestOutputFile.get().getAsFile(),
+                                properties)
+                        .save(getManifestOutputDirectory().get().getAsFile());
+            }
 
-            new BuildOutput(
-                            InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
-                            outputScope.getMainSplit(),
-                            aaptFriendlyManifestOutputFile,
-                            properties)
-                    .save(getAaptFriendlyManifestOutputDirectory());
+            if (getAaptFriendlyManifestOutputDirectory().isPresent()) {
+                new BuildOutput(
+                                InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
+                                outputScope.getMainSplit(),
+                                aaptFriendlyManifestOutputFile,
+                                properties)
+                        .save(getAaptFriendlyManifestOutputDirectory().get().getAsFile());
+            }
         } catch (IOException e) {
             throw new BuildException("Exception while saving build metadata : ", e);
         }
@@ -138,10 +153,12 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
     @Internal
     public File getAaptFriendlyManifestOutputFile() {
         Preconditions.checkNotNull(outputScope.getMainSplit());
-        return FileUtils.join(
-                getAaptFriendlyManifestOutputDirectory(),
-                outputScope.getMainSplit().getDirName(),
-                SdkConstants.ANDROID_MANIFEST_XML);
+        return getAaptFriendlyManifestOutputDirectory().isPresent()
+                ? FileUtils.join(
+                        getAaptFriendlyManifestOutputDirectory().get().getAsFile(),
+                        outputScope.getMainSplit().getDirName(),
+                        SdkConstants.ANDROID_MANIFEST_XML)
+                : null;
     }
 
     @Input
@@ -250,30 +267,6 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
         public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
 
-            manifestOutputFile =
-                    scope.getArtifacts()
-                            .createArtifactFile(
-                                    InternalArtifactType.LIBRARY_MANIFEST,
-                                    BuildArtifactsHolder.OperationType.INITIAL,
-                                    taskName,
-                                    SdkConstants.ANDROID_MANIFEST_XML);
-
-            manifestOutputDirectory =
-                    scope.getArtifacts()
-                            .createDirectory(
-                                    InternalArtifactType.MERGED_MANIFESTS,
-                                    BuildArtifactsHolder.OperationType.INITIAL,
-                                    taskName,
-                                    "");
-
-            aaptFriendlyManifestOutputDirectory =
-                    getVariantScope()
-                            .getArtifacts()
-                            .appendArtifact(
-                                    InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
-                                    taskName,
-                                    "aapt");
-
             reportFile =
                     FileUtils.join(
                             getVariantScope().getGlobalScope().getOutputsDir(),
@@ -294,7 +287,32 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends ProcessLibraryManifest> taskProvider) {
             super.handleProvider(taskProvider);
-            getVariantScope().getTaskContainer().setProcessManifestTask(taskProvider);
+            scope.getTaskContainer().setProcessManifestTask(taskProvider);
+
+            scope.getArtifacts()
+                    .registerProducer(
+                            InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
+                            BuildArtifactsHolder.OperationType.INITIAL,
+                            taskProvider,
+                            taskProvider.map(
+                                    ManifestProcessorTask::getAaptFriendlyManifestOutputDirectory),
+                            "aapt");
+
+            scope.getArtifacts()
+                    .registerProducer(
+                            InternalArtifactType.MERGED_MANIFESTS,
+                            BuildArtifactsHolder.OperationType.INITIAL,
+                            taskProvider,
+                            taskProvider.map(ManifestProcessorTask::getManifestOutputDirectory),
+                            "");
+
+            scope.getArtifacts()
+                    .registerProducer(
+                            InternalArtifactType.LIBRARY_MANIFEST,
+                            BuildArtifactsHolder.OperationType.INITIAL,
+                            taskProvider,
+                            taskProvider.map(ProcessLibraryManifest::getManifestOutputFile),
+                            SdkConstants.ANDROID_MANIFEST_XML);
         }
 
         @Override
@@ -334,11 +352,6 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
                             });
 
             task.maxSdkVersion = TaskInputHelper.memoize(mergedFlavor::getMaxSdkVersion);
-
-            task.setAaptFriendlyManifestOutputDirectory(aaptFriendlyManifestOutputDirectory);
-
-            task.setManifestOutputDirectory(manifestOutputDirectory);
-            task.manifestOutputFile = manifestOutputFile;
 
             task.outputScope = getVariantScope().getOutputScope();
 

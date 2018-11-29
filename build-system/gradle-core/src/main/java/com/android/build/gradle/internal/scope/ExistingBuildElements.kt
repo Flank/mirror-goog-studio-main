@@ -29,7 +29,9 @@ import com.google.gson.TypeAdapter
 import com.google.gson.reflect.TypeToken
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
+import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Provider
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileReader
@@ -45,6 +47,17 @@ class ExistingBuildElements {
     companion object {
 
         private const val METADATA_FILE_NAME = "output.json"
+
+        /**
+         * create a [BuildElements] from an existing [Directory].
+         * @param artifactType the expected element type of the BuildElements.
+         * @param directoryProvider the directory containing the metadata file.
+         */
+        @JvmStatic
+        fun from(artifactType: ArtifactType, directoryProvider: Provider<Directory>): BuildElements {
+            return from(artifactType, directoryProvider.get().asFile)
+        }
+
 
         @JvmStatic
         fun from(artifactType: ArtifactType, buildableArtifact : BuildableArtifact) : BuildElements {

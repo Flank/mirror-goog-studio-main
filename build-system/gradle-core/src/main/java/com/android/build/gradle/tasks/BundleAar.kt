@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.BuilderConstants
 import org.gradle.api.Action
 import org.gradle.api.file.CopySpec
+import org.gradle.api.file.Directory
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.file.FileCopyDetails
 import org.gradle.api.tasks.Input
@@ -113,7 +114,7 @@ open class BundleAar : Zip(), VariantAwareTask {
                     )
                 )
             }
-            task.from(artifacts.getFinalArtifactFiles(InternalArtifactType.LIBRARY_MANIFEST))
+            task.from(artifacts.getFinalProduct<Directory>(InternalArtifactType.LIBRARY_MANIFEST))
             // TODO: this should be unconditional b/69358522
             if (!variantScope.globalScope.extension.aaptOptions.namespaced) {
                 task.from(artifacts.getFinalArtifactFiles(InternalArtifactType.SYMBOL_LIST))
