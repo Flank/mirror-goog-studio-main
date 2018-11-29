@@ -24,5 +24,6 @@ public interface Installer {
 
     Deploy.SwapResponse swap(Deploy.SwapRequest request) throws IOException;
 
-    Deploy.DeltaPushResponse deltaPush(Deploy.DeltaPushRequest request) throws IOException;
+    Deploy.DeltaPreinstallResponse deltaPreinstall(Deploy.DeltaPreinstallRequest request)
+            throws IOException;
 }

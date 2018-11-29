@@ -26,6 +26,8 @@ import com.android.ide.common.blame.SourcePosition;
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
+import java.util.function.Supplier;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -34,16 +36,9 @@ import org.w3c.dom.Node;
  */
 public abstract class XmlNode {
 
-    protected static final Function<Node, String> NODE_TO_NAME =
-            new Function<Node, String>() {
-                @Override
-                public String apply(Node input) {
-                    return input.getNodeName();
-                }
-            };
+    protected static final Function<Node, String> NODE_TO_NAME = Node::getNodeName;
 
-    @Nullable
-    private NodeKey mOriginalId = null;
+    @NonNull private final Supplier<NodeKey> mOriginalId = Suppliers.memoize(this::getId);
 
     /**
      * Returns a constant Nodekey that can be used throughout the lifecycle of the xml element.
@@ -52,10 +47,7 @@ public abstract class XmlNode {
      */
     @NonNull
     public synchronized NodeKey getOriginalId() {
-        if (mOriginalId == null) {
-            mOriginalId = getId();
-        }
-        return mOriginalId;
+        return mOriginalId.get();
     }
 
     /** Returns an unique id within the manifest file for the element. */
@@ -119,11 +111,10 @@ public abstract class XmlNode {
     }
 
     /**
-     * Factory method to create an instance of {@link com.android.manifmerger.XmlNode.NodeName}
-     * for an existing xml node.
+     * Factory method to create an instance of {@link NodeName} for an existing xml node.
+     *
      * @param node the xml definition.
-     * @return an instance of {@link com.android.manifmerger.XmlNode.NodeName} providing
-     * namespace handling.
+     * @return an instance of {@link NodeName} providing namespace handling.
      */
     @NonNull
     public static NodeName unwrapName(@NonNull Node node) {
@@ -160,10 +151,7 @@ public abstract class XmlNode {
         return getSourceFilePosition().print(true /*shortFormat*/);
     }
 
-    /**
-     * Implementation of {@link com.android.manifmerger.XmlNode.NodeName} for an
-     * node's declaration not using a namespace.
-     */
+    /** Implementation of {@link NodeName} for an node's declaration not using a namespace. */
     public static final class Name implements NodeName {
         private final String mName;
 
@@ -183,7 +171,7 @@ public abstract class XmlNode {
 
         @Override
         public boolean equals(@Nullable Object o) {
-            return (o != null && o instanceof Name && ((Name) o).mName.equals(this.mName));
+            return (o instanceof Name && ((Name) o).mName.equals(this.mName));
         }
 
         @Override
@@ -202,9 +190,7 @@ public abstract class XmlNode {
         }
     }
 
-    /**
-     * Implementation of the {@link com.android.manifmerger.XmlNode.NodeName} for a namespace aware attribute.
-     */
+    /** Implementation of the {@link NodeName} for a namespace aware attribute. */
     public static final class NamespaceAwareName implements NodeName {
 
         @NonNull
@@ -249,7 +235,7 @@ public abstract class XmlNode {
 
         @Override
         public boolean equals(@Nullable Object o) {
-            return (o != null && o instanceof NamespaceAwareName
+            return (o instanceof NamespaceAwareName
                     && ((NamespaceAwareName) o).mLocalName.equals(this.mLocalName)
                     && ((NamespaceAwareName) o).mNamespaceURI.equals(this.mNamespaceURI));
         }
@@ -280,8 +266,9 @@ public abstract class XmlNode {
             mKey = key;
         }
 
-        public static NodeKey fromXml(@NonNull Element element) {
-            return new OrphanXmlElement(element).getId();
+        public static NodeKey fromXml(
+                @NonNull Element element, @NonNull DocumentModel<ManifestModel.NodeTypes> model) {
+            return new OrphanXmlElement(element, model).getId();
         }
 
         @NonNull
@@ -292,7 +279,7 @@ public abstract class XmlNode {
 
         @Override
         public boolean equals(@Nullable Object o) {
-            return (o != null && o instanceof NodeKey && ((NodeKey) o).mKey.equals(this.mKey));
+            return (o instanceof NodeKey && ((NodeKey) o).mKey.equals(this.mKey));
         }
 
         @Override

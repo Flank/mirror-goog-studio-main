@@ -444,7 +444,7 @@ public class IncrementalPackagerBuilder {
         }
 
         SigningOptions signingOptions =
-                new SigningOptions(key, certificate, v1SigningEnabled, v2SigningEnabled, minSdk);
+                SigningOptions.create(key, certificate, v1SigningEnabled, v2SigningEnabled, minSdk);
         ApkCreatorFactory.CreationData creationData =
                 new ApkCreatorFactory.CreationData(
                         outputFile,

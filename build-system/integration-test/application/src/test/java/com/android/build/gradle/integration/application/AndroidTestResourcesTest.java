@@ -1,5 +1,8 @@
 package com.android.build.gradle.integration.application;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_BUILD_TOOL_VERSION;
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_COMPILE_SDK_VERSION;
+
 import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
@@ -44,29 +47,45 @@ public class AndroidTestResourcesTest {
         TestFileUtils.appendToFile(
                 appProject.getBuildFile(),
                 "\n"
-                        + "                apply plugin: 'com.android.application'\n"
-                        + "                android {\n"
-                        + "                    compileSdkVersion "
-                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "apply plugin: 'com.android.application'\n"
+                        + "android {\n"
+                        + "    compileSdkVersion "
+                        + DEFAULT_COMPILE_SDK_VERSION
                         + "\n"
-                        + "                    buildToolsVersion \""
-                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
-                        + "\"\n"
-                        + "                }\n");
+                        + "    buildToolsVersion '"
+                        + DEFAULT_BUILD_TOOL_VERSION
+                        + "'\n"
+                        + "    defaultConfig {\n"
+                        + "        minSdkVersion rootProject.supportLibMinSdk\n"
+                        + "        testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "dependencies {\n"
+                        + "    androidTestImplementation \"com.android.support.test:runner:${project.testSupportLibVersion}\"\n"
+                        + "    androidTestImplementation \"com.android.support.test:rules:${project.testSupportLibVersion}\"\n"
+                        + "}\n");
 
         setUpProject(libProject);
         TestFileUtils.appendToFile(
                 libProject.getBuildFile(),
                 "\n"
-                        + "                apply plugin: 'com.android.library'\n"
-                        + "                android {\n"
-                        + "                    compileSdkVersion "
-                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "apply plugin: 'com.android.library'\n"
+                        + "android {\n"
+                        + "    compileSdkVersion "
+                        + DEFAULT_COMPILE_SDK_VERSION
                         + "\n"
-                        + "                    buildToolsVersion \""
-                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
-                        + "\"\n"
-                        + "                }\n");
+                        + "    buildToolsVersion '"
+                        + DEFAULT_BUILD_TOOL_VERSION
+                        + "'\n"
+                        + "    defaultConfig {\n"
+                        + "        minSdkVersion rootProject.supportLibMinSdk\n"
+                        + "        testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "dependencies {\n"
+                        + "    androidTestImplementation \"com.android.support.test:runner:${project.testSupportLibVersion}\"\n"
+                        + "    androidTestImplementation \"com.android.support.test:rules:${project.testSupportLibVersion}\"\n"
+                        + "}\n");
     }
 
     @AfterClass
@@ -157,33 +176,36 @@ public class AndroidTestResourcesTest {
         Files.createDirectories(resourcesTest.getParent());
         String sourcesTestContent =
                 "package com.example.helloworld;\n"
-                        + "                import android.test.ActivityInstrumentationTestCase2;\n"
-                        + "                import android.test.suitebuilder.annotation.MediumTest;\n"
+                        + "                import android.support.test.filters.MediumTest;\n"
+                        + "                import android.support.test.rule.ActivityTestRule;\n"
+                        + "                import android.support.test.runner.AndroidJUnit4;\n"
                         + "                import android.widget.TextView;\n"
+                        + "                import org.junit.Assert;\n"
+                        + "                import org.junit.Before;\n"
+                        + "                import org.junit.Rule;\n"
+                        + "                import org.junit.Test;\n"
+                        + "                import org.junit.runner.RunWith;\n"
                         + "\n"
-                        + "                public class HelloWorldResourceTest extends\n"
-                        + "                        ActivityInstrumentationTestCase2<HelloWorld> {\n"
+                        + "                @RunWith(AndroidJUnit4.class)\n"
+                        + "                public class HelloWorldResourceTest {\n"
+                        + "                    @Rule public ActivityTestRule<HelloWorld> rule = new ActivityTestRule<>(HelloWorld.class);\n"
                         + "                    private TextView mainAppTextView;\n"
                         + "                    private Object testLayout;\n"
                         + "\n"
-                        + "                    public HelloWorldResourceTest() {\n"
-                        + "                        super(\"com.example.helloworld\", HelloWorld.class);\n"
-                        + "                    }\n"
                         + "\n"
-                        + "                    @Override\n"
-                        + "                    protected void setUp() throws Exception {\n"
-                        + "                        super.setUp();\n"
-                        + "                        final HelloWorld a = getActivity();\n"
+                        + "                    public void setUp() {\n"
+                        + "                        final HelloWorld a = rule.getActivity();\n"
                         + "                        mainAppTextView = (TextView) a.findViewById(\n"
                         + "                                com.example.helloworld.R.id.text);\n"
-                        + "                        testLayout = getInstrumentation().getContext().getResources()\n"
+                        + "                        testLayout = rule.getActivity().getResources()\n"
                         + "                                .getLayout(com.example.helloworld.test.R.layout.test_layout_1);\n"
                         + "                    }\n"
                         + "\n"
+                        + "                    @Test\n"
                         + "                    @MediumTest\n"
                         + "                    public void testPreconditions() {\n"
-                        + "                        assertNotNull(\"Should find test test_layout_1.\", testLayout);\n"
-                        + "                        assertNotNull(\"Should find main app text view.\", mainAppTextView);\n"
+                        + "                        Assert.assertNotNull(\"Should find test test_layout_1.\", testLayout);\n"
+                        + "                        Assert.assertNotNull(\"Should find main app text view.\", mainAppTextView);\n"
                         + "                    }\n"
                         + "                }\n"
                         + "                ";

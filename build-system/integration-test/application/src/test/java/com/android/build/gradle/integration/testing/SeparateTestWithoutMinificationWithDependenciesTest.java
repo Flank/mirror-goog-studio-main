@@ -41,13 +41,7 @@ public class SeparateTestWithoutMinificationWithDependenciesTest {
         TestFileUtils.appendToFile(
                 project.getSubproject("test").getBuildFile(),
                 "\n"
-                        + "        apply plugin: 'com.android.test'\n"
-                        + "\n"
                         + "        android {\n"
-                        + "            compileSdkVersion rootProject.latestCompileSdk\n"
-                        + "            buildToolsVersion = rootProject.buildToolsVersion\n"
-                        + "\n"
-                        + "            targetProjectPath ':app'\n"
                         + "            targetVariant 'debug'\n"
                         + "        }\n");
         project.execute("clean");

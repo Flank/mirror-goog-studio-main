@@ -84,9 +84,7 @@ public class Actions {
      */
     @NonNull
     public ImmutableList<NodeRecord> getNodeRecords(@NonNull XmlNode.NodeKey key) {
-        return mRecords.containsKey(key)
-                ? mRecords.get(key).getNodeRecords()
-                : ImmutableList.<NodeRecord>of();
+        return mRecords.containsKey(key) ? mRecords.get(key).getNodeRecords() : ImmutableList.of();
     }
 
     /**
@@ -348,13 +346,15 @@ public class Actions {
 
         SourceFile inMemory = SourceFile.UNKNOWN;
 
-        XmlDocument loadedWithLineNumbers = XmlLoader.load(
-                xmlDocument.getSelectors(),
-                xmlDocument.getSystemPropertyResolver(),
-                inMemory,
-                xmlDocument.prettyPrint(),
-                XmlDocument.Type.MAIN,
-                Optional.<String>absent() /* mainManifestPackageName */);
+        XmlDocument loadedWithLineNumbers =
+                XmlLoader.load(
+                        xmlDocument.getSelectors(),
+                        xmlDocument.getSystemPropertyResolver(),
+                        inMemory,
+                        xmlDocument.prettyPrint(),
+                        XmlDocument.Type.MAIN,
+                        Optional.absent(), /* mainManifestPackageName */
+                        xmlDocument.getModel());
 
         ImmutableMultimap.Builder<Integer, Record> mappingBuilder = ImmutableMultimap.builder();
         for (XmlElement xmlElement : loadedWithLineNumbers.getRootNode().getMergeableElements()) {
@@ -451,8 +451,7 @@ public class Actions {
 
         // all attributes decisions indexed by attribute name.
         @NonNull
-        final Map<XmlNode.NodeName, List<AttributeRecord>> mAttributeRecords =
-                new HashMap<XmlNode.NodeName, List<AttributeRecord>>();
+        final Map<XmlNode.NodeName, List<AttributeRecord>> mAttributeRecords = new HashMap();
 
         @NonNull
         ImmutableList<NodeRecord> getNodeRecords() {
@@ -475,7 +474,7 @@ public class Actions {
         ImmutableList<AttributeRecord> getAttributeRecords(XmlNode.NodeName attributeName) {
             List<AttributeRecord> attributeRecords = mAttributeRecords.get(attributeName);
             return attributeRecords == null
-                    ? ImmutableList.<AttributeRecord>of()
+                    ? ImmutableList.of()
                     : ImmutableList.copyOf(attributeRecords);
         }
     }

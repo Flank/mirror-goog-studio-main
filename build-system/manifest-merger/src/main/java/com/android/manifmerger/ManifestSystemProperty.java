@@ -258,15 +258,15 @@ public enum ManifestSystemProperty implements ManifestMerger2.AutoAddingProperty
             @NonNull ActionRecorder actionRecorder, @NonNull XmlDocument document,
             @NonNull ManifestModel.NodeTypes nodeType, @NonNull String message) {
 
+        String elementName = document.getModel().toXmlName(nodeType);
         Element manifest = document.getXml().getDocumentElement();
-        NodeList nodes = manifest.getElementsByTagName(nodeType.toXmlName());
+        NodeList nodes = manifest.getElementsByTagName(elementName);
         if (nodes.getLength() == 0) {
-            nodes = manifest.getElementsByTagNameNS(
-                    SdkConstants.ANDROID_URI, nodeType.toXmlName());
+            nodes = manifest.getElementsByTagNameNS(SdkConstants.ANDROID_URI, elementName);
         }
         if (nodes.getLength() == 0) {
             // create it first.
-            Element node = manifest.getOwnerDocument().createElement(nodeType.toXmlName());
+            Element node = manifest.getOwnerDocument().createElement(elementName);
             manifest.appendChild(node);
             XmlElement xmlElement = new XmlElement(node, document);
             Actions.NodeRecord nodeRecord = new Actions.NodeRecord(

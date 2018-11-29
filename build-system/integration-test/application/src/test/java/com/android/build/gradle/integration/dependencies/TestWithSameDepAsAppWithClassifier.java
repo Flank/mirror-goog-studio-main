@@ -58,12 +58,15 @@ public class TestWithSameDepAsAppWithClassifier {
                         + "\n"
                         + "  defaultConfig {\n"
                         + "    minSdkVersion 21\n"
+                        + "    testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'\n"
                         + "  }\n"
                         + "}\n"
                         + "\n"
                         + "dependencies {\n"
                         + "  implementation 'org.threeten:threetenbp:1.3.3:no-tzdb'\n"
                         + "  androidTestImplementation 'org.threeten:threetenbp:1.3.3'\n"
+                        + "  androidTestImplementation \"com.android.support.test:runner:${project.testSupportLibVersion}\"\n"
+                        + "  androidTestImplementation \"com.android.support.test:rules:${project.testSupportLibVersion}\"\n"
                         + "}\n");
     }
 

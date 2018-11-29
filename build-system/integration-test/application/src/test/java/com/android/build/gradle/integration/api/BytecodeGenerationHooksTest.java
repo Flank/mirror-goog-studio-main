@@ -225,14 +225,15 @@ public class BytecodeGenerationHooksTest {
     private void checkDependencies(
             GradleBuildResult result, String prefix, boolean exactly, String... dependencies) {
         List<String> lines = result.getStdoutAsLines();
+        String projectDir = project.getTestDir().getAbsolutePath();
 
         lines =
                 lines.stream()
                         .filter(s -> s.startsWith(prefix))
                         .map(s -> s.substring(prefix.length()))
+                        // Internal deps only. Ignore com.android.support.test:rules/runner/monitor
+                        .filter(s -> s.contains(projectDir))
                         .collect(Collectors.toList());
-
-        File projectDir = project.getTestDir();
 
         List<String> deps =
                 Arrays.stream(dependencies)

@@ -159,7 +159,9 @@ public class MinifyTest {
                     dex.getClasses()
                             .keySet()
                             .stream()
-                            .filter(c -> !c.startsWith("Lorg/hamcrest"))
+                            .filter(c -> !c.startsWith("Lorg/"))
+                            .filter(c -> !c.startsWith("Ljunit/"))
+                            .filter(c -> !c.startsWith("Landroid/support/"))
                             .collect(Collectors.toSet()));
         }
 

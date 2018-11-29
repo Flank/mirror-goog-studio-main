@@ -16,6 +16,7 @@
 
 package com.android.manifmerger;
 
+import com.android.ide.common.blame.SourceFile;
 import com.android.testutils.MockLog;
 import com.google.common.base.Strings;
 import java.io.IOException;
@@ -31,6 +32,8 @@ import org.xml.sax.SAXException;
  * Tests for the {@link com.android.manifmerger.ToolsInstructionsCleaner} class.
  */
 public class ToolsInstructionsCleanerTest extends TestCase {
+
+    private final ManifestModel mModel = new ManifestModel();
 
     public void testNodeRemoveOperation()
             throws ParserConfigurationException, SAXException, IOException {
@@ -48,8 +51,8 @@ public class ToolsInstructionsCleanerTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testNodeRemoveOperation"), main);
+        XmlDocument mainDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "testNodeRemoveOperation"), main);
 
         Element rootElement = mainDocument.getRootNode().getXml();
         ToolsInstructionsCleaner.cleanToolsReferences(
@@ -82,8 +85,10 @@ public class ToolsInstructionsCleanerTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testNodeRemoveWithChildrenOperation"), main);
+        XmlDocument mainDocument =
+                loadXmlDoc(
+                        TestUtils.sourceFile(getClass(), "testNodeRemoveWithChildrenOperation"),
+                        main);
 
         Element rootElement = mainDocument.getRootNode().getXml();
         ToolsInstructionsCleaner.cleanToolsReferences(
@@ -112,8 +117,8 @@ public class ToolsInstructionsCleanerTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testNodeRemoveOperation"), main);
+        XmlDocument mainDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "testNodeRemoveOperation"), main);
 
         assertFalse(
                 ToolsInstructionsCleaner.cleanToolsReferences(
@@ -135,8 +140,8 @@ public class ToolsInstructionsCleanerTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testNodeRemoveOperation"), main);
+        XmlDocument mainDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "testNodeRemoveOperation"), main);
 
         assertFalse(
                 ToolsInstructionsCleaner.cleanToolsReferences(
@@ -161,8 +166,8 @@ public class ToolsInstructionsCleanerTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testNodeReplaceOperation"), main);
+        XmlDocument mainDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "testNodeReplaceOperation"), main);
 
         Element rootElement = mainDocument.getRootNode().getXml();
         ToolsInstructionsCleaner.cleanToolsReferences(
@@ -190,8 +195,8 @@ public class ToolsInstructionsCleanerTest extends TestCase {
                 + "    </application>\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testAttributeRemoveOperation"), main);
+        XmlDocument mainDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "testAttributeRemoveOperation"), main);
 
         Element rootElement = mainDocument.getRootNode().getXml();
         ToolsInstructionsCleaner.cleanToolsReferences(
@@ -223,8 +228,8 @@ public class ToolsInstructionsCleanerTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testSelectorRemoval"), main);
+        XmlDocument mainDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "testSelectorRemoval"), main);
 
         Element rootElement = mainDocument.getRootNode().getXml();
         ToolsInstructionsCleaner.cleanToolsReferences(
@@ -254,8 +259,8 @@ public class ToolsInstructionsCleanerTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument mainDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testNodeReplaceOperation"), main);
+        XmlDocument mainDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "testNodeReplaceOperation"), main);
 
         Element rootElement = mainDocument.getRootNode().getXml();
         ToolsInstructionsCleaner.cleanToolsReferences(
@@ -281,5 +286,10 @@ public class ToolsInstructionsCleanerTest extends TestCase {
             }
         }
         return Optional.empty();
+    }
+
+    private XmlDocument loadXmlDoc(SourceFile location, String input)
+            throws ParserConfigurationException, SAXException, IOException {
+        return TestUtils.xmlDocumentFromString(location, input, mModel);
     }
 }

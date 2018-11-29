@@ -114,7 +114,6 @@ class GradleDetectorTest : AbstractCheckTest() {
     }
 
     override fun lint(): TestLintTask {
-        GradleDetector.cleanUp()
         val task = super.lint()
         task.sdkHome(mockSupportLibraryInstallation)
 

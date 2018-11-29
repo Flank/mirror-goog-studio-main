@@ -16,6 +16,7 @@
 package com.android.tools.deployer;
 
 import com.android.tools.deployer.model.Apk;
+import com.android.tools.tracer.Trace;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;

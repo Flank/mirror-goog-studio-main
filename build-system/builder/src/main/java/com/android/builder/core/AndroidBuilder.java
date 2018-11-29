@@ -1152,7 +1152,7 @@ public class AndroidBuilder {
         }
 
         SigningOptions signingOptions =
-                new SigningOptions(
+                SigningOptions.create(
                         key, certificate, v1SigningEnabled, v2SigningEnabled, API_LEVEL_SPLIT_APK);
         ApkCreatorFactory.CreationData creationData =
                 new ApkCreatorFactory.CreationData(

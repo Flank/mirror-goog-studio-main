@@ -32,6 +32,10 @@ public enum InternalArtifactType implements ArtifactType {
     JAVAC,
     // Rewritten classes from non-namespaced dependencies put together into one JAR.
     NAMESPACED_CLASSES_JAR,
+    // Tested code classes
+    TESTED_CODE_CLASSES,
+    // Classes with recalculated stack frames information (RecalculateStackFrames task)
+    FIXED_STACK_FRAMES,
 
     // --- Published classes ---
     // Class-type task output for tasks that generate published classes.

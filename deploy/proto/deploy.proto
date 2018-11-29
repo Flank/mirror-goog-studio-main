@@ -19,8 +19,8 @@ message SwapRequest {
   // The classes to be hot-swapped.
   repeated ClassDef classes = 4;
 
-  // The path to the full apks to be installed
-  repeated string apks = 5;
+  // The session id where the new apk have been staged.
+  string session_id = 5;
 
   // Don't perform actual code swap on these process.
   repeated int32 skip_process_ids = 6;
@@ -85,7 +85,7 @@ message InstallerResponse {
   oneof extra {
     SwapResponse swap_response = 3;
     DumpResponse dump_response = 4;
-    DeltaPushResponse deltapush_response = 5;
+    DeltaPreinstallResponse deltapreinstall_response = 5;
   }
 }
 
@@ -133,7 +133,7 @@ message PatchInstruction {
   int64 dst_filesize = 4;
 }
 
-message DeltaPushRequest {
+message DeltaPreinstallRequest {
    enum Status {
     UNKNOWN = 0;
     OK = 1;
@@ -143,12 +143,12 @@ message DeltaPushRequest {
   repeated PatchInstruction patchInstructions = 2;
 }
 
-message DeltaPushResponse{
+message DeltaPreinstallResponse{
   enum Status {
     UNKNOWN = 0;
     OK = 1;
     ERROR = 2;
   }
   Status status = 1;
-  repeated string apks_absolute_paths = 2;
+  string session_id = 2;
 }

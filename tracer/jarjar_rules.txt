@@ -1,0 +1,1 @@
+rule org.objectweb.** com.android.tools.tracer.agent.objectweb.@1

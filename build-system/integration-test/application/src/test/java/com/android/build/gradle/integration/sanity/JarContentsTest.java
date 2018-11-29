@@ -179,6 +179,7 @@ public class JarContentsTest {
                 "com/",
                 "com/android/",
                 "com/android/builder/",
+                "com/android/builder/aar/",
                 "com/android/builder/compiling/",
                 "com/android/builder/core/",
                 "com/android/builder/dependency/",

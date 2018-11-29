@@ -38,7 +38,7 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
         return new PrivateResourceDetector();
     }
 
-    private static TestLintTask.GradleMockModifier mockModifier =
+    public static TestLintTask.GradleMockModifier mockModifier =
             (project, variant) -> {
                 // Null out the resolved coordinates in the result to simulate the
                 // observed failure in issue 226240

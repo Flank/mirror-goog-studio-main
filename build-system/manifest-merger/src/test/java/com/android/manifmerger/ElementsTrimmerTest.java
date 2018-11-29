@@ -22,6 +22,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.android.SdkConstants;
+import com.android.ide.common.blame.SourceFile;
 import com.android.utils.ILogger;
 import com.android.xml.AndroidManifest;
 import com.google.common.collect.ImmutableList;
@@ -42,6 +43,8 @@ import org.xml.sax.SAXException;
  * Tests for the {@link ElementsTrimmer} class
  */
 public class ElementsTrimmerTest extends TestCase {
+
+    private ManifestModel mModel = new ManifestModel();
 
     @Mock
     ILogger mILogger;
@@ -65,8 +68,8 @@ public class ElementsTrimmerTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testNoUseFeaturesDeclaration"), input);
+        XmlDocument xmlDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "testNoUseFeaturesDeclaration"), input);
 
         MergingReport.Builder mergingReport = new MergingReport.Builder(mILogger);
         ElementsTrimmer.trim(xmlDocument, mergingReport);
@@ -91,8 +94,8 @@ public class ElementsTrimmerTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testNothingToTrim"), input);
+        XmlDocument xmlDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "testNothingToTrim"), input);
 
         MergingReport.Builder mergingReport = new MergingReport.Builder(mILogger);
         ElementsTrimmer.trim(xmlDocument, mergingReport);
@@ -125,8 +128,8 @@ public class ElementsTrimmerTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testMultipleAboveTwoResults"), input);
+        XmlDocument xmlDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "testMultipleAboveTwoResults"), input);
 
         MergingReport.Builder mergingReport = new MergingReport.Builder(mILogger);
         ElementsTrimmer.trim(xmlDocument, mergingReport);
@@ -155,8 +158,8 @@ public class ElementsTrimmerTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testSingleAboveTwoResults"), input);
+        XmlDocument xmlDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "testSingleAboveTwoResults"), input);
 
         MergingReport.Builder mergingReport = new MergingReport.Builder(mILogger);
         ElementsTrimmer.trim(xmlDocument, mergingReport);
@@ -190,8 +193,8 @@ public class ElementsTrimmerTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testMultipleBelowTwoResults"), input);
+        XmlDocument xmlDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "testMultipleBelowTwoResults"), input);
 
         MergingReport.Builder mergingReport = new MergingReport.Builder(mILogger);
         ElementsTrimmer.trim(xmlDocument, mergingReport);
@@ -220,8 +223,8 @@ public class ElementsTrimmerTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testSingleBelowTwoResults"), input);
+        XmlDocument xmlDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "testSingleBelowTwoResults"), input);
 
         MergingReport.Builder mergingReport = new MergingReport.Builder(mILogger);
         ElementsTrimmer.trim(xmlDocument, mergingReport);
@@ -266,8 +269,10 @@ public class ElementsTrimmerTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testMultipleAboveAndBelowTwoResults"), input);
+        XmlDocument xmlDocument =
+                loadXmlDoc(
+                        TestUtils.sourceFile(getClass(), "testMultipleAboveAndBelowTwoResults"),
+                        input);
 
         MergingReport.Builder mergingReport = new MergingReport.Builder(mILogger);
         ElementsTrimmer.trim(xmlDocument, mergingReport);
@@ -300,8 +305,8 @@ public class ElementsTrimmerTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testUsesFeatureSplit"), input);
+        XmlDocument xmlDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "testUsesFeatureSplit"), input);
 
         ActionRecorder mockActionRecorder = Mockito.mock(ActionRecorder.class);
         MergingReport.Builder mockReport = Mockito.mock(MergingReport.Builder.class);
@@ -341,8 +346,8 @@ public class ElementsTrimmerTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testUsesFeatureSplit"), input);
+        XmlDocument xmlDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "testUsesFeatureSplit"), input);
 
         ActionRecorder mockActionRecorder = Mockito.mock(ActionRecorder.class);
         MergingReport.Builder mockReport = Mockito.mock(MergingReport.Builder.class);
@@ -404,5 +409,10 @@ public class ElementsTrimmerTest extends TestCase {
             assertNotNull(glEsVersion);
             assertTrue(expectedVersions.contains(glEsVersion.getValue()));
         }
+    }
+
+    private XmlDocument loadXmlDoc(SourceFile location, String input)
+            throws ParserConfigurationException, SAXException, IOException {
+        return TestUtils.xmlDocumentFromString(location, input, mModel);
     }
 }

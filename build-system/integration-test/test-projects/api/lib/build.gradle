@@ -7,6 +7,10 @@ apply plugin: 'com.android.library'
 android {
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
+    defaultConfig {
+        minSdkVersion rootProject.supportLibMinSdk
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
 }
 
 // query for all (non-test) variants and inject a new step in the builds
@@ -18,6 +22,11 @@ android.libraryVariants.all { variant ->
     }
 
     variant.packageLibrary.dependsOn copyBlahTask
+}
+
+dependencies {
+    androidTestImplementation "com.android.support.test:runner:${project.testSupportLibVersion}"
+    androidTestImplementation "com.android.support.test:rules:${project.testSupportLibVersion}"
 }
 
 project.afterEvaluate {

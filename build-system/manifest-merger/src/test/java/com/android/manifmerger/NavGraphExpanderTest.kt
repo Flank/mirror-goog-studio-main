@@ -35,6 +35,7 @@ import org.mockito.MockitoAnnotations
 /** Tests for [NavGraphExpander]  */
 class NavGraphExpanderTest {
 
+    private val model = ManifestModel()
     @Mock private lateinit var mergingReportBuilder: MergingReport.Builder
     @Mock private lateinit var actionRecorder: ActionRecorder
 
@@ -118,7 +119,7 @@ class NavGraphExpanderTest {
                     |    </application>
                     |</manifest>""".trimMargin()
 
-        val xmlDocument = TestUtils.xmlDocumentFromString(UNKNOWN, inputManifestString)
+        val xmlDocument = TestUtils.xmlDocumentFromString(UNKNOWN, inputManifestString, model)
 
         val loadedNavigationMap: Map<String, NavigationXmlDocument> =
                 mapOf(
@@ -129,7 +130,7 @@ class NavGraphExpanderTest {
                 expandNavGraphs(xmlDocument, loadedNavigationMap, mergingReportBuilder)
 
         val expectedXmlDocument =
-                TestUtils.xmlDocumentFromString(UNKNOWN, expectedOutputManifestString)
+                TestUtils.xmlDocumentFromString(UNKNOWN, expectedOutputManifestString, model)
 
         assertThat(expandedXmlDocument.compareTo(expectedXmlDocument)).isAbsent()
 
@@ -207,7 +208,7 @@ class NavGraphExpanderTest {
                     |    </application>
                     |</manifest>""".trimMargin()
 
-        val xmlDocument = TestUtils.xmlDocumentFromString(UNKNOWN, inputManifestString)
+        val xmlDocument = TestUtils.xmlDocumentFromString(UNKNOWN, inputManifestString, model)
 
         val loadedNavigationMap: Map<String, NavigationXmlDocument> =
                 mapOf(
@@ -304,7 +305,7 @@ class NavGraphExpanderTest {
                     |    </application>
                     |</manifest>""".trimMargin()
 
-        val xmlDocument = TestUtils.xmlDocumentFromString(UNKNOWN, inputManifestString)
+        val xmlDocument = TestUtils.xmlDocumentFromString(UNKNOWN, inputManifestString, model)
 
         val loadedNavigationMap: Map<String, NavigationXmlDocument> =
                 mapOf(

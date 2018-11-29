@@ -156,6 +156,7 @@ public class ManifestMerger2Test {
     public void processTestFiles() throws Exception {
         ManifestMergerTestUtil.TestFiles testFiles =
                 loadTestData(TEST_DATA_DIRECTORY, fileName, getClass().getSimpleName());
+        ManifestModel model = new ManifestModel();
 
         // Make list of optional features
         List<ManifestMerger2.Invoker.Feature> optionalFeatures = new ArrayList<>();
@@ -216,13 +217,17 @@ public class ManifestMerger2Test {
                 fail("Did not get expected error : " + testFiles.getExpectedErrors());
             }
 
-            XmlDocument expectedResult = TestUtils.xmlDocumentFromString(
-                    TestUtils.sourceFile(getClass(), testFiles.getMain().getName()),
-                    testFiles.getExpectedResult());
+            XmlDocument expectedResult =
+                    TestUtils.xmlDocumentFromString(
+                            TestUtils.sourceFile(getClass(), testFiles.getMain().getName()),
+                            testFiles.getExpectedResult(),
+                            model);
 
-            XmlDocument actualResult = TestUtils.xmlDocumentFromString(
-                    TestUtils.sourceFile(getClass(), testFiles.getMain().getName()),
-                    xmlDocument);
+            XmlDocument actualResult =
+                    TestUtils.xmlDocumentFromString(
+                            TestUtils.sourceFile(getClass(), testFiles.getMain().getName()),
+                            xmlDocument,
+                            model);
 
             Optional<String> comparingMessage =
                     expectedResult.compareTo(actualResult);

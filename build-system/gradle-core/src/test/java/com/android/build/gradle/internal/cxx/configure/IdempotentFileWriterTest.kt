@@ -25,17 +25,11 @@ import java.io.File
 class IdempotentFileWriterTest {
     private val folder = File("./folder")
     private val file = File("./folder/my-file")
-    private val logging = TestLoggingEnvironment()
 
     @Before
     fun before() {
         folder.deleteRecursively()
         folder.mkdirs()
-    }
-
-    @After
-    fun after() {
-        logging.close()
     }
 
     @Test

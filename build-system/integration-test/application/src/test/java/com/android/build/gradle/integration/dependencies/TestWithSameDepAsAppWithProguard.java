@@ -40,30 +40,38 @@ public class TestWithSameDepAsAppWithProguard {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        appendToFile(project.getBuildFile(),
-                "\n" +
-                "apply plugin: \"com.android.application\"\n" +
-                "\n" +
-                "android {\n" +
-                "  compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n" +
-                "  buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"\n" +
-                "\n" +
-                "  defaultConfig {\n" +
-                "    minSdkVersion 21\n" +
-                "  }\n" +
-                "\n" +
-                "  buildTypes {\n" +
-                "    debug {\n" +
-                "      minifyEnabled true\n" +
-                "      proguardFiles getDefaultProguardFile(\"proguard-android.txt\")\n" +
-                "      }\n" +
-                "  }\n" +
-                "}\n" +
-                "\n" +
-                "dependencies {\n" +
-                "  compile \"com.android.tools:annotations:+\"\n" +
-                "  androidTestCompile \"com.android.tools:annotations:+\"\n" +
-                "}\n");
+        appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "apply plugin: \"com.android.application\"\n"
+                        + "\n"
+                        + "android {\n"
+                        + "  compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "  buildToolsVersion \""
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "\"\n"
+                        + "\n"
+                        + "  defaultConfig {\n"
+                        + "    minSdkVersion 21\n"
+                        + "    testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'\n"
+                        + "  }\n"
+                        + "\n"
+                        + "  buildTypes {\n"
+                        + "    debug {\n"
+                        + "      minifyEnabled true\n"
+                        + "      proguardFiles getDefaultProguardFile(\"proguard-android.txt\")\n"
+                        + "      }\n"
+                        + "  }\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "  compile 'com.android.tools:annotations:+'\n"
+                        + "  androidTestCompile 'com.android.tools:annotations:+'\n"
+                        + "  androidTestImplementation \"com.android.support.test:runner:${project.testSupportLibVersion}\"\n"
+                        + "  androidTestImplementation \"com.android.support.test:rules:${project.testSupportLibVersion}\"\n"
+                        + "}\n");
     }
 
     @AfterClass

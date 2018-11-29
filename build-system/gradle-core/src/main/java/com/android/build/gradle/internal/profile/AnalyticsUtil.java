@@ -68,9 +68,6 @@ public class AnalyticsUtil {
     @NonNull
     static String getPotentialTransformTypeName(Class<?> taskClass) {
         String taskImpl = taskClass.getSimpleName();
-        if (taskImpl.endsWith("Transform")) {
-            taskImpl = taskImpl.substring(0, taskImpl.length() - "Transform".length());
-        }
         return CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, taskImpl);
     }
 

@@ -21,11 +21,12 @@
 #include <thread>
 
 #include "perfd/event_buffer.h"
-#include "perfd/sessions/session.h"
 #include "proto/profiler.grpc.pb.h"
 #include "utils/log.h"
 
 namespace profiler {
+
+class Session;
 
 // Base class of the sampling infrastructure in the profilers' new data
 // pipeline. It runs a worker thread that calls into Sample() at regular

@@ -56,12 +56,12 @@ public class ApkSwapper {
      * @param apkPaths the paths where the new apk's are already on device.
      * @param toSwap the actual dex classes to swap.
      */
-    public boolean swap(List<ApkEntry> newFiles, List<String> apkPaths, List<DexClass> toSwap)
+    public boolean swap(List<ApkEntry> newFiles, String sessionId, List<DexClass> toSwap)
             throws DeployerException {
         // Builds the Request Protocol Buffer.
         Deploy.SwapRequest request =
                 buildSwapRequest(
-                        packageName, restart, apkPaths, newFiles, toSwap, redefiners.keySet());
+                        packageName, restart, sessionId, newFiles, toSwap, redefiners.keySet());
 
         // Send Request to agent
         ClassRedefiner redefiner = new InstallerBasedClassRedefiner(installer);
@@ -77,7 +77,7 @@ public class ApkSwapper {
     private static Deploy.SwapRequest buildSwapRequest(
             String packageName,
             boolean restart,
-            List<String> apkPaths,
+            String sessionId,
             List<ApkEntry> newFiles,
             List<DexClass> classes,
             Collection<Integer> pids) {
@@ -95,7 +95,7 @@ public class ApkSwapper {
         for (ApkEntry file : newFiles) {
             processNames.addAll(file.apk.processes);
         }
-        request.addAllApks(apkPaths);
+        request.setSessionId(sessionId);
         request.addAllProcessNames(processNames);
         request.addAllSkipProcessIds(pids);
         return request.build();

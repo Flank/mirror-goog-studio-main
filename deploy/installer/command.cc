@@ -19,7 +19,7 @@
 #include <functional>
 #include <unordered_map>
 
-#include "tools/base/deploy/installer/delta_push.h"
+#include "tools/base/deploy/installer/delta_preinstall.h"
 #include "tools/base/deploy/installer/dump.h"
 #include "tools/base/deploy/installer/swap.h"
 
@@ -32,7 +32,7 @@ std::unique_ptr<Command> GetCommand(const char* command_name) {
       commandsRegister = {
           {"dump", []() { return new DumpCommand(); }},
           {"swap", []() { return new SwapCommand(); }},
-          {"deltaPush", []() { return new DeltapushCommand(); }}
+          {"deltapreinstall", []() { return new DeltaPreinstallCommand(); }},
           // Add here more commands (e.g: version, install, patch, agent, ...)
       };
 

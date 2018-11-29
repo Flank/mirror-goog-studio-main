@@ -18,7 +18,6 @@ package com.android.ide.common.rendering.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceUrl;
-
 import java.util.Collection;
 
 /**
@@ -26,15 +25,22 @@ import java.util.Collection;
  */
 public interface StyleResourceValue extends ResourceValue {
     /**
-     * Returns value of the {@code parent} XML attribute of this style. Does not look at the name of
-     * the style itself or dots in it.
+     * Returns value of the {@code parent} XML attribute of this style. Unlike
+     * {@link #getParentStyle()}, does not try to determine the name of the parent style by
+     * removing the last component of the name of this style.
      */
     @Nullable
     String getParentStyleName();
 
     /**
      * Returns a reference to the parent style, if it can be determined based on the explicit parent
-     * reference in XML or by splitting the name of this {@link StyleResourceValue} by dots.
+     * reference in XML, or by using the part of the name of this style before the last dot.
+     *
+     * <p>Note that names of styles have more meaning than other resources: if the parent attribute
+     * is not set, aapt looks for a dot in the style name and treats the string up to the last dot
+     * as the name of a parent style. So {@code <style name="Foo.Bar.Baz">} has an implicit parent
+     * called {@code Foo.Bar}. Setting the {@code parent} XML attribute disables this feature, even
+     * if it's set to an empty string. See {@code ResourceParser::ParseStyle} in aapt for details.
      */
     @Nullable
     default ResourceReference getParentStyle() {

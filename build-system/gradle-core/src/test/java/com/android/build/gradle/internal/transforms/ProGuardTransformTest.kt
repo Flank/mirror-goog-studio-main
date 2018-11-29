@@ -327,6 +327,8 @@ class ProGuardTransformTest {
         Mockito.`when`(scope.variantData).thenReturn(variantData)
         Mockito.`when`(scope.variantConfiguration).thenReturn(variantConfig)
         Mockito.`when`(scope.bootClasspath).thenReturn(FakeFileCollection(bootClassPath))
+        Mockito.`when`(scope.outputProguardMappingFile)
+            .thenReturn(tmp.root.resolve("mapping/mapping.txt"))
         return scope
     }
 }

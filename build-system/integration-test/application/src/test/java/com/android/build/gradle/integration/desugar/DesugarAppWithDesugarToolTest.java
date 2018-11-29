@@ -248,10 +248,16 @@ public class DesugarAppWithDesugarToolTest {
                         + "  buildTypes {\n"
                         + "    debug {\n"
                         + "      minifyEnabled true\n"
-                        + "      testProguardFiles getDefaultProguardFile('proguard-android.txt')\n"
+                        + "      testProguardFiles getDefaultProguardFile('proguard-android.txt'), 'test-proguard-rules.pro'\n"
                         + "    }\n"
                         + "  }\n"
                         + "}\n");
+
+        Files.write(
+                project.file("test-proguard-rules.pro").toPath(),
+                ImmutableList.of(
+                        "# Part of the XML pull API comes with the platform, but ATSL depends on kxml2 which bundles the same classes.",
+                        "-dontwarn org.xmlpull.**"));
 
         // add try with catch in test
         TestFileUtils.addMethod(

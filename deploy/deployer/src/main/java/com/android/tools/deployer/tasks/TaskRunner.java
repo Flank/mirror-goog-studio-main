@@ -17,7 +17,7 @@
 package com.android.tools.deployer.tasks;
 
 import com.android.tools.deployer.DeployerException;
-import com.android.tools.deployer.Trace;
+import com.android.tools.tracer.Trace;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -141,8 +141,14 @@ public class TaskRunner {
         public T get() throws DeployerException {
             try {
                 return future.get();
-            } catch (InterruptedException | ExecutionException e) {
+            } catch (InterruptedException e) {
                 throw new DeployerException(DeployerException.Error.INTERRUPTED, e);
+            } catch (ExecutionException e) {
+                if (e.getCause() instanceof DeployerException) {
+                    throw (DeployerException) e.getCause();
+                } else {
+                    throw new IllegalStateException(e);
+                }
             }
         }
     }

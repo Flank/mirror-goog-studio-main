@@ -81,26 +81,28 @@ class ReflectiveLintRunner {
 
     companion object {
         var loader: DelegatingClassLoader? = null
+        private var buildCompletionListenerRegistered = false
 
         private fun getLintClassLoader(gradle: Gradle, lintClassPath: Set<File>): ClassLoader {
-            if (loader == null) {
-                val listener = BuildCompletionListener {
-                    val l = loader
-                    if (l != null) {
-                        loader = null
-                        val cls =
-                            l.loadClass("com.android.tools.lint.LintCoreApplicationEnvironment")
-                        val disposeMethod = cls.getDeclaredMethod("disposeApplicationEnvironment")
-                        disposeMethod.invoke(null)
-                    }
-                }
-                gradle.addListener(listener)
-
+            var l = loader
+            if (l == null) {
                 val urls = computeUrlsFromClassLoaderDelta(lintClassPath)
                     ?: computeUrlsFallback(lintClassPath)
-                loader = DelegatingClassLoader(urls.toTypedArray())
+                l = DelegatingClassLoader(urls.toTypedArray())
+                loader = l
             }
-            return loader!!
+
+            if (!buildCompletionListenerRegistered) {
+                buildCompletionListenerRegistered = true
+                gradle.addListener(BuildCompletionListener {
+                    val cls = l.loadClass("com.android.tools.lint.LintCoreApplicationEnvironment")
+                    val disposeMethod = cls.getDeclaredMethod("disposeApplicationEnvironment")
+                    disposeMethod.invoke(null)
+                    buildCompletionListenerRegistered = false
+                })
+            }
+
+            return l
         }
 
         /**

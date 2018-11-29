@@ -8,7 +8,10 @@ import com.android.build.gradle.integration.common.fixture.app.AndroidTestModule
 import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.internal.scope.CodeShrinker;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Aar;
 import com.google.common.base.Joiner;
@@ -19,11 +22,14 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /**
  * Integration test to check that libraries included directly as jar files are correctly handled
- * when using proguard.
+ * when using proguard or R8.
  */
+@RunWith(FilterableParameterized.class)
 public class ProguardAarPackagingTest {
 
     public static AndroidTestModule testApp = HelloWorldApp.noBuildFile();
@@ -51,7 +57,7 @@ public class ProguardAarPackagingTest {
                                 + "    }\n"
                                 + "}\n"));
 
-        testApp.addFile(new TestSourceFile("config.pro", "-keeppackagenames"));
+        testApp.addFile(new TestSourceFile("config.pro", "-keeppackagenames **"));
 
         // Create simple library jar.
         libraryInJar.addFile(
@@ -74,6 +80,13 @@ public class ProguardAarPackagingTest {
     @ClassRule
     public static GradleTestProject libraryInJarProject =
             GradleTestProject.builder().withName("libInJar").fromTestApp(libraryInJar).create();
+
+    @Parameterized.Parameter public CodeShrinker shrinker;
+
+    @Parameterized.Parameters(name = "shrinker={0}")
+    public static CodeShrinker[] getSetups() {
+        return CodeShrinker.values();
+    }
 
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
@@ -126,7 +139,10 @@ public class ProguardAarPackagingTest {
     @Test
     public void checkDebugAarPackaging()
             throws IOException, InterruptedException, ProcessException {
-        androidProject.execute("assembleDebug");
+        androidProject
+                .executor()
+                .with(BooleanOption.ENABLE_R8, shrinker == CodeShrinker.R8)
+                .run("assembleDebug");
 
         Aar debug = androidProject.getAar("debug");
 
@@ -140,7 +156,10 @@ public class ProguardAarPackagingTest {
     @Test
     public void checkReleaseAarPackaging()
             throws IOException, InterruptedException, ProcessException {
-        androidProject.execute("assembleRelease");
+        androidProject
+                .executor()
+                .with(BooleanOption.ENABLE_R8, shrinker == CodeShrinker.R8)
+                .run("assembleRelease");
 
         Aar release = androidProject.getAar("release");
 

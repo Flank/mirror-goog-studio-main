@@ -34,7 +34,5 @@ fun isValidZipEntryName(entry: ZipEntry): Boolean {
  * Helper function to validate the path inside a zipfile does not leave the output directory.
  */
 fun isValidZipEntryPath(filePath: File, outputDir: File): Boolean {
-    val canonicalDestinationDirPath = outputDir.getCanonicalPath()
-    val canonicalDestinationFile = filePath.getCanonicalPath()
-    return canonicalDestinationFile.startsWith(canonicalDestinationDirPath + File.separator)
+    return filePath.canonicalPath.startsWith(outputDir.canonicalPath + File.separator)
 }

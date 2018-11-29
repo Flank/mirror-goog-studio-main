@@ -34,7 +34,8 @@ public class SeparateTestWithMinificationButNoObfuscationConnectedTest {
 
     @Parameterized.Parameters(name = "codeShrinker = {0}")
     public static CodeShrinker[] getShrinkers() {
-        return new CodeShrinker[] {CodeShrinker.PROGUARD, CodeShrinker.R8};
+        // Disabled for R8 because of http://b/120067487.
+        return new CodeShrinker[] {CodeShrinker.PROGUARD};
     }
 
     @Parameterized.Parameter public CodeShrinker codeShrinker;

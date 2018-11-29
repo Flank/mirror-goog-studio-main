@@ -19,6 +19,7 @@ package com.android.manifmerger;
 import static org.mockito.Mockito.when;
 
 import com.android.SdkConstants;
+import com.android.ide.common.blame.SourceFile;
 import com.android.utils.StdLogger;
 import com.google.common.base.Optional;
 import java.io.IOException;
@@ -35,6 +36,8 @@ import org.xml.sax.SAXException;
  * Tests for {@link com.android.manifmerger.XmlAttribute} class
  */
 public class XmlAttributeTest extends TestCase {
+
+    private final ManifestModel mModel = new ManifestModel();
 
     @Mock
     XmlDocument mXmlDocument;
@@ -111,10 +114,10 @@ public class XmlAttributeTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
-        XmlDocument otherDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
+        XmlDocument refDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
+        XmlDocument otherDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -172,10 +175,10 @@ public class XmlAttributeTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
-        XmlDocument otherDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
+        XmlDocument refDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
+        XmlDocument otherDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -221,10 +224,10 @@ public class XmlAttributeTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
-        XmlDocument otherDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
+        XmlDocument refDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
+        XmlDocument otherDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -282,12 +285,12 @@ public class XmlAttributeTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument highPriority = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "highPriority"), higherPriority);
-        XmlDocument lowPriority = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "lowPriority"), lowerPriority);
-        XmlDocument lowestPriority = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "lowestPriority"), evenLowerPriority);
+        XmlDocument highPriority =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "highPriority"), higherPriority);
+        XmlDocument lowPriority =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "lowPriority"), lowerPriority);
+        XmlDocument lowestPriority =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "lowestPriority"), evenLowerPriority);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -362,10 +365,10 @@ public class XmlAttributeTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
-        XmlDocument otherDocument = TestUtils.xmlLibraryFromString(
-                TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
+        XmlDocument refDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
+        XmlDocument otherDocument =
+                loadXmlLib(TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -399,10 +402,10 @@ public class XmlAttributeTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
-        XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
+        XmlDocument refDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
+        XmlDocument otherDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -451,10 +454,10 @@ public class XmlAttributeTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
-        XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
+        XmlDocument refDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "higherPriority"), higherPriority);
+        XmlDocument otherDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "lowerPriority"), lowerPriority);
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(
                 new StdLogger(StdLogger.Level.VERBOSE));
@@ -476,5 +479,15 @@ public class XmlAttributeTest extends TestCase {
         assertTrue(toolsRemove.isPresent());
         assertEquals("replace", toolsRemove.get().getValue());
 
+    }
+
+    private XmlDocument loadXmlDoc(SourceFile location, String input)
+            throws ParserConfigurationException, SAXException, IOException {
+        return TestUtils.xmlDocumentFromString(location, input, mModel);
+    }
+
+    private XmlDocument loadXmlLib(SourceFile location, String input)
+            throws ParserConfigurationException, SAXException, IOException {
+        return TestUtils.xmlLibraryFromString(location, input, mModel);
     }
 }

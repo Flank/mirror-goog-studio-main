@@ -115,6 +115,8 @@ public class FlavorsTest {
         Variant f1faDebugVariant = AndroidProjectUtils.getVariantByName(model, "f1FaDebug");
         assertThat(f1faDebugVariant.getProductFlavors()).containsExactly("f1", "fa");
         new ProductFlavorHelper(f1faDebugVariant.getMergedFlavor(), "F1faDebug Merged Flavor")
+                .setMinSdkVersion(14)
+                .setTestInstrumentationRunner("android.support.test.runner.AndroidJUnitRunner")
                 .test();
 
         // Verify the build outputs

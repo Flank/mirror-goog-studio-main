@@ -37,8 +37,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
+import org.gradle.api.file.Directory;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.TaskAction;
@@ -50,7 +52,7 @@ public class CheckManifestInInstantRunMode extends AndroidVariantTask {
 
     private InstantRunBuildContext buildContext;
     private File manifestCheckerDir;
-    private BuildableArtifact instantRunManifests;
+    private Provider<Directory> instantRunManifests;
     private BuildableArtifact processedRes;
     private InternalArtifactType resInputType;
 
@@ -60,7 +62,7 @@ public class CheckManifestInInstantRunMode extends AndroidVariantTask {
     }
 
     @InputFiles
-    public BuildableArtifact getInstantRunManifests() {
+    public Provider<Directory> getInstantRunManifests() {
         return instantRunManifests;
     }
 
@@ -73,24 +75,17 @@ public class CheckManifestInInstantRunMode extends AndroidVariantTask {
     public void checkManifestChanges() throws IOException {
 
         // If we are NOT instant run mode, this is an error, this task should not be running.
-        if (!buildContext.isInInstantRunMode()) {
+        if (!buildContext.isInInstantRunMode() || !instantRunManifests.isPresent()) {
             LOG.warn("CheckManifestInInstantRunMode configured in non instant run build,"
                     + " please file a bug.");
             return;
         }
+        File manifestsFolder = instantRunManifests.get().getAsFile();
 
-        if (instantRunManifests.getFiles().isEmpty()) {
+        if (!manifestsFolder.exists()) {
             String message =
                     "No instant run specific merged manifests in InstantRun mode, "
                             + "please file a bug and disable InstantRun.";
-            LOG.error(message);
-            throw new RuntimeException(message);
-        }
-
-        if (instantRunManifests.getFiles().size() > 1) {
-            String message =
-                    "Full Split are not supported in InstantRun mode, "
-                            + "please disable InstantRun";
             LOG.error(message);
             throw new RuntimeException(message);
         }
@@ -102,9 +97,19 @@ public class CheckManifestInInstantRunMode extends AndroidVariantTask {
 
         BuildElements processedResOutputs = ExistingBuildElements.from(resInputType, processedRes);
 
-        for (BuildOutput buildOutput :
+        BuildElements buildOutputs =
                 ExistingBuildElements.from(
-                        InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS, instantRunManifests)) {
+                        InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS, manifestsFolder);
+
+        if (buildOutputs.size() > 1) {
+            String message =
+                    "Full Split are not supported in InstantRun mode, "
+                            + "please disable InstantRun";
+            LOG.error(message);
+            throw new RuntimeException(message);
+        }
+
+        for (BuildOutput buildOutput : buildOutputs) {
             ApkInfo apkInfo = buildOutput.getApkInfo();
             File mergedManifest = buildOutput.getOutputFile();
 
@@ -224,8 +229,7 @@ public class CheckManifestInInstantRunMode extends AndroidVariantTask {
             task.instantRunManifests =
                     variantScope
                             .getArtifacts()
-                            .getFinalArtifactFiles(
-                                    InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS);
+                            .getFinalProduct(InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS);
             task.resInputType =
                     variantScope.getInstantRunBuildContext().useSeparateApkForResources()
                             ? InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES

@@ -41,6 +41,8 @@ import org.xml.sax.SAXException;
  */
 public class PlaceholderHandlerTest extends TestCase {
 
+    private final ManifestModel mModel = new ManifestModel();
+
     @Mock
     ActionRecorder mActionRecorder;
 
@@ -78,8 +80,9 @@ public class PlaceholderHandlerTest extends TestCase {
                 + "    </activity>\n"
                 + "</manifest>";
 
-        XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testPlaceholders#xml"), xml);
+        XmlDocument refDocument =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), "testPlaceholders#xml"), xml, mModel);
 
         PlaceholderHandler.visit(
                 MergingReport.Record.Severity.ERROR, refDocument, key -> "newValue", mBuilder);
@@ -126,8 +129,9 @@ public class PlaceholderHandlerTest extends TestCase {
                 + "         android:attr4=\"${first}.${second}\"/>\n"
                 + "</manifest>";
 
-        XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testPlaceholders#xml"), xml);
+        XmlDocument refDocument =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), "testPlaceholders#xml"), xml, mModel);
 
         PlaceholderHandler.visit(
                 MergingReport.Record.Severity.ERROR,
@@ -185,8 +189,9 @@ public class PlaceholderHandlerTest extends TestCase {
                 + "         android:attr1=\"${landscapePH}\"/>\n"
                 + "</manifest>";
 
-        XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testPlaceholders#xml"), xml);
+        XmlDocument refDocument =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), "testPlaceholders#xml"), xml, mModel);
 
         PlaceholderHandler.visit(
                 MergingReport.Record.Severity.ERROR, refDocument, nullResolver, mBuilder);
@@ -207,8 +212,9 @@ public class PlaceholderHandlerTest extends TestCase {
                 + "         android:attr1=\"${landscapePH}\"/>\n"
                 + "</manifest>";
 
-        XmlDocument refDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(), "testPlaceholders#xml"), xml);
+        XmlDocument refDocument =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), "testPlaceholders#xml"), xml, mModel);
 
         PlaceholderHandler.visit(
                 MergingReport.Record.Severity.INFO, refDocument, nullResolver, mBuilder);
@@ -232,7 +238,7 @@ public class PlaceholderHandlerTest extends TestCase {
 
         XmlDocument refDocument =
                 TestUtils.xmlDocumentFromString(
-                        TestUtils.sourceFile(getClass(), "testPlaceholders#xml"), xml);
+                        TestUtils.sourceFile(getClass(), "testPlaceholders#xml"), xml, mModel);
 
         MergingReport.Builder builder = new MergingReport.Builder(logger);
         PlaceholderHandler.visit(

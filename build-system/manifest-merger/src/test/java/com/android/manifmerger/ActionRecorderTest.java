@@ -16,6 +16,7 @@
 
 package com.android.manifmerger;
 
+import com.android.ide.common.blame.SourceFile;
 import com.android.utils.ILogger;
 import java.io.IOException;
 import javax.xml.parsers.ParserConfigurationException;
@@ -46,6 +47,8 @@ public class ActionRecorderTest extends TestCase {
     // this will be used as the source location for the "reference" xml string.
     private static final String REFEFENCE_DOCUMENT = "ref_doc";
 
+    private final ManifestModel mModel = new ManifestModel();
+
     @Mock ILogger mLoggerMock;
 
     ActionRecorder mActionRecorderBuilder = new ActionRecorder();
@@ -67,9 +70,8 @@ public class ActionRecorderTest extends TestCase {
     public void testSingleElement_withoutAttributes()
             throws ParserConfigurationException, SAXException, IOException {
 
-        XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(),
-                        REFEFENCE_DOCUMENT), REFERENCE);
+        XmlDocument xmlDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), REFEFENCE_DOCUMENT), REFERENCE);
 
         XmlElement xmlElement = xmlDocument.getRootNode().getNodeByTypeAndKey(
                 ManifestModel.NodeTypes.ACTIVITY, "com.example.lib3.activityOne").get();
@@ -106,13 +108,11 @@ public class ActionRecorderTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(),
-                        REFEFENCE_DOCUMENT), REFERENCE);
+        XmlDocument xmlDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), REFEFENCE_DOCUMENT), REFERENCE);
 
-        XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(),
-                        "other_document"), other);
+        XmlDocument otherDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "other_document"), other);
 
         XmlElement xmlElement = xmlDocument.getRootNode().getNodeByTypeAndKey(
                 ManifestModel.NodeTypes.ACTIVITY, "com.example.lib3.activityOne").get();
@@ -147,9 +147,8 @@ public class ActionRecorderTest extends TestCase {
     public void testSingleElement_withNoNamespaceAttributes()
             throws ParserConfigurationException, SAXException, IOException {
 
-        XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(),
-                        REFEFENCE_DOCUMENT), REFERENCE);
+        XmlDocument xmlDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), REFEFENCE_DOCUMENT), REFERENCE);
 
         XmlElement xmlElement = xmlDocument.getRootNode().getNodeByTypeAndKey(
                 ManifestModel.NodeTypes.ACTIVITY, "com.example.lib3.activityOne").get();
@@ -183,9 +182,8 @@ public class ActionRecorderTest extends TestCase {
     public void testSingleElement_withNamespaceAttributes()
             throws ParserConfigurationException, SAXException, IOException {
 
-        XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(),
-                        REFEFENCE_DOCUMENT), REFERENCE);
+        XmlDocument xmlDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), REFEFENCE_DOCUMENT), REFERENCE);
 
         XmlElement xmlElement = xmlDocument.getRootNode();
         // added during the initial file loading
@@ -230,13 +228,11 @@ public class ActionRecorderTest extends TestCase {
                 + "\n"
                 + "</manifest>";
 
-        XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(),
-                        REFEFENCE_DOCUMENT), REFERENCE);
+        XmlDocument xmlDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), REFEFENCE_DOCUMENT), REFERENCE);
 
-        XmlDocument otherDocument = TestUtils.xmlDocumentFromString(
-                TestUtils.sourceFile(getClass(),
-                        "other_document"), other);
+        XmlDocument otherDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "other_document"), other);
 
         XmlElement activityElement = xmlDocument.getRootNode().getNodeByTypeAndKey(
                 ManifestModel.NodeTypes.ACTIVITY, "com.example.lib3.activityOne").get();
@@ -279,8 +275,7 @@ public class ActionRecorderTest extends TestCase {
             throws ParserConfigurationException, SAXException, IOException {
 
         XmlDocument xmlDocument =
-                TestUtils.xmlDocumentFromString(
-                        TestUtils.sourceFile(getClass(), REFEFENCE_DOCUMENT), REFERENCE);
+                loadXmlDoc(TestUtils.sourceFile(getClass(), REFEFENCE_DOCUMENT), REFERENCE);
 
         XmlElement xmlElement =
                 xmlDocument
@@ -325,12 +320,10 @@ public class ActionRecorderTest extends TestCase {
                         + "</manifest>";
 
         XmlDocument xmlDocument =
-                TestUtils.xmlDocumentFromString(
-                        TestUtils.sourceFile(getClass(), REFEFENCE_DOCUMENT), REFERENCE);
+                loadXmlDoc(TestUtils.sourceFile(getClass(), REFEFENCE_DOCUMENT), REFERENCE);
 
         XmlDocument otherDocument =
-                TestUtils.xmlDocumentFromString(
-                        TestUtils.sourceFile(getClass(), "other_document"), other);
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "other_document"), other);
 
         XmlElement activityElement =
                 otherDocument
@@ -403,5 +396,10 @@ public class ActionRecorderTest extends TestCase {
                 .append(getClass().getSimpleName()).append('#').append(docString)
                 .append(':').append(position)
                 .append('\n');
+    }
+
+    private XmlDocument loadXmlDoc(SourceFile location, String input)
+            throws ParserConfigurationException, SAXException, IOException {
+        return TestUtils.xmlDocumentFromString(location, input, mModel);
     }
 }

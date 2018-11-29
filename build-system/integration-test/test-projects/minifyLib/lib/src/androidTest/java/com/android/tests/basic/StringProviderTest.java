@@ -1,9 +1,15 @@
 package com.android.tests.basic;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
 
-public class StringProviderTest extends TestCase {
+import android.support.test.runner.AndroidJUnit4;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
+@RunWith(AndroidJUnit4.class)
+public class StringProviderTest {
+
+    @Test
     public void testGetString() {
         assertEquals("123", StringProvider.getString(123));
     }

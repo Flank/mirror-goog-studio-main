@@ -33,7 +33,6 @@ import com.android.ide.common.rendering.api.ResourceValueImpl;
 import com.android.ide.common.rendering.api.SampleDataResourceValue;
 import com.android.ide.common.rendering.api.StyleItemResourceValue;
 import com.android.ide.common.rendering.api.StyleResourceValue;
-import com.android.ide.common.rendering.api.StyleResourceValueImpl;
 import com.android.ide.common.resources.sampledata.SampleDataManager;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
@@ -79,9 +78,8 @@ public class ResourceResolver extends RenderResources {
             Pattern.compile("(\\p{Alpha}+)?\\.?DeviceDefault\\.?(.+)?");
 
     private final Map<ResourceNamespace, Map<ResourceType, ResourceValueMap>> mResources;
-    private final Map<StyleResourceValue, StyleResourceValue> mStyleInheritanceMap =
-            new HashMap<>();
-    private final Multimap<StyleResourceValue, StyleResourceValue> mReverseStyleInheritanceMap =
+    private final Map<ResourceReference, StyleResourceValue> mStyleInheritanceMap = new HashMap<>();
+    private final Multimap<ResourceReference, StyleResourceValue> mReverseStyleInheritanceMap =
             HashMultimap.create();
 
     @Nullable private final StyleResourceValue mDefaultTheme;
@@ -266,8 +264,7 @@ public class ResourceResolver extends RenderResources {
             StyleResourceValue to = (StyleResourceValue)map.get(parentName);
 
             if (from != null && to != null) {
-                StyleResourceValueImpl newStyle = StyleResourceValueImpl.copyOf(from);
-                mStyleInheritanceMap.put(newStyle, to);
+                mStyleInheritanceMap.put(from.asReference(), to);
                 mReverseStyleInheritanceMap.clear();
             }
         }
@@ -355,7 +352,7 @@ public class ResourceResolver extends RenderResources {
         Set<StyleResourceValue> parents = ImmutableSet.copyOf(parentThemes);
         StyleResourceValue theme = childTheme;
         do {
-            theme = mStyleInheritanceMap.get(theme);
+            theme = mStyleInheritanceMap.get(theme.asReference());
             if (theme == null) {
                 return false;
             } else if (parents.contains(theme)) {
@@ -376,7 +373,7 @@ public class ResourceResolver extends RenderResources {
             }
 
             // If we didn't find it, we look in the parent style (if applicable).
-            style = mStyleInheritanceMap.get(style);
+            style = mStyleInheritanceMap.get(style.asReference());
             if (style == null) {
                 return null;
             }
@@ -414,7 +411,7 @@ public class ResourceResolver extends RenderResources {
                 break;
             }
 
-            StyleResourceValue parentStyle = mStyleInheritanceMap.get(style);
+            StyleResourceValue parentStyle = mStyleInheritanceMap.get(style.asReference());
             if (parentStyle == null) {
                 break;
             }
@@ -440,6 +437,11 @@ public class ResourceResolver extends RenderResources {
         if (reference.getResourceType() == ResourceType.AAPT) {
             return buildAaptResourceValue(reference);
         }
+        return findResource(reference);
+    }
+
+    @Nullable
+    private ResourceValue findResource(@NonNull ResourceReference reference) {
         ResourceValueMap resourceValueMap =
                 getResourceValueMap(reference.getNamespace(), reference.getResourceType());
         if (resourceValueMap != null) {
@@ -631,7 +633,8 @@ public class ResourceResolver extends RenderResources {
                 if (parent != null) {
                     ResourceValue parentStyle = getUnresolvedResource(parent);
                     if (parentStyle instanceof StyleResourceValue) {
-                        mStyleInheritanceMap.put(style, (StyleResourceValue) parentStyle);
+                        mStyleInheritanceMap.put(
+                                style.asReference(), (StyleResourceValue) parentStyle);
                         continue; // Don't log below.
                     }
                 }
@@ -653,9 +656,12 @@ public class ResourceResolver extends RenderResources {
     }
 
     private void computeReverseStyleInheritance() {
-        for (Map.Entry<StyleResourceValue, StyleResourceValue> entry :
+        for (Map.Entry<ResourceReference, StyleResourceValue> entry :
                 mStyleInheritanceMap.entrySet()) {
-            mReverseStyleInheritanceMap.put(entry.getValue(), entry.getKey());
+            StyleResourceValue parent = entry.getValue();
+            ResourceValue child = findResource(entry.getKey());
+            assert child instanceof StyleResourceValue;
+            mReverseStyleInheritanceMap.put(parent.asReference(), (StyleResourceValue) child);
         }
     }
 
@@ -668,7 +674,7 @@ public class ResourceResolver extends RenderResources {
     @Override
     @Nullable
     public StyleResourceValue getParent(@NonNull StyleResourceValue style) {
-        return mStyleInheritanceMap.get(style);
+        return mStyleInheritanceMap.get(style.asReference());
     }
 
     @NonNull
@@ -676,7 +682,7 @@ public class ResourceResolver extends RenderResources {
         if (mReverseStyleInheritanceMap.isEmpty()) {
             computeReverseStyleInheritance();
         }
-        return mReverseStyleInheritanceMap.get(style);
+        return mReverseStyleInheritanceMap.get(style.asReference());
     }
 
     public boolean styleExtends(
@@ -741,7 +747,7 @@ public class ResourceResolver extends RenderResources {
                     return true;
                 }
 
-                styleValue = mStyleInheritanceMap.get(styleValue);
+                styleValue = mStyleInheritanceMap.get(styleValue.asReference());
                 if (styleValue == null) {
                     return false;
                 }

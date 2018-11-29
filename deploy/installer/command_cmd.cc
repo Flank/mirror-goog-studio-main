@@ -100,11 +100,8 @@ int get_file_size(std::string path) {
   return statbuf.st_size;
 }
 
-int CmdCommand::PreInstall(const std::vector<std::string>& apks,
-                           std::string* output) const noexcept {
-  Phase p("Preinstall");
-  output->clear();
-  Trace trace("CmdCommand::Install");
+bool CmdCommand::CreateInstallSession(std::string* output) const noexcept {
+  Phase p("Create Install Session");
   std::vector<std::string> parameters;
   parameters.emplace_back("package");
   parameters.emplace_back("install-create");
@@ -115,11 +112,25 @@ int CmdCommand::PreInstall(const std::vector<std::string>& apks,
   Executor::Run(CMD_EXEC, parameters, output, &err);
   std::string match = "Success: created install session [";
   if (output->find(match, 0) != 0) {
-    return -1;
+    return false;
   }
-  std::string session =
-      output->substr(match.size(), output->size() - match.size() - 2);
+  *output = output->substr(match.size(), output->size() - match.size() - 2);
+  return true;
+}
 
+int CmdCommand::PreInstall(const std::vector<std::string>& apks,
+                           std::string* output) const noexcept {
+  Phase p("Preinstall");
+  output->clear();
+
+  std::string session;
+  if (!CreateInstallSession(output)) {
+    return -1;
+  } else {
+    session = *output;
+  }
+
+  output->clear();
   for (auto& apk : apks) {
     std::string output;
     std::string error;
@@ -132,30 +143,28 @@ int CmdCommand::PreInstall(const std::vector<std::string>& apks,
     parameters.push_back(session);
     parameters.push_back(apk.substr(apk.rfind("/") + 1));
     Executor::RunWithInput(CMD_EXEC, parameters, &output, &error, apk);
-
-    // Delete this apk since it will never be needed again.
-    unlink(apk.c_str());
   }
   return atoi(session.c_str());
 }  // namespace deploy
 
-bool CmdCommand::CommitInstall(int session, std::string* output) const
-    noexcept {
+bool CmdCommand::CommitInstall(const std::string& session,
+                               std::string* output) const noexcept {
   Phase p("Commit Install");
   output->clear();
   std::vector<std::string> parameters;
   parameters.emplace_back("package");
   parameters.emplace_back("install-commit");
-  parameters.emplace_back(to_string(session));
+  parameters.emplace_back(session);
   std::string err;
   return Executor::Run(CMD_EXEC, parameters, output, &err);
 }
 
-bool CmdCommand::AbortInstall(int session, std::string* output) const noexcept {
+bool CmdCommand::AbortInstall(const std::string& session,
+                              std::string* output) const noexcept {
   std::vector<std::string> parameters;
   parameters.emplace_back("package");
   parameters.emplace_back("install-abandon");
-  parameters.emplace_back(to_string(session));
+  parameters.emplace_back(session);
   output->clear();
   std::string err;
   return Executor::Run(CMD_EXEC, parameters, output, &err);

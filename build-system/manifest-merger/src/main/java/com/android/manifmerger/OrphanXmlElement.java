@@ -37,20 +37,12 @@ public class OrphanXmlElement extends XmlNode {
     @NonNull
     private final NodeTypes mType;
 
-    public OrphanXmlElement(@NonNull Element xml) {
-
+    public OrphanXmlElement(@NonNull Element xml, @NonNull DocumentModel<NodeTypes> model) {
         mXml = Preconditions.checkNotNull(xml);
-        NodeTypes nodeType;
         String elementName = mXml.getNodeName();
-        // if there's a namespace prefix, just strip it. The ManifestModel does not look at
+        // if there's a namespace prefix, just strip it. The DocumentModel does not look at
         // namespaces right now.
-        int indexOfColon = elementName.indexOf(':');
-        if (indexOfColon != -1) {
-            nodeType = NodeTypes.fromXmlSimpleName(elementName.substring(indexOfColon + 1));
-        } else {
-            nodeType = NodeTypes.fromXmlSimpleName(elementName);
-        }
-        mType = nodeType;
+        mType = model.fromXmlSimpleName(elementName.substring(elementName.indexOf(':') + 1));
     }
 
     /**

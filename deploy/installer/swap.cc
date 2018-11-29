@@ -139,14 +139,6 @@ void SwapCommand::Run(Workspace& workspace) {
     ErrEvent("Could not write to agent proxy server");
   }
 
-  CmdCommand cmd;
-  std::vector<std::string> apks;
-  for (auto apk : request_.apks()) {
-    apks.emplace_back(apk);
-  }
-  std::string output;
-  int install_session = cmd.PreInstall(apks, &output);
-
   // TODO: This loop is at risk of hanging in a multi-agent scenario where
   // activity restart is required - if one agent dies before sending an
   // activity restart message, the server will never exit, as the still-alive
@@ -186,6 +178,9 @@ void SwapCommand::Run(Workspace& workspace) {
     overall_status = proto::AgentSwapResponse::ERROR;
   }
 
+  CmdCommand cmd;
+  std::string output;
+  std::string install_session = request_.session_id();
   // If the swap failed, revert the installation.
   if (overall_status != proto::AgentSwapResponse::OK) {
     cmd.AbortInstall(install_session, &output);

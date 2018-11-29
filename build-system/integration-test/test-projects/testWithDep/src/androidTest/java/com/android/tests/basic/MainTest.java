@@ -1,43 +1,39 @@
 package com.android.tests.basic;
 
-import com.google.common.collect.ImmutableList;
+import static org.junit.Assert.*;
 
-import android.test.ActivityInstrumentationTestCase2;
-import android.test.suitebuilder.annotation.MediumTest;
+import android.support.test.filters.MediumTest;
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
 import android.widget.TextView;
+import com.google.common.collect.ImmutableList;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
-public class MainTest extends ActivityInstrumentationTestCase2<Main> {
+@RunWith(AndroidJUnit4.class)
+public class MainTest {
+    @Rule public ActivityTestRule<Main> rule = new ActivityTestRule<>(Main.class);
 
     private ImmutableList<TextView> mTextView;
 
-    /**
-     * Creates an {@link ActivityInstrumentationTestCase2} that tests the {@link Main} activity.
-     */
-    public MainTest() {
-        super(Main.class);
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        final Main a = getActivity();
+    @Before
+    public void setUp() {
+        final Main a = rule.getActivity();
         // ensure a valid handle to the activity has been returned
         assertNotNull(a);
         // Wrapped in an immutable list from guava, to check the dependency worked.
         mTextView = ImmutableList.of((TextView) a.findViewById(R.id.text));
     }
 
-    @Override
-    public void tearDown() throws Exception {
-    }
-
     /**
-     * The name 'test preconditions' is a convention to signal that if this
-     * test doesn't pass, the test case was not set up properly and it might
-     * explain any and all failures in other tests.  This is not guaranteed
-     * to run before other tests, as junit uses reflection to find the tests.
+     * The name 'test preconditions' is a convention to signal that if this test doesn't pass, the
+     * test case was not set up properly and it might explain any and all failures in other tests.
+     * This is not guaranteed to run before other tests, as junit uses reflection to find the tests.
      */
     @MediumTest
+    @Test
     public void testPreconditions() {
         assertNotNull(mTextView);
         assertEquals(1, mTextView.size());

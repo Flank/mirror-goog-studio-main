@@ -82,6 +82,7 @@ public class InstrumentationResultParser extends MultiLineReceiver {
 
     /** known occuring key: stream */
     private static final String STREAM = "stream";
+    private static final String CURRENT = "current";
 
     /** The set of expected status keys. Used to filter which keys should be stored as metrics */
     private static final Set<String> KNOWN_KEYS = new HashSet<String>();
@@ -92,10 +93,10 @@ public class InstrumentationResultParser extends MultiLineReceiver {
         KNOWN_KEYS.add(StatusKeys.NUMTESTS);
         KNOWN_KEYS.add(StatusKeys.ERROR);
         KNOWN_KEYS.add(StatusKeys.SHORTMSG);
-        // unused, but regularly occurring status keys.
         KNOWN_KEYS.add(STREAM);
+        KNOWN_KEYS.add(CURRENT);
+        // Unused, but regularly occurring status keys.
         KNOWN_KEYS.add("id");
-        KNOWN_KEYS.add("current");
     }
 
     /** Test result status codes. */
@@ -133,6 +134,7 @@ public class InstrumentationResultParser extends MultiLineReceiver {
         private String mTestClass = null;
         private String mStackTrace = null;
         private Integer mNumTests = null;
+        private String mCurrentTestNumber = null;
 
         /** Returns true if all expected values have been parsed */
         boolean isComplete() {
@@ -373,6 +375,8 @@ public class InstrumentationResultParser extends MultiLineReceiver {
                     handleTestRunFailed(statusValue);
                 } else if (mCurrentKey.equals(StatusKeys.STACK)) {
                     testInfo.mStackTrace = statusValue;
+                } else if (CURRENT.equals(mCurrentKey)) {
+                    testInfo.mCurrentTestNumber = statusValue;
                 } else if (!KNOWN_KEYS.contains(mCurrentKey)) {
                     // Not one of the recognized key/value pairs, so dump it in mTestMetrics
                     mTestMetrics.put(mCurrentKey, statusValue);
@@ -491,6 +495,20 @@ public class InstrumentationResultParser extends MultiLineReceiver {
                 }
                 break;
             case StatusCodes.FAILURE:
+                // If a test failure was already reported for the same test number
+                // ('current' number), we avoid reporting a second repeated failure since it would
+                // cause inconsistent events.
+                if (mLastTestResult.mCurrentTestNumber != null
+                        && mLastTestResult.mCurrentTestNumber.equals(
+                                mCurrentTestResult.mCurrentTestNumber)
+                        && mLastTestResult.mStackTrace != null) {
+                    Log.e(
+                            LOG_TAG,
+                            String.format(
+                                    "Ignoring repeated failed event for %s. Stack: %s",
+                                    mCurrentTestResult.toString(), mCurrentTestResult.mStackTrace));
+                    break;
+                }
                 metrics = getAndResetTestMetrics();
                 for (ITestRunListener listener : mTestListeners) {
                     listener.testFailed(testId, getTrace(testInfo));

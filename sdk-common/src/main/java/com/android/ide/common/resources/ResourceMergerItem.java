@@ -39,6 +39,7 @@ import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ArrayResourceValueImpl;
 import com.android.ide.common.rendering.api.AttrResourceValueImpl;
 import com.android.ide.common.rendering.api.AttributeFormat;
+import com.android.ide.common.rendering.api.DensityBasedResourceValue;
 import com.android.ide.common.rendering.api.DensityBasedResourceValueImpl;
 import com.android.ide.common.rendering.api.PluralsResourceValueImpl;
 import com.android.ide.common.rendering.api.ResourceNamespace;
@@ -278,14 +279,14 @@ public class ResourceMergerItem extends DataItem<ResourceFile>
         if (mResourceValue == null) {
             //noinspection VariableNotUsedInsideIf
             if (mValue == null) {
-                // Density based resource value?
-                Density density =
-                        mType == ResourceType.DRAWABLE || mType == ResourceType.MIPMAP
-                                ? getFolderDensity()
-                                : null;
-
                 ResourceFile source = getSourceFile();
                 assert source != null;
+
+                // Density based resource value?
+                Density density =
+                        DensityBasedResourceValue.isDensityBasedResourceType(mType)
+                                ? getFolderDensity()
+                                : null;
 
                 if (density != null) {
                     mResourceValue =

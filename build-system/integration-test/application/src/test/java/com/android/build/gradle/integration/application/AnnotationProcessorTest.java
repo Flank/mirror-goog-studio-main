@@ -17,6 +17,8 @@
 package com.android.build.gradle.integration.application;
 
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_BUILD_TOOL_VERSION;
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_COMPILE_SDK_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
@@ -121,21 +123,23 @@ public class AnnotationProcessorTest {
                         "src/androidTest/java/com/example/hellojni/HelloWorldAndroidTest.java",
                         "package com.example.helloworld;\n"
                                 + "\n"
-                                + "import android.test.ActivityInstrumentationTestCase;\n"
+                                + "import android.support.test.runner.AndroidJUnit4;\n"
+                                + "import org.junit.Assert;\n"
+                                + "import org.junit.Test;\n"
+                                + "import org.junit.runner.RunWith;\n"
                                 + "import com.example.annotation.ProvideString;\n"
                                 + "\n"
                                 + "@ProvideString\n"
-                                + "public class HelloWorldAndroidTest extends ActivityInstrumentationTestCase<HelloWorld> {\n"
+                                + "@RunWith(AndroidJUnit4.class)\n"
+                                + "public class HelloWorldAndroidTest {\n"
                                 + "\n"
-                                + "    public HelloWorldAndroidTest() {\n"
-                                + "        super(\"com.example.helloworld\", HelloWorld.class);\n"
-                                + "    }\n"
-                                + "\n"
+                                + "    @Test\n"
                                 + "    public void testStringValue() {\n"
-                                + "        assertTrue(\"Hello\".equals(HelloWorld.getString()));\n"
+                                + "        Assert.assertTrue(\"Hello\".equals(HelloWorld.getString()));\n"
                                 + "    }\n"
+                                + "    @Test\n"
                                 + "    public void testProcessor() {\n"
-                                + "        assertTrue(\"Processor\".equals(HelloWorld.getProcessor()));\n"
+                                + "        Assert.assertTrue(\"Processor\".equals(HelloWorld.getProcessor()));\n"
                                 + "    }\n"
                                 + "}\n"));
     }
@@ -152,10 +156,10 @@ public class AnnotationProcessorTest {
                         + "\n"
                         + "android {\n"
                         + "    compileSdkVersion "
-                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + DEFAULT_COMPILE_SDK_VERSION
                         + "\n"
                         + "    buildToolsVersion '"
-                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + DEFAULT_BUILD_TOOL_VERSION
                         + "'\n"
                         + "    defaultConfig {\n"
                         + "        javaCompileOptions {\n"
@@ -163,7 +167,13 @@ public class AnnotationProcessorTest {
                         + "                argument \"value\", \"Hello\"\n"
                         + "            }\n"
                         + "        }\n"
+                        + "        minSdkVersion rootProject.supportLibMinSdk\n"
+                        + "        testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'\n"
                         + "    }\n"
+                        + "}\n"
+                        + "dependencies {\n"
+                        + "    androidTestImplementation \"com.android.support.test:runner:${project.testSupportLibVersion}\"\n"
+                        + "    androidTestImplementation \"com.android.support.test:rules:${project.testSupportLibVersion}\"\n"
                         + "}\n";
         Files.write(buildScript, project.getSubproject(":app").file("build.gradle"), Charsets.UTF_8);
     }

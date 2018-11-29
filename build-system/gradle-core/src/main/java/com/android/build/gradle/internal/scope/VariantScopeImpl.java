@@ -123,8 +123,8 @@ import java.util.concurrent.Callable;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
 import org.gradle.api.Action;
-import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
@@ -136,6 +136,7 @@ import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.specs.Spec;
 
@@ -261,6 +262,29 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 Preconditions.checkNotNull(
                         config, String.format(PUBLISH_ERROR_MSG, configType, getType()));
                 publishArtifactToConfiguration(config, file, artifact, artifactType);
+            }
+        }
+    }
+
+    @Override
+    public void publishIntermediateArtifact(
+            @NonNull Provider<? extends FileSystemLocation> artifact,
+            @Nonnull Provider<String> lastProducerTaskName,
+            @NonNull ArtifactType artifactType,
+            @NonNull Collection<PublishedConfigType> configTypes) {
+
+        Preconditions.checkState(!configTypes.isEmpty());
+
+        // FIXME this needs to be parameterized based on the variant's publishing type.
+        final VariantDependencies variantDependency = getVariantDependencies();
+
+        for (PublishedConfigType configType : PublishedConfigType.values()) {
+            if (configTypes.contains(configType)) {
+                Configuration config = variantDependency.getElements(configType);
+                Preconditions.checkNotNull(
+                        config, String.format(PUBLISH_ERROR_MSG, configType, getType()));
+                publishArtifactToConfiguration(
+                        config, artifact, lastProducerTaskName, artifactType);
             }
         }
     }
@@ -709,24 +733,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 mainCollection,
                 variantData.getGeneratedBytecode(generatedBytecodeKey),
                 getProject().getPath());
-    }
-
-    @Override
-    public boolean keepDefaultBootstrap() {
-        // javac 1.8 may generate code that uses class not available in android.jar.  This is fine
-        // if desugar is used to compile code for the app or compile task is created only
-        // for unit test. In those cases, we want to keep the default bootstrap classpath.
-        if (!JavaVersion.current().isJava8Compatible()) {
-            return false;
-        }
-
-        VariantScope.Java8LangSupport java8LangSupport = getJava8LangSupportType();
-
-        // only if target and source is explicitly specified to 1.8 (and above), we keep the
-        // default bootclasspath with Desugar. Otherwise, we use android.jar.
-        return java8LangSupport == VariantScope.Java8LangSupport.DESUGAR
-                || java8LangSupport == VariantScope.Java8LangSupport.D8
-                || java8LangSupport == VariantScope.Java8LangSupport.R8;
     }
 
     @NonNull
@@ -1605,7 +1611,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 globalScope.getBuildDir(),
                 FD_OUTPUTS,
                 "mapping",
-                "r8",
                 getVariantConfiguration().getDirName(),
                 "mapping.txt");
     }
