@@ -28,6 +28,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.integration.desugar.resources.TestClass;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
@@ -273,20 +274,50 @@ public class DesugarAppTest {
                 .isEqualTo(2);
     }
 
+    @Test
+    public void testLegacyMultidexForDesugaredExternalLib()
+            throws IOException, InterruptedException {
+        createLibToDesugarAndGetClasses();
+        enableJava8();
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "dependencies {\n"
+                        + "    compile fileTree(dir: 'libs', include: ['*.jar'])\n"
+                        + "}");
+
+        TestFileUtils.addMethod(
+                FileUtils.join(project.getMainSrcDir(), "com/example/helloworld/HelloWorld.java"),
+                "Class<?> c = " + TestClass.class.getName() + ".class;");
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "android.buildTypes.debug.multiDexKeepProguard file('rules')\n"
+                        + "android.defaultConfig.multiDexEnabled true\n"
+                        + "android.defaultConfig.minSdkVersion 20");
+        Files.write(
+                project.getBuildFile().toPath().resolveSibling("rules"),
+                "-keep class **HelloWorld".getBytes());
+
+        getProjectExecutor().run("assembleDebug");
+
+        ImmutableMap<String, DexBackedClassDef> classes =
+                project.getApk(GradleTestProject.ApkType.DEBUG)
+                        .getMainDexFile()
+                        .orElseThrow(AssertionError::new)
+                        .getClasses();
+
+        long helloWorldClasses =
+                classes.keySet().stream().filter(t -> t.contains("TestClass")).count();
+        assertThat(helloWorldClasses)
+                .named("original and synthesized classes count in the main dex ")
+                .isEqualTo(2);
+    }
+
     private void enableJava8() throws IOException {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "android.compileOptions.sourceCompatibility 1.8\n"
                         + "android.compileOptions.targetCompatibility 1.8");
-    }
-
-    static class TestClass {
-        public void lambdaMethod() {
-            Runnable r = () -> {};
-            try (java.io.StringReader reader = new java.io.StringReader("")) {
-                System.out.println("In try-with-resources with reader " + reader.hashCode());
-            }
-        }
     }
 
     @NonNull

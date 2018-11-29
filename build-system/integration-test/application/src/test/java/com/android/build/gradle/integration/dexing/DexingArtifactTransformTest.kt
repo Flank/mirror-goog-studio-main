@@ -75,12 +75,10 @@ class DexingArtifactTransformTest {
         """.trimIndent()
         )
         val result = executor().run("assembleDebug")
-        assertThat(result.tasks).containsAllIn(
-            listOf(
-                ":mergeExtDexDebug",
-                ":mergeDexDebug"
-            )
-        )
+        // Merge legacy multidex in a single task. This is so synthesized classes that originate
+        // from the main dex classes are packaged in the primary dex.
+        assertThat(result.tasks).contains(":mergeDexDebug")
+        assertThat(result.tasks).doesNotContain(":mergeExtDexDebug")
         assertThat(result.tasks).doesNotContain(":mergeLibDexDebug")
         assertThat(result.tasks).doesNotContain(":mergeProjectDexDebug")
         assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))

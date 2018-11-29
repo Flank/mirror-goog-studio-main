@@ -2463,11 +2463,13 @@ public abstract class TaskManager {
     /**
      * Set up dex merging tasks when artifact transforms are used.
      *
-     * <p>External libraries are always merged. In case of a native multidex debuggable variant
-     * these dex files get packaged. In other cases, we will re-merge these files. Because this task
-     * will be almost always up-to-date, having a second merger run over the external libraries will
-     * not cause a performance regression. In addition to that, second dex merger will perform less
-     * I/O compared to reading all external library dex files individually.
+     * <p>External libraries are merged in mono-dex and native multidex modes. In case of a native
+     * multidex debuggable variant these dex files get packaged. In mono-dex case, we will re-merge
+     * these files. Because this task will be almost always up-to-date, having a second merger run
+     * over the external libraries will not cause a performance regression. In addition to that,
+     * second dex merger will perform less I/O compared to reading all external library dex files
+     * individually. For legacy multidex, we must merge all dex files in a single invocation in
+     * order to generate correct primary dex file in presence of desugaring. See b/120039166.
      *
      * <p>When merging native multidex, debuggable variant, project's dex files are merged
      * independently. Also, the library projects' dex files are merged independently.
@@ -2478,36 +2480,44 @@ public abstract class TaskManager {
      */
     private void createDexMergingWithArtifactTransforms(
             @NonNull VariantScope variantScope, @NonNull DexingType dexingType) {
-        boolean produceSeparateOutputs =
-                dexingType == DexingType.NATIVE_MULTIDEX
-                        && variantScope.getVariantConfiguration().getBuildType().isDebuggable();
-        taskFactory.register(
-                new DexMergingTask.CreationAction(
-                        variantScope,
-                        DexMergingAction.MERGE_EXTERNAL_LIBS,
-                        DexingType.NATIVE_MULTIDEX,
-                        produceSeparateOutputs
-                                ? InternalArtifactType.DEX
-                                : InternalArtifactType.EXTERNAL_LIBS_DEX));
-
-        if (produceSeparateOutputs) {
-            DexMergingTask.CreationAction mergeProject =
-                    new DexMergingTask.CreationAction(
-                            variantScope, DexMergingAction.MERGE_PROJECT, dexingType);
-            taskFactory.register(mergeProject);
-
-            DexMergingTask.CreationAction mergeLibraries =
-                    new DexMergingTask.CreationAction(
-                            variantScope,
-                            DexMergingAction.MERGE_LIBRARY_PROJECTS,
-                            dexingType,
-                            InternalArtifactType.DEX);
-            taskFactory.register(mergeLibraries);
-        } else {
+        if (dexingType == DexingType.LEGACY_MULTIDEX) {
             DexMergingTask.CreationAction configAction =
                     new DexMergingTask.CreationAction(
                             variantScope, DexMergingAction.MERGE_ALL, dexingType);
             taskFactory.register(configAction);
+        } else {
+            boolean produceSeparateOutputs =
+                    dexingType == DexingType.NATIVE_MULTIDEX
+                            && variantScope.getVariantConfiguration().getBuildType().isDebuggable();
+
+            taskFactory.register(
+                    new DexMergingTask.CreationAction(
+                            variantScope,
+                            DexMergingAction.MERGE_EXTERNAL_LIBS,
+                            DexingType.NATIVE_MULTIDEX,
+                            produceSeparateOutputs
+                                    ? InternalArtifactType.DEX
+                                    : InternalArtifactType.EXTERNAL_LIBS_DEX));
+
+            if (produceSeparateOutputs) {
+                DexMergingTask.CreationAction mergeProject =
+                        new DexMergingTask.CreationAction(
+                                variantScope, DexMergingAction.MERGE_PROJECT, dexingType);
+                taskFactory.register(mergeProject);
+
+                DexMergingTask.CreationAction mergeLibraries =
+                        new DexMergingTask.CreationAction(
+                                variantScope,
+                                DexMergingAction.MERGE_LIBRARY_PROJECTS,
+                                dexingType,
+                                InternalArtifactType.DEX);
+                taskFactory.register(mergeLibraries);
+            } else {
+                DexMergingTask.CreationAction configAction =
+                        new DexMergingTask.CreationAction(
+                                variantScope, DexMergingAction.MERGE_ALL, dexingType);
+                taskFactory.register(configAction);
+            }
         }
 
         variantScope
