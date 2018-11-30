@@ -171,6 +171,11 @@ void SwapCommand::Run(Workspace& workspace) {
       const proto::Event& event = agent_response.events(i);
       AddRawEvent(ConvertProtoEventToEvent(event));
     }
+
+    std::string jvmti_error_code = agent_response.jvmti_error_code();
+    if (!jvmti_error_code.empty()) {
+      response_->add_jvmti_error_code(jvmti_error_code);
+    }
   }
 
   // Ensure all of the agents have responded.

@@ -105,7 +105,12 @@ public class ApkSwapper {
             throws DeployerException {
         Deploy.SwapResponse swapResponse = redefiner.redefine(request);
         if (swapResponse.getStatus() != Deploy.SwapResponse.Status.OK) {
-            throw new DeployerException(DeployerException.Error.REDEFINER_ERROR, "Swap failed");
+            if (swapResponse.getJvmtiErrorCodeCount() == 0) {
+                throw new DeployerException(
+                        DeployerException.Error.REDEFINER_ERROR, "Redefiner Error");
+            } else {
+                throw new JvmtiRedefinerException(swapResponse.getJvmtiErrorCodeList());
+            }
         }
     }
 }
