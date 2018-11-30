@@ -28,6 +28,7 @@ import com.android.resources.ResourceVisibility;
 import com.android.testutils.TestResources;
 import com.android.testutils.truth.FileSubject;
 import com.android.testutils.truth.PathSubject;
+import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -1085,5 +1086,36 @@ public class SymbolIoTest {
         Symbol xml = Iterables.getOnlyElement(table.getSymbolByResourceType(ResourceType.XML));
         assertThat(xml.getCanonicalName()).isEqualTo("file");
         assertThat(xml.getIntValue()).isEqualTo(0);
+    }
+
+    @Test
+    public void testCharsDifferingInAnsiAndUtf8() throws IOException {
+        // The character "ë" if encoded in ANSI will cause a crash when read as UTF-8.
+        SymbolTable table =
+                SymbolTable.builder()
+                        .tablePackage("foo.bar")
+                        .add(new Symbol.NormalSymbol(ResourceType.STRING, "e_ë", 0))
+                        .build();
+
+        // Sanity check.
+        assertTrue(table.containsSymbol(ResourceType.STRING, "e_ë"));
+
+        // Test standard R.txt.
+        File r = mTemporaryFolder.newFile("R.txt");
+        SymbolIo.writeForAar(table, r);
+        SymbolTable readR = SymbolIo.readFromAapt(r, "foo.bar");
+        assertThat(readR).isEqualTo(table);
+
+        // Test writing package aware R.
+        File pr = mTemporaryFolder.newFile("package-aware-R.txt");
+        SymbolIo.writeSymbolListWithPackageName(r.toPath(), "foo.bar", pr.toPath());
+        FileSubject.assertThat(pr).contains("string e_ë");
+
+        // Test writing the R.java class.
+        File rSources = mTemporaryFolder.newFolder("java");
+        SymbolIo.exportToJava(table, rSources, true);
+        File rClass = FileUtils.join(rSources, "foo", "bar", "R.java");
+        FileSubject.assertThat(rClass).exists();
+        FileSubject.assertThat(rClass).contains("e_ë = 0x0");
     }
 }

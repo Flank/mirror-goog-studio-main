@@ -28,11 +28,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
 import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.nio.file.Files;
@@ -88,6 +87,9 @@ import org.xml.sax.SAXException;
  *     - Has the package name as the first line.
  *     - May contain internal resource types (e.g. "maybe attributes" defined under declare
  *       styleable resources).
+ *
+ *  All files are written in UTF-8. R files use linux-type line separators, while R.java use system
+ *  line separators.
  * </pre>
  */
 public final class SymbolIo {
@@ -726,8 +728,7 @@ public final class SymbolIo {
      */
     public static void writeForAar(@NonNull SymbolTable table, @NonNull Path file)
             throws IOException {
-        try (BufferedOutputStream os = new BufferedOutputStream(Files.newOutputStream(file));
-                PrintWriter pw = new PrintWriter(os)) {
+        try (Writer writer = Files.newBufferedWriter(file)) {
             // loop on the resource types so that the order is always the same
             for (ResourceType resType : ResourceType.values()) {
                 List<Symbol> symbols = table.getSymbolByResourceType(resType);
@@ -736,36 +737,37 @@ public final class SymbolIo {
                 }
 
                 for (Symbol s : symbols) {
-                    pw.print(s.getJavaType().getTypeName());
-                    pw.print(' ');
-                    pw.print(s.getResourceType().getName());
-                    pw.print(' ');
-                    pw.print(s.getCanonicalName());
-                    pw.print(' ');
+                    writer.write(s.getJavaType().getTypeName());
+                    writer.write(' ');
+                    writer.write(s.getResourceType().getName());
+                    writer.write(' ');
+                    writer.write(s.getCanonicalName());
+                    writer.write(' ');
                     if (s.getResourceType() != ResourceType.STYLEABLE) {
-                        pw.print("0x");
-                        pw.print(Integer.toHexString(s.getIntValue()));
-                        pw.print('\n');
+                        writer.write("0x");
+                        writer.write(Integer.toHexString(s.getIntValue()));
+                        writer.write('\n');
                     } else {
 
                         Symbol.StyleableSymbol styleable = (Symbol.StyleableSymbol) s;
-                        writeStyleableValue(styleable, pw);
-                        pw.print('\n');
+                        writeStyleableValue(styleable, writer);
+                        writer.write('\n');
                         // Declare styleables have the attributes that were defined under their node
                         // listed in
                         // the children list.
                         List<String> children = styleable.getChildren();
                         for (int i = 0; i < children.size(); ++i) {
-                            pw.print(SymbolJavaType.INT.getTypeName());
-                            pw.print(' ');
-                            pw.print(ResourceType.STYLEABLE.getName());
-                            pw.print(' ');
-                            pw.print(s.getCanonicalName());
-                            pw.print('_');
-                            pw.print(SymbolUtils.canonicalizeValueResourceName(children.get(i)));
-                            pw.print(' ');
-                            pw.print(Integer.toString(i));
-                            pw.print('\n');
+                            writer.write(SymbolJavaType.INT.getTypeName());
+                            writer.write(' ');
+                            writer.write(ResourceType.STYLEABLE.getName());
+                            writer.write(' ');
+                            writer.write(s.getCanonicalName());
+                            writer.write('_');
+                            writer.write(
+                                    SymbolUtils.canonicalizeValueResourceName(children.get(i)));
+                            writer.write(' ');
+                            writer.write(Integer.toString(i));
+                            writer.write('\n');
                         }
                     }
                 }
@@ -773,17 +775,18 @@ public final class SymbolIo {
         }
     }
 
-    private static void writeStyleableValue(Symbol.StyleableSymbol s, PrintWriter pw) {
-        pw.print("{ ");
+    private static void writeStyleableValue(Symbol.StyleableSymbol s, Writer writer)
+            throws IOException {
+        writer.write("{ ");
         ImmutableList<Integer> values = s.getValues();
         for (int i = 0; i < values.size(); i++) {
             if (i > 0) {
-                pw.print(", ");
+                writer.write(", ");
             }
-            pw.print("0x");
-            pw.print(Integer.toHexString(values.get(i)));
+            writer.write("0x");
+            writer.write(Integer.toHexString(values.get(i)));
         }
-        pw.print(" }");
+        writer.write(" }");
     }
 
     /**
@@ -871,8 +874,7 @@ public final class SymbolIo {
     public static void writeSymbolListWithPackageName(
             @NonNull Path symbolTable, @Nullable String packageName, @NonNull Path outputFile)
             throws IOException {
-        try (Writer writer =
-                new PrintWriter(new BufferedOutputStream(Files.newOutputStream(outputFile)))) {
+        try (Writer writer = Files.newBufferedWriter(outputFile)) {
             if (packageName != null) {
                 writer.write(packageName);
             }
@@ -924,7 +926,6 @@ public final class SymbolIo {
                     } else {
                         styleableChildPrefix = null;
                     }
-
                 }
             }
             writer.write('\n');
@@ -963,27 +964,34 @@ public final class SymbolIo {
 
         String idModifiers = finalIds ? "public static final" : "public static";
 
-        try (PrintWriter pw =
-                new PrintWriter(new BufferedOutputStream(Files.newOutputStream(file.toPath())))) {
+        try (BufferedWriter writer = Files.newBufferedWriter(file.toPath())) {
 
-            pw.println("/* AUTO-GENERATED FILE.  DO NOT MODIFY.");
-            pw.println(" *");
-            pw.println(" * This class was automatically generated by the");
-            pw.println(" * gradle plugin from the resource data it found. It");
-            pw.println(" * should not be modified by hand.");
-            pw.println(" */");
+            writer.write("/* AUTO-GENERATED FILE.  DO NOT MODIFY.");
+            writer.newLine(); // use system line separator
+            writer.write(" *");
+            writer.newLine();
+            writer.write(" * This class was automatically generated by the");
+            writer.newLine();
+            writer.write(" * gradle plugin from the resource data it found. It");
+            writer.newLine();
+            writer.write(" * should not be modified by hand.");
+            writer.newLine();
+            writer.write(" */");
+            writer.newLine();
 
             if (!table.getTablePackage().isEmpty()) {
-                pw.print("package ");
-                pw.print(table.getTablePackage());
-                pw.print(';');
-                pw.println();
+                writer.write("package ");
+                writer.write(table.getTablePackage());
+                writer.write(';');
+                writer.newLine();
             }
 
-            pw.println();
-            pw.println("public final class R {");
-            pw.println("    private R() {}");
-            pw.println();
+            writer.newLine();
+            writer.write("public final class R {");
+            writer.newLine();
+            writer.write("    private R() {}");
+            writer.newLine();
+            writer.newLine();
 
             final String typeName = SymbolJavaType.INT.getTypeName();
 
@@ -993,62 +1001,64 @@ public final class SymbolIo {
                 if (symbols.isEmpty()) {
                     continue;
                 }
-                pw.print("    public static final class ");
-                pw.print(resType.getName());
-                pw.print(" {");
-                pw.println();
+                writer.write("    public static final class ");
+                writer.write(resType.getName());
+                writer.write(" {");
+                writer.newLine();
 
-                pw.print("        private ");
-                pw.print(resType.getName());
-                pw.println("() {}");
-                pw.println();
+                writer.write("        private ");
+                writer.write(resType.getName());
+                writer.write("() {}");
+                writer.newLine();
+                writer.newLine();
 
                 for (Symbol s : symbols) {
                     final String name = s.getCanonicalName();
-                    pw.print("        ");
-                    pw.print(idModifiers);
-                    pw.print(' ');
-                    pw.print(s.getJavaType().getTypeName());
-                    pw.print(' ');
-                    pw.print(name);
-                    pw.print(" = ");
+                    writer.write("        ");
+                    writer.write(idModifiers);
+                    writer.write(' ');
+                    writer.write(s.getJavaType().getTypeName());
+                    writer.write(' ');
+                    writer.write(name);
+                    writer.write(" = ");
 
                     if (s.getResourceType() != ResourceType.STYLEABLE) {
-                        pw.print("0x");
-                        pw.print(Integer.toHexString(s.getIntValue()));
-                        pw.print(';');
-                        pw.println();
+                        writer.write("0x");
+                        writer.write(Integer.toHexString(s.getIntValue()));
+                        writer.write(';');
+                        writer.newLine();
                     } else {
                         Symbol.StyleableSymbol styleable = (Symbol.StyleableSymbol) s;
-                        writeStyleableValue(styleable, pw);
-                        pw.print(';');
-                        pw.println();
+                        writeStyleableValue(styleable, writer);
+                        writer.write(';');
+                        writer.newLine();
                         // Declare styleables have the attributes that were defined under their
                         // node
                         // listed in the children list.
                         List<String> children = styleable.getChildren();
                         for (int i = 0; i < children.size(); ++i) {
-                            pw.print("        ");
-                            pw.print(idModifiers);
-                            pw.print(' ');
-                            pw.print(typeName);
-                            pw.print(' ');
-                            pw.print(name);
-                            pw.print('_');
-                            pw.print(SymbolUtils.canonicalizeValueResourceName(children.get(i)));
-                            pw.print(" = ");
-                            pw.print(i);
-                            pw.print(';');
-                            pw.println();
+                            writer.write("        ");
+                            writer.write(idModifiers);
+                            writer.write(' ');
+                            writer.write(typeName);
+                            writer.write(' ');
+                            writer.write(name);
+                            writer.write('_');
+                            writer.write(
+                                    SymbolUtils.canonicalizeValueResourceName(children.get(i)));
+                            writer.write(" = ");
+                            writer.write(Integer.toString(i));
+                            writer.write(';');
+                            writer.newLine();
                         }
                     }
                 }
-                pw.print("    }");
-                pw.println();
+                writer.write("    }");
+                writer.newLine();
             }
 
-            pw.print('}');
-            pw.println();
+            writer.write('}');
+            writer.newLine();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
