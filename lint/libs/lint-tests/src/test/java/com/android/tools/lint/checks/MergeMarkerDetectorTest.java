@@ -28,15 +28,6 @@ public class MergeMarkerDetectorTest extends AbstractCheckTest {
     public void testMergeMarker() throws Exception {
         assertEquals(
                 ""
-                        + "src/test/pkg/Test.java:2: Error: Missing merge marker? [MergeMarker]\n"
-                        + "<<<<<<< HEAD\n"
-                        + "~~~~~~~\n"
-                        + "src/test/pkg/Test.java:4: Error: Missing merge marker? [MergeMarker]\n"
-                        + "=======\n"
-                        + "~~~~~~~\n"
-                        + "src/test/pkg/Test.java:5: Error: Missing merge marker? [MergeMarker]\n"
-                        + ">>>>>>> branch-a\n"
-                        + "~~~~~~~\n"
                         + "res/values/strings.xml:5: Error: Missing merge marker? [MergeMarker]\n"
                         + "<<<<<<< HEAD\n"
                         + "~~~~~~~\n"
@@ -46,19 +37,8 @@ public class MergeMarkerDetectorTest extends AbstractCheckTest {
                         + "res/values/strings.xml:9: Error: Missing merge marker? [MergeMarker]\n"
                         + ">>>>>>> branch-a    \n"
                         + "~~~~~~~\n"
-                        + "6 errors, 0 warnings\n",
+                        + "3 errors, 0 warnings\n",
                 lintProject(
-                        source(
-                                "src/test/pkg/Test.java",
-                                ""
-                                        + "package test.pkg;\n"
-                                        + "<<<<<<< HEAD\n"
-                                        + "import java.util.List;\n"
-                                        + "=======\n"
-                                        + ">>>>>>> branch-a\n"
-                                        + "class Test {\n"
-                                        + "    PrintTitle('<<<<<<< ', 'X509 certificate chain', name)\n"
-                                        + "}"),
                         source(
                                 "res/values/strings.xml",
                                 ""

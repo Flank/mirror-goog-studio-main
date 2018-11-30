@@ -16,6 +16,10 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.SdkConstants.DOT_GRADLE;
+import static com.android.SdkConstants.DOT_KTS;
+import static com.android.SdkConstants.DOT_PROPERTIES;
+import static com.android.SdkConstants.DOT_XML;
 import static com.android.utils.CharSequences.indexOf;
 import static com.android.utils.CharSequences.startsWith;
 
@@ -29,7 +33,6 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.OtherFileScanner;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.utils.SdkUtils;
 import java.util.EnumSet;
 
 /** Looks for merge markers left behind in the source files. */
@@ -47,6 +50,8 @@ public class MergeMarkerDetector extends Detector implements OtherFileScanner {
                     8,
                     Severity.ERROR,
                     new Implementation(MergeMarkerDetector.class, Scope.OTHER_SCOPE));
+
+    private static final String[] targetFileTypes = {DOT_GRADLE, DOT_KTS, DOT_PROPERTIES, DOT_XML};
 
     /** Constructs a new {@link MergeMarkerDetector} check */
     public MergeMarkerDetector() {}
@@ -66,7 +71,15 @@ public class MergeMarkerDetector extends Detector implements OtherFileScanner {
             return;
         }
 
-        if (SdkUtils.isBitmapFile(context.file)) {
+        boolean shouldCheckFile = false;
+        String path = context.file.getPath();
+        for (String ext : targetFileTypes) {
+            if (path.endsWith(ext)) {
+                shouldCheckFile = true;
+                break;
+            }
+        }
+        if (!shouldCheckFile) {
             return;
         }
 
