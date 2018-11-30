@@ -136,7 +136,7 @@ class CmakeAndroidGradleBuildExtensionsTest(
 
         if (alternateCacheFolder != null) {
             project.localProp.appendText("$CXX_LOCAL_PROPERTIES_CACHE_DIR=" +
-                    "${File(project.testDir, alternateCacheFolder)}\n")
+                    "${File(project.testDir, alternateCacheFolder).absolutePath.replace("\\", "\\\\")}\n")
         }
     }
 
