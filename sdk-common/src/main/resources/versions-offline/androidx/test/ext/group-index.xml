@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <androidx.test.ext>
-  <truth versions="1.0.0"/>
-  <junit versions="1.0.0"/>
+  <truth versions="1.0.0,1.1.0-alpha01"/>
+  <junit versions="1.0.0,1.1.0-alpha01"/>
+  <junit-ktx versions="1.1.0-alpha01"/>
 </androidx.test.ext>
 
