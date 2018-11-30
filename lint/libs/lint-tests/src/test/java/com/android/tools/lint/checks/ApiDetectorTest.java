@@ -1959,6 +1959,30 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testDensity() {
+        // 120162341: Lint detection of Configuration.densityDpi field is strange when minSdk < 17
+        lint().files(
+                        manifest().minSdk(8),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.content.res.Configuration;\n"
+                                        + "\n"
+                                        + "public class ConfigTest {\n"
+                                        + "    public void test(Configuration configuration) {\n"
+                                        + "        System.out.println(configuration.densityDpi);\n"
+                                        + "    }\n"
+                                        + "}\n"))
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/ConfigTest.java:7: Error: Field requires API level 17 (current min is 8): android.content.res.Configuration#densityDpi [NewApi]\n"
+                                + "        System.out.println(configuration.densityDpi);\n"
+                                + "                           ~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "1 errors, 0 warnings");
+    }
+
     public void test38195() {
         // See http://code.google.com/p/android/issues/detail?id=38195
         String expected =
