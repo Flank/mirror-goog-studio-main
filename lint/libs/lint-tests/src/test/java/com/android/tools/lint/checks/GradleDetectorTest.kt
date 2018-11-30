@@ -2641,7 +2641,7 @@ class GradleDetectorTest : AbstractCheckTest() {
 
     class GroovyGradleDetector : GradleDetector() {
         override val gradleUserHome: File
-            get() = GradleDetectorTest.gradleUserHome!!
+            get() = GradleDetectorTest.gradleUserHome ?: super.gradleUserHome
     }
 
     companion object {
