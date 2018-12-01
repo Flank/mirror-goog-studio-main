@@ -57,7 +57,8 @@ readonly report_status=$?
 
 if [[ -d "${dist_dir}" ]]; then
   # Copy the report to ab/ outputs
-  cp -prv "./out/agent-coverage/tools/base/coverage_report/" "${dist_dir}"
+  zip -r coverage_report.zip "./out/agent-coverage/tools/base/coverage_report/"
+  cp -pv coverage_report.zip "${dist_dir}"
 
   # Grab the upsalite_id from the stdout of the bazel command.  This is captured in command.log
   readonly upsalite_id="$(sed -n 's/\r$//;s/^.* invocation_id: //p' "${command_log}")"
