@@ -28,8 +28,8 @@ import java.util.Map;
  * with question mark are optional)
  *
  * <pre>
- *  trackRequestBody()? --->
- *    trackRequest() --->
+ *  trackRequest() --->
+ *    trackRequestBody()? --->
  *       trackResponse() --->
  *           trackResponseBody()? --->
  *              disconnect()?

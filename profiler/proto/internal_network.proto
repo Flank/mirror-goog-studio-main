@@ -20,24 +20,11 @@ package profiler.proto;
 import "network.proto";
 
 service InternalNetworkService {
-  rpc RegisterHttpData(HttpDataRequest) returns (EmptyNetworkReply) {}
   rpc SendChunk(ChunkRequest) returns (EmptyNetworkReply) {}
   rpc SendHttpEvent(HttpEventRequest) returns (EmptyNetworkReply) {}
   rpc SendHttpRequest(HttpRequestRequest) returns (EmptyNetworkReply) {}
   rpc SendHttpResponse(HttpResponseRequest) returns (EmptyNetworkReply) {}
   rpc TrackThread(JavaThreadRequest) returns (EmptyNetworkReply) {}
-}
-
-// HTTP request registration data, used to communicate with perfd that a new
-// request was just created. This also notifies the system that we are using a
-// unique ID value to represent this request from now on in future GRPC messages
-// associated with this connection.
-message HttpDataRequest {
-  int64 conn_id = 1;
-  int32 pid = 2;
-  string url = 3;
-  string trace = 4;
-  int64 start_timestamp = 5;
 }
 
 // A small chunk of a body of data large enough that we want to stream it in
@@ -60,12 +47,11 @@ message ChunkRequest {
 message HttpEventRequest {
   enum Event {
     UNSPECIFIED = 0;
-    CREATED = 1;
-    UPLOAD_STARTED = 2;
-    UPLOAD_COMPLETED = 3;
-    DOWNLOAD_STARTED = 4;
-    DOWNLOAD_COMPLETED = 5;
-    ABORTED = 6;
+    UPLOAD_STARTED = 1;
+    UPLOAD_COMPLETED = 2;
+    DOWNLOAD_STARTED = 3;
+    DOWNLOAD_COMPLETED = 4;
+    ABORTED = 5;
   }
 
   int64 conn_id = 1;
@@ -73,13 +59,20 @@ message HttpEventRequest {
   Event event = 3;
 }
 
-// Request data of HTTP connection.
+// Request data of HTTP connection, used to communicate with perfd that a new
+// request was created. This also notifies the system that we are using a
+// unique ID value to represent this request from now on in future GRPC messages
+// associated with this connection.
 message HttpRequestRequest {
   int64 conn_id = 1;
+  int64 start_timestamp = 2;
+  int32 pid = 3;
+  string url = 4;
+  string trace = 5;
   // Header fields associated with this request. See also:
   // https://en.wikipedia.org/wiki/List_of_HTTP_header_fields#Request_fields.
-  string fields = 2;
-  string method = 3;
+  string fields = 6;
+  string method = 7;
 }
 
 // Response data of HTTP connection.

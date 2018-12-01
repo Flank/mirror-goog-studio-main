@@ -27,16 +27,6 @@ InternalNetworkServiceImpl::InternalNetworkServiceImpl(
     FileCache *file_cache, NetworkCache *network_cache)
     : file_cache_(file_cache), network_cache_(network_cache) {}
 
-Status InternalNetworkServiceImpl::RegisterHttpData(
-    ServerContext *context, const proto::HttpDataRequest *httpData,
-    proto::EmptyNetworkReply *reply) {
-  auto details = network_cache_->AddConnection(
-      httpData->conn_id(), httpData->pid(), httpData->start_timestamp());
-  details->request.url = httpData->url();
-  details->request.trace_id = file_cache_->AddString(httpData->trace());
-  return Status::OK;
-}
-
 Status InternalNetworkServiceImpl::SendChunk(ServerContext *context,
                                              const proto::ChunkRequest *chunk,
                                              proto::EmptyNetworkReply *reply) {
@@ -63,14 +53,6 @@ Status InternalNetworkServiceImpl::SendHttpEvent(
     ServerContext *context, const proto::HttpEventRequest *httpEvent,
     proto::EmptyNetworkReply *reply) {
   switch (httpEvent->event()) {
-    case proto::HttpEventRequest::CREATED: {
-      // TODO: Handle this case for now to avoid printing an error message to
-      // the user. We should probably remove this case later as it is already
-      // handled by |RegisterHttpData|.
-    }
-
-    break;
-
     case proto::HttpEventRequest::DOWNLOAD_STARTED: {
       auto details = network_cache_->GetDetails(httpEvent->conn_id());
       if (details != nullptr) {
@@ -127,13 +109,11 @@ Status InternalNetworkServiceImpl::SendHttpEvent(
 Status InternalNetworkServiceImpl::SendHttpRequest(
     ServerContext *context, const proto::HttpRequestRequest *httpRequest,
     proto::EmptyNetworkReply *reply) {
-  ConnectionDetails *conn = network_cache_->GetDetails(httpRequest->conn_id());
-  if (conn != nullptr) {
-    conn->request.fields = httpRequest->fields();
-    conn->request.method = httpRequest->method();
-  } else {
-    Log::V("Unhandled http request (%lld)", (long long)httpRequest->conn_id());
-  }
+  auto details = network_cache_->AddConnection(httpRequest->conn_id(), httpRequest->pid(), httpRequest->start_timestamp());
+  details->request.url = httpRequest->url();
+  details->request.trace_id = file_cache_->AddString(httpRequest->trace());
+  details->request.fields = httpRequest->fields();
+  details->request.method = httpRequest->method();
   return Status::OK;
 }
 

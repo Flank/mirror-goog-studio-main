@@ -34,7 +34,6 @@ using profiler::JStringWrapper;
 using profiler::SteadyClock;
 using profiler::proto::ChunkRequest;
 using profiler::proto::EmptyNetworkReply;
-using profiler::proto::HttpDataRequest;
 using profiler::proto::HttpEventRequest;
 using profiler::proto::HttpRequestRequest;
 using profiler::proto::HttpResponseRequest;
@@ -197,50 +196,24 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024OutputStreamTra
 }
 
 JNIEXPORT void JNICALL
-Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onPreConnect(
-    JNIEnv *env, jobject thiz, jlong juid, jstring jurl, jstring jstack) {
+Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onRequest(
+    JNIEnv *env, jobject thiz, jlong juid, jstring jurl, jstring jstack, jstring jmethod, jstring jfields) {
   JStringWrapper url(env, jurl);
-  JStringWrapper stack(env, jstack);  // TODO: Send this to perfd
+  JStringWrapper stack(env, jstack);
+  JStringWrapper fields(env, jfields);
+  JStringWrapper method(env, jmethod);
 
   int64_t timestamp = GetClock().GetCurrentTime();
   int32_t pid = getpid();
   Agent::Instance().SubmitNetworkTasks(
-      {[juid, pid, stack, timestamp, url](InternalNetworkService::Stub &stub,
-                                          ClientContext &ctx) {
-         HttpDataRequest httpData;
-         httpData.set_conn_id(juid);
-         httpData.set_pid(pid);
-         httpData.set_url(url.get());
-         httpData.set_trace(stack.get());
-         httpData.set_start_timestamp(timestamp);
-
-         EmptyNetworkReply reply;
-         return stub.RegisterHttpData(&ctx, httpData, &reply);
-       },
-       [juid, timestamp](InternalNetworkService::Stub &stub,
-                         ClientContext &ctx) {
-         return SendHttpEvent(stub, ctx, juid, timestamp,
-                              HttpEventRequest::CREATED);
-       }});
-}
-
-JNIEXPORT void JNICALL
-Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onRequestBody(
-    JNIEnv *env, jobject thiz, jlong juid) {
-  // TODO: Report request body upload bytes
-}
-
-JNIEXPORT void JNICALL
-Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onRequest(
-    JNIEnv *env, jobject thiz, jlong juid, jstring jmethod, jstring jfields) {
-  JStringWrapper fields(env, jfields);
-  JStringWrapper method(env, jmethod);
-
-  Agent::Instance().SubmitNetworkTasks(
-      {[fields, juid, method](InternalNetworkService::Stub &stub,
+      {[juid, pid, timestamp, url, stack, fields, method](InternalNetworkService::Stub &stub,
                               ClientContext &ctx) {
         HttpRequestRequest httpRequest;
         httpRequest.set_conn_id(juid);
+        httpRequest.set_start_timestamp(timestamp);
+        httpRequest.set_pid(pid);
+        httpRequest.set_url(url.get());
+        httpRequest.set_trace(stack.get());
         httpRequest.set_fields(fields.get());
         httpRequest.set_method(method.get());
 
@@ -264,10 +237,6 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onRe
         return stub.SendHttpResponse(&ctx, httpResponse, &reply);
       }});
 }
-
-JNIEXPORT void JNICALL
-Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onResponseBody(
-    JNIEnv *env, jobject thiz, jlong juid) {}
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onDisconnect(

@@ -188,18 +188,16 @@ message HttpDetailsRequest {
     // Metadata about a received response. This data can be safely be queried
     // for any connection that has its end_timestamp set to a non-zero value.
     // (Otherwise, all the fields in the returned details will be empty)
-    // TODO: This detail type is not yet implemented.
     RESPONSE = 2;
 
     // Fetch a path to the request body which can then be fetched over adb.
-    // TODO: This detail type is not yet implemented.
+    // This data can be queried for any connection that has its uploaded_timestamp
+    // set to a non-zero value.
     REQUEST_BODY = 3;
 
     // Fetch a handle to the response body which can be fetched over adb. This
     // data can be safely queried for any connection that has its end_timestamp
     // set to a non-zero value.
-    // TODO: Can this type be combined with RESPONSE? Will reponse details be
-    // available before this is ready, or only at the same time?
     RESPONSE_BODY = 4;
 
     // Fetch accessed threads of a connection.
