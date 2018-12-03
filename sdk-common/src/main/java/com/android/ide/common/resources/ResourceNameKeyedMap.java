@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * A {@link Map} that treats all the keys as resources names. This class takes care of the key
@@ -60,8 +59,8 @@ public class ResourceNameKeyedMap<T> extends ForwardingMap<String, T> {
      * will be replaced by '_' and a a new {@link String} returned. If none of those characters are
      * contained, the same {@link String} passed as input will be returned.
      */
-    @NotNull
-    public static String flattenResourceName(@NotNull String resourceName) {
+    @NonNull
+    public static String flattenResourceName(@NonNull String resourceName) {
         for (int i = 0, n = resourceName.length(); i < n; i++) {
             char c = resourceName.charAt(i);
             if (isInvalidResourceNameCharacter(c)) {
