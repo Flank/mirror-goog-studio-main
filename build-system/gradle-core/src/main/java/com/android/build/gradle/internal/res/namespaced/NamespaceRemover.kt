@@ -67,7 +67,7 @@ object NamespaceRemover : ResourceCompilationService {
      * Rewrites an XML file to be namespace free.
      */
     @Throws(IOException::class, ParserConfigurationException::class, SAXException::class)
-    private fun rewrite(input: Path, output: Path) {
+    fun rewrite(input: Path, output: Path) {
         BufferedInputStream(
                 Files.newInputStream(input)).use {
             `is` -> Files.write(output, rewrite(`is`).toByteArray())
