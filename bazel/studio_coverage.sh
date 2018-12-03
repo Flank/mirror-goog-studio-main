@@ -30,6 +30,9 @@ readonly command_log="$("${script_dir}"/bazel --bazelrc="${script_dir}"/toplevel
 
 readonly bazel_status=$?
 
+# Grab the upsalite_id from the stdout of the bazel command.  This is captured in command.log
+readonly upsalite_id="$(sed -n 's/\r$//;s/^.* invocation_id: //p' "${command_log}")"
+
 # Create a temp file to pass production targets to report generator
 readonly production_targets_file=$(mktemp)
 
@@ -60,20 +63,8 @@ if [[ -d "${dist_dir}" ]]; then
   zip -r coverage_report.zip "./out/agent-coverage/tools/base/coverage_report/"
   cp -pv coverage_report.zip "${dist_dir}"
 
-  # Grab the upsalite_id from the stdout of the bazel command.  This is captured in command.log
-  readonly upsalite_id="$(sed -n 's/\r$//;s/^.* invocation_id: //p' "${command_log}")"
+  # Link to test results
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${upsalite_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
-
-  # follow conventions to use gtest-testlog-forwarding on ATP
-  readonly testlogs_dir="$(${script_dir}/bazel --bazelrc=${script_dir}/toplevel.bazel.rc info bazel-testlogs --config=remote)"
-  mkdir "${dist_dir}"/gtest
-  # This does not handle spaces in file names.
-  for source_xml in $(cd "${testlogs_dir}" && find -name '*.xml' -printf '%P\n'); do
-    target_xml="$(echo "${source_xml}" | tr '/' '_')"
-    cp -pv "${testlogs_dir}/${source_xml}" "${dist_dir}/gtest/${target_xml}"
-    # GTestXmlResultParser requires the testsuites element to have tests and time attributes.
-    sed -i 's/<testsuites>/<testsuites tests="0" time="0">/' "${dist_dir}/gtest/${target_xml}"
-  done
 fi
 
 if [[ $bazel_status && $report_status ]]; then
