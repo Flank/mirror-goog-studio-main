@@ -5,6 +5,10 @@ apply from: "../../commonLocalRepo.gradle"
 android {
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
+    defaultConfig {
+        minSdkVersion rootProject.supportLibMinSdk
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
 }
 
 //
@@ -12,4 +16,6 @@ android {
 //
 dependencies {
     api project(':lib')
+    androidTestImplementation "com.android.support.test:runner:${project.testSupportLibVersion}"
+    androidTestImplementation "com.android.support.test:rules:${project.testSupportLibVersion}"
 }

@@ -22,6 +22,7 @@ import android.support.test.runner.AndroidJUnit4;
 import android.widget.TextView;
 import com.android.tests.testprojecttest.app.R;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,7 +33,7 @@ public class LibActivityTest {
 
     private TextView mTextView;
 
-
+    @Before
     public void setUp() {
         final LibActivity a = rule.getActivity();
         // ensure a valid handle to the activity has been returned
