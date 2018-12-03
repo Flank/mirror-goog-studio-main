@@ -281,7 +281,19 @@ public class StableApiTest {
         if (typeToken.isArray()) {
             return typeToString(typeToken.getComponentType()) + "[]";
         } else {
-            return typeToken.toString();
+            // Workaround for JDK 8 bug https://bugs.openjdk.java.net/browse/JDK-8054213
+            // Bug only appears on Unix derived OSes so not on Windows.
+            // This ugly hack should be removed as soon as we update our JDK to JDK 9 or above
+            // as it was checked that it is not necessary any longer.
+            String expandedName = typeToken.toString();
+            // if there are no inner class, there is no bug.
+            if (!expandedName.contains("$")) return expandedName;
+            // if there is an inner class, getRawType() will return the correct name but we
+            // are missing the generic information so adding it back manually.
+            return typeToken.getRawType().getName()
+                    + (expandedName.contains("<")
+                            ? expandedName.substring(expandedName.indexOf('<'))
+                            : "");
         }
     }
 }
