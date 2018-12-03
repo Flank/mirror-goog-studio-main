@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclaration;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProjectBuildOutput;
+import com.android.builder.model.SyncIssue;
 import com.android.builder.model.VariantBuildOutput;
 import com.android.testutils.truth.ZipFileSubject;
 import com.android.utils.FileUtils;
@@ -313,9 +314,19 @@ public class FeatureTest {
         assertThat(expectedVariantNames).isEmpty();
 
         Map<String, AndroidProject> models =
-                project.model().fetchAndroidProjects().getOnlyModelMap();
-        assertThat(models.get(":feature").isBaseSplit()).isFalse();
-        assertThat(models.get(":baseFeature").isBaseSplit()).isTrue();
+                project.model()
+                        .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+                        .fetchAndroidProjects()
+                        .getOnlyModelMap();
+        AndroidProject featureModel = models.get(":feature");
+        assertThat(featureModel.isBaseSplit()).isFalse();
+        AndroidProject baseModel = models.get(":baseFeature");
+        assertThat(baseModel.isBaseSplit()).isTrue();
+
+        assertThat(featureModel)
+                .hasSingleIssue(SyncIssue.SEVERITY_WARNING, SyncIssue.TYPE_PLUGIN_OBSOLETE);
+        assertThat(baseModel)
+                .hasSingleIssue(SyncIssue.SEVERITY_WARNING, SyncIssue.TYPE_PLUGIN_OBSOLETE);
     }
 
     @Test

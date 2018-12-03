@@ -124,6 +124,18 @@ public class FeatureTaskManager extends ApplicationTaskManager {
                                                 + "to true."));
             }
         }
+
+        // add a warning that the feature module is deprecated and will be removed in the future.
+        globalScope
+                .getAndroidBuilder()
+                .getIssueReporter()
+                .reportWarning(
+                        Type.PLUGIN_OBSOLETE,
+                        "The com.android.feature plugin is deprecated and will be removed in a future"
+                                + " gradle plugin version. Please switch to using dynamic-features or"
+                                + " libraries. For more information on converting your application to using"
+                                + " Android App Bundles, please visit"
+                                + " https://developer.android.com/studio/projects/dynamic-delivery.");
     }
 
     @Override
