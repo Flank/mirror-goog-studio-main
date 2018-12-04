@@ -2590,7 +2590,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                         "}\n" +
                         "dependencies {\n" +
                         "    compile 'com.android.support:recyclerview-v7:28.0.0'\n" +
-                        "    compile 'androidx.appcompat:appcompat:1.0.0-alpha1'\n" +
+                        "    compile 'androidx.appcompat:appcompat:1.0.0'\n" +
                         "}\n"
             )
         )
@@ -2622,7 +2622,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                         "}\n" +
                         "dependencies {\n" +
                         "    compile 'com.android.support:recyclerview-v7:28.0.0'\n" +
-                        "    compile 'androidx.navigation:navigation-fragment:1.0.0-alpha01'\n" +
+                        "    compile 'androidx.navigation:navigation-fragment:1.0.0'\n" +
                         "}\n"
             )
         )

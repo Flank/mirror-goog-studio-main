@@ -125,7 +125,7 @@ public class MinifyTest {
                         + "    implementation 'com.android.support:support-annotations:"
                         + TestVersions.SUPPORT_LIB_VERSION
                         + "'\n"
-                        + "    implementation 'androidx.annotation:annotation:1.0.0-alpha1'\n"
+                        + "    implementation 'androidx.annotation:annotation:1.0.0'\n"
                         + "}");
 
         project.executor()
