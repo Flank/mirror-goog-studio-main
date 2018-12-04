@@ -787,6 +787,9 @@ public final class SdkConstants {
     public static final AndroidxName CLASS_ACTION_MENU_VIEW =
             AndroidxName.of("android.support.v7.widget.", "ActionMenuView");
 
+    public static final AndroidxName CLASS_SUPPORT_PREFERENCE_SCREEN =
+            AndroidxName.of("android.support.v7.preference.", "PreferenceScreen");
+
     public static final String CLASS_AD_VIEW = "com.google.android.gms.ads.AdView"; //$NON-NLS-1$
     public static final String CLASS_MAP_FRAGMENT =
             "com.google.android.gms.maps.MapFragment"; //$NON-NLS-1$
