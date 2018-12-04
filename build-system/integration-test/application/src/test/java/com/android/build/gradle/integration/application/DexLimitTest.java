@@ -81,7 +81,7 @@ public class DexLimitTest {
     @Test
     public void checkDexErrorMessage() throws Exception {
         GradleBuildResult result = mProject.executor().expectFailure().run("assembleDebug");
-        assertThat(result.getStdout())
+        assertThat(result.getStderr())
                 .contains("https://developer.android.com/tools/building/multidex.html");
 
         // Check that when dexing in-process, we don't keep bad state after a failure

@@ -470,7 +470,7 @@ public class NativeBuildOutputTest {
                         .expectFailure()
                         .withEnableInfoLogging(false)
                         .run("assembleDebug");
-        String stderr = result.getStdout();
+        String stderr = result.getStderr();
         for (String expect : expectInStderr) {
             assertThat(stderr).contains(expect);
         }

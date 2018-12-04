@@ -29,7 +29,6 @@ import org.gradle.api.file.CopySpec
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.file.FileCopyDetails
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Zip
@@ -37,10 +36,6 @@ import java.io.File
 
 /** Custom Zip task to allow archive name to be set lazily. */
 open class BundleAar : Zip(), VariantAwareTask {
-    private lateinit var archiveNameSupplier: () -> String
-
-    @Input
-    override fun getArchiveName() = archiveNameSupplier()
 
     @Internal
     override lateinit var variantName: String
@@ -86,9 +81,9 @@ open class BundleAar : Zip(), VariantAwareTask {
                     + variantScope.variantConfiguration.fullName
                     + ".")
 
-            task.destinationDir = variantScope.aarLocation
-            task.archiveNameSupplier = { variantScope.outputScope.mainSplit.outputFileName!! }
-            task.extension = BuilderConstants.EXT_LIB_ARCHIVE
+            task.destinationDirectory.set(variantScope.aarLocation)
+            task.archiveFileName.set(variantScope.outputScope.mainSplit.outputFileName!!)
+            task.archiveExtension.set(BuilderConstants.EXT_LIB_ARCHIVE)
             task.from(
                 variantScope.artifacts.getArtifactFiles(
                     InternalArtifactType.AIDL_PARCELABLE

@@ -41,13 +41,13 @@ class CompileAndRuntimeClasspathTest {
         )
 
         val result = project.executor().expectFailure().run("preDebugBuild")
-        assertThat(result.stdout).contains("> Could not resolve all files for configuration ':debugCompileClasspath'.\n".toSystemLineSeparator() +
+        assertThat(result.stderr).contains("> Could not resolve all files for configuration ':debugCompileClasspath'.\n".toSystemLineSeparator() +
             "   > Could not resolve com.google.guava:guava:20.0.\n".toSystemLineSeparator() +
             "     Required by:\n".toSystemLineSeparator() +
             "         project :\n".toSystemLineSeparator() +
             "      > Cannot find a version of 'com.google.guava:guava' that satisfies the version constraints: \n" +
             "           Dependency path ':project:unspecified' --> 'com.google.guava:guava:20.0'\n" +
-            "           Constraint path ':project:unspecified' --> 'com.google.guava:guava' strictly '19.0' because of the following reason: debugRuntimeClasspath uses version 19.0\n")
+            "           Constraint path ':project:unspecified' --> 'com.google.guava:guava:{strictly 19.0}' because of the following reason: debugRuntimeClasspath uses version 19.0\n")
     }
 
     @Test
@@ -63,7 +63,7 @@ class CompileAndRuntimeClasspathTest {
         val result = project.executor().run("dependencies")
         assertThat(result.stdout).contains("""debugCompileClasspath - Resolved configuration for compilation for variant: debug
 +--- com.google.guava:guava:19.0 -> 20.0
-\--- com.google.guava:guava:20.0""".toSystemLineSeparator())
+\--- com.google.guava:guava:{strictly 20.0}""".toSystemLineSeparator())
     }
 
 }
