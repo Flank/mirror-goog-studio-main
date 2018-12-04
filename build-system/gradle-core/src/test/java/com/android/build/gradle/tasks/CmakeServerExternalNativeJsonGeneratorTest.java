@@ -44,6 +44,7 @@ import com.android.repository.api.LocalPackage;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.testutils.TestResources;
 import com.android.testutils.TestUtils;
+import com.android.tools.build.apkzlib.bytestorage.TemporaryDirectory;
 import com.android.utils.ILogger;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -63,7 +64,9 @@ import java.util.List;
 import java.util.Map;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.mockito.Mockito;
 
 public class CmakeServerExternalNativeJsonGeneratorTest {
@@ -88,6 +91,9 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
     List<File> nativeBuildConfigurationsJsons;
     GradleBuildVariant.Builder stats;
 
+    @Rule
+    public final TemporaryFolder tmpFolder = new TemporaryFolder();
+
     @Before
     public void setUp() throws Exception {
         SdkHandler.setTestSdkFolder(TestUtils.getSdk());
@@ -97,13 +103,15 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
         minSdkVersion = 123;
         variantName = "dummy variant name";
         abis = Lists.newArrayList();
+        objFolder = tmpFolder.newFolder("obj");
+        File json = tmpFolder.newFile("json");
         for (Abi abi : Abi.values()) {
             abis.add(
                     createJsonGenerationAbiConfiguration(
                             abi,
                             "debug",
-                            new File("./json"),
-                            new File("./obj"),
+                            json,
+                            objFolder,
                             NativeBuildSystem.CMAKE,
                             31));
         }
@@ -111,9 +119,8 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
         sdkFolder = TestUtils.getSdk();
         ndkFolder = TestUtils.getNdk();
         soFolder = Mockito.mock(File.class);
-        objFolder = new File("./obj");
         jsonFolder = getTestJsonFolder(); //Mockito.mock(File.class);
-        makeFile = new File("./folder/CMakeLists.txt");
+        makeFile = new File(tmpFolder.newFolder("folder"), "CMakeLists.txt");
         stats = GradleBuildVariant.newBuilder();
         AndroidSdkHandler sdk = AndroidSdkHandler.getInstance(sdkDirectory);
         LocalPackage cmakePackage =
@@ -136,14 +143,14 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
     }
 
     @Test
-    public void testGetCacheArguments() {
+    public void testGetCacheArguments() throws IOException {
         CmakeServerExternalNativeJsonGenerator cmakeServerStrategy = getCMakeServerGenerator();
         JsonGenerationAbiConfiguration abiConfig =
                 createJsonGenerationAbiConfiguration(
                         Abi.X86,
                         "debug",
-                        new File("./my-json"),
-                        new File("./my-obj"),
+                        tmpFolder.newFolder("my-json"),
+                        tmpFolder.newFolder("my-obj"),
                         NativeBuildSystem.CMAKE,
                         12);
 

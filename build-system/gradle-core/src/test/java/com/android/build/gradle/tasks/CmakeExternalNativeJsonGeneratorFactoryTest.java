@@ -35,7 +35,9 @@ import java.io.File;
 import java.util.HashSet;
 import java.util.List;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.mockito.Mockito;
 
 public class CmakeExternalNativeJsonGeneratorFactoryTest {
@@ -62,6 +64,9 @@ public class CmakeExternalNativeJsonGeneratorFactoryTest {
     List<File> nativeBuildConfigurationsJsons;
     GradleBuildVariant.Builder stats;
 
+    @Rule
+    public TemporaryFolder tmpFolder = new TemporaryFolder();
+
     @Before
     public void setUp() throws Exception {
         sdkDirectory = Mockito.mock(File.class);
@@ -69,13 +74,15 @@ public class CmakeExternalNativeJsonGeneratorFactoryTest {
         minSdkVersion = 123;
         variantName = "dummy variant name";
         abis = Lists.newArrayList();
+        objFolder = tmpFolder.newFolder("obj");
+        jsonFolder = tmpFolder.newFolder("json");
         for (Abi abi : Abi.values()) {
             abis.add(
                     createJsonGenerationAbiConfiguration(
                             abi,
                             "debug",
-                            new File("./json"),
-                            new File("./obj"),
+                            jsonFolder,
+                            objFolder,
                             NativeBuildSystem.CMAKE,
                             31));
         }
@@ -85,9 +92,7 @@ public class CmakeExternalNativeJsonGeneratorFactoryTest {
         sdkFolder = Mockito.mock(File.class);
         ndkFolder = Mockito.mock(File.class);
         soFolder = Mockito.mock(File.class);
-        objFolder = new File("./obj");
-        jsonFolder = new File("./json");
-        makeFile = new File("./folder/CMakeLists.txt");
+        makeFile = new File(tmpFolder.newFolder("folder"),"CMakeLists.txt");
         cmakeFolder = Mockito.mock(File.class);
         ninjaFolder = Mockito.mock(File.class);
         stats = GradleBuildVariant.newBuilder();

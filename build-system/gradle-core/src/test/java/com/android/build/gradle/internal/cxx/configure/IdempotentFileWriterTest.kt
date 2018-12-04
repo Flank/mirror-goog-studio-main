@@ -19,17 +19,24 @@ package com.android.build.gradle.internal.cxx.configure
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import java.io.File
 
 class IdempotentFileWriterTest {
-    private val folder = File("./folder")
-    private val file = File("./folder/my-file")
+
+    @Rule
+    @JvmField
+    val tmpFolder = TemporaryFolder()
+
+    private lateinit var folder: File
+    private lateinit var file: File
 
     @Before
-    fun before() {
-        folder.deleteRecursively()
-        folder.mkdirs()
+    fun setup() {
+        folder = tmpFolder.newFolder("folder")
+        file =  File(folder, "my-file")
     }
 
     @Test

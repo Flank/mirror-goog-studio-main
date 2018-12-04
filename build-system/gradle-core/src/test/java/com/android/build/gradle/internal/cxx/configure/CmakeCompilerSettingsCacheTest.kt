@@ -17,17 +17,24 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.google.common.truth.Truth.assertThat
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
 
 class CmakeCompilerSettingsCacheTest {
+
+    @Rule
+    @JvmField
+    val tmpFolder = TemporaryFolder()
+
     private val ndkProperties = SdkSourceProperties(mapOf("x" to "y"))
 
     private fun makeKey(vararg properties: String) : CmakeCompilerCacheKey {
         return CmakeCompilerCacheKey(
-            ndkInstallationFolder = File("."),
+            ndkInstallationFolder = tmpFolder.root,
             ndkSourceProperties = ndkProperties,
             args = properties.toList()
         )
@@ -73,7 +80,7 @@ class CmakeCompilerSettingsCacheTest {
     }
 
     private fun cacheFolder(subFolder : String): File {
-        val cacheFile = File("./my-cache/$subFolder")
+        val cacheFile = File(tmpFolder.root,"my-cache/$subFolder")
         cacheFile.deleteRecursively()
         return cacheFile
     }

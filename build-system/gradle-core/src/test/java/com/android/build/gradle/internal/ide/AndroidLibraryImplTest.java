@@ -20,9 +20,14 @@ import com.android.builder.dependency.MavenCoordinatesImpl;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import nl.jqno.equalsverifier.EqualsVerifier;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class AndroidLibraryImplTest {
+
+    @Rule
+    public final TemporaryFolder tmpFolder = new TemporaryFolder();
 
     @Test
     public void equals() throws Exception {
@@ -35,9 +40,9 @@ public class AndroidLibraryImplTest {
                                 new MavenCoordinatesImpl("g", "a", "unspecified"),
                                 null,
                                 "",
-                                new File("bundle"),
-                                new File("folder"),
-                                new File("resourceStaticLibrary"),
+                                tmpFolder.newFolder("bundle"),
+                                tmpFolder.newFolder("folder"),
+                                tmpFolder.newFolder("resourceStaticLibrary"),
                                 null,
                                 false,
                                 false,

@@ -17,15 +17,21 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.google.common.truth.Truth.assertThat
+import org.junit.Rule
 
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import java.io.File
 
 class CmakeBuildGenerationStateTest {
 
+    @Rule
+    @JvmField
+    val tmpFolder = TemporaryFolder()
+
     @Test
     fun toAndFromFile() {
-        val file = File("./file.json")
+        val file = tmpFolder.newFile("./file.json")
         val state = CmakeBuildGenerationState(listOf(CmakePropertyValue("a", "b")))
         state.toFile(file)
         val state2 = CmakeBuildGenerationState.fromFile(file)

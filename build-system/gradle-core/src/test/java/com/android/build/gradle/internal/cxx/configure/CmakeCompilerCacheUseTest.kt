@@ -17,16 +17,22 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.google.common.truth.Truth.assertThat
+import org.junit.Rule
 
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import java.io.File
 
 class CmakeCompilerCacheUseTest {
 
+    @Rule
+    @JvmField
+    val tmpFolder = TemporaryFolder()
+
     @Test
     fun toAndFromFile() {
         val key = CmakeCompilerCacheUse(true)
-        val file = File("file.json")
+        val file = tmpFolder.newFile("file.json")
         key.toFile(file)
         val key2 = CmakeCompilerCacheUse.fromFile(file)
         assertThat(key2).isEqualTo(key)

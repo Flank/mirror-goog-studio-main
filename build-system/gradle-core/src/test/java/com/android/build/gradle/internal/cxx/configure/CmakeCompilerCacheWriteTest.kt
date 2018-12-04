@@ -17,17 +17,24 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.google.common.truth.Truth.assertThat
+import org.junit.Rule
 
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import java.io.File
 
 class CmakeCompilerCacheWriteTest {
 
+    @Rule
+    @JvmField
+    val tmpFolder = TemporaryFolder()
+
     @Test
     fun toAndFromFile() {
         val original = CmakeCompilerCacheWrite(false, "status")
-        original.toFile(File("file.json"))
-        val new = CmakeCompilerCacheWrite.fromFile(File("file.json"))
+        val fileJson = tmpFolder.newFile("file.json")
+        original.toFile(fileJson)
+        val new = CmakeCompilerCacheWrite.fromFile(fileJson)
         assertThat(new).isEqualTo(original)
     }
 }
