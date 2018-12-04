@@ -2,6 +2,7 @@
 # Invoked by Android Build Launchcontrol for continuous builds.
 
 readonly dist_dir="$1"
+readonly build_number="$2"
 
 readonly script_dir="$(dirname "$0")"
 
@@ -68,6 +69,11 @@ if [[ -d "${dist_dir}" ]]; then
   cp -pv "./out/worstNoFiles" "${dist_dir}/coverage"
   cp -pv "./out/missing" "${dist_dir}/coverage"
   cp -pv "./out/fake" "${dist_dir}/coverage"
+
+  # Upload the LCOV data to GCS if running on BYOB
+  if [[ "$build_number" ]]; then
+    gsutil cp "./out/lcov" "gs://android-devtools-archives/ab-studio-coverage/${build_number}/" || exit $?
+  fi
 
   # Link to test results
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${upsalite_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
