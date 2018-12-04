@@ -8,6 +8,12 @@
 
 load("//tools/base/bazel:maven.bzl", "maven_java_library")
 
+# Used by test
+exports_files(
+    ["BUILD"],
+    visibility = ["//tools/base/bazel:__pkg__"],
+)
+
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "cglib_cglib-nodep",
