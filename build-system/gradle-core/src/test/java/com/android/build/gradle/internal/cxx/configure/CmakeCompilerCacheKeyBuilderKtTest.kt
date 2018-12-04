@@ -63,7 +63,7 @@ class CmakeCompilerCacheKeyBuilderKtTest {
         assertThat(key).isNull()
         assertThat(logger.errors).isEmpty()
         assertThat(logger.warnings).containsExactly(
-            "ANDROID_NDK location (./my-ndk) had no source.properties")
+            "ANDROID_NDK location (.${File.separatorChar}my-ndk) had no source.properties")
         assertThat(logger.infos).isEmpty()
     }
 
@@ -79,7 +79,7 @@ class CmakeCompilerCacheKeyBuilderKtTest {
         assertThat(key).isNull()
         assertThat(logger.errors).isEmpty()
         assertThat(logger.warnings).containsExactly(
-            "ANDROID_NDK location (./my-ndk) had no source.properties")
+            "ANDROID_NDK location (.${File.separatorChar}my-ndk) had no source.properties")
         assertThat(logger.infos).isEmpty()
     }
 
