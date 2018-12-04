@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.android.builder.model.AaptOptions;
 import com.android.ide.common.gradle.model.stubs.AaptOptionsStub;
+import com.android.testutils.Serialization;
 import java.io.Serializable;
 import org.junit.Before;
 import org.junit.Test;

@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import com.android.builder.model.Dependencies;
 import com.android.ide.common.gradle.model.stubs.DependenciesStub;
 import com.android.ide.common.repository.GradleVersion;
+import com.android.testutils.Serialization;
 import java.io.Serializable;
 import org.junit.Before;
 import org.junit.Test;

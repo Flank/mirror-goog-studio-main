@@ -21,8 +21,8 @@ import static org.junit.Assert.assertEquals;
 
 import com.android.builder.model.level2.Library;
 import com.android.ide.common.gradle.model.ModelCache;
-import com.android.ide.common.gradle.model.Serialization;
 import com.android.ide.common.gradle.model.stubs.level2.JavaLibraryStub;
+import com.android.testutils.Serialization;
 import java.io.Serializable;
 import org.junit.Before;
 import org.junit.Test;
