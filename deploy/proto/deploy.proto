@@ -34,6 +34,23 @@ message ClassDef {
   bytes dex = 2;
 }
 
+message JvmtiErrorDetails {
+  enum Type {
+    UNKNOWN = 0;
+    FIELD_ADDED = 1;
+    FIELD_REMOVED = 2;
+  }
+
+  // The type of error.
+  Type type = 1;
+
+  // The name of the field, method, or class that caused the error.
+  string name = 2;
+
+  // The parent class, if any, of the field, method, or class.
+  string class_name = 3;
+}
+
 // A response detailing the results of a swap request.
 message AgentSwapResponse {
   enum Status {
@@ -52,6 +69,8 @@ message AgentSwapResponse {
   repeated Event events = 3;
 
   string jvmti_error_code = 4;
+
+  repeated JvmtiErrorDetails jvmti_error_details = 5;
 }
 
 // Message returned when installer receives a SwapRequest.
@@ -66,6 +85,8 @@ message SwapResponse {
   Status status = 1;
 
   repeated string jvmti_error_code = 4;
+
+  repeated JvmtiErrorDetails jvmti_error_details = 5;
 }
 
 // Message returned by the Android native IRR installer. There are two layers :

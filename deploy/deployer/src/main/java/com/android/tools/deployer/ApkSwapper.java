@@ -111,9 +111,27 @@ public class ApkSwapper {
             if (swapResponse.getJvmtiErrorCodeCount() == 0) {
                 // TODO: We probably want to start reporting actual errors from the device.
                 throw DeployerException.swapFailed("Unknown error");
-            } else {
+            }
+
+            if (swapResponse.getJvmtiErrorDetailsCount() == 0) {
                 // TODO: How to properly handle multiple errors? Multiple errors can only occur in multiprocess apps.
                 throw DeployerException.jvmtiError(swapResponse.getJvmtiErrorCodeList().get(0));
+            }
+
+            // TODO: Currently, all detailed errors are add/remove resource related. Revisit.
+            // TODO: How do we want to display the error if multiple resources were added/removed?
+            Deploy.JvmtiErrorDetails details = swapResponse.getJvmtiErrorDetailsList().get(0);
+            String parentClass = details.getClassName();
+            String resType = parentClass.substring(parentClass.lastIndexOf('$') + 1);
+
+            // Check for resource add before we check for resource remove, since the error
+            // message for resource addition also covers resource renaming (one add + one remove).
+            if (details.getType() == Deploy.JvmtiErrorDetails.Type.FIELD_ADDED) {
+                throw DeployerException.addedResources(details.getName(), resType);
+            } else if (details.getType() == Deploy.JvmtiErrorDetails.Type.FIELD_REMOVED) {
+                throw DeployerException.removedResources(details.getName(), resType);
+            } else {
+                throw DeployerException.swapFailed("Invalid error code");
             }
         }
     }

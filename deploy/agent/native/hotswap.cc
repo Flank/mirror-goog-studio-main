@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "tools/base/deploy/agent/native/dex_verify.h"
 #include "tools/base/deploy/agent/native/jni/jni_class.h"
 #include "tools/base/deploy/agent/native/jni/jni_object.h"
 #include "tools/base/deploy/common/event.h"
@@ -98,15 +99,10 @@ jclass HotSwap::FindInLoadedClasses(const std::string& name) const {
 }
 
 jclass HotSwap::FindClass(const std::string& name) const {
-  // ART would do this for us, but we should do it here for consistency's sake
-  // and to avoid the logged warning. JVMTI requires class names with slashes.
-  std::string fixed_name(name);
-  std::replace(fixed_name.begin(), fixed_name.end(), '.', '/');
-
   Log::V("Searching for class '%s' in the current thread context classloader.",
-         fixed_name.c_str());
+         name.c_str());
 
-  jclass klass = FindInClassLoader(GetThreadClassLoader(jni_), fixed_name);
+  jclass klass = FindInClassLoader(GetThreadClassLoader(jni_), name);
   if (klass != nullptr) {
     return klass;
   }
@@ -114,10 +110,9 @@ jclass HotSwap::FindClass(const std::string& name) const {
   jni_->ExceptionDescribe();
   jni_->ExceptionClear();
 
-  Log::V("Searching for class '%s' in the system classloader.",
-         fixed_name.c_str());
+  Log::V("Searching for class '%s' in the system classloader.", name.c_str());
 
-  klass = jni_->FindClass(fixed_name.c_str());
+  klass = jni_->FindClass(name.c_str());
   if (klass != nullptr) {
     return klass;
   }
@@ -125,41 +120,74 @@ jclass HotSwap::FindClass(const std::string& name) const {
   jni_->ExceptionDescribe();
   jni_->ExceptionClear();
 
-  Log::V("Searching for class '%s' in all loaded classes.", fixed_name.c_str());
+  Log::V("Searching for class '%s' in all loaded classes.", name.c_str());
 
-  klass = FindInLoadedClasses(fixed_name);
+  klass = FindInLoadedClasses(name);
   return klass;
 }
 
-bool HotSwap::DoHotSwap(const proto::SwapRequest& swap_request,
-                        std::string* error_msg) const {
+SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
   Phase p("doHotSwap");
+
+  SwapResult result;
+
   size_t total_classes = swap_request.classes_size();
   jvmtiClassDefinition* def = new jvmtiClassDefinition[total_classes];
 
+  // Build a list of classes that we might need to check for detailed errors.
+  const std::string& r_class_prefix = "/R$";
+  std::vector<ClassInfo> detailed_error_classes;
+
   for (size_t i = 0; i < total_classes; i++) {
     const proto::ClassDef& class_def = swap_request.classes(i);
-    const std::string name = class_def.name();
     const std::string code = class_def.dex();
+
+    // ART would do this for us, but we should do it here for consistency's sake
+    // and to avoid the logged warning. JVMTI requires class names with slashes.
+    std::string name = class_def.name();
+    std::replace(name.begin(), name.end(), '.', '/');
 
     def[i].klass = FindClass(name);
     if (def[i].klass == nullptr) {
-      *error_msg = "Could not find class '" + name + "'";
-      return false;
+      result.success = false;
+      result.error_code = "Could not find class '" + name + "'";
+      return result;
     }
 
-    char* dex = new char[code.length()];
+    unsigned char* dex = new unsigned char[code.length()];
     memcpy(dex, code.c_str(), code.length());
     def[i].class_byte_count = code.length();
-    def[i].class_bytes = (unsigned char*)dex;
+    def[i].class_bytes = dex;
+
+    // Only run verification on R classes right now.
+    if (name.find(r_class_prefix) != std::string::npos) {
+      ClassInfo info{name, def[i].class_bytes, code.length(), def[i].klass};
+      detailed_error_classes.emplace_back(info);
+    }
   }
 
-  // We make the verifier verbose. If verification fails, at least
+  // We make the JVMTI verifier verbose. If verification fails, at least
   // we can ask the user for logcats.
   jvmti_->SetVerboseFlag(JVMTI_VERBOSE_OTHER,
                          true);  // Best Effort, ignore erros.
   jvmtiError error_num = jvmti_->RedefineClasses(total_classes, def);
   jvmti_->SetVerboseFlag(JVMTI_VERBOSE_OTHER, false);
+
+  if (error_num == JVMTI_ERROR_NONE) {
+    // If there was no error, we're done.
+    result.success = true;
+    result.error_code = "";
+  } else {
+    // If we failed, try to get some detailed information.
+    CheckForClassErrors(jvmti_, detailed_error_classes, &result.error_details);
+
+    // Otherwise, get the error associated with the error code from JVMTI.
+    result.success = false;
+    char* error = nullptr;
+    jvmti_->GetErrorName(error_num, &error);
+    result.error_code = error == nullptr ? "Unknown" : std::string(error);
+    jvmti_->Deallocate((unsigned char*)error);
+  }
 
   for (size_t i = 0; i < total_classes; i++) {
     delete[] def[i].class_bytes;
@@ -167,17 +195,7 @@ bool HotSwap::DoHotSwap(const proto::SwapRequest& swap_request,
 
   delete[] def;
 
-  // If there was no error, we're done.
-  if (error_num == JVMTI_ERROR_NONE) {
-    return true;
-  }
-
-  // Otherwise, get the error associated with the error code from JVMTI.
-  char* error = nullptr;
-  jvmti_->GetErrorName(error_num, &error);
-  *error_msg = error == nullptr ? "Unknown" : std::string(error);
-  jvmti_->Deallocate((unsigned char*)error);
-  return false;
+  return result;
 }
 
 }  // namespace deploy

@@ -25,6 +25,11 @@ swap_test(
 )
 
 swap_test(
+    name = "AgentBasedClassRedefinerRClassTest",
+    srcs = ["java/com/android/tools/deployer/AgentBasedClassRedefinerRClassTest.java"],
+)
+
+swap_test(
     name = "JdiBasedClassRedefinerTest",
     srcs = ["java/com/android/tools/deployer/JdiBasedClassRedefinerTest.java"],
 )

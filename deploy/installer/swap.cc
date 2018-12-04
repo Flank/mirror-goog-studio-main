@@ -322,6 +322,9 @@ bool SwapCommand::Swap() {
     if (!jvmti_error_code.empty()) {
       response_->add_jvmti_error_code(jvmti_error_code);
     }
+
+    response_->mutable_jvmti_error_details()->MergeFrom(
+        agent_response.jvmti_error_details());
   }
 
   // Ensure all of the agents have responded.

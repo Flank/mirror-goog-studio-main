@@ -105,6 +105,18 @@ public class DeployerException extends Exception {
                 "Apply changes and restart activity",
                 ResolutionAction.APPLY_CHANGES),
 
+        CANNOT_ADD_RESOURCE(
+                "Adding or renaming a resource requires an application restart.",
+                "Resource '%s' (%s) was added.",
+                "Reinstall and restart app",
+                ResolutionAction.RUN_APP),
+
+        CANNOT_REMOVE_RESOURCE(
+                "Removing a resource requires an application restart.",
+                "Resource '%s' (%s) was removed.",
+                "Reinstall and restart app",
+                ResolutionAction.RUN_APP),
+
         // Errors that are reported to us by jvmti.
 
         CANNOT_ADD_METHOD(
@@ -268,6 +280,14 @@ public class DeployerException extends Exception {
 
     public static DeployerException changedResources(String filePath) {
         return new DeployerException(Error.CANNOT_SWAP_RESOURCE, NO_ARGS, filePath);
+    }
+
+    public static DeployerException addedResources(String name, String type) {
+        return new DeployerException(Error.CANNOT_ADD_RESOURCE, NO_ARGS, name, type);
+    }
+
+    public static DeployerException removedResources(String name, String type) {
+        return new DeployerException(Error.CANNOT_REMOVE_RESOURCE, NO_ARGS, name, type);
     }
 
     private static final ImmutableMap<String, Error> ERROR_CODE_TO_ERROR =

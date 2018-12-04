@@ -76,10 +76,13 @@ void Swapper::StartSwap(JNIEnv* jni) {
   proto::AgentSwapResponse response;
   response.set_pid(getpid());
 
-  std::string error_code;
-  if (!code_swap.DoHotSwap(*request_, &error_code)) {
+  SwapResult result = code_swap.DoHotSwap(*request_);
+  if (!result.success) {
     response.set_status(proto::AgentSwapResponse::ERROR);
-    response.set_jvmti_error_code(error_code);
+    response.set_jvmti_error_code(result.error_code);
+    for (auto& details : result.error_details) {
+      *response.add_jvmti_error_details() = details;
+    }
   } else {
     response.set_status(proto::AgentSwapResponse::OK);
     LogEvent("Swap was successful");
