@@ -2,7 +2,9 @@
     xmlns:dist="http://schemas.android.com/apk/distribution"
     package="${packageName}">
     <#if dynamicFeatureSupportsDynamicDelivery>
-    <dist:module dist:title="@string/title_${projectSimpleName}">
+    <dist:module
+        dist:instant="${isInstantModule?c}"
+        dist:title="@string/title_${projectSimpleName}">
         <dist:delivery>
             <#if dynamicFeatureInstallTimeDelivery>
             <dist:install-time/>
