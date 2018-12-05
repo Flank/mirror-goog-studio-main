@@ -8,6 +8,11 @@ local_repository(
 load("@blaze//:binds.bzl", "blaze_binds")
 blaze_binds()
 
+local_repository(
+      name = "io_bazel_rules_kotlin",
+      path = "tools/external/bazelbuild-rules-kotlin",
+)
+
 http_archive(
   name = "bazel_toolchains",
   urls = [
