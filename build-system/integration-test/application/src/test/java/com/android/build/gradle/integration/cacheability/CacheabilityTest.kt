@@ -70,7 +70,7 @@ class CacheabilityTest {
                     ":mergeDebugAssets",
                     ":mergeExtDexDebug",
                     ":mergeDebugJniLibFolders"
-                    ),
+                ),
                 DID_WORK to setOf(
                     ":checkDebugManifest",
                     ":generateDebugBuildConfig",
@@ -85,9 +85,10 @@ class CacheabilityTest {
                     ":validateSigningDebug",
                     ":signingConfigWriterDebug",
                     ":transformNativeLibsWithMergeJniLibsForDebug",
+                    ":transformNativeLibsWithStripDebugSymbolForDebug",
                     ":transformResourcesWithMergeJavaResForDebug",
                     ":packageDebug"
-                    ),
+                ),
                 SKIPPED to setOf(
                     ":compileDebugAidl",
                     ":generateDebugSources",
@@ -95,7 +96,7 @@ class CacheabilityTest {
                     ":processDebugJavaRes",
                     ":assembleDebug"
 
-                    ),
+                ),
                 FAILED to setOf()
             )
 
@@ -118,6 +119,7 @@ class CacheabilityTest {
             ":mergeDexDebug" /* Bug 120413559 */,
             ":signingConfigWriterDebug" /* Bug 120411939 */,
             ":transformNativeLibsWithMergeJniLibsForDebug" /* Bug 74595223 */,
+            ":transformNativeLibsWithStripDebugSymbolForDebug" /* Bug 120414535 */,
             ":transformResourcesWithMergeJavaResForDebug" /* Bug 74595224 */,
             ":packageDebug" /* Bug 74595859 */
         )
@@ -160,12 +162,21 @@ class CacheabilityTest {
         val result =
             projectCopy2.executor().withArgument("--build-cache").run("clean", "assembleDebug")
 
+        // When running this test with bazel, StripDebugSymbolTransform does not run as the NDK
+        // directory is not available. We need to remove that task from the expected tasks' states.
+        var expectedDidWorkTasks = EXPECTED_TASK_STATES[DID_WORK]!!
+        if (!result.getTask(":transformNativeLibsWithStripDebugSymbolForDebug")
+                .wasPlannedForExecution()) {
+            expectedDidWorkTasks =
+                    expectedDidWorkTasks.minus(":transformNativeLibsWithStripDebugSymbolForDebug")
+        }
+
         // Check that the tasks' states are as expected
         assertThat(result.upToDateTasks)
             .containsExactlyElementsIn(EXPECTED_TASK_STATES[UP_TO_DATE]!!)
         assertThat(result.fromCacheTasks)
             .containsExactlyElementsIn(EXPECTED_TASK_STATES[FROM_CACHE]!!)
-        assertThat(result.didWorkTasks).containsExactlyElementsIn(EXPECTED_TASK_STATES[DID_WORK]!!)
+        assertThat(result.didWorkTasks).containsExactlyElementsIn(expectedDidWorkTasks)
         assertThat(result.skippedTasks).containsExactlyElementsIn(EXPECTED_TASK_STATES[SKIPPED]!!)
         assertThat(result.failedTasks).containsExactlyElementsIn(EXPECTED_TASK_STATES[FAILED]!!)
 
