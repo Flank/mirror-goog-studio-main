@@ -20,7 +20,7 @@ import ${getMaterialComponentName('android.support.v7.app.AppCompatActivity', us
 import ${getMaterialComponentName('android.support.v7.widget', useAndroidX)}.Toolbar
 import android.view.Menu
 
-class ${activityClass} : ${superClass}()<#if !useNavController>, NavigationView.OnNavigationItemSelectedListener</#if> {
+class ${activityClass} : AppCompatActivity()<#if !useNavController>, NavigationView.OnNavigationItemSelectedListener</#if> {
 
 <#if useNavController>
     private lateinit var appBarConfiguration: AppBarConfiguration

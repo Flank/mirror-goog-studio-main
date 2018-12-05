@@ -12,7 +12,7 @@ import android.view.MenuItem
 </#if>
 import kotlinx.android.synthetic.main.${layoutName}.*
 
-class ${activityClass} : ${superClass}() {
+class ${activityClass} : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,7 +26,7 @@ class ${activityClass} : ${superClass}() {
                     .setAction("Action", null).show()
         }
 <#if parentActivityClass?has_content>
-        ${kotlinActionBar}?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
 </#if>
     }
 <#if isNewProject>

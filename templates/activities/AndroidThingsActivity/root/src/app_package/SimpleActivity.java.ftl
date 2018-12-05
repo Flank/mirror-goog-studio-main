@@ -26,7 +26,7 @@ import android.widget.TextView;
  * @see <a href="https://github.com/androidthings/contrib-drivers#readme">https://github.com/androidthings/contrib-drivers#readme</a>
  *
  */
-public class ${activityClass} extends ${superClass} {
+public class ${activityClass} extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

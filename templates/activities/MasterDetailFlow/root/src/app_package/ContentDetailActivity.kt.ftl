@@ -16,7 +16,7 @@ import kotlinx.android.synthetic.main.activity_${detail_name}.*
  * item details are presented side-by-side with a list of items
  * in a [${CollectionName}Activity].
  */
-class ${DetailName}Activity : ${superClass}() {
+class ${DetailName}Activity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,7 +29,7 @@ class ${DetailName}Activity : ${superClass}() {
         }
 
         // Show the Up button in the action bar.
-        ${kotlinActionBar}?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         // savedInstanceState is non-null when there is fragment state
         // saved from previous configurations of this activity
@@ -50,7 +50,7 @@ class ${DetailName}Activity : ${superClass}() {
                 }
             }
 
-            ${kotlinFragmentManager}.beginTransaction()
+            supportFragmentManager.beginTransaction()
                     .add(R.id.${detail_name}_container, fragment)
                     .commit()
         }

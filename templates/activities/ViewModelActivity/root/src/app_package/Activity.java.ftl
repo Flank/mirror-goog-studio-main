@@ -7,7 +7,7 @@ import android.widget.TextView;
 </#if>
 import ${packageName}.${fragmentPackage}.${fragmentClass};
 
-public class ${activityClass} extends ${superClass} {
+public class ${activityClass} extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

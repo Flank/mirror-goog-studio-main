@@ -18,7 +18,7 @@ import kotlinx.android.synthetic.main.${layoutName}.*
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
-class ${activityClass} : ${superClass}() {
+class ${activityClass} : AppCompatActivity() {
     private val mHideHandler = Handler()
     private val mHidePart2Runnable = Runnable {
         // Delayed removal of status and navigation bar
@@ -36,7 +36,7 @@ class ${activityClass} : ${superClass}() {
     }
     private val mShowPart2Runnable = Runnable {
         // Delayed display of UI elements
-        ${kotlinActionBar}?.show()
+        supportActionBar?.show()
         fullscreen_content_controls.visibility = View.VISIBLE
     }
     private var mVisible: Boolean = false
@@ -57,7 +57,7 @@ class ${activityClass} : ${superClass}() {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.${layoutName})
-        ${kotlinActionBar}?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         mVisible = true
 
@@ -101,7 +101,7 @@ class ${activityClass} : ${superClass}() {
 
     private fun hide() {
         // Hide UI first
-        ${kotlinActionBar}?.hide()
+        supportActionBar?.hide()
         fullscreen_content_controls.visibility = View.GONE
         mVisible = false
 

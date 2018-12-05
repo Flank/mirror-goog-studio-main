@@ -21,7 +21,7 @@ import ${getMaterialComponentName('android.support.v7.app.AppCompatActivity', us
 import ${getMaterialComponentName('android.support.v7.widget.Toolbar', useAndroidX)};
 import android.view.Menu;
 
-public class ${activityClass} extends ${superClass} <#if !useNavController>
+public class ${activityClass} extends AppCompatActivity <#if !useNavController>
         implements NavigationView.OnNavigationItemSelectedListener </#if>{
 
 <#if useNavController>

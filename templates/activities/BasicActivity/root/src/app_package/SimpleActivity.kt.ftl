@@ -20,7 +20,7 @@ import kotlinx.android.synthetic.main.${simpleLayoutName}.*
 </#if>
 </#if>
 
-class ${activityClass} : ${superClass}() {
+class ${activityClass} : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,7 +32,7 @@ class ${activityClass} : ${superClass}() {
                     .setAction("Action", null).show()
         }
 <#if parentActivityClass?has_content>
-        ${kotlinActionBar}?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
 </#if>
 <#include "../../../../common/jni_code_usage.kt.ftl">
     }

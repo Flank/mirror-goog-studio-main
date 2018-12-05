@@ -22,7 +22,7 @@ import ${applicationPackage}.R;
  * item details are presented side-by-side with a list of items
  * in a {@link ${CollectionName}Activity}.
  */
-public class ${DetailName}Activity extends ${superClass} {
+public class ${DetailName}Activity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,7 +63,7 @@ public class ${DetailName}Activity extends ${superClass} {
                     getIntent().getStringExtra(${DetailName}Fragment.ARG_ITEM_ID));
             ${DetailName}Fragment fragment = new ${DetailName}Fragment();
             fragment.setArguments(arguments);
-            get${Support}FragmentManager().beginTransaction()
+            getSupportFragmentManager().beginTransaction()
                     .add(R.id.${detail_name}_container, fragment)
                     .commit();
         }
