@@ -80,13 +80,18 @@ public class KotlinHelloWorldApp extends HelloWorldApp {
                                 + "android {\n"
                                 + "    compileSdkVersion rootProject.latestCompileSdk\n"
                                 + "    buildToolsVersion = rootProject.buildToolsVersion\n"
-                                + "    defaultConfig.minSdkVersion 3\n"
+                                + "    defaultConfig {\n"
+                                + "        minSdkVersion rootProject.supportLibMinSdk\n"
+                                + "        testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'\n"
+                                + "    }\n"
                                 + "    sourceSets {\n"
                                 + "        main.java.srcDirs += 'src/main/kotlin'\n"
                                 + "    }\n"
                                 + "}\n"
                                 + "dependencies {\n"
                                 + "    api \"org.jetbrains.kotlin:kotlin-stdlib:$rootProject.kotlinVersion\"\n"
+                                + "    androidTestImplementation \"com.android.support.test:runner:${project.testSupportLibVersion}\"\n"
+                                + "    androidTestImplementation \"com.android.support.test:rules:${project.testSupportLibVersion}\"\n"
                                 + "}\n");
 
         addFile(buildFile);

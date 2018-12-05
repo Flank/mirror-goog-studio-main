@@ -122,37 +122,42 @@ public class HelloWorldJniApp extends AbstractAndroidTestModule implements Andro
 "    </application>\n" +
 "</manifest>\n");
 
-    private static final TestSourceFile androidTestSource = new TestSourceFile(
-            "src/androidTest/java/com/example/hellojni", "HelloJniTest.java",
-"package com.example.hellojni;\n" +
-"\n" +
-"import android.test.ActivityInstrumentationTestCase;\n" +
-"\n" +
-"/**\n" +
-" * This is a simple framework for a test of an Application.  See\n" +
-" * {@link android.test.ApplicationTestCase ApplicationTestCase} for more information on\n" +
-" * how to write and extend Application tests.\n" +
-" * <p/>\n" +
-" * To run this test, you can type:\n" +
-" * adb shell am instrument -w \\n" +
-" * -e class com.example.hellojni.HelloJniTest \\n" +
-" * com.example.hellojni.tests/android.test.InstrumentationTestRunner\n" +
-" */\n" +
-"public class HelloJniTest extends ActivityInstrumentationTestCase<HelloJni> {\n" +
-"\n" +
-"    public HelloJniTest() {\n" +
-"        super(\"com.example.hellojni\", HelloJni.class);\n" +
-"    }\n" +
-"\n" +
-"\n" +
-"    public void testJniName() {\n" +
-"        final HelloJni a = getActivity();\n" +
-"        // ensure a valid handle to the activity has been returned\n" +
-"        assertNotNull(a);\n" +
-"\n" +
-"        assertTrue(\"hello world!\".equals(a.stringFromJNI()));\n" +
-"    }\n" +
-"}\n");
+    private static final TestSourceFile androidTestSource =
+            new TestSourceFile(
+                    "src/androidTest/java/com/example/hellojni",
+                    "HelloJniTest.java",
+                    "package com.example.hellojni;\n"
+                            + "\n"
+                            + "import android.support.test.rule.ActivityTestRule;\n"
+                            + "import android.support.test.runner.AndroidJUnit4;\n"
+                            + "import org.junit.Assert;\n"
+                            + "import org.junit.Rule;\n"
+                            + "import org.junit.Test;\n"
+                            + "import org.junit.runner.RunWith;\n"
+                            + "\n"
+                            + "/**\n"
+                            + " * This is a simple framework for a test of an Application.  See\n"
+                            + " * {@link android.test.ApplicationTestCase ApplicationTestCase} for more information on\n"
+                            + " * how to write and extend Application tests.\n"
+                            + " * <p/>\n"
+                            + " * To run this test, you can type:\n"
+                            + " * adb shell am instrument -w \\n"
+                            + " * -e class com.example.hellojni.HelloJniTest \\n"
+                            + " * com.example.hellojni.tests/android.test.InstrumentationTestRunner\n"
+                            + " */\n"
+                            + " @RunWith(AndroidJUnit4.class)\n"
+                            + "public class HelloJniTest {\n"
+                            + "    @Rule public ActivityTestRule<HelloJni> rule = new ActivityTestRule<>(HelloJni.class);\n"
+                            + "\n"
+                            + "    @Test\n"
+                            + "    public void testJniName() {\n"
+                            + "        final HelloJni a = rule.getActivity();\n"
+                            + "        // ensure a valid handle to the activity has been returned\n"
+                            + "        Assert.assertNotNull(a);\n"
+                            + "\n"
+                            + "        Assert.assertTrue(\"hello world!\".equals(a.stringFromJNI()));\n"
+                            + "    }\n"
+                            + "}\n");
 
 
     public static TestSourceFile libraryCpp(String folder, String file) {
