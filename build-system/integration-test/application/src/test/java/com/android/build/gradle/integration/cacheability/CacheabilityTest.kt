@@ -62,6 +62,7 @@ class CacheabilityTest {
                 FROM_CACHE to setOf(
                     ":preDebugBuild",
                     ":compileDebugRenderscript",
+                    ":generateDebugBuildConfig",
                     ":javaPreCompileDebug",
                     ":generateDebugResValues",
                     ":mergeDebugResources",
@@ -73,7 +74,6 @@ class CacheabilityTest {
                 ),
                 DID_WORK to setOf(
                     ":checkDebugManifest",
-                    ":generateDebugBuildConfig",
                     ":prepareLintJar",
                     ":mainApkListPersistenceDebug",
                     ":createDebugCompatibleScreenManifests",
@@ -108,7 +108,6 @@ class CacheabilityTest {
          */
         private val NOT_YET_CACHEABLE = setOf(
             ":checkDebugManifest" /* Bug 74595857 */,
-            ":generateDebugBuildConfig" /* Bug 120414109 */,
             ":prepareLintJar" /* Bug 120413672 */,
             ":mainApkListPersistenceDebug" /* Bug 74595222 */,
             ":createDebugCompatibleScreenManifests" /* Bug 120412436 */,
