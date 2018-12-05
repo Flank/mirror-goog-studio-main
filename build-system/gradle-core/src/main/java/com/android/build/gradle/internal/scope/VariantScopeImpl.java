@@ -1518,8 +1518,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
         CodeShrinker shrinker = getCodeShrinker();
         if (shrinker == R8) {
-            if (globalScope.getProjectOptions().get(ENABLE_R8_DESUGARING)
-                    && isValidJava8Flag(ENABLE_R8_DESUGARING, ENABLE_R8)) {
+            if (globalScope.getProjectOptions().get(ENABLE_R8_DESUGARING)) {
                 return Java8LangSupport.R8;
             }
         } else {
