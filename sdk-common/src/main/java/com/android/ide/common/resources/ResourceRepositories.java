@@ -22,19 +22,26 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Ordering;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Map;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 /** Utilities for dealing with {@link ResourceRepository} instances. */
 public class ResourceRepositories {
+    /** Compares {@link ResourceItem} instances using {@link ResourceItem#getKey()}. */
+    private static final Ordering<ResourceItem> ORDERING_BY_KEY =
+            Ordering.from(Comparator.comparing(ResourceItem::getKey));
+
     private ResourceRepositories() {}
 
-    /** Sorts values of the given multimap using {@link ResourceItem#BY_KEY}. */
+    /**
+     * Sorts values of the given multimap according to values returned by
+     * the {@link ResourceItem#getKey()} method.
+     */
     public static void sortItemLists(@NonNull ListMultimap<String, ResourceItem> multimap) {
         ListMultimap<String, ResourceItem> sorted = ArrayListMultimap.create();
-        Ordering<ResourceItem> ordering = Ordering.from(ResourceItem.BY_KEY);
         for (Map.Entry<String, Collection<ResourceItem>> entry : multimap.asMap().entrySet()) {
-            sorted.putAll(entry.getKey(), ordering.sortedCopy(entry.getValue()));
+            sorted.putAll(entry.getKey(), ORDERING_BY_KEY.sortedCopy(entry.getValue()));
         }
 
         multimap.clear();

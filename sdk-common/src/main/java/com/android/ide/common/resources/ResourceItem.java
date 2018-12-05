@@ -9,11 +9,10 @@ import com.android.ide.common.resources.configuration.Configurable;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.util.PathString;
 import com.android.resources.ResourceType;
-import java.util.Comparator;
 
 /**
- * Describes resources that exist in an {@link ResourceRepository} (and so the project). Can
- * be turned into a {@link ResourceValue} if the contents of a given resource need to be inspected,
+ * Describes resources that exist in a {@link ResourceRepository} (and so the project). Can be
+ * turned into a {@link ResourceValue} if the contents of a given resource need to be inspected,
  * not just its presence.
  */
 public interface ResourceItem extends Configurable {
@@ -29,15 +28,16 @@ public interface ResourceItem extends Configurable {
     @NonNull
     ResourceType getType();
 
-    /** Returns the {@lnk ResourceNamespace} of this resource. */
+    /** Returns the {@link ResourceNamespace} of this resource. */
     @NonNull
     ResourceNamespace getNamespace();
 
     /**
-     * Returns name of the library which defines this resource, or null for app resources.
+     * Returns the name of the library contains this resource, or null if resource does not belong
+     * to a library.
      *
-     * <p>The contents of the string depend on the build system used to create the {@link
-     * ResourceItem}s.
+     * <p>The contents of the returned string may depend on the build system managing the library
+     * dependency.
      */
     @Nullable
     String getLibraryName();
@@ -58,8 +58,8 @@ public interface ResourceItem extends Configurable {
     String getKey();
 
     /**
-     * Returns a {@link ResourceValue} built from parsing the XML for this resource. This can be
-     * used to inspect the value of the resource.
+     * Returns a {@link ResourceValue} built from parsing the XML for this resource. It can be used
+     * to inspect the value of the resource.
      *
      * <p>The concrete type of the returned object depends on {@link #getType()}.
      *
@@ -71,21 +71,30 @@ public interface ResourceItem extends Configurable {
     ResourceValue getResourceValue();
 
     /**
-     * Returns the {@link PathString} for the file from which this {@link ResourceItem} was
-     * created, or null if the resource is not associated with a file. The returned
-     * {@link PathString} may point to a file on the local file system, or to a zip file entry as
-     * possible for AAR resources.
+     * Returns the {@link PathString} for the file from which this resource was created, or null if
+     * the resource is not associated with a file. The file used to create this resource may be
+     * a result of some kind of processing applied on the original source file. In such a case this
+     * method returns a result different from {@link #getOriginalSource()}. The returned
+     * {@link PathString} may point to a file on the local file system, or to a zip file entry.
      */
     @Nullable
     PathString getSource();
 
     /**
-     * Returns true if the {@link ResourceItem} represents a whole file or a whole zip file entry,
-     * not an XML tag within a values XML file. This is the case for e.g. layouts or colors defined
-     * as state lists.
+     * Returns the {@link PathString} for the original source file that defined this resource, or
+     * null if this resource is not associated with a file, or the original source is not available.
+     * The returned {@link PathString} may point to a file on the local file system, or to a zip
+     * file entry.
+     */
+    @Nullable
+    default PathString getOriginalSource() {
+        return getSource();
+    }
+
+    /**
+     * Returns true if this resource represents a whole file or a whole zip file entry, not an XML
+     * tag within a values XML file. This is the case, e.g. for layouts or colors defined as state
+     * lists.
      */
     boolean isFileBased();
-
-    /** Compares {@link ResourceItem} instances using {@link #getKey()}. */
-    Comparator<ResourceItem> BY_KEY = Comparator.comparing(ResourceItem::getKey);
 }
