@@ -70,57 +70,12 @@ public class GradleTaskSubjectTest {
     }
 
     @Test
-    public void wasPlannedForExecution() {
-        assertSuccess(":didWorkTask", GradleTaskSubject::wasPlannedForExecution);
-        assertFailure(
-                ":taskThatDidNotRun",
-                GradleTaskSubject::wasPlannedForExecution,
-                "Not true that :taskThatDidNotRun was executed");
-    }
-
-    @Test
-    public void wasExecuted() {
-        assertSuccess(":didWorkTask", GradleTaskSubject::wasExecuted);
-        assertFailure(
-                ":taskThatDidNotRun",
-                GradleTaskSubject::wasExecuted,
-                "Not true that :taskThatDidNotRun was executed");
-    }
-
-    @Test
-    public void wasNotPlannedForExecution() {
-        assertSuccess(":taskThatDidNotRun", GradleTaskSubject::wasNotPlannedForExecution);
-        assertFailure(
-                ":didWorkTask",
-                GradleTaskSubject::wasNotPlannedForExecution,
-                "Not true that :didWorkTask was not executed");
-    }
-
-    @Test
-    public void wasNotExecuted() {
-        assertSuccess(":taskThatDidNotRun", GradleTaskSubject::wasNotExecuted);
-        assertFailure(
-                ":didWorkTask",
-                GradleTaskSubject::wasNotExecuted,
-                "Not true that :didWorkTask was not executed");
-    }
-
-    @Test
     public void wasUpToDate() {
         assertSuccess(":upToDateTask", GradleTaskSubject::wasUpToDate);
         assertFailure(
                 ":didWorkTask",
                 GradleTaskSubject::wasUpToDate,
                 "Not true that :didWorkTask was UP-TO-DATE");
-    }
-
-    @Test
-    public void wasNotUpToDate() {
-        assertSuccess(":didWorkTask", GradleTaskSubject::wasNotUpToDate);
-        assertFailure(
-                ":upToDateTask",
-                GradleTaskSubject::wasNotUpToDate,
-                "Not true that :upToDateTask was not UP-TO-DATE");
     }
 
     @Test
@@ -133,30 +88,12 @@ public class GradleTaskSubjectTest {
     }
 
     @Test
-    public void wasNotFromCache() {
-        assertSuccess(":didWorkTask", GradleTaskSubject::wasNotFromCache);
-        assertFailure(
-                ":fromCacheTask",
-                GradleTaskSubject::wasNotFromCache,
-                "Not true that :fromCacheTask was not FROM-CACHE");
-    }
-
-    @Test
     public void didWork() {
         assertSuccess(":didWorkTask", GradleTaskSubject::didWork);
         assertFailure(
                 ":upToDateTask",
                 GradleTaskSubject::didWork,
                 "Not true that :upToDateTask did work");
-    }
-
-    @Test
-    public void didNoWork() {
-        assertSuccess(":upToDateTask", GradleTaskSubject::didNoWork);
-        assertFailure(
-                ":didWorkTask",
-                GradleTaskSubject::didNoWork,
-                "Not true that :didWorkTask did no work");
     }
 
     @Test
@@ -169,28 +106,10 @@ public class GradleTaskSubjectTest {
     }
 
     @Test
-    public void wasNotSkipped() {
-        assertSuccess(":didWorkTask", GradleTaskSubject::wasNotSkipped);
-        assertFailure(
-                ":skippedTask",
-                GradleTaskSubject::wasNotSkipped,
-                "Not true that :skippedTask was not skipped");
-    }
-
-    @Test
     public void failed() {
         assertSuccess(":failedTask", GradleTaskSubject::failed);
         assertFailure(
                 ":didWorkTask", GradleTaskSubject::failed, "Not true that :didWorkTask failed ");
-    }
-
-    @Test
-    public void didNotFail() {
-        assertSuccess(":didWorkTask", GradleTaskSubject::didNotFail);
-        assertFailure(
-                ":failedTask",
-                GradleTaskSubject::didNotFail,
-                "Not true that :failedTask did not fail");
     }
 
     @Test

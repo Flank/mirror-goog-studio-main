@@ -16,7 +16,10 @@
 
 package com.android.build.gradle.integration.common.truth;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -40,14 +43,8 @@ import org.gradle.tooling.events.task.TaskSuccessResult;
  */
 public class TaskStateList {
 
-    /**
-     * State of a task during a build. A task may or may not be in the task execution plan. When it
-     * is not in the execution plan, its state is {@link #NOT_PLANNED_FOR_EXECUTION}. When it is in
-     * the execution plan, its state can be one of the remaining states. Note that these states are
-     * mutually exclusive.
-     */
+    /** State of a task during a build. These states are mutually exclusive. */
     public enum ExecutionState {
-        NOT_PLANNED_FOR_EXECUTION,
         UP_TO_DATE,
         FROM_CACHE,
         DID_WORK,
@@ -79,23 +76,6 @@ public class TaskStateList {
         @NonNull
         public ExecutionState getExecutionState() {
             return executionState;
-        }
-
-        /**
-         * Returns `true` if the task was planned for execution (but it may or may not have actually
-         * run as it may have been skipped for some reason).
-         *
-         * <p>To check that the task actually ran and completed successfully, use {@link
-         * #didWork()}.
-         */
-        public boolean wasPlannedForExecution() {
-            return executionState != ExecutionState.NOT_PLANNED_FOR_EXECUTION;
-        }
-
-        /** @deprecated Use {@link #wasPlannedForExecution()} */
-        @Deprecated
-        public boolean wasExecuted() {
-            return wasPlannedForExecution();
         }
 
         public boolean wasUpToDate() {
@@ -208,15 +188,18 @@ public class TaskStateList {
         return result.build();
     }
 
-    @NonNull
-    public TaskInfo getTask(@NonNull String task) {
-        // if the task-info is missing, then create one for a non executed task.
-        return taskInfoMap.getOrDefault(
-                task, new TaskInfo(task, ExecutionState.NOT_PLANNED_FOR_EXECUTION, this));
+    @Nullable
+    public TaskInfo findTask(@NonNull String task) {
+        return taskInfoMap.get(task);
     }
 
     @NonNull
-    public List<String> getPlannedForExecutionTasks() {
+    public TaskInfo getTask(@NonNull String task) {
+        return checkNotNull(taskInfoMap.get(task), "Task %s not found", task);
+    }
+
+    @NonNull
+    public List<String> getTasks() {
         return taskList;
     }
 

@@ -28,6 +28,7 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.ImmutableList;
+import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.nio.file.Files;
 import org.junit.Rule;
@@ -44,8 +45,7 @@ public class DesugarLibraryWithDesugarToolTest {
     @Test
     public void doesNotRun() throws IOException, InterruptedException {
         GradleBuildResult result = project.executor().run("assembleDebug");
-        assertThat(result.getNotUpToDateTasks())
-                .doesNotContain(":transformClassesWithDesugarForDebug");
+        Truth.assertThat(result.findTask(":transformClassesWithDesugarForDebug")).isNull();
     }
 
     @Test

@@ -94,7 +94,7 @@ android {
     @Test
     fun checkTaskExecutionOrder() {
         val result = project.executor().run("clean", ":app:assembleDebug")
-        assertThat(result.getTask(":lib:externalNativeBuildDebug")).wasExecuted()
+        assertThat(result.getTask(":lib:externalNativeBuildDebug")).didWork()
         assertThat(result.getTask(":app:externalNativeBuildDebug"))
                 .ranAfter(":lib:externalNativeBuildDebug")
     }

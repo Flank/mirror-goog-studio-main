@@ -531,8 +531,7 @@ class IncrementalJavaCompileWithAPsTest(
         // Check the tasks' status. Checking this once in this test is good enough, the other tests
         // don't need to repeat this check.
         if (withKapt || !withSeparateAP) {
-            assertThat(fullBuildResult.getTask(PROCESS_ANNOTATIONS_TASK))
-                .wasNotPlannedForExecution()
+            assertThat(fullBuildResult.findTask(PROCESS_ANNOTATIONS_TASK)).isNull()
         } else {
             assertThat(fullBuildResult.getTask(PROCESS_ANNOTATIONS_TASK)).didWork()
         }
@@ -619,7 +618,7 @@ class IncrementalJavaCompileWithAPsTest(
 
         // Check the tasks' status
         if (withKapt || !withSeparateAP) {
-            assertThat(result.getTask(PROCESS_ANNOTATIONS_TASK)).wasNotPlannedForExecution()
+            assertThat(result.findTask(PROCESS_ANNOTATIONS_TASK)).isNull()
         } else {
             assertThat(fullBuildResult.getTask(PROCESS_ANNOTATIONS_TASK)).didWork()
         }
@@ -709,7 +708,7 @@ class IncrementalJavaCompileWithAPsTest(
 
         // Check the tasks' status
         if (withKapt || !withSeparateAP) {
-            assertThat(result.getTask(PROCESS_ANNOTATIONS_TASK)).wasNotPlannedForExecution()
+            assertThat(result.findTask(PROCESS_ANNOTATIONS_TASK)).isNull()
         } else {
             assertThat(result.getTask(PROCESS_ANNOTATIONS_TASK)).didWork()
         }
@@ -789,7 +788,7 @@ class IncrementalJavaCompileWithAPsTest(
 
         // Check the tasks' status
         if (withKapt || !withSeparateAP) {
-            assertThat(result.getTask(PROCESS_ANNOTATIONS_TASK)).wasNotPlannedForExecution()
+            assertThat(result.findTask(PROCESS_ANNOTATIONS_TASK)).isNull()
         } else {
             assertThat(result.getTask(PROCESS_ANNOTATIONS_TASK)).wasUpToDate()
         }

@@ -16,11 +16,11 @@
 
 package com.android.build.gradle.integration.testing.unit;
 
+import static com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertNotNull;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
@@ -52,7 +52,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.stream.Collectors;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -160,7 +159,7 @@ public class UnitTestingAndroidResourcesTest {
         Files.write(project.file("src/main/assets/foo.txt").toPath(), "CHANGE".getBytes());
         GradleBuildResult result = runGradleTasks.run("testDebugUnitTest");
 
-        assertThat(result.getNotUpToDateTasks()).contains(":testDebugUnitTest");
+        assertThat(result.getTask(":testDebugUnitTest")).didWork();
 
         // Sanity check: make sure we're actually executing Robolectric code.
         File xmlResults =

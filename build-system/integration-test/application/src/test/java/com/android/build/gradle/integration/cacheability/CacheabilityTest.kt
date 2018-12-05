@@ -164,8 +164,7 @@ class CacheabilityTest {
         // When running this test with bazel, StripDebugSymbolTransform does not run as the NDK
         // directory is not available. We need to remove that task from the expected tasks' states.
         var expectedDidWorkTasks = EXPECTED_TASK_STATES[DID_WORK]!!
-        if (!result.getTask(":transformNativeLibsWithStripDebugSymbolForDebug")
-                .wasPlannedForExecution()) {
+        if (result.findTask(":transformNativeLibsWithStripDebugSymbolForDebug") == null) {
             expectedDidWorkTasks =
                     expectedDidWorkTasks.minus(":transformNativeLibsWithStripDebugSymbolForDebug")
         }

@@ -355,7 +355,7 @@ public class MergeResourcesTest {
                 project.executor()
                         .with(BooleanOption.ENABLE_R8, false)
                         .run(":app:clean", ":app:assembleDebug");
-        assertThat(result.getTask(":app:mergeDebugResources")).wasNotUpToDate();
+        assertThat(result.getTask(":app:mergeDebugResources")).didWork();
         long apkSizeWithShrinkResources =
                 appProject.getApk(GradleTestProject.ApkType.DEBUG).getContentsSize();
 
@@ -367,7 +367,7 @@ public class MergeResourcesTest {
                 project.executor()
                         .with(BooleanOption.ENABLE_R8, false)
                         .run(":app:assembleDebug");
-        assertThat(result.getTask(":app:mergeDebugResources")).wasNotUpToDate();
+        assertThat(result.getTask(":app:mergeDebugResources")).didWork();
         long apkSizeWithoutShrinkResources =
                 appProject.getApk(GradleTestProject.ApkType.DEBUG).getContentsSize();
         assertThat(apkSizeWithoutShrinkResources).isGreaterThan(apkSizeWithShrinkResources);
@@ -380,7 +380,7 @@ public class MergeResourcesTest {
                 project.executor()
                         .with(BooleanOption.ENABLE_R8, false)
                         .run(":app:assembleDebug");
-        assertThat(result.getTask(":app:mergeDebugResources")).wasNotUpToDate();
+        assertThat(result.getTask(":app:mergeDebugResources")).didWork();
         long sameApkSizeShrinkResources =
                 appProject.getApk(GradleTestProject.ApkType.DEBUG).getContentsSize();
         assertThat(sameApkSizeShrinkResources).isEqualTo(apkSizeWithShrinkResources);

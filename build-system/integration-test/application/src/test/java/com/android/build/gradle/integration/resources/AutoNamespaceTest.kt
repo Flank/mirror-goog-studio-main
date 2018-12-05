@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.resources
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
+import com.android.build.gradle.integration.common.truth.TruthHelper
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.getDebugGenerateSourcesCommands
 import com.android.build.gradle.integration.common.utils.getDebugVariant
@@ -93,8 +94,7 @@ class AutoNamespaceTest {
                 .with(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES, true)
                 .run("assembleDebug")
 
-        Truth.assertThat(result.upToDateTasks).contains(":autoNamespaceDebugDependencies")
-        Truth.assertThat(result.notUpToDateTasks).doesNotContain(":autoNamespaceDebugDependencies")
+        TruthHelper.assertThat(result.getTask(":autoNamespaceDebugDependencies")).wasUpToDate();
         val apk = project.getApk(GradleTestProject.ApkType.DEBUG)
         assertThat(apk).containsClass("Landroid/support/constraint/Guideline;")
         assertThat(apk).containsClass("Landroid/support/constraint/R\$attr;")

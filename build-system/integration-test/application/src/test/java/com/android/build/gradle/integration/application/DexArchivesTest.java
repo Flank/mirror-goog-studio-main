@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application;
 
+import static com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat;
 import static com.android.build.gradle.integration.common.truth.SubStreamSubject.assertThat;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
@@ -155,10 +156,9 @@ public class DexArchivesTest {
     public void testForReleaseVariants() throws IOException, InterruptedException {
         GradleBuildResult result = runTask("assembleRelease");
 
-        assertThat(result.getNotUpToDateTasks())
-                .contains(":transformClassesWithDexBuilderForRelease");
-        assertThat(result.getNotUpToDateTasks())
-                .containsAllOf(":mergeDexRelease", ":mergeExtDexRelease");
+        assertThat(result.getTask(":transformClassesWithDexBuilderForRelease")).didWork();
+        assertThat(result.getTask(":mergeDexRelease")).didWork();
+        assertThat(result.getTask(":mergeExtDexRelease")).didWork();
     }
 
     /** Regression test for http://b/68144982. */
