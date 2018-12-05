@@ -40,11 +40,17 @@ public class ResValueTypeConnectedTest {
                         "\n"
                                 + "package com.example.helloworld;\n"
                                 + "\n"
-                                + "import android.test.AndroidTestCase;\n"
+                                + "import android.support.test.InstrumentationRegistry;\n"
+                                + "import android.support.test.runner.AndroidJUnit4;\n"
+                                + "import org.junit.Assert;\n"
+                                + "import org.junit.Test;\n"
+                                + "import org.junit.runner.RunWith;\n"
                                 + "\n"
-                                + "public class ResValueTest extends AndroidTestCase {\n"
+                                + "@RunWith(AndroidJUnit4.class)\n"
+                                + "public class ResValueTest {\n"
+                                + "    @Test\n"
                                 + "    public void testResValue() {\n"
-                                + "        assertEquals(\"00\", getContext().getString(R.string.resString));\n"
+                                + "        Assert.assertEquals(\"00\", InstrumentationRegistry.getTargetContext().getString(R.string.resString));\n"
                                 + "    }\n"
                                 + "}\n"));
     }
@@ -79,8 +85,16 @@ public class ResValueTypeConnectedTest {
                         + "        resValue \"plurals\",           \"resPlurals\",          \"s\"\n"
                         + "        resValue \"string\",            \"resString\",           \"00\"  // resString becomes \"0\" if it is incorrectly treated  as int.\n"
                         + "        resValue \"style\",             \"resStyle\",            \"foo\"\n"
+                        + "\n"
+                        + "        minSdkVersion rootProject.supportLibMinSdk\n"
+                        + "        testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'\n"
                         + "    }\n"
-                        + "}\n");
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    androidTestImplementation \"com.android.support.test:runner:${project.testSupportLibVersion}\"\n"
+                        + "}\n"
+                        + "\n");
     }
 
     @Test
