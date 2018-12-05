@@ -206,12 +206,13 @@ public class IncrementalPackagerBuilder {
                                     signingConfig.getKeyAlias(), error, "keyAlias"));
             signingOptions =
                     Optional.of(
-                            SigningOptions.create(
-                                    certificateInfo.getKey(),
-                                    certificateInfo.getCertificate(),
-                                    signingConfig.isV1SigningEnabled(),
-                                    signingConfig.isV2SigningEnabled(),
-                                    minSdk));
+                            SigningOptions.builder()
+                                    .setKey(certificateInfo.getKey())
+                                    .setCertificates(certificateInfo.getCertificate())
+                                    .setV1SigningEnabled(signingConfig.isV1SigningEnabled())
+                                    .setV2SigningEnabled(signingConfig.isV2SigningEnabled())
+                                    .setMinSdkVersion(minSdk)
+                                    .build());
         } catch (KeytoolException|FileNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -244,12 +245,13 @@ public class IncrementalPackagerBuilder {
             SigningOptions oldOptions = signingOptions.get();
             signingOptions =
                     Optional.of(
-                            SigningOptions.create(
-                                    oldOptions.getKey(),
-                                    oldOptions.getCertificates(),
-                                    oldOptions.isV1SigningEnabled(),
-                                    oldOptions.isV2SigningEnabled(),
-                                    minSdk));
+                            SigningOptions.builder()
+                                    .setKey(oldOptions.getKey())
+                                    .setCertificates(oldOptions.getCertificates())
+                                    .setV1SigningEnabled(oldOptions.isV1SigningEnabled())
+                                    .setV2SigningEnabled(oldOptions.isV2SigningEnabled())
+                                    .setMinSdkVersion(minSdk)
+                                    .build());
         }
         return this;
     }

@@ -1138,12 +1138,13 @@ public class AndroidBuilder {
                     Preconditions.checkNotNull(signingConfig.getKeyAlias()));
             signingOptions =
                     Optional.of(
-                            SigningOptions.create(
-                                    certificateInfo.getKey(),
-                                    certificateInfo.getCertificate(),
-                                    signingConfig.isV1SigningEnabled(),
-                                    signingConfig.isV2SigningEnabled(),
-                                    API_LEVEL_SPLIT_APK));
+                            SigningOptions.builder()
+                                    .setKey(certificateInfo.getKey())
+                                    .setCertificates(certificateInfo.getCertificate())
+                                    .setV1SigningEnabled(signingConfig.isV1SigningEnabled())
+                                    .setV2SigningEnabled(signingConfig.isV2SigningEnabled())
+                                    .setMinSdkVersion(API_LEVEL_SPLIT_APK)
+                                    .build());
         } else {
             signingOptions = Optional.absent();
         }
