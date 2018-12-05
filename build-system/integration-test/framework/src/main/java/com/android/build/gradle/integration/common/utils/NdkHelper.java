@@ -38,6 +38,22 @@ import java.util.Objects;
  */
 public class NdkHelper {
 
+    /**
+     * Gets the platform version supported by the specified ndk directory with specified upper bound
+     * version.
+     *
+     * @param ndkDir path to the NDK dir
+     * @param upperBoundVersionHash maximum allowed version (e.g. 'android-23'), can also be a
+     *     preview version (e.g. 'android-O')
+     * @return the platform version supported by this ndk
+     */
+    @NonNull
+    public static AndroidVersion getPlatformSupported(
+            @NonNull File ndkDir, @NonNull String upperBoundVersionHash) {
+        Revision ndkRevision = NdkHandler.findRevision(ndkDir);
+        return implPlatformSupported(ndkRevision, upperBoundVersionHash);
+    }
+
     @VisibleForTesting
     static AndroidVersion implPlatformSupported(
             @Nullable Revision ndkRevision, @NonNull String upperBoundVersionHash) {

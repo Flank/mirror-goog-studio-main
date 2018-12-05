@@ -109,7 +109,7 @@ public class GlobalScope implements TransformGlobalScope {
 
     public void setExtension(@NonNull AndroidConfig extension) {
         this.extension = checkNotNull(extension);
-        ndkHandler = new NdkHandler(project.getRootDir());
+        ndkHandler = new NdkHandler(extension.getNdkVersion(), project.getRootDir());
     }
 
     @NonNull

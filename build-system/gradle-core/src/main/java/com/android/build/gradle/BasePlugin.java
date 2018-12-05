@@ -692,9 +692,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                 "buildToolsVersion is not specified.");
         checkState(extension.getCompileSdkVersion() != null, "compileSdkVersion is not specified.");
 
-        globalScope
-                .getNdkHandler()
-                .setExtensionValues(extension.getNdkVersion(), extension.getCompileSdkVersion());
+        globalScope.getNdkHandler().setCompileSdkVersion(extension.getCompileSdkVersion());
         extension
                 .getCompileOptions()
                 .setDefaultJavaVersion(

@@ -20,7 +20,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.google.common.truth.TruthJUnit.assume;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.internal.cxx.configure.SdkSourceProperties;
+import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.repository.Revision;
 import java.io.IOException;
 import org.junit.Before;
@@ -39,9 +39,7 @@ public class RenderscriptNdkTest {
 
     @Before
     public void setUp() throws IOException, InterruptedException {
-        Revision ndkRevision =
-                SdkSourceProperties.Companion.fromInstallFolder(project.getAndroidNdkHome())
-                        .getRevision();
+        Revision ndkRevision = NdkHandler.findRevision(project.getAndroidNdkHome());
         // ndk r11, r12 are missing renderscript, ndk r10 does support it and has null revision
         assume().that(ndkRevision).isNull();
 

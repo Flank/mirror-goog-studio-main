@@ -18,23 +18,16 @@ package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.cxx.configure.SdkSourceProperties.Companion.SdkSourceProperty.*
 import com.google.common.truth.Truth.assertThat
-import org.junit.Before
 
 import org.junit.Test
 import java.io.File
-import java.io.FileNotFoundException
 
 class SdkSourcePropertiesTest {
-    val file = File("./my-folder/source.properties")
-
-    @Before
-    fun before() {
-        file.parentFile.deleteRecursively()
-        file.parentFile.mkdirs()
-    }
 
     @Test
     fun fromFile() {
+        val file = File("./my-folder/source.properties")
+        file.parentFile.mkdirs()
         file.writeText("""
             Pkg.Desc = Android NDK
             Pkg.Revision = 17.2.4988734
@@ -44,15 +37,5 @@ class SdkSourcePropertiesTest {
             .isEqualTo("Android NDK")
         assertThat(properties.getValue(SDK_PKG_REVISION))
             .isEqualTo("17.2.4988734")
-    }
-
-    @Test
-    fun pathFromInstallFolder() {
-        try {
-            SdkSourceProperties.fromInstallFolder(file.parentFile)
-        } catch(e : FileNotFoundException) {
-            return
-        }
-        assertThat(false).named("Expected exception from fromInstallFolder").isTrue()
     }
 }
