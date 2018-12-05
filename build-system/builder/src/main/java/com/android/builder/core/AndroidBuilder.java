@@ -74,6 +74,7 @@ import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -86,7 +87,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -1145,7 +1145,7 @@ public class AndroidBuilder {
                                     signingConfig.isV2SigningEnabled(),
                                     API_LEVEL_SPLIT_APK));
         } else {
-            signingOptions = Optional.empty();
+            signingOptions = Optional.absent();
         }
 
         ApkCreatorFactory.CreationData creationData =

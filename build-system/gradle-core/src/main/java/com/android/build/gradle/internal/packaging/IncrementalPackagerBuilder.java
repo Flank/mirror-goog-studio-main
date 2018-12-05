@@ -32,6 +32,7 @@ import com.android.ide.common.signing.KeytoolException;
 import com.android.tools.build.apkzlib.sign.SigningOptions;
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory;
 import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
@@ -39,7 +40,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
@@ -93,7 +93,7 @@ public class IncrementalPackagerBuilder {
     }
 
     /** Data to initialize {@link com.android.tools.build.apkzlib.sign.SigningExtension} */
-    @NonNull private Optional<SigningOptions> signingOptions = Optional.empty();
+    @NonNull private Optional<SigningOptions> signingOptions = Optional.absent();
 
     /**
      * The output file.
