@@ -58,9 +58,8 @@ public class AdbClient {
         ByteArrayOutputReceiver receiver;
         try (Trace ignored = Trace.begin("adb shell" + Arrays.toString(parameters))) {
             receiver = new ByteArrayOutputReceiver();
-            // Use 8000ms timeout since dex2oat on O can make install timeout.
             device.executeShellCommand(
-                    String.join(" ", parameters), receiver, 8000, TimeUnit.MILLISECONDS, input);
+                    String.join(" ", parameters), receiver, 5, TimeUnit.MINUTES, input);
             return receiver.toByteArray();
         } catch (AdbCommandRejectedException
                 | ShellCommandUnresponsiveException
@@ -72,7 +71,7 @@ public class AdbClient {
     public InstallResult install(List<String> apks, List<String> options) {
         List<File> files = apks.stream().map(File::new).collect(Collectors.toList());
         try {
-            device.installPackages(files, true, options, 10, TimeUnit.SECONDS);
+            device.installPackages(files, true, options, 5, TimeUnit.MINUTES);
             return InstallResult.OK;
         } catch (InstallException e) {
             System.err.println(e.getMessage());
