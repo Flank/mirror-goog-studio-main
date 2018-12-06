@@ -56,7 +56,7 @@ public class RemoteRepoLoaderImpl implements RemoteRepoLoader {
             "Still waiting for package manifests to be fetched remotely.";
 
     /** Whether or not NDK side by side redirection is enabled. */
-    private static final boolean ENABLE_SIDE_BY_SIDE_NDK = true;
+    private static final boolean ENABLE_SIDE_BY_SIDE_NDK = false;
 
     /**
      * The name of NDK packages that should be redirected if ENABLE_SIDE_BY_SIDE_NDK is set to true.
@@ -78,6 +78,9 @@ public class RemoteRepoLoaderImpl implements RemoteRepoLoader {
      */
     private final Collection<RepositorySourceProvider> mSourceProviders;
 
+    /** If true then present NDK packages as legacy and side-by-side */
+    private final boolean mEnableSideBySideNdk;
+
     /**
      * Constructor
      *
@@ -91,9 +94,18 @@ public class RemoteRepoLoaderImpl implements RemoteRepoLoader {
     public RemoteRepoLoaderImpl(@NonNull Collection<RepositorySourceProvider> sources,
             @Nullable LSResourceResolver resourceResolver,
             @Nullable FallbackRemoteRepoLoader fallback) {
+        this(sources, resourceResolver, fallback, ENABLE_SIDE_BY_SIDE_NDK);
+    }
+
+    public RemoteRepoLoaderImpl(
+            @NonNull Collection<RepositorySourceProvider> sources,
+            @Nullable LSResourceResolver resourceResolver,
+            @Nullable FallbackRemoteRepoLoader fallback,
+            boolean enableSideBySideNdk) {
         mResourceResolver = resourceResolver;
         mSourceProviders = sources;
         mFallback = fallback;
+        mEnableSideBySideNdk = enableSideBySideNdk;
     }
 
     @Override
@@ -275,7 +287,7 @@ public class RemoteRepoLoaderImpl implements RemoteRepoLoader {
         if (parsedPackages != null && !parsedPackages.isEmpty()) {
             // Synthesize NDK packages
             Collection<RemotePackage> packages = new ArrayList<>();
-            if (ENABLE_SIDE_BY_SIDE_NDK) {
+            if (mEnableSideBySideNdk) {
                 for (RemotePackage pkg : parsedPackages) {
                     if (pkg.getPath().equals(NDK_BUNDLE_PACKAGE_NAME)) {
                         packages.add(new NdkLegacyPackage(pkg));
