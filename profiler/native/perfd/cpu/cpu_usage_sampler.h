@@ -35,6 +35,8 @@ class CpuUsageSampler {
   CpuUsageSampler(Clock* clock, CpuCache* cpu_cache)
       : clock_(clock), cache_(*cpu_cache), usage_files_(new ProcfsFiles()) {}
 
+  virtual ~CpuUsageSampler() = default;
+
   // Starts collecting usage data for process with ID of |pid|, if not already.
   profiler::proto::CpuStartResponse::Status AddProcess(int32_t pid);
 
