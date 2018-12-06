@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.tools.build.bundletool.commands.BuildApksCommand
+import com.android.tools.build.bundletool.commands.BuildApksCommand.ApkBuildMode
 import com.android.tools.build.bundletool.model.Aapt2Command
 import com.android.utils.FileUtils
 import org.gradle.api.file.FileCollection
@@ -139,7 +140,7 @@ open class BundleToStandaloneApkTask @Inject constructor(workerExecutor: WorkerE
                     keyPassword = params.keyPassword
                 )
 
-            command.setGenerateOnlyUniversalApk(true)
+            command.setApkBuildMode(ApkBuildMode.UNIVERSAL)
 
             command.build().execute()
         }
