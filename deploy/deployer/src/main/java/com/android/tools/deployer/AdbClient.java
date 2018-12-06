@@ -74,7 +74,7 @@ public class AdbClient {
             device.installPackages(files, true, options, 5, TimeUnit.MINUTES);
             return InstallResult.OK;
         } catch (InstallException e) {
-            System.err.println(e.getMessage());
+            logger.error(e, "Installation Failure");
             String code = e.getErrorCode();
             InstallResult result = InstallResult.UNKNOWN_ERROR;
             try {
