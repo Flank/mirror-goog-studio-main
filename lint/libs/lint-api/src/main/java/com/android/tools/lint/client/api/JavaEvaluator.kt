@@ -711,6 +711,9 @@ class JavaEvaluator {
      * a method in the appcompat library, this would return "com.android.support".
      */
     open fun getLibrary(element: PsiElement): MavenCoordinates? {
+        if (element !is PsiCompiledElement) {
+            return null
+        }
         return getLibrary(findJarPath(element))
     }
 
@@ -719,7 +722,10 @@ class JavaEvaluator {
      * a method in the appcompat library, this would return "com.android.support".
      */
     open fun getLibrary(element: UElement): MavenCoordinates? {
-        return getLibrary(findJarPath(element))
+        if (element !is PsiCompiledElement) {
+            return null
+        }
+        return getLibrary(findJarPath(element as UElement))
     }
 
     /** Disambiguate between UElement and PsiElement since a UMethod is both  */

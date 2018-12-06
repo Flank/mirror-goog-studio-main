@@ -66,6 +66,7 @@ public class AntennaPodSmokeTest {
     }
 
     @Test
+    @Ignore("b/117306698")
     public void buildAntennaPod() throws Exception {
         ModelContainer<AndroidProject> modelContainer =
                 project.model().ignoreSyncIssues().fetchAndroidProjects();

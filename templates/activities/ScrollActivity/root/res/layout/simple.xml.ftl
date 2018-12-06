@@ -2,7 +2,7 @@
 <${getMaterialComponentName('android.support.v4.widget.NestedScrollView', useAndroidX)}
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-<#if hasAppBar && layoutName??>
+<#if layoutName??>
     xmlns:app="http://schemas.android.com/apk/res-auto"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:showIn="@layout/${layoutName}"

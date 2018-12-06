@@ -1,12 +1,8 @@
 package ${escapeKotlinIdentifiers(packageName)}
 
 import android.os.Bundle
-<#if hasAppBar>
 import ${getMaterialComponentName('android.support.design.widget.Snackbar', useMaterial2)}
 import ${getMaterialComponentName('android.support.v7.app.AppCompatActivity', useAndroidX)};
-<#else>
-import ${superClassFqcn}
-</#if>
 <#if isNewProject>
 import android.view.Menu
 import android.view.MenuItem
@@ -23,19 +19,18 @@ import kotlinx.android.synthetic.main.${fragmentLayoutName}.*
 import kotlinx.android.synthetic.main.${simpleLayoutName}.*
 </#if>
 </#if>
+
 class ${activityClass} : ${superClass}() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.${layoutName})
-<#if hasAppBar>
         setSupportActionBar(toolbar)
 
         fab.setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show()
         }
-</#if>
 <#if parentActivityClass?has_content>
         ${kotlinActionBar}?.setDisplayHomeAsUpEnabled(true)
 </#if>

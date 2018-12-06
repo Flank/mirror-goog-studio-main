@@ -57,7 +57,6 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
         .withName("project")
         .create()
 
-    @Suppress("MemberVisibilityCanBePrivate")
     @get:Rule
     val projectCopy = GradleTestProject.builder()
         .fromTestProject("databinding")

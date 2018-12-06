@@ -118,7 +118,10 @@ public class ManifestMerger2 {
         this.mFeatureName = featureName;
         this.mFileStreamProvider = fileStreamProvider;
         this.mNavigationFiles = navigationFiles;
-        this.mModel = new ManifestModel();
+        this.mModel =
+                new ManifestModel(
+                        mOptionalFeatures.contains(
+                                Invoker.Feature.HANDLE_VALUE_CONFLICTS_AUTOMATICALLY));
     }
 
     /**
@@ -132,7 +135,7 @@ public class ManifestMerger2 {
     @NonNull
     private MergingReport merge() throws MergeFailureException {
         // initiate a new merging report
-        MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger, this);
+        MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
 
         SelectorResolver selectors = new SelectorResolver();
 
@@ -379,11 +382,6 @@ public class ManifestMerger2 {
         }
 
         return mergingReport;
-    }
-
-    /** Returns whether the given feature is enabled for this merger */
-    public boolean hasFeature(@NonNull Invoker.Feature feature) {
-        return mOptionalFeatures.contains(feature);
     }
 
     /**
@@ -1012,7 +1010,7 @@ public class ManifestMerger2 {
         MergingReport.Builder builder =
                 manifestInfo.getType() == XmlDocument.Type.MAIN
                         ? mergingReportBuilder
-                        : new MergingReport.Builder(mergingReportBuilder.getLogger(), this);
+                        : new MergingReport.Builder(mergingReportBuilder.getLogger());
 
         // create updatedManifestInfo to have access to the packageName for
         // placeholder substitution if this is the MAIN manifest
@@ -1162,7 +1160,7 @@ public class ManifestMerger2 {
             // a placeholder in a key element, we however do not need to record these
             // substitutions so feed it with a fake merging report.
             MergingReport.Builder builder =
-                    new MergingReport.Builder(mergingReportBuilder.getLogger(), this);
+                    new MergingReport.Builder(mergingReportBuilder.getLogger());
             builder.getActionRecorder().recordAddedNodeAction(libraryDocument.getRootNode(), false);
             performPlaceHolderSubstitution(
                     manifestInfo, libraryDocument, builder, MergingReport.Record.Severity.INFO);

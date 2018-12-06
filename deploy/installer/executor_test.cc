@@ -18,6 +18,7 @@
 
 #include <fcntl.h>
 #include <gtest/gtest.h>
+#include <unistd.h>
 
 using std::string;
 using std::vector;
@@ -89,6 +90,21 @@ TEST_F(ShellCommandRunnerTest, TestPiped) {
   free(buffer0);
   free(buffer1);
   free(buffer2);
+}
+
+TEST_F(ShellCommandRunnerTest, TestForkExitIfExecFails) {
+  // This test times out if the child process is not killed before Run()
+  // returns. This is accomplished by leveraging the fact that a read on a pipe
+  // will block if the write end is still open.
+  int fds[2];
+  pipe(fds);
+
+  std::string output, error;
+  Executor::Run("missing_executable", {}, &output, &error);
+  close(fds[1]);
+
+  char buf;
+  read(fds[0], &buf, 1);
 }
 
 }  // namespace deploy

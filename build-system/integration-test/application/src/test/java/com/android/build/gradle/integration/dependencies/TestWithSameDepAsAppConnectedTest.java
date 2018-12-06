@@ -84,7 +84,7 @@ public class TestWithSameDepAsAppConnectedTest {
                                             + TestVersions.SUPPORT_LIB_VERSION,
                                     "Landroid/support/v4/widget/Space;",
                                     "new android.support.v4.widget.Space(this);",
-                                    "new android.support.v4.widget.Space(getActivity());")
+                                    "new android.support.v4.widget.Space(rule.getActivity());")
                             .toArray());
 
             // Check two AARs, indirect conflict.
@@ -97,7 +97,7 @@ public class TestWithSameDepAsAppConnectedTest {
                                             + TestVersions.SUPPORT_LIB_VERSION,
                                     "Landroid/support/v4/widget/Space;",
                                     "new android.support.v4.widget.Space(this);",
-                                    "new android.support.v4.widget.Space(getActivity());")
+                                    "new android.support.v4.widget.Space(rule.getActivity());")
                             .toArray());
         }
 

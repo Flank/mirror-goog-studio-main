@@ -32,6 +32,7 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
 import groovy.util.Eval;
 import java.util.Arrays;
+import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 import org.junit.Before;
 import org.junit.Rule;
@@ -523,6 +524,24 @@ public class AppPluginDslTest {
         assertThat(android.getDefaultConfig().getMinSdkVersion().getApiString())
                 .named("android.defaultConfig.minSdkVersion.apiLevel")
                 .isEqualTo("P");
+    }
+
+    /** Regression test for b/120196378. */
+    @Test
+    public void testApkShrinker_useProguard_r8() throws Exception {
+        project =
+                TestProjects.builder(projectDirectory.newFolder("useProguardFalse").toPath())
+                        .withPlugin(pluginType)
+                        .withProperty(BooleanOption.ENABLE_R8, false)
+                        .build();
+        initFieldsFromProject();
+        BuildType buildType = android.getBuildTypes().getByName("debug");
+        buildType.setMinifyEnabled(true);
+        buildType.setUseProguard(false);
+        android.getCompileOptions().setSourceCompatibility(JavaVersion.VERSION_1_8);
+        android.getCompileOptions().setTargetCompatibility(JavaVersion.VERSION_1_8);
+
+        plugin.createAndroidTasks();
     }
 
     private void checkGeneratedDensities(String taskName, String... densities) {

@@ -4,9 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import ${getMaterialComponentName('android.support.v7.app.AppCompatActivity', useAndroidX)}
 import ${getMaterialComponentName('android.support.v7.widget.RecyclerView', useAndroidX)}
-<#if hasAppBar>
 import ${getMaterialComponentName('android.support.design.widget.Snackbar', useMaterial2)}
-</#if>
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -43,7 +41,6 @@ class ${CollectionName}Activity : ${superClass}() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-<#if hasAppBar>
         setContentView(R.layout.activity_${item_list_layout})
 
         setSupportActionBar(toolbar)
@@ -53,9 +50,6 @@ class ${CollectionName}Activity : ${superClass}() {
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show()
         }
-<#else>
-        setContentView(R.layout.${item_list_layout})
-</#if>
 <#if parentActivityClass != "">
         // Show the Up button in the action bar.
         supportActionBar?.setDisplayHomeAsUpEnabled(true)

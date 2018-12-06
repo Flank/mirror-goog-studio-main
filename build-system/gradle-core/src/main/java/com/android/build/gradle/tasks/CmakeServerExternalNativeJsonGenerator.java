@@ -94,10 +94,11 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
 
     public CmakeServerExternalNativeJsonGenerator(
             @NonNull JsonGenerationVariantConfiguration config,
+            @NonNull Set<String> configurationFailures,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull File cmakeFolder,
             @NonNull GradleBuildVariant.Builder stats) {
-        super(config, androidBuilder, cmakeFolder, stats);
+        super(config, configurationFailures, androidBuilder, cmakeFolder, stats);
     }
 
     /**

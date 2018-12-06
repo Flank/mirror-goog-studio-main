@@ -23,6 +23,7 @@ import com.android.annotations.NonNull;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.VectorDrawablesOptions;
 import com.android.ide.common.gradle.model.stubs.ProductFlavorStub;
+import com.android.testutils.Serialization;
 import java.io.Serializable;
 import java.util.Objects;
 import org.junit.Before;

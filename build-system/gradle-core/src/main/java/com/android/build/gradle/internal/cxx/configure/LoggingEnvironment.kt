@@ -101,7 +101,7 @@ private fun checkedFormat(format: String, args: Array<out Any>): String {
 /**
  * Push a new logging environment onto the stack of environments.
  */
-private fun push(logger : ThreadLoggingEnvironment) = loggerStack.get().add(0, logger)
+private fun push(logger: ThreadLoggingEnvironment) = loggerStack.get().add(0, logger)
 
 /**
  * Pop the top logging environment.
@@ -129,14 +129,20 @@ abstract class ThreadLoggingEnvironment : AutoCloseable {
 /**
  * A logger suitable for the gradle sync environment. Warnings and errors are reported so that they
  * can be seen in Android Studio.
+ *
+ * Configuration errors are also recorded in a set. The purpose is to be able to replay errors at
+ * sync time if Android Studio requests the model multiple times.
  */
 class GradleSyncLoggingEnvironment(
     private val variantName: String,
     private val tag: String,
+    private val errors: MutableSet<String>,
     private val issueReporter: EvalIssueReporter,
-    private val logger: ILogger) : ThreadLoggingEnvironment() {
+    private val logger: ILogger
+) : ThreadLoggingEnvironment() {
 
     override fun error(message: String) {
+        errors += message
         val e = GradleException(message)
         issueReporter
             .reportError(

@@ -17,6 +17,11 @@ android {
             testCoverageEnabled true
         }
     }
+
+    defaultConfig {
+        minSdkVersion rootProject.supportLibMinSdk
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
 }
 
 project.afterEvaluate {
@@ -41,4 +46,6 @@ project.afterEvaluate {
 
 dependencies {
     api project(':lib')
+    androidTestImplementation "com.android.support.test:runner:${project.testSupportLibVersion}"
+    androidTestImplementation "com.android.support.test:rules:${project.testSupportLibVersion}"
 }

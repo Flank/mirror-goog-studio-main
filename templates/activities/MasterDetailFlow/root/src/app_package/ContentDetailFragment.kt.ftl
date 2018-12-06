@@ -1,11 +1,7 @@
 package ${escapeKotlinIdentifiers(packageName)}
 
 import android.os.Bundle
-<#if useAndroidX>
 import ${getMaterialComponentName('android.support.v4.app.Fragment', useAndroidX)}
-<#else>
-import android.<#if appCompat>support.v4.</#if>app.Fragment
-</#if>
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -38,9 +34,7 @@ class ${DetailName}Fragment : Fragment() {
                 // arguments. In a real-world scenario, use a Loader
                 // to load content from a content provider.
                 item = DummyContent.ITEM_MAP[it.getString(ARG_ITEM_ID)]
-<#if hasAppBar>
                 activity?.toolbar_layout?.title = item?.content
-</#if>
             }
         }
     }

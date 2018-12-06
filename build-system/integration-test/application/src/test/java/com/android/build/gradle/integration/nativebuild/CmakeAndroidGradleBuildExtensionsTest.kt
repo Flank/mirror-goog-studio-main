@@ -98,7 +98,8 @@ class CmakeAndroidGradleBuildExtensionsTest(
                 android.defaultConfig.ndk.abiFilters "x86"
                 """.trimIndent()
         )
-        val ninja = GradleTestProject.getPreferredNinja()
+        // any backslash in the path must be escaped.
+        val ninja = GradleTestProject.getPreferredNinja().absolutePath.replace("\\", "\\\\")
         when (enableCaching) {
             null -> TestFileUtils.appendToFile(
                 project.buildFile,
@@ -136,7 +137,7 @@ class CmakeAndroidGradleBuildExtensionsTest(
 
         if (alternateCacheFolder != null) {
             project.localProp.appendText("$CXX_LOCAL_PROPERTIES_CACHE_DIR=" +
-                    "${File(project.testDir, alternateCacheFolder)}\n")
+                    "${File(project.testDir, alternateCacheFolder).absolutePath.replace("\\", "\\\\")}\n")
         }
     }
 

@@ -68,7 +68,7 @@ class PluginVersionCheckTest {
         assertThat(syncIssue.message).isEqualTo(expected)
 
         val failure = project.executor().expectFailure().run("generateDebugR2")
-        assertThat(failure.stdout).contains(expected)
+        assertThat(failure.stderr).contains(expected)
     }
 
     @Test

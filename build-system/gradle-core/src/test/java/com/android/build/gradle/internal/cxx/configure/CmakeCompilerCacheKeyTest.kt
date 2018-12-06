@@ -18,19 +18,25 @@ package com.android.build.gradle.internal.cxx.configure
 
 import com.android.builder.model.Version
 import com.google.common.truth.Truth.assertThat
+import org.junit.Rule
 
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import java.io.File
 
 class CmakeCompilerCacheKeyTest {
 
+    @Rule
+    @JvmField
+    val tmpFolder = TemporaryFolder()
+
     @Test
     fun toAndFromFile() {
         val key = CmakeCompilerCacheKey(
-            ndkInstallationFolder = File("./ndk"),
+            ndkInstallationFolder = tmpFolder.newFolder("ndk"),
             ndkSourceProperties = SdkSourceProperties(mapOf("x" to "y")),
             args = listOf("a", "b"))
-        val file = File("file.json")
+        val file = tmpFolder.newFile("file.json")
         key.toFile(file)
         val key2 = CmakeCompilerCacheKey.fromFile(file)
         assertThat(key2).isEqualTo(key)

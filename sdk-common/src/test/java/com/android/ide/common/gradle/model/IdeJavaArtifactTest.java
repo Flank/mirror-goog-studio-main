@@ -23,6 +23,7 @@ import com.android.builder.model.JavaArtifact;
 import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
 import com.android.ide.common.gradle.model.stubs.JavaArtifactStub;
 import com.android.ide.common.repository.GradleVersion;
+import com.android.testutils.Serialization;
 import java.io.Serializable;
 import org.junit.Before;
 import org.junit.Test;

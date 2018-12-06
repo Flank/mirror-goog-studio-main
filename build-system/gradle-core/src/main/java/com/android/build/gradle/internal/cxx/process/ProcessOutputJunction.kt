@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.process
 
+import com.android.build.gradle.internal.cxx.configure.info
 import com.android.builder.core.AndroidBuilder
 import com.android.ide.common.process.BuildCommandException
 import com.android.ide.common.process.ProcessException
@@ -44,7 +45,6 @@ class ProcessOutputJunction(
     outputBaseName: String,
     private val logPrefix: String,
     private val lifecycle: (String) -> Unit,
-    private val verbose: (String) -> Unit,
     private val execute: (ProcessInfo, ProcessOutputHandler) -> ProcessResult
 ) {
     private var logErrorToInfo: Boolean = false
@@ -66,7 +66,7 @@ class ProcessOutputJunction(
     fun execute(processHandler: DefaultProcessOutputHandler) {
         commandFile.parentFile.mkdirs()
         commandFile.delete()
-        verbose(process.toString())
+        info(process.toString())
         commandFile.writeText(process.toString())
         stderrFile.delete()
         stdoutFile.delete()
@@ -139,7 +139,6 @@ fun createProcessOutputJunction(
         outputBaseName,
         logPrefix,
         { message -> androidBuilder.logger.lifecycle(message) },
-        { message -> androidBuilder.logger.verbose(message) },
         { processInfo: ProcessInfo, outputHandler: ProcessOutputHandler ->
             androidBuilder.executeProcess(
                 processInfo,

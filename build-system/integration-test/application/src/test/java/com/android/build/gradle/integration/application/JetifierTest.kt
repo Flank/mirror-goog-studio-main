@@ -186,8 +186,7 @@ class JetifierTest(private val withKotlin: Boolean) {
             .with(BooleanOption.ENABLE_JETIFIER, true)
             .expectFailure()
             .run("assembleDebug")
-        val stacktrace = Throwables.getStackTraceAsString(checkNotNull(result.exception))
-        assertThat(stacktrace).contains("Transformation hasn't been executed yet")
+        assertThat(result.stderr).contains("Failed to transform file 'doNotJetifyLib-1.0.jar'")
 
         // Add doNotJetifyLib to a blacklist, the build should succeed
         TestFileUtils.appendToFile(

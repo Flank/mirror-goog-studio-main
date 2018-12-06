@@ -24,6 +24,7 @@ import com.android.tools.maven.MavenCoordinates;
 import com.android.tools.maven.MavenRepository;
 import com.android.tools.utils.Buildifier;
 import com.android.tools.utils.WorkspaceUtils;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.FileWriter;
@@ -142,7 +143,8 @@ public class ThirdPartyBuildGenerator {
     private final Path mBuildFile;
     private final MavenRepository mRepo;
 
-    private ThirdPartyBuildGenerator(Path buildFile, Path localRepo) {
+    @VisibleForTesting
+    protected ThirdPartyBuildGenerator(Path buildFile, Path localRepo) {
         mBuildFile = checkNotNull(buildFile);
         mRepo = new MavenRepository(localRepo);
     }
@@ -161,6 +163,12 @@ public class ThirdPartyBuildGenerator {
             fileWriter.append(GENERATED_WARNING);
             fileWriter.append(System.lineSeparator());
             fileWriter.append("load(\"//tools/base/bazel:maven.bzl\", \"maven_java_library\")");
+            fileWriter.append(System.lineSeparator());
+            fileWriter.append(System.lineSeparator());
+            fileWriter.append("# Used by test");
+            fileWriter.append(System.lineSeparator());
+            fileWriter.append(
+                    "exports_files(['BUILD'], visibility=[\"//tools/base/bazel:__pkg__\"])\n");
             fileWriter.append(System.lineSeparator());
             fileWriter.append(System.lineSeparator());
 
@@ -214,7 +222,8 @@ public class ThirdPartyBuildGenerator {
                 .collect(Collectors.toList());
     }
 
-    private String getJarTarget(Artifact artifact) {
+    @VisibleForTesting
+    protected String getJarTarget(Artifact artifact) {
         Path jar = mRepo.getRelativePath(artifact);
         return PREBUILTS_BAZEL_PACKAGE + jar.getParent() + ":" + JavaImportGenerator.JAR_RULE_NAME;
     }
@@ -272,7 +281,7 @@ public class ThirdPartyBuildGenerator {
         return versions;
     }
 
-    private static String getRuleName(Artifact artifact) {
+    private String getRuleName(Artifact artifact) {
         return artifact.getGroupId() + "_" + artifact.getArtifactId();
     }
 }

@@ -1789,7 +1789,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             }
 
             val containingClass = field.containingClass ?: return
-            val owner = context.evaluator.getQualifiedName(containingClass) ?: return
+            val evaluator = context.evaluator
+            val owner = evaluator.getQualifiedName(containingClass) ?: return
 
             // Enforce @RequiresApi
             val modifierList = field.modifierList
@@ -1802,7 +1803,10 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 val minSdk = getMinSdk(context)
                 if (api > minSdk && api > getTargetApi(node)) {
                     // Only look for compile time constants. See JLS 15.28 and JLS 13.4.9.
-                    var issue = INLINED
+                    var issue = if (evaluator.isStatic(field) && evaluator.isFinal(field))
+                        INLINED
+                    else
+                        UNSUPPORTED
                     if (type !is PsiPrimitiveType && !isString(type)) {
                         issue = UNSUPPORTED
 
@@ -1816,7 +1820,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                                 return
                             }
                         }
-                    } else if (isBenignConstantUsage(node, name, owner)) {
+                    } else if (issue == INLINED && isBenignConstantUsage(node, name, owner)) {
                         return
                     }
 

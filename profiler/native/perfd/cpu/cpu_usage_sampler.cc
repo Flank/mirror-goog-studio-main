@@ -235,8 +235,13 @@ bool CpuUsageSampler::Sample() {
   }
   bool all_succeeded = true;
   for (const int32_t pid : pids) {
-    bool process_succeeded = SampleAProcess(pid);
-    if (!process_succeeded) all_succeeded = false;
+    CpuUsageData data;
+    bool process_succeeded = SampleAProcess(pid, &data);
+    if (process_succeeded) {
+      cache_.Add(pid, data);
+    } else {
+      all_succeeded = false;
+    }
   }
   return all_succeeded;
 }
@@ -245,20 +250,18 @@ bool CpuUsageSampler::Sample() {
 // data. This is not a waste. It takes non-trial amount of time to sample
 // a process's usage data (> 1 millisecond), and therefore it is better to get
 // the up-to-date system-wide data each time.
-bool CpuUsageSampler::SampleAProcess(int32_t pid) {
-  CpuUsageData data;
-  if (CollectSystemUsageData(usage_files_->GetSystemStatFilePath(), &data) &&
+bool CpuUsageSampler::SampleAProcess(int32_t pid, CpuUsageData* data) {
+  if (CollectSystemUsageData(usage_files_->GetSystemStatFilePath(), data) &&
       CollectProcessUsageData(pid, usage_files_->GetProcessStatFilePath(pid),
-                              &data)) {
-    for (int i = 0; i < data.cores_size(); i++) {
+                              data)) {
+    for (int i = 0; i < data->cores_size(); i++) {
       // We do not fail if there is no file, just not set it.
-      CpuCoreUsageData* data_core = data.mutable_cores(i);
+      CpuCoreUsageData* data_core = data->mutable_cores(i);
       CollectCpuFrequency(
           usage_files_->GetSystemCurrentCpuFrequencyPath(data_core->core()),
           data_core);
     }
-    data.set_end_timestamp(clock_->GetCurrentTime());
-    cache_.Add(pid, data);
+    data->set_end_timestamp(clock_->GetCurrentTime());
     return true;
   }
   return false;

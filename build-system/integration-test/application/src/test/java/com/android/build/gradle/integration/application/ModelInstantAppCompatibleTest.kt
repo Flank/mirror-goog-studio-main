@@ -108,9 +108,9 @@ class ModelInstantAppCompatibleTest {
         )
         val issues =
             project.model().ignoreSyncIssues().fetchAndroidProjects().onlyModelMap[":app"]!!.syncIssues
-        Truth.assertThat(issues).hasSize(1)
-        Truth.assertThat(issues.first().message).startsWith("Failed to parse XML")
-        Truth.assertThat(issues.first().message).contains(
+        Truth.assertThat(issues.size).isAtLeast(1)
+        Truth.assertThat(issues.last().message).startsWith("Failed to parse XML")
+        Truth.assertThat(issues.last().message).contains(
             File(
                 project.getSubproject(":app").mainSrcDir.parent,
                 "/AndroidManifest.xml"

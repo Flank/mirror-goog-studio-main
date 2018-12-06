@@ -201,19 +201,19 @@ public final class HttpTracker {
     private static final class Connection implements HttpConnectionTracker {
 
         private long myId;
+        private String myUrl;
+        private String myCallstack;
         private Thread myLastThread = null;
 
         private Connection(String url, StackTraceElement[] callstack) {
             myId = nextId();
-
+            myUrl = url;
             StringBuilder s = new StringBuilder();
             for (StackTraceElement e : callstack) {
                 s.append(e);
                 s.append('\n');
             }
-
-            onPreConnect(myId, url, s.toString());
-            trackThread();
+            myCallstack = s.toString();
         }
 
         @Override
@@ -226,13 +226,8 @@ public final class HttpTracker {
             onError(myId, message);
         }
 
-        /**
-         * Returns output stream with tracker if StudioFlags.PROFILER_TRACK_REQUEST_BODY flag is on,
-         * otherwise returns the original output stream.
-         */
         @Override
         public OutputStream trackRequestBody(OutputStream stream) {
-            onRequestBody(myId);
             return new OutputStreamTracker(stream, this);
         }
 
@@ -247,8 +242,8 @@ public final class HttpTracker {
                 }
                 s.append('\n');
             }
+            onRequest(myId, myUrl, myCallstack, method, s.toString());
             trackThread();
-            onRequest(myId, method, s.toString());
         }
 
         @Override
@@ -268,7 +263,6 @@ public final class HttpTracker {
 
         @Override
         public InputStream trackResponseBody(InputStream stream) {
-            onResponseBody(myId);
             return new InputStreamTracker(stream, this);
         }
 
@@ -282,11 +276,8 @@ public final class HttpTracker {
 
         private native long nextId();
         private native void trackThread(long id, String theadName, long threadId);
-        private native void onPreConnect(long id, String url, String stack);
-        private native void onRequestBody(long id);
-        private native void onRequest(long id, String method, String fields);
+        private native void onRequest(long id, String url, String callstack, String method, String fields);
         private native void onResponse(long id, String response, String fields);
-        private native void onResponseBody(long id);
         private native void onDisconnect(long id);
         private native void onError(long id, String status);
     }

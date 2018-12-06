@@ -44,3 +44,7 @@ project.ext.pomDesc = 'Library implementing the ADB Server protocol'
 jar {
     from 'NOTICE'
 }
+
+apply from: "$rootDir/buildSrc/base/publish.gradle"
+apply from: "$rootDir/buildSrc/base/bintray.gradle"
+apply from: "$rootDir/buildSrc/base/javadoc.gradle"

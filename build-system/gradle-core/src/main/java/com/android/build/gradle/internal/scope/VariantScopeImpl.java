@@ -1442,14 +1442,22 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         // if it's the case then we add the tested artifact.
                         final com.android.build.api.artifact.ArtifactType taskOutputType =
                                 taskOutputSpec.getOutputType();
-                        if (testedScope.getArtifacts().hasArtifact(taskOutputType)) {
+                        BuildArtifactsHolder artifacts = testedScope.getArtifacts();
+                        if (artifacts.hasFinalProduct(taskOutputType)) {
                             result =
                                     plusFunction.apply(
                                             result,
-                                            testedScope
-                                                    .getArtifacts()
-                                                    .getFinalArtifactFiles(taskOutputType)
-                                                    .get(),
+                                            getProject()
+                                                    .files(
+                                                            artifacts.getFinalProduct(
+                                                                    taskOutputType)),
+                                            testedScope.getFullVariantName());
+                        }
+                        if (artifacts.hasArtifact(taskOutputType)) {
+                            result =
+                                    plusFunction.apply(
+                                            result,
+                                            artifacts.getFinalArtifactFiles(taskOutputType).get(),
                                             testedScope.getFullVariantName());
                         }
                     }
@@ -1510,8 +1518,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
         CodeShrinker shrinker = getCodeShrinker();
         if (shrinker == R8) {
-            if (globalScope.getProjectOptions().get(ENABLE_R8_DESUGARING)
-                    && isValidJava8Flag(ENABLE_R8_DESUGARING, ENABLE_R8)) {
+            if (globalScope.getProjectOptions().get(ENABLE_R8_DESUGARING)) {
                 return Java8LangSupport.R8;
             }
         } else {

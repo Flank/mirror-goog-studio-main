@@ -31,10 +31,6 @@ class InternalNetworkServiceImpl final
   InternalNetworkServiceImpl(FileCache *file_cache,
                              NetworkCache *network_cache);
 
-  grpc::Status RegisterHttpData(grpc::ServerContext *context,
-                                const proto::HttpDataRequest *httpData,
-                                proto::EmptyNetworkReply *reply) override;
-
   grpc::Status SendChunk(grpc::ServerContext *context,
                          const proto::ChunkRequest *chunk,
                          proto::EmptyNetworkReply *reply) override;

@@ -20,32 +20,44 @@ import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.*
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.google.common.truth.Truth.assertThat
-import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import java.io.File
 
 class CmakeAndroidGradleBuildExtensionsKtTest {
-    private val base = File("./base")
-    private val cacheRootFolder = File(base, "my-cache-folder")
+    @Rule
+    @JvmField
+    val folder = TemporaryFolder()
+
+    private lateinit var base: File
+    private lateinit var cacheRootFolder: File
     private val variantName = "my-variant"
-    private val externalNativeBuildBaseFolder = File(base, ".externalNativeBuild")
-    private val config = createJsonGenerationAbiConfiguration(
-        Abi.X86,
-        variantName,
-        externalNativeBuildBaseFolder,
-        File(base,"obj"),
-        NativeBuildSystem.CMAKE,
-        19)
-    private val cmakeListsFolder = File(base,"src")
-    private val ndkFolder = File(base,"ndk")
-    private val toolchain = File(ndkFolder,"toolchain.cmake")
-    private val sourceProperties = File(ndkFolder,"source.properties")
+    private lateinit var externalNativeBuildBaseFolder: File
+    private lateinit var config: JsonGenerationAbiConfiguration
+    private lateinit var cmakeListsFolder: File
+    private lateinit var ndkFolder: File
+    private lateinit var toolchain: File
+    private lateinit var sourceProperties: File
 
     @Before
     fun setup() {
-        base.deleteRecursively()
+        base = folder.newFolder("base")
+        cacheRootFolder = File(base, "my-cache-folder")
+        externalNativeBuildBaseFolder = File(base, ".externalNativeBuild")
+        config = createJsonGenerationAbiConfiguration(
+            Abi.X86,
+            variantName,
+            externalNativeBuildBaseFolder,
+            File(base,"obj"),
+            NativeBuildSystem.CMAKE,
+            19)
+        cmakeListsFolder = File(base,"src")
+        ndkFolder = File(base,"ndk")
+        toolchain = File(ndkFolder,"toolchain.cmake")
+        sourceProperties = File(ndkFolder,"source.properties")
     }
 
     @Test
@@ -60,7 +72,7 @@ class CmakeAndroidGradleBuildExtensionsKtTest {
         )
         assertStateNotWrapped()
         assertThat(executionContext.cmakeListsFolder.path).isEqualTo(
-            "./base/src")
+            "$base${File.separatorChar}src")
         assertThat(executionContext.args).containsExactly(
             "-H${cmakeListsFolder.path}",
             "-DX=Y")
@@ -139,7 +151,8 @@ class CmakeAndroidGradleBuildExtensionsKtTest {
             cmakeListsFolder,
             listOf("-DX=Y")
         )
-        assertThat(executionContext.cmakeListsFolder.path).isEqualTo("./base/src")
+        assertThat(executionContext.cmakeListsFolder.path).isEqualTo(
+            "$base${File.separatorChar}src")
         assertThat(executionContext.args).containsExactly("-DX=Y")
         assertStateNotWrapped()
     }
@@ -155,7 +168,7 @@ class CmakeAndroidGradleBuildExtensionsKtTest {
                 "-DX=Y")
         )
         assertThat(executionContext.cmakeListsFolder.path).isEqualTo(
-            "./base/src")
+            "$base${File.separatorChar}src")
         assertThat(executionContext.args).containsExactly(
             "-DX=Y")
         assertStateNotWrapped()

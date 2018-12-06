@@ -12,7 +12,13 @@ android {
         minSdkVersion rootProject.supportLibMinSdk
         //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
         targetSdkVersion 15
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
     registerTransform(new com.android.test.transfomInModuleWithKotlin.TestTransform())
+}
+
+dependencies {
+    androidTestImplementation "com.android.support.test:runner:${project.testSupportLibVersion}"
+    androidTestImplementation "com.android.support.test:rules:${project.testSupportLibVersion}"
 }

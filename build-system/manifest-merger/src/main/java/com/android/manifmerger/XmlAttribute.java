@@ -246,10 +246,7 @@ public class XmlAttribute extends XmlNode {
 
     private boolean automaticallyRejected(
             @NonNull MergingReport.Builder report, @NonNull XmlAttribute higherPriority) {
-        ManifestMerger2 merger = report.getManifestMerger();
-        if (merger != null
-                && merger.hasFeature(
-                        ManifestMerger2.Invoker.Feature.HANDLE_VALUE_CONFLICTS_AUTOMATICALLY)) {
+        if (mOwnerElement.getDocument().getModel().autoRejectConflicts()) {
             Actions.AttributeRecord attributeRecord =
                     report.getActionRecorder().getAttributeCreationRecord(higherPriority);
             String message =

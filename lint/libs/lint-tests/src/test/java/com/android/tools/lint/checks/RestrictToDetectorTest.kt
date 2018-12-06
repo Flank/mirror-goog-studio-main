@@ -150,6 +150,101 @@ class RestrictToDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun testRestrictToLibrary() {
+        // 120087311: Enforce RestrictTo(LIBRARY) when the API is defined in another project
+        val library = project().files(
+            java(
+                """
+                package com.example.mylibrary;
+
+                import android.support.annotation.RestrictTo;
+
+                public class LibraryCode {
+                    // No restriction: any access is fine.
+                    public static int FIELD1;
+
+                    // Scoped to same library: accessing from
+                    // lib is okay, from app is not.
+                    @RestrictTo(RestrictTo.Scope.LIBRARY)
+                    public static int FIELD2;
+
+                    // Scoped to same library group: whether accessing
+                    // from app is okay depends on whether they are in
+                    // the same library group (=groupId). In this test
+                    // project we don't know what they are so there's
+                    // no warning generated.
+                    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+                    public static int FIELD3;
+
+                    public static void method1() {
+                    }
+
+                    @RestrictTo(RestrictTo.Scope.LIBRARY)
+                    public static void method2() {
+                    }
+
+                    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+                    public static void method3() {
+                    }
+                }
+                """
+            ).indented(),
+
+            java(
+                """
+                package test.pkg;
+
+                import com.example.mylibrary.LibraryCode;
+
+                // Access within the same library -- all OK
+                public class LibraryCode2 {
+                    public void method() {
+                        LibraryCode.method1(); // OK
+                        LibraryCode.method2(); // OK
+                        LibraryCode.method3(); // OK
+                        int f1 =  LibraryCode.FIELD1; // OK
+                        int f2 =  LibraryCode.FIELD2; // OK
+                        int f3 =  LibraryCode.FIELD3; // OK
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).name("lib")
+
+        val app = project().files(
+            kotlin(
+                """
+                package com.example.myapplication
+
+                import com.example.mylibrary.LibraryCode
+
+                fun test() {
+                    LibraryCode.method1()
+                    LibraryCode.method2()
+                    LibraryCode.method3()
+                    val f1 = LibraryCode.FIELD1
+                    val f2 = LibraryCode.FIELD2
+                    val f3 = LibraryCode.FIELD3
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).dependsOn(library)
+
+        lint().projects(library, app).run().expect(
+            """
+            project1/src/com/example/myapplication/test.kt:7: Error: LibraryCode.method2 can only be called from within the same library (lib) [RestrictedApi]
+                LibraryCode.method2()
+                            ~~~~~~~
+            project1/src/com/example/myapplication/test.kt:10: Error: LibraryCode.FIELD2 can only be accessed from within the same library (lib) [RestrictedApi]
+                val f2 = LibraryCode.FIELD2
+                                     ~~~~~~
+            2 errors, 0 warnings
+            """
+        )
+    }
+
     fun testHierarchy() {
         val project = project().files(
             java(

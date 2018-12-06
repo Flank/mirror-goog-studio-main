@@ -52,21 +52,24 @@ public class OverrideDetector extends Detector implements ClassScanner {
             Issue.create(
                             "DalvikOverride",
                             "Method considered overridden by Dalvik",
-                            "The Android virtual machine will treat a package private method in one "
+                            "The Dalvik virtual machine will treat a package private method in one "
                                     + "class as overriding a package private method in its super class, even if "
-                                    + "they are in separate packages. This may be surprising, but for compatibility "
-                                    + "reasons the behavior has not been changed (yet).\n"
+                                    + "they are in separate packages.\n"
                                     + "\n"
                                     + "If you really did intend for this method to override the other, make the "
                                     + "method `protected` instead.\n"
                                     + "\n"
                                     + "If you did **not** intend the override, consider making the method private, or "
-                                    + "changing its name or signature.",
+                                    + "changing its name or signature.\n"
+                                    + "\n"
+                                    + "Note that this check is disabled be default, because ART (the successor "
+                                    + "to Dalvik) no longer has this behavior.",
                             Category.CORRECTNESS,
                             7,
                             Severity.ERROR,
                             new Implementation(
                                     OverrideDetector.class, EnumSet.of(Scope.ALL_CLASS_FILES)))
+                    .setEnabledByDefault(false)
                     .setAndroidSpecific(true);
 
     /** map from owner class name to JVM signatures for its package private methods */

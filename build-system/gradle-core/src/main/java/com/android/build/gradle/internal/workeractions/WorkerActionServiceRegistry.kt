@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.workeractions
 
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry.ServiceKey
+import java.io.Closeable
 import java.io.Serializable
 import java.util.concurrent.Executor
 
@@ -38,6 +39,34 @@ class WorkerActionServiceRegistry {
     interface RegisteredService<out T : Any> {
         val service: T
         fun shutdown()
+    }
+
+    class Manager<Obj : Any, Key : ServiceKey<Obj>>(
+        private val obj: Obj?,
+        proposedKey: Key) : Closeable {
+
+        val key = if (obj != null) proposedKey else null
+
+        init {
+            key?.let {
+
+                val service = object : RegisteredService<Obj> {
+
+                    override val service: Obj
+                        get() = obj!!
+
+                    override fun shutdown() {}
+                }
+
+                INSTANCE.registerService(it) { service }
+            }
+        }
+
+        override fun close() {
+            key?.let {
+                INSTANCE.removeService(it)
+            }
+        }
     }
 
     private val services: MutableMap<ServiceKey<*>, RegisteredService<*>> = mutableMapOf()

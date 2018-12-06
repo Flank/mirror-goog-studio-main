@@ -5,9 +5,7 @@
     <dependency mavenUrl="com.android.support:support-v4:${buildApi}.+" />
     <dependency mavenUrl="com.android.support:recyclerview-v7:${buildApi}.+" />
 
-    <#if hasAppBar>
-      <dependency mavenUrl="com.android.support:design:${buildApi}.+"/>
-    </#if>
+    <dependency mavenUrl="com.android.support:design:${buildApi}.+"/>
 
     <#include "../common/recipe_theme.xml.ftl" />
 
@@ -29,9 +27,7 @@
 
     <merge from="root/res/values/dimens.xml.ftl"
              to="${escapeXmlAttribute(resOut)}/values/dimens.xml" />
-    <#if hasAppBar>
-      <#include "../common/recipe_no_actionbar.xml.ftl" />
-    </#if>
+    <#include "../common/recipe_no_actionbar.xml.ftl" />
 
     <instantiate from="root/res/layout/activity_item_detail.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/layout/activity_${detail_name}.xml" />
@@ -48,10 +44,8 @@
                    to="${escapeXmlAttribute(resOut)}/layout/${item_list_content_layout}.xml" />
     <instantiate from="root/res/layout/fragment_item_detail.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/layout/${detail_name}.xml" />
-    <#if hasAppBar>
-      <instantiate from="root/res/layout/activity_item_list_app_bar.xml.ftl"
-                     to="${escapeXmlAttribute(resOut)}/layout/activity_${item_list_layout}.xml" />
-    </#if>
+    <instantiate from="root/res/layout/activity_item_list_app_bar.xml.ftl"
+                   to="${escapeXmlAttribute(resOut)}/layout/activity_${item_list_layout}.xml" />
 
     <instantiate from="root/src/app_package/ContentDetailActivity.${ktOrJavaExt}.ftl"
                    to="${escapeXmlAttribute(srcOut)}/${DetailName}Activity.${ktOrJavaExt}" />

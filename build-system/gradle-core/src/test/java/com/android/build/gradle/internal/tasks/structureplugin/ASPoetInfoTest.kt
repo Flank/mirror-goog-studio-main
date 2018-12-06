@@ -102,8 +102,8 @@ private fun getBaseAndroidAppModule(): ModuleInfo {
     module.name = "myapp"
     module.type = ModuleType.ANDROID
     module.androidBuildConfig.minSdkVersion = 21
-    module.androidBuildConfig.targetSdkVersion = 27
-    module.androidBuildConfig.compileSdkVersion = 27
+    module.androidBuildConfig.targetSdkVersion = 28
+    module.androidBuildConfig.compileSdkVersion = 28
 
     module.resources.stringCount = 2
     module.resources.imageCount = 3

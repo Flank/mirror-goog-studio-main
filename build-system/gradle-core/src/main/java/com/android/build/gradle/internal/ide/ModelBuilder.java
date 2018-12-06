@@ -551,8 +551,20 @@ public class ModelBuilder<Extension extends AndroidConfig>
             ManifestAttributeSupplier attributeSupplier =
                     new DefaultManifestParser(
                             manifest, () -> true, extraModelInfo.getSyncIssueHandler());
-            validateMinSdkVersion(attributeSupplier);
-            validateTargetSdkVersion(attributeSupplier);
+            try {
+                validateMinSdkVersion(attributeSupplier);
+                validateTargetSdkVersion(attributeSupplier);
+            } catch (Throwable e) {
+                syncIssues.add(
+                        new SyncIssueImpl(
+                                Type.GENERIC,
+                                EvalIssueReporter.Severity.ERROR,
+                                null,
+                                "Failed to parse XML in "
+                                        + manifest.getPath()
+                                        + "\n"
+                                        + e.getMessage()));
+            }
         }
 
         String variantName = variantConfiguration.getFullName();

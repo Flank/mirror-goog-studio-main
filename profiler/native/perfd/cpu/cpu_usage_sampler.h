@@ -35,6 +35,8 @@ class CpuUsageSampler {
   CpuUsageSampler(Clock* clock, CpuCache* cpu_cache)
       : clock_(clock), cache_(*cpu_cache), usage_files_(new ProcfsFiles()) {}
 
+  virtual ~CpuUsageSampler() = default;
+
   // Starts collecting usage data for process with ID of |pid|, if not already.
   profiler::proto::CpuStartResponse::Status AddProcess(int32_t pid);
 
@@ -46,6 +48,12 @@ class CpuUsageSampler {
   // |cache_|. Returns true if successfully sampling all processes.
   bool Sample();
 
+  // Samples the CPU data of a process, including the system-wide usage as a
+  // context for this process' usage percentage. Returns true on success.
+  // TODO: Handle the case if there is no running process of |pid|.
+  // Used by new pipeline's CPU usage sampler hence being public.
+  virtual bool SampleAProcess(int32_t pid, profiler::proto::CpuUsageData* data);
+
  protected:
   // Resets where to look for (non-default) usage files.
   // This method is protected because it is supposed to be used for testing
@@ -55,11 +63,6 @@ class CpuUsageSampler {
   }
 
  private:
-  // Samples the CPU data of a process, including the system-wide usage as a
-  // context for this process' usage percentage. Returns true on success.
-  // TODO: Handle the case if there is no running process of |pid|.
-  bool SampleAProcess(int32_t pid);
-
   // PIDs of app process that are being profiled.
   std::unordered_set<int32_t> pids_{};
   std::mutex pids_mutex_;

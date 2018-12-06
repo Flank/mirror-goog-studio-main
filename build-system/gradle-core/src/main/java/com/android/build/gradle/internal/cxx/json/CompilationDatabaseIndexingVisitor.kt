@@ -81,6 +81,8 @@ class CompilationDatabaseIndexingVisitor(private val strings: StringTable) :
 fun indexCompilationDatabase(compilationDatabase: JsonReader, strings: StringTable):
         Map<String, Int> {
     val visitor = CompilationDatabaseIndexingVisitor(strings)
-    CompilationDatabaseStreamingParser(compilationDatabase, visitor).parse()
+    CompilationDatabaseStreamingParser(compilationDatabase, visitor).use {
+        it.parse()
+    }
     return visitor.mappings()
 }

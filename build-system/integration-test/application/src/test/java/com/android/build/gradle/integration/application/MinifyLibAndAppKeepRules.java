@@ -118,15 +118,25 @@ public class MinifyLibAndAppKeepRules {
                 .run(":app:assembleRelease");
         assertThat(confOutput).exists();
 
+        // file path for libraryjar can be surrounded by single quotes on Windows.
         List<String> libraryJars =
                 Files.readLines(confOutput, Charsets.UTF_8)
                         .stream()
                         .filter(i -> i.startsWith("-libraryjar"))
-                        .map(i -> new File(i).getName())
+                        .map(i -> {
+                            String filePathPossiblyWithQuotes = i.substring(i.indexOf(' ') + 1);
+                            String filePathWithoutQuotes = filePathPossiblyWithQuotes.replace("\'","");
+                            return new File(filePathWithoutQuotes).getName();
+                        })
                         .collect(Collectors.toList());
 
         assertThat(libraryJars)
                 .named("keep rules libraryjars")
-                .containsExactly("android.jar", "org.apache.http.legacy.jar");
+                .containsExactly(
+                        "android.jar",
+                        "org.apache.http.legacy.jar",
+                        "android.test.mock.jar",
+                        "android.test.base.jar",
+                        "android.test.runner.jar");
     }
 }

@@ -1,6 +1,6 @@
 <recipe folder="root://activities/common">
 
-<#if appCompat && !(hasDependency('com.android.support:appcompat-v7'))>
+<#if !(hasDependency('com.android.support:appcompat-v7'))>
     <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+"/>
 </#if>
     <dependency mavenUrl="com.android.support.constraint:constraint-layout:+" />

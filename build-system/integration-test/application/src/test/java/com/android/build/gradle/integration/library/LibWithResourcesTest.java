@@ -49,7 +49,7 @@ public class LibWithResourcesTest {
         GradleBuildResult result =
                 project.executor().expectFailure().run("clean", "lib:assembleRelease");
 
-        assertThat(result.getStdout())
+        assertThat(result.getFailureMessage())
                 .contains(
                         "resource string/invalid "
                                 + "(aka com.android.tests.libstest.lib:string/invalid) not found");
@@ -85,7 +85,7 @@ public class LibWithResourcesTest {
                         .expectFailure()
                         .run("clean", "lib:assembleRelease");
 
-        assertThat(result.getStdout())
+        assertThat(result.getFailureMessage())
                 .contains(
                         "resource string/invalid "
                                 + "(aka com.android.tests.libstest.lib:string/invalid) not found");

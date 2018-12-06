@@ -1,7 +1,6 @@
 package ${packageName};
 
 import android.os.Bundle;
-<#if hasAppBar>
 <#if buildApi == 22>
 import ${getMaterialComponentName('android.support.design.widget.CollapsingToolbarLayout', useMaterial2)};
 </#if>
@@ -10,9 +9,6 @@ import ${getMaterialComponentName('android.support.design.widget.Snackbar', useM
 import ${getMaterialComponentName('android.support.v7.app.AppCompatActivity', useAndroidX)};
 import ${getMaterialComponentName('android.support.v7.widget.Toolbar', useAndroidX)};
 import android.view.View;
-<#else>
-import ${superClassFqcn};
-</#if>
 <#if isNewProject>
 import android.view.Menu;
 import android.view.MenuItem;
@@ -27,7 +23,6 @@ public class ${activityClass} extends ${superClass} {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.${layoutName});
-<#if hasAppBar>
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
   <#if buildApi == 22>
@@ -43,7 +38,6 @@ public class ${activityClass} extends ${superClass} {
                         .setAction("Action", null).show();
             }
         });
-</#if>
 <#if parentActivityClass != "">
         get${Support}ActionBar().setDisplayHomeAsUpEnabled(true);
 </#if>

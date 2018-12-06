@@ -22,6 +22,7 @@ import com.android.tools.pixelprobe.Layer;
 import com.android.tools.pixelprobe.ShapeInfo;
 import com.android.tools.pixelprobe.tests.ImageUtils;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Test;
 
 import java.awt.*;
@@ -35,6 +36,8 @@ public class ShapeTest {
     @SuppressWarnings("InspectionUsingGrayColors")
     @Test
     public void colorTypes() throws IOException {
+        // Disabled on Windows due to b/120429381
+        Assume.assumeFalse(System.getProperty("os.name").startsWith("Windows"));
         // In this test, the file defines fill colors for various shapes in the
         // following color spaces: Grayscale, Lab, CMYK, HSB and RGB
         Image image = ImageUtils.loadImage("psd/color_spaces.psd");

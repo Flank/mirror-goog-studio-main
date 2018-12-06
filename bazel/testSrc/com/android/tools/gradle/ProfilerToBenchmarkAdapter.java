@@ -114,6 +114,15 @@ public class ProfilerToBenchmarkAdapter {
         this.benchmark = benchmark;
         this.benchmarkRun = benchmarkRun;
         metrics = new HashMap<>();
+        final int upperLimit =
+                benchmarkRun.iterations
+                        - (benchmarkRun.removeUpperOutliers + benchmarkRun.removeLowerOutliers);
+        if (upperLimit < benchmarkRun.removeLowerOutliers || benchmarkRun.removeLowerOutliers < 0) {
+            throw new RuntimeException(
+                    String.format(
+                            "Invalid upper (%d) and/or lower (%d) outliers removal settings",
+                            benchmarkRun.removeLowerOutliers, benchmarkRun.removeUpperOutliers));
+        }
     }
 
     @SuppressWarnings("MethodMayBeStatic")
@@ -131,15 +140,7 @@ public class ProfilerToBenchmarkAdapter {
 
     public void commit() {
 
-        final int upperLimit =
-                benchmarkRun.iterations
-                        - (benchmarkRun.removeUpperOutliers + benchmarkRun.removeLowerOutliers);
-        if (upperLimit < benchmarkRun.removeLowerOutliers || benchmarkRun.removeLowerOutliers < 0) {
-            throw new RuntimeException(
-                    String.format(
-                            "Invalid upper (%d) and/or lower (%d) outliers removal settings",
-                            benchmarkRun.removeLowerOutliers, benchmarkRun.removeUpperOutliers));
-        }
+
         Metric totalBuildTime = new Metric("TOTAL_BUILD_TIME");
         Metric totalGcTime = new Metric("TOTAL_GC_TIME");
 

@@ -1,11 +1,9 @@
 package ${packageName};
 
 import android.os.Bundle;
-<#if hasAppBar>
 import ${getMaterialComponentName('android.support.design.widget.FloatingActionButton', useMaterial2)};
 import ${getMaterialComponentName('android.support.design.widget.Snackbar', useMaterial2)};
 import android.view.View;
-</#if>
 <#if useNavController>
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -35,7 +33,6 @@ public class ${activityClass} extends ${superClass} <#if !useNavController>
         setContentView(R.layout.${layoutName});
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-<#if hasAppBar>
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -44,7 +41,6 @@ public class ${activityClass} extends ${superClass} <#if !useNavController>
                         .setAction("Action", null).show();
             }
         });
-</#if>
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.nav_view);
 <#if useNavController>

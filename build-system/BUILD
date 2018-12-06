@@ -107,7 +107,7 @@ maven_pom(
 )
 
 # The Gradle APIs to build against and run against.
-GRADLE_VERSION = "5.0"
+GRADLE_VERSION = "5.1-milestone-1"
 
 filegroup(
     name = "gradle-distrib",
@@ -178,6 +178,16 @@ maven_repo(
     artifacts = GRADLE_PLUGIN_ARTIFACTS,
     include_sources = True,
     visibility = ["//visibility:public"],
+)
+
+# m2 repository used by performance tests
+maven_repo(
+    name = "performance_test_repo",
+    artifacts = GRADLE_PLUGIN_ARTIFACTS + [
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-gradle-plugin",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-android-extensions-runtime",
+    ],
+    visibility = ["//prebuilts/studio/buildbenchmarks:__subpackages__"],
 )
 
 # m2 repository packaged inside studio.

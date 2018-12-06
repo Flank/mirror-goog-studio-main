@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Sets;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -88,13 +87,6 @@ public abstract class AbstractResourceRepository implements ResourceRepository {
             @NonNull ResourceNamespace namespace, @NonNull ResourceType resourceType) {
         ListMultimap<String, ResourceItem> map = getResourcesInternal(namespace, resourceType);
         return ImmutableListMultimap.copyOf(map);
-    }
-
-    @Override
-    @NonNull
-    public Collection<ResourceItem> getPublicResources(
-            @NonNull ResourceNamespace namespace, @NonNull ResourceType type) {
-        return ImmutableList.of();
     }
 
     @Override

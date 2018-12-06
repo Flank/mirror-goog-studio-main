@@ -30,7 +30,6 @@ import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
-import com.android.build.gradle.tasks.NdkCompile;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.ProductFlavor;
@@ -291,19 +290,6 @@ public interface BaseTestedVariant extends BaseVariant, TestedVariant {
         @Override
         public ArtifactCollection getCompileClasspathArtifacts(@Nullable Object key) {
             return variant.getCompileClasspathArtifacts(key);
-        }
-
-        @NonNull
-        @Override
-        public NdkCompile getNdkCompile() {
-            //noinspection deprecation
-            return variant.getNdkCompile();
-        }
-
-        @NonNull
-        @Override
-        public TaskProvider<NdkCompile> getNdkCompileProvider() {
-            return variant.getNdkCompileProvider();
         }
 
         @NonNull

@@ -2,7 +2,7 @@
 <#import "root://activities/common/kotlin_macros.ftl" as kt>
 <recipe>
     <@kt.addAllKotlinDependencies />
-    <#if useSupport><dependency mavenUrl="com.android.support:support-v4:${buildApi}.+"/></#if>
+    <dependency mavenUrl="com.android.support:support-v4:${buildApi}.+"/>
     <dependency mavenUrl="com.android.support:recyclerview-v7:${buildApi}.+" />
 
     <instantiate from="root/res/layout/fragment_list.xml"

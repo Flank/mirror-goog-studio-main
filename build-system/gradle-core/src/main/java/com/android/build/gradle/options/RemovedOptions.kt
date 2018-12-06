@@ -80,6 +80,12 @@ enum class RemovedOptions(
     EXCLUDE_R_AND_MANIFEST_DOT_JAVA_FROM_GENERATED_SOURCES(
         "android.excludeRAndManifestDotJavaFromGeneratedSources",
         "Subsumed by android.enableSeparateRClassCompilation"),
+    DEPRECATED_NDK_COMPILE_LEASE(
+        "android.deprecatedNdkCompileLease",
+        "NdkCompile is no longer supported"),
+    ENABLE_DEPRECATED_NDK(
+        "android.useDeprecatedNdk",
+        "NdkCompile is no longer supported"),
     ;
 
     override val status: Option.Status

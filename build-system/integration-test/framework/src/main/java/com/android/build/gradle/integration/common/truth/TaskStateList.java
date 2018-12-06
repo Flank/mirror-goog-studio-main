@@ -46,7 +46,7 @@ public class TaskStateList {
      * the execution plan, its state can be one of the remaining states. Note that these states are
      * mutually exclusive.
      */
-    enum ExecutionState {
+    public enum ExecutionState {
         NOT_PLANNED_FOR_EXECUTION,
         UP_TO_DATE,
         FROM_CACHE,

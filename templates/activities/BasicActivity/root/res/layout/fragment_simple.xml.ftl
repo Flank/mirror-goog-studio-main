@@ -5,7 +5,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-<#if hasAppBar && appBarLayoutName??>
+<#if appBarLayoutName??>
     tools:showIn="@layout/${appBarLayoutName}"
 </#if>
     tools:context="${packageName}.${fragmentClass}">

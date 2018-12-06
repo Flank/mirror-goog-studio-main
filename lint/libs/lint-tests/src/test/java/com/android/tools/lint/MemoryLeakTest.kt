@@ -16,7 +16,6 @@
 
 package com.android.tools.lint
 
-import com.android.SdkConstants.FN_RESOURCE_TEXT
 import com.android.testutils.TestUtils
 import com.android.tools.lint.checks.BuiltinIssueRegistry
 import com.android.tools.lint.checks.PrivateResourceDetectorTest
@@ -25,15 +24,11 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
 import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import com.android.tools.lint.checks.infrastructure.TestLintTask
-import com.google.common.base.Charsets
-import com.google.common.io.Files
 import com.intellij.psi.impl.source.tree.PsiWhiteSpaceImpl
 import com.sun.tools.attach.VirtualMachine
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import sun.tools.attach.HotSpotVirtualMachine
-import java.io.File
-import java.io.IOException
 import java.lang.management.ManagementFactory
 import java.util.Scanner
 

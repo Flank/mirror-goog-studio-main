@@ -39,8 +39,7 @@ class LintStandaloneVitalTest {
     fun checkStandaloneLintVital() {
         project.executeExpectingFailure("clean", "lintVital")
 
-        val stdout = project.buildResult.stdout
-        assertThat(stdout).contains("" +
+        assertThat(project.buildResult.stderr).contains("" +
                 "Lint found errors in the project; aborting build.\n" +
                 "  \n" +
                 "  Fix the issues identified by lint, or add the following to your build script to proceed with errors:\n" +

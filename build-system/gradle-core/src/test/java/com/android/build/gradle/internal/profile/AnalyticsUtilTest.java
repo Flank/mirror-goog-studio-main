@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
-import com.android.build.gradle.options.LongOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
@@ -228,11 +227,6 @@ public class AnalyticsUtilTest {
     }
 
     @Test
-    public void checkLongOptions() {
-        checkOptions(LongOption.values(), AnalyticsUtil::toProto);
-    }
-
-    @Test
     public void checkStringOptions() {
         checkOptions(StringOption.values(), AnalyticsUtil::toProto);
     }
@@ -289,7 +283,6 @@ public class AnalyticsUtilTest {
         properties.put(OptionalBooleanOption.SIGNING_V1_ENABLED.getPropertyName(), true);
         properties.put(OptionalBooleanOption.SIGNING_V2_ENABLED.getPropertyName(), false);
         properties.put(IntegerOption.IDE_BUILD_MODEL_ONLY_VERSION.getPropertyName(), 17);
-        properties.put(LongOption.DEPRECATED_NDK_COMPILE_LEASE.getPropertyName(), Long.MAX_VALUE);
         properties.put(StringOption.IDE_BUILD_TARGET_ABI.getPropertyName(), "x86");
         ProjectOptions options = new ProjectOptions(properties.build());
 
@@ -317,10 +310,6 @@ public class AnalyticsUtilTest {
                                 .IDE_BUILD_MODEL_ONLY_VERSION_VALUE);
         assertThat(gradleProjectOptionsSettings.getIntegerOptionValues(0).getIntegerOptionValue())
                 .isEqualTo(17);
-        assertThat(gradleProjectOptionsSettings.getLongOptionsList())
-                .containsExactly(
-                        com.android.tools.build.gradle.internal.profile.LongOption
-                                .DEPRECATED_NDK_COMPILE_LEASE_VALUE);
         assertThat(gradleProjectOptionsSettings.getStringOptionsList())
                 .containsExactly(
                         com.android.tools.build.gradle.internal.profile.StringOption

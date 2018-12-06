@@ -32,13 +32,12 @@ import com.android.ide.common.signing.KeytoolException;
 import com.android.tools.build.apkzlib.sign.SigningOptions;
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory;
 import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.security.PrivateKey;
-import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -93,23 +92,8 @@ public class IncrementalPackagerBuilder {
         abstract ApkCreatorFactory factory(boolean keepTimestampsInApk, boolean debuggableBuild);
     }
 
-    /** Signing key. {@code null} if not defined. */
-    @Nullable private PrivateKey key;
-
-    /**
-     * Signing certificate. {@code null} if not defined
-     */
-    private X509Certificate certificate;
-
-    /**
-     * Is V1 signing enabled?
-     */
-    private boolean v1SigningEnabled;
-
-    /**
-     * Is V2 signing enabled?
-     */
-    private boolean v2SigningEnabled;
+    /** Data to initialize {@link com.android.tools.build.apkzlib.sign.SigningExtension} */
+    @NonNull private Optional<SigningOptions> signingOptions = Optional.absent();
 
     /**
      * The output file.
@@ -220,10 +204,15 @@ public class IncrementalPackagerBuilder {
                                     signingConfig.getKeyPassword(), error, "keyPassword"),
                             Preconditions.checkNotNull(
                                     signingConfig.getKeyAlias(), error, "keyAlias"));
-            key = certificateInfo.getKey();
-            certificate = certificateInfo.getCertificate();
-            v1SigningEnabled = signingConfig.isV1SigningEnabled();
-            v2SigningEnabled = signingConfig.isV2SigningEnabled();
+            signingOptions =
+                    Optional.of(
+                            SigningOptions.builder()
+                                    .setKey(certificateInfo.getKey())
+                                    .setCertificates(certificateInfo.getCertificate())
+                                    .setV1SigningEnabled(signingConfig.isV1SigningEnabled())
+                                    .setV2SigningEnabled(signingConfig.isV2SigningEnabled())
+                                    .setMinSdkVersion(minSdk)
+                                    .build());
         } catch (KeytoolException|FileNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -252,6 +241,18 @@ public class IncrementalPackagerBuilder {
     @NonNull
     public IncrementalPackagerBuilder withMinSdk(int minSdk) {
         this.minSdk = minSdk;
+        if (signingOptions.isPresent()) {
+            SigningOptions oldOptions = signingOptions.get();
+            signingOptions =
+                    Optional.of(
+                            SigningOptions.builder()
+                                    .setKey(oldOptions.getKey())
+                                    .setCertificates(oldOptions.getCertificates())
+                                    .setV1SigningEnabled(oldOptions.isV1SigningEnabled())
+                                    .setV2SigningEnabled(oldOptions.isV2SigningEnabled())
+                                    .setMinSdkVersion(minSdk)
+                                    .build());
+        }
         return this;
     }
 
@@ -443,8 +444,6 @@ public class IncrementalPackagerBuilder {
             }
         }
 
-        SigningOptions signingOptions =
-                SigningOptions.create(key, certificate, v1SigningEnabled, v2SigningEnabled, minSdk);
         ApkCreatorFactory.CreationData creationData =
                 new ApkCreatorFactory.CreationData(
                         outputFile,

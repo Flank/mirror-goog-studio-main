@@ -33,4 +33,6 @@ android {
 dependencies {
     implementation project(':base')
     implementation project(":normalModule")
+    // runtime classpath is not exported by the base
+    implementation 'com.android.support:appcompat-v7:' + rootProject.supportLibVersion
 }

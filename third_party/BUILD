@@ -8,6 +8,12 @@
 
 load("//tools/base/bazel:maven.bzl", "maven_java_library")
 
+# Used by test
+exports_files(
+    ["BUILD"],
+    visibility = ["//tools/base/bazel:__pkg__"],
+)
+
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "cglib_cglib-nodep",
@@ -1070,7 +1076,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.gradle_gradle-tooling-api",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/5.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/5.1-milestone-1:jar",
     visibility = ["//visibility:public"],
     exports = [],
     runtime_deps = [":org.slf4j_slf4j-api"],
@@ -1123,6 +1129,14 @@ maven_java_library(
     visibility = ["//visibility:public"],
     exports = [],
     runtime_deps = [":org.jetbrains.kotlin_kotlin-compiler-embeddable"],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "org.jetbrains.kotlin_kotlin-android-extensions-runtime",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-android-extensions-runtime/1.3.10:jar",
+    visibility = ["//visibility:public"],
+    exports = [":org.jetbrains.kotlin_kotlin-stdlib"],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.

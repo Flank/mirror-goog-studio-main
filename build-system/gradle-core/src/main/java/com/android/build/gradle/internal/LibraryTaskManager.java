@@ -171,9 +171,6 @@ public class LibraryTaskManager extends TaskManager {
         addJavacClassesStream(variantScope);
         TaskManager.setJavaCompilerTask(javacTask, variantScope);
 
-        // Add dependencies on NDK tasks if NDK plugin is applied.
-        createNdkTasks(variantScope);
-
         // External native build
         createExternalNativeBuildJsonGenerators(variantScope);
         createExternalNativeBuildTasks(variantScope);

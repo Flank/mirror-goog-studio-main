@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.android.builder.model.NativeFile;
 import com.android.ide.common.gradle.model.stubs.NativeFileStub;
+import com.android.testutils.Serialization;
 import java.io.Serializable;
 import org.junit.Before;
 import org.junit.Test;

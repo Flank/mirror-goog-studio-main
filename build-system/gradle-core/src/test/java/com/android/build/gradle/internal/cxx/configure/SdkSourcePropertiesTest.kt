@@ -18,15 +18,20 @@ package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.cxx.configure.SdkSourceProperties.Companion.SdkSourceProperty.*
 import com.google.common.truth.Truth.assertThat
+import org.junit.Rule
 
 import org.junit.Test
-import java.io.File
+import org.junit.rules.TemporaryFolder
 
 class SdkSourcePropertiesTest {
 
+    @Rule
+    @JvmField
+    val tmpFolder = TemporaryFolder()
+
     @Test
     fun fromFile() {
-        val file = File("./my-folder/source.properties")
+        val file = tmpFolder.newFile("source.properties")
         file.parentFile.mkdirs()
         file.writeText("""
             Pkg.Desc = Android NDK

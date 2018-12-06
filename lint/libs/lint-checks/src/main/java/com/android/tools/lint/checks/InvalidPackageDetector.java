@@ -153,25 +153,8 @@ public class InvalidPackageDetector extends Detector implements ClassScanner {
                         owner = classNode.superName;
                     }
 
-                    while (owner != null) {
-                        if (isInvalidPackage(owner)) {
-                            record(context, method, instruction, owner);
-                        }
-
-                        // For virtual dispatch, walk up the inheritance chain checking
-                        // each inherited method
-                        if (owner.startsWith("android/")
-                                || owner.startsWith(JAVA_PKG_PREFIX)
-                                || owner.startsWith(JAVAX_PKG_PREFIX)) {
-                            owner = null;
-                        } else if (node.getOpcode() == Opcodes.INVOKEVIRTUAL) {
-                            owner = context.getDriver().getSuperClass(owner);
-                        } else if (node.getOpcode() == Opcodes.INVOKESTATIC) {
-                            // Inherit through static classes as well
-                            owner = context.getDriver().getSuperClass(owner);
-                        } else {
-                            owner = null;
-                        }
+                    if (isInvalidPackage(owner)) {
+                        record(context, method, instruction, owner);
                     }
                 } else if (type == AbstractInsnNode.FIELD_INSN) {
                     FieldInsnNode node = (FieldInsnNode) instruction;

@@ -20,3 +20,13 @@ apply plugin: 'jacoco-tools-base'
 sourceSets {
     main.resources.srcDir 'src/main/java'
 }
+
+project.ext.pomName = 'ChunkIO'
+project.ext.pomDesc = 'annotations for use with chunkio-processor, and runtime supporting APIs'
+group = 'com.android.tools.chunkio'
+archivesBaseName = 'chunkio'
+version = rootProject.ext.baseVersion
+
+apply from: "$rootDir/buildSrc/base/publish.gradle"
+apply from: "$rootDir/buildSrc/base/bintray.gradle"
+apply from: "$rootDir/buildSrc/base/javadoc.gradle"

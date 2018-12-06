@@ -30,6 +30,7 @@ import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
 import com.android.ide.common.gradle.model.stubs.AndroidProjectStub;
 import com.android.ide.common.gradle.model.stubs.SyncIssueStub;
 import com.android.ide.common.gradle.model.stubs.VariantStub;
+import com.android.testutils.Serialization;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Objects;

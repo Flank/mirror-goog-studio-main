@@ -78,6 +78,7 @@ fun symbol(type: String, name: String, maybeDefinition: Boolean = false): Symbol
 class MockResolvedDependencyResult(
     private val selected: ResolvedComponentResult
 ) : ResolvedDependencyResult {
+    override fun isConstraint(): Boolean = error("not implemented")
     override fun getSelected(): ResolvedComponentResult = selected
     override fun getFrom(): ResolvedComponentResult = error("not implemented")
     override fun getRequested(): ComponentSelector = error("not implemented")

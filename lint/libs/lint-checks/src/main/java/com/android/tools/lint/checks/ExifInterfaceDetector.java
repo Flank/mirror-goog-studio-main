@@ -96,7 +96,7 @@ public class ExifInterfaceDetector extends Detector implements SourceCodeScanner
             locationNode = locationNode.getUastParent();
         }
 
-        Location location = context.getLocation(reference);
+        Location location = context.getLocation(locationNode);
         String message = getErrorMessage();
         context.report(ISSUE, reference, location, message);
     }
@@ -115,8 +115,7 @@ public class ExifInterfaceDetector extends Detector implements SourceCodeScanner
 
     @Override
     public List<Class<? extends UElement>> getApplicableUastTypes() {
-        List<Class<? extends UElement>> types = new ArrayList<>(4);
-        types.add(USimpleNameReferenceExpression.class);
+        List<Class<? extends UElement>> types = new ArrayList<>(3);
         types.add(UQualifiedReferenceExpression.class);
         types.add(UImportStatement.class);
         types.add(UVariable.class);
@@ -138,24 +137,15 @@ public class ExifInterfaceDetector extends Detector implements SourceCodeScanner
         }
 
         @Override
-        public void visitSimpleNameReferenceExpression(
-                @NonNull USimpleNameReferenceExpression node) {
-            // Temporary workaround: We get qualified expressions wrapped as
-            // USimpleNameReferenceExpression when qualified names are used in
-            // constructor expressions
-            String identifier = node.getIdentifier();
-            if (OLD_EXIF_INTERFACE.equals(identifier)) {
-                replace(context, node);
-            }
-        }
-
-        @Override
         public void visitQualifiedReferenceExpression(@NonNull UQualifiedReferenceExpression node) {
-            String resolvedName = node.getResolvedName();
-            if (EXIF_INTERFACE.equals(resolvedName)) {
-                PsiElement resolved = node.resolve();
-                if (resolved != null) {
-                    fix(context, node, resolved);
+            UElement selector = node.getSelector();
+            if (selector instanceof USimpleNameReferenceExpression) {
+                USimpleNameReferenceExpression name = (USimpleNameReferenceExpression) selector;
+                if (EXIF_INTERFACE.equals(name.getIdentifier())) {
+                    PsiElement resolved = node.resolve();
+                    if (resolved != null) {
+                        fix(context, node, resolved);
+                    }
                 }
             }
         }

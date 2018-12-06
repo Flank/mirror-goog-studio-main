@@ -87,7 +87,7 @@ class DataBindingKotlinAppTest(private val useV2: Boolean, useAndroidX: Boolean)
             """
         TestFileUtils.appendToFile(project.getSubproject(":app").buildFile, kapt)
         val result = project.executor().expectFailure().run("app:assembleDebug")
-        assertThat(result.stdout)
+        assertThat(result.failureMessage)
             .contains("Data Binding annotation processor version needs to match the")
     }
 }

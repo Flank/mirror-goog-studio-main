@@ -42,11 +42,6 @@ emulator:package.xml
 # Subset of docs happened to be used by tests
 docs:{package.xml,reference/android/*,reference/android/content/*,reference/android/widget/*}
 
-# Extra components picked to pass various AndroidGradleTestCase tests
-# TemplateTest uses a lot of them
-extras;m2repository;com;android;support;constraint;constraint-layout;1.0.2
-extras;m2repository;com;android;support;constraint;constraint-layout-solver;1.0.2
-
 cmake;3.6.4111459:**:docs/**
 
 # Instant apps sdk used in integration tests

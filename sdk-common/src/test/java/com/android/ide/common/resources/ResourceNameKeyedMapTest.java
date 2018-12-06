@@ -29,21 +29,19 @@ import org.junit.Test;
 
 public class ResourceNameKeyedMapTest {
     @Test
-    public void testFlattenKey() {
-        assertEquals(null, ResourceNameKeyedMap.flattenKey(null));
-        assertEquals("", ResourceNameKeyedMap.flattenKey(""));
-        assertEquals("my_key_test", ResourceNameKeyedMap.flattenKey("my.key:test"));
-        assertEquals("my_key_test", ResourceNameKeyedMap.flattenKey("my_key_test"));
-        assertEquals("_key_test", ResourceNameKeyedMap.flattenKey(".key_test"));
-        assertEquals("_key_test_", ResourceNameKeyedMap.flattenKey(".key_test:"));
-        assertEquals("_key test_", ResourceNameKeyedMap.flattenKey("-key test:"));
+    public void testFlattenResourceName() {
+        assertEquals("", ResourceNameKeyedMap.flattenResourceName(""));
+        assertEquals("my_key_test", ResourceNameKeyedMap.flattenResourceName("my.key:test"));
+        assertEquals("my_key_test", ResourceNameKeyedMap.flattenResourceName("my_key_test"));
+        assertEquals("_key_test", ResourceNameKeyedMap.flattenResourceName(".key_test"));
+        assertEquals("_key_test_", ResourceNameKeyedMap.flattenResourceName(".key_test:"));
+        assertEquals("_key test_", ResourceNameKeyedMap.flattenResourceName("-key test:"));
     }
 
     @Test
     public void testResourceMap() {
         ResourceNameKeyedMap<ResourceValue> resourceNameKeyedMap = new ResourceNameKeyedMap<>();
 
-        // Check null key
         ResourceValue value1 =
                 new ResourceValueImpl(
                         ResourceNamespace.RES_AUTO, ResourceType.STRING, "test1", null);
@@ -71,11 +69,11 @@ public class ResourceNameKeyedMapTest {
         assertEquals(value1, resourceNameKeyedMap.remove("test_key"));
         assertFalse(resourceNameKeyedMap.keySet().contains("test_key"));
 
-        // Check key replace
+        // Check key replace.
         assertEquals(value2, resourceNameKeyedMap.put("key2", value1));
         assertEquals(value1, resourceNameKeyedMap.put("key2", value2));
 
-        // Check key flattening
+        // Check key flattening.
         resourceNameKeyedMap.put("test:key", value1);
         assertFalse(resourceNameKeyedMap.keySet().contains("test_key"));
         assertTrue(resourceNameKeyedMap.keySet().contains("test:key"));

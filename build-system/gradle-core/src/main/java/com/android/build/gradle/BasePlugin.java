@@ -953,6 +953,16 @@ public abstract class BasePlugin<E extends BaseExtension2>
                 // Default, doesn't allow to set force HTTP.
             }
 
+            @Override
+            public boolean getDisableSdkPatches() {
+                return true;
+            }
+
+            @Override
+            public void setDisableSdkPatches(boolean disable) {
+                // Default, doesn't allow to enable SDK patches, since this is an IDEA thing.
+            }
+
             @Nullable
             @Override
             public Channel getChannel() {

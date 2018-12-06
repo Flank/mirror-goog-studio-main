@@ -51,9 +51,10 @@ public class TestReport {
         htmlRenderer.requireResource(getClass().getResource("style.css"));
     }
 
-    public void generateReport() {
+    public CompositeTestResults generateReport() {
         AllTestResults model = loadModel();
         generateFiles(model);
+        return model;
     }
 
     private AllTestResults loadModel() {

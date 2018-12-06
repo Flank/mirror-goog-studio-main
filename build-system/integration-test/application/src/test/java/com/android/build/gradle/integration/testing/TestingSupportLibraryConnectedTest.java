@@ -47,7 +47,7 @@ public class TestingSupportLibraryConnectedTest {
                                 + "package com.example.helloworld;\n"
                                 + "\n"
                                 + "import android.support.test.runner.AndroidJUnit4;\n"
-                                + "import android.test.suitebuilder.annotation.SmallTest;\n"
+                                + "import android.support.test.filters.SmallTest;\n"
                                 + "\n"
                                 + "import org.junit.Ignore;\n"
                                 + "import org.junit.Test;\n"

@@ -1,9 +1,7 @@
 <globals>
-    <#assign theme=getApplicationTheme()!{ "name": "AppTheme", "isAppCompat": true }>
+    <#assign theme=getApplicationTheme()!{ "name": "AppTheme"}>
     <#assign themeName=theme.name!'AppTheme'>
     <#assign themeNameNoActionBar=theme.nameNoActionBar!'AppTheme.NoActionBar'>
-    <#assign appCompat=backwardsCompatibility!(theme.isAppCompat)!false>
-    <#assign appCompatActivity=appCompat && (buildApi gte 22)>
     <#assign espresso=hasDependency('com.android.support.test.espresso:espresso-core', 'androidTestCompile')>
     <#assign useAndroidX=isAndroidxEnabled()>
     <#assign useMaterial2=useAndroidX || hasDependency('com.google.android.material:material')>
@@ -21,12 +19,9 @@
     <global id="themeExistsPopupOverlay" type="boolean" value="${(theme.existsPopupOverlay!false)?string}" />
     <global id="hasApplicationTheme" type="boolean" value="${(hasApplicationTheme!true)?string}" />
 
-    <global id="appCompat" type="boolean" value="${appCompat?string}" />
-    <global id="appCompatActivity" type="boolean" value="${appCompatActivity?string}" />
-    <global id="hasAppBar" type="boolean" value="${appCompatActivity?string}" />
     <global id="useMaterial2" type="boolean" value="${useMaterial2?string}" />
     <global id="useAndroidX" type="boolean" value="${useAndroidX?string}" />
-    <global id="hasNoActionBar" type="boolean" value="${appCompatActivity?string}" />
+    <global id="hasNoActionBar" type="boolean" value="true" /> <#-- It's overridden in each template if necessary -->
     <global id="testSupportLib" type="boolean" value="${testSupportLib?string}" />
 
     <global id="isInstantApp" type="boolean" value="false" />
@@ -44,28 +39,12 @@
     <global id="buildVersion" value="${buildApi}" />
     <global id="buildApiRevision" type="integer" value="${buildApiRevision!0}" />
 
-<#if !appCompat>
-    <global id="superClass" type="string" value="Activity"/>
-    <global id="superClassFqcn" type="string" value="android.app.Activity"/>
-    <global id="Support" value="" />
-    <global id="actionBarClassFqcn" type = "string" value="android.app.ActionBar" />
-    <global id="kotlinActionBar" type="string" value="actionBar" />
-    <global id="kotlinFragmentManager" type="string" value="fragmentManager" />
-<#elseif appCompatActivity>
     <global id="superClass" type="string" value="AppCompatActivity"/>
     <global id="superClassFqcn" type="string" value="${getMaterialComponentName('android.support.v7.app.AppCompatActivity', useAndroidX)}"/>
     <global id="Support" value="Support" />
     <global id="actionBarClassFqcn" type = "string" value="${getMaterialComponentName('android.support.v7.app.ActionBar', useAndroidX)}" />
     <global id="kotlinActionBar" type="string" value="supportActionBar" />
     <global id="kotlinFragmentManager" type="string" value="supportFragmentManager" />
-<#else>
-    <global id="superClass" type="string" value="ActionBarActivity"/>
-    <global id="superClassFqcn" type="string" value="${getMaterialComponentName('android.support.v7.app.ActionBarActivity', useAndroidX)}"/>
-    <global id="Support" value="Support" />
-    <global id="actionBarClassFqcn" type = "string" value="${getMaterialComponentName('android.support.v7.app.ActionBar', useAndroidX)}" />
-    <global id="kotlinActionBar" type="string" value="supportActionBar" />
-    <global id="kotlinFragmentManager" type="string" value="supportFragmentManager" />
-</#if>
 
     <global id="srcOut" value="${srcDir}/${slashedPackageName(packageName)}" />
     <global id="resOut" value="${resDir}" />

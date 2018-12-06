@@ -38,6 +38,19 @@ public interface SettingsController {
     void setForceHttp(boolean force);
 
     /**
+     * @return If {@code true}, SDK updates should be performed using full installer (optimizes for
+     * local installation time, but not for download time). Recommended for lower-end hardware.
+     */
+    boolean getDisableSdkPatches();
+
+    /**
+     * @param disable If {@code true}, SDK updates should be performed using full installer
+     *                (optimizes for local installation time, but not for download time).
+     *                Recommended for lower-end hardware.
+     */
+    void setDisableSdkPatches(boolean disable);
+
+    /**
      * Gets the current channel. Only packages of channels at least as stable as specified will be
      * downloaded.
      */

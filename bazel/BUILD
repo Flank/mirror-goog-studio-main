@@ -415,3 +415,25 @@ coverage_java_test(
         "//tools/base/third_party:junit_junit",
     ],
 )
+
+coverage_java_test(
+    name = "third_party_up_to_date",
+    srcs = ["testSrc/com/android/tools/binaries/ThirdPartyBuildConsistencyTest.java"],
+    data = [
+        "//tools/base/third_party:BUILD",
+        "//tools/buildSrc/base:dependencies.properties",
+    ],
+    tags = [
+        "no_test_windows",
+    ],
+    test_class = "com.android.tools.binaries.ThirdPartyBuildConsistencyTest",
+    deps = [
+        ":maven",
+        ":third_party_build_generator",
+        ":utils",
+        "//tools/base/testutils:tools.testutils",
+        "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:junit_junit",
+        "//tools/base/third_party:org.apache.maven_maven-aether-provider",
+    ],
+)

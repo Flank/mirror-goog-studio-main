@@ -53,6 +53,12 @@ public final class InstallOptions {
             return this;
         }
 
+        // Installs application as non-ephemeral full app.
+        public Builder setInstallFullApk() {
+            flags.add("--full");
+            return this;
+        }
+
         // Sets a string of user-specified installation flags to be passed to the installer.
         public Builder setUserInstallOptions(String userSpecifiedFlags) {
             flags.add(userSpecifiedFlags);
@@ -62,5 +68,22 @@ public final class InstallOptions {
         public InstallOptions build() {
             return new InstallOptions(flags);
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        InstallOptions that = (InstallOptions) o;
+        return flags.equals(that.flags);
+    }
+
+    @Override
+    public int hashCode() {
+        return flags.hashCode();
     }
 }

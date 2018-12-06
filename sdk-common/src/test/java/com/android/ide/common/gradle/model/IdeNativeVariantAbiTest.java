@@ -21,6 +21,7 @@ import static junit.framework.TestCase.assertEquals;
 
 import com.android.builder.model.NativeVariantAbi;
 import com.android.ide.common.gradle.model.stubs.NativeVariantAbiStub;
+import com.android.testutils.Serialization;
 import java.io.Serializable;
 import org.junit.Before;
 import org.junit.Test;

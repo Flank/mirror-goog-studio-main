@@ -158,7 +158,7 @@ open class DexMergingTask : AndroidVariantTask() {
         override fun configure(task: DexMergingTask) {
             super.configure(task)
 
-            task.dexFiles = getDexFiles(action)
+            task.dexFiles = getDexFiles(action, dexingType)
             task.mergingThreshold = getMergingThreshold(action, task)
 
             task.dexingType = dexingType
@@ -174,7 +174,7 @@ open class DexMergingTask : AndroidVariantTask() {
             task.outputDir = output
         }
 
-        private fun getDexFiles(action: DexMergingAction): FileCollection {
+        private fun getDexFiles(action: DexMergingAction, type: DexingType): FileCollection {
             val minSdk = variantScope.minSdkVersion.featureLevel
             val isDebuggable = variantScope.variantConfiguration.buildType.isDebuggable
             val attributes = getAttributeMap(minSdk, isDebuggable)
@@ -218,9 +218,18 @@ open class DexMergingTask : AndroidVariantTask() {
                         return files
                     }
                     DexMergingAction.MERGE_ALL -> {
+                        val external = if (dexingType == DexingType.LEGACY_MULTIDEX) {
+                            // we have to dex it
+                            forAction(DexMergingAction.MERGE_EXTERNAL_LIBS)
+                        } else {
+                            // we merge external dex in a separate task
+                            variantScope.artifacts
+                                .getFinalArtifactFiles(InternalArtifactType.EXTERNAL_LIBS_DEX)
+                                .get()
+                        }
                         return forAction(DexMergingAction.MERGE_PROJECT) +
                                 forAction(DexMergingAction.MERGE_LIBRARY_PROJECTS) +
-                                variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.EXTERNAL_LIBS_DEX).get()
+                                external
                     }
                 }
             }

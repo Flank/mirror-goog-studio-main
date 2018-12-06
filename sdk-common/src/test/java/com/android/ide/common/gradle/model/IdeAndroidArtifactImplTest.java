@@ -26,6 +26,7 @@ import com.android.builder.model.InstantRun;
 import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
 import com.android.ide.common.gradle.model.stubs.AndroidArtifactStub;
 import com.android.ide.common.repository.GradleVersion;
+import com.android.testutils.Serialization;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Objects;

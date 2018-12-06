@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.common.fixture
 
-import com.google.common.truth.Truth.assert_
 import com.android.build.gradle.integration.common.truth.GradleOutputFileSubject
 import com.android.build.gradle.integration.common.truth.GradleOutputFileSubjectFactory
 import com.android.build.gradle.integration.common.truth.TaskStateList
@@ -26,14 +25,16 @@ import com.google.api.client.repackaged.com.google.common.base.Throwables
 import com.google.common.base.Splitter
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.Sets
-import java.io.ByteArrayOutputStream
-import java.io.File
+import com.google.common.truth.Truth.assert_
 import org.gradle.api.ProjectConfigurationException
 import org.gradle.api.tasks.TaskExecutionException
+import org.gradle.internal.serialize.ContextualPlaceholderException
 import org.gradle.internal.serialize.PlaceholderException
 import org.gradle.tooling.BuildException
 import org.gradle.tooling.GradleConnectionException
 import org.gradle.tooling.events.ProgressEvent
+import java.io.ByteArrayOutputStream
+import java.io.File
 
 /**
  * The result from running a build.
@@ -83,12 +84,12 @@ class GradleBuildResult @JvmOverloads constructor(
                         "Exception had unexpected structure.",
                         exception
                     )
-                } else if (throwableType == PlaceholderException::class.java.name) {
+                } else if (isPlaceholderEx(throwableType)) {
                     if (throwable.toString().startsWith(TaskExecutionException::class.java.name)) {
                         var cause = throwable
                         // there can be several levels of PlaceholderException when dealing with
                         // Worker API failures.
-                        while (cause.javaClass.name == PlaceholderException::class.java.name && cause.cause != null) {
+                        while (isPlaceholderEx(throwableType) && cause.cause != null) {
                             cause = cause.cause
                         }
                         return cause.message
@@ -147,4 +148,7 @@ class GradleBuildResult @JvmOverloads constructor(
         return taskStates.getTask(name)
     }
 
+    private fun isPlaceholderEx(throwableType: String) =
+        throwableType == PlaceholderException::class.java.name
+                || throwableType == ContextualPlaceholderException::class.java.name
 }

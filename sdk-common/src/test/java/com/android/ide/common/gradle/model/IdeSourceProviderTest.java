@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import com.android.annotations.NonNull;
 import com.android.builder.model.SourceProvider;
 import com.android.ide.common.gradle.model.stubs.SourceProviderStub;
+import com.android.testutils.Serialization;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;

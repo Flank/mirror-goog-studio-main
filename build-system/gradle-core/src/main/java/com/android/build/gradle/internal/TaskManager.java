@@ -198,7 +198,6 @@ import com.android.build.gradle.tasks.MainApkListPersistence;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
-import com.android.build.gradle.tasks.NdkCompile;
 import com.android.build.gradle.tasks.PackageApplication;
 import com.android.build.gradle.tasks.PackageSplitAbi;
 import com.android.build.gradle.tasks.PackageSplitRes;
@@ -946,21 +945,6 @@ public abstract class TaskManager {
                                                 .get())
                                 .build());
 
-        // create a stream that contains the content of the local NDK build
-        if (shouldCreateNdkCompile()) {
-            variantScope
-                    .getTransformManager()
-                    .addStream(
-                            OriginalStream.builder(project, "local-ndk-build")
-                                    .addContentType(ExtendedContentType.NATIVE_LIBS)
-                                    .addScope(Scope.PROJECT)
-                                    .setFileCollection(
-                                            variantScope
-                                                    .getArtifacts()
-                                                    .getFinalArtifactFiles(NDK_LIBS)
-                                                    .get())
-                                    .build());
-        }
 
         // create a stream that contains the content of the local external native build
         if (taskContainer.getExternalNativeJsonGenerator() != null) {
@@ -1583,22 +1567,6 @@ public abstract class TaskManager {
                 taskFactory.register(new ExternalNativeCleanTask.CreationAction(generator, scope)));
     }
 
-    private boolean shouldCreateNdkCompile() {
-        return !ExternalNativeBuildTaskUtils.isExternalNativeBuildEnabled(
-                extension.getExternalNativeBuild());
-    }
-
-    public void createNdkTasks(@NonNull VariantScope scope) {
-        if (!shouldCreateNdkCompile()) {
-            return;
-        }
-
-        TaskProvider<NdkCompile> ndkCompileTask =
-                taskFactory.register(new NdkCompile.CreationAction(scope));
-
-        TaskFactoryUtils.dependsOn(scope.getTaskContainer().getCompileTask(), ndkCompileTask);
-    }
-
     /** Create transform for stripping debug symbols from native libraries before deploying. */
     public static void createStripNativeLibraryTask(
             @NonNull TaskFactory taskFactory, @NonNull VariantScope scope) {
@@ -1779,9 +1747,6 @@ public abstract class TaskManager {
         createProcessJavaResTask(variantScope);
 
         createAidlTask(variantScope);
-
-        // Add NDK tasks
-        createNdkTasks(variantScope);
 
         // add tasks to merge jni libs.
         createMergeJniLibFoldersTasks(variantScope);
@@ -2464,11 +2429,13 @@ public abstract class TaskManager {
     /**
      * Set up dex merging tasks when artifact transforms are used.
      *
-     * <p>External libraries are always merged. In case of a native multidex debuggable variant
-     * these dex files get packaged. In other cases, we will re-merge these files. Because this task
-     * will be almost always up-to-date, having a second merger run over the external libraries will
-     * not cause a performance regression. In addition to that, second dex merger will perform less
-     * I/O compared to reading all external library dex files individually.
+     * <p>External libraries are merged in mono-dex and native multidex modes. In case of a native
+     * multidex debuggable variant these dex files get packaged. In mono-dex case, we will re-merge
+     * these files. Because this task will be almost always up-to-date, having a second merger run
+     * over the external libraries will not cause a performance regression. In addition to that,
+     * second dex merger will perform less I/O compared to reading all external library dex files
+     * individually. For legacy multidex, we must merge all dex files in a single invocation in
+     * order to generate correct primary dex file in presence of desugaring. See b/120039166.
      *
      * <p>When merging native multidex, debuggable variant, project's dex files are merged
      * independently. Also, the library projects' dex files are merged independently.
@@ -2479,36 +2446,44 @@ public abstract class TaskManager {
      */
     private void createDexMergingWithArtifactTransforms(
             @NonNull VariantScope variantScope, @NonNull DexingType dexingType) {
-        boolean produceSeparateOutputs =
-                dexingType == DexingType.NATIVE_MULTIDEX
-                        && variantScope.getVariantConfiguration().getBuildType().isDebuggable();
-        taskFactory.register(
-                new DexMergingTask.CreationAction(
-                        variantScope,
-                        DexMergingAction.MERGE_EXTERNAL_LIBS,
-                        DexingType.NATIVE_MULTIDEX,
-                        produceSeparateOutputs
-                                ? InternalArtifactType.DEX
-                                : InternalArtifactType.EXTERNAL_LIBS_DEX));
-
-        if (produceSeparateOutputs) {
-            DexMergingTask.CreationAction mergeProject =
-                    new DexMergingTask.CreationAction(
-                            variantScope, DexMergingAction.MERGE_PROJECT, dexingType);
-            taskFactory.register(mergeProject);
-
-            DexMergingTask.CreationAction mergeLibraries =
-                    new DexMergingTask.CreationAction(
-                            variantScope,
-                            DexMergingAction.MERGE_LIBRARY_PROJECTS,
-                            dexingType,
-                            InternalArtifactType.DEX);
-            taskFactory.register(mergeLibraries);
-        } else {
+        if (dexingType == DexingType.LEGACY_MULTIDEX) {
             DexMergingTask.CreationAction configAction =
                     new DexMergingTask.CreationAction(
                             variantScope, DexMergingAction.MERGE_ALL, dexingType);
             taskFactory.register(configAction);
+        } else {
+            boolean produceSeparateOutputs =
+                    dexingType == DexingType.NATIVE_MULTIDEX
+                            && variantScope.getVariantConfiguration().getBuildType().isDebuggable();
+
+            taskFactory.register(
+                    new DexMergingTask.CreationAction(
+                            variantScope,
+                            DexMergingAction.MERGE_EXTERNAL_LIBS,
+                            DexingType.NATIVE_MULTIDEX,
+                            produceSeparateOutputs
+                                    ? InternalArtifactType.DEX
+                                    : InternalArtifactType.EXTERNAL_LIBS_DEX));
+
+            if (produceSeparateOutputs) {
+                DexMergingTask.CreationAction mergeProject =
+                        new DexMergingTask.CreationAction(
+                                variantScope, DexMergingAction.MERGE_PROJECT, dexingType);
+                taskFactory.register(mergeProject);
+
+                DexMergingTask.CreationAction mergeLibraries =
+                        new DexMergingTask.CreationAction(
+                                variantScope,
+                                DexMergingAction.MERGE_LIBRARY_PROJECTS,
+                                dexingType,
+                                InternalArtifactType.DEX);
+                taskFactory.register(mergeLibraries);
+            } else {
+                DexMergingTask.CreationAction configAction =
+                        new DexMergingTask.CreationAction(
+                                variantScope, DexMergingAction.MERGE_ALL, dexingType);
+                taskFactory.register(configAction);
+            }
         }
 
         variantScope

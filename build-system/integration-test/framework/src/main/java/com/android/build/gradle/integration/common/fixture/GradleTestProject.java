@@ -1451,7 +1451,7 @@ public final class GradleTestProject implements TestRule {
                     "buildCache {\n"
                             + "    local(DirectoryBuildCache) {\n"
                             + "        directory = \""
-                            + absoluteFile.getPath()
+                            + absoluteFile.getPath().replace("\\", "\\\\")
                             + "\"\n"
                             + "    }\n"
                             + "}");

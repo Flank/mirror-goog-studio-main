@@ -32,5 +32,7 @@ internal interface DocumentModel<T> {
      * @return a tag/name of XmlElement based on its type
      */
     fun toXmlName(type: T): String
-    // fun getElementModel(type: T): ElementModel
+
+    // This should ideally be a property of AttributeModel
+    fun autoRejectConflicts(): Boolean
 }

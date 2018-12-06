@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
-import com.android.build.gradle.options.LongOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
@@ -299,18 +298,6 @@ public class AnalyticsUtil {
 
     @VisibleForTesting
     @NonNull
-    static com.android.tools.build.gradle.internal.profile.LongOption toProto(
-            @NonNull LongOption option) {
-        try {
-            return com.android.tools.build.gradle.internal.profile.LongOption.valueOf(
-                    option.name());
-        } catch (IllegalArgumentException e) {
-            return com.android.tools.build.gradle.internal.profile.LongOption.UNKNOWN_LONG_OPTION;
-        }
-    }
-
-    @VisibleForTesting
-    @NonNull
     static com.android.tools.build.gradle.internal.profile.StringOption toProto(
             @NonNull StringOption option) {
         try {
@@ -356,10 +343,6 @@ public class AnalyticsUtil {
                                             .setIntegerOption(toProto(option).getNumber())
                                             .setIntegerOptionValue(value));
                         });
-
-        for (LongOption longOption : projectOptions.getExplicitlySetLongOptions().keySet()) {
-            builder.addLongOptions(toProto(longOption).getNumber());
-        }
 
         for (StringOption stringOption : projectOptions.getExplicitlySetStringOptions().keySet()) {
             builder.addStringOptions(toProto(stringOption).getNumber());

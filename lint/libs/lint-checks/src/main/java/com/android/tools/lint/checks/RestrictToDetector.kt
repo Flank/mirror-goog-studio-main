@@ -34,6 +34,7 @@ import com.android.tools.lint.detector.api.UastLintUtils
 import com.android.tools.lint.detector.api.UastLintUtils.containsAnnotation
 import com.android.tools.lint.detector.api.isKotlin
 import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiCompiledElement
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiMember
@@ -342,10 +343,16 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         }
 
         if (scope and RESTRICT_TO_LIBRARY_GROUP != 0 && member != null) {
-            // TODO: Consult Project.getMavenCoordinates
             val evaluator = context.evaluator
-            val thisCoordinates = evaluator.getLibrary(node)
-            val methodCoordinates = evaluator.getLibrary(member)
+            val thisCoordinates = evaluator.getLibrary(node) ?: context.project.mavenCoordinates
+            val methodCoordinates = evaluator.getLibrary(member) ?: run {
+                if (thisCoordinates != null && member !is PsiCompiledElement) {
+                    // Local source?
+                    context.evaluator.getProject(member)?.mavenCoordinates
+                } else {
+                    null
+                }
+            }
             val thisGroup = thisCoordinates?.groupId
             val methodGroup = methodCoordinates?.groupId
             if (thisGroup != methodGroup && methodGroup != null) {
@@ -361,9 +368,8 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         }
 
         if (scope and RESTRICT_TO_LIBRARY != 0 && member != null) {
-            // TODO: Consult Project.getMavenCoordinates
             val evaluator = context.evaluator
-            val thisCoordinates = evaluator.getLibrary(node)
+            val thisCoordinates = evaluator.getLibrary(node) ?: context.project.mavenCoordinates
             val methodCoordinates = evaluator.getLibrary(member)
             val thisGroup = thisCoordinates?.groupId
             val methodGroup = methodCoordinates?.groupId
@@ -376,6 +382,23 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                         methodGroup,
                         methodArtifact
                     )
+                    reportRestriction(
+                        where, containingClass, member, context,
+                        node, isClassAnnotation
+                    )
+                }
+            } else if (member !is PsiCompiledElement) {
+                // If the resolved method is source, make sure they're part
+                // of the same Gradle project
+                val project = context.evaluator.getProject(member)
+                if (project != null && project != context.project) {
+                    val coordinates = project.mavenCoordinates
+                    val name = if (coordinates != null) {
+                        "${coordinates.groupId}:${coordinates.artifactId}"
+                    } else {
+                        project.name
+                    }
+                    val where = "from within the same library ($name)"
                     reportRestriction(
                         where, containingClass, member, context,
                         node, isClassAnnotation

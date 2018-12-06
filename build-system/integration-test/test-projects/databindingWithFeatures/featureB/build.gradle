@@ -33,4 +33,8 @@ android {
 dependencies {
     implementation project(':base')
     implementation project(":featureA")
+    // TODO: remove once we are fully on AndroidX
+    implementation 'android.arch.lifecycle:runtime:1.1.0'
+    // runtime classpath is not exported by the base
+    implementation 'com.android.support:appcompat-v7:' + rootProject.supportLibVersion
 }

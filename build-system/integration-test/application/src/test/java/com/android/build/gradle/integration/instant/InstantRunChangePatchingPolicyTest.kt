@@ -88,6 +88,6 @@ class InstantRunChangePatchingPolicyTest(private val firstBuild: BuildTarget,
 
     enum class BuildTarget constructor(internal val apiLevel: Int) {
         MULTI_APK(23),
-        MULTI_APK_SEPARATE_RESOURCES(27)
+        MULTI_APK_SEPARATE_RESOURCES(28)
     }
 }

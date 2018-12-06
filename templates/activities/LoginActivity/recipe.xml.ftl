@@ -1,15 +1,15 @@
 <?xml version="1.0"?>
 <#import "root://activities/common/kotlin_macros.ftl" as kt>
 <recipe>
-   <#if appCompat && !(hasDependency('com.android.support:appcompat-v7'))>
+    <#if !(hasDependency('com.android.support:appcompat-v7'))>
        <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+" />
     </#if>
 
-    <#if (buildApi gte 22) && appCompat && !(hasDependency('com.android.support:design'))>
+    <#if (buildApi gte 22) && !(hasDependency('com.android.support:design'))>
         <dependency mavenUrl="com.android.support:design:${buildApi}.+" />
     </#if>
 
-    <#if !appCompat && (includePermissionCheck!false)>
+    <#if (includePermissionCheck!false)>
         <dependency mavenUrl="com.android.support:support-annotations:${buildApi}.+" />
     </#if>
 

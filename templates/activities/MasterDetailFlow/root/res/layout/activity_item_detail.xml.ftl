@@ -1,12 +1,3 @@
-<#if !hasAppBar>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/${detail_name}_container"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="${packageName}.${DetailName}Activity"
-    tools:ignore="MergeRootFrame" />
-<#else>
 <${getMaterialComponentName('android.support.design.widget.CoordinatorLayout', useAndroidX)} xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -60,4 +51,3 @@
         app:layout_anchorGravity="top|end" />
 
 </${getMaterialComponentName('android.support.design.widget.CoordinatorLayout', useAndroidX)}>
-</#if>

@@ -1,16 +1,19 @@
 <?xml version="1.0"?>
 <recipe>
 
-  <#if requireTheme!false>
-  <#include "../common/recipe_theme.xml.ftl" />
-  </#if>
+    <#if requireTheme!false>
+        <#include "../common/recipe_theme.xml.ftl" />
+    </#if>
 
-  <dependency mavenUrl="com.android.support:support-v4:${buildApi}.+" />
+    <dependency mavenUrl="com.android.support:support-v4:${buildApi}.+" />
+    <#if !(hasDependency('com.android.support:appcompat-v7'))>
+        <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+"/>
+    </#if>
 
-  <merge from="root/AndroidManifest.xml.ftl"
-           to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
-  <merge from="root/build.gradle.ftl"
-           to="${escapeXmlAttribute(projectOut)}/build.gradle" />
+    <merge from="root/AndroidManifest.xml.ftl"
+             to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
+    <merge from="root/build.gradle.ftl"
+             to="${escapeXmlAttribute(projectOut)}/build.gradle" />
 
     <instantiate from="root/src/app_package/SimpleActivity.${ktOrJavaExt}.ftl"
                    to="${escapeXmlAttribute(srcOut)}/${activityClass}.${ktOrJavaExt}" />

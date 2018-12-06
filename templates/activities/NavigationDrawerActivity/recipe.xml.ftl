@@ -61,11 +61,7 @@
         <#include "../common/recipe_simple.xml.ftl" />
     </#if>
 
-    <#if hasAppBar>
-        <#include "../common/recipe_app_bar.xml.ftl" />
-    <#else>
-        <#include "../common/recipe_no_actionbar.xml.ftl" />
-    </#if>
+    <#include "../common/recipe_app_bar.xml.ftl" />
     <#if buildApi gte 21>
         <instantiate from="root/res-buildApi22/values-v21/no_actionbar_styles_v21.xml.ftl"
                         to="${escapeXmlAttribute(resOut)}/values-v21/styles.xml" />

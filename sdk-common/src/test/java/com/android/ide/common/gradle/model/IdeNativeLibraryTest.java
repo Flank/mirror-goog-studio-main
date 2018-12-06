@@ -16,8 +16,8 @@
 package com.android.ide.common.gradle.model;
 
 import static com.android.ide.common.gradle.model.IdeModelTestUtils.*;
-import static com.android.ide.common.gradle.model.Serialization.deserialize;
-import static com.android.ide.common.gradle.model.Serialization.serialize;
+import static com.android.testutils.Serialization.deserialize;
+import static com.android.testutils.Serialization.serialize;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 

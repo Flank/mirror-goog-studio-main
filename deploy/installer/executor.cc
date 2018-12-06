@@ -230,8 +230,11 @@ bool Executor::ForkAndExec(const std::string& executable_path,
     argv[args.size() + 1] = nullptr;
     execvp(executable_path.c_str(), (char* const*)argv);
     delete[] argv;
-    return 0;
+
+    // We need to kill the child process; otherwise, we have two installers.
+    exit(1);
   }
+
   // Parent
   close(stdin_pipe[0]);
   close(stdout_pipe[1]);
