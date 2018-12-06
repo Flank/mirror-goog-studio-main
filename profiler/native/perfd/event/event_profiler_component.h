@@ -16,11 +16,14 @@
 #ifndef PERFD_EVENT_EVENT_PROFILER_COMPONENT_H_
 #define PERFD_EVENT_EVENT_PROFILER_COMPONENT_H_
 
+#include <string>
+
 #include "perfd/event/event_service.h"
 #include "perfd/event/internal_event_service.h"
 #include "perfd/profiler_component.h"
 #include "proto/profiler.grpc.pb.h"
 #include "utils/clock.h"
+#include "utils/process_manager.h"
 
 namespace profiler {
 
@@ -35,10 +38,11 @@ class EventProfilerComponent final : public ProfilerComponent {
   // Returns the service that talks to device clients (e.g., the agent).
   grpc::Service* GetInternalService() override { return &internal_service_; }
 
-  void AgentStatusChangedCallback(
-      int process_id,
-      const profiler::proto::AgentStatusResponse::Status& status) {
-    if (status == proto::AgentStatusResponse::DETACHED) {
+  void AgentStatusChangedCallback(int process_id) {
+    // Check if the process is alive.
+    std::string app_name = ProcessManager::GetCmdlineForPid(process_id);
+    if (app_name.empty()) {
+      // Process is not available.
       cache_.MarkActivitiesAsTerminated(process_id);
     }
   }

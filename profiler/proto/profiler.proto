@@ -255,18 +255,14 @@ message AgentStatusRequest {
 
 message AgentStatusResponse {
   enum Status {
+    // Used when we don't know if the app is attachable or not.
     UNSPECIFIED = 0;
+    // Set when the agent has attached to the application at least once.
     ATTACHED = 1;
-    DETACHED = 2;
+    // Set when the application is determined to be unattachable.
+    UNATTACHABLE = 2;
   }
   Status status = 1;
-  // Whether the requested process supports advanced profiling (perfa).
-  // For pre-O, since the agent is included wih the app, this returns
-  // true if we receive an heartbeat from the app.
-  // For post-O, since the agent is late-attached during runtime, this
-  // return tures if an JVMTI agent can be attached. (e.g. the app is
-  // debuggable).
-  bool is_agent_attachable = 2;
 }
 
 message ExecuteRequest {

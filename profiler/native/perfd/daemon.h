@@ -99,8 +99,7 @@ class Daemon {
   // Interrupts the WriteEventsTo.
   void InterruptWriteEvents() { buffer_->InterruptWriteEvents(); }
 
-  void GetAgentStatus(const proto::AgentStatusRequest* request,
-                      proto::AgentStatusResponse* response);
+  proto::AgentStatusResponse::Status GetAgentStatus(int32_t pid);
 
   grpc::Status ConfigureStartupAgent(
       const profiler::proto::ConfigureStartupAgentRequest* request,
