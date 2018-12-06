@@ -101,7 +101,7 @@ class ProfilerServiceTest : public ::testing::Test {
     // we timeout (returning null) or we have an event.
     if (events_cv_.wait_for(lock, std::chrono::milliseconds(500),
                             [this] { return !events_.empty(); })) {
-      proto::Event& event = events_.front();
+      proto::Event event = events_.front();
       events_.pop();
       return std::unique_ptr<proto::Event>(new proto::Event(event));
     }
@@ -154,7 +154,10 @@ TEST_F(ProfilerServiceTest, TestBeginSessionCommand) {
   // Validate command created session started event.
   std::unique_ptr<proto::Event> event = PopEvent();
   EXPECT_EQ(2, event->timestamp());
-  EXPECT_EQ(proto::Event::SESSION_STARTED, event->type());
+  EXPECT_EQ(proto::Event::SESSION, event->kind());
+  EXPECT_FALSE(event->is_ended());
+  EXPECT_TRUE(event->has_session());
+  EXPECT_TRUE(event->session().has_session_started());
 
   clock_.SetCurrentTime(4);
   grpc::ClientContext context2;
@@ -164,10 +167,14 @@ TEST_F(ProfilerServiceTest, TestBeginSessionCommand) {
   // Validate when a new session is started a previous session is ended.
   event = PopEvent();
   EXPECT_EQ(4, event->timestamp());
-  EXPECT_EQ(proto::Event::SESSION_ENDED, event->type());
+  EXPECT_EQ(proto::Event::SESSION, event->kind());
+  EXPECT_TRUE(event->is_ended());
   event = PopEvent();
   EXPECT_EQ(4, event->timestamp());
-  EXPECT_EQ(proto::Event::SESSION_STARTED, event->type());
+  EXPECT_EQ(proto::Event::SESSION, event->kind());
+  EXPECT_FALSE(event->is_ended());
+  EXPECT_TRUE(event->has_session());
+  EXPECT_TRUE(event->session().has_session_started());
 
   // Test legacy api:
   // Because lagacy APIs use device ID but new APIs don't, we have to call

@@ -63,8 +63,7 @@ class EventBuffer {
   // An event group spans from the first event with that group_id, to the
   // last event with group_id, or that end with an event of type |end|.
   std::vector<proto::EventGroup> Get(int64_t session_id,
-                                     proto::Event::Kind kind,
-                                     proto::Event::Type end, int64_t from,
+                                     proto::Event::Kind kind, int64_t from,
                                      int64_t to);
 
   // Gets the group with the given group_id (in |group|), and returns true iff

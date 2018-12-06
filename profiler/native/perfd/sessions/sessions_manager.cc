@@ -44,15 +44,15 @@ void SessionsManager::BeginSession(int64_t device_id,
   event.set_session_id(session->info().session_id());
   event.set_timestamp(now);
   event.set_kind(proto::Event::SESSION);
-  event.set_type(proto::Event::SESSION_STARTED);
-  proto::SessionStarted* session_started = event.mutable_session_started();
+  auto session_data = event.mutable_session();
+  auto session_started = session_data->mutable_session_started();
   session_started->set_pid(pid);
   session_started->set_start_timestamp_epoch_ms(data.request_time_epoch_ms());
   session_started->set_session_name(data.session_name());
   session_started->set_jvmti_enabled(data.jvmti_config().attach_agent());
   session_started->set_live_allocation_enabled(
       data.jvmti_config().live_allocation_enabled());
-  session_started->set_type(proto::SessionStarted::FULL);
+  session_started->set_type(proto::SessionData::SessionStarted::FULL);
   daemon_->buffer()->Add(event);
 
   sessions_.push_back(std::move(session));
@@ -85,8 +85,7 @@ void SessionsManager::DoEndSession(profiler::Session* session, int64_t time) {
     event.set_group_id(session->info().session_id());
     event.set_session_id(session->info().session_id());
     event.set_kind(proto::Event::SESSION);
-    event.set_type(proto::Event::SESSION_ENDED);
-    event.mutable_session_ended();
+    event.set_is_ended(true);
     daemon_->buffer()->Add(event);
   }
 }

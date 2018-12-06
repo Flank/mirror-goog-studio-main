@@ -56,26 +56,6 @@ message Event {
     // Event Profiler Prefix = 500
   }
 
-  enum Type {
-    UNSPECIFIED = 0;
-    SESSION_STARTED = 1;
-    SESSION_ENDED = 2;
-    PROCESS_STARTED = 3;
-    PROCESS_ENDED = 4;
-    STREAM_CONNECTED = 5;
-    STREAM_DISCONNECTED = 6;
-
-    // Network Profiler Prefix = 100
-
-    // Cpu Profiler Prefix = 200
-
-    // Memory Profiler Prefix = 300
-
-    // Energy Profiler Prefix = 400
-
-    // Event Profiler Prefix = 500
-  }
-
   // Fixed ID for pre-determined EventGroup. Event.Type is reserved for data types
   // that contain multiple states. So we use these group Ids to categorize data that
   // belong to the same Event.kind.
@@ -108,17 +88,17 @@ message Event {
   // same area) Useful for queries such as "all the groups of "kind" SESSION.
   Event.Kind kind = 3;
 
-  // The actual type of the event.
-  Event.Type type = 4;
-
   // Timestamp in device wall clock time (ns).
-  int64 timestamp = 5;
+  int64 timestamp = 4;
+
+  // Indicate whether the event group has ended. Note that the |group_id| can
+  // be recycled afterwards within the same |Event.Kind|.
+  bool is_ended = 5;
 
   oneof union {
-    SessionStarted session_started = 6;
-    SessionEnded session_ended = 7;
-    Process process = 8;
-    Stream stream = 9;
+    StreamData stream = 6;
+    ProcessData process = 7;
+    SessionData session = 8;
 
     // Network Profiler Prefix = 100
     NetworkSpeedData network_speed = 101;
@@ -235,46 +215,72 @@ message SessionMetaData {
   SessionType type = 6;
 }
 
-message SessionStarted {
-  // The PID of the app. Note that this is actually an int16, but gRPC only
-  // provides int32.
-  int32 pid = 1;
-
-  // The session type here maps directly to the SessionMetadata.SessionType.
-  // After the move to the new pipeline we can remove SessionMetadata.
-  enum SessionType {
-    UNSPECIFIED = 0;
-    FULL = 1;
-    MEMORY_CAPTURE = 2;
-    CPU_CAPTURE = 3;
-  }
-  // Session start time (unix epoch) as provided by the BeginSessionRequest.
-  // For Studio-side display only.
-  int64 start_timestamp_epoch_ms = 2;
-  // Session name as provided by the BeginSessionRequest.
-  // For Studio-side display only.
-  string session_name = 3;
-  // Whether JVMTI is used for the session
-  bool jvmti_enabled = 4;
-  // Whether JVMTI live allocation is enabled for the session.
-  bool live_allocation_enabled = 5;
-  // Session's type which indicates what data it has.
-  SessionType type = 6;
-}
-
-message SessionEnded {
-}
-
 message Stream {
   // A list of supported stream types.
   enum Type {
     UNSPECIFIED_STREAM_TYPE = 0;
     DEVICE = 1;
   }
-  // The id of a stream. This is set by the multiplexer.
   int64 stream_id = 1;
-  Stream.Type type = 2;
+  Type type = 2;
   oneof union {
     Device device = 3;
   }
 }
+
+message StreamData {
+  message StreamConnected {
+    Stream stream = 1;
+  }
+
+  oneof union {
+    StreamConnected stream_connected = 1;
+    // Note - the disconnected event contains no payload.
+  }
+}
+
+message ProcessData {
+  message ProcessStarted {
+    Process process = 1;
+  }
+
+  oneof union {
+    ProcessStarted process_started = 1;
+    // Note - the ended event contains no payload.
+  }
+}
+
+message SessionData {
+  message SessionStarted {
+    // The session type here maps directly to the SessionMetadata.SessionType.
+    // After the move to the new pipeline we can remove SessionMetadata.
+    enum SessionType {
+      UNSPECIFIED = 0;
+      FULL = 1;
+      MEMORY_CAPTURE = 2;
+      CPU_CAPTURE = 3;
+    }
+
+    // The PID of the app. Note that this is actually an int16, but gRPC only
+    // provides int32.
+    int32 pid = 1;
+    // Session start time (unix epoch) as provided by the BeginSessionRequest.
+    // For Studio-side display only.
+    int64 start_timestamp_epoch_ms = 2;
+    // Session name as provided by the BeginSessionRequest.
+    // For Studio-side display only.
+    string session_name = 3;
+    // Whether JVMTI is used for the session
+    bool jvmti_enabled = 4;
+    // Whether JVMTI live allocation is enabled for the session.
+    bool live_allocation_enabled = 5;
+    // Session's type which indicates what data it has.
+    SessionType type = 6;
+  }
+
+  oneof union {
+    SessionStarted session_started = 1;
+    // Note - the ended event contains no payload.
+  }
+}
+

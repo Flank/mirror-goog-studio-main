@@ -60,18 +60,19 @@ void CreateTestData(FakeClock& clock, EventBuffer& buffer) {
   event.set_group_id(1);
   event.set_session_id(1);
   event.set_kind(Event::SESSION);
-  event.set_type(Event::SESSION_STARTED);
+  event.mutable_session();
   buffer.Add(event);
   clock.Elapse(5);
   event.set_kind(Event::SESSION);
-  event.set_type(Event::SESSION_ENDED);
+  event.set_is_ended(true);
   buffer.Add(event);
   clock.Elapse(1);
   // Add 1 event to a new event group.
   event.set_group_id(2);
   event.set_session_id(2);
   event.set_kind(Event::PROCESS);
-  event.set_type(Event::PROCESS_STARTED);
+  event.set_is_ended(false);
+  event.mutable_process();
   buffer.Add(event);
 }
 
@@ -87,8 +88,12 @@ TEST(EventBuffer, GettingEventGroup) {
   // Validate
   EXPECT_EQ(1, group.group_id());
   EXPECT_EQ(2, group.events_size());
-  EXPECT_EQ(Event::SESSION_STARTED, group.events().Get(0).type());
-  EXPECT_EQ(Event::SESSION_ENDED, group.events().Get(1).type());
+  EXPECT_EQ(Event::SESSION, group.events().Get(0).kind());
+  EXPECT_TRUE(group.events().Get(0).has_session());
+  EXPECT_FALSE(group.events().Get(0).is_ended());
+  EXPECT_EQ(Event::SESSION, group.events().Get(1).kind());
+  EXPECT_TRUE(group.events().Get(0).has_session());
+  EXPECT_TRUE(group.events().Get(1).is_ended());
 }
 
 TEST(EventBuffer, GettingEventsFiltered) {
@@ -97,13 +102,11 @@ TEST(EventBuffer, GettingEventsFiltered) {
   CreateTestData(clock, buffer);
 
   // Validate we get a group back for events that fit in group.
-  EXPECT_EQ(1,
-            buffer.Get(1, Event::SESSION, Event::SESSION_ENDED, 0, 5).size());
+  EXPECT_EQ(1, buffer.Get(1, Event::SESSION, 0, 5).size());
 
   // Validate we get the group back if the start session is before the requested
   // time, and the end is greater than the event end.
-  EXPECT_EQ(1,
-            buffer.Get(1, Event::SESSION, Event::SESSION_ENDED, 3, 7).size());
+  EXPECT_EQ(1, buffer.Get(1, Event::SESSION, 3, 7).size());
 }
 
 TEST(EventBuffer, ReadWriteEvents) {
@@ -147,11 +150,13 @@ TEST(EventBuffer, BufferOverflowOfEvents) {
   // SESSION_ENDED, PROCESS_STARTED.
   // We expect to get only 4 elements back because we don't start listening to
   // events until after we insert our initial data.
-  Event::Type expected[] = {Event::PROCESS_STARTED, Event::SESSION_STARTED,
-                            Event::SESSION_ENDED, Event::PROCESS_STARTED};
+  Event::Kind expected_kinds[] = {Event::PROCESS, Event::SESSION,
+                                  Event::SESSION, Event::PROCESS};
+  bool expected_ends[] = {false, false, true, false};
   int i = 0;
   for (auto it = events->begin(); it != events->end(); ++it, ++i) {
-    EXPECT_EQ(expected[i], it->type());
+    EXPECT_EQ(expected_kinds[i], it->kind());
+    EXPECT_EQ(expected_ends[i], it->is_ended());
   }
 
   // Kill read thread to cleanly exit test.
