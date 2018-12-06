@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.integration.databinding;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.category.DeviceTestsQuarantine;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProjectBuilder;
@@ -77,7 +77,7 @@ public class DataBindingIntegrationTestAppsConnectedTest {
     }
 
     @Test
-    @Category(DeviceTests.class)
+    @Category(DeviceTestsQuarantine.class)
     public void connectedCheck() throws Exception {
         project.executeConnectedCheck();
     }
