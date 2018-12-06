@@ -118,7 +118,6 @@ kotlin_test(
     ],
     resources = glob(["src/test/resources/**"]),
     tags = [
-        "no_test_windows",  # b/72972266 for mac, b/73306170 for win
         "slow",
     ],
     # TODO: Remove the blacklist, once NDK is checked in.
