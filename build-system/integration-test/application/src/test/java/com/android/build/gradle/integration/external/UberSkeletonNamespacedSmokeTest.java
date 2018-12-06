@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.external;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.LoggingLevel;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -51,6 +52,7 @@ public class UberSkeletonNamespacedSmokeTest {
     public void checkBuilds() throws Exception {
         AssumeUtil.assumeNotWindows(); // b/67975239
         project.executor()
+                .withLoggingLevel(LoggingLevel.QUIET)
                 .with(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES, true)
                 .run(":phthalic:assembleDebug");
     }
