@@ -708,6 +708,9 @@ public class GradleModelMocker {
                 || context.equals("allprojects.repositories")) {
             // Plugins not modeled in the builder model
             return;
+        } else if (line.startsWith("apply plugin: ")) {
+            // Some other plugin not relevant to the builder-model
+            return;
         }
 
         String key = context.isEmpty() ? line : context + "." + line;
@@ -1369,6 +1372,9 @@ public class GradleModelMocker {
     private void addDependency(String declaration, String scope, boolean isProvided) {
         // If it's one of the common libraries, built up the full dependency graph
         // that we know will actually be used
+        //
+        // To compute these graphs, put the dependency you're interested into
+        // a test project and then run ./gradlew app:dependencies
         if (declaration.startsWith("com.android.support:appcompat-v7:")) {
             String version = declaration.substring("com.android.support:appcompat-v7:".length());
             addTransitiveLibrary(
@@ -1480,6 +1486,32 @@ public class GradleModelMocker {
                                     + "|    \\--- com.google.android.gms:play-services-base:VERSION\n"
                                     + "|         \\--- com.google.android.gms:play-services-basement:VERSION (*)")
                             .replace("VERSION", version));
+        } else if (declaration.startsWith("org.jetbrains.kotlin:kotlin-stdlib-jdk7:")) {
+            // Kotlin
+            String version =
+                    declaration.substring("org.jetbrains.kotlin:kotlin-stdlib-jdk7:".length());
+            addTransitiveLibrary(
+                    (""
+                                    + "+--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:VERSION\n"
+                                    + "|    \\--- org.jetbrains.kotlin:kotlin-stdlib:VERSION\n"
+                                    + "|         +--- org.jetbrains.kotlin:kotlin-stdlib-common:VERSION\n"
+                                    + "|         \\--- org.jetbrains:annotations:13.0\n"
+                                    + "+--- org.jetbrains.kotlin:kotlin-stdlib:VERSION (*)\n"
+                                    + "+--- org.jetbrains.kotlin:kotlin-stdlib-common:VERSION")
+                            .replace("VERSION", version));
+        } else if (declaration.startsWith("org.jetbrains.kotlin:kotlin-stdlib-jdk8:")) {
+            // Kotlin
+            String version =
+                    declaration.substring("org.jetbrains.kotlin:kotlin-stdlib-jdk8:".length());
+            addTransitiveLibrary(
+                    (""
+                                    + "+--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:VERSION\n"
+                                    + "|    +--- org.jetbrains.kotlin:kotlin-stdlib:VERSION\n"
+                                    + "|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-common:VERSION\n"
+                                    + "|    |    \\--- org.jetbrains:annotations:13.0\n"
+                                    + "|    \\--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:VERSION\n"
+                                    + "|         \\--- org.jetbrains.kotlin:kotlin-stdlib:VERSION (*)")
+                            .replace("VERSION", version));
         } else {
             // Look for the library in the dependency graph provided
             Dep dep = graphs.get(declaration);
@@ -1534,6 +1566,9 @@ public class GradleModelMocker {
                 "com.android.support.constraint:constraint-layout-solver:")) {
             return true;
         } else if (declaration.startsWith("junit:junit:")) {
+            return true;
+        } else if (declaration.startsWith("org.jetbrains.kotlin:kotlin-")
+                || declaration.startsWith("org.jetbrains:annotations")) {
             return true;
         }
         return false;
