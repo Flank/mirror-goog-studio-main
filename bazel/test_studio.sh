@@ -27,7 +27,7 @@ fi
 readonly command_log="$("${script_dir}"/bazel info ${config_options} command_log)"
 
 # Run Bazel
-"${script_dir}/bazel" --max_idle_secs=60 test ${config_options} --build_tag_filters=-no_linux --test_tag_filters=${test_tag_filters} -- $(< "${script_dir}/targets") //tools/base/bazel/foundry:test
+"${script_dir}/bazel" --max_idle_secs=60 test ${config_options} --build_tag_filters=-no_linux,-requires_emulator --test_tag_filters=${test_tag_filters} -- $(< "${script_dir}/targets") //tools/base/bazel/foundry:test
 
 readonly bazel_status=$?
 
