@@ -503,7 +503,9 @@ class GradleDetectorTest : AbstractCheckTest() {
             )
         ).issues(MIN_SDK_TOO_LOW).run().expect(expected).expectFixDiffs(
             "" +
-                    "Fix for build.gradle line 7: Update minSdkVersion to 14:\n" +
+                    "Fix for build.gradle line 7: Update minSdkVersion to " +
+                    expectedNewVersion +
+                    ":\n" +
                     "@@ -8 +8\n" +
                     "-         minSdkVersion 7\n" +
                     "+         minSdkVersion " +
@@ -2340,10 +2342,10 @@ class GradleDetectorTest : AbstractCheckTest() {
                 @@ -30 +30
                 -     compile("com.android.support.constraint:constraint-layout:1.0.0-alpha8")
                 +     compile("com.android.support.constraint:constraint-layout:1.0.3-alpha8")
-                Fix for build.gradle.kts line 12: Update minSdkVersion to 14:
+                Fix for build.gradle.kts line 12: Update minSdkVersion to 16:
                 @@ -12 +12
                 -         minSdkVersion(7)
-                +         minSdkVersion(14)
+                +         minSdkVersion(16)
                 """
             )
     }

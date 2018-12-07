@@ -88,7 +88,7 @@ class MemoryLeakTest {
                     compileSdkVersion 28
                     defaultConfig {
                         applicationId "com.gharrma.sampleapp"
-                        minSdkVersion 15
+                        minSdkVersion 16
                         targetSdkVersion 28
                         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
                     }
