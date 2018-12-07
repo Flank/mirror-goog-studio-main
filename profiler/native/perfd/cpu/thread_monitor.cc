@@ -26,7 +26,7 @@
 using profiler::FileReader;
 using profiler::proto::CpuStartResponse;
 using profiler::proto::CpuStopResponse;
-using profiler::proto::GetThreadsResponse;
+using profiler::proto::CpuThreadData;
 using std::string;
 using std::vector;
 
@@ -112,45 +112,45 @@ bool ParseThreadStat(int32_t tid, const string& content, char* state,
 // According to http://man7.org/linux/man-pages/man5/proc.5.html, 'W' could mean
 // Paging (only before Linux 2.6.0) or Waking (Linux 2.6.33 to 3.13 only).
 // Android 1.0 already used kernel 2.6.25.
-GetThreadsResponse::State ThreadStateInEnum(char state_in_char) {
+CpuThreadData::State ThreadStateInEnum(char state_in_char) {
   switch (state_in_char) {
     case 'R':
-      return GetThreadsResponse::RUNNING;
+      return CpuThreadData::RUNNING;
     case 'S':
-      return GetThreadsResponse::SLEEPING;
+      return CpuThreadData::SLEEPING;
     case 'D':
-      return GetThreadsResponse::WAITING;
+      return CpuThreadData::WAITING;
     case 'Z':
-      return GetThreadsResponse::ZOMBIE;
+      return CpuThreadData::ZOMBIE;
     case 'T':
       // TODO: Handle the subtle difference before and afer Linux 2.6.33.
-      return GetThreadsResponse::STOPPED;
+      return CpuThreadData::STOPPED;
     case 't':
-      return GetThreadsResponse::TRACING;
+      return CpuThreadData::TRACING;
     case 'X':
     case 'x':
-      return GetThreadsResponse::DEAD;
+      return CpuThreadData::DEAD;
     case 'K':
-      return GetThreadsResponse::WAKEKILL;
+      return CpuThreadData::WAKEKILL;
     case 'W':
-      return GetThreadsResponse::WAKING;
+      return CpuThreadData::WAKING;
     case 'P':
-      return GetThreadsResponse::PARKED;
+      return CpuThreadData::PARKED;
     default:
-      return GetThreadsResponse::UNSPECIFIED;
+      return CpuThreadData::UNSPECIFIED;
   }
 }
 
 // Gets |state| and |name| of a given thread of |tid| under process of |pid|.
 // Returns true on success.
-bool GetThreadState(int32_t pid, int32_t tid, GetThreadsResponse::State* state,
+bool GetThreadState(int32_t pid, int32_t tid, CpuThreadData::State* state,
                     string* name) {
   string buffer;
   if (ReadThreadStatFile(pid, tid, &buffer)) {
     char state_in_char;
     if (ParseThreadStat(tid, buffer, &state_in_char, name)) {
-      GetThreadsResponse::State enum_state = ThreadStateInEnum(state_in_char);
-      if (enum_state != GetThreadsResponse::UNSPECIFIED) {
+      CpuThreadData::State enum_state = ThreadStateInEnum(state_in_char);
+      if (enum_state != CpuThreadData::UNSPECIFIED) {
         *state = enum_state;
         return true;
       }
@@ -257,9 +257,9 @@ bool ThreadMonitor::CopyOldStatesToActivities(int64_t timestamp,
                                               ThreadsSample* sample) const {
   bool new_activity_added = false;
   for (const auto& map : old_states) {
-    if (map.second.state != GetThreadsResponse::DEAD) {
-      AddActivity(map.first, GetThreadsResponse::DEAD, map.second.name,
-                  timestamp, sample);
+    if (map.second.state != CpuThreadData::DEAD) {
+      AddActivity(map.first, CpuThreadData::DEAD, map.second.name, timestamp,
+                  sample);
       new_activity_added = true;
     }
   }
@@ -289,8 +289,8 @@ bool ThreadMonitor::DetectActivities(int64_t timestamp,
       // Thread disappeared. It is a DEAD activity.
       // Do not duplicate DEAD activity (if the thread was already known as
       // DEAD).
-      if (old.second.state != GetThreadsResponse::DEAD) {
-        AddActivity(tid, GetThreadsResponse::DEAD, old.second.name, timestamp,
+      if (old.second.state != CpuThreadData::DEAD) {
+        AddActivity(tid, CpuThreadData::DEAD, old.second.name, timestamp,
                     sample);
         new_activity_added = true;
       }
@@ -332,7 +332,7 @@ void ThreadMonitor::AddActivity(int32_t tid, const ThreadState& state,
   AddActivity(tid, state.state, state.name, state.timestamp, sample);
 }
 
-void ThreadMonitor::AddActivity(int32_t tid, GetThreadsResponse::State state,
+void ThreadMonitor::AddActivity(int32_t tid, CpuThreadData::State state,
                                 const string& name, int64_t timestamp,
                                 ThreadsSample* sample) const {
   ThreadsSample::Activity activity;
@@ -343,8 +343,7 @@ void ThreadMonitor::AddActivity(int32_t tid, GetThreadsResponse::State state,
   sample->activities.push_back(activity);
 }
 
-void ThreadMonitor::AddThreadSnapshot(int32_t tid,
-                                      GetThreadsResponse::State state,
+void ThreadMonitor::AddThreadSnapshot(int32_t tid, CpuThreadData::State state,
                                       const string& name,
                                       ThreadsSample* sample) const {
   auto* snapshot = sample->snapshot.add_threads();

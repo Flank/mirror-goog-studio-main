@@ -35,6 +35,9 @@
 // the same.
 message CpuUsageData {
   // Timestamp(ns) when the data sample was collected.
+  //
+  // TODO: in the new pipeline, timestamp is stored in the common Event proto.
+  // Remove this field when old pipeline is deprecated.
   int64 end_timestamp = 1;
   // Amount of time that this process has been using CPU, measured in
   // milliseconds.
@@ -58,4 +61,31 @@ message CpuCoreUsageData {
   int64 elapsed_time_in_millisec = 3;
   // Current CPU frequency in kHz. Used for energy usage estimation.
   int32 frequency_in_khz = 4;
+}
+
+// Represents a single event when a thread changes its state.
+message CpuThreadData {
+  enum State {
+    UNSPECIFIED = 0;
+    RUNNING = 1;
+    SLEEPING = 2;
+    WAITING = 3;
+    ZOMBIE = 4;
+    STOPPED = 5;
+    TRACING = 6;
+    PAGING = 7;
+    DEAD = 8;
+    WAKEKILL = 9;
+    WAKING = 10;
+    PARKED = 11;
+  }
+
+  // Thread ID as returned from the Android OS. Unique within a process.
+  int32 tid = 1;
+
+  // Thread name as returned from the Android OS.
+  string name = 2;
+
+  // The current thread state in this activity.
+  State state = 3;
 }
