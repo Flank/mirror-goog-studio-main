@@ -18,124 +18,154 @@ package com.android.tools.deployer.tasks;
 
 import com.android.tools.deployer.DeployerException;
 import com.android.tools.tracer.Trace;
-import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Phaser;
+import java.util.stream.Collectors;
 
 public class TaskRunner {
 
     private final ExecutorService executor;
-    private final Phaser phaser;
+    private final ArrayList<Task<?>> tasks;
 
     public TaskRunner(ExecutorService executor) {
         this.executor = executor;
-        this.phaser = new Phaser(1);
+        this.tasks = new ArrayList<>();
     }
 
-    public <T> Task<T> submit(T value) {
-        SettableFuture<T> future = SettableFuture.create();
-        future.set(value);
-        return new Task<>(future);
+    public <T> Task<T> create(T value) {
+        Task<T> task = new Task<>(() -> value);
+        tasks.add(task);
+
+        return task;
     }
 
-    public <I, O> Task<O> submit(String name, ThrowingFunction<I, O> task, Task<I> input) {
-        phaser.register();
-        ListenableFuture<O> future =
-                Futures.whenAllComplete(ImmutableList.of(input.future))
-                        .call(
-                                () -> {
-                                    try {
-                                        Trace.begin("Task: " + name);
-                                        // The input value is already done
-                                        I value = input.future.get();
-                                        return task.apply(value);
-                                    } finally {
-                                        phaser.arriveAndDeregister();
-                                        Trace.end();
-                                    }
-                                },
-                                executor);
-        return new Task<>(future);
+    public <I, O> Task<O> create(String name, ThrowingFunction<I, O> function, Task<I> input) {
+        Callable<O> callable =
+                () -> {
+                    try {
+                        Trace.begin("Task: " + name);
+                        // The input value is already done
+                        I value = input.future.get();
+                        return function.apply(value);
+                    } finally {
+                        Trace.end();
+                    }
+                };
+
+        Task<O> task = new Task<>(callable, input);
+        tasks.add(task);
+        return task;
     }
 
-    public <T, U, O> Task<O> submit(
-            String name, ThrowingBiFunction<T, U, O> task, Task<T> input1, Task<U> input2) {
-        phaser.register();
-        ListenableFuture<O> future =
-                Futures.whenAllComplete(ImmutableList.of(input1.future, input2.future))
-                        .call(
-                                () -> {
-                                    try {
-                                        // The input value is already done
-                                        Trace.begin("Task: " + name);
-                                        T value1 = input1.future.get();
-                                        U value2 = input2.future.get();
-                                        return task.apply(value1, value2);
-                                    } finally {
-                                        Trace.end();
-                                        phaser.arriveAndDeregister();
-                                    }
-                                },
-                                executor);
-        return new Task<>(future);
+    public <T, U, O> Task<O> create(
+            String name, ThrowingBiFunction<T, U, O> function, Task<T> input1, Task<U> input2) {
+        Callable<O> callable =
+                () -> {
+                    try {
+                        // The input value is already done
+                        Trace.begin("Task: " + name);
+                        T value1 = input1.future.get();
+                        U value2 = input2.future.get();
+                        return function.apply(value1, value2);
+                    } finally {
+                        Trace.end();
+                    }
+                };
+        Task<O> task = new Task<>(callable, input1, input2);
+        tasks.add(task);
+        return task;
     }
 
-    public <T, U, V, O> Task<O> submit(
+    public <T, U, V, O> Task<O> create(
             String name,
-            ThrowingTriFunction<T, U, V, O> task,
+            ThrowingTriFunction<T, U, V, O> function,
             Task<T> input1,
             Task<U> input2,
             Task<V> input3) {
-        phaser.register();
-        ListenableFuture<O> future =
-                Futures.whenAllComplete(
-                                ImmutableList.of(input1.future, input2.future, input3.future))
-                        .call(
-                                () -> {
-                                    try {
-                                        // The input value is already done
-                                        Trace.begin("Task: " + name);
-                                        T value1 = input1.future.get();
-                                        U value2 = input2.future.get();
-                                        V value3 = input3.future.get();
-                                        return task.apply(value1, value2, value3);
-                                    } finally {
-                                        Trace.end();
-                                        phaser.arriveAndDeregister();
-                                    }
-                                },
-                                executor);
-        return new Task<>(future);
+        Callable<O> callable =
+                () -> {
+                    try {
+                        // The input value is already done
+                        Trace.begin("Task: " + name);
+                        T value1 = input1.future.get();
+                        U value2 = input2.future.get();
+                        V value3 = input3.future.get();
+                        return function.apply(value1, value2, value3);
+                    } finally {
+                        Trace.end();
+                    }
+                };
+        Task<O> task = new Task<>(callable, input1, input2, input3);
+        tasks.add(task);
+        return task;
     }
 
-    public void join() {
-        try {
-            Trace.begin("TaskRunner#Join");
-            phaser.arriveAndAwaitAdvance();
-        } finally {
-            Trace.end();
+    /** Synchronized to force one batch of tasks to run at a time. */
+    private synchronized void runInternal(ArrayList<Task<?>> batch) throws DeployerException {
+        for (Task<?> task : batch) {
+            task.run(executor);
+        }
+        for (Task<?> task : batch) {
+            task.get();
         }
     }
 
-    public int getPendingTasks() {
-        // The runner is also registered so we need to subtract it
-        return phaser.getRegisteredParties() - 1;
+    /**
+     * Runs and waits for all the pending tasks to be executed.
+     *
+     * <p>If no tasks are pending this is a no-op.
+     *
+     * @throws DeployerException if a task throws it while executing
+     */
+    public void run() throws DeployerException {
+        ArrayList<Task<?>> batch = new ArrayList<>(tasks);
+        tasks.clear();
+        runInternal(batch);
     }
 
-    public <T, U> Task<T> block(Task<T> blocked, Task<U> on) {
-        return new Task<>(Futures.whenAllSucceed(on.future).call(blocked.future::get));
+    /**
+     * Utility method to run the tasks on a separate executor. The exceptions are then thrown as
+     * runtime exceptions.
+     */
+    public void runAsync(Executor executor) {
+        ArrayList<Task<?>> batch = new ArrayList<>(tasks);
+        tasks.clear();
+        executor.execute(
+                () -> {
+                    try {
+                        runInternal(batch);
+                    } catch (DeployerException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 
+    /**
+     * Runs the tasks asynchronously using the runner's executor for the controlling thread.
+     * Subsequent work queued via run or runAsync on this TaskRunner will wait until the async batch
+     * completes before beginning.
+     */
+    public void runAsync() {
+        runAsync(executor);
+    }
 
     public static class Task<T> {
-        private ListenableFuture<T> future;
+        private final Callable<T> callable;
+        private final Task<?>[] inputs;
+        private final SettableFuture<T> future;
+
         // Only can be created through the interface enforcing a no-cycle dependency graph.
-        private Task(ListenableFuture<T> future) {
-            this.future = future;
+        Task(Callable<T> callable, Task<?>... inputs) {
+            this.future = SettableFuture.create();
+            this.inputs = inputs;
+            this.callable = callable;
         }
 
         public T get() throws DeployerException {
@@ -150,6 +180,12 @@ public class TaskRunner {
                     throw new IllegalStateException(e);
                 }
             }
+        }
+
+        public void run(Executor executor) {
+            List<? extends SettableFuture<?>> futures =
+                    Arrays.stream(inputs).map(t -> t.future).collect(Collectors.toList());
+            future.setFuture(Futures.whenAllComplete(futures).call(callable, executor));
         }
     }
 

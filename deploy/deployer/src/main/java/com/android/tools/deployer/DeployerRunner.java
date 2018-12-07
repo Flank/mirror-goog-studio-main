@@ -100,11 +100,11 @@ public class DeployerRunner implements UIService {
                     deployer.codeSwap(packageName, apks, ImmutableMap.of());
                 }
             }
+            runner.run();
         } catch (DeployerException e) {
             e.printStackTrace(System.out);
             LOGGER.error(e, "Error executing the deployer");
         }
-        runner.join();
         service.shutdown();
     }
 

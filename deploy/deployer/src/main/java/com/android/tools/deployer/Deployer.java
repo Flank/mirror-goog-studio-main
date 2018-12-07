@@ -61,25 +61,22 @@ public class Deployer {
     public void install(String packageName, List<String> apks, InstallOptions options)
             throws DeployerException {
         try (Trace ignored = Trace.begin("install")) {
-            // There could be tasks running from the previous cycle that were
-            // left to complete in the background. We wait for them to finish
-            // So that we don't accumulate them.
-            runner.join();
-
             ApkInstaller apkInstaller = new ApkInstaller(adb, service);
             apkInstaller.install(packageName, apks, options);
 
 
             // Inputs
-            Task<List<String>> paths = runner.submit(apks);
+            Task<List<String>> paths = runner.create(apks);
             CachedDexSplitter splitter = new CachedDexSplitter(db, new D8DexSplitter());
 
             // Parse the apks
             Task<List<ApkEntry>> entries =
-                    runner.submit("parsePaths", new ApkParser()::parsePaths, paths);
+                    runner.create("parsePaths", new ApkParser()::parsePaths, paths);
 
             // Update the database
-            runner.submit("computeClassChecksums", splitter::cache, entries);
+            runner.create("computeClassChecksums", splitter::cache, entries);
+
+            runner.runAsync();
         }
     }
 
@@ -103,28 +100,27 @@ public class Deployer {
             boolean argRestart,
             Map<Integer, ClassRedefiner> redefiners)
             throws DeployerException {
-        runner.join();
 
         // Inputs
-        Task<List<String>> paths = runner.submit(argPaths);
-        Task<String> packageName = runner.submit(argPackageName);
-        Task<Boolean> restart = runner.submit(argRestart);
-        Task<DexSplitter> splitter = runner.submit(new CachedDexSplitter(db, new D8DexSplitter()));
+        Task<List<String>> paths = runner.create(argPaths);
+        Task<String> packageName = runner.create(argPackageName);
+        Task<Boolean> restart = runner.create(argRestart);
+        Task<DexSplitter> splitter = runner.create(new CachedDexSplitter(db, new D8DexSplitter()));
 
         // Get the list of files from the local apks
         Task<List<ApkEntry>> newFiles =
-                runner.submit("parseApks", new ApkParser()::parsePaths, paths);
+                runner.create("parseApks", new ApkParser()::parsePaths, paths);
 
         // Get the list of files from the installed app
         Task<List<ApkEntry>> dumps =
-                runner.submit("dump", new ApkDumper(installer)::dump, packageName);
+                runner.create("dump", new ApkDumper(installer)::dump, packageName);
 
         // Calculate the difference between them
-        Task<List<FileDiff>> diffs = runner.submit("diff", new ApkDiffer()::diff, dumps, newFiles);
+        Task<List<FileDiff>> diffs = runner.create("diff", new ApkDiffer()::diff, dumps, newFiles);
 
         // Push the apks to device and get the remote paths
         Task<String> sessionId =
-                runner.submit(
+                runner.create(
                         "preinstall",
                         new ApkPreInstaller(adb, installer, logger)::preinstall,
                         dumps,
@@ -132,23 +128,26 @@ public class Deployer {
 
         // Verify the changes are swappable and get only the dexes that we can change
         Task<List<FileDiff>> dexDiffs =
-                runner.submit("verify", new SwapVerifier()::verify, diffs, restart);
+                runner.create("verify", new SwapVerifier()::verify, diffs, restart);
 
         // Compare the local vs remote dex files.
         Task<List<DexClass>> toSwap =
-                runner.submit("compare", new DexComparator()::compare, dexDiffs, splitter);
+                runner.create("compare", new DexComparator()::compare, dexDiffs, splitter);
 
         // Do the swap
         ApkSwapper swapper = new ApkSwapper(installer, argPackageName, argRestart, redefiners);
-        Task<Boolean> swap = runner.submit("swap", swapper::swap, newFiles, sessionId, toSwap);
+
+        runner.create("swap", swapper::swap, newFiles, sessionId, toSwap);
+
+        runner.run();
 
         // Update the database with the entire new apk. In the normal case this should
         // be a no-op because the dexes that were modified were extracted at comparison time.
         // However if the compare task doesn't get to execute we still update the database.
         // Note we artificially block this task until swap is done.
-        runner.submit("cache", DexSplitter::cache, runner.block(splitter, swap), newFiles);
+        runner.create("cache", DexSplitter::cache, splitter, newFiles);
 
         // Wait only for swap to finish
-        swap.get();
+        runner.runAsync();
     }
 }
