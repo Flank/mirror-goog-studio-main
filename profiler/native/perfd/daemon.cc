@@ -202,6 +202,12 @@ bool Daemon::TryAttachAppAgent(int32_t app_pid, const std::string& app_name,
     return false;
   }
 
+  auto agent_status = GetAgentStatus(app_pid);
+  // Only attempt to connect if our status is not unattachable
+  if (agent_status == AgentData::UNATTACHABLE) {
+    return false;
+  }
+
   // Copies the connector over to the package's data folder so we can run it
   // to send messages to perfa's Unix socket server.
   CopyFileToPackageFolder(package_name, kConnectorFileName);
@@ -303,8 +309,7 @@ AgentData::Status Daemon::GetAgentStatus(int32_t pid) {
   bool has_data_path =
       package_manager.GetAppDataPath(package_name, &data_path, &error);
   agent_attachable_map_[pid] = has_data_path;
-  return has_data_path ? AgentData::UNSPECIFIED
-                       : AgentData::UNATTACHABLE;
+  return has_data_path ? AgentData::UNSPECIFIED : AgentData::UNATTACHABLE;
 }
 
 bool Daemon::CheckAppHeartBeat(int app_pid) {

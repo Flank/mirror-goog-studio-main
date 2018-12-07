@@ -16,10 +16,12 @@
 #include "perfd/commands/begin_session.h"
 
 #include <string>
+#include "proto/common.pb.h"
 #include "utils/process_manager.h"
 
 using grpc::Status;
 using grpc::StatusCode;
+using profiler::proto::Event;
 using std::string;
 
 namespace profiler {
@@ -36,8 +38,17 @@ Status BeginSession::ExecuteOn(Daemon* daemon) {
   auto session = daemon->sessions()->GetLastSession();
   session->StartSamplers();
   if (data_.jvmti_config().attach_agent()) {
-    daemon->TryAttachAppAgent(data_.pid(), app_name,
-                              data_.jvmti_config().agent_lib_file_name());
+    bool attachable = daemon->TryAttachAppAgent(
+        data_.pid(), app_name, data_.jvmti_config().agent_lib_file_name());
+    if (!attachable) {
+      Event event;
+      event.set_session_id(session->info().session_id());
+      event.set_group_id(session->info().session_id());
+      event.set_kind(Event::AGENT);
+      auto* status = event.mutable_agent_data();
+      status->set_status(proto::AgentData::UNATTACHABLE);
+      daemon->buffer()->Add(event);
+    }
   }
 
   return Status::OK;

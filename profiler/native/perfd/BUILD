@@ -6,6 +6,7 @@ filegroup(
         "samplers/cpu_usage_sampler.h",
         "samplers/network_connection_count_sampler.h",
         "samplers/network_speed_sampler.h",
+        "samplers/agent_status_sampler.h",
         "samplers/sampler.h",
     ]),
 )
@@ -16,6 +17,7 @@ filegroup(
         "samplers/cpu_usage_sampler.cc",
         "samplers/network_connection_count_sampler.cc",
         "samplers/network_speed_sampler.cc",
+        "samplers/agent_status_sampler.cc",
         "samplers/sampler.cc",
     ]),
 )
