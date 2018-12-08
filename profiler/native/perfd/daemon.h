@@ -25,6 +25,7 @@
 #include "perfd/event_writer.h"
 #include "perfd/profiler_component.h"
 #include "perfd/sessions/sessions_manager.h"
+#include "proto/common.grpc.pb.h"
 #include "proto/profiler.grpc.pb.h"
 #include "utils/clock.h"
 #include "utils/config.h"
@@ -99,7 +100,7 @@ class Daemon {
   // Interrupts the WriteEventsTo.
   void InterruptWriteEvents() { buffer_->InterruptWriteEvents(); }
 
-  proto::AgentStatusResponse::Status GetAgentStatus(int32_t pid);
+  proto::AgentData::Status GetAgentStatus(int32_t pid);
 
   grpc::Status ConfigureStartupAgent(
       const profiler::proto::ConfigureStartupAgentRequest* request,
@@ -120,7 +121,7 @@ class Daemon {
     return heartbeat_timestamp_map_;
   }
 
-  std::unordered_map<int32_t, profiler::proto::AgentStatusResponse::Status>&
+  std::unordered_map<int32_t, profiler::proto::AgentData::Status>&
   agent_status_map() {
     return agent_status_map_;
   }
@@ -158,7 +159,7 @@ class Daemon {
   std::unordered_map<int32_t, int64_t> heartbeat_timestamp_map_;
   // Mapping pid -> latest status of agent (Attached / Detached).
   // TODO (b/110830616): remove dead entries
-  std::unordered_map<int32_t, profiler::proto::AgentStatusResponse::Status>
+  std::unordered_map<int32_t, profiler::proto::AgentData::Status>
       agent_status_map_;
   // Mapping pid -> whether an agent is attachable.
   // TODO (b/110830616): remove dead entries

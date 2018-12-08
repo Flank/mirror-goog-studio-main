@@ -21,7 +21,7 @@
 #include "perfd/event/event_service.h"
 #include "perfd/event/internal_event_service.h"
 #include "perfd/profiler_component.h"
-#include "proto/profiler.grpc.pb.h"
+#include "proto/common.grpc.pb.h"
 #include "utils/clock.h"
 #include "utils/process_manager.h"
 

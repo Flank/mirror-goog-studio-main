@@ -41,7 +41,7 @@
 using grpc::Service;
 using grpc::Status;
 using grpc::StatusCode;
-using profiler::proto::AgentStatusResponse;
+using profiler::proto::AgentData;
 using std::string;
 
 namespace profiler {
@@ -267,7 +267,7 @@ bool Daemon::IsAppAgentAlive(int app_pid, const string& app_name) {
   return ping.RunAs(args.str(), app_name, nullptr);
 }
 
-AgentStatusResponse::Status Daemon::GetAgentStatus(int32_t pid) {
+AgentData::Status Daemon::GetAgentStatus(int32_t pid) {
   auto got = agent_status_map_.find(pid);
   if (got != agent_status_map_.end()) {
     return got->second;
@@ -277,14 +277,14 @@ AgentStatusResponse::Status Daemon::GetAgentStatus(int32_t pid) {
   // avoid calling "run-as" repeatedly.
   auto attachable_itr = agent_attachable_map_.find(pid);
   if (attachable_itr != agent_attachable_map_.end()) {
-    return attachable_itr->second ? AgentStatusResponse::UNSPECIFIED
-                                  : AgentStatusResponse::UNATTACHABLE;
+    return attachable_itr->second ? AgentData::UNSPECIFIED
+                                  : AgentData::UNATTACHABLE;
   }
   string app_name = ProcessManager::GetCmdlineForPid(pid);
   if (app_name.empty()) {
     // Process is not available. Do not cache the attachable result here since
     // we couldn't retrieve the process.
-    return AgentStatusResponse::UNATTACHABLE;
+    return AgentData::UNATTACHABLE;
   }
   if (profiler::DeviceInfo::feature_level() < proto::Device::O) {
     // pre-O, since the agent is deployed with the app, we should receive a
@@ -292,7 +292,7 @@ AgentStatusResponse::Status Daemon::GetAgentStatus(int32_t pid) {
     // whether an agent can be attached.
     // Note: This will only be called if we have not had a heartbeat yet, so we
     // will return unspecified by default.
-    return AgentStatusResponse::UNSPECIFIED;
+    return AgentData::UNSPECIFIED;
   }
   // In O+, we can attach an jvmti agent as long as the app is debuggable
   // and the app's data folder is available to us.
@@ -303,14 +303,14 @@ AgentStatusResponse::Status Daemon::GetAgentStatus(int32_t pid) {
   bool has_data_path =
       package_manager.GetAppDataPath(package_name, &data_path, &error);
   agent_attachable_map_[pid] = has_data_path;
-  return has_data_path ? AgentStatusResponse::UNSPECIFIED
-                       : AgentStatusResponse::UNATTACHABLE;
+  return has_data_path ? AgentData::UNSPECIFIED
+                       : AgentData::UNATTACHABLE;
 }
 
 bool Daemon::CheckAppHeartBeat(int app_pid) {
   auto got = agent_status_map_.find(app_pid);
   if (got != agent_status_map_.end()) {
-    return got->second == proto::AgentStatusResponse::ATTACHED;
+    return got->second == proto::AgentData::ATTACHED;
   }
   return false;
 }
