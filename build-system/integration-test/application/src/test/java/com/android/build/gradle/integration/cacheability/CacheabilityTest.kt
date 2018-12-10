@@ -70,6 +70,7 @@ class CacheabilityTest {
                     ":mergeDebugShaders",
                     ":mergeDebugAssets",
                     ":mergeExtDexDebug",
+                    ":mergeDexDebug",
                     ":mergeDebugJniLibFolders"
                 ),
                 DID_WORK to setOf(
@@ -81,7 +82,6 @@ class CacheabilityTest {
                     ":processDebugResources",
                     ":compileDebugShaders",
                     ":transformClassesWithDexBuilderForDebug",
-                    ":mergeDexDebug",
                     ":validateSigningDebug",
                     ":signingConfigWriterDebug",
                     ":transformNativeLibsWithMergeJniLibsForDebug",
@@ -115,7 +115,6 @@ class CacheabilityTest {
             ":processDebugResources" /* Bug 120414113 */,
             ":compileDebugShaders" /* Bug 120413401 */,
             ":transformClassesWithDexBuilderForDebug" /* Bug 74595921 */,
-            ":mergeDexDebug" /* Bug 120413559 */,
             ":signingConfigWriterDebug" /* Bug 120411939 */,
             ":transformNativeLibsWithMergeJniLibsForDebug" /* Bug 74595223 */,
             ":transformNativeLibsWithStripDebugSymbolForDebug" /* Bug 120414535 */,
