@@ -3,6 +3,7 @@ package com.android.tools.gradle;
 import com.android.annotations.NonNull;
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
+import com.google.common.base.MoreObjects;
 import java.io.BufferedInputStream;
 import java.io.Closeable;
 import java.io.File;
@@ -90,7 +91,7 @@ public class Gradle implements Closeable {
         File androidDir = new File(outDir, "_android").getAbsoluteFile();
         File homeDir = getGradleUserHome().getAbsoluteFile();
         // gradle tries to write into .m2 so we pass it a tmp one.
-        File tmpLocalMaven = new File(outDir, "_tmp_local_maven").getAbsoluteFile();
+        Path tmpLocalMaven = getLocalMavenRepo();
 
         HashMap<String, String> env = new HashMap<>();
 
@@ -110,7 +111,7 @@ public class Gradle implements Closeable {
         arguments.add("--profile");
         arguments.add("--init-script");
         arguments.add(getInitScript().getAbsolutePath());
-        arguments.add("-Dmaven.repo.local=" + tmpLocalMaven.getAbsolutePath());
+        arguments.add("-Dmaven.repo.local=" + tmpLocalMaven.toAbsolutePath().toString());
 
         // Workaround for issue https://github.com/gradle/gradle/issues/5188
         System.setProperty("gradle.user.home", "");
@@ -128,6 +129,8 @@ public class Gradle implements Closeable {
             launcher.setStandardOutput(out);
             launcher.setStandardError(err);
             launcher.run();
+        } catch (Exception e) {
+            throw new RuntimeException("Gradle invocation failed: " + this.toString(), e);
         } finally {
             projectConnection.close();
         }
@@ -137,10 +140,6 @@ public class Gradle implements Closeable {
         if (val != null) {
             env.put(key, val);
         }
-    }
-
-    public File getOutput(String path) {
-        return new File(getBuildDir(), path);
     }
 
     @Override
@@ -197,8 +196,12 @@ public class Gradle implements Closeable {
         return new File(outDir, "_home");
     }
 
-    private File getBuildDir() {
+    public File getBuildDir() {
         return new File(outDir, "_build");
+    }
+
+    public Path getLocalMavenRepo() {
+        return outDir.toPath().resolve("_tmp_local_maven");
     }
 
     private File getRepoDir() {
@@ -258,5 +261,15 @@ public class Gradle implements Closeable {
                 .useGradleUserHomeDir(home)
                 .forProjectDirectory(projectDirectory)
                 .connect();
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("outDir", outDir)
+                .add("distribution", distribution)
+                .add("project", project)
+                .add("arguments", arguments)
+                .toString();
     }
 }
