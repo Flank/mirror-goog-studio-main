@@ -35,7 +35,14 @@ readonly command_log="$("${script_dir}"/bazel info ${config_options} command_log
   --build_tag_filters=${build_tag_filters} \
   --test_tag_filters=${test_tag_filters} \
   -- \
-  $(< "${script_dir}/targets") \
+  @blaze//:aswb_tests \
+  //prebuilts/studio/... \
+  //prebuilts/tools/... \
+  //tools/... \
+  -//tools/base:coverage_report \
+  -//tools/base:coverage_report_collection_binary \
+  -//tools/base:coverage_report_source_and_classes \
+  -//tools/base:coverage_report_source_and_classes.map \
   //tools/base/bazel/foundry:test
 
 readonly bazel_status=$?
