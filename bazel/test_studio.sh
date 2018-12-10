@@ -8,6 +8,7 @@ readonly build_number="$3"
 
 readonly script_dir="$(dirname "$0")"
 
+build_tag_filters=-no_linux
 test_tag_filters=-no_linux,-no_test_linux,-qa_sanity,-qa_fast,-qa_unreliable
 
 # If the build number starts with a 'P', this is a pre-submit builder.
@@ -27,7 +28,7 @@ fi
 readonly command_log="$("${script_dir}"/bazel info ${config_options} command_log)"
 
 # Run Bazel
-"${script_dir}/bazel" --max_idle_secs=60 test ${config_options} --build_tag_filters=-no_linux --test_tag_filters=${test_tag_filters} -- $(< "${script_dir}/targets") //tools/base/bazel/foundry:test
+"${script_dir}/bazel" --max_idle_secs=60 test ${config_options} --build_tag_filters=${build_tag_filters} --test_tag_filters=${test_tag_filters} -- $(< "${script_dir}/targets") //tools/base/bazel/foundry:test
 
 readonly bazel_status=$?
 
