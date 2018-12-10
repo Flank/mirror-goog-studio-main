@@ -21,14 +21,16 @@
 
 #include <string>
 
+#include "tools/base/deploy/installer/workspace.h"
+
 namespace deploy {
 
 class DeltaPreinstallCommand : public Command {
  public:
-  DeltaPreinstallCommand();
+  DeltaPreinstallCommand(Workspace& workspace) : Command(workspace) {}
   virtual ~DeltaPreinstallCommand() {}
   virtual void ParseParameters(int argc, char** argv);
-  virtual void Run(Workspace& workspace);
+  virtual void Run();
 
  private:
   bool SendApkToPackageManager(const proto::PatchInstruction& patch,

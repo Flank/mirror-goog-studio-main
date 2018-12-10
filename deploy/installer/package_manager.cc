@@ -4,15 +4,13 @@
 #include <sstream>
 
 #include "tools/base/deploy/common/event.h"
-#include "tools/base/deploy/installer/executor.h"
+#include "tools/base/deploy/installer/workspace.h"
 
 namespace deploy {
 
 namespace {
 const char* PM_EXEC = "/system/bin/pm";
 }  // namespace
-
-PackageManager::PackageManager() {}
 
 bool PackageManager::GetApks(const std::string& package_name,
                              std::vector<std::string>* apks,
@@ -23,7 +21,7 @@ bool PackageManager::GetApks(const std::string& package_name,
   parameters.emplace_back(package_name);
   std::string out;
   std::string err;
-  bool success = Executor::Run(PM_EXEC, parameters, &out, &err);
+  bool success = workspace_.GetExecutor().Run(PM_EXEC, parameters, &out, &err);
   if (!success) {
     *error_string = err;
     return false;

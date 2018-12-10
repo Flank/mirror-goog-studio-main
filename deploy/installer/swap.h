@@ -23,17 +23,18 @@
 
 #include "tools/base/deploy/common/message_pipe_wrapper.h"
 #include "tools/base/deploy/installer/command.h"
+#include "tools/base/deploy/installer/executor.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {
 
 class SwapCommand : public Command {
  public:
-  SwapCommand() : response_(nullptr){};
-  ~SwapCommand(){};
+  SwapCommand(Workspace& workspace) : Command(workspace), response_(nullptr) {}
+  ~SwapCommand() {}
 
   void ParseParameters(int argc, char** argv) override;
-  void Run(Workspace& workspace) override;
+  void Run() override;
 
  private:
   std::string request_bytes_;
@@ -46,7 +47,7 @@ class SwapCommand : public Command {
   // Makes sure everything is ready for ART to attach the JVMI agent to the app.
   // - Make sure the agent shared lib is in the app data folder.
   // - Make sure the  configuration file to app data folder.
-  bool Setup(const Workspace& workspace) noexcept;
+  bool Setup() noexcept;
 
   // Obtains a list of process ids corresponding to processes running on the
   // device that match the names present in the SwapRequest object.

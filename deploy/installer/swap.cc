@@ -86,14 +86,14 @@ inline void FilterPids(std::vector<int>& process_ids,
       process_ids.end());
 }
 
-void SwapCommand::Run(Workspace& workspace) {
+void SwapCommand::Run() {
   Phase p("Command Swap");
 
   response_ = new proto::SwapResponse();
-  workspace.GetResponse().set_allocated_swap_response(response_);
+  workspace_.GetResponse().set_allocated_swap_response(response_);
   LogEvent("Got swap request for:" + request_.package_name());
 
-  if (!Setup(workspace)) {
+  if (!Setup()) {
     response_->set_status(proto::SwapResponse::ERROR);
     ErrEvent("Unable to setup workspace");
     return;
@@ -185,7 +185,7 @@ void SwapCommand::Run(Workspace& workspace) {
     overall_status = proto::AgentSwapResponse::ERROR;
   }
 
-  CmdCommand cmd;
+  CmdCommand cmd(workspace_);
   std::string output;
   std::string install_session = request_.session_id();
   // If the swap failed, revert the installation.
@@ -208,7 +208,7 @@ void SwapCommand::Run(Workspace& workspace) {
   LogEvent("Swapped");
 }
 
-bool SwapCommand::Setup(const Workspace& workspace) noexcept {
+bool SwapCommand::Setup() noexcept {
   // Make sure the target dir exists.
   Phase p("Setup");
   std::string output;
@@ -217,7 +217,7 @@ bool SwapCommand::Setup(const Workspace& workspace) noexcept {
     return false;
   }
 
-  if (!CopyBinaries(workspace.GetTmpFolder(), target_dir_)) {
+  if (!CopyBinaries(workspace_.GetTmpFolder(), target_dir_)) {
     ErrEvent("Could not copy binaries");
     return false;
   }
@@ -373,8 +373,6 @@ bool SwapCommand::WaitForServer(int agent_count, int* server_pid, int* read_fd,
     LogEvent("Could not set sync pipe read end to close-on-exec");
   }
 
-  std::string command = target_dir_ + kServerFilename;
-
   std::vector<std::string> parameters;
   parameters.push_back(to_string(agent_count));
   parameters.push_back(Socket::kDefaultAddress);
@@ -385,9 +383,9 @@ bool SwapCommand::WaitForServer(int agent_count, int* server_pid, int* read_fd,
   LogEvent(parameters.back());
 
   int err_fd = -1;
-  bool success =
-      Executor::ForkAndExecAs(command, request_.package_name(), parameters,
-                              write_fd, read_fd, &err_fd, server_pid);
+  bool success = workspace_.GetExecutor().ForkAndExecAs(
+      target_dir_ + kServerFilename, request_.package_name(), parameters,
+      write_fd, read_fd, &err_fd, server_pid);
   close(sync_write_fd);
   close(err_fd);
 
@@ -406,7 +404,7 @@ bool SwapCommand::WaitForServer(int agent_count, int* server_pid, int* read_fd,
 
 bool SwapCommand::AttachAgents(const std::vector<int>& process_ids) const {
   Phase p("AttachAgents");
-  CmdCommand cmd;
+  CmdCommand cmd(workspace_);
   for (int pid : process_ids) {
     std::string output;
     std::string agent = kAgentFilename;
@@ -436,10 +434,10 @@ bool SwapCommand::RunCmd(const std::string& shell_cmd, User run_as,
                          std::string* output) const {
   std::string err;
   if (run_as == User::APP_PACKAGE) {
-    return Executor::RunAs(shell_cmd, request_.package_name(), args, output,
-                           &err);
+    return workspace_.GetExecutor().RunAs(shell_cmd, request_.package_name(),
+                                          args, output, &err);
   } else {
-    return Executor::Run(shell_cmd, args, output, &err);
+    return workspace_.GetExecutor().Run(shell_cmd, args, output, &err);
   }
 }
 

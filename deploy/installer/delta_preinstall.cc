@@ -102,8 +102,6 @@ void Sendfile(int out_fd, int in_fd, off_t* offset, size_t count) {
 }  // namespace
 namespace deploy {
 
-DeltaPreinstallCommand::DeltaPreinstallCommand() {}
-
 void DeltaPreinstallCommand::ParseParameters(int argc, char** argv) {
   deploy::MessagePipeWrapper wrapper(STDIN_FILENO);
   std::string data;
@@ -144,8 +142,8 @@ bool DeltaPreinstallCommand::SendApkToPackageManager(
   parameters.push_back(apk.substr(apk.rfind("/") + 1));
 
   int pm_stdout, pm_stderr, pm_stdin, pid;
-  Executor::ForkAndExec("cmd", parameters, &pm_stdin, &pm_stdout, &pm_stderr,
-                        &pid);
+  workspace_.GetExecutor().ForkAndExec("cmd", parameters, &pm_stdin, &pm_stdout,
+                                       &pm_stderr, &pid);
 
   // Feed each apk to the apk manager
   const std::string& src_absolute_path = patch.src_absolute_path();
@@ -213,15 +211,15 @@ bool DeltaPreinstallCommand::SendApkToPackageManager(
   return WIFEXITED(status) && (WEXITSTATUS(status) == 0);
 }
 
-void DeltaPreinstallCommand::Run(Workspace& workspace) {
+void DeltaPreinstallCommand::Run() {
   Phase p("Command DeltaPreinstall");
 
   proto::DeltaPreinstallResponse* response =
       new proto::DeltaPreinstallResponse();
-  workspace.GetResponse().set_allocated_deltapreinstall_response(response);
+  workspace_.GetResponse().set_allocated_deltapreinstall_response(response);
 
   // Create a session
-  CmdCommand cmd;
+  CmdCommand cmd(workspace_);
   std::string output;
   std::string session_id;
   if (!cmd.CreateInstallSession(&output)) {

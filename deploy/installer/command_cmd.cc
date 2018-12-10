@@ -26,15 +26,12 @@
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/trace.h"
 #include "tools/base/deploy/common/utils.h"
-#include "tools/base/deploy/installer/executor.h"
 
 namespace deploy {
 
 namespace {
 const char* CMD_EXEC = "/system/bin/cmd";
 }  // namespace
-
-CmdCommand::CmdCommand() {}
 
 bool CmdCommand::GetAppApks(const std::string& package_name,
                             std::vector<std::string>* apks,
@@ -46,7 +43,7 @@ bool CmdCommand::GetAppApks(const std::string& package_name,
   parameters.emplace_back(package_name);
   std::string out;
   std::string err;
-  bool success = Executor::Run(CMD_EXEC, parameters, &out, &err);
+  bool success = workspace_.GetExecutor().Run(CMD_EXEC, parameters, &out, &err);
   if (!success) {
     *error_string = err;
     return false;
@@ -77,7 +74,7 @@ bool CmdCommand::AttachAgent(int pid, const std::string& agent,
   parameters.emplace_back(agent + "=" + args);
 
   std::string out;
-  return Executor::Run(CMD_EXEC, parameters, &out, error_string);
+  return workspace_.GetExecutor().Run(CMD_EXEC, parameters, &out, error_string);
 }
 
 bool CmdCommand::UpdateAppInfo(const std::string& user_id,
@@ -91,7 +88,7 @@ bool CmdCommand::UpdateAppInfo(const std::string& user_id,
   parameters.emplace_back(package_name);
 
   std::string out;
-  return Executor::Run(CMD_EXEC, parameters, &out, error_string);
+  return workspace_.GetExecutor().Run(CMD_EXEC, parameters, &out, error_string);
 }
 
 int get_file_size(std::string path) {
@@ -109,7 +106,7 @@ bool CmdCommand::CreateInstallSession(std::string* output) const noexcept {
   parameters.emplace_back("-r");
   parameters.emplace_back("--dont-kill");
   std::string err;
-  Executor::Run(CMD_EXEC, parameters, output, &err);
+  workspace_.GetExecutor().Run(CMD_EXEC, parameters, output, &err);
   std::string match = "Success: created install session [";
   if (output->find(match, 0) != 0) {
     return false;
@@ -142,7 +139,8 @@ int CmdCommand::PreInstall(const std::vector<std::string>& apks,
     parameters.push_back(size.str());
     parameters.push_back(session);
     parameters.push_back(apk.substr(apk.rfind("/") + 1));
-    Executor::RunWithInput(CMD_EXEC, parameters, &output, &error, apk);
+    workspace_.GetExecutor().RunWithInput(CMD_EXEC, parameters, &output, &error,
+                                          apk);
   }
   return atoi(session.c_str());
 }  // namespace deploy
@@ -156,7 +154,7 @@ bool CmdCommand::CommitInstall(const std::string& session,
   parameters.emplace_back("install-commit");
   parameters.emplace_back(session);
   std::string err;
-  return Executor::Run(CMD_EXEC, parameters, output, &err);
+  return workspace_.GetExecutor().Run(CMD_EXEC, parameters, output, &err);
 }
 
 bool CmdCommand::AbortInstall(const std::string& session,
@@ -167,7 +165,7 @@ bool CmdCommand::AbortInstall(const std::string& session,
   parameters.emplace_back(session);
   output->clear();
   std::string err;
-  return Executor::Run(CMD_EXEC, parameters, output, &err);
+  return workspace_.GetExecutor().Run(CMD_EXEC, parameters, output, &err);
 }
 
 void CmdCommand::SetPath(const char* path) { CMD_EXEC = path; }

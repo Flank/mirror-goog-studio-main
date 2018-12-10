@@ -31,6 +31,7 @@
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/command_cmd.h"
 #include "tools/base/deploy/installer/dump.h"
+#include "tools/base/deploy/installer/executor_impl.h"
 #include "tools/base/deploy/installer/package_manager.h"
 #include "tools/base/deploy/installer/workspace.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
@@ -38,6 +39,8 @@
 using namespace deploy;
 
 extern const char* kVersion_hash;
+
+const std::string kRunAsExecutable = "/system/bin/run-as";
 
 struct Parameters {
   const char* binary_name = nullptr;
@@ -124,7 +127,8 @@ int main(int argc, char** argv) {
   InitEventSystem();
   BeginPhase("installer");
 
-  Workspace workspace(GetInstallerPath());
+  ExecutorImpl executor(kRunAsExecutable);
+  Workspace workspace(GetInstallerPath(), executor);
 
   // Check and parse parameters
   if (argc < 2) {
@@ -154,7 +158,7 @@ int main(int argc, char** argv) {
   }
 
   // Retrieve Command to be invoked.
-  auto task = GetCommand(parameters.command_name);
+  auto task = GetCommand(parameters.command_name, workspace);
   if (task == nullptr) {
     return Fail(proto::InstallerResponse::ERROR_CMD, workspace,
                 "Unknown command");
@@ -175,7 +179,7 @@ int main(int argc, char** argv) {
   }
 
   // Finally! Run !
-  task->Run(workspace);
+  task->Run();
   workspace.GetResponse().set_status(proto::InstallerResponse::OK);
   EndPhase();
   workspace.SendResponse();

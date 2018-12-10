@@ -28,12 +28,11 @@
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/apk_archive.h"
-#include "tools/base/deploy/installer/apk_retriever.h"
+#include "tools/base/deploy/installer/command_cmd.h"
+#include "tools/base/deploy/installer/package_manager.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {
-
-DumpCommand::DumpCommand() {}
 
 void DumpCommand::ParseParameters(int argc, char** argv) {
   if (argc < 1) {
@@ -44,15 +43,14 @@ void DumpCommand::ParseParameters(int argc, char** argv) {
   ready_to_run_ = true;
 }
 
-void DumpCommand::Run(Workspace& workspace) {
+void DumpCommand::Run() {
   Phase p("Command Dump");
 
   proto::DumpResponse* response = new proto::DumpResponse();
-  workspace.GetResponse().set_allocated_dump_response(response);
+  workspace_.GetResponse().set_allocated_dump_response(response);
 
   // Retrieve apks for this package.
-  ApkRetriever apkRetriever;
-  auto apks_path = apkRetriever.retrieve(packageName_);
+  auto apks_path = RetrieveApks(packageName_);
   if (apks_path.size() == 0) {
     response->set_status(proto::DumpResponse::ERROR_PACKAGE_NOT_FOUND);
     ErrEvent("ApkRetriever did not return apks");
@@ -79,6 +77,23 @@ void DumpCommand::Run(Workspace& workspace) {
     }
   }
   response->set_status(proto::DumpResponse::OK);
+}
+
+std::vector<std::string> DumpCommand::RetrieveApks(
+    const std::string& package_name) {
+  Phase p("retrieve_apk_path");
+  std::vector<std::string> apks;
+  // First try with cmd. It may fail since path capability was added to "cmd" in
+  // Android P.
+  CmdCommand cmd(workspace_);
+  std::string error_output;
+  cmd.GetAppApks(package_name, &apks, &error_output);
+  if (apks.size() == 0) {
+    // "cmd" likely failed. Try with PackageManager (pm)
+    PackageManager pm(workspace_);
+    pm.GetApks(package_name, &apks, &error_output);
+  }
+  return apks;
 }
 
 }  // namespace deploy

@@ -14,49 +14,43 @@
  * limitations under the License.
  */
 
-#ifndef BASH_COMMAND_RUNNER_H
-#define BASH_COMMAND_RUNNER_H
+#ifndef EXECUTOR_H
+#define EXECUTOR_H
 
 #include <string>
 #include <vector>
 
 namespace deploy {
 
+// Interface allowing execution behavior to be mocked, in order to make it
+// possible to unit test complex installer commands.
 class Executor {
  public:
-  static bool RunWithInput(const std::string& executable_path,
-                           const std::vector<std::string>& args,
-                           std::string* output, std::string* error,
-                           const std::string& input_file) noexcept;
+  virtual bool Run(const std::string& executable_path,
+                   const std::vector<std::string>& args, std::string* output,
+                   std::string* error) const = 0;
 
-  static bool Run(const std::string& executable_path,
-                  const std::vector<std::string>& args, std::string* output,
-                  std::string* error) noexcept;
+  virtual bool RunAs(const std::string& executable_path,
+                     const std::string& package_name,
+                     const std::vector<std::string>& args, std::string* output,
+                     std::string* error) const = 0;
 
-  static bool RunAs(const std::string& executable_path,
-                    const std::string& package_name,
-                    const std::vector<std::string>& parameters,
-                    std::string* output, std::string* error) noexcept;
+  virtual bool RunWithInput(const std::string& executable_path,
+                            const std::vector<std::string>& args,
+                            std::string* output, std::string* error,
+                            const std::string& input_file) const = 0;
 
-  // Run a fork() and exec(). Returns the stdin, stderr, and stdout fd
-  // which the caller MUST close. It is also the caller's responsibility
-  // to call wait in order to reclaim the resource of the zombi process
-  // left after exec() terminates.
-  static bool ForkAndExec(const std::string& executable_path,
-                          const std::vector<std::string>& parameters,
-                          int* child_stdin_fd, int* child_stdout_fd,
-                          int* child_stderr_fd, int* fork_pid) noexcept;
+  virtual bool ForkAndExec(const std::string& executable_path,
+                           const std::vector<std::string>& parameters,
+                           int* child_stdin_fd, int* child_stdout_fd,
+                           int* child_stderr_fd, int* fork_pid) const = 0;
 
-  // Run a fork() and exec() using a package username. Returns the stdin,
-  // stderr, and stdout fd which the caller MUST close. It is also the
-  // caller's responsibility to call wait in order to reclaim the resource
-  // of the zombi process left after exec() terminates.
-  static bool ForkAndExecAs(const std::string& executable_path,
-                            const std::string& package_name,
-                            const std::vector<std::string>& parameters,
-                            int* child_stdin_fd, int* child_stdout_fd,
-                            int* child_stderr_fd, int* fork_pid) noexcept;
+  virtual bool ForkAndExecAs(const std::string& executable_path,
+                             const std::string& package_name,
+                             const std::vector<std::string>& parameters,
+                             int* child_stdin_fd, int* child_stdout_fd,
+                             int* child_stderr_fd, int* fork_pid) const = 0;
 };
 
 }  // namespace deploy
-#endif  // BASH_COMMAND_RUNNER_H
+#endif  // EXECUTOR_H
