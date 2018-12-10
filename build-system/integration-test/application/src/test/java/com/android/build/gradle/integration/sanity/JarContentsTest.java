@@ -22,7 +22,6 @@ import com.android.utils.FileUtils;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import com.google.common.truth.Expect;
@@ -1282,20 +1281,139 @@ public class JarContentsTest {
                 "META-INF/gradle-plugins/",
                 "META-INF/gradle-plugins/com.android.java.properties");
 
+        expected.putAll(
+                "com/android/tools/apkparser/binary-resources",
+                "com/",
+                "com/google/",
+                "com/google/devrel/",
+                "com/google/devrel/gmscore/",
+                "com/google/devrel/gmscore/tools/",
+                "com/google/devrel/gmscore/tools/apk/",
+                "com/google/devrel/gmscore/tools/apk/arsc/",
+                "LICENSE",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "NOTICE");
+
+        expected.putAll(
+                "com/android/tools/apkparser/apkanalyzer",
+                "com/",
+                "com/android/",
+                "com/android/tools/",
+                "com/android/tools/apk/",
+                "com/android/tools/apk/analyzer/",
+                "com/android/tools/apk/analyzer/dex/",
+                "com/android/tools/apk/analyzer/dex/tree/",
+                "com/android/tools/apk/analyzer/internal/",
+                "com/android/tools/apk/analyzer/optimizer/",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "NOTICE");
+
+        expected.putAll(
+                "com/android/tools/pixelprobe/pixelprobe",
+                "com/",
+                "META-INF/MANIFEST.MF",
+                "com/android/",
+                "com/android/tools/",
+                "com/android/tools/pixelprobe/",
+                "com/android/tools/pixelprobe/color/",
+                "com/android/tools/pixelprobe/decoder/",
+                "com/android/tools/pixelprobe/decoder/psd/",
+                "com/android/tools/pixelprobe/effect/",
+                "com/android/tools/pixelprobe/util/",
+                "icc/",
+                "icc/cmyk/",
+                "icc/cmyk/USWebCoatedSWOP.icc",
+                "META-INF/",
+                "NOTICE");
+
+        expected.putAll(
+                "com/android/tools/draw9patch",
+                "com/",
+                "com/android/",
+                "com/android/draw9patch/",
+                "com/android/draw9patch/graphics/",
+                "com/android/draw9patch/ui/",
+                "com/android/draw9patch/ui/action/",
+                "images/",
+                "images/checker.png",
+                "images/drop.png",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "NOTICE");
+
+        expected.putAll(
+                "com/android/tools/ninepatch",
+                "com/",
+                "com/android/",
+                "com/android/ninepatch/",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "NOTICE");
+
+        expected.putAll(
+                "com/android/tools/fakeadbserver/fakeadbserver",
+                "com/",
+                "com/android/",
+                "com/android/fakeadbserver/",
+                "com/android/fakeadbserver/devicecommandhandlers/",
+                "com/android/fakeadbserver/devicecommandhandlers/ddmsHandlers/",
+                "com/android/fakeadbserver/hostcommandhandlers/",
+                "com/android/fakeadbserver/shellcommandhandlers/",
+                "com/android/fakeadbserver/statechangehubs/",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "NOTICE");
+
+        expected.putAll(
+                "com/android/tools/chunkio/chunkio",
+                "com/",
+                "com/android/",
+                "com/android/tools/",
+                "com/android/tools/chunkio/",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "NOTICE");
+
+        expected.putAll(
+                "com/android/tools/analytics-library/publisher",
+                "com/",
+                "com/android/",
+                "com/android/tools/",
+                "com/android/tools/analytics/",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "NOTICE");
+
+        expected.putAll(
+                "com/android/tools/analytics-library/testing",
+                "com/",
+                "com/android/",
+                "com/android/tools/",
+                "com/android/tools/analytics/",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "NOTICE");
+
         if (TestUtils.runningFromBazel()) {
-            // TODO: move all differences from IGNORED_ARTIFACTS_BAZEL to here (b/64921827)
             // TODO: fix these. (b/64921827)
-            Multimap<String, String> bazelNotImplementedYet =
-                    ImmutableSetMultimap.<String, String>builder()
-                            .build();
+            ImmutableSet<String> bazelNotImplementedYet =
+                    ImmutableSet.of(
+                            "com/android/tools/apkparser/binary-resources",
+                            "com/android/tools/apkparser/apkanalyzer",
+                            "com/android/tools/pixelprobe/pixelprobe",
+                            "com/android/tools/draw9patch",
+                            "com/android/tools/ninepatch",
+                            "com/android/tools/fakeadbserver/fakeadbserver",
+                            "com/android/tools/chunkio/chunkio",
+                            "com/android/tools/analytics-library/testing");
 
             EXPECTED =
                     ImmutableSetMultimap.copyOf(
                             Multimaps.filterEntries(
                                     expected.build(),
-                                    entry ->
-                                            !bazelNotImplementedYet.containsEntry(
-                                                    entry.getKey(), entry.getValue())));
+                                    entry -> !bazelNotImplementedYet.contains(entry.getKey())));
         } else {
             EXPECTED = expected.build();
         }
