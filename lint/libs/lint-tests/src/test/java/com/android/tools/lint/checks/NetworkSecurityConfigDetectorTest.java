@@ -96,6 +96,34 @@ public class NetworkSecurityConfigDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    // Test a config file that has its base-config's cleartextTrafficPermitted flag set to "true"
+    public void testInsecureBaseConfiguration() {
+        String expected =
+                ""
+                        + "res/xml/network_config.xml:3: Warning: Setting cleartextTrafficPermitted to \"true\" by default is not recommended [InsecureBaseConfiguration]\n"
+                        + "    <base-config cleartextTrafficPermitted=\"true\">\n"
+                        + "                                            ~~~~\n"
+                        + "0 errors, 1 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                        xml(
+                                "res/xml/network_config.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<network-security-config>\n"
+                                        + "    <base-config cleartextTrafficPermitted=\"true\">\n"
+                                        + "    </base-config>\n"
+                                        + "</network-security-config>"))
+                .run()
+                .expect(expected)
+                .expectFixDiffs(
+                        ""
+                                + "Fix for res/xml/network_config.xml line 3: Replace with false:\n"
+                                + "@@ -3 +3\n"
+                                + "-     <base-config cleartextTrafficPermitted=\"true\">\n"
+                                + "+     <base-config cleartextTrafficPermitted=\"false\">");
+    }
+
     // Test expiration, invalid digest algorithm and invalid digest length for sha-256
     public void testPinSetElement() {
         String fiveDaysFromNow =

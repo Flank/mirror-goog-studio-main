@@ -31,6 +31,7 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.ImmutableSet;
@@ -52,7 +53,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
-/** Check which makes sure that a network-security-config descriptor file is valid and logical */
+/** Check which makes sure that a network-security-config descriptor file is valid and logical. */
 public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
 
     public static final Implementation IMPLEMENTATION =
@@ -86,7 +87,7 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
                     .addMoreInfo(
                             "https://developer.android.com/preview/features/security-config.html");
 
-    /** No backup pin specified */
+    /** No backup pin specified. */
     public static final Issue MISSING_BACKUP_PIN =
             Issue.create(
                             "MissingBackupPin",
@@ -96,6 +97,21 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
                                     + "particular site certificate is rotated and the app has not yet been updated.",
                             Category.CORRECTNESS,
                             6,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .addMoreInfo(
+                            "https://developer.android.com/preview/features/security-config.html");
+
+    /** Base configuration allows cleartext by default. */
+    public static final Issue INSECURE_CONFIGURATION =
+            Issue.create(
+                            "InsecureBaseConfiguration",
+                            "Setting `cleartextTrafficPermitted` to `\"true\"` by default is not recommended",
+                            "Permitting cleartext traffic could allow eavesdroppers to intercept data sent "
+                                    + "by your app, which impacts the privacy of your users. Consider only allowing "
+                                    + "encrypted traffic by setting the `cleartextTrafficPermitted` tag to `\"false\"`.",
+                            Category.SECURITY,
+                            5,
                             Severity.WARNING,
                             IMPLEMENTATION)
                     .addMoreInfo(
@@ -174,6 +190,7 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
                 } else {
                     baseConfigHandle = context.createLocationHandle(child);
                     handleConfigElement(context, child, seenDomains2Nodes);
+                    handleBaseContextElement(context, child);
                 }
             } else if (TAG_DEBUG_OVERRIDES.equals(tagName)) {
                 if (mDebugOverridesHandle != null) {
@@ -302,6 +319,23 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
                     config,
                     context.getNameLocation(config),
                     "No `<domain>` elements in `<domain-config>`");
+        }
+    }
+
+    private void handleBaseContextElement(XmlContext context, Element node) {
+        if (node.hasAttribute(ATTR_CLEARTEXT_TRAFFIC_PERMITTED)) {
+            Attr cleartextTrafficAttribute =
+                    node.getAttributeNode(ATTR_CLEARTEXT_TRAFFIC_PERMITTED);
+            if (cleartextTrafficAttribute.getValue().equals("true")) {
+                Location attributeLocation = context.getValueLocation(cleartextTrafficAttribute);
+                LintFix fix = fix().replace().range(attributeLocation).with("false").build();
+                context.report(
+                        INSECURE_CONFIGURATION,
+                        node,
+                        attributeLocation,
+                        INSECURE_CONFIGURATION.getBriefDescription(TextFormat.RAW),
+                        fix);
+            }
         }
     }
 
