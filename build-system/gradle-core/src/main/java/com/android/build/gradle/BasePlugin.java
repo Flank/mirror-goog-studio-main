@@ -873,12 +873,23 @@ public abstract class BasePlugin<E extends BaseExtension2>
             throw new GradleException("Calling getBootClasspath before compileSdkVersion");
         }
 
-        return sdkHandler.initTarget(
-                extension.getCompileSdkVersion(),
-                extension.getBuildToolsRevision(),
-                extension.getLibraryRequests(),
-                globalScope.getAndroidBuilder(),
-                SdkHandler.useCachedSdk(projectOptions));
+        try {
+            return sdkHandler.initTarget(
+                    extension.getCompileSdkVersion(),
+                    extension.getBuildToolsRevision(),
+                    extension.getLibraryRequests(),
+                    globalScope.getAndroidBuilder(),
+                    SdkHandler.useCachedSdk(projectOptions));
+        } catch (SdkHandler.MissingSdkException e) {
+            throw new SdkHandler.MissingSdkException(
+                    "SDK location not found. Define location with an ANDROID_SDK_ROOT environment "
+                            + "variable or by setting the sdk.dir path in your project's local "
+                            + "properties file at '"
+                            + new File(project.getRootDir(), SdkConstants.FN_LOCAL_PROPERTIES)
+                                    .getAbsolutePath()
+                            + "'.",
+                    e);
+        }
     }
 
     /**
