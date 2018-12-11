@@ -126,7 +126,7 @@ message Event {
 
     // Cpu Profiler Prefix = 200
     CpuUsageData cpu_usage = 201;
-    CpuThreadData cpu_thread_activity = 202;
+    CpuThreadData cpu_thread = 202;
 
     // Memory Profiler Prefix = 300
     // Energy Profiler Prefix = 400
