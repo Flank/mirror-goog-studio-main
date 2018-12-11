@@ -133,6 +133,14 @@ public class ProguardMap {
         BufferedReader reader = new BufferedReader(mapReader);
         String line = reader.readLine();
         while (line != null) {
+            // Line may start with '#' as part of R8 markers, e.g.,
+            //   '# compiler: R8'
+            // Allow comments or empty lines in class mapping lines.
+            String trimmed = line.trim();
+            if (trimmed.isEmpty() || trimmed.startsWith("#")) {
+                line = reader.readLine();
+                continue;
+            }
             // Class lines are of the form:
             //   'clear.class.name -> obfuscated_class_name:'
             int sep = line.indexOf(" -> ");
@@ -149,8 +157,18 @@ public class ProguardMap {
             // After the class line comes zero or more field/method lines of the form:
             //   '    type clearName -> obfuscatedName'
             line = reader.readLine();
-            while (line != null && line.startsWith("    ")) {
-                String trimmed = line.trim();
+            while (line != null) {
+                trimmed = line.trim();
+                // Allow comments or empty lines in field/method mapping lines.
+                if (trimmed.isEmpty() || trimmed.startsWith("#")) {
+                    line = reader.readLine();
+                    continue;
+                }
+                // After skipping comments or empty line,
+                // make sure this is a field/method mapping line.
+                if (!line.startsWith("    ")) {
+                    break;
+                }
                 int ws = trimmed.indexOf(' ');
                 sep = trimmed.indexOf(" -> ");
                 if (ws == -1 || sep == -1) {
