@@ -40,6 +40,7 @@ import com.android.ide.common.blame.parser.ToolOutputParser
 import com.android.ide.common.process.ProcessException
 import com.android.ide.common.process.ProcessOutput
 import com.android.utils.FileUtils
+import com.android.utils.PathUtils.toSystemIndependentPath
 import com.google.common.base.Throwables
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.CacheableTask
@@ -284,7 +285,18 @@ open class DexMergingTask : AndroidVariantTask() {
 private fun getAllRegularFiles(fc: FileCollection): List<File> {
     return fc.files.flatMap {
         if (it.isFile) listOf(it)
-        else it.walkTopDown().filter { it.isFile }.sorted().toList()
+        else {
+            it.walkTopDown()
+                .filter { it.isFile }
+                .sortedWith(
+                    Comparator { left, right ->
+                        val systemIndependentLeft = toSystemIndependentPath(left.toPath())
+                        val systemIndependentRight = toSystemIndependentPath(right.toPath())
+                        systemIndependentLeft.compareTo(systemIndependentRight)
+                    }
+                )
+                .toList()
+        }
     }
 }
 
