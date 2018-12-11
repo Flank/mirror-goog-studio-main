@@ -18,12 +18,13 @@ package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
+import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.ide.common.build.ApkData;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -44,18 +45,10 @@ import java.util.stream.Collectors;
  */
 public class OutputScope implements Serializable {
 
-    @NonNull private final List<ApkData> apkDatas;
+    @NonNull private final ImmutableList<ApkData> sortedApkDatas;
 
-    public OutputScope() {
-        this.apkDatas = new ArrayList<>();
-    }
-
-    public OutputScope(@NonNull Collection<ApkData> apkDatas) {
-        this.apkDatas = new ArrayList<>(apkDatas);
-    }
-
-    void addSplit(@NonNull ApkData apkData) {
-        apkDatas.add(apkData);
+    private OutputScope(@NonNull ImmutableList<ApkData> sortedApkDatas) {
+        this.sortedApkDatas = sortedApkDatas;
     }
 
     /**
@@ -66,7 +59,7 @@ public class OutputScope implements Serializable {
      */
     @NonNull
     public List<ApkData> getApkDatas() {
-        return apkDatas.stream().filter(ApkData::isEnabled).collect(Collectors.toList());
+        return sortedApkDatas.stream().filter(ApkData::isEnabled).collect(Collectors.toList());
     }
 
     @NonNull
@@ -74,7 +67,8 @@ public class OutputScope implements Serializable {
 
         // no ABI specified, look for the main split.
         Optional<ApkData> splitsByType =
-                apkDatas.stream()
+                sortedApkDatas
+                        .stream()
                         .filter(apkInfo -> apkInfo.getType() == OutputFile.OutputType.MAIN)
                         .findFirst();
 
@@ -102,12 +96,13 @@ public class OutputScope implements Serializable {
         throw new RuntimeException(
                 String.format(
                         "Cannot determine main APK output from %1$s",
-                        Joiner.on(":").join(apkDatas)));
+                        Joiner.on(":").join(sortedApkDatas)));
     }
 
     @NonNull
     public List<ApkData> getSplitsByType(OutputFile.OutputType outputType) {
-        return apkDatas.stream()
+        return sortedApkDatas
+                .stream()
                 .filter(split -> split.getType() == outputType)
                 .collect(Collectors.toList());
     }
@@ -124,11 +119,45 @@ public class OutputScope implements Serializable {
             return false;
         }
         OutputScope that = (OutputScope) o;
-        return Objects.equals(apkDatas, that.apkDatas);
+        return Objects.equals(sortedApkDatas, that.sortedApkDatas);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), apkDatas);
+        return Objects.hash(super.hashCode(), sortedApkDatas);
+    }
+
+    public static class Builder {
+        @NonNull private final List<ApkData> apkDatas = new ArrayList<>();
+
+        public void addSplit(@NonNull ApkData apkData) {
+            apkDatas.add(apkData);
+        }
+
+        public void addMainSplit(@NonNull ApkData apkData) {
+            if (hasMainSplits()) {
+                throw new RuntimeException(
+                        "Cannot add "
+                                + apkData
+                                + " in a scope that already"
+                                + " has "
+                                + apkDatas.stream()
+                                        .filter(
+                                                output ->
+                                                        output.getType()
+                                                                == VariantOutput.OutputType.MAIN)
+                                        .map(ApkData::toString)
+                                        .collect(Collectors.joining(",")));
+            }
+            addSplit(apkData);
+        }
+
+        private boolean hasMainSplits() {
+            return apkDatas.stream().anyMatch(s -> s.getType() == VariantOutput.OutputType.MAIN);
+        }
+
+        public OutputScope build() {
+            return new OutputScope(ImmutableList.sortedCopyOf(apkDatas));
+        }
     }
 }

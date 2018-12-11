@@ -24,6 +24,7 @@ import com.android.build.VariantOutput;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.IntSupplier;
@@ -40,7 +41,19 @@ import java.util.stream.Collectors;
  * <p>this is used to model outputs of a variant during configuration and it is sometimes altered at
  * execution when new pure splits are discovered.
  */
-public abstract class ApkData implements ApkInfo, VariantOutput {
+public abstract class ApkData implements ApkInfo, VariantOutput, Comparable<ApkData> {
+
+    private static final Comparator<ApkData> COMPARATOR =
+            Comparator.nullsLast(
+                    Comparator.comparing(ApkData::getType)
+                            .thenComparingInt(ApkData::getVersionCode)
+                            .thenComparing(
+                                    ApkData::getOutputFileName,
+                                    Comparator.nullsLast(String::compareTo))
+                            .thenComparing(
+                                    ApkData::getVersionName,
+                                    Comparator.nullsLast(String::compareTo))
+                            .thenComparing(ApkData::isEnabled));
 
     // TO DO : move it to a subclass, we cannot override versions for SPLIT
     private Supplier<String> versionName = () -> null;
@@ -85,8 +98,6 @@ public abstract class ApkData implements ApkInfo, VariantOutput {
     public boolean requiresAapt() {
         return true;
     }
-
-
 
     @NonNull
     @Override
@@ -212,5 +223,10 @@ public abstract class ApkData implements ApkInfo, VariantOutput {
     @Override
     public int hashCode() {
         return Objects.hash(getVersionCode(), enabled.get(), getVersionName(), outputFileName);
+    }
+
+    @Override
+    public int compareTo(ApkData other) {
+        return COMPARATOR.compare(this, other);
     }
 }

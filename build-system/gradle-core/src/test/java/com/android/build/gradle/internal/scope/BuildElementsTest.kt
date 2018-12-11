@@ -66,8 +66,7 @@ class BuildElementsTest {
     @Test
     @Throws(IOException::class)
     fun testPersistence() {
-        val outputScope = OutputScope()
-        val outputFactory = OutputFactory("project", variantConfiguration, outputScope)
+        val outputFactory = OutputFactory("project", variantConfiguration)
 
         outputFactory.addUniversalApk()
         val densityApkData = outputFactory.addFullSplit(

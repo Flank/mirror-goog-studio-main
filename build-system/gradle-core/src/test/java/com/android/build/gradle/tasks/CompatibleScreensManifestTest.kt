@@ -109,7 +109,7 @@ class CompatibleScreensManifestTest {
     @Test
     fun testNoSplit() {
 
-        val outputFactory = OutputFactory(PROJECT, variantConfiguration, outputScope)
+        val outputFactory = OutputFactory(PROJECT, variantConfiguration)
         val mainApk = outputFactory.addMainApk()
         `when`(outputScope.apkDatas).thenReturn(ImmutableList.of(mainApk))
 
@@ -127,7 +127,7 @@ class CompatibleScreensManifestTest {
     @Throws(IOException::class)
     fun testSingleSplitWithMinSdkVersion() {
 
-        val outputFactory = OutputFactory(PROJECT, variantConfiguration, outputScope)
+        val outputFactory = OutputFactory(PROJECT, variantConfiguration)
         val splitApk = outputFactory.addFullSplit(
                 ImmutableList.of<Pair<VariantOutput.FilterType, String>>(
                         Pair.of<VariantOutput.FilterType, String>(
@@ -160,7 +160,7 @@ class CompatibleScreensManifestTest {
     @Throws(IOException::class)
     fun testSingleSplitWithoutMinSdkVersion() {
 
-        val outputFactory = OutputFactory(PROJECT, variantConfiguration, outputScope)
+        val outputFactory = OutputFactory(PROJECT, variantConfiguration)
         val splitApk = outputFactory.addFullSplit(
                 ImmutableList.of<Pair<VariantOutput.FilterType, String>>(
                         Pair.of<VariantOutput.FilterType, String>(
@@ -191,7 +191,7 @@ class CompatibleScreensManifestTest {
     @Throws(IOException::class)
     fun testMultipleSplitsWithMinSdkVersion() {
 
-        val outputFactory = OutputFactory(PROJECT, variantConfiguration, outputScope)
+        val outputFactory = OutputFactory(PROJECT, variantConfiguration)
         val xhdpiSplit = outputFactory.addFullSplit(
                 ImmutableList.of<Pair<VariantOutput.FilterType, String>>(
                         Pair.of<VariantOutput.FilterType, String>(

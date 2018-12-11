@@ -114,8 +114,6 @@ public abstract class BaseVariantData {
      */
     public boolean outputsAreSigned = false;
 
-    @NonNull private final OutputScope outputScope;
-
     @NonNull private final OutputFactory outputFactory;
     public VariantOutputFactory variantOutputFactory;
 
@@ -167,10 +165,7 @@ public abstract class BaseVariantData {
                                 globalScope.getErrorHandler(),
                                 recorder),
                         this);
-        outputScope = new OutputScope();
-        outputFactory =
-                new OutputFactory(
-                        globalScope.getProjectBaseName(), variantConfiguration, outputScope);
+        outputFactory = new OutputFactory(globalScope.getProjectBaseName(), variantConfiguration);
 
         taskManager.configureScopeForNdk(scope);
 
@@ -216,7 +211,7 @@ public abstract class BaseVariantData {
 
     @NonNull
     public OutputScope getOutputScope() {
-        return outputScope;
+        return outputFactory.getOutput();
     }
 
     @NonNull

@@ -249,26 +249,20 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             List<BuildOutput> unprocessedManifest =
                     manifestBuildElements.stream().collect(Collectors.toList());
 
-            for (BuildOutput manifestBuildOutput : manifestBuildElements) {
-                ApkInfo apkInfo = manifestBuildOutput.getApkInfo();
-                boolean codeGen =
-                        (apkInfo.getType() == OutputFile.OutputType.MAIN
-                                || apkInfo.getFilter(OutputFile.FilterType.DENSITY) == null);
-                if (codeGen) {
-                    unprocessedManifest.remove(manifestBuildOutput);
-                    buildOutputs.add(
-                            invokeAaptForSplit(
-                                    manifestBuildOutput,
-                                    dependencies,
-                                    imports,
-                                    splitList,
-                                    featureResourcePackages,
-                                    apkInfo,
-                                    true,
-                                    aapt2ServiceKey));
-                    break;
-                }
-            }
+            BuildOutput mainOutput = chooseOutput(manifestBuildElements);
+
+            unprocessedManifest.remove(mainOutput);
+            buildOutputs.add(
+                    invokeAaptForSplit(
+                            mainOutput,
+                            dependencies,
+                            imports,
+                            splitList,
+                            featureResourcePackages,
+                            mainOutput.getApkInfo(),
+                            true,
+                            aapt2ServiceKey));
+
             // now all remaining splits will be generated asynchronously.
             if (variantScope.getType().getCanHaveSplits()) {
                 for (BuildOutput manifestBuildOutput : unprocessedManifest) {
@@ -340,6 +334,43 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
         // and save the metadata file.
         new BuildElements(buildOutputs.build()).save(resPackageOutputFolder);
+    }
+
+    BuildOutput chooseOutput(@NonNull BuildElements manifestBuildElements) {
+        switch (multiOutputPolicy) {
+            case SPLITS:
+                java.util.Optional<BuildOutput> main =
+                        manifestBuildElements
+                                .stream()
+                                .filter(
+                                        output ->
+                                                output.getApkInfo().getType()
+                                                        == OutputFile.OutputType.MAIN)
+                                .findFirst();
+                if (!main.isPresent()) {
+                    throw new RuntimeException("No main apk found");
+                }
+                return main.get();
+            case MULTI_APK:
+                java.util.Optional<BuildOutput> nonDensity =
+                        manifestBuildElements
+                                .stream()
+                                .filter(
+                                        output ->
+                                                output.getApkInfo()
+                                                                .getFilter(
+                                                                        OutputFile.FilterType
+                                                                                .DENSITY)
+                                                        == null)
+                                .findFirst();
+                if (!nonDensity.isPresent()) {
+                    throw new RuntimeException("No non-density apk found");
+                }
+                return nonDensity.get();
+            default:
+                throw new RuntimeException(
+                        "Unexpected MultiOutputPolicy type: " + multiOutputPolicy);
+        }
     }
 
     File getOutputBaseNameFile(ApkInfo apkInfo) {

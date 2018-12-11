@@ -25,10 +25,12 @@ import com.android.build.gradle.integration.common.truth.TaskStateList.Execution
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.DID_WORK
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.SKIPPED
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.FAILED
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 
 import com.google.common.collect.Sets
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -71,15 +73,15 @@ class CacheabilityTest {
                     ":mergeDebugAssets",
                     ":mergeExtDexDebug",
                     ":mergeDexDebug",
-                    ":mergeDebugJniLibFolders"
+                    ":mergeDebugJniLibFolders",
+                    ":processDebugManifest",
+                    ":processDebugResources",
+                    ":mainApkListPersistenceDebug"
                 ),
                 DID_WORK to setOf(
                     ":checkDebugManifest",
                     ":prepareLintJar",
-                    ":mainApkListPersistenceDebug",
                     ":createDebugCompatibleScreenManifests",
-                    ":processDebugManifest",
-                    ":processDebugResources",
                     ":compileDebugShaders",
                     ":transformClassesWithDexBuilderForDebug",
                     ":validateSigningDebug",
@@ -96,7 +98,6 @@ class CacheabilityTest {
                     ":generateDebugAssets",
                     ":processDebugJavaRes",
                     ":assembleDebug"
-
                 ),
                 FAILED to setOf()
             )
@@ -110,10 +111,7 @@ class CacheabilityTest {
         private val NOT_YET_CACHEABLE = setOf(
             ":checkDebugManifest" /* Bug 74595857 */,
             ":prepareLintJar" /* Bug 120413672 */,
-            ":mainApkListPersistenceDebug" /* Bug 74595222 */,
             ":createDebugCompatibleScreenManifests" /* Bug 120412436 */,
-            ":processDebugManifest" /* Bug 120411937 */,
-            ":processDebugResources" /* Bug 120414113 */,
             ":compileDebugShaders" /* Bug 120413401 */,
             ":transformClassesWithDexBuilderForDebug" /* Bug 74595921 */,
             ":signingConfigWriterDebug" /* Bug 120411939 */,
@@ -146,6 +144,12 @@ class CacheabilityTest {
         .withName("projectCopy2")
         .dontOutputLogOnFailure()
         .create()
+
+    @Before
+    fun setUp() {
+        TestFileUtils.appendToFile(projectCopy1.buildFile, "archivesBaseName = 'project'")
+        TestFileUtils.appendToFile(projectCopy2.buildFile, "archivesBaseName = 'project'")
+    }
 
     @Test
     fun testRelocatability() {
