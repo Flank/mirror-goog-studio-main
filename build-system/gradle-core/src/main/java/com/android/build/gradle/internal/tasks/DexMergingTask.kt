@@ -271,10 +271,20 @@ open class DexMergingTask : AndroidVariantTask() {
     }
 }
 
-private fun getAllRegularFiles(fc: FileCollection): Collection<File> {
+/**
+ * This returns a list of files from a file collection. If a file is in a file collection it is
+ * added to the resulting set. If it is a directory, all files all collected recursively, and they
+ * are sorted. This ensures that files from a single directory are always in deterministic order.
+ *
+ * We do not sort all files from a file collection as Gradle ensures consistent ordering of file
+ * collection content across builds. This holds for artifact transform outputs that are in the file
+ * collection. In fact, sorting it means that artifact transform outputs for library projects will
+ * not be consistent across builds. See http://b/119064593#comment11 for details.
+ */
+private fun getAllRegularFiles(fc: FileCollection): List<File> {
     return fc.files.flatMap {
         if (it.isFile) listOf(it)
-        else it.walkTopDown().filter { it.isFile }.toList()
+        else it.walkTopDown().filter { it.isFile }.sorted().toList()
     }
 }
 
@@ -336,7 +346,7 @@ class DexMergingTaskDelegate(
             if (dexFiles.files.size >= mergingThreshold) {
                 submitForMerging(processOutput).join()
             } else {
-                for (file in getAllRegularFiles(dexFiles).sorted().withIndex()) {
+                for (file in getAllRegularFiles(dexFiles).withIndex()) {
                     file.value.copyTo(outputDir.resolve("classes_${file.index}.${SdkConstants.EXT_DEX}"))
                 }
             }
