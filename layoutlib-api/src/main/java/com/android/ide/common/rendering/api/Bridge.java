@@ -136,6 +136,13 @@ public abstract class Bridge {
     }
 
     /**
+     * Removes a font file from the Typeface cache.
+     *
+     * @param path path of the font file to remove from the cache
+     */
+    public void clearFontCache(String path) {}
+
+    /**
      * Utility method returning the parent of a given view object.
      *
      * @param viewObject the object for which to return the parent.
