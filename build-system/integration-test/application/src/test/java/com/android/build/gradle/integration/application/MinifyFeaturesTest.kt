@@ -252,7 +252,7 @@ class MinifyFeaturesTest(
                     "src/main/AndroidManifest.xml",
                     """<?xml version="1.0" encoding="utf-8"?>
                         <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                              package="com.example.baseModule" android:versionCode="1">
+                              package="com.example.baseModule">
                             <application android:label="app_name">
                                 <activity android:name=".Main"
                                           android:label="app_name">
@@ -399,7 +399,7 @@ class MinifyFeaturesTest(
                     """<?xml version="1.0" encoding="utf-8"?>
                         <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                             xmlns:dist="http://schemas.android.com/apk/distribution"
-                            package="com.example.otherFeature1" android:versionCode="1">
+                            package="com.example.otherFeature1">
 
                             <dist:module dist:onDemand="true"
                                          dist:title="@string/otherFeature1">
@@ -524,7 +524,7 @@ class MinifyFeaturesTest(
                     """<?xml version="1.0" encoding="utf-8"?>
                         <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                             xmlns:dist="http://schemas.android.com/apk/distribution"
-                            package="com.example.otherFeature2" android:versionCode="1">
+                            package="com.example.otherFeature2">
 
                             <dist:module dist:onDemand="true"
                                          dist:title="@string/otherFeature2">
