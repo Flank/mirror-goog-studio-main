@@ -287,12 +287,6 @@ public class AndroidBuilder {
         return getTargetInfo().getTarget().getVersion().isPreview();
     }
 
-    public String getTargetCodename() {
-        checkState(getTargetInfo() != null,
-                "Cannot call getTargetCodename() before setTargetInfo() is called.");
-        return getTargetInfo().getTarget().getVersion().getCodename();
-    }
-
     /**
      * Helper method to get the boot classpath to be used during compilation.
      *
@@ -1013,42 +1007,6 @@ public class AndroidBuilder {
                 .action(processor)
                 .build()
                 .walk();
-    }
-
-    /**
-     * Compiles the given aidl file.
-     *
-     * @param sourceFolder the source folder containing the file
-     * @param shaderFile the shader file to compile
-     * @param outputDir the output dir
-     * @throws IOException failed
-     */
-    public void compileShaderFile(
-            @NonNull File sourceFolder,
-            @NonNull File shaderFile,
-            @NonNull File outputDir,
-            @NonNull List<String> defaultArgs,
-            @NonNull Map<String, List<String>> scopedArgs,
-            @Nullable File nkdLocation,
-            @NonNull ProcessOutputHandler processOutputHandler)
-            throws IOException {
-        checkNotNull(sourceFolder, "sourceFolder cannot be null.");
-        checkNotNull(shaderFile, "aidlFile cannot be null.");
-        checkNotNull(outputDir, "outputDir cannot be null.");
-        checkState(getTargetInfo() != null,
-                "Cannot call compileAidlFile() before setTargetInfo() is called.");
-
-        ShaderProcessor processor =
-                new ShaderProcessor(
-                        nkdLocation,
-                        sourceFolder,
-                        outputDir,
-                        defaultArgs,
-                        scopedArgs,
-                        mProcessExecutor,
-                        processOutputHandler,
-                        null);
-        processor.call(sourceFolder.toPath(), shaderFile.toPath());
     }
 
     /**
