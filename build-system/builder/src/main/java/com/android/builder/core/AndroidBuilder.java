@@ -151,8 +151,8 @@ public class AndroidBuilder {
     @Nullable private String mCreatedBy;
 
 
-    private SdkInfo mSdkInfo;
-    private TargetInfo mTargetInfo;
+    private Supplier<SdkInfo> mSdkInfoProvider = () -> null;
+    private Supplier<TargetInfo> mTargetInfoProvider = () -> null;
 
     private List<File> mBootClasspathFiltered;
     private List<File> mBootClasspathAll;
@@ -192,24 +192,25 @@ public class AndroidBuilder {
      * @see com.android.builder.sdk.SdkLoader
      */
     public void setTargetInfo(@NonNull TargetInfo targetInfo) {
-        mTargetInfo = targetInfo;
+        mTargetInfoProvider = () -> targetInfo;
+    }
 
-        if (mTargetInfo.getBuildTools().getRevision().compareTo(MIN_BUILD_TOOLS_REV) < 0) {
-            issueReporter.reportError(
-                    EvalIssueReporter.Type.BUILD_TOOLS_TOO_LOW,
-                    new EvalIssueException(
-                            String.format(
-                                    "The SDK Build Tools revision (%1$s) is too low for project '%2$s'. "
-                                            + "Minimum required is %3$s",
-                                    mTargetInfo.getBuildTools().getRevision(),
-                                    mProjectId,
-                                    MIN_BUILD_TOOLS_REV),
-                            MIN_BUILD_TOOLS_REV.toString()));
-        }
+    /**
+     * Sets the SdkInfo and the targetInfo on the builder. This is required to actually
+     * build (some of the steps).
+     *
+     * @see com.android.builder.sdk.SdkLoader
+     */
+    public void setTargetInfo(@NonNull Supplier<TargetInfo> targetInfoProvider) {
+        mTargetInfoProvider = targetInfoProvider;
     }
 
     public void setSdkInfo(@NonNull SdkInfo sdkInfo) {
-        mSdkInfo = sdkInfo;
+        mSdkInfoProvider = () -> sdkInfo;
+    }
+
+    public void setSdkInfoProvider(@NonNull Supplier<SdkInfo> sdkInfoProvider) {
+        mSdkInfoProvider = sdkInfoProvider;
     }
 
     public void setLibraryRequests(@NonNull Collection<LibraryRequest> libraryRequests) {
@@ -221,7 +222,7 @@ public class AndroidBuilder {
      */
     @Nullable
     public SdkInfo getSdkInfo() {
-        return mSdkInfo;
+        return mSdkInfoProvider.get();
     }
 
     /**
@@ -229,15 +230,30 @@ public class AndroidBuilder {
      */
     @Nullable
     public TargetInfo getTargetInfo() {
-        return mTargetInfo;
+        TargetInfo targetInfo = mTargetInfoProvider.get();
+
+        if (targetInfo != null && targetInfo.getBuildTools().getRevision().compareTo(MIN_BUILD_TOOLS_REV) < 0) {
+            issueReporter.reportError(
+                    EvalIssueReporter.Type.BUILD_TOOLS_TOO_LOW,
+                    new EvalIssueException(
+                            String.format(
+                                    "The SDK Build Tools revision (%1$s) is too low for project '%2$s'. "
+                                            + "Minimum required is %3$s",
+                                    targetInfo.getBuildTools().getRevision(),
+                                    mProjectId,
+                                    MIN_BUILD_TOOLS_REV),
+                            MIN_BUILD_TOOLS_REV.toString()));
+        }
+
+        return targetInfo;
     }
 
     /** Returns the build tools for this builder. */
     @NonNull
     public BuildToolInfo getBuildToolInfo() {
         checkNotNull(
-                mTargetInfo, "Cannot call getBuildToolInfo() before setTargetInfo() is called.");
-        return mTargetInfo.getBuildTools();
+                getTargetInfo(), "Cannot call getBuildToolInfo() before setTargetInfo() is called.");
+        return getTargetInfo().getBuildTools();
     }
 
     @NonNull
@@ -258,24 +274,24 @@ public class AndroidBuilder {
     /** Returns the compilation target, if set. */
     @NonNull
     public IAndroidTarget getTarget() {
-        checkState(mTargetInfo != null,
+        checkState(getTargetInfo() != null,
                 "Cannot call getTarget() before setTargetInfo() is called.");
-        return mTargetInfo.getTarget();
+        return getTargetInfo().getTarget();
     }
 
     /**
      * Returns whether the compilation target is a preview.
      */
     public boolean isPreviewTarget() {
-        checkState(mTargetInfo != null,
+        checkState(getTargetInfo() != null,
                 "Cannot call isTargetAPreview() before setTargetInfo() is called.");
-        return mTargetInfo.getTarget().getVersion().isPreview();
+        return getTargetInfo().getTarget().getVersion().isPreview();
     }
 
     public String getTargetCodename() {
-        checkState(mTargetInfo != null,
+        checkState(getTargetInfo() != null,
                 "Cannot call getTargetCodename() before setTargetInfo() is called.");
-        return mTargetInfo.getTarget().getVersion().getCodename();
+        return getTargetInfo().getTarget().getVersion().getCodename();
     }
 
     /**
@@ -301,7 +317,7 @@ public class AndroidBuilder {
      */
     public List<File> computeAdditionalAndRequestedOptionalLibraries() {
         return BootClasspathBuilder.computeAdditionalAndRequestedOptionalLibraries(
-                mTargetInfo.getTarget(), mLibraryRequests, issueReporter);
+                getTargetInfo().getTarget(), mLibraryRequests, issueReporter);
     }
 
     private List<File> computeFilteredBootClasspath() {
@@ -309,15 +325,15 @@ public class AndroidBuilder {
         // Changes here should be applied to #computeFullClasspath()
 
         if (mBootClasspathFiltered == null) {
-            checkState(mTargetInfo != null,
+            checkState(getTargetInfo() != null,
                     "Cannot call getBootClasspath() before setTargetInfo() is called.");
 
             mBootClasspathFiltered =
                     BootClasspathBuilder.computeFilteredClasspath(
-                            mTargetInfo.getTarget(),
+                            getTargetInfo().getTarget(),
                             mLibraryRequests,
                             issueReporter,
-                            mSdkInfo.getAnnotationsJar());
+                            getSdkInfo().getAnnotationsJar());
         }
 
         return mBootClasspathFiltered;
@@ -329,12 +345,12 @@ public class AndroidBuilder {
         // Changes here should be applied to #computeFilteredClasspath()
 
         if (mBootClasspathAll == null) {
-            checkState(mTargetInfo != null,
+            checkState(getTargetInfo() != null,
                     "Cannot call getBootClasspath() before setTargetInfo() is called.");
 
             mBootClasspathAll = BootClasspathBuilder.computeFullBootClasspath(
-                    mTargetInfo.getTarget(),
-                    mSdkInfo.getAnnotationsJar());
+                    getTargetInfo().getTarget(),
+                    getSdkInfo().getAnnotationsJar());
         }
 
         return mBootClasspathAll;
@@ -370,9 +386,9 @@ public class AndroidBuilder {
      */
     @Nullable
     public File getRenderScriptSupportJar(boolean useAndroidX) {
-        if (mTargetInfo != null) {
+        if (getTargetInfo() != null) {
             return RenderScriptProcessor.getSupportJar(
-                    mTargetInfo.getBuildTools().getLocation().getAbsolutePath(), useAndroidX);
+                    getTargetInfo().getBuildTools().getLocation().getAbsolutePath(), useAndroidX);
         }
 
         return null;
@@ -389,9 +405,9 @@ public class AndroidBuilder {
      */
     @Nullable
     public File getSupportNativeLibFolder() {
-        if (mTargetInfo != null) {
+        if (getTargetInfo() != null) {
             return RenderScriptProcessor.getSupportNativeLibFolder(
-                    mTargetInfo.getBuildTools().getLocation().getAbsolutePath());
+                    getTargetInfo().getBuildTools().getLocation().getAbsolutePath());
         }
 
         return null;
@@ -408,9 +424,9 @@ public class AndroidBuilder {
      */
     @Nullable
     public File getSupportBlasLibFolder() {
-        if (mTargetInfo != null) {
+        if (getTargetInfo() != null) {
             return RenderScriptProcessor.getSupportBlasLibFolder(
-                    mTargetInfo.getBuildTools().getLocation().getAbsolutePath());
+                    getTargetInfo().getBuildTools().getLocation().getAbsolutePath());
         }
 
         return null;
@@ -813,10 +829,10 @@ public class AndroidBuilder {
             @NonNull AaptPackageConfig.Builder aaptConfigBuilder)
             throws IOException, ProcessException {
 
-        checkState(mTargetInfo != null,
+        checkState(getTargetInfo() != null,
                 "Cannot call processResources() before setTargetInfo() is called.");
 
-        aaptConfigBuilder.setAndroidTarget(mTargetInfo.getTarget());
+        aaptConfigBuilder.setAndroidTarget(getTargetInfo().getTarget());
 
         AaptPackageConfig aaptConfig = aaptConfigBuilder.build();
         processResources(aapt, aaptConfig, mLogger);
@@ -873,7 +889,7 @@ public class AndroidBuilder {
             @NonNull String resName) throws ProcessException, IOException {
 
         // need to run aapt to get apk information
-        BuildToolInfo buildToolInfo = mTargetInfo.getBuildTools();
+        BuildToolInfo buildToolInfo = getTargetInfo().getBuildTools();
 
         String aapt = buildToolInfo.getPath(BuildToolInfo.PathId.AAPT);
         if (aapt == null) {
@@ -971,7 +987,7 @@ public class AndroidBuilder {
             throws IOException {
         checkNotNull(sourceFolder, "sourceFolder cannot be null.");
         checkNotNull(outputDir, "outputDir cannot be null.");
-        checkState(mTargetInfo != null,
+        checkState(getTargetInfo() != null,
                 "Cannot call compileAllShaderFiles() before setTargetInfo() is called.");
 
         Supplier<ShaderProcessor> processor =
@@ -1020,7 +1036,7 @@ public class AndroidBuilder {
         checkNotNull(sourceFolder, "sourceFolder cannot be null.");
         checkNotNull(shaderFile, "aidlFile cannot be null.");
         checkNotNull(outputDir, "outputDir cannot be null.");
-        checkState(mTargetInfo != null,
+        checkState(getTargetInfo() != null,
                 "Cannot call compileAidlFile() before setTargetInfo() is called.");
 
         ShaderProcessor processor =
@@ -1078,10 +1094,10 @@ public class AndroidBuilder {
         checkNotNull(importFolders, "importFolders cannot be null.");
         checkNotNull(sourceOutputDir, "sourceOutputDir cannot be null.");
         checkNotNull(resOutputDir, "resOutputDir cannot be null.");
-        checkState(mTargetInfo != null,
+        checkState(getTargetInfo() != null,
                 "Cannot call compileAllRenderscriptFiles() before setTargetInfo() is called.");
 
-        BuildToolInfo buildToolInfo = mTargetInfo.getBuildTools();
+        BuildToolInfo buildToolInfo = getTargetInfo().getBuildTools();
 
         String renderscript = buildToolInfo.getPath(BuildToolInfo.PathId.LLVM_RS_CC);
         if (renderscript == null || !new File(renderscript).isFile()) {
