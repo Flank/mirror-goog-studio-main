@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -66,20 +67,27 @@ public class UnifiedPipelineOkHttpTest {
                 myPerfDriver, ACTIVITY_CLASS, "runOkHttp3Get", okHttp3Get, 1);
         assertThat(httpEventsMap.size()).isEqualTo(1);
         for (List<Event> httpEvents : httpEventsMap.values()) {
+            List<Event> httpConnectionEvents = httpEvents.stream()
+                    .filter(e -> e.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION)
+                    .collect(Collectors.toList());
             // No request body in get test. So we only expect to get back 4 events instead of 5.
-            assertThat(httpEvents).hasSize(4);
-            Event requestStartedEvent = httpEvents.get(0);
+            assertThat(httpConnectionEvents).hasSize(4);
+            Event requestStartedEvent = httpConnectionEvents.get(0);
             Network.NetworkHttpConnectionData.HttpRequestStarted requestData =
                     requestStartedEvent.getNetworkHttpConnection().getHttpRequestStarted();
             assertThat(requestData.getMethod()).isEqualTo("GET");
             assertThat(requestData.getUrl()).contains("?method=" + okHttp3Get);
 
-            Event responseStartedEvent = httpEvents.get(1);
+            Event responseStartedEvent = httpConnectionEvents.get(1);
             Network.NetworkHttpConnectionData.HttpResponseStarted responseData =
                     responseStartedEvent.getNetworkHttpConnection().getHttpResponseStarted();
             assertThat(responseData.getFields()).contains(EXPECTED_RESPONSE_CODE);
 
-            // TODO validate accessing threads and payloads.
+            assertThat(httpEvents.stream()
+                    .filter(e -> e.getKind() == Event.Kind.NETWORK_HTTP_THREAD).count()).isEqualTo(1);
+
+            // TODO validate payloads.
+
         }
     }
 
@@ -90,8 +98,11 @@ public class UnifiedPipelineOkHttpTest {
                 myPerfDriver, ACTIVITY_CLASS, "runOkHttp3Post", okHttp3Post, 1);
         assertThat(httpEventsMap.size()).isEqualTo(1);
         for (List<Event> httpEvents : httpEventsMap.values()) {
-            assertThat(httpEvents).hasSize(5);
-            Event requestStartedEvent = httpEvents.get(0);
+            List<Event> httpConnectionEvents = httpEvents.stream()
+                    .filter(e -> e.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION)
+                    .collect(Collectors.toList());
+            assertThat(httpConnectionEvents).hasSize(5);
+            Event requestStartedEvent = httpConnectionEvents.get(0);
             Network.NetworkHttpConnectionData.HttpRequestStarted data =
                     requestStartedEvent.getNetworkHttpConnection().getHttpRequestStarted();
             assertThat(data.getMethod()).isEqualTo("POST");
@@ -108,20 +119,26 @@ public class UnifiedPipelineOkHttpTest {
                 myPerfDriver, ACTIVITY_CLASS, "runOkHttp2Get", okHttp2Get, 1);
         assertThat(httpEventsMap.size()).isEqualTo(1);
         for (List<Event> httpEvents : httpEventsMap.values()) {
+            List<Event> httpConnectionEvents = httpEvents.stream()
+                    .filter(e -> e.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION)
+                    .collect(Collectors.toList());
             // No request body in get test. So we only expect to get back 4 events instead of 5.
-            assertThat(httpEvents).hasSize(4);
-            Event requestStartedEvent = httpEvents.get(0);
+            assertThat(httpConnectionEvents).hasSize(4);
+            Event requestStartedEvent = httpConnectionEvents.get(0);
             Network.NetworkHttpConnectionData.HttpRequestStarted requestData =
                     requestStartedEvent.getNetworkHttpConnection().getHttpRequestStarted();
             assertThat(requestData.getMethod()).isEqualTo("GET");
             assertThat(requestData.getUrl()).contains("?method=" + okHttp2Get);
 
-            Event responseStartedEvent = httpEvents.get(1);
+            Event responseStartedEvent = httpConnectionEvents.get(1);
             Network.NetworkHttpConnectionData.HttpResponseStarted responseData =
                     responseStartedEvent.getNetworkHttpConnection().getHttpResponseStarted();
             assertThat(responseData.getFields()).contains(EXPECTED_RESPONSE_CODE);
 
-            // TODO validate accessing threads and payloads.
+            assertThat(httpEvents.stream()
+                    .filter(e -> e.getKind() == Event.Kind.NETWORK_HTTP_THREAD).count()).isEqualTo(1);
+
+            // TODO validate payloads.
         }
     }
 
@@ -132,8 +149,11 @@ public class UnifiedPipelineOkHttpTest {
                 myPerfDriver, ACTIVITY_CLASS, "runOkHttp2Post", okHttp2Post, 1);
         assertThat(httpEventsMap.size()).isEqualTo(1);
         for (List<Event> httpEvents : httpEventsMap.values()) {
-            assertThat(httpEvents).hasSize(5);
-            Event requestStartedEvent = httpEvents.get(0);
+            List<Event> httpConnectionEvents = httpEvents.stream()
+                    .filter(e -> e.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION)
+                    .collect(Collectors.toList());
+            assertThat(httpConnectionEvents).hasSize(5);
+            Event requestStartedEvent = httpConnectionEvents.get(0);
             Network.NetworkHttpConnectionData.HttpRequestStarted data =
                     requestStartedEvent.getNetworkHttpConnection().getHttpRequestStarted();
             assertThat(data.getMethod()).isEqualTo("POST");
@@ -151,8 +171,11 @@ public class UnifiedPipelineOkHttpTest {
         assertThat(httpEventsMap.size()).isEqualTo(2);
         String urlQuery = "?method=" + okhttp2AndOkHttp3Get;
         for (List<Event> httpEvents : httpEventsMap.values()) {
-            assertThat(httpEvents).hasSize(4);
-            Event requestStartedEvent = httpEvents.get(0);
+            List<Event> httpConnectionEvents = httpEvents.stream()
+                    .filter(e -> e.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION)
+                    .collect(Collectors.toList());
+            assertThat(httpConnectionEvents).hasSize(4);
+            Event requestStartedEvent = httpConnectionEvents.get(0);
             Network.NetworkHttpConnectionData.HttpRequestStarted data =
                     requestStartedEvent.getNetworkHttpConnection().getHttpRequestStarted();
             assertThat(data.getMethod()).isEqualTo("GET");
@@ -171,14 +194,22 @@ public class UnifiedPipelineOkHttpTest {
         httpEventsMap.keySet().toArray(connectionIds);
 
         // First connection should have been aborted
-        List<Event> failedConnectionEvents = httpEventsMap.get(connectionIds[0]);
+        List<Event> failedEvents = httpEventsMap.get(connectionIds[0]);
+        List<Event> failedConnectionEvents = failedEvents.stream()
+                .filter(e -> e.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION)
+                .collect(Collectors.toList());
         Event abortedEvent = failedConnectionEvents.get(failedConnectionEvents.size() - 1);
         assertThat(abortedEvent.getNetworkHttpConnection().hasHttpClosed()).isTrue();
         assertThat(abortedEvent.getNetworkHttpConnection().getHttpClosed().getCompleted()).isFalse();
 
-        // TODO validate accessing threads
+        // Even though the request was aborted, it should still have thread information available
+        assertThat(failedEvents.stream()
+                .filter(e -> e.getKind() == Event.Kind.NETWORK_HTTP_THREAD).count()).isEqualTo(1);
 
-        List<Event> successConnectionEvents = httpEventsMap.get(connectionIds[1]);
+        List<Event> successEvents = httpEventsMap.get(connectionIds[1]);
+        List<Event> successConnectionEvents = successEvents.stream()
+                .filter(e -> e.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION)
+                .collect(Collectors.toList());
         assertThat(successConnectionEvents).hasSize(4);
         Event responseStartedEvent = successConnectionEvents.get(1);
         Network.NetworkHttpConnectionData.HttpResponseStarted responseData =
@@ -199,14 +230,22 @@ public class UnifiedPipelineOkHttpTest {
         httpEventsMap.keySet().toArray(connectionIds);
 
         // First connection should have been aborted
-        List<Event> failedConnectionEvents = httpEventsMap.get(connectionIds[0]);
+        List<Event> failedEvents = httpEventsMap.get(connectionIds[0]);
+        List<Event> failedConnectionEvents = failedEvents.stream()
+                .filter(e -> e.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION)
+                .collect(Collectors.toList());
         Event abortedEvent = failedConnectionEvents.get(failedConnectionEvents.size() - 1);
         assertThat(abortedEvent.getNetworkHttpConnection().hasHttpClosed()).isTrue();
         assertThat(abortedEvent.getNetworkHttpConnection().getHttpClosed().getCompleted()).isFalse();
 
-        // TODO validate accessing threads
+        // Even though the request was aborted, it should still have thread information available
+        assertThat(failedEvents.stream()
+                .filter(e -> e.getKind() == Event.Kind.NETWORK_HTTP_THREAD).count()).isEqualTo(1);
 
-        List<Event> successConnectionEvents = httpEventsMap.get(connectionIds[1]);
+        List<Event> successEvents = httpEventsMap.get(connectionIds[1]);
+        List<Event> successConnectionEvents = successEvents.stream()
+                .filter(e -> e.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION)
+                .collect(Collectors.toList());
         assertThat(successConnectionEvents).hasSize(4);
         Event responseStartedEvent = successConnectionEvents.get(1);
         Network.NetworkHttpConnectionData.HttpResponseStarted responseData =

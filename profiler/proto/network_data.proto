@@ -70,3 +70,10 @@ message NetworkHttpConnectionData {
     HttpClosed http_closed = 5;
   }
 }
+
+message NetworkHttpThreadData {
+  // ID of the thread obtained from Java, which is different from the thread ID obtained in a JNI context.
+  int64 id = 1;
+  // Name of the thread as obtained by Thread#getName()
+  string name = 2;
+}

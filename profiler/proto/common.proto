@@ -44,6 +44,8 @@ message Event {
     NETWORK_CONNECTION_COUNT = 102;
     // group_id: connection id
     NETWORK_HTTP_CONNECTION = 103;
+    // group_id: connection id
+    NETWORK_HTTP_THREAD = 104;
 
     // Cpu Profiler Prefix = 200
     // group_id: process id
@@ -109,6 +111,8 @@ message Event {
     NetworkConnectionData network_connections = 102;
     // Populated when |kind| is |NETWORK_HTTP_CONNECTION|
     NetworkHttpConnectionData network_http_connection = 103;
+    // Populated when |kind| is |NETWORK_HTTP_THREAD|
+    NetworkHttpThreadData network_http_thread = 104;
 
     // Cpu Profiler Prefix = 200
     CpuUsageData cpu_usage = 201;

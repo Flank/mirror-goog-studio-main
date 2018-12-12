@@ -27,6 +27,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -62,6 +63,9 @@ public class UnifiedPipelineHttpUrlTest {
                 myPerfDriver, ACTIVITY_CLASS, "runGet", getSuccess, 1);
         assertThat(httpEventsMap.size()).isEqualTo(1);
         for (List<Event> httpEvents : httpEventsMap.values()) {
+            httpEvents = httpEvents.stream()
+                    .filter(e -> e.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION)
+                    .collect(Collectors.toList());
             // No request body in get test. So we only expect to get back 4 events instead of 5.
             assertThat(httpEvents).hasSize(4);
             Event requestStartedEvent = httpEvents.get(0);
@@ -80,6 +84,9 @@ public class UnifiedPipelineHttpUrlTest {
                 myPerfDriver, ACTIVITY_CLASS, "runPost", getSuccess, 1);
         assertThat(httpEventsMap.size()).isEqualTo(1);
         for (List<Event> httpEvents : httpEventsMap.values()) {
+            httpEvents = httpEvents.stream()
+                    .filter(e -> e.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION)
+                    .collect(Collectors.toList());
             assertThat(httpEvents).hasSize(5);
             Event requestStartedEvent = httpEvents.get(0);
             Network.NetworkHttpConnectionData.HttpRequestStarted data =
@@ -97,6 +104,9 @@ public class UnifiedPipelineHttpUrlTest {
                 myPerfDriver, ACTIVITY_CLASS, "runGet_CallResponseMethodBeforeConnect", getSuccess, 1);
         assertThat(httpEventsMap.size()).isEqualTo(1);
         for (List<Event> httpEvents : httpEventsMap.values()) {
+            httpEvents = httpEvents.stream()
+                    .filter(e -> e.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION)
+                    .collect(Collectors.toList());
             // No request body in get test. So we only expect to get back 4 events instead of 5.
             assertThat(httpEvents).hasSize(4);
             Event requestStartedEvent = httpEvents.get(0);

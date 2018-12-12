@@ -101,7 +101,8 @@ final class NetworkStubWrapper {
             while (events.hasNext()) {
                 Common.Event event = events.next();
                 // capture the first event.
-                if (event.getKind() == Common.Event.Kind.NETWORK_HTTP_CONNECTION) {
+                if (event.getKind() == Common.Event.Kind.NETWORK_HTTP_CONNECTION ||
+                        event.getKind() == Common.Event.Kind.NETWORK_HTTP_THREAD) {
                     List<Common.Event> connectionEvents = httpEvents.get(event.getGroupId());
                     if (connectionEvents == null) {
                         connectionEvents = new ArrayList<>();

@@ -154,17 +154,39 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_trac
     jlong jthread_id) {
   JStringWrapper thread_name(env, jthread_name);
 
-  Agent::Instance().SubmitNetworkTasks({[juid, thread_name, jthread_id](
-      InternalNetworkService::Stub &stub, ClientContext &ctx) {
-    JavaThreadRequest threadRequest;
-    threadRequest.set_conn_id(juid);
-    auto thread = threadRequest.mutable_thread();
-    thread->set_name(thread_name.get());
-    thread->set_id(jthread_id);
+  if (Agent::Instance().agent_config().unified_pipeline()) {
+    int64_t timestamp = GetClock().GetCurrentTime();
+    Agent::Instance().SubmitAgentTasks(
+        {[timestamp, juid, thread_name, jthread_id](AgentService::Stub &stub, ClientContext &ctx) mutable {
+           SendEventRequest request;
+           request.set_pid(getpid());
+           // session_id will be populated in perfd.
+           auto event = request.mutable_event();
+           event->set_group_id(juid);
+           event->set_kind(Event::NETWORK_HTTP_THREAD);
+           event->set_timestamp(timestamp);
 
-    EmptyNetworkReply reply;
-    return stub.TrackThread(&ctx, threadRequest, &reply);
-  }});
+           auto data = event->mutable_network_http_thread();
+           data->set_id(jthread_id);
+           data->set_name(thread_name.get());
+
+           EmptyResponse response;
+           return stub.SendEvent(&ctx, request, &response);
+         }});
+  }
+  else {
+    Agent::Instance().SubmitNetworkTasks({[juid, thread_name, jthread_id](
+        InternalNetworkService::Stub &stub, ClientContext &ctx) {
+      JavaThreadRequest threadRequest;
+      threadRequest.set_conn_id(juid);
+      auto thread = threadRequest.mutable_thread();
+      thread->set_name(thread_name.get());
+      thread->set_id(jthread_id);
+
+      EmptyNetworkReply reply;
+      return stub.TrackThread(&ctx, threadRequest, &reply);
+    }});
+  }
 }
 
 JNIEXPORT void JNICALL
