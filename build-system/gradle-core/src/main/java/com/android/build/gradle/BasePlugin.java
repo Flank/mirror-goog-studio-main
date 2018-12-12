@@ -126,7 +126,6 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.initialization.Settings;
 import org.gradle.api.invocation.Gradle;
-import org.gradle.api.logging.LogLevel;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPlugin;
@@ -367,8 +366,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                         new GradleJavaProcessExecutor(project),
                         extraModelInfo.getSyncIssueHandler(),
                         extraModelInfo.getMessageReceiver(),
-                        getLogger(),
-                        isVerbose());
+                        getLogger());
         dataBindingBuilder = new DataBindingBuilder();
         dataBindingBuilder.setPrintMachineReadableOutput(
                 SyncOptions.getErrorFormatMode(projectOptions) == ErrorFormatMode.MACHINE_PARSABLE);
@@ -856,10 +854,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
                                     + "To learn more, see "
                                     + configApkUrl);
         }
-    }
-
-    private boolean isVerbose() {
-        return project.getLogger().isEnabled(LogLevel.INFO);
     }
 
     private boolean ensureTargetSetup() {
