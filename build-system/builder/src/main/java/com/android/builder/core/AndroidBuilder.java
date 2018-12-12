@@ -609,7 +609,7 @@ public class AndroidBuilder {
     private static void save(String xmlDocument, File out) {
         try {
             Files.createParentDirs(out);
-            Files.write(xmlDocument, out, Charsets.UTF_8);
+            Files.asCharSink(out, Charsets.UTF_8).write(xmlDocument);
         } catch(IOException e) {
             throw new RuntimeException(e);
         }
@@ -765,7 +765,7 @@ public class AndroidBuilder {
                     throw new RuntimeException("No result from manifest merger");
                 }
                 try {
-                    Files.write(finalMergedDocument, outFile, Charsets.UTF_8);
+                    Files.asCharSink(outFile, Charsets.UTF_8).write(finalMergedDocument);
                 } catch (IOException e) {
                     mLogger.error(e, "Cannot write resulting xml");
                     throw new RuntimeException(e);
@@ -913,9 +913,8 @@ public class AndroidBuilder {
         File resXmlFile = new File(outResFolder, FD_RES_XML);
         FileUtils.mkdirs(resXmlFile);
 
-        Files.write(content,
-                new File(resXmlFile, ANDROID_WEAR_MICRO_APK + DOT_XML),
-                Charsets.UTF_8);
+        Files.asCharSink(new File(resXmlFile, ANDROID_WEAR_MICRO_APK + DOT_XML), Charsets.UTF_8)
+                .write(content);
     }
 
     public void generateUnbundledWearApkData(
@@ -933,10 +932,8 @@ public class AndroidBuilder {
         File resXmlFile = new File(outResFolder, FD_RES_XML);
         FileUtils.mkdirs(resXmlFile);
 
-        Files.write(
-                content,
-                new File(resXmlFile, ANDROID_WEAR_MICRO_APK + DOT_XML),
-                Charsets.UTF_8);
+        Files.asCharSink(new File(resXmlFile, ANDROID_WEAR_MICRO_APK + DOT_XML), Charsets.UTF_8)
+                .write(content);
     }
 
     public static void generateApkDataEntryInManifest(
@@ -959,7 +956,7 @@ public class AndroidBuilder {
                 .append("   </application>\n")
                 .append("</manifest>\n");
 
-        Files.write(content, manifestFile, Charsets.UTF_8);
+        Files.asCharSink(manifestFile, Charsets.UTF_8).write(content);
     }
 
     /**
