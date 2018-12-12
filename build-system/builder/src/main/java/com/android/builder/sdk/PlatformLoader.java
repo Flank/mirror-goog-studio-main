@@ -36,8 +36,6 @@ import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Singleton-based implementation of SdkLoader for a platform-based SDK.
@@ -119,15 +117,6 @@ public class PlatformLoader implements SdkLoader {
     @NonNull
     public ImmutableList<File> getRepositories() {
         return mRepositories;
-    }
-
-    @NonNull
-    @Override
-    public List<File> updateRepositories(
-            @NonNull List<String> repositoryPaths,
-            @NonNull SdkLibData sdkLibData,
-            @NonNull ILogger logger) {
-        return Collections.EMPTY_LIST;
     }
 
     @Override

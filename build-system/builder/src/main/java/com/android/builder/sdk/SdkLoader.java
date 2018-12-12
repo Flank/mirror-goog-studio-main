@@ -69,23 +69,6 @@ public interface SdkLoader {
     ImmutableList<File> getRepositories();
 
     /**
-     * Tries to update (or install) all local maven repositories and returns a list of directories
-     * that were modified.
-     *
-     * @param repositoryPaths a list of all install paths as described in {@code RepoPackage} of the
-     *     remote packages for the maven repositories. Eg.: extras;google;m2repository
-     * @param sdkLibData contains all the components for downloading.
-     * @param logger a logger for messages.
-     * @return a {@code List} of locations to the directories that contain the maven repositories.
-     */
-    @NonNull
-    List<File> updateRepositories(
-            @NonNull List<String> repositoryPaths,
-            @NonNull SdkLibData sdkLibData,
-            @NonNull ILogger logger)
-            throws LicenceNotAcceptedException, InstallFailedException;
-
-    /**
      * Installs an Android Sdk Tool if it's not already installed.
      *
      * @param sdkLibData contains all the components for downloading.

@@ -24,11 +24,8 @@ import static com.android.SdkConstants.FD_TOOLS;
 import static com.android.SdkConstants.FN_ADB;
 import static com.android.SdkConstants.FN_ANNOTATIONS_JAR;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.repository.GradleCoordinate;
-import com.android.ide.common.repository.SdkMavenRepository;
 import com.android.repository.Revision;
 import com.android.repository.api.Downloader;
 import com.android.repository.api.Installer;
@@ -39,8 +36,6 @@ import com.android.repository.api.RemotePackage;
 import com.android.repository.api.RepoManager;
 import com.android.repository.api.SettingsController;
 import com.android.repository.api.UpdatablePackage;
-import com.android.repository.io.FileOp;
-import com.android.repository.io.FileOpUtils;
 import com.android.repository.util.InstallerUtil;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
@@ -62,7 +57,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -83,7 +77,6 @@ public class DefaultSdkLoader implements SdkLoader {
     private AndroidSdkHandler mSdkHandler;
     private SdkInfo mSdkInfo;
     private final ImmutableList<File> mRepositories;
-    private final  FileOp mFileOp = FileOpUtils.create();
 
     public static synchronized SdkLoader getLoader(
             @NonNull File sdkLocation) {
@@ -412,135 +405,6 @@ public class DefaultSdkLoader implements SdkLoader {
                         mSdkLocation,
                         FD_EXTRAS + File.separator + "google" + File.separator + FD_M2_REPOSITORY),
                 new File(mSdkLocation, FD_EXTRAS + File.separator + FD_M2_REPOSITORY));
-    }
-
-    @Override
-    @NonNull
-    public List<File> updateRepositories(
-            @NonNull List<String> repositoryPaths,
-            @NonNull SdkLibData sdkLibData,
-            @NonNull ILogger logger)
-            throws LicenceNotAcceptedException, InstallFailedException {
-
-        ImmutableList.Builder<File> repositoriesBuilder = ImmutableList.builder();
-        Map<RemotePackage, InstallResultType> installResults = new HashMap<>();
-        ProgressIndicator progress = getNewDownloadProgress();
-        RepoManager repoManager = mSdkHandler.getSdkManager(progress);
-        checkNeedsCacheReset(repoManager, sdkLibData);
-        repoManager.loadSynchronously(
-                RepoManager.DEFAULT_EXPIRATION_PERIOD_MS,
-                new LoggerProgressIndicatorWrapper(logger),
-                sdkLibData.getDownloader(),
-                sdkLibData.getSettings());
-
-        Map<String, RemotePackage> remotePackages = repoManager.getPackages().getRemotePackages();
-        List<RemotePackage> artifactPackages =
-                repositoryPaths
-                        .stream()
-                        .map(remotePackages::get)
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toList());
-
-        if (!artifactPackages.isEmpty()) {
-            installResults.putAll(installRemotePackages(
-                    artifactPackages, repoManager, sdkLibData.getDownloader(), progress));
-            repositoriesBuilder.add(new File(
-                    mSdkLocation +
-                            File.separator +
-                            SdkConstants.FD_EXTRAS +
-                            File.separator +
-                            SdkConstants.FD_M2_REPOSITORY));
-        }
-
-        // Check to see if we failed because of some license not being accepted.
-        checkResults(installResults);
-
-        // If we can't find some of the remote packages or some install failed
-        // we resort to installing/updating the old big repositories.
-        if (artifactPackages.size() != repositoryPaths.size()
-                || installResults.values().contains(InstallResultType.INSTALL_FAIL)) {
-            UpdatablePackage googleRepositoryPackage =
-                    repoManager
-                            .getPackages()
-                            .getConsolidatedPkgs()
-                            .get(SdkMavenRepository.GOOGLE.getPackageId());
-
-            UpdatablePackage androidRepositoryPackage =
-                    mSdkHandler
-                            .getSdkManager(progress)
-                            .getPackages()
-                            .getConsolidatedPkgs()
-                            .get(SdkMavenRepository.ANDROID.getPackageId());
-
-            // Check if there is a Google Repository dependency. If not, we don't install/update
-            // the Google repository. If there is one, we update both repositories, since
-            // the (maven) packages in the Google repo have dependencies (declared in *.pom files)
-            // on packages from the Android repo.
-            if (isInGoogleRepository(repositoryPaths)) {
-                // If a Google package is already there and there is no update, it means we've
-                // already done this step, but the list of repositories wasn't updated, so just add
-                // the repo again.
-                if (googleRepositoryPackage.hasLocal() && !googleRepositoryPackage.isUpdate()) {
-                    File googleRepo = getMavenRepoAsFile(SdkMavenRepository.GOOGLE);
-                    repositoriesBuilder.add(googleRepo);
-                } else if (googleRepositoryPackage.getRemote() != null) {
-                    installResults.putAll(
-                            installRemotePackages(
-                                    ImmutableList.of(googleRepositoryPackage.getRemote()),
-                                    repoManager,
-                                    sdkLibData.getDownloader(),
-                                    progress));
-
-                    if (installResults.get(googleRepositoryPackage.getRemote())
-                            .equals(InstallResultType.SUCCESS)) {
-                        File googleRepo = getMavenRepoAsFile(SdkMavenRepository.GOOGLE);
-                        repositoriesBuilder.add(googleRepo);
-                    }
-                }
-            }
-
-            // The same as above.
-            if (androidRepositoryPackage.hasLocal() && !androidRepositoryPackage.isUpdate()) {
-                File androidRepo = getMavenRepoAsFile(SdkMavenRepository.ANDROID);
-                repositoriesBuilder.add(androidRepo);
-            } else if (androidRepositoryPackage.getRemote() != null) {
-                installResults.putAll(
-                        installRemotePackages(
-                                ImmutableList.of(androidRepositoryPackage.getRemote()),
-                                repoManager,
-                                sdkLibData.getDownloader(),
-                                progress));
-
-                if (installResults
-                        .get(androidRepositoryPackage.getRemote())
-                        .equals(InstallResultType.SUCCESS)) {
-                    File androidRepo = getMavenRepoAsFile(SdkMavenRepository.ANDROID);
-                    repositoriesBuilder.add(androidRepo);
-                }
-            }
-            checkResults(installResults);
-        }
-
-        return repositoriesBuilder.build();
-    }
-
-    private File getMavenRepoAsFile(SdkMavenRepository mavenRepository) {
-        return mavenRepository.getRepositoryLocation(mSdkLocation, true, mFileOp);
-    }
-
-    private static boolean isInGoogleRepository(List<String> repoPaths) {
-        for (String repoPath : repoPaths) {
-            GradleCoordinate coordinate = SdkMavenRepository.getCoordinateFromSdkPath(repoPath);
-            if (coordinate != null) {
-                String group = coordinate.getGroupId();
-                if (group != null &&
-                        (group.startsWith(SdkConstants.GOOGLE_SUPPORT_ARTIFACT_PREFIX) ||
-                                group.startsWith(SdkConstants.FIREBASE_ARTIFACT_PREFIX))) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     @Override
