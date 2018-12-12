@@ -1,6 +1,11 @@
 #!/bin/bash -x
 # Invoked by Android Build Launchcontrol for continuous builds.
 
+# Expected arguments:
+#readonly out_dir="$1"
+#readonly dist_dir="$2"
+#readonly build_number="$3"
+
 readonly dist_dir="$1"
 
 readonly script_dir="$(dirname "$0")"
@@ -39,7 +44,7 @@ readonly production_targets_file=$(mktemp)
 
 readonly testlogs_dir="$(${script_dir}/bazel info bazel-testlogs --config=remote)"
 
-# Generate the Jacoco report
+# Generate the report
 "${script_dir}/bazel" \
   run \
   //tools/base:coverage_report \
@@ -50,33 +55,18 @@ readonly testlogs_dir="$(${script_dir}/bazel info bazel-testlogs --config=remote
   $production_targets_file \
   $testlogs_dir
 
-readonly jacoco_status=$?
-
-# Resolve to sourcefiles and convert to LCOV
-python "${script_dir}/bazel/jacoco_to_lcov.py"
-
-readonly resolve_status=$?
-
-# Generate LCOV report
-genhtml -o "./out/lcovhtml" "./out/lcov" --no-function-coverage
-
-readonly genhtml_status=$?
+readonly report_status=$?
 
 if [[ -d "${dist_dir}" ]]; then
   # Copy the report to ab/ outputs
-  pushd "./out/lcovhtml"
-  zip -r html.zip "."
-  cp -pv html.zip "${dist_dir}/coverage"
-  popd
-  cp -pv "./out/lcov" "${dist_dir}/coverage"
-  cp -pv "./out/worst" "${dist_dir}/coverage"
-  cp -pv "./out/worstNoFiles" "${dist_dir}/coverage"
+  zip -r coverage_report.zip "./out/agent-coverage/tools/base/coverage_report/"
+  cp -pv coverage_report.zip "${dist_dir}"
 
   # Link to test results
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${upsalite_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
 fi
 
-if [[ $bazel_status && $jacoco_status && $resolve_status && $genhtml_status]]; then
+if [[ $bazel_status && $report_status ]]; then
   exit 0
 else
   exit 1
