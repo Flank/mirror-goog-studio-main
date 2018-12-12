@@ -51,6 +51,7 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 
@@ -126,8 +127,9 @@ public class RenderscriptCompile extends NdkTask {
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
+    @SkipWhenEmpty
     public FileCollection getSourceDirs() {
-        return sourceDirs;
+        return sourceDirs.getAsFileTree();
     }
 
     @InputFiles

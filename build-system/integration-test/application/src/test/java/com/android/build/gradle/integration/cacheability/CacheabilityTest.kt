@@ -61,7 +61,6 @@ class CacheabilityTest {
                 ),
                 FROM_CACHE to setOf(
                     ":preDebugBuild",
-                    ":compileDebugRenderscript",
                     ":generateDebugBuildConfig",
                     ":javaPreCompileDebug",
                     ":generateDebugResValues",
@@ -92,6 +91,7 @@ class CacheabilityTest {
                 ),
                 SKIPPED to setOf(
                     ":compileDebugAidl",
+                    ":compileDebugRenderscript",
                     ":generateDebugSources",
                     ":generateDebugAssets",
                     ":processDebugJavaRes",

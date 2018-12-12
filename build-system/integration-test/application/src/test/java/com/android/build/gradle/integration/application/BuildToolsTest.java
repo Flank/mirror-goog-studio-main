@@ -29,11 +29,9 @@ public class BuildToolsTest {
     private static final List<String> COMMON_TASKS =
             ImmutableList.of(
                     ":compileDebugAidl",
-                    ":compileDebugRenderscript",
                     ":mergeDebugResources",
                     ":processDebugResources",
                     ":compileReleaseAidl",
-                    ":compileReleaseRenderscript",
                     ":mergeReleaseResources",
                     ":processReleaseResources");
 
