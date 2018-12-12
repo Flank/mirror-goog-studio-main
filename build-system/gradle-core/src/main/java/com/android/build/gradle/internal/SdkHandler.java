@@ -230,7 +230,7 @@ public class SdkHandler {
         LocalPackage platformToolsPackage =
                 sdk.getLatestLocalPackageForPrefix(
                         SdkConstants.FD_PLATFORM_TOOLS, null, true, progress);
-        if (platformToolsPackage == null) {
+        if (platformToolsPackage == null && sdkLoader != null) {
             if (sdkLibData.useSdkDownload()) {
                 try {
                     sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_PLATFORM_TOOLS);
