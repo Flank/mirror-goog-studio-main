@@ -40,8 +40,5 @@ sh_test(
     size = "medium",
     srcs = ["simple_test.sh"],
     data = [":test_exec"],
-    tags = [
-        "no_mac",  # b/120893915
-        "no_windows",
-    ],
+    tags = ["no_windows"],
 )

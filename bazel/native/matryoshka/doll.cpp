@@ -19,6 +19,10 @@
 #include <fstream>
 #include <iostream>
 
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
+
 using namespace std;
 
 namespace matryoshka {
@@ -31,7 +35,18 @@ static inline void ReadBack(ifstream& self, unsigned char* content, int size) {
 }
 
 bool Open(std::vector<std::unique_ptr<Doll> >& dolls) {
+
+#ifdef __APPLE__
+  char path[1024];
+  uint32_t psize = sizeof(path);
+  if (_NSGetExecutablePath(path, &psize) != 0) {
+    // Failed to get executable.
+    return false;
+  }
+  ifstream self(path, ios::binary);
+#else
   ifstream self("/proc/self/exe", ios::binary);
+#endif
   self.seekg(0, ios::end);
 
   // Check the Magic Number
