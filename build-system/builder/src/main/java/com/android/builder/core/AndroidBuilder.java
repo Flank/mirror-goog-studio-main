@@ -104,7 +104,6 @@ import java.util.function.Supplier;
  *   <li>{@link #mergeManifestsForApplication }
  *   <li>{@link #mergeManifestsForTestVariant }
  *   <li>{@link #processResources }
- *   <li>{@link #compileAllAidlFiles }
  * </ol>
  *
  * <p>Java compilation is not handled but the builder provides the boot classpath with {@link
@@ -652,7 +651,7 @@ public class AndroidBuilder {
             @NonNull List<? extends ManifestProvider> manifestProviders,
             @NonNull Map<String, Object> manifestPlaceholders,
             @NonNull File outManifest,
-            @NonNull File tmpDir) throws IOException {
+            @NonNull File tmpDir) {
         checkNotNull(testApplicationId, "testApplicationId cannot be null.");
         checkNotNull(testedApplicationId, "testedApplicationId cannot be null.");
         checkNotNull(instrumentationRunner, "instrumentationRunner cannot be null.");
@@ -927,7 +926,7 @@ public class AndroidBuilder {
 
     public void generateUnbundledWearApkData(
             @NonNull File outResFolder,
-            @NonNull String mainPkgName) throws ProcessException, IOException {
+            @NonNull String mainPkgName) throws IOException {
 
         String content = String.format(
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
@@ -948,7 +947,7 @@ public class AndroidBuilder {
 
     public static void generateApkDataEntryInManifest(
             int minSdkVersion, int targetSdkVersion, @NonNull File manifestFile)
-            throws InterruptedException, IOException {
+            throws IOException {
 
         StringBuilder content = new StringBuilder();
         content.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
