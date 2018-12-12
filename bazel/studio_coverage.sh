@@ -31,11 +31,13 @@ readonly upsalite_id="$(sed -n 's/\r$//;s/^.* invocation_id: //p' "${command_log
 readonly production_targets_file=$(mktemp)
 
 # Collect the production targets
+readonly universe="//tools - //tools/adt/idea/android-uitests/..."
 "${script_dir}/bazel" \
   query \
-  'kind(test, rdeps(//tools/..., deps(//tools/base:coverage_report)))' \
+  "kind(test, rdeps(${universe}, deps(//tools/base:coverage_report)))" \
   | tee $production_targets_file
 
+readonly query_status=$?
 
 readonly testlogs_dir="$(${script_dir}/bazel info bazel-testlogs --config=remote)"
 
@@ -76,7 +78,7 @@ if [[ -d "${dist_dir}" ]]; then
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${upsalite_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
 fi
 
-if [[ $bazel_status && $jacoco_status && $resolve_status && $genhtml_status]]; then
+if [[ $bazel_status && $query_status && $jacoco_status && $resolve_status && $genhtml_status]]; then
   exit 0
 else
   exit 1
