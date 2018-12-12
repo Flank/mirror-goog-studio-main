@@ -131,6 +131,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(GradleDetector.ACCIDENTAL_OCTAL);
         issues.add(GradleDetector.BUNDLED_GMS);
         issues.add(GradleDetector.COMPATIBILITY);
+        issues.add(GradleDetector.DATA_BINDING_WITHOUT_KAPT);
         issues.add(GradleDetector.DEPENDENCY);
         issues.add(GradleDetector.DEPRECATED);
         issues.add(GradleDetector.DEPRECATED_LIBRARY);

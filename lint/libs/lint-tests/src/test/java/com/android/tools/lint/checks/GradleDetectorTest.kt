@@ -28,6 +28,7 @@ import com.android.testutils.TestUtils
 import com.android.tools.lint.checks.GradleDetector.Companion.ACCIDENTAL_OCTAL
 import com.android.tools.lint.checks.GradleDetector.Companion.BUNDLED_GMS
 import com.android.tools.lint.checks.GradleDetector.Companion.COMPATIBILITY
+import com.android.tools.lint.checks.GradleDetector.Companion.DATA_BINDING_WITHOUT_KAPT
 import com.android.tools.lint.checks.GradleDetector.Companion.DEPENDENCY
 import com.android.tools.lint.checks.GradleDetector.Companion.DEPRECATED
 import com.android.tools.lint.checks.GradleDetector.Companion.DEPRECATED_LIBRARY
@@ -2629,6 +2630,48 @@ class GradleDetectorTest : AbstractCheckTest() {
             .issues(COMPATIBILITY)
             .run()
             .expect("No warnings.")
+    }
+
+    fun testDataBindingWithKapt() {
+        lint().files(
+            gradle(
+                "apply plugin: 'com.android.application'\n" +
+                        "apply plugin: 'kotlin-android'\n" +
+                        "apply plugin: 'kotlin-kapt'\n" +
+                        "\n" +
+                        "android {\n" +
+                        "  dataBinding {\n" +
+                        "    enabled true\n" +
+                        "  }\n" +
+                        "}"
+            )
+        )
+            .issues(DATA_BINDING_WITHOUT_KAPT)
+            .run()
+            .expect("No warnings.")
+    }
+
+    fun testDataBindingWithoutKapt() {
+        lint().files(
+            gradle(
+                "apply plugin: 'com.android.application'\n" +
+                        "apply plugin: 'kotlin-android'\n" +
+                        "\n" +
+                        "android {\n" +
+                        "  dataBinding {\n" +
+                        "    enabled true\n" +
+                        "  }\n" +
+                        "}"
+            )
+        )
+            .issues(DATA_BINDING_WITHOUT_KAPT)
+            .run()
+            .expect(
+                "build.gradle:6: Warning: If you plan to use data binding in a Kotlin project, you should apply the kotlin-kapt plugin. [DataBindingWithoutKapt]\n" +
+                        "    enabled true\n" +
+                        "    ~~~~~~~~~~~~\n" +
+                        "0 errors, 1 warnings"
+            )
     }
 
     // -------------------------------------------------------------------------------------------

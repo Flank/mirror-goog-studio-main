@@ -118,6 +118,18 @@ open class GradleDetector : Detector(), GradleScanner {
      */
     private var mCheckedWearableLibs: Boolean = false
 
+    /**
+     * If incrementally editing a single build.gradle file, tracks whether we've already
+     * applied kotlin-android plugin.
+     */
+    private var mAppliedKotlinAndroidPlugin: Boolean = false
+
+    /**
+     * If incrementally editing a single build.gradle file, tracks whether we've already
+     * applied kotlin-kapt plugin.
+     */
+    private var mAppliedKotlinKaptPlugin: Boolean = false
+
     private val blacklisted = HashMap<Project, BlacklistedDeps>()
 
     // ---- Implements GradleScanner ----
@@ -450,6 +462,13 @@ open class GradleDetector : Detector(), GradleScanner {
                 DEV_MODE_OBSOLETE,
                 "You no longer need a `dev` mode to enable multi-dexing during development, and this can break API version checks"
             )
+        } else if (property == "enabled" && parent == "dataBinding") {
+            if (value == SdkConstants.VALUE_TRUE) {
+                if (mAppliedKotlinAndroidPlugin && !mAppliedKotlinKaptPlugin) {
+                  val message = "If you plan to use data binding in a Kotlin project, you should apply the kotlin-kapt plugin."
+                  report(context, valueCookie, DATA_BINDING_WITHOUT_KAPT, message, null)
+                }
+            }
         }
     }
 
@@ -504,6 +523,13 @@ open class GradleDetector : Detector(), GradleScanner {
                     .sharedName("Replace plugin")
                     .replace().text(plugin).with(replaceWith).autoFix().build()
                 report(context, cookie, DEPRECATED, message, fix)
+            }
+
+            if (plugin == "kotlin-android") {
+                mAppliedKotlinAndroidPlugin = true
+            }
+            if (plugin == "kotlin-kapt") {
+                mAppliedKotlinKaptPlugin = true
             }
         }
     }
@@ -2112,6 +2138,23 @@ open class GradleDetector : Detector(), GradleScanner {
             category = Category.COMPLIANCE,
             priority = 8,
             severity = Severity.ERROR,
+            androidSpecific = true,
+            implementation = IMPLEMENTATION
+        )
+
+
+        /** Using data binding with Kotlin but not Kotlin annotation processing */
+        @JvmField
+        val DATA_BINDING_WITHOUT_KAPT = Issue.create(
+            id = "DataBindingWithoutKapt",
+            briefDescription = "Data Binding without Annotation Processing",
+            moreInfo = "https://kotlinlang.org/docs/reference/kapt.html",
+            explanation = """
+                Apps that use Kotlin and data binding should also apply the kotlin-kapt plugin. \
+                """,
+            category = Category.CORRECTNESS,
+            priority = 1,
+            severity = Severity.WARNING,
             androidSpecific = true,
             implementation = IMPLEMENTATION
         )
