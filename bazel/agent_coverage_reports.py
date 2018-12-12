@@ -30,7 +30,7 @@ def main():
 
   bazel = workspace + '/tools/base/bazel/bazel'
 
-  universe = '(//tools/... - //tools/adt/idea/android-uitests/...)'
+  universe = '//tools/...'
 
   print('Finding all possible coverage reports...')
 
