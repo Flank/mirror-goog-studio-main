@@ -122,12 +122,8 @@ public abstract class AbstractAndroidTestModule implements AndroidTestModule {
                     ? Files.toString(buildFile, Charset.defaultCharset())
                     : "";
 
-            Files.write(
-                    buildScriptContent
-                            + "\n\n"
-                            + oldContent,
-                    buildFile,
-                    Charset.defaultCharset());
+            Files.asCharSink(buildFile, Charset.defaultCharset())
+                    .write(buildScriptContent + "\n\n" + oldContent);
         }
     }
 

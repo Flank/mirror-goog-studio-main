@@ -166,7 +166,7 @@ public class TemporaryProjectModification {
 
         mFileEvents.put(relativePath, FileEvent.added());
 
-        Files.write(content, file, Charsets.UTF_8);
+        Files.asCharSink(file, Charsets.UTF_8).write(content);
         TestUtils.waitForFileSystemTick();
     }
 
@@ -187,7 +187,7 @@ public class TemporaryProjectModification {
         if (newContent == null) {
             assertTrue("File should have been deleted", file.delete());
         } else {
-            Files.write(newContent, file, Charsets.UTF_8);
+            Files.asCharSink(file, Charsets.UTF_8).write(newContent);
         }
         TestUtils.waitForFileSystemTick();
     }
@@ -199,8 +199,8 @@ public class TemporaryProjectModification {
             switch (fileEvent.getType()) {
                 case REMOVED:
                 case CHANGED:
-                    Files.write(fileEvent.getFileContent(),
-                            getFile(entry.getKey()), Charsets.UTF_8);
+                    Files.asCharSink(getFile(entry.getKey()), Charsets.UTF_8)
+                            .write(fileEvent.getFileContent());
                     break;
                 case ADDED:
                     // it's fine if the file was already removed somehow.

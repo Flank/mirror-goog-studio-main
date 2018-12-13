@@ -502,28 +502,20 @@ public final class GradleTestProject implements TestRule {
         FileUtils.deleteRecursivelyIfExists(testDir);
         FileUtils.mkdirs(testDir);
 
-        Files.write(
-                generateVersions(),
-                new File(testDir.getParent(), COMMON_VERSIONS),
-                StandardCharsets.UTF_8);
-        Files.write(
-                generateProjectRepoScript(),
-                new File(testDir.getParent(), COMMON_LOCAL_REPO),
-                StandardCharsets.UTF_8);
-        Files.write(
-                generateCommonHeader(),
-                new File(testDir.getParent(), COMMON_HEADER),
-                StandardCharsets.UTF_8);
-        Files.write(
-                generateCommonBuildScript(),
-                new File(testDir.getParent(), COMMON_BUILD_SCRIPT),
-                StandardCharsets.UTF_8);
+        Files.asCharSink(new File(testDir.getParent(), COMMON_VERSIONS), StandardCharsets.UTF_8)
+                .write(generateVersions());
+        Files.asCharSink(new File(testDir.getParent(), COMMON_LOCAL_REPO), StandardCharsets.UTF_8)
+                .write(generateProjectRepoScript());
+        Files.asCharSink(new File(testDir.getParent(), COMMON_HEADER), StandardCharsets.UTF_8)
+                .write(generateCommonHeader());
+        Files.asCharSink(new File(testDir.getParent(), COMMON_BUILD_SCRIPT), StandardCharsets.UTF_8)
+                .write(generateCommonBuildScript());
 
         if (testProject != null) {
             testProject.write(
                     testDir, testProject.containsFullBuildScript() ? "" : getGradleBuildscript());
         } else {
-            Files.write(getGradleBuildscript(), buildFile, Charsets.UTF_8);
+            Files.asCharSink(buildFile, Charsets.UTF_8).write(getGradleBuildscript());
         }
 
         createSettingsFile();
@@ -1462,10 +1454,8 @@ public final class GradleTestProject implements TestRule {
         if (gradleProperties.isEmpty()) {
             return;
         }
-        Files.write(
-                Joiner.on(System.lineSeparator()).join(gradleProperties),
-                getGradlePropertiesFile(),
-                Charset.defaultCharset());
+        Files.asCharSink(getGradlePropertiesFile(), Charset.defaultCharset())
+                .write(Joiner.on(System.lineSeparator()).join(gradleProperties));
     }
 
     @Nullable
