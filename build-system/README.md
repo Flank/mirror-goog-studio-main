@@ -47,9 +47,7 @@ To run a specific connectedIntegrationTest, run:
 
 Ro run a specific integration test, run:
 
-```$ ./gradlew :base:build-system:integration-test:<integration test module>:<integration test task name> -D:base:build-system:integration-test:<integration test module>:<integration test task name>.single=<specific integration test>```
-
-This command is more verbose, but runs faster than using the Gradle `--tests` filter.
+```$ ./gradlew :base:build-system:integration-test:<integration test module>:<integration test task name> --tests=<specific integration test>```
 
 ## Editing the plugin
 
