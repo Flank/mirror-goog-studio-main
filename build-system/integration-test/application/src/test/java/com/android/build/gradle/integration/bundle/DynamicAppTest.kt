@@ -26,6 +26,7 @@ import com.android.build.gradle.options.StringOption
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.builder.model.AppBundleVariantBuildOutput
+import com.android.testutils.TestUtils
 import com.android.testutils.apk.Dex
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.DexSubject.assertThat
@@ -346,6 +347,7 @@ class DynamicAppTest {
 
     @Test
     fun `test abiFilter with Bundle task`() {
+        TestUtils.disableIfOnWindowsWithBazel()
         val appProject = project.getSubproject(":app")
         createAbiFile(appProject, SdkConstants.ABI_ARMEABI_V7A, "libbase.so")
         createAbiFile(appProject, SdkConstants.ABI_INTEL_ATOM, "libbase.so")

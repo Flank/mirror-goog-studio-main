@@ -17,6 +17,7 @@
 package com.android.testutils;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeFalse;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -577,4 +578,9 @@ public class TestUtils {
         }
     }
 
+    // disable tests when running on Windows in Bazel.
+    public static void disableIfOnWindowsWithBazel() {
+        assumeFalse((SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS)
+            && System.getenv("TEST_TMPDIR")!=null);
+    }
 }

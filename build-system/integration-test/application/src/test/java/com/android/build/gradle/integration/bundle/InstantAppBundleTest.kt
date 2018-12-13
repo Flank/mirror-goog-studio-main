@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.utils.getVariantByName
 import com.android.build.gradle.options.StringOption
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.SyncIssue
+import com.android.testutils.TestUtils
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.FileSubject
 import com.android.testutils.truth.FileSubject.assertThat
@@ -159,6 +160,7 @@ class InstantAppBundleTest {
 
     @Test
     fun `test abiFilter with Bundle task`() {
+        TestUtils.disableIfOnWindowsWithBazel()
         val appProject = project.getSubproject(":base")
         createAbiFile(appProject, SdkConstants.ABI_ARMEABI_V7A, "libbase.so")
         createAbiFile(appProject, SdkConstants.ABI_INTEL_ATOM, "libbase.so")

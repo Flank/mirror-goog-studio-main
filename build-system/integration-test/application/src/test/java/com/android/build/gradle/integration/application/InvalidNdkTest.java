@@ -47,7 +47,7 @@ public class InvalidNdkTest {
         ndkDir = temporaryFolder.newFolder();
         TestFileUtils.appendToFile(
                 sProject.file("local.properties"),
-                "ndk.dir=" + ndkDir.getAbsolutePath());
+                "ndk.dir=" + ndkDir.getAbsolutePath().replace("\\", "\\\\"));
     }
 
     @Test
