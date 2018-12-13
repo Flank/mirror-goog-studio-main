@@ -54,7 +54,7 @@ public class FlatJavaLibTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        Files.write("include 'app'", project.getSettingsFile(), Charsets.UTF_8);
+        Files.asCharSink(project.getSettingsFile(), Charsets.UTF_8).write("include 'app'");
 
         /*
          * These two dependencies will transitively bring in 9 counts of support-annotations.

@@ -56,7 +56,8 @@ public class OptionalAarTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        Files.write("include 'app', 'library', 'library2'", project.getSettingsFile(), Charsets.UTF_8);
+        Files.asCharSink(project.getSettingsFile(), Charsets.UTF_8)
+                .write("include 'app', 'library', 'library2'");
 
         appendToFile(
                 project.getSubproject("app").getBuildFile(),

@@ -50,7 +50,8 @@ public class LibWithProvidedAarAsJarTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        Files.write("include 'library', 'library2'", project.getSettingsFile(), Charsets.UTF_8);
+        Files.asCharSink(project.getSettingsFile(), Charsets.UTF_8)
+                .write("include 'library', 'library2'");
 
         appendToFile(
                 project.getSubproject("library").getBuildFile(),

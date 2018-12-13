@@ -43,7 +43,8 @@ public class DependencyOrderTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        Files.write("include 'app', 'library', 'library2'", project.getSettingsFile(), Charsets.UTF_8);
+        Files.asCharSink(project.getSettingsFile(), Charsets.UTF_8)
+                .write("include 'app', 'library', 'library2'");
 
         // add the library2 to make sure that whether it's before or after library, it'll still be
         // ordered after (since library depends on library2.)
