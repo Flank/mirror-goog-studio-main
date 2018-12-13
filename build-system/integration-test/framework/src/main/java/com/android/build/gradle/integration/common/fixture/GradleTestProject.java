@@ -96,6 +96,10 @@ import org.junit.runners.model.Statement;
 public final class GradleTestProject implements TestRule {
     public static final String ENV_CUSTOM_REPO = "CUSTOM_REPO";
 
+    // Limit daemon idle time for tests. 10 seconds is enough for another test
+    // to start and reuse the daemon.
+    public static final int GRADLE_DEAMON_IDLE_TIME_IN_SECONDS = 10;
+
 
     public static final String DEFAULT_COMPILE_SDK_VERSION;
 
@@ -438,17 +442,25 @@ public final class GradleTestProject implements TestRule {
     }
 
     private static File computeTestDir(Class<?> testClass, String methodName, String projectName) {
-        // On Windows machines, make sure the test directory's path is short enough to avoid running
-        // into path too long exceptions. Typically, on local Windows machines, OUT_DIR's path is
-        // long, whereas on Windows build bots, OUT_DIR's path is already short (see
-        // https://issuetracker.google.com/69271554). In the first case, let's move the test
-        // directory close to root (user home), and in the second case, let's use OUT_DIR directly.
-        File testDir =
-                SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS
-                                && System.getenv("BUILDBOT_BUILDERNAME") == null
-                        ? new File(new File(System.getProperty("user.home")), "android-tests")
-                        : OUT_DIR;
 
+        File testDir = OUT_DIR;
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS
+                && System.getenv("BUILDBOT_BUILDERNAME") == null) {
+            // On Windows machines, make sure the test directory's path is short enough to avoid
+            // running into path too long exceptions. Typically, on local Windows machines,
+            // OUT_DIR's path is long, whereas on Windows build bots, OUT_DIR's path is already
+            // short (see https://issuetracker.google.com/69271554).
+            // In the first case, let's move the test directory close to root (user home), and in
+            // the second case, let's use OUT_DIR directly.
+            String outDir = FileUtils.join(System.getProperty("user.home"), "android-tests");
+
+            // when sharding is on, use a private sharded folder as tests can be split along
+            // shards and files will get locked on Windows.
+            if (System.getenv("TEST_TOTAL_SHARDS") != null) {
+                outDir = FileUtils.join(outDir, System.getenv("TEST_SHARD_INDEX"));
+            }
+            testDir = new File(outDir);
+        }
         String classDir = testClass.getSimpleName();
         String methodDir = null;
 
@@ -1269,9 +1281,8 @@ public final class GradleTestProject implements TestRule {
         }
         GradleConnector connector = GradleConnector.newConnector();
 
-        // Limit daemon idle time for tests. 10 seconds is enough for another test
-        // to start and reuse the daemon.
-        ((DefaultGradleConnector) connector).daemonMaxIdleTime(10, TimeUnit.SECONDS);
+        ((DefaultGradleConnector) connector).daemonMaxIdleTime(
+                GRADLE_DEAMON_IDLE_TIME_IN_SECONDS, TimeUnit.SECONDS);
 
         String distributionName = String.format("gradle-%s-bin.zip", targetGradleVersion);
         File distributionZip = new File(gradleDistributionDirectory, distributionName);

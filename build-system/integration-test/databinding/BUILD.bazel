@@ -74,7 +74,7 @@ coverage_java_test(
         "-Dmaven.repo.local=/tmp/localMavenRepo",  # For gradle publishing, writing to ~/.m2
         "-Dtest.android.build.gradle.integration.repos=tools/base/build-system/gradle_plugin_repo.zip,tools/base/build-system/integration-test/databinding/prebuilts.zip,tools/base/third_party/kotlin/kotlin-m2repository.zip,tools/data-binding/data_binding_runtime.zip,tools/base/build-system/integration-test/support_library_latest.zip",
     ],
-    shard_count = 3,  #TODO: better sharding.
+    shard_count = 8,
     tags = [
         "block-network",
         "cpu:3",

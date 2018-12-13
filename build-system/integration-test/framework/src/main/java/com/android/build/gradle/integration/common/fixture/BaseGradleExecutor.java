@@ -200,7 +200,6 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         arguments.add("-Dfile.encoding=" + System.getProperty("file.encoding"));
         arguments.add("-Dsun.jnu.encoding=" + System.getProperty("sun.jnu.encoding"));
 
-
         if (offline) {
             arguments.add("--offline");
         }
@@ -228,12 +227,14 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
                 .collect(ImmutableSet.toImmutableSet());
     }
 
-    protected final void setJvmArguments(@NonNull LongRunningOperation launcher)
-            throws IOException {
+    protected final void setJvmArguments(@NonNull LongRunningOperation launcher) {
         List<String> jvmArguments = new ArrayList<>();
 
         if (!Strings.isNullOrEmpty(heapSize)) {
             jvmArguments.add("-Xmx" + heapSize);
+        } else {
+            // by default, set the heap to 1G.
+            jvmArguments.add("-Xmx1G");
         }
         jvmArguments.add("-XX:MaxPermSize=1024m");
 
