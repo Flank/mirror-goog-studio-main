@@ -19,7 +19,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
@@ -39,23 +38,19 @@ public class PatchTest {
         List<String> remoteApks = Lists.newArrayList(remoteApkPath);
         List<ApkEntry> remoteEntries = new ApkParser().parsePaths(remoteApks);
         Apk remoteApk =
-                new Apk(
-                        null,
-                        null,
-                        remoteApkPath,
-                        ImmutableList.of(),
-                        remoteEntries.get(0).apk.zipEntries);
+                Apk.builder()
+                        .setPath(remoteApkPath)
+                        .setZipEntries(remoteEntries.get(0).apk.zipEntries)
+                        .build();
 
         String localApkPath = BASE + "local.apk";
         List<String> localApks = Lists.newArrayList(localApkPath);
         List<ApkEntry> localEntries = new ApkParser().parsePaths(localApks);
         Apk localApk =
-                new Apk(
-                        null,
-                        null,
-                        localApkPath,
-                        ImmutableList.of(),
-                        localEntries.get(0).apk.zipEntries);
+                Apk.builder()
+                        .setPath(localApkPath)
+                        .setZipEntries(localEntries.get(0).apk.zipEntries)
+                        .build();
 
         PatchGenerator.Patch patch = new PatchGenerator().generate(remoteApk, localApk);
 

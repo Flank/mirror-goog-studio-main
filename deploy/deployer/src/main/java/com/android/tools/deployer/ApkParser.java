@@ -56,11 +56,19 @@ public class ApkParser {
 
     private static class ApkDetails {
         private final String fileName;
+        private final String packageName;
         private final List<String> processNames;
+        private final List<String> targetPackages;
 
-        private ApkDetails(String fileName, List<String> processNames) {
+        private ApkDetails(
+                String fileName,
+                String packageName,
+                List<String> processNames,
+                List<String> targetPackages) {
             this.fileName = fileName;
+            this.packageName = packageName;
             this.processNames = processNames;
+            this.targetPackages = targetPackages;
         }
     }
 
@@ -101,12 +109,16 @@ public class ApkParser {
 
         List<ApkEntry> files = new ArrayList<>();
         Apk apk =
-                new Apk(
-                        apkDetails.fileName,
-                        digest,
-                        absolutePath,
-                        apkDetails.processNames,
-                        zipEntries);
+                Apk.builder()
+                        .setName(apkDetails.fileName)
+                        .setChecksum(digest)
+                        .setPath(absolutePath)
+                        .setPackageName(apkDetails.packageName)
+                        .setProcessNames(apkDetails.processNames)
+                        .setTargetPackages(apkDetails.targetPackages)
+                        .setZipEntries(zipEntries)
+                        .build();
+
         for (Map.Entry<String, ZipUtils.ZipEntry> entry : zipEntries.entrySet()) {
             files.add(new ApkEntry(entry.getKey(), entry.getValue().crc, apk));
         }
@@ -221,6 +233,7 @@ public class ApkParser {
         String packageName = null;
         String splitName = null;
         HashSet<String> processNames = new HashSet<>();
+        List<String> targetPackages = new ArrayList<>();
 
         XmlChunk xmlChunk = (XmlChunk) chunks.get(0);
         for (Chunk chunk : xmlChunk.getChunks().values()) {
@@ -248,6 +261,14 @@ public class ApkParser {
                     }
                 }
             }
+
+            if (startChunk.getName().equals("instrumentation")) {
+                for (XmlAttribute attribute : startChunk.getAttributes()) {
+                    if (attribute.name().equals("targetPackage")) {
+                        targetPackages.add(attribute.rawValue());
+                    }
+                }
+            }
         }
 
         if (packageName == null) {
@@ -270,6 +291,6 @@ public class ApkParser {
 
         // Default process name is the name of the package.
         builder.add(packageName);
-        return new ApkDetails(apkFileName, builder.build());
+        return new ApkDetails(apkFileName, packageName, builder.build(), targetPackages);
     }
 }

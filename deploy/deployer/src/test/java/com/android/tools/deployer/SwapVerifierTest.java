@@ -21,7 +21,6 @@ import static com.android.tools.deployer.model.FileDiff.Status.MODIFIED;
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.FileDiff;
-import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Assert;
@@ -119,9 +118,9 @@ public class SwapVerifierTest {
 
     private FileDiff makeDiff(String name, FileDiff.Status status) {
         ApkEntry left =
-                new ApkEntry(name, 0, new Apk("apk1", "abcd", null, ImmutableList.of(), null));
+                new ApkEntry(name, 0, Apk.builder().setName("apk1").setChecksum("abcd").build());
         ApkEntry right =
-                new ApkEntry(name, 0, new Apk("apk2", "abcd", null, ImmutableList.of(), null));
+                new ApkEntry(name, 0, Apk.builder().setName("apk2").setChecksum("abcd").build());
         return new FileDiff(left, right, status);
     }
 }

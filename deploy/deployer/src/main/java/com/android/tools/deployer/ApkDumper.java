@@ -18,7 +18,6 @@ package com.android.tools.deployer;
 import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
-import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -58,12 +57,12 @@ public class ApkDumper {
             cd.rewind();
             String digest = ZipUtils.digest(signature.remaining() != 0 ? signature : cd);
             Apk apk =
-                    new Apk(
-                            dump.getName(),
-                            digest,
-                            dump.getAbsolutePath(),
-                            ImmutableList.of(),
-                            zipEntries);
+                    Apk.builder()
+                            .setName(dump.getName())
+                            .setChecksum(digest)
+                            .setPath(dump.getAbsolutePath())
+                            .setZipEntries(zipEntries)
+                            .build();
             for (Map.Entry<String, ZipUtils.ZipEntry> entry : zipEntries.entrySet()) {
                 dumps.add(new ApkEntry(entry.getKey(), entry.getValue().crc, apk));
             }

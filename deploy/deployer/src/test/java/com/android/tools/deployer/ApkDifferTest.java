@@ -20,7 +20,6 @@ import static org.junit.Assert.*;
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.FileDiff;
-import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -33,11 +32,11 @@ public class ApkDifferTest {
     ApkDiffer differ = new ApkDiffer();
 
     List<ApkEntry> before = new ArrayList<>();
-        Apk apk0 = new Apk("apk.apk", "abcd", "", ImmutableList.of(), null);
+        Apk apk0 = Apk.builder().setName("apk.apk").setChecksum("abcd").build();
     before.add(new ApkEntry("dex0", 0x01, apk0));
 
     List<ApkEntry> after = new ArrayList<>();
-        Apk apk1 = new Apk("apk.apk", "efgh", "", ImmutableList.of(), null);
+        Apk apk1 = Apk.builder().setName("apk.apk").setChecksum("efgh").build();
     after.add(new ApkEntry("dex0", 0x01, apk1));
 
     List<FileDiff> diff = differ.diff(before, after);
@@ -52,17 +51,17 @@ public class ApkDifferTest {
     ApkDiffer differ = new ApkDiffer();
 
     List<ApkEntry> before = new ArrayList<>();
-        Apk apk1 = new Apk("apk1.apk", "abcd", "", ImmutableList.of(), null);
+        Apk apk1 = Apk.builder().setName("apk1.apk").setChecksum("abcd").build();
     before.add(new ApkEntry("dex0", 0x01, apk1));
-        Apk apk2 = new Apk("apk2.apk", "abcd", "", ImmutableList.of(), null);
+        Apk apk2 = Apk.builder().setName("apk2.apk").setChecksum("abcd").build();
     before.add(new ApkEntry("dex0", 0x01, apk2));
 
     List<ApkEntry> after = new ArrayList<>();
-        Apk apk3 = new Apk("apk1.apk", "efgh", "", ImmutableList.of(), null);
+        Apk apk3 = Apk.builder().setName("apk1.apk").setChecksum("efgh").build();
     after.add(new ApkEntry("dex0", 0x01, apk3));
     try {
       differ.diff(before, after);
-      fail("Diff should't have thrown an exception");
+            fail("Diff should have thrown an exception");
     }
     catch (DeployerException e) {
       assertEquals(DeployerException.Error.DIFFERENT_NUMBER_OF_APKS, e.getError());
@@ -71,7 +70,7 @@ public class ApkDifferTest {
     // Diff in the other direction
     try {
       differ.diff(after, before);
-      fail("Diff should't have thrown an exception");
+            fail("Diff should have thrown an exception");
     }
     catch (DeployerException e) {
       assertEquals(DeployerException.Error.DIFFERENT_NUMBER_OF_APKS, e.getError());
@@ -83,11 +82,11 @@ public class ApkDifferTest {
     ApkDiffer differ = new ApkDiffer();
 
     List<ApkEntry> before = new ArrayList<>();
-        Apk apk1 = new Apk("apk1.apk", "abcd", "", ImmutableList.of(), null);
+        Apk apk1 = Apk.builder().setName("apk1.apk").setChecksum("abcd").build();
     before.add(new ApkEntry("dex0", 0x01, apk1));
 
     List<ApkEntry> after = new ArrayList<>();
-        Apk apk2 = new Apk("apk.apk", "efgh", "", ImmutableList.of(), null);
+        Apk apk2 = Apk.builder().setName("apk.apk").setChecksum("abcd").build();
     after.add(new ApkEntry("dex0", 0x01, apk2));
     try {
       differ.diff(before, after);
@@ -113,14 +112,14 @@ public class ApkDifferTest {
     ApkDiffer differ = new ApkDiffer();
 
     List<ApkEntry> before = new ArrayList<>();
-        Apk apk1 = new Apk("apk.apk", "abcd", "", ImmutableList.of(), null);
+        Apk apk1 = Apk.builder().setName("apk.apk").setChecksum("abcd").build();
     before.add(new ApkEntry("dex0", 0x00, apk1));
     before.add(new ApkEntry("dex1", 0x01, apk1));
     before.add(new ApkEntry("dex2", 0x02, apk1));
     before.add(new ApkEntry("dex3", 0x03, apk1));
 
     List<ApkEntry> after = new ArrayList<>();
-        Apk apk2 = new Apk("apk.apk", "efgh", "", ImmutableList.of(), null);
+        Apk apk2 = Apk.builder().setName("apk.apk").setChecksum("efgh").build();
     after.add(new ApkEntry("dex1", 0x01, apk2));
     after.add(new ApkEntry("dex2", 0x12, apk2));
     after.add(new ApkEntry("dex3", 0x13, apk2));
