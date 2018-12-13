@@ -3,22 +3,31 @@ load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
 package(default_visibility = ["//visibility:public"])
 
 platform(
-    name = "rbe_debian8",
+    name = "rbe_ubuntu16",
     constraint_values = [
         "@bazel_tools//platforms:x86_64",
         "@bazel_tools//platforms:linux",
         "@bazel_tools//tools/cpp:clang",
-        "@bazel_toolchains//constraints:jessie",
+        "@bazel_toolchains//constraints:xenial",
+        "@bazel_toolchains//constraints/sanitizers:support_msan",
     ],
     remote_execution_properties = """
           properties: {
             name: "container-image"
-            value:"docker://gcr.io/google.com/android-studio-alphasource/nosla-debian8-clang-as@sha256:71c886770d70dd28c1e8a8f58eab8f8ed8bc7322550ec0dcca3cf28ae6eeac19"
-         }
-      properties: {
-        name: "dockerNetwork"
-        value: "standard"
-      }
+            value:"docker://gcr.io/google.com/android-studio-alphasource/rbe-ubuntu16-as@sha256:c8611373581bb39ee5320cdddb03a5c47641ff780bbc0b6cf9c812d8de86cd42"
+          }
+          properties: {
+            name: "dockerNetwork"
+            value: "standard"
+          }
+          properties: {
+            name: "dockerUseURandom"
+            value: "true"
+          }
+          properties: {
+            name: "dockerAddCapabilities"
+            value: "SYS_NICE"
+          }
          """,
 )
 
@@ -54,7 +63,7 @@ coverage_java_test(
         "-Xms10000M",
         "-Xmx10000M",
     ],
-    tags = ["no_rbe_windows"], # Too much memory needed for rbe win.
+    tags = ["no_rbe_windows"],  # Too much memory needed for rbe win.
     test_class = "FoundryPerfgateMetrics",
     deps = [
         "//tools/base/perf-logger:studio.perf-logger_testlib",

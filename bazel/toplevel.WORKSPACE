@@ -1,5 +1,6 @@
 load("//tools/base/bazel:repositories.bzl", "setup_external_repositories")
 load("//tools/base/bazel:emulator.bzl", "setup_external_sdk")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 setup_external_repositories()
 
@@ -18,12 +19,19 @@ local_repository(
 http_archive(
   name = "bazel_toolchains",
   urls = [
-    "https://mirror.bazel.build/github.com/bazelbuild/bazel-toolchains/archive/de25e8f33fb50ba5870bed2fe644736c06afb8c5.tar.gz",
-    "https://github.com/bazelbuild/bazel-toolchains/archive/de25e8f33fb50ba5870bed2fe644736c06afb8c5.tar.gz",
+    "https://mirror.bazel.build/github.com/bazelbuild/bazel-toolchains/archive/31b5dc8c4e9c7fd3f5f4d04c6714f2ce87b126c1.tar.gz",
+    "https://github.com/bazelbuild/bazel-toolchains/archive/31b5dc8c4e9c7fd3f5f4d04c6714f2ce87b126c1.tar.gz",
   ],
-  strip_prefix = "bazel-toolchains-de25e8f33fb50ba5870bed2fe644736c06afb8c5",
-  sha256 = "238bcd5cfe4cc79a00bb3886df089f7912ee579d955cae78eb9e9a02287a4821",
+  strip_prefix = "bazel-toolchains-31b5dc8c4e9c7fd3f5f4d04c6714f2ce87b126c1",
+  sha256 = "07a81ee03f5feae354c9f98c884e8e886914856fb2b6a63cba4619ef10aaaf0b",
 )
+
+load(
+  "@bazel_toolchains//repositories:repositories.bzl",
+  bazel_toolchains_repositories = "repositories",
+)
+
+bazel_toolchains_repositories()
 
 setup_external_sdk(
       name = "externsdk",

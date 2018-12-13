@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.security.KeyStore;
-import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Locale;
@@ -60,10 +59,7 @@ public final class FoundryTest {
 
     @Test
     public void testRandom() throws Exception {
-        File rnd = new File("/dev/random");
-        assertTrue(rnd.isDirectory());
-        // Running this with -Djava.security.debug=all shows in the logs that it fails to use /dev/random
-        byte[] seed = SecureRandom.getInstance("SHA1PRNG").generateSeed(24);
+        // TODO(navabi): Write testRandom() to test urandom on our rbe docker container.
     }
 
     @Test
