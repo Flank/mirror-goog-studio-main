@@ -88,11 +88,11 @@ public class LibDependencyTest {
                 project.file("lib/build.gradle"),
                 "\n" + "dependencies {\n" + "    api project(':javalib')\n" + "}\n");
         mkdirs(project.file("javalib"));
-        Files.write(
-                "apply plugin: 'java'\n"
-                + "targetCompatibility = '1.6'\n"
-                + "sourceCompatibility = '1.6'\n",
-                project.file("javalib/build.gradle"), Charsets.UTF_8);
+        Files.asCharSink(project.file("javalib/build.gradle"), Charsets.UTF_8)
+                .write(
+                        "apply plugin: 'java'\n"
+                                + "targetCompatibility = '1.6'\n"
+                                + "sourceCompatibility = '1.6'\n");
         createJavaLibraryClass("original");
 
         ModelContainer<AndroidProject> modelContainer = project.model().fetchAndroidProjects();
@@ -114,7 +114,7 @@ public class LibDependencyTest {
     @Test
     public void checkVerifierFailsIfJavaResourceInLibraryChanged() throws Exception {
         File resource = project.getSubproject(":lib").file("src/main/resources/properties.txt");
-        Files.write("java resource", resource, Charsets.UTF_8);
+        Files.asCharSink(resource, Charsets.UTF_8).write("java resource");
 
         project.execute("clean");
         ModelContainer<AndroidProject> modelContainer = project.model().fetchAndroidProjects();
@@ -131,7 +131,7 @@ public class LibDependencyTest {
                 .that()
                 .hasMethod("onCreate");
 
-        Files.write("changed java resource", resource, Charsets.UTF_8);
+        Files.asCharSink(resource, Charsets.UTF_8).write("changed java resource");
 
         project.executor().withInstantRun(new AndroidVersion(23, null)).run("assembleDebug");
         InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);
@@ -169,9 +169,10 @@ public class LibDependencyTest {
                   +"return \"someStringMessage=" + message + "\";\n"
                 +"}\n"
             +"}\n";
-        Files.write(javaCompile,
-                project.file("lib/src/main/java/com/android/tests/libstest/lib/Lib.java"),
-                Charsets.UTF_8);
+        Files.asCharSink(
+                        project.file("lib/src/main/java/com/android/tests/libstest/lib/Lib.java"),
+                        Charsets.UTF_8)
+                .write(javaCompile);
     }
 
     private void createJavaLibraryClass(String message) throws Exception {
@@ -183,6 +184,6 @@ public class LibDependencyTest {
                 +"        return \"someStringMessage=" + message + "\";\n"
                 +"    }\n"
                 +"}\n";
-        Files.write(java, new File(dir, "A.java"), Charsets.UTF_8);
+        Files.asCharSink(new File(dir, "A.java"), Charsets.UTF_8).write(java);
     }
 }

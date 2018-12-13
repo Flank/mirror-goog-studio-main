@@ -152,9 +152,7 @@ public class HotSwapWithNoChangesTest {
                 + "                .warning(\"" + message + "\");"
                 + "    }\n"
                 + "}\n";
-        Files.write(javaCompile,
-                project.file(ACTIVITY_PATH),
-                Charsets.UTF_8);
+        Files.asCharSink(project.file(ACTIVITY_PATH), Charsets.UTF_8).write(javaCompile);
     }
 
     @FunctionalInterface

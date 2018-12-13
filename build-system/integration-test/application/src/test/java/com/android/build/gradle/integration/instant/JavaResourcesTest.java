@@ -97,7 +97,7 @@ public class JavaResourcesTest {
         assertThat(mainArtifacts).hasSize(1);
         assertThatApk(new Apk(Iterables.getOnlyElement(mainArtifacts).file))
                 .containsFileWithContent("foo.txt", "foo");
-        Files.write("bar", resource, Charsets.UTF_8);
+        Files.asCharSink(resource, Charsets.UTF_8).write("bar");
 
         project.executor().withInstantRun(androidVersion).run("assembleDebug");
 

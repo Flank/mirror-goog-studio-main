@@ -120,9 +120,9 @@ public class HotSwapConnectedTest {
                         + "        }\n"
                         + "    }\n"
                         + "}\n";
-        Files.write(
-                javaCompile,
-                project.file("src/main/java/com/example/helloworld/HelloWorld.java"),
-                Charsets.UTF_8);
+        Files.asCharSink(
+                        project.file("src/main/java/com/example/helloworld/HelloWorld.java"),
+                        Charsets.UTF_8)
+                .write(javaCompile);
     }
 }
