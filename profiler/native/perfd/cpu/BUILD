@@ -14,6 +14,7 @@ cc_library(
         "simpleperf.cc",
         "simpleperf_manager.cc",
         "thread_monitor.cc",
+        "thread_parser.cc",
     ],
     hdrs = [
         "atrace.h",
@@ -29,6 +30,7 @@ cc_library(
         "simpleperf.h",
         "simpleperf_manager.h",
         "thread_monitor.h",
+        "thread_parser.h",
         "threads_sample.h",
     ],
     copts = ANDROID_COPTS + [
