@@ -19,7 +19,7 @@ import ${applicationPackage}.R;
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
-public class ${activityClass} extends ${superClass} {
+public class ${activityClass} extends AppCompatActivity {
     /**
      * Whether or not the system UI should be auto-hidden after
      * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
@@ -48,7 +48,7 @@ public class ${activityClass} extends ${superClass} {
 
         setContentView(R.layout.${layoutName});
         <#if parentActivityClass != "">
-            ActionBar actionBar = get${Support}ActionBar();
+            ActionBar actionBar = getSupportActionBar();
             if (actionBar != null) {
                 actionBar.setDisplayHomeAsUpEnabled(true);
             }
@@ -121,7 +121,7 @@ public class ${activityClass} extends ${superClass} {
 
     private void hide() {
         // Hide UI first
-        ActionBar actionBar = get${Support}ActionBar();
+        ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.hide();
         }
@@ -167,7 +167,7 @@ public class ${activityClass} extends ${superClass} {
         @Override
         public void run() {
             // Delayed display of UI elements
-            ActionBar actionBar = get${Support}ActionBar();
+            ActionBar actionBar = getSupportActionBar();
             if (actionBar != null) {
                 actionBar.show();
             }

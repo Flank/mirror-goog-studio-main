@@ -63,6 +63,7 @@ import com.android.builder.utils.ZipEntryUtils;
 import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.resources.FileStatus;
 import com.android.sdklib.AndroidVersion;
+import com.android.tools.build.apkzlib.sign.SigningOptions;
 import com.android.tools.build.apkzlib.utils.IOExceptionWrapper;
 import com.android.tools.build.apkzlib.zip.compress.Zip64NotSupportedException;
 import com.android.utils.FileUtils;
@@ -524,7 +525,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                 updatedJavaResources,
                 updatedAssets,
                 updatedAndroidResources,
-                updatedJniResources);
+                updatedJniResources,
+                false);
 
         /*
          * Update the known files.
@@ -625,7 +627,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             @NonNull ImmutableMap<RelativeFile, FileStatus> changedJavaResources,
             @NonNull ImmutableMap<RelativeFile, FileStatus> changedAssets,
             @NonNull ImmutableMap<RelativeFile, FileStatus> changedAndroidResources,
-            @NonNull ImmutableMap<RelativeFile, FileStatus> changedNLibs)
+            @NonNull ImmutableMap<RelativeFile, FileStatus> changedNLibs,
+            boolean isIncremental)
             throws IOException {
 
         ImmutableMap.Builder<RelativeFile, FileStatus> javaResourcesForApk =
@@ -664,11 +667,16 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         EvalIssueReporter issueReporter = getBuilder().getIssueReporter();
         // we are executing a task right now, so we can parse the manifest.
         BooleanSupplier isInExecutionPhase = () -> true;
+        SigningOptions.Validation validation =
+                isIncremental
+                        ? SigningOptions.Validation.ASSUME_VALID
+                        : SigningOptions.Validation.ASSUME_INVALID;
 
         try (IncrementalPackager packager =
                 new IncrementalPackagerBuilder(apkFormat)
                         .withOutputFile(outputFile)
-                        .withSigning(SigningConfigMetadata.Companion.load(signingConfig))
+                        .withSigning(
+                                SigningConfigMetadata.Companion.load(signingConfig), validation)
                         .withCreatedBy(getBuilder().getCreatedBy())
                         .withMinSdk(getMinSdkVersion())
                         // TODO: allow extra metadata to be saved in the split scope to avoid
@@ -862,7 +870,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                 changedJavaResources,
                 changedAssets,
                 changedAndroidResources,
-                changedNLibs);
+                changedNLibs,
+                true);
 
         /*
          * Update the cache

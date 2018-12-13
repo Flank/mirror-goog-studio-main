@@ -326,27 +326,12 @@ message GetThreadsRequest {
 }
 
 message GetThreadsResponse {
-  enum State {
-    UNSPECIFIED = 0;
-    RUNNING = 1;
-    SLEEPING = 2;
-    WAITING = 3;
-    ZOMBIE = 4;
-    STOPPED = 5;
-    TRACING = 6;
-    PAGING = 7;
-    DEAD = 8;
-    WAKEKILL = 9;
-    WAKING = 10;
-    PARKED = 11;
-  }
-
   // Snapshot of the threads that were alive at a given moment.
   message ThreadSnapshot {
     message Snapshot {
       int32 tid = 1;
       string name = 2;
-      State state = 3;
+      CpuThreadData.State state = 3;
     }
     repeated Snapshot threads = 1;
     int64 timestamp = 2;
@@ -354,7 +339,7 @@ message GetThreadsResponse {
 
   message ThreadActivity {
     int64 timestamp = 1;
-    State new_state = 2;
+    CpuThreadData.State new_state = 2;
   }
 
   // TODO: unify with Thread

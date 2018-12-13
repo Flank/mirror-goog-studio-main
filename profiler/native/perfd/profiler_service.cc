@@ -160,7 +160,6 @@ Status ProfilerServiceImpl::GetSessions(
     profiler::proto::GetSessionsResponse* response) {
   proto::GetEventGroupsRequest req;
   req.set_kind(proto::Event::SESSION);
-  req.set_end(proto::Event::SESSION_ENDED);
   req.set_from_timestamp(request->start_timestamp());
   req.set_to_timestamp(request->end_timestamp());
   for (auto& group : daemon_->GetEventGroups(&req)) {
@@ -169,13 +168,14 @@ Status ProfilerServiceImpl::GetSessions(
     session.set_session_id(group.group_id());
     for (int i = 0; i < group.events_size(); i++) {
       const auto& event = group.events(i);
-      if (event.has_session_started()) {
+      if (event.has_session()) {
+        auto session_started = event.session().session_started();
         session.set_device_id(device_id_in_last_begin_session_request);
-        session.set_pid(event.session_started().pid());
+        session.set_pid(session_started.pid());
         session.set_start_timestamp(event.timestamp());
         session.set_end_timestamp(LLONG_MAX);
       }
-      if (event.has_session_ended()) {
+      if (event.is_ended()) {
         session.set_end_timestamp(event.timestamp());
       }
     }

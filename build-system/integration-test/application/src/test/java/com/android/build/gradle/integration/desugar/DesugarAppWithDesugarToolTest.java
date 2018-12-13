@@ -40,6 +40,7 @@ import com.android.tools.ir.client.InstantRunArtifactType;
 import com.android.tools.ir.client.InstantRunBuildInfo;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -84,15 +85,14 @@ public class DesugarAppWithDesugarToolTest {
     @Test
     public void noTaskIfNoJava8Set() throws IOException, InterruptedException {
         GradleBuildResult result = getProjectExecutor().run("assembleDebug");
-        assertThat(result.getNotUpToDateTasks())
-                .doesNotContain(":transformClassesWithDesugarForDebug");
+        Truth.assertThat(result.findTask(":transformClassesWithDesugarForDebug")).isNull();
     }
 
     @Test
     public void taskRunsIfJava8Set() throws IOException, InterruptedException {
         enableJava8();
         GradleBuildResult result = getProjectExecutor().run("assembleDebug");
-        assertThat(result.getNotUpToDateTasks()).contains(":transformClassesWithDesugarForDebug");
+        assertThat(result.getTask(":transformClassesWithDesugarForDebug")).didWork();
     }
 
     @Test
@@ -203,7 +203,7 @@ public class DesugarAppWithDesugarToolTest {
                 getProjectExecutor()
                         .with(BooleanOption.ENABLE_BUILD_CACHE, false)
                         .run("assembleDebug");
-        assertThat(result.getNotUpToDateTasks()).contains(":transformClassesWithDesugarForDebug");
+        assertThat(result.getTask(":transformClassesWithDesugarForDebug")).didWork();
     }
 
     @Test

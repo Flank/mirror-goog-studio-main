@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.integration.application;
 
+import static java.lang.Math.max;
+
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
@@ -68,15 +70,15 @@ public class SigningConnectedTest {
 
         parameters.add(
                 new Object[] {
-                    "rsa_keystore.jks", "CERT.RSA", SignatureAlgorithm.RSA.minSdkVersion
+                    "rsa_keystore.jks", "CERT.RSA", max(SignatureAlgorithm.RSA.minSdkVersion, 9)
                 });
         parameters.add(
                 new Object[] {
-                    "dsa_keystore.jks", "CERT.DSA", SignatureAlgorithm.DSA.minSdkVersion
+                    "dsa_keystore.jks", "CERT.DSA", max(SignatureAlgorithm.DSA.minSdkVersion, 9)
                 });
         parameters.add(
                 new Object[] {
-                    "ec_keystore.jks", "CERT.EC", SignatureAlgorithm.ECDSA.minSdkVersion
+                    "ec_keystore.jks", "CERT.EC", max(SignatureAlgorithm.ECDSA.minSdkVersion, 9)
                 });
 
         return parameters;
@@ -103,6 +105,7 @@ public class SigningConnectedTest {
                         + "        minSdkVersion "
                         + minSdkVersion
                         + "\n"
+                        + "        testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'\n"
                         + "    }\n"
                         + "\n"
                         + "    signingConfigs {\n"
@@ -137,7 +140,11 @@ public class SigningConnectedTest {
                         + "            // and variant.outputs*.outputFile is set to point to these files.\n"
                         + "        }\n"
                         + "    }\n"
-                        + "}"
+                        + "}\n"
+                        + "dependencies {\n"
+                        + "  androidTestImplementation \"com.android.support.test:runner:${project.testSupportLibVersion}\"\n"
+                        + "  androidTestImplementation \"com.android.support.test:rules:${project.testSupportLibVersion}\"\n"
+                        + "}\n"
                         + "");
     }
 

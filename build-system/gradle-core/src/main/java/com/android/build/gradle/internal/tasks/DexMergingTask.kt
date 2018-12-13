@@ -24,11 +24,13 @@ import com.android.build.gradle.internal.api.artifact.singlePath
 import com.android.build.gradle.internal.crash.PluginCrashReporter
 import com.android.build.gradle.internal.dependency.getAttributeMap
 import com.android.build.gradle.internal.pipeline.StreamFilter
+import com.android.build.gradle.internal.pipeline.SubStream.FN_FOLDER_CONTENT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.transforms.DexMergerTransformCallable
+import com.android.build.gradle.options.BooleanOption
 import com.android.builder.dexing.DexMergerTool
 import com.android.builder.dexing.DexingType
 import com.android.ide.common.blame.Message
@@ -39,8 +41,11 @@ import com.android.ide.common.blame.parser.ToolOutputParser
 import com.android.ide.common.process.ProcessException
 import com.android.ide.common.process.ProcessOutput
 import com.android.utils.FileUtils
+import com.android.utils.PathUtils.toSystemIndependentPath
 import com.google.common.base.Throwables
+import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -104,9 +109,27 @@ open class DexMergingTask : AndroidVariantTask() {
     var mainDexListFile: BuildableArtifact? = null
         private set
 
+    private lateinit var dexFiles: FileCollection
+    /**
+     * Until we migrate dexing transform to use buildable artifacts (b/111156401), we need to filter
+     * out the __content__.json file from inputs, as it breaks caching (see b/120413559).
+     *
+     * DO NOT USE THIS WITHIN TASK, USE THE PROPERTY:
+     * Dex merger knows how to handle jars and directories containing dex files. Because of that,
+     * getDexFilesForInput() cannot be used to pass files for merging as that would contain actual
+     * .dex files. Therefore, we need to compute input separately, until we migrate dexing off the
+     * transforms.
+     */
+    @InputFiles
+    @PathSensitive(PathSensitivity.NONE)
+    fun getDexFilesForInput(): FileCollection =
+        dexFiles.asFileTree.filter { it.name != FN_FOLDER_CONTENT }
+
+    // Dummy folder, used as a way to set up dependency
+    @get:Optional
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.NONE)
-    lateinit var dexFiles: FileCollection
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    var duplicateClassesCheck: BuildableArtifact? = null
         private set
 
     @get:OutputDirectory
@@ -170,7 +193,12 @@ open class DexMergingTask : AndroidVariantTask() {
             task.messageReceiver = variantScope.globalScope.messageReceiver
             task.dexMerger = variantScope.dexMerger
             task.minSdkVersion = variantScope.minSdkVersion.featureLevel
-            task.isDebuggable = variantScope.variantConfiguration.buildType.isDebuggable()
+            task.isDebuggable = variantScope.variantConfiguration.buildType.isDebuggable
+            if (variantScope.globalScope.projectOptions[BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK]) {
+                task.duplicateClassesCheck = variantScope.artifacts.getFinalArtifactFiles(
+                    InternalArtifactType.DUPLICATE_CLASSES_CHECK
+                )
+            }
             task.outputDir = output
         }
 
@@ -259,10 +287,31 @@ open class DexMergingTask : AndroidVariantTask() {
     }
 }
 
-private fun getAllRegularFiles(fc: FileCollection): Collection<File> {
+/**
+ * This returns a list of files from a file collection. If a file is in a file collection it is
+ * added to the resulting set. If it is a directory, all files all collected recursively, and they
+ * are sorted. This ensures that files from a single directory are always in deterministic order.
+ *
+ * We do not sort all files from a file collection as Gradle ensures consistent ordering of file
+ * collection content across builds. This holds for artifact transform outputs that are in the file
+ * collection. In fact, sorting it means that artifact transform outputs for library projects will
+ * not be consistent across builds. See http://b/119064593#comment11 for details.
+ */
+private fun getAllRegularFiles(fc: FileCollection): List<File> {
     return fc.files.flatMap {
         if (it.isFile) listOf(it)
-        else it.walkTopDown().filter { it.isFile }.toList()
+        else {
+            it.walkTopDown()
+                .filter { it.isFile }
+                .sortedWith(
+                    Comparator { left, right ->
+                        val systemIndependentLeft = toSystemIndependentPath(left.toPath())
+                        val systemIndependentRight = toSystemIndependentPath(right.toPath())
+                        systemIndependentLeft.compareTo(systemIndependentRight)
+                    }
+                )
+                .toList()
+        }
     }
 }
 
@@ -324,7 +373,7 @@ class DexMergingTaskDelegate(
             if (dexFiles.files.size >= mergingThreshold) {
                 submitForMerging(processOutput).join()
             } else {
-                for (file in getAllRegularFiles(dexFiles).sorted().withIndex()) {
+                for (file in getAllRegularFiles(dexFiles).withIndex()) {
                     file.value.copyTo(outputDir.resolve("classes_${file.index}.${SdkConstants.EXT_DEX}"))
                 }
             }

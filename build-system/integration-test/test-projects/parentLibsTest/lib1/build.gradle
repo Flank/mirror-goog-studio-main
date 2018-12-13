@@ -7,7 +7,12 @@ android {
 
     defaultConfig {
         minSdkVersion rootProject.supportLibMinSdk
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
         targetSdkVersion 15
     }
+}
+dependencies {
+    androidTestImplementation "com.android.support.test:runner:${project.testSupportLibVersion}"
+    androidTestImplementation "com.android.support.test:rules:${project.testSupportLibVersion}"
 }

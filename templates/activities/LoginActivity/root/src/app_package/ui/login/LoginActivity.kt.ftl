@@ -17,7 +17,7 @@ import android.widget.Toast
 
 import ${escapeKotlinIdentifiers(packageName)}.R
 
-class ${activityClass} : ${superClass}() {
+class ${activityClass} : AppCompatActivity() {
 
     private lateinit var loginViewModel: LoginViewModel
 

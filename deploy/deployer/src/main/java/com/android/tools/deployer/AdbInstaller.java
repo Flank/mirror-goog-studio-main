@@ -212,6 +212,8 @@ public class AdbInstaller implements Installer {
         adb.shell(new String[] {"mkdir", "-p", Deployer.INSTALLER_DIRECTORY}, null);
         adb.push(installerFile.getAbsolutePath(), INSTALLER_PATH);
         adb.shell(new String[] {"chmod", "+x", INSTALLER_PATH}, null);
+
+        installerFile.delete();
     }
 
     private InputStream getResource(String path) throws FileNotFoundException {

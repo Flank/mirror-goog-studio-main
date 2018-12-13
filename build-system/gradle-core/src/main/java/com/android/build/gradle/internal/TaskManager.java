@@ -46,7 +46,6 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGE
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JNI_LIBS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.NDK_LIBS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_LIB;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_CLASSES;
@@ -106,6 +105,7 @@ import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport;
 import com.android.build.gradle.internal.tasks.AndroidReportTask;
+import com.android.build.gradle.internal.tasks.CheckDuplicateClassesTask;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.CheckProguardFiles;
 import com.android.build.gradle.internal.tasks.DependencyReportTask;
@@ -2373,6 +2373,10 @@ public abstract class TaskManager {
                 .addTransform(taskFactory, variantScope, preDexTransform)
                 .ifPresent(variantScope::addColdSwapBuildTask);
 
+        if (projectOptions.get(BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK)) {
+            taskFactory.register(new CheckDuplicateClassesTask.CreationAction(variantScope));
+        }
+
         if (enableDexingArtifactTransform) {
             createDexMergingWithArtifactTransforms(variantScope, dexingType);
         } else {
@@ -2409,6 +2413,10 @@ public abstract class TaskManager {
                                         .getFinalArtifactFiles(
                                                 InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST)
                                 : null,
+                        variantScope
+                                .getArtifacts()
+                                .getFinalArtifactFiles(
+                                        InternalArtifactType.DUPLICATE_CLASSES_CHECK),
                         variantScope.getGlobalScope().getMessageReceiver(),
                         variantScope.getDexMerger(),
                         variantScope.getMinSdkVersion().getFeatureLevel(),

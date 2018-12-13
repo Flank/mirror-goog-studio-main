@@ -20,17 +20,13 @@ public class DeployerException extends Exception {
 
     private final Error error;
 
+
     public enum Error {
-        SWAP_NOT_INSTALLED,
         DUMP_FAILED,
-        READ_HOST_APK_FAILED,
-        CANNOT_SWAP,
         CANNOT_SWAP_NEW_CLASS,
         REMOTE_APK_NOT_FOUND_ON_DB,
         REDEFINER_ERROR,
         DIFFERENT_NUMBER_OF_APKS,
-        LOCAL_APK_NOT_FOUND,
-        ERROR_EXECUTING_SWAP,
         DUMP_UNKNOWN_PACKAGE,
         INVALID_APK,
         FAILED_TO_SPLIT_DEXES,
@@ -49,6 +45,7 @@ public class DeployerException extends Exception {
         this.error = error;
     }
 
+
     public DeployerException(Error error, Throwable t) {
         super(t);
         this.error = error;
@@ -57,4 +54,5 @@ public class DeployerException extends Exception {
     public Error getError() {
         return error;
     }
+
 }

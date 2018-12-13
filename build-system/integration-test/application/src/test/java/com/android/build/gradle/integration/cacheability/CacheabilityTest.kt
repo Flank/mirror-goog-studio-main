@@ -61,15 +61,16 @@ class CacheabilityTest {
                 ),
                 FROM_CACHE to setOf(
                     ":preDebugBuild",
-                    ":compileDebugRenderscript",
                     ":generateDebugBuildConfig",
                     ":javaPreCompileDebug",
                     ":generateDebugResValues",
                     ":mergeDebugResources",
                     ":compileDebugJavaWithJavac",
+                    ":checkDebugDuplicateClasses",
                     ":mergeDebugShaders",
                     ":mergeDebugAssets",
                     ":mergeExtDexDebug",
+                    ":mergeDexDebug",
                     ":mergeDebugJniLibFolders"
                 ),
                 DID_WORK to setOf(
@@ -81,7 +82,6 @@ class CacheabilityTest {
                     ":processDebugResources",
                     ":compileDebugShaders",
                     ":transformClassesWithDexBuilderForDebug",
-                    ":mergeDexDebug",
                     ":validateSigningDebug",
                     ":signingConfigWriterDebug",
                     ":transformNativeLibsWithMergeJniLibsForDebug",
@@ -91,6 +91,7 @@ class CacheabilityTest {
                 ),
                 SKIPPED to setOf(
                     ":compileDebugAidl",
+                    ":compileDebugRenderscript",
                     ":generateDebugSources",
                     ":generateDebugAssets",
                     ":processDebugJavaRes",
@@ -115,7 +116,6 @@ class CacheabilityTest {
             ":processDebugResources" /* Bug 120414113 */,
             ":compileDebugShaders" /* Bug 120413401 */,
             ":transformClassesWithDexBuilderForDebug" /* Bug 74595921 */,
-            ":mergeDexDebug" /* Bug 120413559 */,
             ":signingConfigWriterDebug" /* Bug 120411939 */,
             ":transformNativeLibsWithMergeJniLibsForDebug" /* Bug 74595223 */,
             ":transformNativeLibsWithStripDebugSymbolForDebug" /* Bug 120414535 */,
@@ -164,8 +164,7 @@ class CacheabilityTest {
         // When running this test with bazel, StripDebugSymbolTransform does not run as the NDK
         // directory is not available. We need to remove that task from the expected tasks' states.
         var expectedDidWorkTasks = EXPECTED_TASK_STATES[DID_WORK]!!
-        if (!result.getTask(":transformNativeLibsWithStripDebugSymbolForDebug")
-                .wasPlannedForExecution()) {
+        if (result.findTask(":transformNativeLibsWithStripDebugSymbolForDebug") == null) {
             expectedDidWorkTasks =
                     expectedDidWorkTasks.minus(":transformNativeLibsWithStripDebugSymbolForDebug")
         }

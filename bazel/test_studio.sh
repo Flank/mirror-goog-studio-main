@@ -8,6 +8,7 @@ readonly build_number="$3"
 
 readonly script_dir="$(dirname "$0")"
 
+build_tag_filters=-no_linux
 test_tag_filters=-no_linux,-no_test_linux,-qa_sanity,-qa_fast,-qa_unreliable
 
 # If the build number starts with a 'P', this is a pre-submit builder.
@@ -27,7 +28,22 @@ fi
 readonly command_log="$("${script_dir}"/bazel info ${config_options} command_log)"
 
 # Run Bazel
-"${script_dir}/bazel" --max_idle_secs=60 test ${config_options} --build_tag_filters=-no_linux --test_tag_filters=${test_tag_filters} -- $(< "${script_dir}/targets") //tools/base/bazel/foundry:test
+"${script_dir}/bazel" \
+  --max_idle_secs=60 \
+  test \
+  ${config_options} \
+  --build_tag_filters=${build_tag_filters} \
+  --test_tag_filters=${test_tag_filters} \
+  -- \
+  @blaze//:aswb_tests \
+  //prebuilts/studio/... \
+  //prebuilts/tools/... \
+  //tools/... \
+  -//tools/base:coverage_report \
+  -//tools/base:coverage_report_collection_binary \
+  -//tools/base:coverage_report_source_and_classes \
+  -//tools/base:coverage_report_source_and_classes.map \
+  //tools/base/bazel/foundry:test
 
 readonly bazel_status=$?
 
@@ -36,7 +52,7 @@ if [[ -d "${dist_dir}" ]]; then
   readonly upsalite_id="$(sed -n 's/\r$//;s/^.* invocation_id: //p' "${command_log}")"
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${upsalite_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
 
-  # follow conventions to use bazel-testlog-forwarding on ATP
+  # on AB/ATP, put JUnit XML in place for junit-xml-forwarding
   readonly testlogs_dir="$("${script_dir}/bazel" info bazel-testlogs ${config_options})"
   mkdir "${dist_dir}"/bazel-testlogs
   (cd "${testlogs_dir}" && zip -R "${dist_dir}"/bazel-testlogs/xml_files.zip "*.xml")

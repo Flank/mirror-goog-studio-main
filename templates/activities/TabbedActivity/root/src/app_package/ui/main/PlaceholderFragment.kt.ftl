@@ -6,8 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import ${getMaterialComponentName('android.support.v4.app.Fragment', useAndroidX)}
-import ${getMaterialComponentName('android.arch.lifecycle', useAndroidX)}.Observer
-import ${getMaterialComponentName('android.arch.lifecycle', useAndroidX)}.ViewModelProviders
+import ${getMaterialComponentName('android.arch.lifecycle.Observer', useAndroidX)}
+import ${getMaterialComponentName('android.arch.lifecycle.ViewModelProviders', useAndroidX)}
 import ${packageName}.R
 
 /**

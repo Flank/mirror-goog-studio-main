@@ -1,5 +1,15 @@
+# compiler: R8
+# compiler_version: 1.4.14-dev
+# min_api: 1
+# compiler_hash: engineering
+
+    # test comment with indent
+
 AnotherClass -> a:
-    void <init>() -> <init>
+
+    # test comment with indent
+
+    47:47:void <init>() -> <init>
 SomeAnnotation -> SomeAnnotation:
 Test2 -> Test2:
     int aField -> aField
@@ -9,4 +19,4 @@ Test2 -> Test2:
     java.util.List getList() -> getList
 TestSubclass -> TestSubclass:
     void <init>() -> <init>
-    java.util.List getAnotherList() -> getAnotherList
+    37:37:java.util.List getAnotherList():21:21 -> getAnotherList

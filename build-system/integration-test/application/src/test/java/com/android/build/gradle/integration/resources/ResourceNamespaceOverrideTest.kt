@@ -159,10 +159,10 @@ android {
 """)
         val result = project.executor().run(":assembleFreePlayDebug")
 
-        assertThat(result.getTask(":replaceFree")).wasExecuted()
-        assertThat(result.getTask(":appendToPlay")).wasExecuted()
-        assertThat(result.getTask(":appendToPaid")).wasNotExecuted()
-        assertThat(result.getTask(":replaceDebug")).wasExecuted()
+        assertThat(result.getTask(":replaceFree")).didWork()
+        assertThat(result.getTask(":appendToPlay")).didWork()
+        assertThat(result.findTask(":appendToPaid")).isNull()
+        assertThat(result.getTask(":replaceDebug")).didWork()
         assertThat(result.getTask(":appendTo1Debug")).ranAfter(":replaceDebug")
         assertThat(result.getTask(":appendTo2Debug")).ranAfter(":appendTo1Debug")
 

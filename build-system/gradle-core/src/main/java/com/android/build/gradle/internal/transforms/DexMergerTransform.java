@@ -115,6 +115,7 @@ public class DexMergerTransform extends Transform {
 
     @NonNull private final DexingType dexingType;
     @Nullable private final BuildableArtifact mainDexListFile;
+    @NonNull private final BuildableArtifact duplicateClassesCheck;
     @NonNull private final DexMergerTool dexMerger;
     private final int minSdkVersion;
     private final boolean isDebuggable;
@@ -126,6 +127,7 @@ public class DexMergerTransform extends Transform {
     public DexMergerTransform(
             @NonNull DexingType dexingType,
             @Nullable BuildableArtifact mainDexListFile,
+            @NonNull BuildableArtifact duplicateClassesCheck,
             @NonNull MessageReceiver messageReceiver,
             @NonNull DexMergerTool dexMerger,
             int minSdkVersion,
@@ -134,6 +136,7 @@ public class DexMergerTransform extends Transform {
             boolean isInInstantRunMode) {
         this.dexingType = dexingType;
         this.mainDexListFile = mainDexListFile;
+        this.duplicateClassesCheck = duplicateClassesCheck;
         this.dexMerger = dexMerger;
         this.minSdkVersion = minSdkVersion;
         this.isDebuggable = isDebuggable;
@@ -175,10 +178,11 @@ public class DexMergerTransform extends Transform {
     @NonNull
     @Override
     public Collection<SecondaryFile> getSecondaryFiles() {
+        SecondaryFile dupCheck = SecondaryFile.nonIncremental(duplicateClassesCheck);
         if (mainDexListFile != null) {
-            return ImmutableList.of(SecondaryFile.nonIncremental(mainDexListFile));
+            return ImmutableList.of(SecondaryFile.nonIncremental(mainDexListFile), dupCheck);
         } else {
-            return ImmutableList.of();
+            return ImmutableList.of(dupCheck);
         }
     }
 

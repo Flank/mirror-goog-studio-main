@@ -77,7 +77,6 @@ void EventBuffer::InterruptWriteEvents() {
 
 std::vector<proto::EventGroup> EventBuffer::Get(int64_t session_id,
                                                 proto::Event::Kind kind,
-                                                proto::Event::Type end,
                                                 int64_t from, int64_t to) {
   std::lock_guard<std::mutex> lock(mutex_);
   std::set<int64_t> group_ids;
@@ -87,7 +86,7 @@ std::vector<proto::EventGroup> EventBuffer::Get(int64_t session_id,
       const auto& event = g.events(j);
       if (event.kind() == kind) {
         if (event.timestamp() < from) {
-          if (event.type() == end) {
+          if (event.is_ended()) {
             group_ids.erase(event.group_id());
           } else {
             group_ids.insert(event.group_id());

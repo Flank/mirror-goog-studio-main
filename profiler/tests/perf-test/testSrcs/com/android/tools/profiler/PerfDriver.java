@@ -55,14 +55,20 @@ public class PerfDriver implements TestRule {
     private PerfdDriver myPerfdDriver;
     private GrpcUtils myGrpc;
     private boolean myIsOPlusDevice;
+    private boolean myUnifiedPipeline;
     private DeviceProperties myPropertiesFile;
     private int mySdkLevel;
     private Session mySession;
     private int myLiveAllocSamplingRate = 1;
 
     public PerfDriver(String activityClass, int sdkLevel) {
+        this(activityClass, sdkLevel, false);
+    }
+
+    public PerfDriver(String activityClass, int sdkLevel, boolean unifiedPipeline) {
         myActivityClass = activityClass;
         mySdkLevel = sdkLevel;
+        myUnifiedPipeline = unifiedPipeline;
         myIsOPlusDevice = TestUtils.isOPlusDevice(sdkLevel);
         String codeName;
         if (mySdkLevel >= 28) {
@@ -261,6 +267,7 @@ public class PerfDriver implements TestRule {
                             .setSocketType(Agent.SocketType.UNSPECIFIED_SOCKET)
                             .setEnergyProfilerEnabled(true)
                             .setAndroidFeatureLevel(sdkLevel)
+                            .setUnifiedPipeline(myUnifiedPipeline)
                             .build();
             config.writeTo(outputStream);
             outputStream.flush();

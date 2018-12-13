@@ -20,10 +20,13 @@ option java_package = "com.android.tools.profiler.proto";
 option java_outer_classname = "Agent";
 
 import "memory.proto";
+import "common.proto";
 
 service AgentService {
   // A simple ping mechanism to notify perfd of the agent's existence, vice versa.
   rpc HeartBeat(HeartBeatRequest) returns (HeartBeatResponse) {}
+
+  rpc SendEvent(SendEventRequest) returns (EmptyResponse) {}
 }
 
 message HeartBeatRequest {
@@ -33,6 +36,24 @@ message HeartBeatRequest {
 }
 
 message HeartBeatResponse {
+}
+
+message SendEventRequest {
+  // The id of the process generating the Event.
+  int32 pid = 1;
+  // The event. Note that the app agent does not have knowledge about sessions.
+  // So it is the responsibility of the server (perfd) to resolve and populate
+  // the |session_id| field in the Event based on the pid.
+  Event event = 2;
+}
+
+// TODO b/120504084 replace with google.protobuf.empty
+// Currently there are multiple locations where the well known protos
+// exists in our codebase. One inside our prebuilt maven repo, the other
+// one in the external protobuf repo. For some reason it is not as simple
+// as including @protobuf_repo//:well_known_protos in cc_grpc_proto_library
+// rule, so more investigation is needed.
+message EmptyResponse {
 }
 
 enum SocketType {

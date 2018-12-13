@@ -192,7 +192,7 @@ public class AndroidTestResourcesTest {
                         + "                    private TextView mainAppTextView;\n"
                         + "                    private Object testLayout;\n"
                         + "\n"
-                        + "\n"
+                        + "\n                  @Before\n"
                         + "                    public void setUp() {\n"
                         + "                        final HelloWorld a = rule.getActivity();\n"
                         + "                        mainAppTextView = (TextView) a.findViewById(\n"

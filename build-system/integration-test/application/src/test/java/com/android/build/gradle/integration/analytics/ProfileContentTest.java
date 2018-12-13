@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.analytics;
 
+import static com.android.build.gradle.integration.common.fixture.TestVersions.SUPPORT_LIB_MIN_SDK;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -82,7 +83,7 @@ public class ProfileContentTest {
                     .doesNotContain(GradleBuildProject.GradlePlugin.UNKNOWN_GRADLE_PLUGIN);
             assertThat(gbp.getVariantCount()).isGreaterThan(0);
             GradleBuildVariant gbv = gbp.getVariant(0);
-            assertThat(gbv.getMinSdkVersion().getApiLevel()).isEqualTo(3);
+            assertThat(gbv.getMinSdkVersion().getApiLevel()).isEqualTo(SUPPORT_LIB_MIN_SDK);
             assertThat(gbv.hasTargetSdkVersion()).named("has target sdk version").isFalse();
             assertThat(gbv.hasMaxSdkVersion()).named("has max sdk version").isFalse();
             assertThat(new HashSet<>(profile.getRawProjectIdList()))

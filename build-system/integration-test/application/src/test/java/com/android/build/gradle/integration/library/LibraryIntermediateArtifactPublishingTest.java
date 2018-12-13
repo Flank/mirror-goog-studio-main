@@ -27,6 +27,7 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibrary
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.utils.FileUtils;
+import com.google.common.truth.Truth;
 import java.io.File;
 import java.io.IOException;
 import org.junit.Before;
@@ -52,14 +53,14 @@ public class LibraryIntermediateArtifactPublishingTest {
                 project.executor()
                         .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, false)
                         .run(":app:assembleDebug");
-        assertThat(result.getTask(":lib:createFullJarDebug")).wasNotExecuted();
+        Truth.assertThat(result.findTask(":lib:createFullJarDebug")).isNull();
         assertThat(getJar("full.jar")).doesNotExist();
     }
 
     @Test
     public void testFullJarUpToDate() throws IOException, InterruptedException {
         GradleBuildResult result = project.executor().run(":lib:createFullJarDebug");
-        assertThat(result.getTask(":lib:createFullJarDebug")).wasExecuted();
+        assertThat(result.getTask(":lib:createFullJarDebug")).didWork();
 
         result = project.executor().run(":lib:createFullJarDebug");
         assertThat(result.getTask(":lib:createFullJarDebug")).wasUpToDate();
@@ -92,7 +93,7 @@ public class LibraryIntermediateArtifactPublishingTest {
                         + "    }\n"
                         + "}\n");
         GradleBuildResult result = project.executor().run(":app:verify");
-        assertThat(result.getTask(":lib:createFullJarDebug")).wasExecuted();
+        assertThat(result.getTask(":lib:createFullJarDebug")).didWork();
         File fullJar = getJar("full.jar");
         assertThatZip(fullJar).contains("com/example/helloworld/HelloWorld.class");
         assertThatZip(fullJar).contains("foo.txt");

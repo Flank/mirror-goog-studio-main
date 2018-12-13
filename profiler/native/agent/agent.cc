@@ -57,12 +57,13 @@ Agent& Agent::Instance(const Config* config) {
 }
 
 Agent::Agent(const Config& config)
-    : memory_component_(nullptr),  // set in ConnectToPerfd()
+    : agent_config_(config.GetAgentConfig()),
+      memory_component_(nullptr),  // set in ConnectToPerfd()
       background_queue_("Studio:Agent", kMaxBackgroundTasks),
       can_grpc_target_change_(false),
       grpc_target_initialized_(false) {
   if (profiler::DeviceInfo::feature_level() >= 26 &&
-      config.GetAgentConfig().socket_type() == proto::ABSTRACT_SOCKET) {
+      agent_config_.socket_type() == proto::ABSTRACT_SOCKET) {
     // For O and post-O devices, we used an existing socket of which the file
     // descriptor will be provided into kAgentSocketName. This is provided via
     // socket_thread_ so we don't setup here.
@@ -71,7 +72,7 @@ Agent::Agent(const Config& config)
   } else {
     // Pre-O, we don't need to start the socket thread, as the agent
     // communicates to perfd via a fixed port.
-    ConnectToPerfd(config.GetAgentConfig().service_address());
+    ConnectToPerfd(agent_config_.service_address());
     StartHeartbeat();
   }
 
@@ -85,6 +86,26 @@ void Agent::StartHeartbeat() {
     return;
   }
   heartbeat_thread_ = std::thread(&Agent::RunHeartbeatThread, this);
+}
+
+void Agent::SubmitAgentTasks(const std::vector<AgentServiceTask>& tasks) {
+  background_queue_.EnqueueTask([this, tasks] {
+    for (auto task : tasks) {
+      if (can_grpc_target_change_) {
+        bool success = false;
+        do {
+          // Each grpc call needs a new ClientContext.
+          grpc::ClientContext ctx;
+          Config::SetClientContextTimeout(&ctx, kGrpcTimeoutSec);
+          Status status = task(agent_stub(), ctx);
+          success = status.ok();
+        } while (!success);
+      } else {
+        grpc::ClientContext ctx;
+        task(agent_stub(), ctx);
+      }
+    }
+  });
 }
 
 void Agent::SubmitNetworkTasks(const std::vector<NetworkServiceTask>& tasks) {

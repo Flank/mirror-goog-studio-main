@@ -1,10 +1,10 @@
 package ${packageName}.ui.main
 
-import ${getMaterialComponentName('android.arch.lifecycle', useAndroidX)}.LiveData
-import ${getMaterialComponentName('android.arch.lifecycle', useAndroidX)}.MutableLiveData
-import ${getMaterialComponentName('android.arch.lifecycle', useAndroidX)}.Transformations
-import ${getMaterialComponentName('android.arch.lifecycle', useAndroidX)}.ViewModel
-import ${getMaterialComponentName('android.arch.lifecycle', useAndroidX)}.ViewModelProvider
+import ${getMaterialComponentName('android.arch.lifecycle.LiveData', useAndroidX)}
+import ${getMaterialComponentName('android.arch.lifecycle.MutableLiveData', useAndroidX)}
+import ${getMaterialComponentName('android.arch.lifecycle.Transformations', useAndroidX)}
+import ${getMaterialComponentName('android.arch.lifecycle.ViewModel', useAndroidX)}
+import ${getMaterialComponentName('android.arch.lifecycle.ViewModelProvider', useAndroidX)}
 
 class PageViewModel : ViewModel() {
 

@@ -1679,6 +1679,8 @@ public final class SdkConstants {
     public static final String LAYOUT_CONSTRAINT_DEPRECATED_GUIDE_PERCENT =
             "layout_constraintGuide_Percent"; //$NON-NLS-1$
     public static final String ATTR_LOCKED = "locked"; //$NON-NLS-1$
+    public static final String ATTR_CONSTRAINT_LAYOUT_DESCRIPTION =
+      "layoutDescription"; //$NON-NLS-1$
 
     // AbsListView
     public static final String ATTR_LIST_SELECTOR = "listSelector";

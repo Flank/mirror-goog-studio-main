@@ -251,7 +251,7 @@ grpc::Status Daemon::Execute(const proto::Command& command_data) {
 
 std::vector<proto::EventGroup> Daemon::GetEventGroups(
     const proto::GetEventGroupsRequest* request) {
-  return buffer_->Get(request->session_id(), request->kind(), request->end(),
+  return buffer_->Get(request->session_id(), request->kind(),
                       request->from_timestamp(), request->to_timestamp());
 }
 

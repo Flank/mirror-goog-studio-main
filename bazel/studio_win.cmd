@@ -40,7 +40,7 @@ echo "Called with the following:  OUTDIR=%OUTDIR%, DISTDIR=%DISTDIR%, BUILDNUMBE
 echo "Command Log Location: %COMMANDLOGLOC%"
 
 @rem Run Bazel
-CALL %SCRIPTDIR%bazel.cmd --max_idle_secs=60 test %CONFIGOPTIONS% %AUTHCREDS% --build_tag_filters=-no_windows --test_tag_filters=%TESTTAGFILTERS% -- //tools/base/...
+CALL %SCRIPTDIR%bazel.cmd --max_idle_secs=60 test %CONFIGOPTIONS% %AUTHCREDS% --build_tag_filters=-no_windows --test_tag_filters=%TESTTAGFILTERS% -- //tools/base/... -//tools/base:coverage_report -//tools/base:coverage_report_collection_binary -//tools/base:coverage_report_source_and_classes -//tools/base:coverage_report_source_and_classes.map
 
 SET EXITCODE=%errorlevel%
 

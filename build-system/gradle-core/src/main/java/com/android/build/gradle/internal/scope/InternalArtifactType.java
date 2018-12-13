@@ -240,8 +240,14 @@ public enum InternalArtifactType implements ArtifactType {
     // The main dex list for the bundle, unlike the main dex list for a monolithic application, this
     // analyzes all of the dynamic feature classes too.
     MAIN_DEX_LIST_FOR_BUNDLE,
-    // the full bundle, including feature module. This is only valid for the base module.
+    // The final Bundle, including feature module, ready for consumption at Play Store.
+    // This is only valid for the base module.
     BUNDLE(Category.OUTPUTS, Kind.FILE),
+    // The bundle artifact, including feature module, used as the base for further processing,
+    // like extracting APKs. It's cheaper to produce but not suitable as a final artifact to send
+    // to the Play Store.
+    // This is only valid for the base module.
+    INTERMEDIARY_BUNDLE(Category.INTERMEDIATES, Kind.FILE),
     // APK Set archive with APKs generated from a bundle.
     APKS_FROM_BUNDLE,
     // output of ExtractApks applied to APKS_FROM_BUNDLE and a device config.
@@ -290,8 +296,17 @@ public enum InternalArtifactType implements ArtifactType {
     METADATA_FEATURE_DECLARATION,
     METADATA_FEATURE_MANIFEST,
     METADATA_INSTALLED_BASE_DECLARATION,
+    // The metadata for the library dependencies, direct and indirect, published for each module.
+    METADATA_LIBRARY_DEPENDENCIES_REPORT(Kind.FILE),
 
-    INSTANT_RUN_APP_INFO_OUTPUT_FILE;
+    // The library dependencies report, direct and indirect, published for the entire app to
+    // package in the bundle.
+    BUNDLE_DEPENDENCY_REPORT(Kind.FILE),
+
+    INSTANT_RUN_APP_INFO_OUTPUT_FILE,
+
+    // A dummy output (folder) result of CheckDuplicateClassesTask execution
+    DUPLICATE_CLASSES_CHECK;
 
     /**
      * Defines the kind of artifact type. this will be used to determine the output file location

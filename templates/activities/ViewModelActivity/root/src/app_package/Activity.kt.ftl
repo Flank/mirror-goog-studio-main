@@ -7,7 +7,7 @@ import kotlinx.android.synthetic.main.${layoutName}.*
 </#if>
 import ${escapeKotlinIdentifiers(packageName)}.${escapeKotlinIdentifiers(fragmentPackage)}.${fragmentClass}
 
-class ${activityClass} : ${superClass}() {
+class ${activityClass} : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -16,10 +16,10 @@
 
 package com.android.build.gradle.integration.feature;
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.android.testutils.truth.MoreTruth.assertThatZip;
-import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
 import com.android.build.OutputFile;
@@ -345,7 +345,7 @@ public class FeatureTest {
 
         multi = assemble.getBuildOutputContainer().getOnlyModelMap();
 
-        assertThat(assemble.getNotUpToDateTasks()).contains(":feature:assembleDebug");
+        assertThat(assemble.getTask(":feature:assembleDebug")).wasSkipped();
 
         Map<String, File> modifiedApks =
                 getVariantNameToOutputFileMap(multi.get(":feature").getVariantsBuildOutput());
@@ -397,7 +397,7 @@ public class FeatureTest {
 
         multi = assembleDebug.getBuildOutputContainer().getOnlyModelMap();
 
-        assertThat(assembleDebug.getNotUpToDateTasks()).contains(":feature:assembleDebug");
+        assertThat(assembleDebug.getTask(":feature:assembleDebug")).wasSkipped();
 
         Map<String, File> modifiedApks =
                 getVariantNameToOutputFileMap(multi.get(":feature").getVariantsBuildOutput());
@@ -436,7 +436,7 @@ public class FeatureTest {
         Files.write(content, featureManifest, Charsets.UTF_8);
 
         GradleBuildResult run = project.executor().run("assembleDebug");
-        assertThat(run.getNotUpToDateTasks()).contains(":baseFeature:processDebugFeatureManifest");
+        assertThat(run.getTask(":baseFeature:processDebugFeatureManifest")).didWork();
     }
 
     private static String generateClass() {

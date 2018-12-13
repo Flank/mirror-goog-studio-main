@@ -26,7 +26,7 @@ private const val TOAST_TEXT = "Test ads are being shown. " +
         "with your own ad unit ID."
 private const val START_LEVEL = 1
 
-class ${activityClass} : ${superClass}() {
+class ${activityClass} : AppCompatActivity() {
 
 <#if adFormat == "interstitial">
     private var currentLevel: Int = 0

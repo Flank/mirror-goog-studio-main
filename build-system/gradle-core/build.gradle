@@ -6,6 +6,7 @@ apply plugin: 'kotlin'
 apply plugin: 'jacoco-tools-base'
 apply plugin: 'clone-artifacts'
 apply plugin: 'license-report'
+apply plugin: 'com.google.protobuf'
 
 configurations {
     provided
@@ -58,6 +59,7 @@ dependencies {
     compile libs.bundle_tool
     compile libs.jetifier_core
     compile libs.jetifier_processor
+    compile libs.protobuf
     compile libs.protobuf_util
 
     compileOnly libs.jacoco_core
@@ -86,6 +88,12 @@ dependencies {
     testCompile libs.jsoup
     testCompile libs.jacoco_core
     testCompile libs.jacoco_report
+}
+
+protobuf {
+    protoc {
+        artifact = libs.proto_compiler
+    }
 }
 
 compileKotlin {

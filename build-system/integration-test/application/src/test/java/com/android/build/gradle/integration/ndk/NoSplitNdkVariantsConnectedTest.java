@@ -53,6 +53,11 @@ public class NoSplitNdkVariantsConnectedTest {
                         + "    buildToolsVersion '"
                         + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
                         + "'\n"
+                        + "    defaultConfig {\n"
+                        + "      minSdkVersion rootProject.supportLibMinSdk\n"
+                        + "      testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'\n"
+                        + "    }\n"
+                        + "\n"
                         + "    externalNativeBuild {\n"
                         + "        ndkBuild {\n"
                         + "            path 'Android.mk'\n"
@@ -77,7 +82,12 @@ public class NoSplitNdkVariantsConnectedTest {
                         + "            }\n"
                         + "        }\n"
                         + "    }\n"
-                        + "}");
+                        + "}\n"
+                        + "dependencies {\n"
+                        + "  androidTestImplementation \"com.android.support.test:runner:${project.testSupportLibVersion}\"\n"
+                        + "  androidTestImplementation \"com.android.support.test:rules:${project.testSupportLibVersion}\"\n"
+                        + "}\n"
+                        + "\n");
         TestFileUtils.appendToFile(
                 new File(project.getBuildFile().getParentFile(), "Android.mk"),
                 "LOCAL_PATH := $(call my-dir)\n"

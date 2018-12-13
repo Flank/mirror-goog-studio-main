@@ -148,6 +148,7 @@ task sanityTest(type: Test) {
     environment = testEnvironment
     dependsOn ':base:java-lib-model:publishLocal'
     dependsOn ':base:java-lib-model-builder:publishLocal'
+    dependsOn ':publishLocal'
 }
 
 task onlineTest(type: Test) {
@@ -161,6 +162,7 @@ task onlineTest(type: Test) {
 }
 
 check.dependsOn automaticTest
+check.dependsOn sanityTest
 
 task connectedIntegrationTest(type: Test)
 task connectedIntegrationTestQuarantine(type: Test)

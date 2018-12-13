@@ -62,7 +62,7 @@ import com.google.android.things.contrib.driver.pwmservo.Servo;
 import com.google.android.things.contrib.driver.pwmspeaker.Speaker;
 </#if>
 
-public class ${activityClass} extends ${superClass} {
+public class ${activityClass} extends AppCompatActivity {
     private static final String TAG = ${activityClass}.class.getSimpleName();
 
 <#if integrateButton>

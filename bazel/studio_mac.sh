@@ -12,7 +12,7 @@ readonly script_dir="$(dirname "$0")"
 readonly command_log="$(${script_dir}/bazel --bazelrc=${script_dir}/toplevel.bazel.rc info command_log --config=postsubmit --config=local --config=mac-experimental --auth_credentials=/buildbot/android-studio-alphasource.json)"
 
 # Run Bazel
-"${script_dir}/bazel" --max_idle_secs=60 --bazelrc=${script_dir}/toplevel.bazel.rc test --config=postsubmit --config=local --config=mac-experimental --build_tag_filters=-no_mac --test_tag_filters=-no_mac,-no_test_mac,-qa_sanity,-qa_fast,-qa_unreliable --auth_credentials=/buildbot/android-studio-alphasource.json -- @blaze//:aswb_tests //prebuilts/studio/... //prebuilts/tools/... //tools/...
+"${script_dir}/bazel" --max_idle_secs=60 --bazelrc=${script_dir}/toplevel.bazel.rc test --config=postsubmit --config=local --config=mac-experimental --build_tag_filters=-no_mac --test_tag_filters=-no_mac,-no_test_mac,-qa_sanity,-qa_fast,-qa_unreliable --auth_credentials=/buildbot/android-studio-alphasource.json -- @blaze//:aswb_tests //prebuilts/studio/... //prebuilts/tools/... //tools/... -//tools/base:coverage_report -//tools/base:coverage_report_collection_binary -//tools/base:coverage_report_source_and_classes -//tools/base:coverage_report_source_and_classes.map
 
 readonly bazel_status=$?
 

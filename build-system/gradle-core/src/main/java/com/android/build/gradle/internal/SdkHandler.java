@@ -270,9 +270,7 @@ public class SdkHandler {
     @NonNull
     public File checkAndGetSdkFolder() {
         if (sdkFolder == null) {
-            throw new RuntimeException(
-                    "SDK location not found. Define location with sdk.dir in the local.properties "
-                    + "file or with an ANDROID_SDK_ROOT environment variable.");
+            throw new MissingSdkException("SDK location not found.");
         }
 
         return sdkFolder;
@@ -474,5 +472,15 @@ public class SdkHandler {
      */
     public boolean checkResetCache() {
         return sdkLibData.needsCacheReset();
+    }
+
+    public static class MissingSdkException extends RuntimeException {
+        public MissingSdkException(String message) {
+            super(message);
+        }
+
+        public MissingSdkException(String message, Exception e) {
+            super(message, e);
+        }
     }
 }

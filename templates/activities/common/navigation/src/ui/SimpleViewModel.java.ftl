@@ -1,8 +1,8 @@
 package ${packageName}.ui.${navFragmentPrefix};
 
-import ${getMaterialComponentName('android.arch.lifecycle', useAndroidX)}.LiveData;
-import ${getMaterialComponentName('android.arch.lifecycle', useAndroidX)}.MutableLiveData;
-import ${getMaterialComponentName('android.arch.lifecycle', useAndroidX)}.ViewModel;
+import ${getMaterialComponentName('android.arch.lifecycle.LiveData', useAndroidX)};
+import ${getMaterialComponentName('android.arch.lifecycle.MutableLiveData', useAndroidX)};
+import ${getMaterialComponentName('android.arch.lifecycle.ViewModel', useAndroidX)};
 
 public class ${navViewModelClass} extends ViewModel {
 

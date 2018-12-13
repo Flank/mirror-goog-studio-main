@@ -88,7 +88,7 @@ public class LintVitalTest {
         TestFileUtils.searchAndReplace(
                 project.getBuildFile(), "com.android.application", "com.android.library");
         GradleBuildResult result = project.executor().run("assembleRelease");
-        TruthHelper.assertThat(result.getTask(":lintVitalRelease")).wasNotExecuted();
+        assertThat(result.findTask(":lintVitalRelease")).isNull();
     }
 
     @Test
@@ -98,6 +98,6 @@ public class LintVitalTest {
                 "android.lintOptions.checkReleaseBuilds = false\n");
 
         GradleBuildResult result = project.executor().run("assembleRelease");
-        TruthHelper.assertThat(result.getTask(":lintVitalRelease")).wasNotExecuted();
+        assertThat(result.findTask(":lintVitalRelease")).isNull();
     }
 }

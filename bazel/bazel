@@ -36,6 +36,8 @@ def main():
   env['ANDROID_NDK_HOME'] = os.path.join(workspace, 'prebuilts', 'studio', 'sdk', sdk_subdir, 'ndk-bundle')
   env['TERM'] = os.environ.get('TERM', '')
   env['SHELL'] = os.environ.get('SHELL', '')
+  if 'QA_ANDROID_SDK_ROOT' in os.environ:
+    env['QA_ANDROID_SDK_ROOT'] = os.environ['QA_ANDROID_SDK_ROOT']
   if sys.platform == 'darwin':
     args.insert(0, '--watchfs')
     env['CC'] = os.environ.get('GCC', '/usr/bin/gcc')

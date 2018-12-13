@@ -21,6 +21,7 @@
 #include "proto/common.pb.h"
 #include "proto/cpu.grpc.pb.h"
 #include "proto/cpu.pb.h"
+#include "proto/cpu_data.pb.h"
 
 namespace profiler {
 
@@ -32,7 +33,7 @@ struct ThreadsSample {
   struct Activity {
     int32_t tid;                                       // Thread id
     std::string name;                                  // Thread name
-    profiler::proto::GetThreadsResponse::State state;  // Thread state
+    profiler::proto::CpuThreadData::State state;       // Thread state
     int64_t timestamp;                                 // Activity timestamp
   };
 

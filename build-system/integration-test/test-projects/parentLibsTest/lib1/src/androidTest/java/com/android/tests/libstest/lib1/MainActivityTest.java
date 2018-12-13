@@ -16,43 +16,28 @@
 
 package com.android.tests.libstest.lib1;
 
-import android.test.ActivityInstrumentationTestCase2;
-import android.test.suitebuilder.annotation.MediumTest;
-import android.widget.TextView;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
-/**
- * An example of an {@link ActivityInstrumentationTestCase2} of a specific activity {@link Focus2}.
- * By virtue of extending {@link ActivityInstrumentationTestCase2}, the target activity is automatically
- * launched and finished before and after each test.  This also extends
- * {@link android.test.InstrumentationTestCase}, which provides
- * access to methods for sending events to the target activity, such as key and
- * touch events.  See {@link #sendKeys}.
- *
- * In general, {@link android.test.InstrumentationTestCase}s and {@link ActivityInstrumentationTestCase2}s
- * are heavier weight functional tests available for end to end testing of your
- * user interface.  When run via a {@link android.test.InstrumentationTestRunner},
- * the necessary {@link android.app.Instrumentation} will be injected for you to
- * user via {@link #getInstrumentation} in your tests.
- *
- * See {@link com.example.android.apis.AllTests} for documentation on running
- * all tests and individual tests in this application.
- */
-public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActivity> {
+import android.support.test.filters.MediumTest;
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
+import android.widget.TextView;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+@RunWith(AndroidJUnit4.class)
+public class MainActivityTest {
+    @Rule public ActivityTestRule<MainActivity> rule = new ActivityTestRule<>(MainActivity.class);
 
     private TextView mLib1TextView1;
     private TextView mLib1TextView2;
 
-    /**
-     * Creates an {@link ActivityInstrumentationTestCase2} that tests the activity.
-     */
-    public MainActivityTest() {
-        super(MainActivity.class);
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        final MainActivity a = getActivity();
+    @Before
+    public void setUp() {
+        final MainActivity a = rule.getActivity();
         // ensure a valid handle to the activity has been returned
         assertNotNull(a);
 
@@ -61,22 +46,24 @@ public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActiv
     }
 
     /**
-     * The name 'test preconditions' is a convention to signal that if this
-     * test doesn't pass, the test case was not set up properly and it might
-     * explain any and all failures in other tests.  This is not guaranteed
-     * to run before other tests, as junit uses reflection to find the tests.
+     * The name 'test preconditions' is a convention to signal that if this test doesn't pass, the
+     * test case was not set up properly and it might explain any and all failures in other tests.
+     * This is not guaranteed to run before other tests, as junit uses reflection to find the tests.
      */
+    @Test
     @MediumTest
     public void testPreconditions() {
         assertNotNull(mLib1TextView1);
         assertNotNull(mLib1TextView2);
     }
 
+    @Test
     @MediumTest
     public void testAndroidStrings() {
         assertEquals("SUCCESS-LIB1", mLib1TextView1.getText().toString());
     }
 
+    @Test
     @MediumTest
     public void testJavaStrings() {
         assertEquals("SUCCESS-LIB1", mLib1TextView2.getText().toString());

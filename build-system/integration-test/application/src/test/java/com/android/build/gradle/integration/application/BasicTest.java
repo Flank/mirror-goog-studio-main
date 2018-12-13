@@ -221,4 +221,17 @@ public class BasicTest {
             }
         }
     }
+
+    @Test
+    public void testRenderscriptDidNotRun() throws Exception {
+        // Execute renderscript task and check if it was skipped
+        Map<String, ProjectBuildOutput> multi =
+                project.executeAndReturnOutputMultiModel("compileDebugRenderscript");
+        assertThat(
+                        project.getBuildResult()
+                                .getTask(":compileDebugRenderscript")
+                                .getExecutionState()
+                                .toString())
+                .isEqualTo("SKIPPED");
+    }
 }

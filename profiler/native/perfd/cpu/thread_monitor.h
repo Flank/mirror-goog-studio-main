@@ -24,6 +24,7 @@
 #include "perfd/cpu/cpu_cache.h"
 #include "proto/cpu.grpc.pb.h"
 #include "proto/cpu.pb.h"
+#include "proto/cpu_data.pb.h"
 #include "utils/clock.h"
 
 namespace profiler {
@@ -58,7 +59,7 @@ class ThreadMonitor {
   struct ThreadState {
     int64_t timestamp;
     std::string name;
-    profiler::proto::GetThreadsResponse::State state;
+    profiler::proto::CpuThreadData::State state;
   };
 
   // States of all threads in a given process.
@@ -107,13 +108,12 @@ class ThreadMonitor {
   void AddActivity(int32_t tid, const ThreadState& state,
                    ThreadsSample* sample) const;
   // Adds an activity of thread |tid| into |sample| with given information.
-  void AddActivity(int32_t tid,
-                   profiler::proto::GetThreadsResponse::State state,
+  void AddActivity(int32_t tid, profiler::proto::CpuThreadData::State state,
                    const std::string& name, int64_t timestamp,
                    ThreadsSample* sample) const;
   // Adds the state of a thread |tid| into |sample|.
   void AddThreadSnapshot(int32_t tid,
-                         profiler::proto::GetThreadsResponse::State state,
+                         profiler::proto::CpuThreadData::State state,
                          const std::string& name, ThreadsSample* sample) const;
 
   // PIDs of app process that are being monitored.

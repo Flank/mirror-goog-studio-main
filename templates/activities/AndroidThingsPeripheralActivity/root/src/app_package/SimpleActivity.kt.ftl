@@ -87,7 +87,7 @@ private val PWM_BUS = "BUS NAME"
 private val SPI_BUS = "BUS NAME"
 </#if>
 
-class ${activityClass} : ${superClass}() {
+class ${activityClass} : AppCompatActivity() {
 <#if integrateButton>
     private lateinit var mButton: Button
 </#if>

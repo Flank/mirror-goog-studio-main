@@ -185,6 +185,19 @@ public class IncrementalPackagerBuilder {
      */
     @NonNull
     public IncrementalPackagerBuilder withSigning(@Nullable SigningConfig signingConfig) {
+        return withSigning(signingConfig, SigningOptions.Validation.ALWAYS_VALIDATE);
+    }
+
+    /**
+     * Sets the signing configuration information for the incremental packager.
+     *
+     * @param signingConfig the signing config; if {@code null} then the APK will not be signed
+     * @param validation a strategy to check the validity of the package signature
+     * @return {@code this} for use with fluent-style notation
+     */
+    @NonNull
+    public IncrementalPackagerBuilder withSigning(
+            @Nullable SigningConfig signingConfig, @NonNull SigningOptions.Validation validation) {
         if (signingConfig == null) {
             return this;
         }
@@ -212,6 +225,7 @@ public class IncrementalPackagerBuilder {
                                     .setV1SigningEnabled(signingConfig.isV1SigningEnabled())
                                     .setV2SigningEnabled(signingConfig.isV2SigningEnabled())
                                     .setMinSdkVersion(minSdk)
+                                    .setValidation(validation)
                                     .build());
         } catch (KeytoolException|FileNotFoundException e) {
             throw new RuntimeException(e);
@@ -251,6 +265,7 @@ public class IncrementalPackagerBuilder {
                                     .setV1SigningEnabled(oldOptions.isV1SigningEnabled())
                                     .setV2SigningEnabled(oldOptions.isV2SigningEnabled())
                                     .setMinSdkVersion(minSdk)
+                                    .setValidation(oldOptions.getValidation())
                                     .build());
         }
         return this;

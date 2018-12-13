@@ -415,7 +415,8 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                         ImmutableList.of(
                                 new FakeRepositorySourceProvider(ImmutableList.of(source))),
                         null,
-                        null);
+                        null,
+                        true);
         Map<String, RemotePackage> pkgs =
                 loader.fetchPackages(progress, downloader, new FakeSettingsController(false));
         RepositoryPackages packages =

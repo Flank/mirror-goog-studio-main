@@ -126,7 +126,6 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.initialization.Settings;
 import org.gradle.api.invocation.Gradle;
-import org.gradle.api.logging.LogLevel;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPlugin;
@@ -367,8 +366,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                         new GradleJavaProcessExecutor(project),
                         extraModelInfo.getSyncIssueHandler(),
                         extraModelInfo.getMessageReceiver(),
-                        getLogger(),
-                        isVerbose());
+                        getLogger());
         dataBindingBuilder = new DataBindingBuilder();
         dataBindingBuilder.setPrintMachineReadableOutput(
                 SyncOptions.getErrorFormatMode(projectOptions) == ErrorFormatMode.MACHINE_PARSABLE);
@@ -858,10 +856,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
         }
     }
 
-    private boolean isVerbose() {
-        return project.getLogger().isEnabled(LogLevel.INFO);
-    }
-
     private boolean ensureTargetSetup() {
         // check if the target has been set.
         TargetInfo targetInfo = globalScope.getAndroidBuilder().getTargetInfo();
@@ -873,12 +867,23 @@ public abstract class BasePlugin<E extends BaseExtension2>
             throw new GradleException("Calling getBootClasspath before compileSdkVersion");
         }
 
-        return sdkHandler.initTarget(
-                extension.getCompileSdkVersion(),
-                extension.getBuildToolsRevision(),
-                extension.getLibraryRequests(),
-                globalScope.getAndroidBuilder(),
-                SdkHandler.useCachedSdk(projectOptions));
+        try {
+            return sdkHandler.initTarget(
+                    extension.getCompileSdkVersion(),
+                    extension.getBuildToolsRevision(),
+                    extension.getLibraryRequests(),
+                    globalScope.getAndroidBuilder(),
+                    SdkHandler.useCachedSdk(projectOptions));
+        } catch (SdkHandler.MissingSdkException e) {
+            throw new SdkHandler.MissingSdkException(
+                    "SDK location not found. Define location with an ANDROID_SDK_ROOT environment "
+                            + "variable or by setting the sdk.dir path in your project's local "
+                            + "properties file at '"
+                            + new File(project.getRootDir(), SdkConstants.FN_LOCAL_PROPERTIES)
+                                    .getAbsolutePath()
+                            + "'.",
+                    e);
+        }
     }
 
     /**

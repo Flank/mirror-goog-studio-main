@@ -6,7 +6,7 @@ import android.os.Bundle;
 import android.widget.TextView;
 </#if>
 
-public class ${activityClass} extends ${superClass} {
+public class ${activityClass} extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

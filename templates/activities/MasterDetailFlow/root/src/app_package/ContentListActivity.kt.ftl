@@ -31,7 +31,7 @@ import kotlinx.android.synthetic.main.${collection_name}.*
  * item details. On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
-class ${CollectionName}Activity : ${superClass}() {
+class ${CollectionName}Activity : AppCompatActivity() {
 
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet

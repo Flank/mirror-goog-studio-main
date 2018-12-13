@@ -39,12 +39,8 @@
     <global id="buildVersion" value="${buildApi}" />
     <global id="buildApiRevision" type="integer" value="${buildApiRevision!0}" />
 
-    <global id="superClass" type="string" value="AppCompatActivity"/>
     <global id="superClassFqcn" type="string" value="${getMaterialComponentName('android.support.v7.app.AppCompatActivity', useAndroidX)}"/>
-    <global id="Support" value="Support" />
     <global id="actionBarClassFqcn" type = "string" value="${getMaterialComponentName('android.support.v7.app.ActionBar', useAndroidX)}" />
-    <global id="kotlinActionBar" type="string" value="supportActionBar" />
-    <global id="kotlinFragmentManager" type="string" value="supportFragmentManager" />
 
     <global id="srcOut" value="${srcDir}/${slashedPackageName(packageName)}" />
     <global id="resOut" value="${resDir}" />

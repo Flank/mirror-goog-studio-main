@@ -96,7 +96,7 @@ import java.util.function.Supplier;
  * specific build steps.
  *
  * <p>To use: create a builder with {@link #AndroidBuilder(String, String, ProcessExecutor,
- * JavaProcessExecutor, EvalIssueReporter, MessageReceiver, ILogger, boolean)}
+ * JavaProcessExecutor, EvalIssueReporter, MessageReceiver, ILogger)}
  *
  * <p>then build steps can be done with:
  *
@@ -148,8 +148,6 @@ public class AndroidBuilder {
     @NonNull private final EvalIssueReporter issueReporter;
     @NonNull private final MessageReceiver messageReceiver;
 
-    private final boolean mVerboseExec;
-
     @Nullable private String mCreatedBy;
 
 
@@ -169,7 +167,6 @@ public class AndroidBuilder {
      *
      * @param createdBy the createdBy String for the apk manifest.
      * @param logger the Logger
-     * @param verboseExec whether external tools are launched in verbose mode
      */
     public AndroidBuilder(
             @NonNull String projectId,
@@ -178,8 +175,7 @@ public class AndroidBuilder {
             @NonNull JavaProcessExecutor javaProcessExecutor,
             @NonNull EvalIssueReporter issueReporter,
             @NonNull MessageReceiver messageReceiver,
-            @NonNull ILogger logger,
-            boolean verboseExec) {
+            @NonNull ILogger logger) {
         mProjectId = checkNotNull(projectId);
         mCreatedBy = createdBy;
         mProcessExecutor = checkNotNull(processExecutor);
@@ -187,7 +183,6 @@ public class AndroidBuilder {
         this.issueReporter = checkNotNull(issueReporter);
         this.messageReceiver = messageReceiver;
         mLogger = checkNotNull(logger);
-        mVerboseExec = verboseExec;
     }
 
     /**

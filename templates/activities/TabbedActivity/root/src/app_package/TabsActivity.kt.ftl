@@ -10,7 +10,7 @@ import android.view.Menu
 import android.view.MenuItem
 import ${packageName}.ui.main.SectionsPagerAdapter
 
-class ${activityClass} : ${superClass}() {
+class ${activityClass} : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

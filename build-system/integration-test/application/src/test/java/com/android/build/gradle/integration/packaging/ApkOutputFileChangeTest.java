@@ -65,7 +65,7 @@ public class ApkOutputFileChangeTest {
                 project.executor()
                         .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
                         .run("assembleDebug");
-        assertThat(result.getTask(":packageDebug")).wasNotUpToDate();
+        assertThat(result.getTask(":packageDebug")).didWork();
 
         assertThat(project.getApk(GradleTestProject.ApkType.DEBUG)).doesNotExist();
         assertCorrectApk(project.getApk("x86", GradleTestProject.ApkType.DEBUG));
@@ -84,7 +84,7 @@ public class ApkOutputFileChangeTest {
                 project.executor()
                         .with(StringOption.IDE_BUILD_TARGET_ABI, "armeabi-v7a")
                         .run("assembleDebug");
-        assertThat(result.getTask(":packageDebug")).wasNotUpToDate();
+        assertThat(result.getTask(":packageDebug")).didWork();
 
         assertThat(project.getApk(GradleTestProject.ApkType.DEBUG)).doesNotExist();
         assertCorrectApk(project.getApk("x86", GradleTestProject.ApkType.DEBUG));
@@ -101,7 +101,7 @@ public class ApkOutputFileChangeTest {
         // Run the third build without any target ABI, check that the APKs for all ABIs are
         // generated (or regenerated)
         result = project.executor().run("assembleDebug");
-        assertThat(result.getTask(":packageDebug")).wasNotUpToDate();
+        assertThat(result.getTask(":packageDebug")).didWork();
 
         assertThat(project.getApk(GradleTestProject.ApkType.DEBUG)).doesNotExist();
         assertCorrectApk(project.getApk("x86", GradleTestProject.ApkType.DEBUG));
@@ -132,7 +132,7 @@ public class ApkOutputFileChangeTest {
                 project.executor()
                         .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
                         .run("assembleDebug");
-        assertThat(result.getTask(":packageDebug")).wasNotUpToDate();
+        assertThat(result.getTask(":packageDebug")).didWork();
 
         assertThat(project.getApk(GradleTestProject.ApkType.DEBUG)).doesNotExist();
         assertCorrectApk(project.getApk("x86", GradleTestProject.ApkType.DEBUG));
@@ -157,7 +157,7 @@ public class ApkOutputFileChangeTest {
                 project.executor()
                         .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
                         .run("assembleDebug");
-        assertThat(result.getTask(":packageDebug")).wasNotUpToDate();
+        assertThat(result.getTask(":packageDebug")).didWork();
 
         assertCorrectApk(project.getApk(GradleTestProject.ApkType.DEBUG));
         assertThat(project.getApk("x86", GradleTestProject.ApkType.DEBUG)).doesNotExist();
@@ -187,7 +187,7 @@ public class ApkOutputFileChangeTest {
     public void testOutputFileNameChange() throws Exception {
         // Run the first build
         GradleBuildResult result = project.executor().run("assembleDebug");
-        assertThat(result.getTask(":packageDebug")).wasNotUpToDate();
+        assertThat(result.getTask(":packageDebug")).didWork();
         assertCorrectApk(project.getApk(GradleTestProject.ApkType.DEBUG));
 
         // Modify the output file name
@@ -204,7 +204,7 @@ public class ApkOutputFileChangeTest {
         // Run the second build, check that the new APK is generated correctly (regression test for
         // https://issuetracker.google.com/issues/64703619)
         result = project.executor().run("assembleDebug");
-        assertThat(result.getTask(":packageDebug")).wasNotUpToDate();
+        assertThat(result.getTask(":packageDebug")).didWork();
         assertCorrectApk(project.getApkByFileName(GradleTestProject.ApkType.DEBUG, "foo.apk"));
     }
 

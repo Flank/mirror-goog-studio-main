@@ -17,10 +17,10 @@ import android.view.MenuItem
 import ${getMaterialComponentName('android.support.v4.widget.DrawerLayout', useAndroidX)}
 import ${getMaterialComponentName('android.support.design.widget.NavigationView', useMaterial2)}
 import ${getMaterialComponentName('android.support.v7.app.AppCompatActivity', useAndroidX)}
-import ${getMaterialComponentName('android.support.v7.widget', useAndroidX)}.Toolbar
+import ${getMaterialComponentName('android.support.v7.widget.Toolbar', useAndroidX)}
 import android.view.Menu
 
-class ${activityClass} : ${superClass}()<#if !useNavController>, NavigationView.OnNavigationItemSelectedListener</#if> {
+class ${activityClass} : AppCompatActivity()<#if !useNavController>, NavigationView.OnNavigationItemSelectedListener</#if> {
 
 <#if useNavController>
     private lateinit var appBarConfiguration: AppBarConfiguration

@@ -90,7 +90,7 @@ public class Bin2CTest {
     }
 
     @Test
-    public void converToJava() throws IOException {
+    public void convertToJava() throws IOException {
         byte[] buffer = new byte[20];
         for (byte i = 0; i < buffer.length; i++) {
             buffer[i] = i;
@@ -116,6 +116,35 @@ public class Bin2CTest {
                     "}",
                 },
                 strings);
- 
+    }
+
+    @Test
+    public void convertMultipleToJava() throws IOException {
+        byte[] buffer = new byte[20];
+        for (byte i = 0; i < buffer.length; i++) {
+            buffer[i] = i;
+        }
+        Path in = Files.createTempFile("input_java", ".bin");
+        Files.write(in, buffer);
+        Path out = Files.createTempFile("output_java", ".cc");
+        Bin2C.main(
+                new String[] {
+                    "-lang=java",
+                    "-embed=false",
+                    "-output=" + out.toString(),
+                    "-variable=my.package.TestName",
+                    in.toString(),
+                    in.toString()
+                });
+        String[] strings = Files.readAllLines(out).toArray(new String[] {});
+        assertArrayEquals(
+                new String[] {
+                    "package my.package;",
+                    "",
+                    "public class TestName {",
+                    "    public static String hash() { return \"e9fd81c6\"; }",
+                    "}",
+                },
+                strings);
     }
 }

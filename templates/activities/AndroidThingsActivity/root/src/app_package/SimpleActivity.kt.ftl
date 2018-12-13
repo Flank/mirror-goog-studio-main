@@ -26,7 +26,7 @@ import kotlinx.android.synthetic.main.${layoutName}.*
  * @see <a href="https://github.com/androidthings/contrib-drivers#readme">https://github.com/androidthings/contrib-drivers#readme</a>
  *
  */
-class ${activityClass} : ${superClass}() {
+class ${activityClass} : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

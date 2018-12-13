@@ -115,14 +115,10 @@ class GradleBuildResult @JvmOverloads constructor(
         get() = Splitter.on(System.lineSeparator()).omitEmptyStrings().split(stdout).toList()
 
     val tasks: List<String>
-        get() = taskStates.plannedForExecutionTasks
+        get() = taskStates.tasks
 
     val upToDateTasks: Set<String>
         get() = taskStates.upToDateTasks
-
-    /** Use [didWorkTasks] instead for clearer semantics.  */
-    val notUpToDateTasks: Set<String>
-        get() = Sets.difference(tasks.toSet(), upToDateTasks)
 
     val fromCacheTasks: Set<String>
         get() = taskStates.fromCacheTasks
@@ -143,6 +139,22 @@ class GradleBuildResult @JvmOverloads constructor(
         return assert_().about(GradleOutputFileSubjectFactory.factory(stdout)).that(subject)
     }
 
+    /**
+     * Returns the task info given the task name, or null if the task is not found (if it is not in
+     * the task execution plan).
+     *
+     * @see getTask
+     */
+    fun findTask(name: String): TaskStateList.TaskInfo? {
+        return taskStates.findTask(name)
+    }
+
+    /**
+     * Returns the task info given the task name. The task must exist (it must be in the task
+     * execution plan).
+     *
+     * @see findTask
+     */
     fun getTask(name: String): TaskStateList.TaskInfo {
         Preconditions.checkArgument(name.startsWith(":"), "Task name must start with :")
         return taskStates.getTask(name)
