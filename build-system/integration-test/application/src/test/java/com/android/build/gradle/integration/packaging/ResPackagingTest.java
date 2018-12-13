@@ -66,12 +66,12 @@ public class ResPackagingTest {
         testProject = project.getSubproject("test");
 
         // rewrite settings.gradle to remove un-needed modules
-        Files.write("include 'app'\n"
-                + "include 'library'\n"
-                + "include 'library2'\n"
-                + "include 'test'\n",
-                project.getSettingsFile(),
-                Charsets.UTF_8);
+        Files.asCharSink(project.getSettingsFile(), Charsets.UTF_8)
+                .write(
+                        "include 'app'\n"
+                                + "include 'library'\n"
+                                + "include 'library2'\n"
+                                + "include 'test'\n");
 
         // setup dependencies.
         TestFileUtils.appendToFile(appProject.getBuildFile(),
@@ -129,7 +129,7 @@ public class ResPackagingTest {
             throws Exception {
         File assetFolder = FileUtils.join(projectFolder, "src", dimension, "res", "raw");
         FileUtils.mkdirs(assetFolder);
-        Files.write(content, new File(assetFolder, filename), Charsets.UTF_8);
+        Files.asCharSink(new File(assetFolder, filename), Charsets.UTF_8).write(content);
     }
 
     @Test
@@ -378,7 +378,7 @@ public class ResPackagingTest {
         String newBuild =
                 appGradleFileContents.replaceAll("minSdkVersion .*", "minSdkVersion 26 // Updated");
         assertThat(newBuild).isNotEqualTo(appGradleFileContents);
-        Files.write(newBuild, appGradleFile, Charset.defaultCharset());
+        Files.asCharSink(appGradleFile, Charset.defaultCharset()).write(newBuild);
         execute("clean", ":app:assembleDebug");
 
         assertThat(appProject.getApk("debug")).containsFileWithContent("res/raw/f1", f1NoneC);

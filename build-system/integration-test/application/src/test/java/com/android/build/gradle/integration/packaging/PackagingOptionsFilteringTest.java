@@ -63,7 +63,7 @@ public class PackagingOptionsFilteringTest {
         File buildFile = project.getBuildFile();
         String contents = com.google.common.io.Files.toString(buildFile, Charsets.US_ASCII);
         contents += System.lineSeparator() + text;
-        com.google.common.io.Files.write(contents, buildFile, Charsets.US_ASCII);
+        com.google.common.io.Files.asCharSink(buildFile, Charsets.US_ASCII).write(contents);
     }
 
     /**
