@@ -156,7 +156,7 @@ public class Merger {
                 if (mergedDocument != null) {
                     if (outFile != null) {
                         try {
-                            Files.write(mergedDocument, outFile, Charsets.UTF_8);
+                            Files.asCharSink(outFile, Charsets.UTF_8).write(mergedDocument);
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }

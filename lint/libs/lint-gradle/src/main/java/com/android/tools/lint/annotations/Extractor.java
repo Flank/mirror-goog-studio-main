@@ -366,7 +366,7 @@ public class Extractor {
         }
         FileUtils.deleteIfExists(file);
         Files.createParentDirs(file);
-        Files.write(desc, file, Charsets.UTF_8);
+        Files.asCharSink(file, Charsets.UTF_8).write(desc);
     }
 
     public static void removeTypedefClasses(

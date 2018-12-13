@@ -227,7 +227,7 @@ public abstract class BaseLintDetectorTest extends TestCase implements TestResou
         if (expected == null) {
             File expectedPath =
                     new File(UPDATE_MISSING_FILES ? getTargetDir() : getTempDir(), expectedName);
-            Files.write(actual, expectedPath, Charsets.UTF_8);
+            Files.asCharSink(expectedPath, Charsets.UTF_8).write(actual);
             System.out.println("Expected - written to " + expectedPath + ":\n");
             System.out.println(actual);
             fail(
@@ -240,11 +240,12 @@ public abstract class BaseLintDetectorTest extends TestCase implements TestResou
                 File expectedPath = new File(getTempDir(), expectedName);
                 File actualPath =
                         new File(getTempDir(), expectedName.replace("expected", "actual"));
-                Files.write(expected, expectedPath, Charsets.UTF_8);
-                Files.write(actual, actualPath, Charsets.UTF_8);
+                Files.asCharSink(expectedPath, Charsets.UTF_8).write(expected);
+                Files.asCharSink(actualPath, Charsets.UTF_8).write(actual);
                 // Also update data dir with the current value
                 if (UPDATE_DIFFERENT_FILES) {
-                    Files.write(actual, new File(getTargetDir(), expectedName), Charsets.UTF_8);
+                    Files.asCharSink(new File(getTargetDir(), expectedName), Charsets.UTF_8)
+                            .write((actual));
                 }
                 System.out.println("The files differ: diff " + expectedPath + " " + actualPath);
                 assertEquals(
