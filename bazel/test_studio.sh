@@ -58,9 +58,4 @@ if [[ -d "${dist_dir}" ]]; then
   (cd "${testlogs_dir}" && zip -R "${dist_dir}"/bazel-testlogs/xml_files.zip "*.xml")
 fi
 
-# See http://docs.bazel.build/versions/master/guide.html#what-exit-code-will-i-get
-if [[ "${bazel_status}" == "3" ]]; then  # "Build OK, but some tests failed or timed out."
-  exit 0  # show build success on AB; ATP will determine test status from JUnit XML
-else
-  exit "${bazel_status}"
-fi
+exit $bazel_status
