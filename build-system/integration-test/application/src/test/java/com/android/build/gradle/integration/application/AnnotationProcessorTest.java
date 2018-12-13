@@ -175,7 +175,8 @@ public class AnnotationProcessorTest {
                         + "    androidTestImplementation \"com.android.support.test:runner:${project.testSupportLibVersion}\"\n"
                         + "    androidTestImplementation \"com.android.support.test:rules:${project.testSupportLibVersion}\"\n"
                         + "}\n";
-        Files.write(buildScript, project.getSubproject(":app").file("build.gradle"), Charsets.UTF_8);
+        Files.asCharSink(project.getSubproject(":app").file("build.gradle"), Charsets.UTF_8)
+                .write(buildScript);
     }
 
     @Test

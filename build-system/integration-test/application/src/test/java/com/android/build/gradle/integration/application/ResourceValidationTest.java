@@ -53,10 +53,8 @@ public class ResourceValidationTest {
         assertThat(result.getStdout()).contains(FileUtils.join("src", "main", "res",
                 "drawable", "not_a_drawable.ext"));
 
-        Files.write(
-                "android.disableResourceValidation=true\n",
-                project.file("gradle.properties"),
-                Charsets.UTF_8);
+        Files.asCharSink(project.file("gradle.properties"), Charsets.UTF_8)
+                .write("android.disableResourceValidation=true\n");
 
         project.execute("assembleDebug");
 

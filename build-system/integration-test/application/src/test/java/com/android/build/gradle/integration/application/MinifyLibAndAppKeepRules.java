@@ -59,21 +59,21 @@ public class MinifyLibAndAppKeepRules {
     public void testReleaseClassesPackaging() throws Exception {
         File noPackage =
                 FileUtils.join(project.getSubproject("lib").getMainSrcDir(), "NoPackage.java");
-        Files.write("public class NoPackage{}", noPackage, Charsets.UTF_8);
+        Files.asCharSink(noPackage, Charsets.UTF_8).write("public class NoPackage{}");
 
         File referencesNoPackage =
                 FileUtils.join(
                         project.getSubproject("app").getMainSrcDir(), "ReferencesNoPackage.java");
-        Files.write(
-                "public class ReferencesNoPackage { static { NoPackage np = new NoPackage(); } }",
-                referencesNoPackage,
-                Charsets.UTF_8);
+        Files.asCharSink(referencesNoPackage, Charsets.UTF_8)
+                .write(
+                        "public class ReferencesNoPackage { static { NoPackage np = new NoPackage(); } }");
 
         // add the proguard rule that should keep all the classes
-        Files.write(
-                "-keep class *",
-                FileUtils.join(project.getSubproject("app").getTestDir(), "proguard-rules.pro"),
-                Charsets.UTF_8);
+        Files.asCharSink(
+                        FileUtils.join(
+                                project.getSubproject("app").getTestDir(), "proguard-rules.pro"),
+                        Charsets.UTF_8)
+                .write("-keep class *");
 
         TestFileUtils.appendToFile(
                 project.getSubproject("app").getBuildFile(),

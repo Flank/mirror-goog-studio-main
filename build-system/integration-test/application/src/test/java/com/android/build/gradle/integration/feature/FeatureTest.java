@@ -350,7 +350,7 @@ public class FeatureTest {
                 featureProject.file(
                         "src/main/java/com/example/android/multiproject/feature/Hello.java");
 
-        Files.write(javaCode, addedSource, Charsets.UTF_8);
+        Files.asCharSink(addedSource, Charsets.UTF_8).write(javaCode);
 
         GradleBuildResult assemble = project.executor().withOutputModelQuery().run("assemble");
 
@@ -401,7 +401,7 @@ public class FeatureTest {
                 featureProject.file(
                         "src/main/java/com/example/android/multiproject/feature/Hello.java");
 
-        Files.write(javaCode, addedSource, Charsets.UTF_8);
+        Files.asCharSink(addedSource, Charsets.UTF_8).write(javaCode);
 
         GradleBuildResult assembleDebug =
                 project.executor().withOutputModelQuery().run("assembleDebug");
@@ -444,7 +444,7 @@ public class FeatureTest {
         File featureManifest = featureProject.file("src/main/AndroidManifest.xml");
         String content = Files.toString(featureManifest, Charsets.UTF_8);
         content = content.replace("84", "42");
-        Files.write(content, featureManifest, Charsets.UTF_8);
+        Files.asCharSink(featureManifest, Charsets.UTF_8).write(content);
 
         GradleBuildResult run = project.executor().run("assembleDebug");
         assertThat(run.getTask(":baseFeature:processDebugFeatureManifest")).didWork();

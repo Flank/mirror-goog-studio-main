@@ -88,10 +88,8 @@ public class PostprocessingTest {
                         + "proguardFiles android.getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'\n"
                         + "}\n");
 
-        Files.write(
-                "-printconfiguration build/proguard-config.txt",
-                project.file("proguard-rules.pro"),
-                StandardCharsets.UTF_8);
+        Files.asCharSink(project.file("proguard-rules.pro"), StandardCharsets.UTF_8)
+                .write("-printconfiguration build/proguard-config.txt");
 
         project.execute("assembleRelease");
 
@@ -112,10 +110,8 @@ public class PostprocessingTest {
                         + "proguardFile 'proguard-rules.pro'\n"
                         + "}\n");
 
-        Files.write(
-                "-printconfiguration build/proguard-config.txt",
-                project.file("proguard-rules.pro"),
-                StandardCharsets.UTF_8);
+        Files.asCharSink(project.file("proguard-rules.pro"), StandardCharsets.UTF_8)
+                .write("-printconfiguration build/proguard-config.txt");
 
         TestFileUtils.addMethod(
                 project.getMainSrcDir("java/com/example/helloworld/HelloWorld.java"),
@@ -146,10 +142,8 @@ public class PostprocessingTest {
                         + "proguardFile 'proguard-rules.pro'\n"
                         + "}\n");
 
-        Files.write(
-                "-printconfiguration build/proguard-config.txt",
-                project.file("proguard-rules.pro"),
-                StandardCharsets.UTF_8);
+        Files.asCharSink(project.file("proguard-rules.pro"), StandardCharsets.UTF_8)
+                .write("-printconfiguration build/proguard-config.txt");
 
         TestFileUtils.addMethod(
                 project.getMainSrcDir("java/com/example/helloworld/HelloWorld.java"),
