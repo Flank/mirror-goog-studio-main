@@ -79,50 +79,55 @@ public class TestResourceRepositoryTest2 extends TestCase {
         new File(layout, "layout2.xml").createNewFile();
         new File(drawable, "graphic.9.png").createNewFile();
         File strings = new File(values, "strings.xml");
-        Files.write(""
-                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                + "<resources>\n"
-                + "    <item type=\"id\" name=\"action_bar_refresh\" />\n"
-                + "    <item type=\"dimen\" name=\"dialog_min_width_major\">45%</item>\n"
-                + "    <string name=\"home_title\">Home Sample</string>\n"
-                + "    <string name=\"show_all_apps\">All</string>\n"
-                + "    <string name=\"menu_wallpaper\">Wallpaper</string>\n"
-                + "    <string name=\"menu_search\">Search</string>\n"
-                + "    <string name=\"menu_settings\">Settings</string>\n"
-                + "    <string name=\"dummy\" translatable=\"false\">Ignore Me</string>\n"
-                + "    <string name=\"wallpaper_instructions\">Tap picture to set portrait wallpaper</string>\n"
-                + "</resources>\n", strings, Charsets.UTF_8);
-
-        Files.write(""
-                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                + "<resources>\n"
-                + "    <string name=\"show_all_apps\">Todo</string>\n"
-                + "</resources>\n", new File(valuesEs, "strings.xml"), Charsets.UTF_8);
-        Files.write(""
-                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                + "<resources>\n"
-                + "    <string name=\"show_all_apps\">Todo</string>\n"
-                + "</resources>\n", new File(valuesEsUs, "strings.xml"), Charsets.UTF_8);
-        Files.write(""
-                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                + "<resources>\n"
-                + "    <string name=\"show_all_apps\">Todo</string>\n"
-                + "</resources>\n", new File(valuesKok, "strings.xml"), Charsets.UTF_8);
-        Files.write(""
-                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                + "<resources>\n"
-                + "    <string name=\"show_all_apps\">Todo</string>\n"
-                + "</resources>\n", new File(valuesKokIn, "strings.xml"), Charsets.UTF_8);
+        Files.asCharSink(strings, Charsets.UTF_8)
+                .write(
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                + "<resources>\n"
+                                + "    <item type=\"id\" name=\"action_bar_refresh\" />\n"
+                                + "    <item type=\"dimen\" name=\"dialog_min_width_major\">45%</item>\n"
+                                + "    <string name=\"home_title\">Home Sample</string>\n"
+                                + "    <string name=\"show_all_apps\">All</string>\n"
+                                + "    <string name=\"menu_wallpaper\">Wallpaper</string>\n"
+                                + "    <string name=\"menu_search\">Search</string>\n"
+                                + "    <string name=\"menu_settings\">Settings</string>\n"
+                                + "    <string name=\"dummy\" translatable=\"false\">Ignore Me</string>\n"
+                                + "    <string name=\"wallpaper_instructions\">Tap picture to set portrait wallpaper</string>\n"
+                                + "</resources>\n");
+        Files.asCharSink(new File(valuesEs, "strings.xml"), Charsets.UTF_8)
+                .write(
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                + "<resources>\n"
+                                + "    <string name=\"show_all_apps\">Todo</string>\n"
+                                + "</resources>\n");
+        Files.asCharSink(new File(valuesEsUs, "strings.xml"), Charsets.UTF_8)
+                .write(
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                + "<resources>\n"
+                                + "    <string name=\"show_all_apps\">Todo</string>\n"
+                                + "</resources>\n");
+        Files.asCharSink(new File(valuesKok, "strings.xml"), Charsets.UTF_8)
+                .write(
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                + "<resources>\n"
+                                + "    <string name=\"show_all_apps\">Todo</string>\n"
+                                + "</resources>\n");
+        Files.asCharSink(new File(valuesKokIn, "strings.xml"), Charsets.UTF_8)
+                .write(
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                + "<resources>\n"
+                                + "    <string name=\"show_all_apps\">Todo</string>\n"
+                                + "</resources>\n");
 
         if ("testGetMatchingFileAliases".equals(getName())) {
-            Files.write(""
-                    + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                    + "<resources>\n"
-                    + "    <item name=\"layout2\" type=\"layout\">@layout/indirect3</item>\n"
-                    + "    <item name=\"indirect3\" type=\"layout\">@layout/indirect2</item>\n"
-                    + "    <item name=\"indirect2\" type=\"layout\">@layout/indirect1</item>\n"
-                    + "    <item name=\"indirect1\" type=\"layout\">@layout/layout1</item>\n"
-                    + "</resources>", new File(valuesEsUs, "refs.xml"), Charsets.UTF_8);
+            Files.asCharSink(new File(valuesEsUs, "refs.xml"), Charsets.UTF_8)
+                    .write(
+                            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                    + "<resources>\n"
+                                    + "    <item name=\"layout2\" type=\"layout\">@layout/indirect3</item>\n"
+                                    + "    <item name=\"indirect3\" type=\"layout\">@layout/indirect2</item>\n"
+                                    + "    <item name=\"indirect2\" type=\"layout\">@layout/indirect1</item>\n"
+                                    + "    <item name=\"indirect1\" type=\"layout\">@layout/layout1</item>\n"
+                                    + "</resources>");
         }
 
         mResourceMerger = new ResourceMerger(0);
@@ -295,7 +300,7 @@ public class TestResourceRepositoryTest2 extends TestCase {
         String strings = Files.toString(stringFile, Charsets.UTF_8);
         assertNotNull(strings);
         strings = strings.replace("name=\"dummy\"", "name=\"myDummy\"");
-        Files.write(strings, stringFile, Charsets.UTF_8);
+        Files.asCharSink(stringFile, Charsets.UTF_8).write(strings);
 
         resourceSet.updateWith(mRes, stringFile, FileStatus.CHANGED, mLogger);
         mRepository.update(mResourceMerger);

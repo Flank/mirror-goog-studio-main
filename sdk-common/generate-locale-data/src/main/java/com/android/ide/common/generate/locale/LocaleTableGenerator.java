@@ -16,6 +16,7 @@
 
 package com.android.ide.common.generate.locale;
 
+import com.android.ide.common.resources.LocaleManager;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
@@ -26,10 +27,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
-
-import com.android.ide.common.resources.LocaleManager;
 import com.ibm.icu.util.ULocale;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -471,7 +469,7 @@ public class LocaleTableGenerator {
         }
         try {
             File tempFile = File.createTempFile("LocaleData", ".java");
-            Files.write(code, tempFile, Charsets.UTF_8);
+            Files.asCharSink(tempFile, Charsets.UTF_8).write(code);
             System.out.println("Wrote updated locale data code fragment to " + tempFile);
         } catch (IOException ioe) {
             ioe.printStackTrace();

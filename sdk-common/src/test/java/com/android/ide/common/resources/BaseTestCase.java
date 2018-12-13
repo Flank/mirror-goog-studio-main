@@ -134,7 +134,8 @@ public abstract class BaseTestCase {
                 replaceAll("\\$SEP\\$", Matcher.quoteReplacement(File.separator));
 
         File tempFolder = TestUtils.createTempDirDeletedOnExit();
-        Files.write(content, new File(tempFolder, DataMerger.FN_MERGER_XML), Charsets.UTF_8);
+        Files.asCharSink(new File(tempFolder, DataMerger.FN_MERGER_XML), Charsets.UTF_8)
+                .write(content);
 
         return tempFolder;
     }

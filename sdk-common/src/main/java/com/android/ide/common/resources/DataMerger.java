@@ -345,7 +345,7 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
             }
             File file = new File(blobRootFolder, FN_MERGER_XML);
             try {
-                Files.write(content, file, StandardCharsets.UTF_8);
+                Files.asCharSink(file, StandardCharsets.UTF_8).write(content);
             } catch (IOException ioe) {
                 throw MergingException.wrapException(ioe).withFile(file).build();
             }
