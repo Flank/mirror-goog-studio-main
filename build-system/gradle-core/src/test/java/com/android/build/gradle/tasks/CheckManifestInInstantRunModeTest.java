@@ -59,7 +59,7 @@ public class CheckManifestInInstantRunModeTest {
         // Initial build
         {
             InstantRunBuildContext context = mock(InstantRunBuildContext.class);
-            Files.write("Original Manifest", manifestFileToPackage, Charsets.UTF_8);
+            Files.asCharSink(manifestFileToPackage, Charsets.UTF_8).write("Original Manifest");
             CheckManifestInInstantRunMode.runManifestChangeVerifier(
                     context, instantRunSupportDir, manifestFileToPackage);
             verify(context).setVerifierStatus(InstantRunVerifierStatus.INITIAL_BUILD);
@@ -68,7 +68,7 @@ public class CheckManifestInInstantRunModeTest {
         // No changes
         {
             InstantRunBuildContext context = mock(InstantRunBuildContext.class);
-            Files.write("Original Manifest", manifestFileToPackage, Charsets.UTF_8);
+            Files.asCharSink(manifestFileToPackage, Charsets.UTF_8).write("Original Manifest");
             CheckManifestInInstantRunMode.runManifestChangeVerifier(
                     context, instantRunSupportDir, manifestFileToPackage);
             verifyNoMoreInteractions(context);
@@ -77,7 +77,7 @@ public class CheckManifestInInstantRunModeTest {
         // Change
         {
             InstantRunBuildContext context = mock(InstantRunBuildContext.class);
-            Files.write("Changed Manifest", manifestFileToPackage, Charsets.UTF_8);
+            Files.asCharSink(manifestFileToPackage, Charsets.UTF_8).write("Changed Manifest");
             CheckManifestInInstantRunMode.runManifestChangeVerifier(
                     context, instantRunSupportDir, manifestFileToPackage);
             verify(context).setVerifierStatus(InstantRunVerifierStatus.MANIFEST_FILE_CHANGE);
@@ -86,7 +86,7 @@ public class CheckManifestInInstantRunModeTest {
         // No changes
         {
             InstantRunBuildContext context = mock(InstantRunBuildContext.class);
-            Files.write("Changed Manifest", manifestFileToPackage, Charsets.UTF_8);
+            Files.asCharSink(manifestFileToPackage, Charsets.UTF_8).write("Changed Manifest");
             CheckManifestInInstantRunMode.runManifestChangeVerifier(
                     context, instantRunSupportDir, manifestFileToPackage);
             verifyNoMoreInteractions(context);

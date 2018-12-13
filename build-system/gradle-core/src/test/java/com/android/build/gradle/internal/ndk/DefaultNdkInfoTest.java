@@ -56,7 +56,7 @@ public class DefaultNdkInfoTest {
 
     @Test
     public void testParseFailureResultInDefaultAbiList() throws IOException {
-        Files.write("invalid json file\n", abiListFile, Charsets.UTF_8);
+        Files.asCharSink(abiListFile, Charsets.UTF_8).write("invalid json file\n");
         NdkInfo info = new DefaultNdkInfo(ndkFolder);
         assertThat(info.getSupportedAbis()).containsExactly(ALL_ABIS);
         assertThat(info.getSupported32BitsAbis()).containsExactly(ALL_32_BITS_ABIS);
@@ -66,14 +66,13 @@ public class DefaultNdkInfoTest {
 
     @Test
     public void testWithAbiListFile() throws IOException {
-        Files.write(
-                "{\n"
-                        + "    \"armeabi\": {\n"
-                        + "        \"deprecated\" : false\n"
-                        + "    }\n"
-                        + "}",
-                abiListFile,
-                Charsets.UTF_8);
+        Files.asCharSink(abiListFile, Charsets.UTF_8)
+                .write(
+                        "{\n"
+                                + "    \"armeabi\": {\n"
+                                + "        \"deprecated\" : false\n"
+                                + "    }\n"
+                                + "}");
         NdkInfo info = new DefaultNdkInfo(ndkFolder);
         assertThat(info.getSupportedAbis()).containsExactly(Abi.ARMEABI);
         assertThat(info.getSupported32BitsAbis()).containsExactly(Abi.ARMEABI);
@@ -83,25 +82,24 @@ public class DefaultNdkInfoTest {
 
     @Test
     public void testWithDefaultSettingsInAbiListFile() throws IOException {
-        Files.write(
-                "{\n"
-                        + "    \"armeabi\": {\n"
-                        + "        \"default\" : true,\n"
-                        + "        \"deprecated\" : false\n"
-                        + "    },\n"
-                        + "    \"armeabi-v7a\": {\n"
-                        + "    },\n"
-                        + "    \"mips\": {\n"
-                        + "        \"default\" : false,\n"
-                        + "        \"deprecated\" : false\n"
-                        + "    },\n"
-                        + "    \"x86\": {\n"
-                        + "        \"default\" : true,\n"
-                        + "        \"deprecated\" : true\n"
-                        + "    }\n"
-                        + "}",
-                abiListFile,
-                Charsets.UTF_8);
+        Files.asCharSink(abiListFile, Charsets.UTF_8)
+                .write(
+                        "{\n"
+                                + "    \"armeabi\": {\n"
+                                + "        \"default\" : true,\n"
+                                + "        \"deprecated\" : false\n"
+                                + "    },\n"
+                                + "    \"armeabi-v7a\": {\n"
+                                + "    },\n"
+                                + "    \"mips\": {\n"
+                                + "        \"default\" : false,\n"
+                                + "        \"deprecated\" : false\n"
+                                + "    },\n"
+                                + "    \"x86\": {\n"
+                                + "        \"default\" : true,\n"
+                                + "        \"deprecated\" : true\n"
+                                + "    }\n"
+                                + "}");
         NdkInfo info = new DefaultNdkInfo(ndkFolder);
         assertThat(info.getSupportedAbis())
                 .containsExactly(Abi.ARMEABI, Abi.ARMEABI_V7A, Abi.MIPS, Abi.X86);
@@ -113,17 +111,16 @@ public class DefaultNdkInfoTest {
 
     @Test
     public void testErrorHandling() throws IOException {
-        Files.write(
-                "{\n"
-                        + "    \"armeabi\": {\n"
-                        + "        \"unknown\" : 42\n" // unknown fields are ignored.
-                        // missing 'deprecated' field default to false.
-                        + "    },\n"
-                        + "    \"invalid\": { }\n" // invalid ABI is ignored.
-                        + "\n"
-                        + "}",
-                abiListFile,
-                Charsets.UTF_8);
+        Files.asCharSink(abiListFile, Charsets.UTF_8)
+                .write(
+                        "{\n"
+                                + "    \"armeabi\": {\n"
+                                + "        \"unknown\" : 42\n" // unknown fields are ignored.
+                                // missing 'deprecated' field default to false.
+                                + "    },\n"
+                                + "    \"invalid\": { }\n" // invalid ABI is ignored.
+                                + "\n"
+                                + "}");
         NdkInfo info = new DefaultNdkInfo(ndkFolder);
         assertThat(info.getSupportedAbis()).containsExactly(Abi.ARMEABI);
         assertThat(info.getSupported32BitsAbis()).containsExactly(Abi.ARMEABI);
@@ -133,23 +130,22 @@ public class DefaultNdkInfoTest {
 
     @Test
     public void testMultipleAbiWithAbiListFile() throws IOException {
-        Files.write(
-                "{\n"
-                        + "    \"armeabi-v7a\": {\n"
-                        + "        \"deprecated\" : false\n"
-                        + "    },\n"
-                        + "    \"x86_64\": {\n"
-                        + "        \"deprecated\" : false\n"
-                        + "    },\n"
-                        + "    \"mips\": {\n"
-                        + "        \"deprecated\" : true\n"
-                        + "    },\n"
-                        + "    \"mips64\": {\n"
-                        + "        \"deprecated\" : true\n"
-                        + "    }\n"
-                        + "}",
-                abiListFile,
-                Charsets.UTF_8);
+        Files.asCharSink(abiListFile, Charsets.UTF_8)
+                .write(
+                        "{\n"
+                                + "    \"armeabi-v7a\": {\n"
+                                + "        \"deprecated\" : false\n"
+                                + "    },\n"
+                                + "    \"x86_64\": {\n"
+                                + "        \"deprecated\" : false\n"
+                                + "    },\n"
+                                + "    \"mips\": {\n"
+                                + "        \"deprecated\" : true\n"
+                                + "    },\n"
+                                + "    \"mips64\": {\n"
+                                + "        \"deprecated\" : true\n"
+                                + "    }\n"
+                                + "}");
         NdkInfo info = new DefaultNdkInfo(ndkFolder);
         assertThat(info.getSupportedAbis())
                 .containsExactly(Abi.ARMEABI_V7A, Abi.X86_64, Abi.MIPS, Abi.MIPS64);

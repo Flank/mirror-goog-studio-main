@@ -1216,6 +1216,6 @@ public class InstantRunBuildContextTest {
     private static void saveBuildInfo(InstantRunBuildContext context, File buildInfo)
             throws IOException, ParserConfigurationException {
         String xml = context.toXml();
-        Files.write(xml, buildInfo, Charsets.UTF_8);
+        Files.asCharSink(buildInfo, Charsets.UTF_8).write(xml);
     }
 }

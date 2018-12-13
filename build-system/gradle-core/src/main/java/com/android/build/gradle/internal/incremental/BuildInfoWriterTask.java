@@ -74,7 +74,7 @@ public class BuildInfoWriterTask extends AndroidVariantTask {
                         buildContext.getBuildId(), xml);
             }
             Files.createParentDirs(buildInfoFile);
-            Files.write(xml, buildInfoFile, Charsets.UTF_8);
+            Files.asCharSink(buildInfoFile, Charsets.UTF_8).write(xml);
         } catch (Exception e) {
             throw new RuntimeException("Exception while saving build-info.xml", e);
         }

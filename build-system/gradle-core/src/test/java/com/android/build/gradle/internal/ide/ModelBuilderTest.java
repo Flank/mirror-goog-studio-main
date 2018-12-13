@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
@@ -40,7 +39,6 @@ import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.model.AndroidProject;
@@ -164,7 +162,7 @@ public class ModelBuilderTest {
         File variantOutputFolder = new File(apkLocation, FileUtils.join("variant", "name"));
         File apkOutput = new File(variantOutputFolder, "main.apk");
         Files.createParentDirs(apkOutput);
-        Files.write("some apk", apkOutput, Charsets.UTF_8);
+        Files.asCharSink(apkOutput, Charsets.UTF_8).write("some apk");
 
         OutputFactory outputFactory = new OutputFactory(PROJECT, variantConfiguration, outputScope);
         new BuildElements(
@@ -289,7 +287,7 @@ public class ModelBuilderTest {
             File variantOutputFolder = new File(apkLocation, FileUtils.join("variant", "name" + i));
             File apkOutput = new File(variantOutputFolder, "main.apk");
             Files.createParentDirs(apkOutput);
-            Files.write("some apk", apkOutput, Charsets.UTF_8);
+            Files.asCharSink(apkOutput, Charsets.UTF_8).write("some apk");
 
             OutputFactory outputFactory =
                     new OutputFactory(PROJECT, variantConfiguration, outputScope);
@@ -376,7 +374,7 @@ public class ModelBuilderTest {
         File variantOutputFolder = new File(apkLocation, FileUtils.join("variant", "name"));
         File apkOutput = new File(variantOutputFolder, "main.apk");
         Files.createParentDirs(apkOutput);
-        Files.write("some apk", apkOutput, Charsets.UTF_8);
+        Files.asCharSink(apkOutput, Charsets.UTF_8).write("some apk");
 
         OutputFactory outputFactory = new OutputFactory(PROJECT, variantConfiguration, outputScope);
         new BuildElements(
@@ -445,7 +443,7 @@ public class ModelBuilderTest {
     private static File createApk(File variantOutputFolder, String fileName) throws IOException {
         File apkOutput = new File(variantOutputFolder, fileName);
         Files.createParentDirs(apkOutput);
-        Files.write("some apk", apkOutput, Charsets.UTF_8);
+        Files.asCharSink(apkOutput, Charsets.UTF_8).write("some apk");
         return apkOutput;
     }
 }

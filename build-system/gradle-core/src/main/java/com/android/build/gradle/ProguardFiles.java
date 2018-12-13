@@ -141,7 +141,7 @@ public class ProguardFiles {
         sb.append("\n");
         append(sb, "proguard-common.txt");
 
-        Files.write(sb.toString(), destination, UTF_8);
+        Files.asCharSink(destination, UTF_8).write(sb.toString());
     }
 
     private static void append(StringBuilder sb, String resourceName) throws IOException {

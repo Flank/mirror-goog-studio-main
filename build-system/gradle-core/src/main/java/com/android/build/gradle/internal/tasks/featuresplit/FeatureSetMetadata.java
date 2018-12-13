@@ -126,7 +126,7 @@ public class FeatureSetMetadata {
     public void save(@NonNull File outputFile) throws IOException {
         GsonBuilder gsonBuilder = new GsonBuilder();
         Gson gson = gsonBuilder.create();
-        Files.write(gson.toJson(featureSplits), outputFile, Charsets.UTF_8);
+        Files.asCharSink(outputFile, Charsets.UTF_8).write(gson.toJson(featureSplits));
     }
 
     /**

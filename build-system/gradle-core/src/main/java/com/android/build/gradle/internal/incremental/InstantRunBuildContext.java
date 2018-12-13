@@ -975,7 +975,7 @@ public class InstantRunBuildContext {
     public void writeTmpBuildInfo(@NonNull File tmpBuildInfo)
             throws ParserConfigurationException, IOException {
         Files.createParentDirs(tmpBuildInfo);
-        Files.write(toXml(PersistenceMode.TEMP_BUILD), tmpBuildInfo, Charsets.UTF_8);
+        Files.asCharSink(tmpBuildInfo, Charsets.UTF_8).write(toXml(PersistenceMode.TEMP_BUILD));
     }
 
     @VisibleForTesting
