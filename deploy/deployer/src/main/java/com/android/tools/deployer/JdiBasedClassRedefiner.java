@@ -72,7 +72,7 @@ public class JdiBasedClassRedefiner implements ClassRedefiner {
     }
 
     @Override
-    public Deploy.SwapResponse redefine(Deploy.SwapRequest request) {
+    public Deploy.SwapResponse redefine(Deploy.SwapRequest request) throws DeployerException {
         Map<ReferenceType, byte[]> redefinitionRequest = new HashMap<>();
 
         for (Deploy.ClassDef redefinition : request.getClassesList()) {
@@ -83,7 +83,11 @@ public class JdiBasedClassRedefiner implements ClassRedefiner {
         }
 
         Deploy.SwapResponse.Builder response = Deploy.SwapResponse.newBuilder();
-        vm.redefineClasses(redefinitionRequest);
+        try {
+            vm.redefineClasses(redefinitionRequest);
+        } catch (Throwable t) {
+            throw new DeployerException(DeployerException.Error.REDEFINER_ERROR, t);
+        }
         response.setStatus(Deploy.SwapResponse.Status.OK);
         return response.build();
     }

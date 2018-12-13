@@ -37,7 +37,8 @@ public class DeployerException extends Exception {
         ERROR_PUSHING_APK,
         DIFFERENT_NAMES_OF_APKS,
         INSTALL_FAILED,
-        UNABLE_TO_PREINSTALL
+        UNABLE_TO_PREINSTALL,
+        OPERATION_NOT_SUPPORTED, // (yet)
     }
 
     public DeployerException(Error error, String message) {
