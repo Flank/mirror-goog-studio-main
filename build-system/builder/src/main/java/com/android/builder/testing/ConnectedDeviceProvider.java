@@ -28,6 +28,7 @@ import com.android.ddmlib.Log;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.File;
@@ -36,6 +37,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 /**
  * DeviceProvider for locally connected devices. Basically returns the list of devices that
@@ -43,8 +45,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class ConnectedDeviceProvider extends DeviceProvider {
 
-    @NonNull
-    private final File adbLocation;
+    @NonNull private final Supplier<File> adbLocationSupplier;
 
     private final long timeOut;
 
@@ -64,7 +65,18 @@ public class ConnectedDeviceProvider extends DeviceProvider {
      */
     public ConnectedDeviceProvider(@NonNull File adbLocation, int timeOutInMs,
             @NonNull ILogger logger) {
-        this.adbLocation = adbLocation;
+        this(Suppliers.ofInstance(adbLocation), timeOutInMs, logger);
+    }
+
+    /**
+     * Uses a supplier for the adb executable, so we can avoid parsing the SDK until it's needed for
+     * the init.
+     *
+     * @param timeOutInMs The time out for each adb command, where 0 means wait forever.
+     */
+    public ConnectedDeviceProvider(
+            @NonNull Supplier<File> adbLocationSupplier, int timeOutInMs, @NonNull ILogger logger) {
+        this.adbLocationSupplier = adbLocationSupplier;
         this.timeOut = timeOutInMs;
         timeOutUnit = TimeUnit.MILLISECONDS;
         iLogger = logger;
@@ -96,6 +108,8 @@ public class ConnectedDeviceProvider extends DeviceProvider {
         AndroidDebugBridge.initIfNeeded(false /*clientSupport*/);
 
         try {
+
+            File adbLocation = adbLocationSupplier.get();
 
             AndroidDebugBridge bridge =
                     AndroidDebugBridge.createBridge(
