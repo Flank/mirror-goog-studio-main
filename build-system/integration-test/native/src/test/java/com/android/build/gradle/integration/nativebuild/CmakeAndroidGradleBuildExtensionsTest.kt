@@ -145,7 +145,7 @@ class CmakeAndroidGradleBuildExtensionsTest(
         return createJsonGenerationAbiConfiguration(
             Abi.X86,
             "debug",
-            File(project.testDir, ".externalNativeBuild"),
+            File(project.testDir, CXX_DEFAULT_CONFIGURATION_SUBFOLDER),
             File(project.testDir, "build/intermediates/cmake/obj"),
             NativeBuildSystem.CMAKE,
     21)
@@ -219,8 +219,8 @@ class CmakeAndroidGradleBuildExtensionsTest(
         assertThat(cacheWrite.cacheWritten).isTrue()
 
         // Delete the .externalNativeBuild folder and sync
-        File(project.testDir, ".externalNativeBuild/cmake").deleteRecursively()
-        File(project.testDir, ".externalNativeBuild/gradle").deleteRecursively()
+        File(project.testDir, "$CXX_DEFAULT_CONFIGURATION_SUBFOLDER/cmake").deleteRecursively()
+        File(project.testDir, "$CXX_DEFAULT_CONFIGURATION_SUBFOLDER/gradle").deleteRecursively()
         val nativeProject2 = project.model()
             .with(ENABLE_NATIVE_COMPILER_SETTINGS_CACHE, true)
             .fetch(NativeAndroidProject::class.java)

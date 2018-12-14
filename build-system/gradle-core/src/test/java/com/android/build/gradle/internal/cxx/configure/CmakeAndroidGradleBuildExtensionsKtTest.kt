@@ -46,7 +46,7 @@ class CmakeAndroidGradleBuildExtensionsKtTest {
     fun setup() {
         base = folder.newFolder("base")
         cacheRootFolder = File(base, "my-cache-folder")
-        externalNativeBuildBaseFolder = File(base, ".externalNativeBuild")
+        externalNativeBuildBaseFolder = File(base, CXX_DEFAULT_CONFIGURATION_SUBFOLDER)
         config = createJsonGenerationAbiConfiguration(
             Abi.X86,
             variantName,

@@ -705,11 +705,10 @@ public abstract class ExternalNativeJsonGenerator {
     }
 
     /**
-     * Find's the location of the build-system output folder. For example,
-     * .externalNativeBuild/cmake/debug/x86/
+     * Find's the location of the build-system output folder. For example, .cxx/cmake/debug/x86/
      *
      * <p>If user specific externalNativeBuild.cmake.buildStagingFolder = 'xyz' then that folder
-     * will be used instead of the default of app/.externalNativeBuild.
+     * will be used instead of the default of app/.cxx.
      *
      * <p>If the resulting build output folder would be inside of app/build then issue an error
      * because app/build will be deleted when the user does clean and that will lead to undefined
@@ -731,7 +730,10 @@ public abstract class ExternalNativeJsonGenerator {
         File externalNativeBuildPath;
         if (externalNativeBuildDir == null) {
             return FileUtils.join(
-                    projectDir, ".externalNativeBuild", buildSystem.getName(), variantName);
+                    projectDir,
+                    CXX_DEFAULT_CONFIGURATION_SUBFOLDER,
+                    buildSystem.getName(),
+                    variantName);
         }
 
         externalNativeBuildPath =
@@ -741,7 +743,10 @@ public abstract class ExternalNativeJsonGenerator {
             File invalidPath = externalNativeBuildPath;
             externalNativeBuildPath =
                     FileUtils.join(
-                            projectDir, ".externalNativeBuild", buildSystem.getName(), variantName);
+                            projectDir,
+                            CXX_DEFAULT_CONFIGURATION_SUBFOLDER,
+                            buildSystem.getName(),
+                            variantName);
             error(
                     "The build staging directory you specified ('%s')"
                             + " is a subdirectory of your project's temporary build directory ('%s')."

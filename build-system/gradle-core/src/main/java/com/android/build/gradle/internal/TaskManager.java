@@ -1521,7 +1521,7 @@ public abstract class TaskManager {
                                 project.getPath(),
                                 project.getProjectDir(),
                                 project.getBuildDir(),
-                                pathResolution.externalNativeBuildDir,
+                                pathResolution.cxxBuildDir,
                                 checkNotNull(pathResolution.buildSystem),
                                 pathResolution.makeFile,
                                 globalScope.getAndroidBuilder(),

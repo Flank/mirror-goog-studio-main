@@ -23,6 +23,7 @@ import static com.android.build.gradle.integration.common.fixture.app.HelloWorld
 import static com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp.cmakeLists;
 import static com.android.build.gradle.integration.common.truth.NativeAndroidProjectSubject.assertThat;
 import static com.android.build.gradle.integration.common.truth.NativeSettingsSubject.assertThat;
+import static com.android.build.gradle.internal.cxx.configure.ConstantsKt.CXX_DEFAULT_CONFIGURATION_SUBFOLDER;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
@@ -189,7 +190,7 @@ public class NativeModelTest {
                 Compiler.CLANG,
                 NativeBuildSystem.NDK_BUILD,
                 DEFAULT_ABI_COUNT * 2,
-                ".externalNativeBuild"),
+                CXX_DEFAULT_CONFIGURATION_SUBFOLDER),
         ANDROID_MK_GOOGLE_TEST(
                 "apply plugin: 'com.android.application'\n"
                         + "\n"
@@ -229,7 +230,7 @@ public class NativeModelTest {
                 Compiler.IRRELEVANT,
                 NativeBuildSystem.NDK_BUILD,
                 0,
-                ".externalNativeBuild"),
+                CXX_DEFAULT_CONFIGURATION_SUBFOLDER),
         ANDROID_MK_FILE_CPP_GCC(
                 "apply plugin: 'com.android.application'\n"
                         + "\n"
@@ -260,7 +261,7 @@ public class NativeModelTest {
                 Compiler.GCC,
                 NativeBuildSystem.NDK_BUILD,
                 DEFAULT_ABI_COUNT * 2,
-                ".externalNativeBuild"),
+                CXX_DEFAULT_CONFIGURATION_SUBFOLDER),
         ANDROID_MK_FILE_CPP_GCC_VIA_APPLICATION_MK(
                 "apply plugin: 'com.android.application'\n"
                         + "\n"
@@ -290,7 +291,7 @@ public class NativeModelTest {
                 Compiler.GCC,
                 NativeBuildSystem.NDK_BUILD,
                 DEFAULT_ABI_COUNT * 2,
-                ".externalNativeBuild"),
+                CXX_DEFAULT_CONFIGURATION_SUBFOLDER),
         ANDROID_MK_CUSTOM_BUILD_TYPE(
                 "apply plugin: 'com.android.application'\n"
                         + "\n"
@@ -329,7 +330,7 @@ public class NativeModelTest {
                 Compiler.IRRELEVANT,
                 NativeBuildSystem.NDK_BUILD,
                 DEFAULT_ABI_COUNT * 3,
-                ".externalNativeBuild"),
+                CXX_DEFAULT_CONFIGURATION_SUBFOLDER),
         CMAKELISTS_FILE_CPP(
                 "apply plugin: 'com.android.application'\n"
                         + "\n"
@@ -422,7 +423,7 @@ public class NativeModelTest {
                 Compiler.IRRELEVANT,
                 NativeBuildSystem.CMAKE,
                 DEFAULT_ABI_COUNT * 2,
-                ".externalNativeBuild"),
+                CXX_DEFAULT_CONFIGURATION_SUBFOLDER),
         CMAKELISTS_ARGUMENTS_WITH_CMAKE_VERSION(
                 "apply plugin: 'com.android.application'\n"
                         + "\n"

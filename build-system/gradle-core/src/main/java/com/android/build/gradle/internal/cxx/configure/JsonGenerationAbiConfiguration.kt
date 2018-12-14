@@ -99,7 +99,7 @@ fun createJsonGenerationAbiConfiguration(
     val buildSystemPresentationName = nativeBuildSystem.getName()
     val objFolder = File(objBaseFolder, abiName)
 
-    // Build up .externalNativeBuild/cmake/debug/x86
+    // Build up .cxx/cmake/debug/x86
     val buildSystemFolder =
         File(externalNativeBuildBaseFolder, buildSystemPresentationName)
     val variantFolder = File(buildSystemFolder, variantName)
@@ -110,7 +110,7 @@ fun createJsonGenerationAbiConfiguration(
     val buildOutputFile =
         File(externalNativeBuildFolder,"${buildSystemPresentationName}_build_output.txt")
 
-    // Build up .externalNativeBuild/gradle/debug/x86
+    // Build up .cxx/gradle/debug/x86
     val externalNativeBuildGradleFolder =
         File(externalNativeBuildBaseFolder, "cxx")
     val externalNativeBuildGradleVariantFolder =

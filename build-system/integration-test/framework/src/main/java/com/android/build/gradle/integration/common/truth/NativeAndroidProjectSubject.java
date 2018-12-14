@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.common.truth;
 
+import static com.android.build.gradle.internal.cxx.configure.ConstantsKt.CXX_DEFAULT_CONFIGURATION_SUBFOLDER;
 import static com.google.common.truth.Truth.assert_;
 
 import com.android.annotations.NonNull;
@@ -36,7 +37,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -107,15 +107,15 @@ public class NativeAndroidProjectSubject
         Set<File> intermediatesFolders = Sets.newHashSet();
         for (NativeArtifact artifact : getSubject().getArtifacts()) {
             File intermediatesBaseFolder = artifact.getOutputFile();
-            File externalNativeBuildFolder;
+            File cxxFolder;
             do {
                 if (intermediatesBaseFolder.getName().equals("project")) {
                     return intermediatesFolders;
                 }
                 intermediatesBaseFolder = intermediatesBaseFolder.getParentFile();
-                externalNativeBuildFolder = new File(intermediatesBaseFolder, baseFolder);
-            } while(!externalNativeBuildFolder.isDirectory());
-            intermediatesFolders.add(externalNativeBuildFolder);
+                cxxFolder = new File(intermediatesBaseFolder, baseFolder);
+            } while (!cxxFolder.isDirectory());
+            intermediatesFolders.add(cxxFolder);
         }
         return intermediatesFolders;
     }
@@ -183,9 +183,8 @@ public class NativeAndroidProjectSubject
     }
 
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
-    public void hasExactObjectFilesInExternalNativeBuildFolder(
-            String... baseName) throws IOException {
-        hasExactOutputFiles(".o", ".externalNativeBuild", baseName);
+    public void hasExactObjectFilesInCxxFolder(String... baseName) throws IOException {
+        hasExactOutputFiles(".o", CXX_DEFAULT_CONFIGURATION_SUBFOLDER, baseName);
     }
 
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")

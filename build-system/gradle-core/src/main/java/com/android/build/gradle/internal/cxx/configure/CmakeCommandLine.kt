@@ -62,7 +62,7 @@ data class CmakeListsPath(
  * For example, -B<path-to-binary-output-dir>
  *
  * This is the build output folder. This is where the Ninja project is generated.
- * For us, it usually has a value like .externalNativeBuild/cmake/debug/x86.
+ * For us, it usually has a value like .cxx/cmake/debug/x86.
  */
 data class BinaryOutputPath(
     override val sourceArgument: String,

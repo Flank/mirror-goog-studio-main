@@ -675,7 +675,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
             }
 
             if (sourceFile.getPath().startsWith(config.getGradleBuildOutputFolder().getPath())) {
-                // Skip files in .externalNativeBuild/cmake/x86
+                // Skip files in .cxx/cmake/x86
                 continue;
             }
 

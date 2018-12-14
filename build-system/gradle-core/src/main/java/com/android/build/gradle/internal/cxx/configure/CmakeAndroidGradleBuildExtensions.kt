@@ -114,7 +114,7 @@ fun wrapCmakeListsForCompilerSettingsCaching(
         return CmakeExecutionConfiguration(cmakeListsFolder, args)
     }
 
-    // Write the cache files to .externalNativeBuild so they can be used after the build.
+    // Write the cache files to .cxx so they can be used after the build.
     fileWriter.addFile(config.cmake!!.cacheKeyFile.path, cacheKey.toJsonString())
 
     val cachedProperties = cache.tryGetValue(cacheKey)
@@ -135,7 +135,7 @@ fun wrapCmakeListsForCompilerSettingsCaching(
     // Note that if we have cached compiler settings we don't strictly need to wrap CMakeLists.txt
     // because the purpose of wrapping is to save build variables so that they can be cached.
     // However, it's very helpful diagnostic information and will be useful when people send us
-    // a zip of .externalNativeBuild folder. Also, there may be other future purposes for wrapping
+    // a zip of .cxx folder. Also, there may be other future purposes for wrapping
     // CMakeLists.txt such as helping with CCACHE-like scenarios.
     val result = replaceCmakeListsWithWrapper(
         commandLine = toolchainReplaced,

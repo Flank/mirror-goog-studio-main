@@ -359,12 +359,12 @@ public class ExternalNativeBuildTaskUtils {
         @Nullable public final String errorText;
         @Nullable public final NativeBuildSystem buildSystem;
         @Nullable public final File makeFile;
-        @Nullable public final File externalNativeBuildDir;
+        @Nullable public final File cxxBuildDir;
 
         private ExternalNativeBuildProjectPathResolution(
                 @Nullable NativeBuildSystem buildSystem,
                 @Nullable File makeFile,
-                @Nullable File externalNativeBuildDir,
+                @Nullable File cxxBuildDir,
                 @Nullable String errorText) {
             checkArgument(
                     makeFile == null || buildSystem != null,
@@ -377,7 +377,7 @@ public class ExternalNativeBuildTaskUtils {
                     "Expected path or error but both existed");
             this.buildSystem = buildSystem;
             this.makeFile = makeFile;
-            this.externalNativeBuildDir = externalNativeBuildDir;
+            this.cxxBuildDir = cxxBuildDir;
             this.errorText = errorText;
         }
     }

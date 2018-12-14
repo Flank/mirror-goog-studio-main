@@ -179,7 +179,7 @@ public class CmakeStlMatrixTest {
         assertThat(model).hasBuildOutputCountEqualTo(4);
         assertThat(model).allBuildOutputsExist();
         // CMake .o files are kept in -B folder which is under .externalNativeBuild/
-        assertThat(model).hasExactObjectFilesInExternalNativeBuildFolder("hello-jni.c.o");
+        assertThat(model).hasExactObjectFilesInCxxFolder("hello-jni.c.o");
         // CMake .so files are kept in -DCMAKE_LIBRARY_OUTPUT_DIRECTORY folder which is under build/
         if (stl.endsWith("_shared")) {
             assertThat(model)

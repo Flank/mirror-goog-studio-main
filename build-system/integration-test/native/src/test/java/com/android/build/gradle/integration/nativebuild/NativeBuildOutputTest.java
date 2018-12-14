@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.nativebuild;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.internal.cxx.configure.ConstantsKt.CXX_DEFAULT_CONFIGURATION_SUBFOLDER;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
@@ -129,7 +130,8 @@ public class NativeBuildOutputTest {
         original =
                 new File(
                         original,
-                        ".externalNativeBuild/custom-output/debug/arm64-v8a/libhello-jni.so");
+                        CXX_DEFAULT_CONFIGURATION_SUBFOLDER
+                                + "/custom-output/debug/arm64-v8a/libhello-jni.so");
         assertThat(original).isFile();
     }
 
