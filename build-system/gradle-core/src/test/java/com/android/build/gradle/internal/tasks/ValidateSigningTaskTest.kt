@@ -19,6 +19,8 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.SigningConfigFactory
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.registerTask
@@ -28,6 +30,8 @@ import com.google.common.hash.Hashing
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.Project
+import org.gradle.api.file.Directory
+import org.gradle.api.provider.Provider
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.AfterClass
 import org.junit.Assert.fail
@@ -37,6 +41,7 @@ import org.junit.ClassRule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.anyString
@@ -78,6 +83,13 @@ class ValidateSigningTaskTest {
     lateinit var variantScope: VariantScope
     @Mock
     lateinit var variantConfiguration : GradleVariantConfiguration
+    @Mock
+    lateinit var artifacts : BuildArtifactsHolder
+    @Mock
+    lateinit var outputDirectoryProvider : Provider<Directory>
+    @Mock
+    lateinit var outputDirectoryMock : Directory
+    lateinit var outputDirectory : File
 
     private lateinit var defaultDebugKeystore: File
 
@@ -88,11 +100,20 @@ class ValidateSigningTaskTest {
     }
 
     fun initPackagingScope(variantName: String) {
+        outputDirectory = temporaryFolder.newFolder()
+        `when`(variantScope.artifacts).thenReturn(artifacts)
+        `when`(artifacts
+            .createDirectory(
+                InternalArtifactType.VALIDATE_SIGNING_CONFIG,
+                "validateSigning" + variantName.capitalize()))
+            .thenReturn(outputDirectoryProvider)
+
+        `when`(outputDirectoryProvider.get()).thenReturn(outputDirectoryMock)
+        `when`(outputDirectoryMock.asFile).thenReturn(outputDirectory)
         `when`(variantScope.variantConfiguration).thenReturn(variantConfiguration)
         `when`(variantScope.fullVariantName).thenReturn(variantName)
         `when`(variantScope.getTaskName("validateSigning"))
-                .thenReturn("validateSigning" + variantName.capitalize())
-        `when`(variantScope.getIncrementalDir(anyString())).thenReturn(temporaryFolder.newFolder())
+            .thenReturn("validateSigning" + variantName.capitalize())
         `when`(variantScope.taskContainer).thenReturn(MutableTaskContainer())
 
         variantScope.taskContainer.preBuildTask = project!!.tasks.named(PRE_BUILD_TASKNAME)
