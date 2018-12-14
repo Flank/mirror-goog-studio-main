@@ -32,7 +32,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    public static final int INITIAL_CAPACITY = 364;
+    public static final int INITIAL_CAPACITY = 365;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -92,6 +92,10 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(ChildCountDetector.SCROLLVIEW_ISSUE);
         issues.add(ChromeOsDetector.PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE);
         issues.add(ChromeOsDetector.UNSUPPORTED_CHROME_OS_HARDWARE);
+        issues.add(ChromeOsDetector.NON_RESIZEABLE_ACTIVITY);
+        issues.add(ChromeOsDetector.SETTING_ORIENTATION_ON_ACTIVITY);
+        issues.add(ChromeOsSourceDetector.UNSUPPORTED_LOCKED_ORIENTATION);
+        issues.add(ChromeOsSourceDetector.UNSUPPORTED_CAMERA_FEATURE);
         issues.add(CipherGetInstanceDetector.ISSUE);
         issues.add(CipherGetInstanceDetector.DEPRECATED_PROVIDER);
         issues.add(CleanupDetector.APPLY_SHARED_PREF);
@@ -433,11 +437,11 @@ public class BuiltinIssueRegistry extends IssueRegistry {
             }
 
             if (scope.contains(Scope.JAVA_FILE)) {
-                initialSize += 125;
+                initialSize += 127;
             } else if (scope.contains(Scope.CLASS_FILE)) {
                 initialSize += 16;
             } else if (scope.contains(Scope.MANIFEST)) {
-                initialSize += 52;
+                initialSize += 54;
             } else if (scope.contains(Scope.GRADLE_FILE)) {
                 initialSize += 15;
             }

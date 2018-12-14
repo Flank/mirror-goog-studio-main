@@ -19,7 +19,12 @@ package com.android.tools.lint.checks;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.VALUE_FALSE;
+import static com.android.SdkConstants.VALUE_TRUE;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_REQUIRED;
+import static com.android.xml.AndroidManifest.ATTRIBUTE_RESIZEABLE_ACTIVITY;
+import static com.android.xml.AndroidManifest.ATTRIBUTE_SCREEN_ORIENTATION;
+import static com.android.xml.AndroidManifest.NODE_ACTIVITY;
+import static com.android.xml.AndroidManifest.NODE_APPLICATION;
 import static com.android.xml.AndroidManifest.NODE_USES_FEATURE;
 import static com.android.xml.AndroidManifest.NODE_USES_PERMISSION;
 
@@ -36,8 +41,10 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.tools.lint.detector.api.XmlScanner;
+import com.android.utils.XmlUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -46,11 +53,12 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 /** Detects various issues for Chrome OS devices. */
 public class ChromeOsDetector extends Detector implements XmlScanner {
-    private static final Implementation IMPLEMENTATION =
+    private static final Implementation XML_IMPLEMENTATION =
             new Implementation(ChromeOsDetector.class, Scope.MANIFEST_SCOPE);
 
     /** Using hardware unsupported by Chrome OS devices */
@@ -66,7 +74,7 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
                             Category.CHROME_OS,
                             6,
                             Severity.ERROR,
-                            IMPLEMENTATION)
+                            XML_IMPLEMENTATION)
                     .setEnabledByDefault(false)
                     .addMoreInfo(
                             "https://developer.android.com/topic/arc/manifest.html#incompat-entries");
@@ -84,10 +92,43 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
                             Category.CHROME_OS,
                             3,
                             Severity.ERROR,
-                            IMPLEMENTATION)
+                            XML_IMPLEMENTATION)
                     .setEnabledByDefault(false)
                     .addMoreInfo(
                             "https://developer.android.com/topic/arc/manifest.html#implied-features");
+
+    /** Setting activities to be non-resizable */
+    public static final Issue NON_RESIZEABLE_ACTIVITY =
+            Issue.create(
+                            "NonResizeableActivity",
+                            "Activity is set to be non resizeable",
+                            "The `<activity>` element should be allowed to be resized to allow "
+                                    + "users to take advantage of the multi-window environment on Chrome OS "
+                                    + "To fix the issue, consider declaring the corresponding "
+                                    + "activity element with `resizableActivity=\"true\"` attribute.",
+                            Category.CHROME_OS,
+                            4,
+                            Severity.ERROR,
+                            XML_IMPLEMENTATION)
+                    .setEnabledByDefault(false)
+                    .addMoreInfo("https://developer.android.com/topic/arc/window-management");
+
+    /** Setting activities to be non-resizable */
+    public static final Issue SETTING_ORIENTATION_ON_ACTIVITY =
+            Issue.create(
+                            "LockedOrientationActivity",
+                            "Activity is locked to an orientation",
+                            "The `<activity>` element should not be locked to any orientation so "
+                                    + "that users can take advantage of the multi-window environments and "
+                                    + "larger screens on Chrome OS. To fix the issue, consider declaring the "
+                                    + "corresponding activity element with `screenOrientation=\"unspecified\"`"
+                                    + "or `\"fullSensor\"` attribute.",
+                            Category.CHROME_OS,
+                            4,
+                            Severity.ERROR,
+                            XML_IMPLEMENTATION)
+                    .setEnabledByDefault(false)
+                    .addMoreInfo("https://developer.android.com/topic/arc/window-management");
 
     private static final String HARDWARE_FEATURE_CAMERA = "android.hardware.camera";
 
@@ -143,6 +184,18 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
                 "android.software.sip.voip"
             };
 
+    private static final Set<String> UNSUPPORTED_ORIENTATIONS =
+            new HashSet<>(
+                    Arrays.asList(
+                            "landscape",
+                            "portrait",
+                            "reverseLandscape",
+                            "reversePortrait",
+                            "sensorLandscape",
+                            "sensorPortrait",
+                            "userLandscape",
+                            "userPortrait"));
+
     /** Constructs a new {@link ChromeOsDetector} check */
     public ChromeOsDetector() {}
 
@@ -161,9 +214,15 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
     /** Set containing unsupported Chrome OS uses-features elements without required="false" */
     private Set<String> unsupportedChromeOsUsesFeatures;
 
+    /** Set containing all non resizrable activities */
+    private Set<String> nonResizeableActivities;
+
+    /** Set containing all orientationLocked activities */
+    private Set<String> lockedOrientationActivities;
+
     @Override
     public Collection<String> getApplicableElements() {
-        return Arrays.asList(NODE_USES_FEATURE, NODE_USES_PERMISSION);
+        return Arrays.asList(NODE_USES_FEATURE, NODE_USES_PERMISSION, NODE_ACTIVITY);
     }
 
     @Override
@@ -173,6 +232,8 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
         unsupportedHardwareImpliedPermissions = Lists.newArrayListWithExpectedSize(2);
         unsupportedChromeOsUsesFeatures = Sets.newHashSetWithExpectedSize(2);
         allUnsupportedChromeOsUsesFeatures = Sets.newHashSetWithExpectedSize(2);
+        nonResizeableActivities = Sets.newHashSetWithExpectedSize(2);
+        lockedOrientationActivities = Sets.newHashSetWithExpectedSize(2);
     }
 
     @Override
@@ -272,8 +333,19 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
                     }
                 }
             }
+
+            if (!nonResizeableActivities.isEmpty()
+                    && xmlContext.isEnabled(NON_RESIZEABLE_ACTIVITY)) {
+                generateNonResizeableActivityReports(xmlContext);
+            }
+
+            if (!lockedOrientationActivities.isEmpty()
+                    && xmlContext.isEnabled(SETTING_ORIENTATION_ON_ACTIVITY)) {
+                generateLockedOrientationActivityReports(xmlContext);
+            }
         }
     }
+
 
     @Nullable
     private static String getImpliedUnsupportedHardware(@NonNull String permission) {
@@ -337,6 +409,21 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
             if (getImpliedUnsupportedHardware(permissionName) != null) {
                 unsupportedHardwareImpliedPermissions.add(permissionName);
             }
+        } else if (NODE_ACTIVITY.equals(elementName)) {
+            Attr resizeableActivity =
+                    element.getAttributeNodeNS(ANDROID_URI, ATTRIBUTE_RESIZEABLE_ACTIVITY);
+            if (resizeableActivity != null
+                    && !Boolean.parseBoolean(resizeableActivity.getValue())) {
+                nonResizeableActivities.add(element.getAttributeNS(ANDROID_URI, ATTR_NAME));
+            }
+
+            Attr activityOrientation =
+                    element.getAttributeNodeNS(ANDROID_URI, ATTRIBUTE_SCREEN_ORIENTATION);
+            if (activityOrientation != null
+                    && UNSUPPORTED_ORIENTATIONS.contains(activityOrientation.getValue())) {
+                lockedOrientationActivities.add(element.getAttributeNS(ANDROID_URI, ATTR_NAME));
+            }
+
         }
     }
 
@@ -348,4 +435,82 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
         }
         return false;
     }
+
+    private void generateNonResizeableActivityReports(@NonNull XmlContext xmlContext) {
+        List<Element> activityElements =
+                findActivityElements(nonResizeableActivities, xmlContext.document);
+
+        for (Element element : activityElements) {
+            Attr attrResizableActivity =
+                    element.getAttributeNodeNS(ANDROID_URI, ATTRIBUTE_RESIZEABLE_ACTIVITY);
+            Location location =
+                    attrResizableActivity == null
+                            ? xmlContext.getNameLocation(element)
+                            : xmlContext.getLocation(attrResizableActivity);
+            LintFix fix =
+                    fix().name("Set resizeableActivity=\"true\"")
+                            .set(ANDROID_URI, ATTRIBUTE_RESIZEABLE_ACTIVITY, VALUE_TRUE)
+                            .autoFix()
+                            .build();
+            xmlContext.report(
+                    NON_RESIZEABLE_ACTIVITY,
+                    element,
+                    location,
+                    "Expecting `android:resizeableActivity=\"true\"` for this activity "
+                            + "so the user can take advantage of the multi-window environment on "
+                            + "Chrome OS devices.",
+                    fix);
+        }
+    }
+
+    private void generateLockedOrientationActivityReports(@NonNull XmlContext xmlContext) {
+        List<Element> activityElements =
+                findActivityElements(lockedOrientationActivities, xmlContext.document);
+
+        for (Element element : activityElements) {
+            Attr attrResizableActivity =
+                    element.getAttributeNodeNS(ANDROID_URI, ATTRIBUTE_SCREEN_ORIENTATION);
+            Location location =
+                    attrResizableActivity == null
+                            ? xmlContext.getNameLocation(element)
+                            : xmlContext.getLocation(attrResizableActivity);
+            LintFix fix =
+                    fix().name("Set screenOrientation=\"fullSensor\"")
+                            .set(ANDROID_URI, ATTRIBUTE_SCREEN_ORIENTATION, "fullSensor")
+                            .autoFix()
+                            .build();
+            xmlContext.report(
+                    SETTING_ORIENTATION_ON_ACTIVITY,
+                    element,
+                    location,
+                    "Expecting `android:screenOrientation=\"unspecified\"` or `\"fullSensor\"` for this activity "
+                            + "so the user can use the application in any orientation and provide a great experience on "
+                            + "Chrome OS devices.",
+                    fix);
+        }
+    }
+
+    @NonNull
+    private static List<Element> findActivityElements(
+            @NonNull Set<String> activityNames, @NonNull Document document) {
+        List<Element> nodes = new ArrayList<>(activityNames.size());
+        Element manifestElement = document.getDocumentElement();
+
+        Element applicationElement = null;
+
+        for (Element child : XmlUtils.getSubTags(manifestElement)) {
+            if (NODE_APPLICATION.equals(child.getTagName())) {
+                applicationElement = child;
+            }
+        }
+        for (Element applicationChild : XmlUtils.getSubTags(applicationElement)) {
+            if (NODE_ACTIVITY.equals(applicationChild.getTagName())
+                    && activityNames.contains(
+                            applicationChild.getAttributeNS(ANDROID_URI, ATTR_NAME))) {
+                nodes.add(applicationChild);
+            }
+        }
+        return nodes;
+    }
 }
+
