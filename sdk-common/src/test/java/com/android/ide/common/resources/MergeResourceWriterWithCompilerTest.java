@@ -98,7 +98,7 @@ public class MergeResourceWriterWithCompilerTest {
         File rawRes = new File(resourceDir, "raw");
         rawRes.mkdir();
         File f1 = new File(rawRes, "f1.txt");
-        Files.asCharSink(f1, Charsets.US_ASCII).write("foo");
+        Files.asCharSink(f1, Charsets.UTF_8).write("foo");
 
         ResourceMergerItem f1Item =
                 new ResourceMergerItem("f1.txt", null, ResourceType.RAW, null, null);
@@ -106,8 +106,7 @@ public class MergeResourceWriterWithCompilerTest {
         f1Item.setSourceFile(f1File);
 
         File f2 = new File(rawRes, "f2.xml");
-        Files.asCharSink(f2, Charsets.US_ASCII)
-                .write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
+        Files.asCharSink(f2, Charsets.UTF_8).write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
 
         ResourceMergerItem f2Item =
                 new ResourceMergerItem("f2.xml", null, ResourceType.RAW, null, null);
