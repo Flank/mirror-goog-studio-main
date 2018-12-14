@@ -16,20 +16,20 @@
 
 package com.android.tools.profiler.network;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.tools.profiler.GrpcUtils;
 import com.android.tools.profiler.PerfDriver;
 import com.android.tools.profiler.proto.Common.Event;
 import com.android.tools.profiler.proto.Network;
+import com.android.tools.profiler.proto.Profiler;
+import java.util.*;
+import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static com.google.common.truth.Truth.assertThat;
 
 @RunWith(Parameterized.class)
 public class UnifiedPipelineHttpUrlTest {
@@ -73,7 +73,19 @@ public class UnifiedPipelineHttpUrlTest {
                     requestStartedEvent.getNetworkHttpConnection().getHttpRequestStarted();
             assertThat(data.getMethod()).isEqualTo("GET");
             assertThat(data.getUrl()).contains("?activity=HttpUrlGet");
-            // TODO validate payload id and payload
+
+            Event responseCompletedEvent = httpEvents.get(2);
+            Network.NetworkHttpConnectionData.HttpResponseCompleted responseData =
+                    responseCompletedEvent.getNetworkHttpConnection().getHttpResponseCompleted();
+            assertThat(responseData.getPayloadId())
+                    .isEqualTo(responseCompletedEvent.getGroupId() + "_response");
+            Profiler.BytesResponse bytesResponse =
+                    myGrpc.getProfilerStub()
+                            .getBytes(
+                                    Profiler.BytesRequest.newBuilder()
+                                            .setId(responseData.getPayloadId())
+                                            .build());
+            assertThat(bytesResponse.getContents().toStringUtf8()).isEqualTo(getSuccess);
         }
     }
 
@@ -93,7 +105,32 @@ public class UnifiedPipelineHttpUrlTest {
                     requestStartedEvent.getNetworkHttpConnection().getHttpRequestStarted();
             assertThat(data.getMethod()).isEqualTo("POST");
             assertThat(data.getUrl()).contains("?activity=HttpUrlPost");
-            // TODO validate payload id and payload
+
+            Event requestCompleteEvent = httpEvents.get(1);
+            Network.NetworkHttpConnectionData.HttpRequestCompleted requestData =
+                    requestCompleteEvent.getNetworkHttpConnection().getHttpRequestCompleted();
+            assertThat(requestData.getPayloadId())
+                    .isEqualTo(requestCompleteEvent.getGroupId() + "_request");
+            Profiler.BytesResponse bytesResponse =
+                    myGrpc.getProfilerStub()
+                            .getBytes(
+                                    Profiler.BytesRequest.newBuilder()
+                                            .setId(requestData.getPayloadId())
+                                            .build());
+            assertThat(bytesResponse.getContents().toStringUtf8()).isEqualTo("TestRequestBody");
+
+            Event responseCompletedEvent = httpEvents.get(3);
+            Network.NetworkHttpConnectionData.HttpResponseCompleted responseData =
+                    responseCompletedEvent.getNetworkHttpConnection().getHttpResponseCompleted();
+            assertThat(responseData.getPayloadId())
+                    .isEqualTo(responseCompletedEvent.getGroupId() + "_response");
+            bytesResponse =
+                    myGrpc.getProfilerStub()
+                            .getBytes(
+                                    Profiler.BytesRequest.newBuilder()
+                                            .setId(responseData.getPayloadId())
+                                            .build());
+            assertThat(bytesResponse.getContents().toStringUtf8()).isEqualTo(getSuccess);
         }
     }
 

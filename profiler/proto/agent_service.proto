@@ -27,6 +27,8 @@ service AgentService {
   rpc HeartBeat(HeartBeatRequest) returns (HeartBeatResponse) {}
 
   rpc SendEvent(SendEventRequest) returns (EmptyResponse) {}
+
+  rpc SendPayload(SendPayloadRequest) returns (EmptyResponse) {}
 }
 
 message HeartBeatRequest {
@@ -45,6 +47,15 @@ message SendEventRequest {
   // So it is the responsibility of the server (perfd) to resolve and populate
   // the |session_id| field in the Event based on the pid.
   Event event = 2;
+}
+
+message SendPayloadRequest {
+  // string id of the payload (e.g. file name)
+  string name = 1;
+  // byte content of the payload.
+  bytes payload = 2;
+  // whether the data is partial and more content should be expected
+  bool is_partial = 3;
 }
 
 // TODO b/120504084 replace with google.protobuf.empty

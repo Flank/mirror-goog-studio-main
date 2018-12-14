@@ -38,6 +38,10 @@ class AgentServiceImpl : public proto::AgentService::Service {
                          const proto::SendEventRequest* request,
                          proto::EmptyResponse* response) override;
 
+  grpc::Status SendPayload(grpc::ServerContext* context,
+                           const proto::SendPayloadRequest* request,
+                           proto::EmptyResponse* response) override;
+
  private:
   Daemon* daemon_;
 };
