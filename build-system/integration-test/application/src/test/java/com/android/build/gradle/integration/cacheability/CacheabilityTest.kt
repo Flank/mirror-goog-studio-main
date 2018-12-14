@@ -76,7 +76,9 @@ class CacheabilityTest {
                     ":mergeDebugJniLibFolders",
                     ":processDebugManifest",
                     ":processDebugResources",
-                    ":mainApkListPersistenceDebug"
+                    ":mainApkListPersistenceDebug",
+                    ":validateSigningDebug",
+                    ":signingConfigWriterDebug"
                 ),
                 DID_WORK to setOf(
                     ":checkDebugManifest",
@@ -84,8 +86,6 @@ class CacheabilityTest {
                     ":createDebugCompatibleScreenManifests",
                     ":compileDebugShaders",
                     ":transformClassesWithDexBuilderForDebug",
-                    ":validateSigningDebug",
-                    ":signingConfigWriterDebug",
                     ":transformNativeLibsWithMergeJniLibsForDebug",
                     ":transformNativeLibsWithStripDebugSymbolForDebug",
                     ":transformResourcesWithMergeJavaResForDebug",
@@ -114,7 +114,6 @@ class CacheabilityTest {
             ":createDebugCompatibleScreenManifests" /* Bug 120412436 */,
             ":compileDebugShaders" /* Bug 120413401 */,
             ":transformClassesWithDexBuilderForDebug" /* Bug 74595921 */,
-            ":signingConfigWriterDebug" /* Bug 120411939 */,
             ":transformNativeLibsWithMergeJniLibsForDebug" /* Bug 74595223 */,
             ":transformNativeLibsWithStripDebugSymbolForDebug" /* Bug 120414535 */,
             ":transformResourcesWithMergeJavaResForDebug" /* Bug 74595224 */,
@@ -124,9 +123,7 @@ class CacheabilityTest {
         /**
          * Tasks that are never cacheable.
          */
-        private val NEVER_CACHEABLE = setOf(
-            ":validateSigningDebug"
-        )
+        private val NEVER_CACHEABLE = setOf<String>()
     }
 
     @get:Rule
