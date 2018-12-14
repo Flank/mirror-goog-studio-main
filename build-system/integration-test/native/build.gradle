@@ -14,7 +14,6 @@ dependencies {
     testCompile project(':apksig')
     testCompile project(':base:builder')
     testCompile project(':base:builder-model')
-    testCompile project(':base:instant-run:instant-run-client')
     testCompile project(':base:sdk-common')
     testCompile project(':base:testing-infrastructure:device-pool:device-provider')
     testCompile project(':base:testutils')

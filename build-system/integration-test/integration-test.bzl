@@ -93,10 +93,10 @@ def gradle_integration_test(
         **kwargs
     )
 
-def single_gradle_integration_test(name, deps, data, maven_repos, runtime_deps = [], tags = [], **kwargs):
+def single_gradle_integration_test(name, deps, data, maven_repos, srcs = "", runtime_deps = [], tags = [], **kwargs):
     gradle_integration_test(
         name = name,
-        srcs = native.glob([name + ".java", name + ".kt"]),
+        srcs = native.glob([srcs + name + ".java", srcs + name + ".kt"]),
         deps = deps,
         data = data,
         dirs = ["."],

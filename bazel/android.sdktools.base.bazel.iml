@@ -115,15 +115,6 @@
     </orderEntry>
     <orderEntry type="module" module-name="android.sdktools.repository" />
     <orderEntry type="module" module-name="android.sdktools.common" />
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/4.5/gradle-tooling-api-4.5.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
     <orderEntry type="module" module-name="android.sdktools.testutils" />
     <orderEntry type="module-library" scope="TEST">
       <library>
@@ -137,5 +128,14 @@
     <orderEntry type="module" module-name="perf-logger" scope="TEST" />
     <orderEntry type="library" name="protobuf" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="jacoco-core" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../../prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/5.1-milestone-1/gradle-tooling-api-5.1-milestone-1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>

@@ -55,44 +55,7 @@ configurations {
     testCompile.exclude group: 'com.google.guava', module: 'guava-jdk5'
 }
 
-def testEnvironment =
-        /*
-         * We keep the following properties:
-         * - starting with CUSTOM_ e.g. CUSTOM_ANDROID_HOME
-         * - DEBUG_INNER_TEST: to allow us to debug tests
-         * - starting with LC_ or LANG_, so the locale is set up correctly
-         * - BUILDBOT_: to get BuildBot specific information
-         */
-        System.getenv().findAll { entry ->
-            String key = entry.key
-            key.startsWith("CUSTOM_") ||
-                    key.startsWith("ACTD_") || // environment variables for uploading to Dana
-                    key.startsWith("PERF_") || // environment variables for controlling perf tests
-                    key == "USE_GRADLE_NIGHTLY" ||
-                    key == "DEBUG_INNER_TEST" ||
-                    // For NDK tests on Windows. See init.mk.
-                    key == "OS" ||
-                    key == "PROCESSOR_ARCHITECTURE" ||
-                    key == "ProgramW6432" ||
-                    key == "ProgramFiles(x86)" ||
-                    key == "TMP" ||
-                    key == "TEMP" ||
-                    // For AccentCharacterAndProguardTest
-                    key.startsWith("LC_") ||
-                    key.startsWith("LANG") ||
-                    key.startsWith("BUILDBOT_")
-        }
-
-testEnvironment << [
-        TEST_TMPDIR:
-                System.env.TEST_TMPDIR != null
-                        ? new File(System.env.TEST_TMPDIR)
-                        : project.buildDir, // Use the same environment variable as Bazel for now.
-        CUSTOM_REPO: new File(rootProject.ext.androidHostOut, "repo").toString()
-                + File.pathSeparator
-                + rootProject.file("../prebuilts/tools/common/m2/repository/").toString(),
-        CUSTOM_IMPROVED_DEPENDENCY_RESOLUTION : "true"
-]
+apply from: '../integration-tests.gradle'
 
 // These tasks will not depend on publishLocal, so they will run integration
 // tests against whatever version of the plugin is in ../../../out/repo. This
@@ -164,7 +127,9 @@ task onlineTest(type: Test) {
 check.dependsOn automaticTest
 check.dependsOn sanityTest
 
-task connectedIntegrationTest(type: Test)
+task connectedIntegrationTest(type: Test) {
+    dependsOn ':base:build-system:integration-test:native:publishLocal'
+}
 task connectedIntegrationTestQuarantine(type: Test)
 
 def allConnectedTestTasks = [
@@ -176,8 +141,9 @@ def allConnectedTestTasks = [
 
 
 configure(allConnectedTestTasks) {
-    testClassesDirs = sourceSets.test.output.classesDirs
-    classpath = sourceSets.test.runtimeClasspath
+    def nativeTestTask = tasks.findByPath(':base:build-system:integration-test:native:test')
+    testClassesDirs = sourceSets.test.output.classesDirs.plus(nativeTestTask.testClassesDirs)
+    classpath = sourceSets.test.runtimeClasspath.plus(nativeTestTask.classpath)
 
     description =
             "Runs the project integration tests with device tests. This requires an SDK either " +
