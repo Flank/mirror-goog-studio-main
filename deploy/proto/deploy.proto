@@ -108,11 +108,31 @@ message Event {
   int64 timestamp_ns = 5;
 }
 
-message ApkDump{
+message ApkDump {
   string name = 1;
   bytes cd = 2;
   bytes signature = 3;
   string absolute_path = 4;
+}
+
+message PackageDump {
+  // The name of the package.
+  string name = 1;
+
+  // The apk files installed in the package.
+  repeated ApkDump apks = 2;
+
+  // The package processes currently executing.
+  repeated int32 processes = 3;
+
+  enum Arch {
+    ARCH_UNKNOWN = 0;
+    ARCH_32_BIT = 1;
+    ARCH_64_BIT = 2;
+  }
+
+  // Whether the package is running as 32-bit or 64-bit.
+  Arch arch = 4;
 }
 
 message DumpResponse {
@@ -120,10 +140,12 @@ message DumpResponse {
     UNKNOWN = 0;
     OK = 1; // The dump completed successfully.
     ERROR_PACKAGE_NOT_FOUND = 2;
+    ERROR_PROCESS_NOT_FOUND = 3;
   }
 
   Status status = 1;
-  repeated ApkDump dumps = 3;
+  repeated PackageDump packages = 2;
+  string failed_package = 3;
 }
 
 message PatchInstruction {

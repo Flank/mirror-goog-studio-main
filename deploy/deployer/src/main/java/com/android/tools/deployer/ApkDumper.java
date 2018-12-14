@@ -18,6 +18,7 @@ package com.android.tools.deployer;
 import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -35,14 +36,15 @@ public class ApkDumper {
 
     public List<ApkEntry> dump(String packageName) throws DeployerException {
         try {
-            Deploy.DumpResponse response = installer.dump(packageName);
+            Deploy.DumpResponse response = installer.dump(ImmutableList.of(packageName));
             if (response.getStatus() == Deploy.DumpResponse.Status.ERROR_PACKAGE_NOT_FOUND) {
                 throw new DeployerException(
                         DeployerException.Error.DUMP_UNKNOWN_PACKAGE,
                         "Cannot list apks for package " + packageName + ". Is the app installed?");
             }
 
-            return convert(response.getDumpsList());
+            // Only one package is being dumped right now.
+            return convert(response.getPackages(0).getApksList());
         } catch (IOException e) {
             throw new DeployerException(DeployerException.Error.DUMP_FAILED, e);
         }

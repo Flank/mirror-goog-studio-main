@@ -17,10 +17,11 @@ package com.android.tools.deployer;
 
 import com.android.tools.deploy.proto.Deploy;
 import java.io.IOException;
+import java.util.List;
 
 public interface Installer {
 
-    Deploy.DumpResponse dump(String packageName) throws IOException;
+    Deploy.DumpResponse dump(List<String> packageNames) throws IOException;
 
     Deploy.SwapResponse swap(Deploy.SwapRequest request) throws IOException;
 

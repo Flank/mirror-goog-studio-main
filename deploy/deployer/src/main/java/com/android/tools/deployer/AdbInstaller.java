@@ -85,8 +85,11 @@ public class AdbInstaller implements Installer {
     }
 
     @Override
-    public Deploy.DumpResponse dump(String packageName) throws IOException {
-        String[] cmd = buildCmd(new String[] {"dump", packageName});
+    public Deploy.DumpResponse dump(List<String> packageNames) throws IOException {
+        String[] cmd =
+                buildCmd(
+                        ObjectArrays.concat(
+                                "dump", packageNames.toArray(new String[packageNames.size()])));
         Deploy.InstallerResponse installerResponse = invokeRemoteCommand(cmd, null);
         Deploy.DumpResponse response = installerResponse.getDumpResponse();
         logger.info("Dump response:" + response.getStatus().toString());

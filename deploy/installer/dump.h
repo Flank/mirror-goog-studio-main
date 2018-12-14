@@ -32,9 +32,22 @@ class DumpCommand : public Command {
   virtual void Run();
 
  private:
-  std::string packageName_;
+  std::vector<std::string> package_names_;
 
   std::vector<std::string> RetrieveApks(const std::string& package_name);
+
+  struct ProcStats {
+    char name[16];
+    int pid;
+    int ppid;
+    int uid;
+  };
+
+  bool GetApks(const std::string& package_name,
+               proto::PackageDump* package_dump);
+  bool GetProcessIds(const std::string& package_name,
+                     proto::PackageDump* package_dump);
+  bool ParseProc(dirent* entry, ProcStats* stats);
 };
 
 }  // namespace deploy

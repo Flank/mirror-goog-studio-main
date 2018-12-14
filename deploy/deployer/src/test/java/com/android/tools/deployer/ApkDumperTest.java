@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.android.testutils.TestUtils;
 import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deployer.model.ApkEntry;
+import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
 import java.io.File;
 import java.nio.file.Files;
@@ -41,10 +42,15 @@ public class ApkDumperTest {
                 Deploy.ApkDump.newBuilder()
                         .setCd(ByteString.copyFrom(Files.readAllBytes(cd.toPath())))
                         .setSignature(ByteString.copyFrom(Files.readAllBytes(sig.toPath())));
-        Deploy.DumpResponse response = Deploy.DumpResponse.newBuilder().addDumps(dump).build();
+
+        Deploy.DumpResponse response =
+                Deploy.DumpResponse.newBuilder()
+                        .addPackages(
+                                Deploy.PackageDump.newBuilder().setName("package").addApks(dump))
+                        .build();
 
         Installer installer = Mockito.mock(Installer.class);
-        Mockito.when(installer.dump("package")).thenReturn(response);
+        Mockito.when(installer.dump(ImmutableList.of("package"))).thenReturn(response);
 
         List<ApkEntry> files = new ApkDumper(installer).dump("package");
 
@@ -67,10 +73,14 @@ public class ApkDumperTest {
         Deploy.ApkDump.Builder dump =
                 Deploy.ApkDump.newBuilder()
                         .setCd(ByteString.copyFrom(Files.readAllBytes(cd.toPath())));
-        Deploy.DumpResponse response = Deploy.DumpResponse.newBuilder().addDumps(dump).build();
+        Deploy.DumpResponse response =
+                Deploy.DumpResponse.newBuilder()
+                        .addPackages(
+                                Deploy.PackageDump.newBuilder().setName("package").addApks(dump))
+                        .build();
 
         Installer installer = Mockito.mock(Installer.class);
-        Mockito.when(installer.dump("package")).thenReturn(response);
+        Mockito.when(installer.dump(ImmutableList.of("package"))).thenReturn(response);
 
         List<ApkEntry> files = new ApkDumper(installer).dump("package");
 

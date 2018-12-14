@@ -275,7 +275,7 @@ sh_test(
         "//tools/base/deploy/proto:protobuffer_src",
     ] + glob(["tests/**/*"]),
     tags = [
-        "no_windows",
+        "manual",  # b/120995974
     ],
 )
 
@@ -291,7 +291,7 @@ sh_test(
         "//tools/base/deploy/proto:protobuffer_src",
     ] + glob(["tests/**/*"]),
     tags = [
-        "no_windows",
+        "manual",  # b/120995974
     ],
 )
 
@@ -307,6 +307,6 @@ sh_test(
         "//tools/base/deploy/proto:protobuffer_src",
     ] + glob(["tests/**/*"]),
     tags = [
-        "no_windows",
+        "manual",  # b/120995974
     ],
 )
