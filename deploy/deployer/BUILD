@@ -28,7 +28,7 @@ iml_module(
         "//tools/idea/.idea/libraries:Guava",
         "//tools/base/deploy/proto:deploy_java_proto",
         "//tools/idea/.idea/libraries:protobuf",
-        "//prebuilts/r8:d8-master",
+        "//prebuilts/r8:r8-master",
         "//tools/base/deploy/deployer:java_version",
         "//tools/idea/.idea/libraries:sqlite",
         "//tools/idea/.idea/libraries:mockito[test]",
@@ -65,13 +65,13 @@ java_library(
     srcs = glob([
         "src/main/**/*.java",
     ]),
-    tags = ["no_rbe_windows"],
     # Embed android installer in the jar (x86_64, arm7, arm64)
     resources = ["//tools/base/deploy/installer:android"],
+    tags = ["no_rbe_windows"],
     visibility = ["//visibility:public"],
     deps = [
         ":java_version",
-        "//prebuilts/r8:d8-master",
+        "//prebuilts/r8:r8-master",
         "//prebuilts/tools/common/m2/repository/com/google/guava/guava/23.0:jar",
         "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.4.0:jar",
         "//tools/base/annotations",
@@ -103,7 +103,10 @@ coverage_java_test(
     srcs = glob(["src/test/java/**/*.java"]),
     data = glob(["src/test/resource/**"]),
     jvm_flags = ["-Dtest.suite.jar=deployer.tests.jar"],
-    tags = ["no_rbe_windows", "no_test_windows"],  # b/116693861
+    tags = [
+        "no_rbe_windows",
+        "no_test_windows",
+    ],  # b/116693861
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":tools.deployer",

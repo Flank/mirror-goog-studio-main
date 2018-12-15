@@ -23,7 +23,7 @@ kotlin_library(
     bundled_deps = [
         "//tools/base/build-system/profile",
         "//tools/dx/dalvik/dx",
-        "//prebuilts/r8:d8-master",
+        "//prebuilts/r8:r8-master",
     ],
     javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
     pom = ":pom",
