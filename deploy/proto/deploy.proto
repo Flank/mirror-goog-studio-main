@@ -13,17 +13,14 @@ message SwapRequest {
   // If true, restarts the current activity after a successful hot-swap.
   bool restart_activity = 2;
 
-  // The processes that the JVMTI agents should attach to.
-  repeated string process_names = 3;
-
   // The classes to be hot-swapped.
-  repeated ClassDef classes = 4;
+  repeated ClassDef classes = 3;
 
   // The session id where the new apk have been staged.
-  string session_id = 5;
+  string session_id = 4;
 
-  // Don't perform actual code swap on these process.
-  repeated int32 skip_process_ids = 6;
+  // The processes to code swap.
+  repeated int32 process_ids = 5;
 }
 
 message ResumeRequest {

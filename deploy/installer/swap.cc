@@ -74,18 +74,6 @@ void SwapCommand::ParseParameters(int argc, char** argv) {
   ready_to_run_ = true;
 }
 
-inline void FilterPids(std::vector<int>& process_ids,
-                       proto::SwapRequest request) {
-  process_ids.erase(
-      remove_if(process_ids.begin(), process_ids.end(),
-                [&](int x) {
-                  return std::find(request.skip_process_ids().begin(),
-                                   request.skip_process_ids().end(),
-                                   x) != request.skip_process_ids().end();
-                }),
-      process_ids.end());
-}
-
 void SwapCommand::Run() {
   Phase p("Command Swap");
 
@@ -99,21 +87,15 @@ void SwapCommand::Run() {
     return;
   }
 
-  // Get the list of processes we need to attach to.
-  std::vector<int> process_ids = GetApplicationPids();
-
-  // Filter out PIDs that was instructed to skip.
-  FilterPids(process_ids, request_);
-
   CmdCommand cmd(workspace_);
   std::string output;
   std::string install_session = request_.session_id();
 
-  int agent_server_pid;
-  if (Swap(process_ids, &agent_server_pid)) {
+  if (Swap()) {
     if (cmd.CommitInstall(install_session, &output)) {
       // Swap and commit have both succeeded.
       response_->set_status(proto::SwapResponse::OK);
+      LogEvent("Successfully installed package: " + request_.package_name());
     } else {
       // Swap succeeded but installation failed to complete.
       response_->set_status(proto::SwapResponse::INSTALLATION_FAILED);
@@ -123,10 +105,6 @@ void SwapCommand::Run() {
     cmd.AbortInstall(install_session, &output);
     response_->set_status(proto::SwapResponse::ERROR);
   }
-
-  // Cleanup zombie agent-server status from the kernel.
-  int status;
-  waitpid(agent_server_pid, &status, 0);
 }
 
 bool SwapCommand::Setup() noexcept {
@@ -254,18 +232,17 @@ bool SwapCommand::WriteArrayToDisk(const unsigned char* array,
   return true;
 }
 
-bool SwapCommand::Swap(const std::vector<int>& process_ids,
-                       int* agent_server_pid) {
+bool SwapCommand::Swap() {
   // Don't bother with the server if we have no work to do.
-  if (process_ids.empty()) {
+  if (request_.process_ids().empty()) {
     response_->set_status(proto::SwapResponse::OK);
     LogEvent("No PIDs needs to be swapped");
     return true;
   }
 
   // Start the server and wait for it to begin listening for connections.
-  int read_fd, write_fd;
-  if (!WaitForServer(process_ids.size(), agent_server_pid, &read_fd,
+  int read_fd, write_fd, agent_server_pid, status;
+  if (!WaitForServer(request_.process_ids().size(), &agent_server_pid, &read_fd,
                      &write_fd)) {
     ErrEvent("Unable to start server");
     response_->set_status(proto::SwapResponse::ERROR);
@@ -275,27 +252,30 @@ bool SwapCommand::Swap(const std::vector<int>& process_ids,
   OwnedMessagePipeWrapper server_input(write_fd);
   OwnedMessagePipeWrapper server_output(read_fd);
 
-  if (!AttachAgents(process_ids)) {
+  if (!AttachAgents()) {
     response_->set_status(proto::SwapResponse::ERROR);
     ErrEvent("One or more agents failed to attach");
+    waitpid(agent_server_pid, &status, 0);
     return false;
   }
 
   if (!server_input.Write(request_bytes_)) {
     response_->set_status(proto::SwapResponse::ERROR);
     ErrEvent("Could not write to agent proxy server");
+    waitpid(agent_server_pid, &status, 0);
     return false;
   }
 
   std::string response_bytes;
   std::unordered_map<int, proto::AgentSwapResponse> agent_responses;
   auto overall_status = proto::AgentSwapResponse::UNKNOWN;
-  while (agent_responses.size() < process_ids.size() &&
+  while (agent_responses.size() < request_.process_ids().size() &&
          server_output.Read(&response_bytes)) {
     proto::AgentSwapResponse agent_response;
     if (!agent_response.ParseFromString(response_bytes)) {
       response_->set_status(proto::SwapResponse::ERROR);
       ErrEvent("Received unparseable response from agent");
+      waitpid(agent_server_pid, &status, 0);
       return false;
     }
 
@@ -320,32 +300,13 @@ bool SwapCommand::Swap(const std::vector<int>& process_ids,
   }
 
   // Ensure all of the agents have responded.
-  if (agent_responses.size() < process_ids.size()) {
+  if (agent_responses.size() < request_.process_ids().size()) {
     overall_status = proto::AgentSwapResponse::ERROR;
   }
 
+  // Cleanup zombie agent-server status from the kernel.
+  waitpid(agent_server_pid, &status, 0);
   return overall_status == proto::AgentSwapResponse::OK;
-}
-
-std::vector<int> SwapCommand::GetApplicationPids() const {
-  Phase p("GetApplicationPids");
-  std::vector<int> process_ids;
-  std::string pidof_output;
-  std::vector<std::string> process_names(request_.process_names().begin(),
-                                         request_.process_names().end());
-
-  if (!RunCmd("pidof", User::SHELL_USER, {process_names}, &pidof_output)) {
-    ErrEvent("Could not get app pid for package: "_s + request_.package_name());
-    return process_ids;
-  }
-
-  int pid;
-  std::istringstream pids(pidof_output);
-  while (pids >> pid) {
-    process_ids.push_back(pid);
-  }
-
-  return process_ids;
 }
 
 bool SwapCommand::WaitForServer(int agent_count, int* server_pid, int* read_fd,
@@ -396,10 +357,10 @@ bool SwapCommand::WaitForServer(int agent_count, int* server_pid, int* read_fd,
   return success;
 }
 
-bool SwapCommand::AttachAgents(const std::vector<int>& process_ids) const {
+bool SwapCommand::AttachAgents() const {
   Phase p("AttachAgents");
   CmdCommand cmd(workspace_);
-  for (int pid : process_ids) {
+  for (int pid : request_.process_ids()) {
     std::string output;
     std::string agent = kAgentFilename;
 #if defined(__aarch64__)

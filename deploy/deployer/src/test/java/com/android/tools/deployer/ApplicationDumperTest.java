@@ -20,16 +20,18 @@ import static org.junit.Assert.assertEquals;
 
 import com.android.testutils.TestUtils;
 import com.android.tools.deploy.proto.Deploy;
+import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-public class ApkDumperTest {
+public class ApplicationDumperTest {
 
     private static final String BASE = "tools/base/deploy/deployer/src/test/resource/";
 
@@ -52,7 +54,9 @@ public class ApkDumperTest {
         Installer installer = Mockito.mock(Installer.class);
         Mockito.when(installer.dump(ImmutableList.of("package"))).thenReturn(response);
 
-        List<ApkEntry> files = new ApkDumper(installer).dump("package");
+        ApkEntry entry = new ApkEntry("", 0, Apk.builder().setPackageName("package").build());
+        List<ApkEntry> files =
+                new ApplicationDumper(installer).dump(ImmutableList.of(entry)).apkEntries;
 
         String apk = "b236acae47f2b2163e9617021c4e1adc7a0c197b";
         assertEquals(277, files.size());
@@ -82,7 +86,9 @@ public class ApkDumperTest {
         Installer installer = Mockito.mock(Installer.class);
         Mockito.when(installer.dump(ImmutableList.of("package"))).thenReturn(response);
 
-        List<ApkEntry> files = new ApkDumper(installer).dump("package");
+        ApkEntry entry = new ApkEntry("", 0, Apk.builder().setPackageName("package").build());
+        List<ApkEntry> files =
+                new ApplicationDumper(installer).dump(ImmutableList.of(entry)).apkEntries;
 
         String apk = "e5c64a6b8f51198331aefcb7ff695e7faebbd80a";
         assertEquals(494, files.size());
@@ -98,5 +104,38 @@ public class ApkDumperTest {
                 0x566244DBL,
                 files.get(20));
         assertApkEntryEquals(apk, "res/color/abc_tint_spinner.xml", 0xD7611BC4L, files.get(30));
+    }
+
+    @Test
+    public void testProcessIds() throws Exception {
+        Deploy.DumpResponse response =
+                Deploy.DumpResponse.newBuilder()
+                        .addPackages(
+                                Deploy.PackageDump.newBuilder()
+                                        .setName("target")
+                                        .addProcesses(1)
+                                        .addProcesses(2))
+                        .addPackages(
+                                Deploy.PackageDump.newBuilder()
+                                        .setName("instrument")
+                                        .addProcesses(3)
+                                        .addProcesses(4))
+                        .build();
+
+        Installer installer = Mockito.mock(Installer.class);
+        Mockito.when(installer.dump(ImmutableList.of("instrument", "target"))).thenReturn(response);
+
+        ApkEntry entry =
+                new ApkEntry(
+                        "",
+                        0,
+                        Apk.builder()
+                                .setPackageName("instrument")
+                                .setTargetPackages(ImmutableList.of("target"))
+                                .build());
+        Map<String, List<Integer>> pids =
+                new ApplicationDumper(installer).dump(ImmutableList.of(entry)).pids;
+        assertEquals(ImmutableList.of(1, 2), pids.get("target"));
+        assertEquals(ImmutableList.of(3, 4), pids.get("instrument"));
     }
 }

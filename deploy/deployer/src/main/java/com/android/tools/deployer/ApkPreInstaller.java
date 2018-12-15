@@ -57,7 +57,7 @@ public class ApkPreInstaller {
      * @return Paths of the apks pushed on the device
      */
     @Trace
-    public String preinstall(List<ApkEntry> remoteContent, List<ApkEntry> localContent)
+    public String preinstall(ApplicationDumper.Dump remoteContent, List<ApkEntry> localContent)
             throws DeployerException {
         String sessionId = "";
 
@@ -69,7 +69,7 @@ public class ApkPreInstaller {
 
         // Build the list of remote apks.
         HashMap<String, Apk> remoteApks = new HashMap<>();
-        for (ApkEntry file : remoteContent) {
+        for (ApkEntry file : remoteContent.apkEntries) {
             remoteApks.put(file.apk.name, file.apk);
         }
 

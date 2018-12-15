@@ -95,9 +95,9 @@ public class DeployerRunner implements UIService {
                 deployer.install(packageName, apks, options.build());
             } else {
                 if (command.equals("fullswap")) {
-                    deployer.fullSwap(packageName, apks);
+                    deployer.fullSwap(apks);
                 } else if (command.equals("codeswap")) {
-                    deployer.codeSwap(packageName, apks, ImmutableMap.of());
+                    deployer.codeSwap(apks, ImmutableMap.of());
                 }
             }
             runner.run();

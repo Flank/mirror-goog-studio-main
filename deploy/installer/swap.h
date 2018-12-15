@@ -49,12 +49,8 @@ class SwapCommand : public Command {
   // - Make sure the  configuration file to app data folder.
   bool Setup() noexcept;
 
-  // Obtains a list of process ids corresponding to processes running on the
-  // device that match the names present in the SwapRequest object.
-  std::vector<int> GetApplicationPids() const;
-
   // Performs a swap by starting the server and attaching agents.
-  bool Swap(const std::vector<int>& process_ids, int* agent_server_pid);
+  bool Swap();
 
   // Starts the server and waits for it to start listening. The sync is
   // performed by opening a pipe and passing the write end to the server
@@ -65,7 +61,7 @@ class SwapCommand : public Command {
 
   // Tries to attach an agent to each process in the request; if any agent fails
   // to attach, returns false.
-  bool AttachAgents(const std::vector<int>& process_ids) const;
+  bool AttachAgents() const;
 
   // Runs a command with the provided arguments. If run_as_package is true,
   // the command is invoked with 'run-as'. If the command fails, prints the

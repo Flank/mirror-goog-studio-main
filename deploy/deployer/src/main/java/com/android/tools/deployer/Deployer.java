@@ -91,30 +91,24 @@ public class Deployer {
         }
     }
 
-    public List<Task<?>> codeSwap(
-            String packageName, List<String> apks, Map<Integer, ClassRedefiner> redefiners)
+    public List<Task<?>> codeSwap(List<String> apks, Map<Integer, ClassRedefiner> redefiners)
             throws DeployerException {
         try (Trace ignored = Trace.begin("codeSwap")) {
-            return swap(packageName, apks, false /* Restart Activity */, redefiners);
+            return swap(apks, false /* Restart Activity */, redefiners);
         }
     }
 
-    public List<Task<?>> fullSwap(String packageName, List<String> apks) throws DeployerException {
+    public List<Task<?>> fullSwap(List<String> apks) throws DeployerException {
         try (Trace ignored = Trace.begin("fullSwap")) {
-            return swap(packageName, apks, true /* Restart Activity */, ImmutableMap.of());
+            return swap(apks, true /* Restart Activity */, ImmutableMap.of());
         }
     }
 
     private List<Task<?>> swap(
-            String argPackageName,
-            List<String> argPaths,
-            boolean argRestart,
-            Map<Integer, ClassRedefiner> redefiners)
+            List<String> argPaths, boolean argRestart, Map<Integer, ClassRedefiner> redefiners)
             throws DeployerException {
-
         // Inputs
         Task<List<String>> paths = runner.create(argPaths);
-        Task<String> packageName = runner.create(argPackageName);
         Task<Boolean> restart = runner.create(argRestart);
         Task<DexSplitter> splitter = runner.create(new CachedDexSplitter(db, new D8DexSplitter()));
 
@@ -123,8 +117,8 @@ public class Deployer {
                 runner.create(Tasks.PARSE_PATHS, new ApkParser()::parsePaths, paths);
 
         // Get the list of files from the installed app
-        Task<List<ApkEntry>> dumps =
-                runner.create(Tasks.DUMP, new ApkDumper(installer)::dump, packageName);
+        Task<ApplicationDumper.Dump> dumps =
+                runner.create(Tasks.DUMP, new ApplicationDumper(installer)::dump, newFiles);
 
         // Calculate the difference between them
         Task<List<FileDiff>> diffs =
@@ -147,9 +141,8 @@ public class Deployer {
                 runner.create(Tasks.COMPARE, new DexComparator()::compare, dexDiffs, splitter);
 
         // Do the swap
-        ApkSwapper swapper = new ApkSwapper(installer, argPackageName, argRestart, redefiners);
-
-        runner.create(Tasks.SWAP, swapper::swap, newFiles, sessionId, toSwap);
+        ApkSwapper swapper = new ApkSwapper(installer, redefiners, argRestart);
+        runner.create(Tasks.SWAP, swapper::swap, dumps, sessionId, toSwap);
 
         List<Task<?>> tasks = runner.run();
 
