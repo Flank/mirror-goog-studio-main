@@ -40,69 +40,49 @@ public class TaskRunner {
     }
 
     public <T> Task<T> create(T value) {
-        Task<T> task = new Task<>(() -> value);
+        Task<T> task = new Task<>("", () -> value);
         tasks.add(task);
 
         return task;
     }
 
-    public <I, O> Task<O> create(String name, ThrowingFunction<I, O> function, Task<I> input) {
+    public <I, O, E extends Enum> Task<O> create(
+            E id, ThrowingFunction<I, O> function, Task<I> input) {
+        Callable<O> callable = () -> function.apply(input.future.get());
+        Task<O> task = new Task<>(id.name(), callable, input);
+        tasks.add(task);
+        return task;
+    }
+
+    public <T, U, O, E extends Enum> Task<O> create(
+            E id, ThrowingBiFunction<T, U, O> function, Task<T> input1, Task<U> input2) {
         Callable<O> callable =
                 () -> {
-                    try {
-                        Trace.begin("Task: " + name);
-                        // The input value is already done
-                        I value = input.future.get();
-                        return function.apply(value);
-                    } finally {
-                        Trace.end();
-                    }
+                    // The input value is already done
+                    T value1 = input1.future.get();
+                    U value2 = input2.future.get();
+                    return function.apply(value1, value2);
                 };
-
-        Task<O> task = new Task<>(callable, input);
+        Task<O> task = new Task<>(id.name(), callable, input1, input2);
         tasks.add(task);
         return task;
     }
 
-    public <T, U, O> Task<O> create(
-            String name, ThrowingBiFunction<T, U, O> function, Task<T> input1, Task<U> input2) {
-        Callable<O> callable =
-                () -> {
-                    try {
-                        // The input value is already done
-                        Trace.begin("Task: " + name);
-                        T value1 = input1.future.get();
-                        U value2 = input2.future.get();
-                        return function.apply(value1, value2);
-                    } finally {
-                        Trace.end();
-                    }
-                };
-        Task<O> task = new Task<>(callable, input1, input2);
-        tasks.add(task);
-        return task;
-    }
-
-    public <T, U, V, O> Task<O> create(
-            String name,
+    public <T, U, V, O, E extends Enum> Task<O> create(
+            E id,
             ThrowingTriFunction<T, U, V, O> function,
             Task<T> input1,
             Task<U> input2,
             Task<V> input3) {
         Callable<O> callable =
                 () -> {
-                    try {
-                        // The input value is already done
-                        Trace.begin("Task: " + name);
-                        T value1 = input1.future.get();
-                        U value2 = input2.future.get();
-                        V value3 = input3.future.get();
-                        return function.apply(value1, value2, value3);
-                    } finally {
-                        Trace.end();
-                    }
+                    // The input value is already done
+                    T value1 = input1.future.get();
+                    U value2 = input2.future.get();
+                    V value3 = input3.future.get();
+                    return function.apply(value1, value2, value3);
                 };
-        Task<O> task = new Task<>(callable, input1, input2, input3);
+        Task<O> task = new Task<>(id.name(), callable, input1, input2, input3);
         tasks.add(task);
         return task;
     }
@@ -124,10 +104,11 @@ public class TaskRunner {
      *
      * @throws DeployerException if a task throws it while executing
      */
-    public void run() throws DeployerException {
+    public List<Task<?>> run() throws DeployerException {
         ArrayList<Task<?>> batch = new ArrayList<>(tasks);
         tasks.clear();
         runInternal(batch);
+        return batch;
     }
 
     /**
@@ -160,12 +141,26 @@ public class TaskRunner {
         private final Callable<T> callable;
         private final Task<?>[] inputs;
         private final SettableFuture<T> future;
+        private final String name;
+        private long startTimeMs;
+        private long endTimeMs;
+        private long threadId;
 
         // Only can be created through the interface enforcing a no-cycle dependency graph.
-        Task(Callable<T> callable, Task<?>... inputs) {
+        Task(String name, Callable<T> callable, Task<?>... inputs) {
             this.future = SettableFuture.create();
             this.inputs = inputs;
-            this.callable = callable;
+            this.name = name;
+            this.callable =
+                    () -> {
+                        try (Trace ignored = Trace.begin(name)) {
+                            startTimeMs = System.currentTimeMillis();
+                            threadId = Thread.currentThread().getId();
+                            T value = callable.call();
+                            endTimeMs = System.currentTimeMillis();
+                            return value;
+                        }
+                    };
         }
 
         public T get() throws DeployerException {
@@ -186,6 +181,22 @@ public class TaskRunner {
             List<? extends SettableFuture<?>> futures =
                     Arrays.stream(inputs).map(t -> t.future).collect(Collectors.toList());
             future.setFuture(Futures.whenAllComplete(futures).call(callable, executor));
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public long getStartTimeMs() {
+            return startTimeMs;
+        }
+
+        public long getEndTimeMs() {
+            return endTimeMs;
+        }
+
+        public long getThreadId() {
+            return threadId;
         }
     }
 

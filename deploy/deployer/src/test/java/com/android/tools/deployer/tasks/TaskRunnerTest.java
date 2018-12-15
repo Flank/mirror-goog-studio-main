@@ -32,6 +32,12 @@ import org.junit.Test;
 
 public class TaskRunnerTest {
 
+    enum Tasks {
+        TASK1,
+        TASK2,
+        TASK3
+    };
+
     @Test
     public void testRunningSimpleTask() throws Exception {
         String input = "text";
@@ -40,7 +46,7 @@ public class TaskRunnerTest {
 
         TaskRunner runner = new TaskRunner(service);
         Task<String> start = runner.create(input);
-        Task<String> add = runner.create("add", a -> a + " added", start);
+        Task<String> add = runner.create(Tasks.TASK1, a -> a + " added", start);
         runner.run();
         String output = add.get();
 
@@ -56,9 +62,9 @@ public class TaskRunnerTest {
 
         TaskRunner runner = new TaskRunner(service);
         Task<String> start = runner.create(input);
-        Task<String> task1 = runner.create("task1", a -> a + " task1", start);
-        Task<String> task2 = runner.create("task2", a -> a + " task2", start);
-        Task<String> add = runner.create("join", (a, b) -> a + "." + b, task1, task2);
+        Task<String> task1 = runner.create(Tasks.TASK1, a -> a + " task1", start);
+        Task<String> task2 = runner.create(Tasks.TASK2, a -> a + " task2", start);
+        Task<String> add = runner.create(Tasks.TASK3, (a, b) -> a + "." + b, task1, task2);
         runner.run();
         String output = add.get();
 
@@ -76,13 +82,13 @@ public class TaskRunnerTest {
         Task<String> start = runner.create(input);
         Task<String> task1 =
                 runner.create(
-                        "task1",
+                        Tasks.TASK1,
                         a -> {
                             throw new RuntimeException("abc");
                         },
                         start);
-        Task<String> task2 = runner.create("task2", a -> a + " task2", start);
-        Task<String> add = runner.create("join", (a, b) -> a + "." + b, task1, task2);
+        Task<String> task2 = runner.create(Tasks.TASK2, a -> a + " task2", start);
+        Task<String> add = runner.create(Tasks.TASK3, (a, b) -> a + "." + b, task1, task2);
         try {
             runner.run();
             fail();
@@ -108,7 +114,7 @@ public class TaskRunnerTest {
         // deadlock. They need to run in parallel to unlock.
         Task<String> task1 =
                 runner.create(
-                        "task1",
+                        Tasks.TASK1,
                         a -> {
                             // Allow task 2 to run
                             task1Latch.countDown();
@@ -120,7 +126,7 @@ public class TaskRunnerTest {
 
         Task<String> task2 =
                 runner.create(
-                        "task2",
+                        Tasks.TASK2,
                         a -> {
                             // Wait for task 1 to give the go
                             waitLatch(task1Latch);
@@ -130,7 +136,7 @@ public class TaskRunnerTest {
                         },
                         start);
 
-        Task<String> add = runner.create("join", (a, b) -> a + "." + b, task1, task2);
+        Task<String> add = runner.create(Tasks.TASK3, (a, b) -> a + "." + b, task1, task2);
         runner.run();
 
         String output = add.get();
@@ -146,10 +152,10 @@ public class TaskRunnerTest {
 
         TaskRunner runner = new TaskRunner(service);
         Task<String> start = runner.create(input);
-        Task<String> task1 = runner.create("task1", a -> a + " task1", start);
+        Task<String> task1 = runner.create(Tasks.TASK1, a -> a + " task1", start);
         Task<String> task2 =
                 runner.create(
-                        "task2",
+                        Tasks.TASK2,
                         a -> {
                             waitLatch(task2Latch);
                             return a + " task2";
@@ -177,14 +183,14 @@ public class TaskRunnerTest {
         Task<String> start = runner.create(input);
         Task<String> task1 =
                 runner.create(
-                        "first",
+                        Tasks.TASK1,
                         a -> {
                             waitLatch(task1Latch);
                             return a + "1";
                         },
                         start);
-        Task<String> task2 = runner.create("blocks", a -> a + "2", task1);
-        Task<String> task3 = runner.create("can_run", a -> a + "3", start);
+        Task<String> task2 = runner.create(Tasks.TASK2, a -> a + "2", task1);
+        Task<String> task3 = runner.create(Tasks.TASK3, a -> a + "3", start);
 
         // We have room to run two tasks in parallel. Task 1 should start first, and until it's done
         // task2 wouldn't be available to run. But task3 can run to completion.
@@ -215,10 +221,10 @@ public class TaskRunnerTest {
 
         TaskRunner runner = new TaskRunner(service);
         Task<String> start = runner.create(input);
-        Task<String> task1 = runner.create("task1", a -> a + " task2", start);
-        Task<String> task2 = runner.create("task2", (a, b) -> a + b + " task2", start, task1);
+        Task<String> task1 = runner.create(Tasks.TASK1, a -> a + " task2", start);
+        Task<String> task2 = runner.create(Tasks.TASK2, (a, b) -> a + b + " task2", start, task1);
         Task<String> task3 =
-                runner.create("task2", (a, b, c) -> a + b + c + " task3", start, task1, task2);
+                runner.create(Tasks.TASK3, (a, b, c) -> a + b + c + " task3", start, task1, task2);
 
         runner.run();
         List<Runnable> runnables = service.shutdownNow();
@@ -234,7 +240,7 @@ public class TaskRunnerTest {
         Task<String> start = runner.create(input);
         Task<String> task1 =
                 runner.create(
-                        "task1",
+                        Tasks.TASK1,
                         a -> {
                             throw new DeployerException(
                                     DeployerException.Error.INSTALL_FAILED, "failed");
@@ -259,13 +265,13 @@ public class TaskRunnerTest {
         Task<String> start = runner.create(input);
         Task<String> task1 =
                 runner.create(
-                        "task1",
+                        Tasks.TASK1,
                         a -> {
                             throw new DeployerException(
                                     DeployerException.Error.INSTALL_FAILED, "failed");
                         },
                         start);
-        Task<String> task2 = runner.create("task2", a -> a + "2", task1);
+        Task<String> task2 = runner.create(Tasks.TASK2, a -> a + "2", task1);
 
         try {
             runner.run();
@@ -302,7 +308,7 @@ public class TaskRunnerTest {
         Task<String> start = runner.create(input);
         Task<String> task1 =
                 runner.create(
-                        "task1",
+                        Tasks.TASK1,
                         a -> {
                             throw new DeployerException(
                                     DeployerException.Error.INSTALL_FAILED, "async failed");
