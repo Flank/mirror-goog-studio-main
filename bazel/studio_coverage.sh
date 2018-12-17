@@ -1,6 +1,11 @@
 #!/bin/bash -x
 # Invoked by Android Build Launchcontrol for continuous builds.
 
+# Expected arguments:
+#readonly out_dir="$1"
+#readonly dist_dir="$2"
+#readonly build_number="$3"
+
 readonly dist_dir="$1"
 
 readonly script_dir="$(dirname "$0")"
@@ -20,8 +25,9 @@ readonly command_log="$("${script_dir}"/bazel info --config=remote command_log)"
   //tools/... \
   -//tools/adt/idea/android-uitests/... \
   -//tools/adt/idea/uitest-framework:intellij.android.guiTestFramework_tests \
-  -//tools/base/perf-logger:studio.perf-logger_tests \
-  || exit $?
+  -//tools/base/perf-logger:studio.perf-logger_tests
+
+readonly bazel_status=$?
 
 # Grab the upsalite_id from the stdout of the bazel command.  This is captured in command.log
 readonly upsalite_id="$(sed -n 's/\r$//;s/^.* invocation_id: //p' "${command_log}")"
@@ -30,17 +36,15 @@ readonly upsalite_id="$(sed -n 's/\r$//;s/^.* invocation_id: //p' "${command_log
 readonly production_targets_file=$(mktemp)
 
 # Collect the production targets
-readonly universe="//tools - //tools/adt/idea/android-uitests/..."
-
 "${script_dir}/bazel" \
   query \
-  "kind(test, rdeps(${universe}, deps(//tools/base:coverage_report)))" \
-  | tee $production_targets_file \
-  || exit $?
+  'kind(test, rdeps(//tools/..., deps(//tools/base:coverage_report)))' \
+  | tee $production_targets_file
 
-# Generate the Jacoco report
+
 readonly testlogs_dir="$(${script_dir}/bazel info bazel-testlogs --config=remote)"
 
+# Generate the report
 "${script_dir}/bazel" \
   run \
   //tools/base:coverage_report \
@@ -49,21 +53,21 @@ readonly testlogs_dir="$(${script_dir}/bazel info bazel-testlogs --config=remote
   -- \
   tools/base/coverage_report \
   $production_targets_file \
-  $testlogs_dir \
-  || exit $?
+  $testlogs_dir
 
-# Resolve to sourcefiles and convert to LCOV
-python "${script_dir}/bazel/jacoco_to_lcov.py" || exit $?
+readonly report_status=$?
 
 if [[ -d "${dist_dir}" ]]; then
   # Copy the report to ab/ outputs
-  mkdir "${dist_dir}/coverage"
-  cp -pv "./out/lcov" "${dist_dir}/coverage"
-  cp -pv "./out/worst" "${dist_dir}/coverage"
-  cp -pv "./out/worstNoFiles" "${dist_dir}/coverage"
+  zip -r coverage_report.zip "./out/agent-coverage/tools/base/coverage_report/"
+  cp -pv coverage_report.zip "${dist_dir}"
 
   # Link to test results
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${upsalite_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
 fi
 
-exit 0
+if [[ $bazel_status && $report_status ]]; then
+  exit 0
+else
+  exit 1
+fi
