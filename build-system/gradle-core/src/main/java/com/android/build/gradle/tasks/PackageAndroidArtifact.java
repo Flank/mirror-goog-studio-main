@@ -66,7 +66,6 @@ import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.resources.FileStatus;
 import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.sdklib.AndroidVersion;
-import com.android.tools.build.apkzlib.sign.SigningOptions;
 import com.android.tools.build.apkzlib.utils.IOExceptionWrapper;
 import com.android.tools.build.apkzlib.zip.compress.Zip64NotSupportedException;
 import com.android.utils.FileUtils;
@@ -778,19 +777,18 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         FileUtils.mkdirs(outputFile.getParentFile());
         // we are executing a task right now, so we can parse the manifest.
         BooleanSupplier isInExecutionPhase = () -> true;
-        SigningOptions.Validation validation =
+        IncrementalPackagerBuilder.BuildType buildType =
                 isIncremental
-                        ? SigningOptions.Validation.ASSUME_VALID
-                        : SigningOptions.Validation.ASSUME_INVALID;
+                        ? IncrementalPackagerBuilder.BuildType.INCREMENTAL
+                        : IncrementalPackagerBuilder.BuildType.CLEAN;
 
         try (IncrementalPackager packager =
-                new IncrementalPackagerBuilder(params.apkFormat)
+                new IncrementalPackagerBuilder(params.apkFormat, buildType)
                         .withOutputFile(outputFile)
                         .withSigning(
                                 SigningConfigMetadata.Companion.load(params.signingConfig),
-                                validation)
+                                params.minSdkVersion)
                         .withCreatedBy(params.createdBy)
-                        .withMinSdk(params.minSdkVersion)
                         // TODO: allow extra metadata to be saved in the split scope to avoid
                         // reparsing
                         // these manifest files.

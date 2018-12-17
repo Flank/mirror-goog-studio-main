@@ -155,9 +155,9 @@ public class PackageSplitAbi extends AndroidBuilderTask {
                     new IncrementalPackagerBuilder(IncrementalPackagerBuilder.ApkFormat.FILE)
                             .withOutputFile(params.getOutput())
                             .withSigning(
-                                    SigningConfigMetadata.Companion.load(params.signingConfigFile))
+                                    SigningConfigMetadata.Companion.load(params.signingConfigFile),
+                                    params.minSdkVersion)
                             .withCreatedBy(params.createdBy)
-                            .withMinSdk(params.minSdkVersion)
                             // .withManifest(manifest)
                             .withAaptOptionsNoCompress(params.aaptOptionsNoCompress)
                             .withIntermediateDir(params.incrementalDir)

@@ -32,7 +32,6 @@ import com.android.ide.common.signing.KeytoolException;
 import com.android.tools.build.apkzlib.sign.SigningOptions;
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory;
 import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
@@ -92,20 +91,25 @@ public class IncrementalPackagerBuilder {
         abstract ApkCreatorFactory factory(boolean keepTimestampsInApk, boolean debuggableBuild);
     }
 
-    /** Data to initialize {@link com.android.tools.build.apkzlib.sign.SigningExtension} */
-    @NonNull private Optional<SigningOptions> signingOptions = Optional.absent();
-
     /**
-     * The output file.
+     * Type of build that invokes the instance of IncrementalPackagerBuilder
+     *
+     * <p>This information is provided as a hint for possible performance optimizations
      */
-    @Nullable
-    private File outputFile;
+    public enum BuildType {
+        UNKNOWN,
+        CLEAN,
+        INCREMENTAL
+    }
+
+    /** Builder for the data to create APK file. */
+    @NonNull
+    private ApkCreatorFactory.CreationData.Builder creationDataBuilder =
+            ApkCreatorFactory.CreationData.builder();
+
 
     /** Desired format of the output. */
     @NonNull private ApkFormat apkFormat;
-
-    /** The minimum SDK. */
-    private int minSdk;
 
     /**
      * How should native libraries be packaged. If not defined, it can be inferred if
@@ -137,12 +141,6 @@ public class IncrementalPackagerBuilder {
     private File intermediateDir;
 
     /**
-     * Created-By.
-     */
-    @Nullable
-    private String createdBy;
-
-    /**
      * Is the build debuggable?
      */
     private boolean debuggableBuild;
@@ -169,12 +167,19 @@ public class IncrementalPackagerBuilder {
 
     @Nullable private EvalIssueReporter issueReporter;
     @Nullable private BooleanSupplier canParseManifest;
+    @NonNull private BuildType buildType;
+
+    /** Creates a new builder. */
+    public IncrementalPackagerBuilder(@NonNull ApkFormat apkFormat, @NonNull BuildType buildType) {
+        abiFilters = new HashSet<>();
+        this.apkFormat = apkFormat;
+        this.buildType = buildType;
+        creationDataBuilder.setIncremental(buildType == BuildType.INCREMENTAL);
+    }
 
     /** Creates a new builder. */
     public IncrementalPackagerBuilder(@NonNull ApkFormat apkFormat) {
-        minSdk = 1;
-        abiFilters = new HashSet<>();
-        this.apkFormat = apkFormat;
+        this(apkFormat, BuildType.UNKNOWN);
     }
 
     /**
@@ -185,19 +190,19 @@ public class IncrementalPackagerBuilder {
      */
     @NonNull
     public IncrementalPackagerBuilder withSigning(@Nullable SigningConfig signingConfig) {
-        return withSigning(signingConfig, SigningOptions.Validation.ALWAYS_VALIDATE);
+        return withSigning(signingConfig, 1);
     }
 
     /**
      * Sets the signing configuration information for the incremental packager.
      *
      * @param signingConfig the signing config; if {@code null} then the APK will not be signed
-     * @param validation a strategy to check the validity of the package signature
+     * @param minSdk the minimum SDK
      * @return {@code this} for use with fluent-style notation
      */
     @NonNull
     public IncrementalPackagerBuilder withSigning(
-            @Nullable SigningConfig signingConfig, @NonNull SigningOptions.Validation validation) {
+            @Nullable SigningConfig signingConfig, int minSdk) {
         if (signingConfig == null) {
             return this;
         }
@@ -217,21 +222,34 @@ public class IncrementalPackagerBuilder {
                                     signingConfig.getKeyPassword(), error, "keyPassword"),
                             Preconditions.checkNotNull(
                                     signingConfig.getKeyAlias(), error, "keyAlias"));
-            signingOptions =
-                    Optional.of(
-                            SigningOptions.builder()
-                                    .setKey(certificateInfo.getKey())
-                                    .setCertificates(certificateInfo.getCertificate())
-                                    .setV1SigningEnabled(signingConfig.isV1SigningEnabled())
-                                    .setV2SigningEnabled(signingConfig.isV2SigningEnabled())
-                                    .setMinSdkVersion(minSdk)
-                                    .setValidation(validation)
-                                    .build());
+            creationDataBuilder.setSigningOptions(
+                    SigningOptions.builder()
+                            .setKey(certificateInfo.getKey())
+                            .setCertificates(certificateInfo.getCertificate())
+                            .setV1SigningEnabled(signingConfig.isV1SigningEnabled())
+                            .setV2SigningEnabled(signingConfig.isV2SigningEnabled())
+                            .setMinSdkVersion(minSdk)
+                            .setValidation(computeValidation())
+                            .build());
         } catch (KeytoolException|FileNotFoundException e) {
             throw new RuntimeException(e);
         }
 
         return this;
+    }
+
+    private SigningOptions.Validation computeValidation() {
+        switch (buildType) {
+            case INCREMENTAL:
+                return SigningOptions.Validation.ASSUME_VALID;
+            case CLEAN:
+                return SigningOptions.Validation.ASSUME_INVALID;
+            case UNKNOWN:
+                return SigningOptions.Validation.ALWAYS_VALIDATE;
+            default:
+                throw new RuntimeException(
+                        "Unknown IncrementalPackagerBuilder build type " + buildType);
+        }
     }
 
     /**
@@ -242,32 +260,7 @@ public class IncrementalPackagerBuilder {
      */
     @NonNull
     public IncrementalPackagerBuilder withOutputFile(@NonNull File f) {
-        outputFile = f;
-        return this;
-    }
-
-    /**
-     * Sets the minimum SDK.
-     *
-     * @param minSdk the minimum SDK
-     * @return {@code this} for use with fluent-style notation
-     */
-    @NonNull
-    public IncrementalPackagerBuilder withMinSdk(int minSdk) {
-        this.minSdk = minSdk;
-        if (signingOptions.isPresent()) {
-            SigningOptions oldOptions = signingOptions.get();
-            signingOptions =
-                    Optional.of(
-                            SigningOptions.builder()
-                                    .setKey(oldOptions.getKey())
-                                    .setCertificates(oldOptions.getCertificates())
-                                    .setV1SigningEnabled(oldOptions.isV1SigningEnabled())
-                                    .setV2SigningEnabled(oldOptions.isV2SigningEnabled())
-                                    .setMinSdkVersion(minSdk)
-                                    .setValidation(oldOptions.getValidation())
-                                    .build());
-        }
+        creationDataBuilder.setApkPath(f);
         return this;
     }
 
@@ -367,7 +360,7 @@ public class IncrementalPackagerBuilder {
      */
     @NonNull
     public IncrementalPackagerBuilder withCreatedBy(@Nullable String createdBy) {
-        this.createdBy = createdBy;
+        creationDataBuilder.setCreatedBy(createdBy);
         return this;
     }
 
@@ -435,7 +428,6 @@ public class IncrementalPackagerBuilder {
             keepTimestampsInApk = AndroidGradleOptions.keepTimestampsInApk(project);
         }
 
-        Preconditions.checkState(outputFile != null, "outputFile == null");
         Preconditions.checkState(keepTimestampsInApk != null, "keepTimestampsInApk == null");
         Preconditions.checkState(intermediateDir != null, "intermediateDir == null");
 
@@ -459,18 +451,13 @@ public class IncrementalPackagerBuilder {
             }
         }
 
-        ApkCreatorFactory.CreationData creationData =
-                new ApkCreatorFactory.CreationData(
-                        outputFile,
-                        signingOptions,
-                        null,
-                        createdBy,
-                        nativeLibrariesPackagingMode,
-                        noCompressPredicate::test);
+        creationDataBuilder
+                .setNativeLibrariesPackagingMode(nativeLibrariesPackagingMode)
+                .setNoCompressPredicate(noCompressPredicate::test);
 
         try {
             return new IncrementalPackager(
-                    creationData,
+                    creationDataBuilder.build(),
                     intermediateDir,
                     apkFormat.factory(keepTimestampsInApk, debuggableBuild),
                     abiFilters,
