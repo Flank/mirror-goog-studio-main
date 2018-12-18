@@ -46,6 +46,7 @@ import com.google.common.collect.Iterables
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
@@ -60,6 +61,7 @@ import java.util.concurrent.Future
 import javax.inject.Inject
 import java.util.function.Function as JavaFunction
 
+@CacheableTask
 open class VerifyLibraryResourcesTask @Inject
 constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
 
@@ -71,9 +73,6 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     lateinit var inputDirectory: BuildableArtifact private set
 
-    @get:Input
-    lateinit var mergeBlameLogFolder: File private set
-
     lateinit var taskInputType: InternalArtifactType private set
 
     @Input
@@ -82,6 +81,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
     }
 
     @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     lateinit var manifestFiles: Provider<Directory>
         private set
 
@@ -176,7 +176,6 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
                     variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_RES)
 
             task.compiledDirectory = variantScope.compiledResourcesOutputDir
-            task.mergeBlameLogFolder = variantScope.resourceBlameLogDir
 
             val aaptFriendlyManifestsFilePresent = variantScope.artifacts
                     .hasFinalProduct(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
