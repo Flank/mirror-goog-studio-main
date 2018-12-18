@@ -29,6 +29,23 @@ swap_test(
     srcs = ["java/com/android/tools/deployer/JdiBasedClassRedefinerTest.java"],
 )
 
+java_test(
+    name = "D8DexSplitterTest",
+    srcs = ["java/com/android/tools/deployer/D8DexSplitterTest.java"],
+    data = [
+        "//tools/base/deploy/test/data/apk1:apk",
+        "//tools/base/deploy/test/data/apk2:apk",
+    ],
+    jvm_flags = [
+        "-Dapk1.location=$(location //tools/base/deploy/test/data/apk1:apk)",
+        "-Dapk2.location=$(location //tools/base/deploy/test/data/apk2:apk)",
+    ],
+    deps = [
+        "//tools/base/deploy/deployer:tools.deployer",
+        "//tools/base/third_party:junit_junit",
+    ],
+)
+
 dex_library(
     name = "original_dex",
     dexer = "D8",
