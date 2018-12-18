@@ -712,11 +712,17 @@ abstract class BuildArtifactsHolder(
             )
         }
 
-        return when(T::class) {
-            RegularFileProperty::class -> project.layout.fileProperty(
-                project.layout.buildDirectory.file(path)) as T
-            DirectoryProperty::class -> project.layout.directoryProperty(
-                project.layout.buildDirectory.dir(path)) as T
+        when(T::class) {
+            RegularFileProperty::class -> {
+                var prop = project.objects.fileProperty()
+                prop.set(project.layout.buildDirectory.file(path))
+                return prop as T
+            }
+            DirectoryProperty::class -> {
+                var prop = project.objects.directoryProperty()
+                prop.set(project.layout.buildDirectory.dir(path))
+                return prop as T
+            }
             else -> throw RuntimeException("createFileOrDirectory called with unsupported type ${T::class}")
         }
     }
