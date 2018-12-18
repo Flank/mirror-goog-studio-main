@@ -344,6 +344,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/ndk/",
     data = DATA + CMAKE,
     maven_repos = MAVEN_REPOS,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -352,6 +353,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/ndk/",
     data = DATA + CMAKE,
     maven_repos = MAVEN_REPOS,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -360,6 +362,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/ndk/",
     data = DATA + CMAKE,
     maven_repos = MAVEN_REPOS,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -368,6 +371,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/ndk/",
     data = DATA + CMAKE,
     maven_repos = MAVEN_REPOS,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -376,6 +380,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/ndk/",
     data = DATA + CMAKE,
     maven_repos = MAVEN_REPOS,
+    tags = TAGS,
     deps = DEPS,
 )
 
