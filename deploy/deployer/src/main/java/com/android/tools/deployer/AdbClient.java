@@ -48,6 +48,7 @@ public class AdbClient {
         NO_CERTIFICATE,
         INSTALL_FAILED_OLDER_SDK,
         DEVICE_NOT_FOUND,
+        SHELL_UNRESPONSIVE,
     }
 
     /**
@@ -74,12 +75,20 @@ public class AdbClient {
             device.installPackages(files, true, options, 5, TimeUnit.MINUTES);
             return InstallResult.OK;
         } catch (InstallException e) {
-            logger.error(e, "Installation Failure");
-            String code = e.getErrorCode();
             InstallResult result = InstallResult.UNKNOWN_ERROR;
-            try {
-                result = InstallResult.valueOf(code);
-            } catch (IllegalArgumentException | NullPointerException ignored) {
+            String code = e.getErrorCode();
+            if (code != null) {
+                try {
+                    result = InstallResult.valueOf(code);
+                } catch (IllegalArgumentException | NullPointerException ignored) {
+                }
+            } else {
+                Throwable cause = e.getCause();
+                if (cause instanceof ShellCommandUnresponsiveException) {
+                    result = InstallResult.SHELL_UNRESPONSIVE;
+                } else {
+                    logger.error(e, "Installation Failure");
+                }
             }
             return result;
         }

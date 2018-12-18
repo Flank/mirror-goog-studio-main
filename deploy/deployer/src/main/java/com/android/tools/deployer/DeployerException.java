@@ -19,7 +19,7 @@ package com.android.tools.deployer;
 public class DeployerException extends Exception {
 
     private final Error error;
-
+    private final String code;
 
     public enum Error {
         DUMP_FAILED,
@@ -44,16 +44,26 @@ public class DeployerException extends Exception {
     public DeployerException(Error error, String message) {
         super(message);
         this.error = error;
+        this.code = "";
     }
 
+    public <E extends Enum> DeployerException(Error error, E code, String message) {
+        super(message);
+        this.error = error;
+        this.code = code.name();
+    }
 
     public DeployerException(Error error, Throwable t) {
         super(t);
         this.error = error;
+        this.code = "";
     }
 
     public Error getError() {
         return error;
     }
 
+    public String getId() {
+        return error.name() + (code.isEmpty() ? "" : ".") + code;
+    }
 }

@@ -52,7 +52,7 @@ public class ApkInstaller {
         }
 
         if (result != AdbClient.InstallResult.OK) {
-            throw new DeployerException(DeployerException.Error.INSTALL_FAILED, message);
+            throw new DeployerException(DeployerException.Error.INSTALL_FAILED, result, message);
         }
     }
 
@@ -73,6 +73,8 @@ public class ApkInstaller {
                 return "The application's minSdkVersion is newer than the device API level.";
             case DEVICE_NOT_FOUND:
                 return "The device has been disconnected.";
+            case SHELL_UNRESPONSIVE:
+                return "The device timed out while trying to install the application.";
             default:
                 return "Installation failed";
         }
