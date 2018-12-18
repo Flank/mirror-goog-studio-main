@@ -27,6 +27,7 @@
 #include "utils/config.h"
 #include "utils/fake_clock.h"
 #include "utils/file_cache.h"
+#include "utils/fs/disk_file_system.h"
 #include "utils/fs/memory_file_system.h"
 #include "utils/procfs_files.h"
 
@@ -46,12 +47,15 @@ namespace {
 // lapse.
 class MockProcfsFiles final : public ProcfsFiles {
  public:
-  MockProcfsFiles(profiler::Clock* clock) : ProcfsFiles(), clock_(clock) {}
+  MockProcfsFiles(profiler::Clock* clock, const string& working_dir)
+      : ProcfsFiles(), clock_(clock), working_dir_(working_dir) {}
 
   string GetProcessTaskDir(int32_t pid) const override {
-    ostringstream os;
-    os << "pid_task_" << pid << "/t" << clock_->GetCurrentTime() << "/";
-    return TestUtils::getCpuTestData(os.str());
+    ostringstream dir, abs_dir;
+    dir << "pid_task_" << pid << "/t" << clock_->GetCurrentTime() << "/";
+    // FileSystem#WalkDir uses absolute path.
+    abs_dir << working_dir_ << "/" << TestUtils::getCpuTestData(dir.str());
+    return abs_dir.str();
   }
 
   string GetThreadStatFilePath(int32_t pid, int32_t tid) const override {
@@ -63,6 +67,7 @@ class MockProcfsFiles final : public ProcfsFiles {
 
  private:
   profiler::Clock* clock_;
+  const string working_dir_;
 };
 }  // namespace
 
@@ -77,8 +82,9 @@ TEST(CpuThreadSamplerTest, SampleCpuThreads) {
   Daemon daemon(&clock, &config, &file_cache, &event_buffer);
   int32_t pid = 1;
   Session session(0, pid, 0, &daemon);
+  DiskFileSystem fs;
   CpuThreadSampler sampler(session, &clock, &event_buffer,
-                           new MockProcfsFiles(&clock));
+                           new MockProcfsFiles(&clock, fs.GetWorkingDir()));
 
   // t0
   {

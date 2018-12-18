@@ -15,64 +15,59 @@
  */
 #include "thread_parser.h"
 
-#include <dirent.h>  // dor opendir()
 #include <cstdlib>   // for atoi()
-#include <cstring>   // for strncmp()
-#include <sstream>   // for std::ostringstream
 #include <string>
 #include <vector>
 
 #include "proto/cpu_data.pb.h"
 #include "utils/file_reader.h"
+#include "utils/fs/disk_file_system.h"
 #include "utils/log.h"
 #include "utils/procfs_files.h"
 
 namespace profiler {
 
+using profiler::FileReader;
+using profiler::Log;
+using profiler::proto::CpuThreadData;
 using std::string;
 using std::vector;
 
 bool GetThreads(const ProcfsFiles* procfs, int32_t pid, vector<int32_t>* tids) {
-  vector<string> dir_entries;
-  DIR* dp;
-  struct dirent* dirp;
-  // List thread ID files under /proc/[pid]/task/ directory.
-  const string& dir = procfs->GetProcessTaskDir(pid);
-  if ((dp = opendir(dir.c_str())) == nullptr) {
-    profiler::Log::E("Failed to open dir %s: %s.", dir.c_str(),
-                     strerror(errno));
+  DiskFileSystem fs;
+  auto dir = fs.GetDir(procfs->GetProcessTaskDir(pid));
+  if (!dir->Exists()) {
+    Log::E("Directory %s doesn't exist.", dir->path().c_str());
     return false;
   }
-  while ((dirp = readdir(dp)) != nullptr) {
-    const char* const name = dirp->d_name;
-    if (strncmp(name, ".", 1) != 0 && strncmp(name, "..", 2) != 0) {
-      // TODO: Use std::stoi() after we use libc++, and remove '.c_str()'.
-      tids->push_back(atoi(name));
-    }
-  }
-  closedir(dp);
+  // List thread ID directories under /proc/[pid]/task/ directory.
+  dir->Walk(
+      [tids](const PathStat& pstat) {
+        if (pstat.type() == PathStat::Type::DIR) {
+          // TODO: Use std::stoi() after we use libc++, and remove '.c_str()'.
+          tids->push_back(atoi(pstat.rel_path().c_str()));
+        }
+      },
+      1);
   return true;
 }
 
 bool GetThreadState(const ProcfsFiles* procfs, int32_t pid, int32_t tid,
-                    profiler::proto::CpuThreadData::State* state,
-                    string* name) {
+                    CpuThreadData::State* state, string* name) {
   string buffer;
   // Reads /proc/[pid]/task/[tid]/stat file.
   const string& thread_stat_file = procfs->GetThreadStatFilePath(pid, tid);
-  if (profiler::FileReader::Read(thread_stat_file, &buffer)) {
+  if (FileReader::Read(thread_stat_file, &buffer)) {
     char state_in_char;
     if (ParseThreadStat(tid, buffer, &state_in_char, name)) {
-      profiler::proto::CpuThreadData::State enum_state =
-          ThreadStateInEnum(state_in_char);
-      if (enum_state != profiler::proto::CpuThreadData::UNSPECIFIED) {
+      CpuThreadData::State enum_state = ThreadStateInEnum(state_in_char);
+      if (enum_state != CpuThreadData::UNSPECIFIED) {
         *state = enum_state;
         return true;
       }
     }
   }
-  profiler::Log::E("Failed to parse stat file %s: %s", thread_stat_file.c_str(),
-                   strerror(errno));
+  Log::E("Failed to parse stat file %s.", thread_stat_file.c_str());
   return false;
 }
 
@@ -104,32 +99,32 @@ bool ParseThreadStat(int32_t tid, const string& content, char* state,
   return true;
 }
 
-profiler::proto::CpuThreadData::State ThreadStateInEnum(char state_in_char) {
+CpuThreadData::State ThreadStateInEnum(char state_in_char) {
   switch (state_in_char) {
     case 'R':
-      return profiler::proto::CpuThreadData::RUNNING;
+      return CpuThreadData::RUNNING;
     case 'S':
-      return profiler::proto::CpuThreadData::SLEEPING;
+      return CpuThreadData::SLEEPING;
     case 'D':
-      return profiler::proto::CpuThreadData::WAITING;
+      return CpuThreadData::WAITING;
     case 'Z':
-      return profiler::proto::CpuThreadData::ZOMBIE;
+      return CpuThreadData::ZOMBIE;
     case 'T':
       // TODO: Handle the subtle difference before and afer Linux 2.6.33.
-      return profiler::proto::CpuThreadData::STOPPED;
+      return CpuThreadData::STOPPED;
     case 't':
-      return profiler::proto::CpuThreadData::TRACING;
+      return CpuThreadData::TRACING;
     case 'X':
     case 'x':
-      return profiler::proto::CpuThreadData::DEAD;
+      return CpuThreadData::DEAD;
     case 'K':
-      return profiler::proto::CpuThreadData::WAKEKILL;
+      return CpuThreadData::WAKEKILL;
     case 'W':
-      return profiler::proto::CpuThreadData::WAKING;
+      return CpuThreadData::WAKING;
     case 'P':
-      return profiler::proto::CpuThreadData::PARKED;
+      return CpuThreadData::PARKED;
     default:
-      return profiler::proto::CpuThreadData::UNSPECIFIED;
+      return CpuThreadData::UNSPECIFIED;
   }
 }
 
