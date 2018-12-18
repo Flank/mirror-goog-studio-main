@@ -23,6 +23,7 @@ import com.android.annotations.Nullable;
 import com.android.tools.analytics.CommonMetricsData;
 import com.android.tools.analytics.UsageTracker;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -121,6 +122,8 @@ public final class ProcessProfileWriter implements ProfileRecordWriter {
 
     /** Appends a generic event (e.g. test execution record) to be uploaded. */
     public void recordEvent(@NonNull AndroidStudioEvent.Builder event) {
+        // TODO: do this per EVENT_TYPE?
+        Preconditions.checkArgument(event.hasProductDetails(), "Product details not set.");
         otherEvents.add(event);
     }
     /**

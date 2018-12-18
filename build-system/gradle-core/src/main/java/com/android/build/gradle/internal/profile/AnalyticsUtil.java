@@ -31,8 +31,10 @@ import com.android.build.gradle.options.StringOption;
 import com.android.builder.dexing.DexMergerTool;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.model.TestOptions;
+import com.android.builder.model.Version;
 import com.android.resources.Density;
 import com.android.sdklib.AndroidVersion;
+import com.android.tools.analytics.CommonMetricsData;
 import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType;
 import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType;
 import com.google.common.base.CaseFormat;
@@ -44,6 +46,7 @@ import com.google.wireless.android.sdk.stats.GradleBuildSplits;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import com.google.wireless.android.sdk.stats.GradleIntegerOptionEntry;
 import com.google.wireless.android.sdk.stats.GradleProjectOptionsSettings;
+import com.google.wireless.android.sdk.stats.ProductDetails;
 import com.google.wireless.android.sdk.stats.TestRun;
 import java.util.Locale;
 import org.gradle.api.Plugin;
@@ -53,6 +56,14 @@ import org.gradle.api.logging.Logging;
  * Utilities to map internal representations of types to analytics.
  */
 public class AnalyticsUtil {
+
+    public static ProductDetails getProductDetails() {
+        return ProductDetails.newBuilder()
+                .setProduct(ProductDetails.ProductKind.GRADLE)
+                .setVersion(Version.ANDROID_GRADLE_PLUGIN_VERSION)
+                .setOsArchitecture(CommonMetricsData.getOsArchitecture())
+                .build();
+    }
 
     public static GradleTransformExecutionType getTransformType(
             @NonNull Class<? extends Transform> taskClass) {
