@@ -61,6 +61,8 @@ if [[ -d "${dist_dir}" ]]; then
   cp -pv "./out/lcov" "${dist_dir}/coverage"
   cp -pv "./out/worst" "${dist_dir}/coverage"
   cp -pv "./out/worstNoFiles" "${dist_dir}/coverage"
+  cp -pv "./out/missing" "${dist_dir}/coverage"
+  cp -pv "./out/fake" "${dist_dir}/coverage"
 
   # Link to test results
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${upsalite_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
