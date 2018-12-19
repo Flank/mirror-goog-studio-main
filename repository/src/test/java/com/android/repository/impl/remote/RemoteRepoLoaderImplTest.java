@@ -311,7 +311,7 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                         ImmutableSet.of(RepoManager.getGenericModule()),
                         null);
         List<RepositorySource> sourceList = ImmutableList.of(httpSource, httpSource2, fileSource);
-        FakeProgressIndicator progress = new FakeProgressIndicator();
+        FakeProgressIndicator progress = new FakeProgressIndicator(true);
         RemoteRepoLoader loader =
                 new RemoteRepoLoaderImpl(
                         ImmutableList.of(new FakeRepositorySourceProvider(sourceList)), null, null);

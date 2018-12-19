@@ -80,6 +80,7 @@ public class FakeProgressIndicator implements ProgressIndicator {
 
     @Override
     public void setFraction(double v) {
+        assert v >= 0.0 && v <= 1.0;
         assert !mValidateMonotonicProgress || mPercent <= v;
         mPercent = v;
     }
