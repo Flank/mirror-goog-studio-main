@@ -163,11 +163,11 @@ public class AndroidArtifacts {
         // be namespace aware.
         NON_NAMESPACED_CLASSES(TYPE_NON_NAMESPACED_CLASSES),
         SHARED_CLASSES(TYPE_SHARED_CLASSES),
-        // Jar file for annotation processor as both classes and resources are needed, and for
-        // building model
-        // NOTE: Consumers should generally use PROCESSED_JAR instead of JAR, as the jars may need
-        // to be processed (e.g., jetified to AndroidX) before they can be used. If JAR is used, the
-        // reason should be documented.
+        // Jar or processed jar, used for purposes such as computing the annotation processor
+        // classpath or building the model.
+        // IMPORTANT: Consumers should generally use PROCESSED_JAR instead of JAR, as the jars may
+        // need to be processed (e.g., jetified to AndroidX) before they can be used. Consuming JAR
+        // should be considered as an exception and the reason should be documented.
         JAR(TYPE_JAR),
         PROCESSED_JAR(TYPE_PROCESSED_JAR),
         // published dex folder for bundle
