@@ -61,6 +61,9 @@ readonly testlogs_dir="$(${script_dir}/bazel info bazel-testlogs --config=remote
 # Resolve to sourcefiles and convert to LCOV
 python "${script_dir}/jacoco_to_lcov.py" || exit $?
 
+# Generate LCOV style HTML report
+genhtml -o "./out/html" "./out/lcov" -p $(pwd) --no-function-coverage || exit $?
+
 if [[ -d "${dist_dir}" ]]; then
   # Copy the report to ab/ outputs
   mkdir "${dist_dir}/coverage"
@@ -69,6 +72,11 @@ if [[ -d "${dist_dir}" ]]; then
   cp -pv "./out/worstNoFiles" "${dist_dir}/coverage"
   cp -pv "./out/missing" "${dist_dir}/coverage"
   cp -pv "./out/fake" "${dist_dir}/coverage"
+  # HTML report needs to be zipped for fast uploads
+  pushd "./out"
+  zip -r "html.zip" "./html"
+  popd
+  mv -v "./out/html.zip" "${dist_dir}/coverage"
 
   # Upload the LCOV data to GCS if running on BYOB
   if [[ "$build_number" ]]; then
