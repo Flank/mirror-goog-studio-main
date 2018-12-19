@@ -26,6 +26,7 @@ coverage_java_test(
     data = [
         "//prebuilts/studio/jdk:jdk_runtime",
         "//prebuilts/studio/sdk:build-tools/latest",
+        "//tools/base/build-system/aapt2:aapt2_for_tests",
     ],
     jvm_flags = ["-Djava.security.debug=all"],
     tags = [
