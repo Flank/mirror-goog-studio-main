@@ -8,12 +8,17 @@ readonly script_dir="$(dirname "$0")"
 # Grab the location of the command_log file for bazel daemon so we can search it later.
 readonly command_log="$("${script_dir}"/bazel info --config=remote command_log)"
 
+# Conditionally add --auth_credentials option for BYOB machines.
+if [[ -r "${HOME}/.android-studio-alphasource.json" ]]; then
+  auth_options="--auth_credentials=${HOME}/.android-studio-alphasource.json"
+fi
+
 # Run Bazel with coverage instrumentation
 "${script_dir}/bazel" \
   --max_idle_secs=60 \
   test \
   --config=remote \
-  --auth_credentials="$HOME"/.android-studio-alphasource.json \
+  ${auth_options} \
   --test_tag_filters=-no_linux,-no_test_linux \
   --define agent_coverage=true \
   -- \
@@ -45,7 +50,7 @@ readonly testlogs_dir="$(${script_dir}/bazel info bazel-testlogs --config=remote
   run \
   //tools/base:coverage_report \
   --config=remote \
-  --auth_credentials="$HOME"/.android-studio-alphasource.json \
+  ${auth_options} \
   -- \
   tools/base/coverage_report \
   $production_targets_file \
