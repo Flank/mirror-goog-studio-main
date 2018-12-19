@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.fakeadbserver.shellcommandhandlers;
 
 import com.android.annotations.NonNull;
@@ -24,21 +23,25 @@ import com.android.fakeadbserver.FakeAdbServer;
 import java.net.Socket;
 
 /**
- * ShellCommandHandler is a pre-supplied convenience construct to plug in and handle custom shell
- * commands. This reflects the "shell:command" local service as stated in the ADB protocol, tied to
- * a specific command separated by space.
+ * ShellHandler is a pre-supplied convenience construct to plug in and handle general shell
+ * commands. This reflects the "shell:command" local service as stated in the ADB protocol. Note:
+ * this handler runs *after* {@link ShellCommandHandler}s, and only if {@link ShellCommandHandler}s
+ * don't already handle the given command.
  */
-public abstract class ShellCommandHandler extends CommandHandler {
+public abstract class ShellHandler extends CommandHandler {
 
     /**
      * This is the main execution method of the command.
      *
-     * @param fakeAdbServer  Fake ADB Server itself.
+     * @param fakeAdbServer Fake ADB Server itself.
      * @param responseSocket Socket for this connection.
-     * @param device         Target device for the command, if any.
-     * @param args           Arguments for the command, if any.
+     * @param device Target device for the command, if any.
+     * @param cmd The whole command line.
      * @return a boolean, with true meaning keep the connection alive, false to close the connection
      */
-    public abstract boolean invoke(@NonNull FakeAdbServer fakeAdbServer,
-            @NonNull Socket responseSocket, @NonNull DeviceState device, @Nullable String args);
+    public abstract boolean invoke(
+            @NonNull FakeAdbServer fakeAdbServer,
+            @NonNull Socket responseSocket,
+            @NonNull DeviceState device,
+            @Nullable String cmd);
 }

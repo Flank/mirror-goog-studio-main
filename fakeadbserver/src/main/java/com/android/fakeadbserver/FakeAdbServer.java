@@ -35,6 +35,7 @@ import com.android.fakeadbserver.shellcommandhandlers.LogcatCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.PackageManagerCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.SetPropCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.ShellCommandHandler;
+import com.android.fakeadbserver.shellcommandhandlers.ShellHandler;
 import com.android.fakeadbserver.shellcommandhandlers.WindowManagerCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.WriteNoStopCommandHandler;
 import com.android.fakeadbserver.statechangehubs.DeviceStateChangeHub;
@@ -56,6 +57,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 
 /**
  * See {@link FakeAdbServerTest#testInteractiveServer()} for example usage.
@@ -76,6 +78,8 @@ public final class FakeAdbServer implements AutoCloseable {
 
     private final Map<String, Supplier<ShellCommandHandler>> mShellCommandHandlers =
             new HashMap<>();
+
+    private final Map<Pattern, Supplier<ShellHandler>> mShellHandlers = new HashMap<>();
 
     private final Map<String, DeviceState> mDevices = new HashMap<>();
 
@@ -129,7 +133,8 @@ public final class FakeAdbServer implements AutoCloseable {
                                                     socket,
                                                     mHostCommandHandlers,
                                                     mDeviceCommandHandlers,
-                                                    mShellCommandHandlers));
+                                                    mShellCommandHandlers,
+                                                    mShellHandlers));
                                 } catch (IOException ignored) {
                                     // close() is called in a separate thread, and will cause accept() to throw an
                                     // exception if closed here.
@@ -320,6 +325,21 @@ public final class FakeAdbServer implements AutoCloseable {
                 @NonNull String command,
                 @NonNull Supplier<ShellCommandHandler> handlerConstructor) {
             mServer.mShellCommandHandlers.put(command, handlerConstructor);
+            return this;
+        }
+
+        /**
+         * Adds a handler for generalized ADB shell command. This only needs to be called if the
+         * test author requires handling of complex shell commands that existing {@link
+         * ShellCommandHandler} format does not provide sufficient functionality.
+         *
+         * @param matcher The {@link Pattern} that is used to match against the command.
+         * @param handlerConstructor The constructor for the handler.
+         */
+        @NonNull
+        public Builder setShellHandler(
+                @NonNull Pattern pattern, @NonNull Supplier<ShellHandler> handlerConstructor) {
+            mServer.mShellHandlers.put(pattern, handlerConstructor);
             return this;
         }
 
