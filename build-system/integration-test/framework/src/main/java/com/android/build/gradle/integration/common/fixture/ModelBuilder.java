@@ -73,7 +73,7 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
             @NonNull Consumer<GradleBuildResult> lastBuildResultConsumer,
             @NonNull Path projectDirectory,
             @Nullable Path buildDotGradleFile,
-            @Nullable String heapSize) {
+            @NonNull GradleTestProjectBuilder.HeapSizeRequirement heapSize) {
         super(
                 projectConnection,
                 lastBuildResultConsumer,

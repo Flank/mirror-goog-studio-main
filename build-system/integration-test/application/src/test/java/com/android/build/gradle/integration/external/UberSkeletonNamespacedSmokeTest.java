@@ -31,7 +31,10 @@ public class UberSkeletonNamespacedSmokeTest {
 
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromExternalProject("android-studio-gradle-test").create();
+            GradleTestProject.builder()
+                    .withHeap("10G")
+                    .fromExternalProject("android-studio-gradle-test")
+                    .create();
 
     @Before
     public void setUp() throws IOException {

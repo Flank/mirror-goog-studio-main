@@ -114,6 +114,13 @@ public final class GradleTestProjectBuilder {
             withDeviceProvider = GradleTestProject.APPLY_DEVICEPOOL_PLUGIN;
         }
 
+        // if nothing else, use default policy for heap size.
+        HeapSizeRequirement heapSizeRequirement = HeapSizeRequirement.useDefault();
+        if (heapSize != null) {
+            // if set by the Test, always takes precedence.
+            heapSizeRequirement = HeapSizeRequirement.use(heapSize);
+        }
+
         return new GradleTestProject(
                 name,
                 testProject,
@@ -121,7 +128,7 @@ public final class GradleTestProjectBuilder {
                 withoutNdk,
                 withDependencyChecker,
                 gradleProperties,
-                heapSize,
+                heapSizeRequirement,
                 compileSdkVersion,
                 buildToolsVersion,
                 profileDirectory,
@@ -142,6 +149,52 @@ public final class GradleTestProjectBuilder {
                 outputLogOnFailure);
     }
 
+
+    /** Policy for setting Heap Size for Gradle process */
+    public static class HeapSizeRequirement {
+
+        /** use default heap size for gradle. */
+        public static HeapSizeRequirement useDefault() {
+            return new HeapSizeRequirement(Type.DEFAULT, null);
+        }
+
+        /**
+         * Use a provided heap size for Gradle
+         *
+         * @param value the desired heap size
+         */
+        public static HeapSizeRequirement use(@NonNull String value) {
+            return new HeapSizeRequirement(Type.EXPLICIT, value);
+        }
+
+        @Nullable
+        public String getHeapSize() {
+            switch (type) {
+                case EXPLICIT:
+                    return "-Xmx" + value;
+                case DEFAULT:
+                    // by default, set the heap to 1G.
+                    return "-Xmx1G";
+                default:
+                    throw new IllegalArgumentException(
+                            "Unhandled HeapSizeRequirement.Type " + type);
+            }
+        }
+
+        private HeapSizeRequirement(Type type, @Nullable String value) {
+            this.type = type;
+            this.value = value;
+        }
+
+        private enum Type {
+            DEFAULT,
+            GRADLE_PROPERTIES,
+            EXPLICIT
+        }
+
+        @Nullable private final String value;
+        @NonNull private final Type type;
+    }
     /**
      * Set the name of the project.
      *
