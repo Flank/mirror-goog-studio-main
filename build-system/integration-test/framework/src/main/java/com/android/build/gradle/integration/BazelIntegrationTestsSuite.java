@@ -20,32 +20,22 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
-import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.repository.io.FileOpUtils;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.util.InstallerUtil;
-import com.android.testutils.BazelRunfilesManifestProcessor;
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.Maps;
 import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
-import java.nio.channels.OverlappingFileLockException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.gradle.tooling.internal.consumer.DefaultGradleConnector;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -78,29 +68,8 @@ public class BazelIntegrationTestsSuite {
 
     @BeforeClass
     public static void unzipOfflineRepo() throws Exception {
-
-        // use a lock file to avoid tests stepping on each others toes when running sharded on the
-        // same machine.
-        try {
-
-            File userDir = new File(System.getProperty("user.dir"));
-            File file = new File(userDir.getParentFile().getParentFile(), "test_srcDir.lock");
-
-            FileChannel channel = new RandomAccessFile(file, "rw").getChannel();
-
-            // file lock is not used, just guaranteeing single process access.
-            try(FileLock ignored = channel.lock()) {
-
-                // do the test set up while holding the lock.
-                BazelRunfilesManifestProcessor.setUpRunfiles();
-                for (Map.Entry<String, Path> mavenRepoSource : MAVEN_REPO_SOURCES.entrySet()) {
-                    unzip(mavenRepoSource.getValue(), mavenRepoSource.getKey());
-                }
-            }
-        }
-        catch (IOException e) {
-            System.out.println("I/O Error: " + e.getMessage());
-            throw e;
+        for (Map.Entry<String, Path> mavenRepoSource : MAVEN_REPO_SOURCES.entrySet()) {
+            unzip(mavenRepoSource.getValue(), mavenRepoSource.getKey());
         }
     }
 
@@ -129,21 +98,10 @@ public class BazelIntegrationTestsSuite {
     }
 
     @AfterClass
-    public static void cleanUp() throws InterruptedException {
+    public static void cleanUp() throws Exception {
         DefaultGradleConnector.close();
-        // on Windows, wait until the last gradle daemon had a chance to shutdown.
-        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
-            Thread.sleep(GradleTestProject.GRADLE_DEAMON_IDLE_TIME_IN_SECONDS + 2);
-        }
-        try {
-            FileUtils.deletePath(DATA_DIR.toFile());
-            Files.deleteIfExists(NDK_IN_TMP);
-        } catch(IOException ioe) {
-            // not cleaning up temp file is not a failure on its own as Gradle daemon can still
-            // be alive and holding on to the files.
-            Logger.getAnonymousLogger().log(Level.WARNING, "Cannot delete tmp files, "
-                    + "will be cleared at the next run ", ioe);
-        }
+        FileUtils.deletePath(DATA_DIR.toFile());
+        Files.deleteIfExists(NDK_IN_TMP);
     }
 
     private static void unzip(@NonNull Path repoPath, @NonNull String zipName) throws IOException {

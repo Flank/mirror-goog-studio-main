@@ -42,7 +42,6 @@ import com.android.builder.model.Variant;
 import com.android.builder.model.VariantBuildOutput;
 import com.android.sdklib.AndroidVersion;
 import com.google.common.collect.Iterators;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
