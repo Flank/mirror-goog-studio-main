@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import com.google.common.truth.Truth.assertThat
+import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -76,7 +77,7 @@ class DependenciesGraphTest {
         graphWithSharedRoot(listOf(b, a))
     }
 
-    private fun graphWithSharedRoot(list: List<MockResolvedDependencyResult>) {
+    private fun graphWithSharedRoot(list: List<ResolvedDependencyResult>) {
         val result = DependenciesGraph.create(
             ImmutableList.copyOf(list),
             artifacts = ImmutableMap.of()
