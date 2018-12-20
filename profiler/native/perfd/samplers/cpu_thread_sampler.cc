@@ -15,6 +15,7 @@
  */
 #include "cpu_thread_sampler.h"
 
+#include <string>
 #include <unordered_set>
 #include <vector>
 
@@ -41,6 +42,7 @@ void CpuThreadSampler::Sample() {
     std::string name;
     if (GetThreadState(procfs_.get(), pid_, tid, &state, &name)) {
       potentially_dead_tids.erase(tid);
+      name_cache_[tid] = name;
       const auto& search = previous_states_.find(tid);
       if (search == previous_states_.end()) {
         // New thread.
@@ -56,6 +58,9 @@ void CpuThreadSampler::Sample() {
       event.set_session_id(session().info().session_id());
       event.set_group_id(tid);
       event.set_kind(Event::CPU_THREAD);
+      if (state == CpuThreadData::DEAD) {
+        event.set_is_ended(true);
+      }
       auto* thread = event.mutable_cpu_thread();
       thread->set_tid(tid);
       thread->set_name(name);
@@ -72,9 +77,11 @@ void CpuThreadSampler::Sample() {
       event.set_session_id(session().info().session_id());
       event.set_group_id(tid);
       event.set_kind(Event::CPU_THREAD);
+      event.set_is_ended(true);
       auto* thread = event.mutable_cpu_thread();
       thread->set_tid(tid);
-      // TODO: store thread name.
+      thread->set_name(name_cache_[tid]);
+      name_cache_.erase(tid);
       thread->set_state(CpuThreadData::DEAD);
       buffer()->Add(event);
     }
