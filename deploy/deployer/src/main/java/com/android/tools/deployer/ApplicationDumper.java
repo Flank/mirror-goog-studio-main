@@ -48,7 +48,7 @@ public class ApplicationDumper {
                 packageName = entry.apk.packageName;
             }
 
-            if (entry.apk.packageName != packageName) {
+            if (!entry.apk.packageName.equals(packageName)) {
                 throw new DeployerException(
                         DeployerException.Error.DUMP_FAILED, "Cannot deploy multiple packages");
             }
