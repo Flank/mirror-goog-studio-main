@@ -15,15 +15,15 @@ def main():
   if sys.platform.startswith('linux'):
     platform = 'linux-x86_64'
     jdk_subdir = 'linux'
-    sdk_subdir = 'linux'
+    config = 'linux'
   elif sys.platform == 'darwin':
     platform = 'darwin-x86_64'
     jdk_subdir = os.path.join('mac', 'Contents', 'Home')
-    sdk_subdir = 'darwin'
+    config = 'darwin'
   elif sys.platform == 'win32':
     platform = 'windows-x86_64'
     jdk_subdir = 'win64'
-    sdk_subdir = 'windows'
+    config = 'windows'
   else:
     sys.exit('Platform %s is not yet supported.' % sys.platform)
 
@@ -33,7 +33,7 @@ def main():
 
   env = {}
   env['JAVA_HOME'] = os.path.join(workspace, 'prebuilts', 'studio', 'jdk', jdk_subdir)
-  env['ANDROID_NDK_HOME'] = os.path.join(workspace, 'prebuilts', 'studio', 'sdk', sdk_subdir, 'ndk-bundle')
+  env['ANDROID_NDK_HOME'] = os.path.join(workspace, 'prebuilts', 'studio', 'sdk', config, 'ndk-bundle')
   env['TERM'] = os.environ.get('TERM', '')
   env['SHELL'] = os.environ.get('SHELL', '')
   if 'QA_ANDROID_SDK_ROOT' in os.environ:
@@ -72,7 +72,7 @@ def main():
 
   bazelrc_arg = '--bazelrc=%s' % os.path.join(workspace, 'tools',
                                               'base', 'bazel',
-                                              'toplevel.bazel.rc')
+                                              config + '.bazel.rc')
   sys.exit(subprocess.call([bazel, bazelrc_arg] + args, env=env))
 
 
