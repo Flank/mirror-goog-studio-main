@@ -147,6 +147,15 @@ class CacheabilityTest {
 
     @Before
     fun setUp() {
+        // Normally the APK name wouldn't include the project name. However, because the current
+        // test project has only one module located at the root project (as opposed to residing in a
+        // subdirectory under the root project), the APK name in this test does include the project
+        // name, which would break relocatability. To fix that, we need to apply the following
+        // workaround to use a generic name for the APK that is independent of the project name.
+        //
+        // NOTE: This project setup is not configured by default in Android Studio, so we assume
+        // that not many users have this setup. However, if we later find that users do run into
+        // cacheability issues because of this, we will need to think of a proper fix.
         TestFileUtils.appendToFile(projectCopy1.buildFile, "archivesBaseName = 'project'")
         TestFileUtils.appendToFile(projectCopy2.buildFile, "archivesBaseName = 'project'")
     }
