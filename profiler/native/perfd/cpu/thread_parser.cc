@@ -37,7 +37,7 @@ bool GetThreads(const ProcfsFiles* procfs, int32_t pid, vector<int32_t>* tids) {
   DiskFileSystem fs;
   auto dir = fs.GetDir(procfs->GetProcessTaskDir(pid));
   if (!dir->Exists()) {
-    Log::E("Directory %s doesn't exist.", dir->path().c_str());
+    Log::W("Directory %s doesn't exist.", dir->path().c_str());
     return false;
   }
   // List thread ID directories under /proc/[pid]/task/ directory.
@@ -67,7 +67,7 @@ bool GetThreadState(const ProcfsFiles* procfs, int32_t pid, int32_t tid,
       }
     }
   }
-  Log::E("Failed to parse stat file %s.", thread_stat_file.c_str());
+  Log::W("Failed to parse stat file %s.", thread_stat_file.c_str());
   return false;
 }
 
