@@ -78,7 +78,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     @NonNull private final List<String> arguments = Lists.newArrayList();
     @NonNull private final ProjectOptionsBuilder options = new ProjectOptionsBuilder();
     @NonNull final Path projectDirectory;
-    @Nullable private final String heapSize;
+    @NonNull private final GradleTestProjectBuilder.HeapSizeRequirement heapSize;
     @NonNull private LoggingLevel loggingLevel = LoggingLevel.INFO;
     private boolean offline = true;
     private boolean sdkInLocalProperties = false;
@@ -90,7 +90,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             @NonNull Path projectDirectory,
             @Nullable Path buildDotGradleFile,
             @Nullable Path profileDirectory,
-            @Nullable String heapSize) {
+            @NonNull GradleTestProjectBuilder.HeapSizeRequirement heapSize) {
         this.lastBuildResultConsumer = lastBuildResultConsumer;
         this.projectDirectory = projectDirectory;
         this.projectConnection = projectConnection;
@@ -200,7 +200,6 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         arguments.add("-Dfile.encoding=" + System.getProperty("file.encoding"));
         arguments.add("-Dsun.jnu.encoding=" + System.getProperty("sun.jnu.encoding"));
 
-
         if (offline) {
             arguments.add("--offline");
         }
@@ -228,13 +227,14 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
                 .collect(ImmutableSet.toImmutableSet());
     }
 
-    protected final void setJvmArguments(@NonNull LongRunningOperation launcher)
-            throws IOException {
+    protected final void setJvmArguments(@NonNull LongRunningOperation launcher) {
         List<String> jvmArguments = new ArrayList<>();
 
-        if (!Strings.isNullOrEmpty(heapSize)) {
-            jvmArguments.add("-Xmx" + heapSize);
+        String heapSize = this.heapSize.getHeapSize();
+        if (heapSize != null) {
+            jvmArguments.add(heapSize);
         }
+
         jvmArguments.add("-XX:MaxPermSize=1024m");
 
         String debugIntegrationTest = System.getenv("DEBUG_INNER_TEST");

@@ -20,7 +20,9 @@ import static org.junit.Assert.assertEquals;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.SourceProvider;
+import com.google.common.truth.Truth;
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Collection;
 
 public final class SourceProviderHelper {
@@ -113,9 +115,9 @@ public final class SourceProviderHelper {
         testSinglePathCollection("rs", renderscriptDir, sourceProvider.getRenderscriptDirectories());
         testSinglePathCollection("jni", jniDir, sourceProvider.getCDirectories());
 
-        assertEquals("AndroidManifest",
-                new File(projectDir, manifestFile).getAbsolutePath(),
-                sourceProvider.getManifestFile().getAbsolutePath());
+        Truth.assertWithMessage("AndroidManifest")
+                .that((Comparable<Path>) new File(projectDir, manifestFile).toPath())
+                .isEquivalentAccordingToCompareTo(sourceProvider.getManifestFile().toPath());
     }
 
     private void testSinglePathCollection(
@@ -123,9 +125,9 @@ public final class SourceProviderHelper {
             @NonNull String referencePath,
             @NonNull Collection<File> pathSet) {
         assertEquals(1, pathSet.size());
-        assertEquals(projectName + ": " + configName + "/" + setName,
-                new File(projectDir, referencePath).getAbsolutePath(),
-                pathSet.iterator().next().getAbsolutePath());
+        Truth.assertWithMessage(projectName + ": " + configName + "/" + setName)
+                .that((Comparable<Path>) new File(projectDir, referencePath).toPath())
+                .isEquivalentAccordingToCompareTo(pathSet.iterator().next().toPath());
     }
 
 }
