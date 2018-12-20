@@ -1264,7 +1264,7 @@ public class XmlPrettyPrinter {
                 if (stdout) {
                     System.out.println(formatted);
                 } else {
-                    Files.write(formatted, file, Charsets.UTF_8);
+                    Files.asCharSink(file, Charsets.UTF_8).write(formatted);
                 }
             } catch (IOException e) {
                 System.err.println("Could not read " + file);

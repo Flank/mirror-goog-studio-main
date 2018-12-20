@@ -3,9 +3,11 @@ load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS", "and
 filegroup(
     name = "samplers_h",
     srcs = glob([
+        "samplers/cpu_thread_sampler.h",
         "samplers/cpu_usage_sampler.h",
         "samplers/network_connection_count_sampler.h",
         "samplers/network_speed_sampler.h",
+        "samplers/agent_status_sampler.h",
         "samplers/sampler.h",
     ]),
 )
@@ -13,9 +15,11 @@ filegroup(
 filegroup(
     name = "samplers_cc",
     srcs = glob([
+        "samplers/cpu_thread_sampler.cc",
         "samplers/cpu_usage_sampler.cc",
         "samplers/network_connection_count_sampler.cc",
         "samplers/network_speed_sampler.cc",
+        "samplers/agent_status_sampler.cc",
         "samplers/sampler.cc",
     ]),
 )
@@ -111,6 +115,7 @@ cc_test(
     srcs = [
         "event_buffer_test.cc",
         "profiler_service_test.cc",
+        "samplers/cpu_thread_sampler_test.cc",
         "samplers/cpu_usage_sampler_test.cc",
         "samplers/sampler_test.cc",
         "sessions/session_test.cc",
@@ -118,6 +123,9 @@ cc_test(
     copts = [
         "-Itools/base/profiler/native",
         "-I$(GENDIR)/tools/base/profiler",
+    ],
+    data = [
+        "//tools/base/profiler/native/testdata:perfd/cpu",
     ],
     linkstatic = 1,
     tags = ["no_windows"],

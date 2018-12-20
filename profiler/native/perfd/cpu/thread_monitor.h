@@ -26,6 +26,7 @@
 #include "proto/cpu.pb.h"
 #include "proto/cpu_data.pb.h"
 #include "utils/clock.h"
+#include "utils/procfs_files.h"
 
 namespace profiler {
 
@@ -39,7 +40,7 @@ class ThreadMonitor {
  public:
   // Creates a thread monitor that detects and saves activities to |cpu_cache|.
   ThreadMonitor(Clock* clock, CpuCache* cpu_cache)
-      : clock_(clock), cache_(*cpu_cache) {}
+      : clock_(clock), cache_(*cpu_cache), procfs_(new ProcfsFiles()) {}
 
   // Starts collecting thread activity for process with ID of |pid|. Does
   // nothing if the process has been monitored.
@@ -125,6 +126,8 @@ class ThreadMonitor {
   CpuCache& cache_;
   // Last known thread states of all process being monitored.
   States previous_states_{};
+  // Files that are used to sample CPU threads.
+  std::unique_ptr<const ProcfsFiles> procfs_;
 };
 
 }  // namespace profiler

@@ -37,6 +37,9 @@ class MinimalSubProject private constructor(val plugin: String, val packageName:
                     <application />
                 </manifest>""".trimMargin()
             )
+            if (plugin == "com.android.application") {
+                content += "android.defaultConfig.versionCode 1\n";
+            }
             addFiles(manifest)
         }
         val build = TestSourceFile("build.gradle", content)

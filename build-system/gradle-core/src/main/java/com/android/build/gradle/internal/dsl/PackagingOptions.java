@@ -100,6 +100,7 @@ import org.gradle.api.tasks.Input;
  *         <li><code>&#042;&#042;/&#042;~</code> (temporary files)
  *         <li><code>&#042;&#042;/thumbs.db</code>
  *         <li><code>&#042;&#042;/picasa.ini</code>
+ *         <li><code>&#042;&#042;/protobuf.meta</code>
  *         <li><code>&#042;&#042;/about.html</code>
  *         <li><code>&#042;&#042;/package.html</code>
  *         <li><code>&#042;&#042;/overview.html</code>
@@ -177,6 +178,9 @@ public class PackagingOptions implements com.android.builder.model.PackagingOpti
         exclude("**/about.html");
         exclude("**/package.html");
         exclude("**/overview.html");
+
+        // Exclude protobuf metadata files
+        exclude("**/protobuf.meta");
 
         // Exclude stuff for unknown reasons
         exclude("**/_*");

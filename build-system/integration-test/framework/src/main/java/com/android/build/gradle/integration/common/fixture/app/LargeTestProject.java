@@ -92,10 +92,8 @@ public class LargeTestProject<T extends GradleModule> implements TestProject {
         createSettingsGradle(gradleModule, projectDir);
         createGradleProperties(projectDir);
 
-        Files.write(
-                buildScriptContent,
-                new File(projectDir, "build.gradle"),
-                Charset.defaultCharset());
+        Files.asCharSink(new File(projectDir, "build.gradle"), Charset.defaultCharset())
+                .write(buildScriptContent);
     }
 
     @Override
@@ -139,8 +137,8 @@ public class LargeTestProject<T extends GradleModule> implements TestProject {
         StringBuilder builder = new StringBuilder();
         buildSettingsGradle(project, builder);
 
-        Files.write(builder.toString(), new File(location, "settings.gradle"),
-                Charset.defaultCharset());
+        Files.asCharSink(new File(location, "settings.gradle"), Charset.defaultCharset())
+                .write(builder.toString());
     }
 
     private static void buildSettingsGradle(
@@ -153,9 +151,9 @@ public class LargeTestProject<T extends GradleModule> implements TestProject {
     }
 
     private static void createGradleProperties(@NonNull File location) throws IOException {
-        Files.write(
-                "org.gradle.jvmargs=-Xmx6096m -XX:MaxPermSize=1024m\n" +
-                        "org.gradle.daemon=true\n",
-                new File(location, "gradle.properties"), Charset.defaultCharset());
+        Files.asCharSink(new File(location, "gradle.properties"), Charset.defaultCharset())
+                .write(
+                        "org.gradle.jvmargs=-Xmx6096m -XX:MaxPermSize=1024m\n"
+                                + "org.gradle.daemon=true\n");
     }
 }

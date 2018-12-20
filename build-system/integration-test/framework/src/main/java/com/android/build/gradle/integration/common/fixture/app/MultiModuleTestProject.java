@@ -73,13 +73,11 @@ public class MultiModuleTestProject implements TestProject {
         for (String subprojectName : subprojects.keySet()) {
             builder.append("include '").append(subprojectName).append("'\n");
         }
-        Files.write(builder.toString(),
-                new File(projectDir, "settings.gradle"),
-                Charset.defaultCharset());
+        Files.asCharSink(new File(projectDir, "settings.gradle"), Charset.defaultCharset())
+                .write(builder.toString());
 
-        Files.write(buildScriptContent,
-                new File(projectDir, "build.gradle"),
-                Charset.defaultCharset());
+        Files.asCharSink(new File(projectDir, "build.gradle"), Charset.defaultCharset())
+                .write(buildScriptContent);
     }
 
     @Override

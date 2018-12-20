@@ -62,6 +62,11 @@ class NamespacedResourcesTaskManager(
 
         // Compile
         createCompileResourcesTask()
+        // We need to strip namespaces from the manifest to bundle, so that it's consumable by
+        // non-namespaced projects.
+        taskFactory.register(CreateNonNamespacedLibraryManifestTask.CreationAction(variantScope))
+        // TODO: If we want to read the namespaced manifest from the static library, we need to keep
+        // all the data in it, not just a skeleton with the package. See b/117869877
         taskFactory.register(StaticLibraryManifestTask.CreationAction(variantScope))
         taskFactory.register(LinkLibraryAndroidResourcesTask.CreationAction(variantScope))
         // TODO: also generate a private R.jar holding private resources.

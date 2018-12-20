@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "tools/base/deploy/installer/executor.h"
+#include "tools/base/deploy/installer/executor_impl.h"
 
 #include <iostream>
 #include <numeric>
@@ -30,16 +30,15 @@
 using std::string;
 namespace deploy {
 
-const string kRunAsExecutable = "/system/bin/run-as";
-
 const size_t kStdinFileBufferSize = 64 * 1024;
 const size_t kReadBufferSize = 64 * 1024;
 
 // Pump stdin_source > child_stdin
 //      child_stdout > output
 //      child_strerr > error
-static void Pump(int stdin_source, int child_stdin, int child_stdout,
-                 std::string* output, int child_stderr, std::string* error) {
+void ExecutorImpl::Pump(int stdin_source, int child_stdin, int child_stdout,
+                        std::string* output, int child_stderr,
+                        std::string* error) const {
   pollfd fds[3];
   fds[0].fd = child_stdin;
   fds[0].events = POLLOUT;
@@ -106,13 +105,13 @@ static void Pump(int stdin_source, int child_stdin, int child_stdout,
   free(stdin_buffer);
 }
 
-static bool PrivateRun(const std::string& executable_path,
-                       const std::vector<std::string>& args,
-                       std::string* output, std::string* error,
-                       int input_file_fd) {
+bool ExecutorImpl::PrivateRun(const std::string& executable_path,
+                              const std::vector<std::string>& args,
+                              std::string* output, std::string* error,
+                              int input_file_fd) const {
   int child_stdout, child_stdin, child_stderr, child_pid, status;
-  bool ok = Executor::ForkAndExec(executable_path, args, &child_stdin,
-                                  &child_stdout, &child_stderr, &child_pid);
+  bool ok = ForkAndExec(executable_path, args, &child_stdin, &child_stdout,
+                        &child_stderr, &child_pid);
   if (!ok) {
     *error = "Unable to ForkAndExec";
     return false;
@@ -135,19 +134,19 @@ static bool PrivateRun(const std::string& executable_path,
   return WIFEXITED(status) && (WEXITSTATUS(status) == 0);
 }
 
-bool Executor::RunWithInput(const std::string& executable_path,
-                            const std::vector<std::string>& args,
-                            std::string* output, std::string* error,
-                            const std::string& input_file) noexcept {
+bool ExecutorImpl::RunWithInput(const std::string& executable_path,
+                                const std::vector<std::string>& args,
+                                std::string* output, std::string* error,
+                                const std::string& input_file) const {
   int stdin_source = open(input_file.c_str(), O_RDONLY, 0);
   bool result = PrivateRun(executable_path, args, output, error, stdin_source);
   close(stdin_source);
   return result;
 }
 
-bool Executor::Run(const std::string& executable_path,
-                   const std::vector<std::string>& args, std::string* output,
-                   std::string* error) noexcept {
+bool ExecutorImpl::Run(const std::string& executable_path,
+                       const std::vector<std::string>& args,
+                       std::string* output, std::string* error) const {
   // Create an empty input fd for the pump
   int p[2];
   int err = pipe(p);
@@ -161,34 +160,34 @@ bool Executor::Run(const std::string& executable_path,
   return result;
 }
 
-bool Executor::RunAs(const std::string& executable_path,
-                     const std::string& package_name,
-                     const std::vector<std::string>& parameters,
-                     std::string* output, std::string* error) noexcept {
-  std::vector<std::string> args;
-  args.push_back(package_name);
-  args.push_back(executable_path),
-      args.insert(args.end(), parameters.begin(), parameters.end());
-  return Run(kRunAsExecutable, args, output, error);
-}
-
-bool Executor::ForkAndExecAs(const std::string& executable_path,
-                             const std::string& package_name,
-                             const std::vector<std::string>& parameters,
-                             int* child_stdin_fd, int* child_stdout_fd,
-                             int* child_stderr_fd, int* fork_pid) noexcept {
+bool ExecutorImpl::RunAs(const std::string& executable_path,
+                         const std::string& package_name,
+                         const std::vector<std::string>& parameters,
+                         std::string* output, std::string* error) const {
   std::vector<std::string> args;
   args.push_back(package_name);
   args.push_back(executable_path);
   args.insert(args.end(), parameters.begin(), parameters.end());
-  return ForkAndExec(kRunAsExecutable, args, child_stdin_fd, child_stdout_fd,
+  return Run(run_as_exec_, args, output, error);
+}
+
+bool ExecutorImpl::ForkAndExecAs(const std::string& executable_path,
+                                 const std::string& package_name,
+                                 const std::vector<std::string>& parameters,
+                                 int* child_stdin_fd, int* child_stdout_fd,
+                                 int* child_stderr_fd, int* fork_pid) const {
+  std::vector<std::string> args;
+  args.push_back(package_name);
+  args.push_back(executable_path);
+  args.insert(args.end(), parameters.begin(), parameters.end());
+  return ForkAndExec(run_as_exec_, args, child_stdin_fd, child_stdout_fd,
                      child_stderr_fd, fork_pid);
 }
 
-bool Executor::ForkAndExec(const std::string& executable_path,
-                           const std::vector<std::string>& args,
-                           int* child_stdin_fd, int* child_stdout_fd,
-                           int* child_stderr_fd, int* fork_pid) noexcept {
+bool ExecutorImpl::ForkAndExec(const std::string& executable_path,
+                               const std::vector<std::string>& args,
+                               int* child_stdin_fd, int* child_stdout_fd,
+                               int* child_stderr_fd, int* fork_pid) const {
   //  std::string cmd = executable_path;
   //  for (const std::string& arg : args) {
   //    cmd.append(" ");

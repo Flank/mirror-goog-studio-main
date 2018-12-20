@@ -73,5 +73,5 @@ java_library(
 filegroup(
     name = "aapt2_for_tests",
     srcs = DARWIN_FILES + LINUX_FILES + WINDOWS_FILES,
-    visibility = ["//tools/base/build-system:__subpackages__"],
+    visibility = ["//tools/base:__subpackages__"],
 )

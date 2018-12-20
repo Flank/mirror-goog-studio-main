@@ -61,7 +61,19 @@ string ProcfsFiles::GetProcessStatFilePath(int32_t pid) const {
   return os.str();
 }
 
-std::string ProcfsFiles::GetMemoryMapFilePath(int32_t pid) const {
+string ProcfsFiles::GetProcessTaskDir(int32_t pid) const {
+  std::ostringstream os;
+  os << "/proc/" << pid << "/task/";
+  return os.str();
+}
+
+string ProcfsFiles::GetThreadStatFilePath(int32_t pid, int32_t tid) const {
+  std::ostringstream os;
+  os << "/proc/" << pid << "/task/" << tid << "/stat";
+  return os.str();
+}
+
+string ProcfsFiles::GetMemoryMapFilePath(int32_t pid) const {
   std::ostringstream os;
   os << "/proc/" << pid << "/maps";
   return os.str();

@@ -49,7 +49,8 @@ public class AppWithJarDependOnLibTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        Files.write("include 'app', 'library', 'jar'", project.getSettingsFile(), Charsets.UTF_8);
+        Files.asCharSink(project.getSettingsFile(), Charsets.UTF_8)
+                .write("include 'app', 'library', 'jar'");
 
         TestFileUtils.appendToFile(project.getSubproject("app").getBuildFile(),
                 "\n" +

@@ -47,7 +47,7 @@ service ProfilerService {
   }
 
   // Query for whether the agent is alive.
-  rpc GetAgentStatus(AgentStatusRequest) returns (AgentStatusResponse) {
+  rpc GetAgentStatus(AgentStatusRequest) returns (AgentData) {
   }
 
   // Makes all necessary configurations needed for attaching agent on startup.
@@ -246,27 +246,6 @@ message BytesResponse {
   // Byte contents from a cache, or "" if no data was found associated with the
   // cache key used to fetch it, or if the data was removed after some timeout.
   bytes contents = 1;
-}
-
-message AgentStatusRequest {
-  int64 device_id = 1;
-  int32 pid = 2;
-}
-
-message AgentStatusResponse {
-  enum Status {
-    UNSPECIFIED = 0;
-    ATTACHED = 1;
-    DETACHED = 2;
-  }
-  Status status = 1;
-  // Whether the requested process supports advanced profiling (perfa).
-  // For pre-O, since the agent is included wih the app, this returns
-  // true if we receive an heartbeat from the app.
-  // For post-O, since the agent is late-attached during runtime, this
-  // return tures if an JVMTI agent can be attached. (e.g. the app is
-  // debuggable).
-  bool is_agent_attachable = 2;
 }
 
 message ExecuteRequest {

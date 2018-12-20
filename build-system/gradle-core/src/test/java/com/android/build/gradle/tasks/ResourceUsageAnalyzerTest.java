@@ -1216,7 +1216,7 @@ public class ResourceUsageAnalyzerTest {
     @NonNull
     private static File createFile(File dir, String relative, String contents) throws IOException {
         File file = createFile(dir, relative);
-        Files.write(contents, file, Charsets.UTF_8);
+        Files.asCharSink(file, Charsets.UTF_8).write(contents);
         return file;
     }
 

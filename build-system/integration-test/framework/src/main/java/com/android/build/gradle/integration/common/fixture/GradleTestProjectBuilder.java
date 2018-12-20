@@ -37,6 +37,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 public final class GradleTestProjectBuilder {
 
@@ -112,6 +113,18 @@ public final class GradleTestProjectBuilder {
 
         if (withDeviceProvider == null) {
             withDeviceProvider = GradleTestProject.APPLY_DEVICEPOOL_PLUGIN;
+        }
+
+        if (heapSize != null && testProject instanceof AndroidTestModule) {
+            try {
+                // will throw NoSuchElementException if the file does not exist.
+                ((AndroidTestModule) testProject).getFile("gradle.properties");
+                // if we are here, the file exists, this is an error.
+                throw new IllegalArgumentException("You cannot use withHeap() function to configure"
+                        + " a project with a gradle.properties file, please set it there.");
+            } catch (NoSuchElementException | IllegalStateException e) {
+                // ignore.
+            }
         }
 
         return new GradleTestProject(

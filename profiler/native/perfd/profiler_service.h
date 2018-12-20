@@ -44,7 +44,7 @@ class ProfilerServiceImpl final
   grpc::Status GetAgentStatus(
       grpc::ServerContext* context,
       const profiler::proto::AgentStatusRequest* request,
-      profiler::proto::AgentStatusResponse* response) override;
+      profiler::proto::AgentData* response) override;
 
   grpc::Status GetDevices(
       grpc::ServerContext* context,

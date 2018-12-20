@@ -115,7 +115,9 @@ public class InstantRunAddLibraryTest {
                 "        " + action + "\n" +
                 "    }\n" +
                 "}\n";
-        Files.write(contents, project.file("src/main/java/com/example/helloworld/Util.java"),
-                Charsets.UTF_8);
+        Files.asCharSink(
+                        project.file("src/main/java/com/example/helloworld/Util.java"),
+                        Charsets.UTF_8)
+                .write(contents);
     }
 }

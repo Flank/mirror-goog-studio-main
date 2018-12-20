@@ -51,7 +51,8 @@ public class LibWithProvidedDirectJarTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        Files.write("include 'app', 'library', 'jar'", project.getSettingsFile(), Charsets.UTF_8);
+        Files.asCharSink(project.getSettingsFile(), Charsets.UTF_8)
+                .write("include 'app', 'library', 'jar'");
 
         appendToFile(
                 project.getSubproject("app").getBuildFile(),

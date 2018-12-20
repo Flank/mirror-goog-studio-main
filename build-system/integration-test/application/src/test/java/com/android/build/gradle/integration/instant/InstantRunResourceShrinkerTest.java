@@ -51,20 +51,19 @@ public class InstantRunResourceShrinkerTest {
         File unusedResource = project.file("src/main/res/drawable/not_used.xml");
         Files.createParentDirs(unusedResource);
 
-        Files.write(
-                "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "        android:width=\"24dp\"\n"
-                        + "        android:height=\"24dp\"\n"
-                        + "        android:viewportHeight=\"108.0\"\n"
-                        + "        android:viewportWidth=\"108.0\">\n"
-                        + "    <path\n"
-                        + "            android:fillColor=\"#26A69A\"\n"
-                        + "            android:pathData=\"M0,0h108v108h-108z\"\n"
-                        + "            android:strokeColor=\"#66FFFFFF\"\n"
-                        + "            android:strokeWidth=\"0.8\" />\n"
-                        + "</vector>\n",
-                unusedResource,
-                StandardCharsets.UTF_8);
+        Files.asCharSink(unusedResource, StandardCharsets.UTF_8)
+                .write(
+                        "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "        android:width=\"24dp\"\n"
+                                + "        android:height=\"24dp\"\n"
+                                + "        android:viewportHeight=\"108.0\"\n"
+                                + "        android:viewportWidth=\"108.0\">\n"
+                                + "    <path\n"
+                                + "            android:fillColor=\"#26A69A\"\n"
+                                + "            android:pathData=\"M0,0h108v108h-108z\"\n"
+                                + "            android:strokeColor=\"#66FFFFFF\"\n"
+                                + "            android:strokeWidth=\"0.8\" />\n"
+                                + "</vector>\n");
     }
 
     @Test

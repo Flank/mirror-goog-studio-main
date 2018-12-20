@@ -84,6 +84,7 @@ private fun recordTestRun(
             testRun = run
             javaProcessStats = CommonMetricsData.javaProcessStats
             jvmDetails = CommonMetricsData.jvmDetails
+            productDetails = AnalyticsUtil.getProductDetails()
         }
     )
 }

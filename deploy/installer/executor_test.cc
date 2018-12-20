@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "tools/base/deploy/installer/executor.h"
 #include "tools/base/deploy/common/utils.h"
+#include "tools/base/deploy/installer/executor_impl.h"
 
 #include <fcntl.h>
 #include <gtest/gtest.h>
@@ -48,8 +48,9 @@ TEST_F(ShellCommandRunnerTest, TestSimpleRun) {
   string error;
   std::vector<std::string> args;
   args.emplace_back("-c");
+  ExecutorImpl executor("");
   args.emplace_back("echo \"Hello\"");
-  Executor::Run("sh", args, &output, &error);
+  executor.Run("sh", args, &output, &error);
   ASSERT_EQ("Hello\n", output);
 }
 
@@ -77,7 +78,8 @@ TEST_F(ShellCommandRunnerTest, TestPiped) {
   std::stringstream string_size;
   string_size << size;
   args.push_back(string_size.str());
-  Executor::RunWithInput(helper_path, args, &output, &error, tmp);
+  ExecutorImpl executor("");
+  executor.RunWithInput(helper_path, args, &output, &error, tmp);
   ASSERT_EQ(size * 3 + 3, output.size());
   EXPECT_EQ(0, strncmp(output.data(), buffer0, size));
   EXPECT_EQ(0, strncmp(output.data() + size + 1, buffer1, size));
@@ -100,7 +102,8 @@ TEST_F(ShellCommandRunnerTest, TestForkExitIfExecFails) {
   pipe(fds);
 
   std::string output, error;
-  Executor::Run("missing_executable", {}, &output, &error);
+  ExecutorImpl executor("");
+  executor.Run("missing_executable", {}, &output, &error);
   close(fds[1]);
 
   char buf;

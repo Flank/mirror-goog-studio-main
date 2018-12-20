@@ -16,12 +16,14 @@
 
 package com.android.builder.internal.aapt.v2
 
+import com.android.SdkConstants
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.utils.GrabProcessOutput
 import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.SettableFuture
+import java.io.File
 import java.io.IOException
 import java.io.Writer
 import java.nio.file.Files
@@ -77,9 +79,18 @@ class Aapt2DaemonImpl(
 
     @Throws(TimeoutException::class)
     override fun startProcess() {
+        val value: File = File(aaptCommand.get(0))
+
         val waitForReady = WaitForReadyOnStdOut(displayName, logger)
         processOutput.delegate = waitForReady
-        process = ProcessBuilder(aaptCommand).start()
+        val processBuilder = ProcessBuilder(aaptCommand)
+        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_LINUX) {
+            if (File(value.parentFile.absolutePath + "/lib64/libc++.so").exists()) {
+                processBuilder.environment()["LD_PRELOAD"] = value.parentFile.absolutePath +
+                        "/lib64/libc++.so"
+            }
+        }
+        process = processBuilder.start()
         writer = try {
             GrabProcessOutput.grabProcessOutput(
                     process,

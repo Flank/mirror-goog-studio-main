@@ -16,6 +16,8 @@
 #include "session.h"
 
 #include "perfd/daemon.h"
+#include "perfd/samplers/agent_status_sampler.h"
+#include "perfd/samplers/cpu_thread_sampler.h"
 #include "perfd/samplers/cpu_usage_sampler.h"
 #include "perfd/samplers/network_connection_count_sampler.h"
 #include "perfd/samplers/network_speed_sampler.h"
@@ -41,6 +43,10 @@ Session::Session(int64_t device_id, int32_t pid, int64_t start_timestamp,
     samplers_.push_back(
         std::unique_ptr<Sampler>(new profiler::CpuUsageDataSampler(
             *this, daemon->clock(), daemon->buffer())));
+    samplers_.push_back(std::unique_ptr<Sampler>(
+        new profiler::AgentStatusSampler(*this, daemon)));
+    samplers_.push_back(std::unique_ptr<Sampler>(new profiler::CpuThreadSampler(
+        *this, daemon->clock(), daemon->buffer())));
   }
 }
 

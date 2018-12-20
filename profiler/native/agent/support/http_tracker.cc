@@ -44,22 +44,40 @@ using profiler::proto::HttpResponseRequest;
 using profiler::proto::InternalNetworkService;
 using profiler::proto::JavaThreadRequest;
 using profiler::proto::SendEventRequest;
+using profiler::proto::SendPayloadRequest;
 
 namespace {
 std::atomic_int id_generator_(1);
+
+constexpr char kRequestPayloadSuffix[] = "_request";
+constexpr char kResponsePayloadSuffix[] = "_response";
 
 // Intermediate buffer that stores all payload chunks not yet sent. That way,
 // if grpc requests start to fall behind, data is batched and flushed all at
 // once at the next opportunity. This can be a major performance boost, as it's
 // faster to send one 10K message than ten 1K messages, which gives the system
 // a chance to catch up.
-struct PayloadChunk {
-  std::mutex chunks_mutex;
+struct PayloadBuffer {
+  std::mutex payload_mutex;
   std::unordered_map<uint64_t, std::deque<std::string>> chunks;
+  // Accumulative size of the paylod for the connection.
+  // Note that entries for completed connections are not cleaned up.
+  std::unordered_map<uint64_t, int32_t> payload_sizes;
+  // Name suffix used for the payload
+  const char *name_suffix;
 
-  void AddBytes(jlong juid, JByteArrayWrapper *bytes, ChunkRequest::Type type) {
-    std::lock_guard<std::mutex> guard(chunks_mutex);
+  PayloadBuffer(const char *suffx) : name_suffix(suffx){};
+
+  int32_t GetPayloadLength(jlong juid) {
+    std::lock_guard<std::mutex> guard(payload_mutex);
+    const auto &itr = payload_sizes.find(juid);
+    return itr != payload_sizes.end() ? itr->second : 0;
+  }
+
+  void AddBytes(jlong juid, JByteArrayWrapper *bytes) {
+    std::lock_guard<std::mutex> guard(payload_mutex);
     const auto &itr = chunks.find(juid);
+    payload_sizes[juid] += bytes->length();
     if (itr != chunks.end()) {
       itr->second.push_back(bytes->get());
     } else {
@@ -67,38 +85,74 @@ struct PayloadChunk {
       // background thread to consume it. Additional bytes reported before the
       // background thread finally runs will be sent out at the same time.
       chunks[juid].push_back(bytes->get());
-      Agent::Instance().SubmitNetworkTasks({[juid, this, type](
-          InternalNetworkService::Stub &stub, ClientContext &ctx) {
-        std::ostringstream batched_bytes;
-        {
-          std::lock_guard<std::mutex> guard(chunks_mutex);
-          for (const std::string &chunk : chunks[juid]) {
-            batched_bytes << chunk;
+      if (Agent::Instance().agent_config().unified_pipeline()) {
+        Agent::Instance().SubmitAgentTasks(
+            {[juid, this](AgentService::Stub &stub, ClientContext &ctx) {
+              std::ostringstream batched_bytes;
+              {
+                std::lock_guard<std::mutex> guard(payload_mutex);
+                for (const std::string &chunk : chunks[juid]) {
+                  batched_bytes << chunk;
+                }
+                chunks.erase(juid);
+              }
+
+              std::stringstream payload_name;
+              payload_name << juid << name_suffix;
+              SendPayloadRequest request;
+              request.set_name(payload_name.str());
+              request.set_payload(batched_bytes.str());
+              request.set_is_partial(true);
+
+              EmptyResponse response;
+              Status result = stub.SendPayload(&ctx, request, &response);
+
+              // Send failed, push the chunks back into front of deque
+              if (!result.ok()) {
+                std::lock_guard<std::mutex> guard(payload_mutex);
+                chunks[juid].push_front(batched_bytes.str());
+              }
+
+              return result;
+            }});
+      } else {
+        Agent::Instance().SubmitNetworkTasks({[juid, this](
+            InternalNetworkService::Stub &stub, ClientContext &ctx) {
+          std::ostringstream batched_bytes;
+          {
+            std::lock_guard<std::mutex> guard(payload_mutex);
+            for (const std::string &chunk : chunks[juid]) {
+              batched_bytes << chunk;
+            }
+            chunks.erase(juid);
           }
-          chunks.erase(juid);
-        }
 
-        ChunkRequest chunk;
-        chunk.set_conn_id(juid);
-        chunk.set_content(batched_bytes.str());
-        chunk.set_type(type);
+          ChunkRequest chunk;
+          chunk.set_conn_id(juid);
+          chunk.set_content(batched_bytes.str());
+          if (name_suffix == kRequestPayloadSuffix) {
+            chunk.set_type(ChunkRequest::REQUEST);
+          } else if (name_suffix == kResponsePayloadSuffix) {
+            chunk.set_type(ChunkRequest::RESPONSE);
+          }
 
-        EmptyNetworkReply reply;
-        Status result = stub.SendChunk(&ctx, chunk, &reply);
+          EmptyNetworkReply reply;
+          Status result = stub.SendChunk(&ctx, chunk, &reply);
 
-        // Send failed, push the chunks back into front of deque
-        if (!result.ok()) {
-          std::lock_guard<std::mutex> guard(chunks_mutex);
-          chunks[juid].push_front(batched_bytes.str());
-        }
+          // Send failed, push the chunks back into front of deque
+          if (!result.ok()) {
+            std::lock_guard<std::mutex> guard(payload_mutex);
+            chunks[juid].push_front(batched_bytes.str());
+          }
 
-        return result;
-      }});
+          return result;
+        }});
+      }
     }
   }
 };
-PayloadChunk response_payload_chunk_;
-PayloadChunk request_payload_chunk_;
+PayloadBuffer response_payload_buffer_(kResponsePayloadSuffix);
+PayloadBuffer request_payload_buffer_(kRequestPayloadSuffix);
 
 const SteadyClock &GetClock() {
   static SteadyClock clock;
@@ -157,29 +211,29 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_trac
   if (Agent::Instance().agent_config().unified_pipeline()) {
     int64_t timestamp = GetClock().GetCurrentTime();
     Agent::Instance().SubmitAgentTasks(
-        {[timestamp, juid, thread_name, jthread_id](AgentService::Stub &stub, ClientContext &ctx) mutable {
-           SendEventRequest request;
-           request.set_pid(getpid());
-           // session_id will be populated in perfd.
-           auto event = request.mutable_event();
-           event->set_group_id(juid);
-           event->set_kind(Event::NETWORK_HTTP_THREAD);
-           event->set_timestamp(timestamp);
+        {[timestamp, juid, thread_name, jthread_id](
+            AgentService::Stub &stub, ClientContext &ctx) mutable {
+          SendEventRequest request;
+          request.set_pid(getpid());
+          // session_id will be populated in perfd.
+          auto *event = request.mutable_event();
+          event->set_group_id(juid);
+          event->set_kind(Event::NETWORK_HTTP_THREAD);
+          event->set_timestamp(timestamp);
 
-           auto data = event->mutable_network_http_thread();
-           data->set_id(jthread_id);
-           data->set_name(thread_name.get());
+          auto *data = event->mutable_network_http_thread();
+          data->set_id(jthread_id);
+          data->set_name(thread_name.get());
 
-           EmptyResponse response;
-           return stub.SendEvent(&ctx, request, &response);
-         }});
-  }
-  else {
+          EmptyResponse response;
+          return stub.SendEvent(&ctx, request, &response);
+        }});
+  } else {
     Agent::Instance().SubmitNetworkTasks({[juid, thread_name, jthread_id](
         InternalNetworkService::Stub &stub, ClientContext &ctx) {
       JavaThreadRequest threadRequest;
       threadRequest.set_conn_id(juid);
-      auto thread = threadRequest.mutable_thread();
+      auto *thread = threadRequest.mutable_thread();
       thread->set_name(thread_name.get());
       thread->set_id(jthread_id);
 
@@ -195,22 +249,37 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTrac
   if (Agent::Instance().agent_config().unified_pipeline()) {
     SendEventRequest request;
     PrepopulateEventRequest(&request, juid);
+    std::stringstream ss;
+    ss << juid << kResponsePayloadSuffix;
+    std::string payload_name = ss.str();
     Agent::Instance().SubmitAgentTasks(
-        {[request](AgentService::Stub &stub, ClientContext &ctx) mutable {
+        {[juid, payload_name](AgentService::Stub &stub, ClientContext &ctx) {
+           // Sends an empty paylod with |is_partial| set to false to indicate
+           // that the payload is complete.
+           SendPayloadRequest request;
+           request.set_name(payload_name);
+           request.set_is_partial(false);
+           EmptyResponse response;
+           return stub.SendPayload(&ctx, request, &response);
+         },
+         [request, juid, payload_name](AgentService::Stub &stub,
+                                       ClientContext &ctx) mutable {
            // session_id will be populated in perfd.
-           auto event = request.mutable_event();
-           auto data = event->mutable_network_http_connection()
-                           ->mutable_http_response_completed();
-           // TODO populate payload
+           auto *event = request.mutable_event();
+           auto *data = event->mutable_network_http_connection()
+                            ->mutable_http_response_completed();
+           data->set_payload_id(payload_name);
+           data->set_payload_size(
+               response_payload_buffer_.GetPayloadLength(juid));
            EmptyResponse response;
            return stub.SendEvent(&ctx, request, &response);
          },
          [request](AgentService::Stub &stub, ClientContext &ctx) mutable {
            // session_id will be populated in perfd.
-           auto event = request.mutable_event();
+           auto *event = request.mutable_event();
            event->set_is_ended(true);
-           auto data = event->mutable_network_http_connection()
-                           ->mutable_http_closed();
+           auto *data =
+               event->mutable_network_http_connection()->mutable_http_closed();
            data->set_completed(true);
 
            EmptyResponse response;
@@ -235,7 +304,7 @@ JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTracker_reportBytes(
     JNIEnv *env, jobject thiz, jlong juid, jbyteArray jbytes, jint jlen) {
   JByteArrayWrapper bytes(env, jbytes, jlen);
-  response_payload_chunk_.AddBytes(juid, &bytes, ChunkRequest::RESPONSE);
+  response_payload_buffer_.AddBytes(juid, &bytes);
 }
 
 JNIEXPORT void JNICALL
@@ -244,16 +313,31 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024OutputStreamTra
   if (Agent::Instance().agent_config().unified_pipeline()) {
     SendEventRequest request;
     PrepopulateEventRequest(&request, juid);
+    std::stringstream ss;
+    ss << juid << kRequestPayloadSuffix;
+    std::string payload_name = ss.str();
     Agent::Instance().SubmitAgentTasks(
-        {[request](AgentService::Stub &stub, ClientContext &ctx) mutable {
-          // session_id will be populated in perfd.
-          auto event = request.mutable_event();
-          auto data = event->mutable_network_http_connection()
-                          ->mutable_http_request_completed();
-          // TODO populate payload
-          EmptyResponse response;
-          return stub.SendEvent(&ctx, request, &response);
-        }});
+        {[juid, payload_name](AgentService::Stub &stub, ClientContext &ctx) {
+           // Sends an empty paylod with |is_partial| set to false to indicate
+           // that the payload is complete.
+           SendPayloadRequest request;
+           request.set_name(payload_name);
+           request.set_is_partial(false);
+           EmptyResponse response;
+           return stub.SendPayload(&ctx, request, &response);
+         },
+         [request, juid, payload_name](AgentService::Stub &stub,
+                                       ClientContext &ctx) mutable {
+           // session_id will be populated in perfd.
+           auto *event = request.mutable_event();
+           auto *data = event->mutable_network_http_connection()
+                            ->mutable_http_request_completed();
+           data->set_payload_id(payload_name);
+           data->set_payload_size(
+               request_payload_buffer_.GetPayloadLength(juid));
+           EmptyResponse response;
+           return stub.SendEvent(&ctx, request, &response);
+         }});
   } else {
     EnqueueHttpEvent(juid, HttpEventRequest::UPLOAD_COMPLETED);
   }
@@ -267,7 +351,7 @@ JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_network_HttpTracker_00024OutputStreamTracker_reportBytes(
     JNIEnv *env, jobject thiz, jlong juid, jbyteArray jbytes, jint jlen) {
   JByteArrayWrapper bytes(env, jbytes, jlen);
-  request_payload_chunk_.AddBytes(juid, &bytes, ChunkRequest::REQUEST);
+  request_payload_buffer_.AddBytes(juid, &bytes);
 }
 
 JNIEXPORT void JNICALL
@@ -285,9 +369,9 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onRe
     Agent::Instance().SubmitAgentTasks({[request, url, stack, fields, method](
         AgentService::Stub &stub, ClientContext &ctx) mutable {
       // session_id will be populated in perfd.
-      auto event = request.mutable_event();
-      auto data = event->mutable_network_http_connection()
-                      ->mutable_http_request_started();
+      auto *event = request.mutable_event();
+      auto *data = event->mutable_network_http_connection()
+                       ->mutable_http_request_started();
       data->set_url(url.get());
       data->set_trace(stack.get());
       data->set_fields(fields.get());
@@ -328,9 +412,9 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onRe
     Agent::Instance().SubmitAgentTasks({[request, fields](
         AgentService::Stub &stub, ClientContext &ctx) mutable {
       // session_id will be populated in perfd.
-      auto event = request.mutable_event();
-      auto data = event->mutable_network_http_connection()
-                      ->mutable_http_response_started();
+      auto *event = request.mutable_event();
+      auto *data = event->mutable_network_http_connection()
+                       ->mutable_http_response_started();
       data->set_fields(fields.get());
 
       EmptyResponse response;
@@ -359,18 +443,18 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onEr
   if (Agent::Instance().agent_config().unified_pipeline()) {
     SendEventRequest request;
     PrepopulateEventRequest(&request, juid);
-    Agent::Instance().SubmitAgentTasks({[request](AgentService::Stub &stub,
-                                                  ClientContext &ctx) mutable {
-      // session_id will be populated in perfd.
-      auto event = request.mutable_event();
-      event->set_is_ended(true);
-      auto data =
-          event->mutable_network_http_connection()->mutable_http_closed();
-      data->set_completed(false);
+    Agent::Instance().SubmitAgentTasks(
+        {[request](AgentService::Stub &stub, ClientContext &ctx) mutable {
+          // session_id will be populated in perfd.
+          auto *event = request.mutable_event();
+          event->set_is_ended(true);
+          auto *data =
+              event->mutable_network_http_connection()->mutable_http_closed();
+          data->set_completed(false);
 
-      EmptyResponse response;
-      return stub.SendEvent(&ctx, request, &response);
-    }});
+          EmptyResponse response;
+          return stub.SendEvent(&ctx, request, &response);
+        }});
   } else {
     EnqueueHttpEvent(juid, HttpEventRequest::ABORTED);
   }

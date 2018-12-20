@@ -16,88 +16,88 @@
 package com.android.tools.deployer;
 
 import com.android.tools.deploy.proto.Deploy;
-import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.DexClass;
+import com.google.common.collect.Iterables;
 import com.google.protobuf.ByteString;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /** An object that can perform swaps via an installer or custom redefiners. */
 public class ApkSwapper {
     private final Installer installer;
-    private final String packageName;
     private final boolean restart;
     private final Map<Integer, ClassRedefiner> redefiners;
 
     /**
      * @param installer used to perform swaps on device.
-     * @param packageName the name of the package to swap
      * @param restart whether to restart the application or not.
-     * @param redefiners an additional set of redefiners that will swap the given pid's.
+     * @param redefiners an additional set of redefiners that will handle the swap for the given
+     *     process ids
      */
     public ApkSwapper(
-            Installer installer,
-            String packageName,
-            boolean restart,
-            Map<Integer, ClassRedefiner> redefiners) {
+            Installer installer, Map<Integer, ClassRedefiner> redefiners, boolean restart) {
         this.installer = installer;
-        this.packageName = packageName;
-        this.restart = restart;
         this.redefiners = redefiners;
+        this.restart = restart;
     }
 
     /**
      * Performs the swap.
      *
-     * @param newFiles the new files, used to determine the process names.
-     * @param apkPaths the paths where the new apk's are already on device.
+     * @param dump the application dump
+     * @param sessionId the installation session
      * @param toSwap the actual dex classes to swap.
      */
-    public boolean swap(List<ApkEntry> newFiles, String sessionId, List<DexClass> toSwap)
+    public boolean swap(ApplicationDumper.Dump dump, String sessionId, List<DexClass> toSwap)
             throws DeployerException {
-        // Builds the Request Protocol Buffer.
-        Deploy.SwapRequest request =
-                buildSwapRequest(
-                        packageName, restart, sessionId, newFiles, toSwap, redefiners.keySet());
-
-        // Send Request to agent
-        ClassRedefiner redefiner = new InstallerBasedClassRedefiner(installer);
-        sendSwapRequest(request, redefiner);
-
-        // Send requests to the alternative redefiners
-        for (ClassRedefiner r : redefiners.values()) {
-            sendSwapRequest(request, r);
+        if (dump.pids.isEmpty()) {
+            throw new DeployerException(
+                    DeployerException.Error.REDEFINER_ERROR, "No application process was running");
         }
+
+        // The native installer can't handle swapping more than one package in the same swap request. The dump
+        // returns a map because the dump should not be gated by this limitation, since we may eventually address it.
+        if (dump.pids.size() > 1) {
+            throw new DeployerException(
+                    DeployerException.Error.REDEFINER_ERROR, "Cannot swap multiple packages");
+        }
+
+        Deploy.SwapRequest request = buildSwapRequest(dump, sessionId, toSwap);
+
+        // TODO: If multiple pids have a debugger attached, we'll do extra swaps. Fix?
+        sendSwapRequest(request, new InstallerBasedClassRedefiner(installer));
+        for (Map.Entry<Integer, ClassRedefiner> entry : redefiners.entrySet()) {
+            sendSwapRequest(request, entry.getValue());
+        }
+
         return true;
     }
 
-    private static Deploy.SwapRequest buildSwapRequest(
-            String packageName,
-            boolean restart,
-            String sessionId,
-            List<ApkEntry> newFiles,
-            List<DexClass> classes,
-            Collection<Integer> pids) {
-        Deploy.SwapRequest.Builder request = Deploy.SwapRequest.newBuilder();
-        request.setPackageName(packageName);
-        request.setRestartActivity(restart);
-        for (DexClass clz : classes) {
+    private Deploy.SwapRequest buildSwapRequest(
+            ApplicationDumper.Dump dump, String sessionId, List<DexClass> toSwap) {
+        Map.Entry<String, List<Integer>> onlyPackage =
+                Iterables.getOnlyElement(dump.pids.entrySet());
+
+        Deploy.SwapRequest.Builder request =
+                Deploy.SwapRequest.newBuilder()
+                        .setPackageName(onlyPackage.getKey())
+                        .setRestartActivity(restart)
+                        .setSessionId(sessionId);
+
+        for (DexClass clazz : toSwap) {
             request.addClasses(
                     Deploy.ClassDef.newBuilder()
-                            .setName(clz.name)
-                            .setDex(ByteString.copyFrom(clz.code)));
+                            .setName(clazz.name)
+                            .setDex(ByteString.copyFrom(clazz.code)));
         }
-        // Obtain the process names from the local apks
-        Set<String> processNames = new HashSet<>();
-        for (ApkEntry file : newFiles) {
-            processNames.addAll(file.apk.processes);
+
+        for (Integer pid : onlyPackage.getValue()) {
+            if (redefiners.containsKey(pid)) {
+                continue;
+            }
+            request.addProcessIds(pid);
         }
-        request.setSessionId(sessionId);
-        request.addAllProcessNames(processNames);
-        request.addAllSkipProcessIds(pids);
+
         return request.build();
     }
 

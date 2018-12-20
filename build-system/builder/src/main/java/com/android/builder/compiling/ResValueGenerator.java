@@ -177,6 +177,6 @@ public class ResValueGenerator {
             content = XmlUtils.toXml(document);
         }
 
-        Files.write(content, resFile, Charsets.UTF_8);
+        Files.asCharSink(resFile, Charsets.UTF_8).write(content);
     }
 }

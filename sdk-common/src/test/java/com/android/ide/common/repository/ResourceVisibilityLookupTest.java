@@ -400,10 +400,10 @@ public class ResourceVisibilityLookupTest extends TestCase {
         // can't access each other
         final File tempDir = TestUtils.createTempDirDeletedOnExit();
 
-        Files.write(allResources, new File(tempDir, FN_RESOURCE_TEXT), Charsets.UTF_8);
+        Files.asCharSink(new File(tempDir, FN_RESOURCE_TEXT), Charsets.UTF_8).write(allResources);
         File publicTxtFile = new File(tempDir, FN_PUBLIC_TXT);
         if (publicResources != null) {
-            Files.write(publicResources, publicTxtFile, Charsets.UTF_8);
+            Files.asCharSink(publicTxtFile, Charsets.UTF_8).write(publicResources);
         }
         AndroidLibrary library = mock(AndroidLibrary.class);
         when(library.getPublicResources()).thenReturn(publicTxtFile);

@@ -135,9 +135,9 @@ public class KotlinColdSwapTest {
                         + newMethodBody
                         + "    }\n"
                         + "}";
-        Files.write(
-                kotlinCompile,
-                project.file("src/main/kotlin/com/example/helloworld/HelloWorld.kt"),
-                Charsets.UTF_8);
+        Files.asCharSink(
+                        project.file("src/main/kotlin/com/example/helloworld/HelloWorld.kt"),
+                        Charsets.UTF_8)
+                .write(kotlinCompile);
     }
 }

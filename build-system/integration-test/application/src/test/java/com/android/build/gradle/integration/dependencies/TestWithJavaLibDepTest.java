@@ -39,7 +39,7 @@ public class TestWithJavaLibDepTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        Files.write("include 'app', 'jar'", project.getSettingsFile(), Charsets.UTF_8);
+        Files.asCharSink(project.getSettingsFile(), Charsets.UTF_8).write("include 'app', 'jar'");
 
         appendToFile(project.getBuildFile(),
 "\nsubprojects {\n" +

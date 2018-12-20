@@ -50,9 +50,7 @@ genrule(
     outs = [
         "Version.java",
     ],
-    cmd = "$(location //tools/base/bazel:bin2c) -lang=java -embed=false -variable=com.android.tools.deployer.Version -output=$(location Version.java) " +
-          "$(locations //tools/base/deploy/installer:unversioned_installer) " +
-          "$(location //tools/base/deploy/agent/native:libswap.so) ",
+    cmd = "$(location //tools/base/bazel:bin2c) -lang=java -embed=false -variable=com.android.tools.deployer.Version -output=$(location Version.java) " + "$(locations //tools/base/deploy/installer:unversioned_installer) " + "$(location //tools/base/deploy/agent/native:libswap.so) ",
     tags = ["no_windows"],
     tools = [
         "//tools/base/bazel:bin2c",

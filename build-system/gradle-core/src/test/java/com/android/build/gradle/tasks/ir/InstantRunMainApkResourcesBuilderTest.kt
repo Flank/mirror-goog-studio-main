@@ -84,7 +84,6 @@ open class InstantRunMainApkResourcesBuilderTest {
     @Mock private lateinit var dslScope: DslScope
     @Mock private lateinit var issueReporter: EvalIssueReporter
     @Mock private lateinit var projectOptions: ProjectOptions
-    private val outputScope = OutputScope()
 
     internal lateinit var project: Project
     internal lateinit var task: InstantRunMainApkResourcesBuilder
@@ -103,7 +102,6 @@ open class InstantRunMainApkResourcesBuilderTest {
         `when`(globalScope.projectOptions).thenReturn(projectOptions)
         `when`(variantScope.getTaskName(any(String::class.java))).thenReturn("taskFoo")
         `when`(variantScope.globalScope).thenReturn(globalScope)
-        `when`(variantScope.outputScope).thenReturn(outputScope)
         `when`(variantScope.artifacts).thenReturn(buildArtifactsHolder)
         `when`(variantConfiguration.type).thenReturn(VariantTypeImpl.BASE_APK)
 
@@ -169,7 +167,7 @@ open class InstantRunMainApkResourcesBuilderTest {
                 "</manifest>\n")
 
         BuildOutput(InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS,
-                OutputFactory("test", variantConfiguration, outputScope).addMainApk(),
+                OutputFactory("test", variantConfiguration).addMainApk(),
                 manifestFile)
                 .save(manifestFileFolder.root)
 

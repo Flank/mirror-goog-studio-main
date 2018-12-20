@@ -20,15 +20,20 @@
 #include <string>
 #include <vector>
 
+#include "tools/base/deploy/installer/workspace.h"
+
 namespace deploy {
 
 // Wrapper around Android executable "pm" (Android Package Manager).
 class PackageManager {
  public:
-  PackageManager();
+  PackageManager(Workspace& workspace) : workspace_(workspace) {}
   bool GetApks(const std::string& package_name, std::vector<std::string>* apks,
                std::string* error_string) const;
   static void SetPath(const char* path);
+
+ private:
+  Workspace& workspace_;
 };
 
 }  // namespace deploy

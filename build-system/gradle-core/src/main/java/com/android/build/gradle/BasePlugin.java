@@ -79,6 +79,7 @@ import com.android.build.gradle.tasks.LintBaseTask;
 import com.android.build.gradle.tasks.factory.AbstractCompilesUtil;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
+import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.model.AndroidProject;
@@ -874,15 +875,21 @@ public abstract class BasePlugin<E extends BaseExtension2>
                     extension.getLibraryRequests(),
                     globalScope.getAndroidBuilder(),
                     SdkHandler.useCachedSdk(projectOptions));
+
         } catch (SdkHandler.MissingSdkException e) {
-            throw new SdkHandler.MissingSdkException(
+            String filePath =
+                    new File(project.getRootDir(), SdkConstants.FN_LOCAL_PROPERTIES)
+                            .getAbsolutePath();
+            String message =
                     "SDK location not found. Define location with an ANDROID_SDK_ROOT environment "
                             + "variable or by setting the sdk.dir path in your project's local "
                             + "properties file at '"
-                            + new File(project.getRootDir(), SdkConstants.FN_LOCAL_PROPERTIES)
-                                    .getAbsolutePath()
-                            + "'.",
-                    e);
+                            + filePath
+                            + "'.";
+            extraModelInfo
+                    .getSyncIssueHandler()
+                    .reportError(Type.SDK_NOT_SET, new EvalIssueException(message, filePath, null));
+            return false;
         }
     }
 

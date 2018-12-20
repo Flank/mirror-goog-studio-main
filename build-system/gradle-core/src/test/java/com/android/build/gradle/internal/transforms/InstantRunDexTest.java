@@ -111,7 +111,7 @@ public class InstantRunDexTest {
         directoryInput = new File(tmp, "directory");
         File changedFile = new File(directoryInput, "path/to/some/file");
         Files.createParentDirs(changedFile);
-        Files.write("abcde", changedFile, Charsets.UTF_8);
+        Files.asCharSink(changedFile, Charsets.UTF_8).write("abcde");
     }
 
     @After

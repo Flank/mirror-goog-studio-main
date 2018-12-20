@@ -20,7 +20,6 @@ import static com.android.build.gradle.integration.common.fixture.TemporaryProje
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 import static com.android.testutils.truth.PathSubject.assertThat;
-import static com.google.common.io.Files.write;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -28,6 +27,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import org.junit.After;
@@ -60,13 +60,13 @@ public class JavaResPackagingTest {
         jarProject = project.getSubproject("jar");
 
         // rewrite settings.gradle to remove un-needed modules
-        write("include 'app'\n"
-                + "include 'library'\n"
-                + "include 'library2'\n"
-                + "include 'test'\n"
-                + "include 'jar'\n",
-                project.getSettingsFile(),
-                Charsets.UTF_8);
+        Files.asCharSink(project.getSettingsFile(), Charsets.UTF_8)
+                .write(
+                        "include 'app'\n"
+                                + "include 'library'\n"
+                                + "include 'library2'\n"
+                                + "include 'test'\n"
+                                + "include 'jar'\n");
 
         // setup dependencies.
         appendToFile(appProject.getBuildFile(),
@@ -109,7 +109,7 @@ public class JavaResPackagingTest {
         File jarDir = jarProject.getTestDir();
         File resFolder = FileUtils.join(jarDir, "src", "main", "resources", "com", "foo");
         FileUtils.mkdirs(resFolder);
-        write("jar:abcd",  new File(resFolder, "jar.txt"), Charsets.UTF_8);
+        Files.asCharSink(new File(resFolder, "jar.txt"), Charsets.UTF_8).write("jar:abcd");
     }
 
     @After
@@ -130,7 +130,7 @@ public class JavaResPackagingTest {
             throws Exception {
         File assetFolder = FileUtils.join(projectFolder, "src", dimension, "resources", "com", "foo");
         FileUtils.mkdirs(assetFolder);
-        write(content, new File(assetFolder, filename), Charsets.UTF_8);
+        Files.asCharSink(new File(assetFolder, filename), Charsets.UTF_8).write(content);
     }
 
     private void execute(String... tasks) throws IOException, InterruptedException {

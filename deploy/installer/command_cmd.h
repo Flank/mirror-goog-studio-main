@@ -20,12 +20,15 @@
 #include <string>
 #include <vector>
 
+#include "tools/base/deploy/installer/workspace.h"
+
 namespace deploy {
 
 // Wrapper around Android executable "service client".
 class CmdCommand {
  public:
-  CmdCommand();
+  CmdCommand(Workspace& workspace) : workspace_(workspace) {}
+
   bool GetAppApks(const std::string& package_name,
                   std::vector<std::string>* apks,
                   std::string* error_string) const noexcept;
@@ -52,6 +55,9 @@ class CmdCommand {
       noexcept;
 
   static void SetPath(const char* path);
+
+ private:
+  Workspace& workspace_;
 };
 
 }  // namespace deploy

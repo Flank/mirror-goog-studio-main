@@ -45,7 +45,7 @@ public class ResourcesSwapTest {
     public void artifactContents() throws Exception {
         File asset = mProject.file("src/main/assets/movie.mp4");
         Files.createParentDirs(asset);
-        Files.write("this is a movie", asset, StandardCharsets.UTF_8);
+        Files.asCharSink(asset, StandardCharsets.UTF_8).write("this is a movie");
 
         InstantRun instantRunModel =
                 InstantRunTestUtils.getInstantRunModel(

@@ -94,10 +94,10 @@ class DexMergingTaskTest {
 
         val output = tmp.newFolder()
         DexMergingTaskDelegate(
-            DexingType.MONO_DEX,
+            DexingType.LEGACY_MULTIDEX,
             NoOpMessageReceiver(),
             DexMergerTool.D8,
-            21,
+            19,
             true,
             0,
             createBuildArtifact(mainDexList),

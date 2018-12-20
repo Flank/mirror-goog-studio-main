@@ -14,24 +14,22 @@
  * limitations under the License.
  */
 
-#ifndef INSTALLER_APKRETRIEVER_H
-#define INSTALLER_APKRETRIEVER_H
+package com.android.build.gradle.internal.res.namespaced
 
-#include <string>
-#include <vector>
+import java.io.File
+import java.io.Serializable
+import javax.inject.Inject
 
-namespace deploy {
+class CreateNonNamespacedLibraryManifestRunnable @Inject constructor(
+    val params: CreateNonNamespacedLibraryManifestRequest) : Runnable {
 
-class ApkRetriever {
- public:
-  ApkRetriever() = default;
+    override fun run() {
+        NamespaceRemover.rewrite(
+            params.originalManifestFile.toPath(),
+            params.strippedManifestFile.toPath())
+    }
+}
 
-  // Retrieve the apks for the packageName_. Try to use "cmd package" first and
-  // "pm" second.
-  std::vector<std::string> retrieve(const std::string& packageName) const
-      noexcept;
-};
-
-}  // namespace deploy
-
-#endif  // INSTALLER_APKRETRIEVER_H
+data class CreateNonNamespacedLibraryManifestRequest(
+    val originalManifestFile: File,
+    val strippedManifestFile: File) : Serializable

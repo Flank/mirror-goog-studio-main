@@ -71,10 +71,12 @@ public class ChangeRecordsTest {
     @Test
     public void testLoading() throws IOException {
         File file = tmpFolder.newFile("ChangeRecordsTest.txt");
-        Files.write("CHANGED,/some/changed/file\n"
-                + "CHANGED,/another/changed/file\n"
-                + "REMOVED,/some/removed/file\n"
-                + "ADDED,/some/added/file\n", file, Charsets.UTF_8);
+        Files.asCharSink(file, Charsets.UTF_8)
+                .write(
+                        "CHANGED,/some/changed/file\n"
+                                + "CHANGED,/another/changed/file\n"
+                                + "REMOVED,/some/removed/file\n"
+                                + "ADDED,/some/added/file\n");
         ChangeRecords changeRecords = ChangeRecords.load(file);
         assertThat(changeRecords.getChangeFor("/some/changed/file")).isEqualTo(Status.CHANGED);
         assertThat(changeRecords.getChangeFor("/another/changed/file")).isEqualTo(Status.CHANGED);

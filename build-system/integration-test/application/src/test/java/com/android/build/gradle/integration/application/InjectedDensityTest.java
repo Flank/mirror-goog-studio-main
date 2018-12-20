@@ -66,8 +66,7 @@ public class InjectedDensityTest {
                         + "    }"
                         + "}";
 
-        Files.write(buildScript, project.getBuildFile(), Charsets.UTF_8);
-
+        Files.asCharSink(project.getBuildFile(), Charsets.UTF_8).write(buildScript);
     }
 
     @Test

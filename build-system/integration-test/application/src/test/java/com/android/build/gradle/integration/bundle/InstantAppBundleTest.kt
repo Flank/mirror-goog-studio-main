@@ -22,6 +22,8 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.getVariantByName
 import com.android.build.gradle.options.StringOption
 import com.android.builder.model.AndroidProject
+import com.android.builder.model.SyncIssue
+import com.android.testutils.TestUtils
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.FileSubject
 import com.android.testutils.truth.FileSubject.assertThat
@@ -72,6 +74,7 @@ class InstantAppBundleTest {
     @Throws(IOException::class)
     fun `test model contains feature information`() {
         val rootBuildModelMap = project.model()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
             .fetchAndroidProjects()
             .rootBuildModelMap
 
@@ -157,6 +160,7 @@ class InstantAppBundleTest {
 
     @Test
     fun `test abiFilter with Bundle task`() {
+        TestUtils.disableIfOnWindowsWithBazel()
         val appProject = project.getSubproject(":base")
         createAbiFile(appProject, SdkConstants.ABI_ARMEABI_V7A, "libbase.so")
         createAbiFile(appProject, SdkConstants.ABI_INTEL_ATOM, "libbase.so")
@@ -270,6 +274,7 @@ class InstantAppBundleTest {
     private fun getBundleTaskName(name: String): String {
         // query the model to get the task name
         val syncModels = project.model()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
             .fetchAndroidProjects()
         val appModel =
             syncModels.rootBuildModelMap[":base"] ?: fail("Failed to get sync model for :base module")
@@ -281,6 +286,7 @@ class InstantAppBundleTest {
     private fun getApkFromBundleTaskName(name: String): String {
         // query the model to get the task name
         val syncModels = project.model()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
             .fetchAndroidProjects()
         val appModel =
             syncModels.rootBuildModelMap[":base"] ?: fail("Failed to get sync model for :base module")

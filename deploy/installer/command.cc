@@ -26,13 +26,15 @@
 namespace deploy {
 
 // Search dispatch table for a Command object matching the command name.
-std::unique_ptr<Command> GetCommand(const char* command_name) {
+std::unique_ptr<Command> GetCommand(const char* command_name,
+                                    Workspace& workspace) {
   // Dispatch table mapping a command string to a Command object.
   static std::unordered_map<std::string, std::function<Command*(void)>>
       commandsRegister = {
-          {"dump", []() { return new DumpCommand(); }},
-          {"swap", []() { return new SwapCommand(); }},
-          {"deltapreinstall", []() { return new DeltaPreinstallCommand(); }},
+          {"dump", [&]() { return new DumpCommand(workspace); }},
+          {"swap", [&]() { return new SwapCommand(workspace); }},
+          {"deltapreinstall",
+           [&]() { return new DeltaPreinstallCommand(workspace); }},
           // Add here more commands (e.g: version, install, patch, agent, ...)
       };
 

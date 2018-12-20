@@ -284,7 +284,7 @@ public class ResourceUsageAnalyzer {
                 if (dir != null) {
                     if ((dir.exists() || dir.mkdir()) && dir.canWrite()) {
                         try {
-                            Files.write(output, mReportFile, Charsets.UTF_8);
+                            Files.asCharSink(mReportFile, Charsets.UTF_8).write(output);
                         } catch (IOException ignore) {
                         }
                     }
@@ -582,7 +582,7 @@ public class ResourceUsageAnalyzer {
                 throw new IOException("Could not create " + destination);
             }
         }
-        Files.write(mModel.dumpWhitelistedResources(), destinationFile, UTF_8);
+        Files.asCharSink(destinationFile, UTF_8).write(mModel.dumpWhitelistedResources());
     }
 
     public void emitConfig(Path destination) throws IOException {
@@ -594,7 +594,7 @@ public class ResourceUsageAnalyzer {
                 throw new IOException("Could not create " + destination);
             }
         }
-        Files.write(mModel.dumpConfig(), destinationFile, UTF_8);
+        Files.asCharSink(destinationFile, UTF_8).write(mModel.dumpConfig());
     }
 
 
@@ -731,7 +731,7 @@ public class ResourceUsageAnalyzer {
                 for (Map.Entry<File, String> entry : rewritten.entrySet()) {
                     File file = entry.getKey();
                     String formatted = entry.getValue();
-                    Files.write(formatted, file, UTF_8);
+                    Files.asCharSink(file, UTF_8).write(formatted);
                 }
             } else {
                 for (File dir : mResourceDirs) {
@@ -766,7 +766,7 @@ public class ResourceUsageAnalyzer {
             } else if (!skip.contains(source) && source.isFile()) {
                 String contents = replace.get(source);
                 if (contents != null) {
-                    Files.write(contents, destination, UTF_8);
+                    Files.asCharSink(destination, UTF_8).write(contents);
                 } else {
                     Files.copy(source, destination);
                 }

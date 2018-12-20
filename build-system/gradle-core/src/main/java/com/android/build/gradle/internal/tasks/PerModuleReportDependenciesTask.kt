@@ -173,6 +173,8 @@ open class PerModuleReportDependenciesTask :
             task.runtimeClasspathArtifacts = variantScope.getArtifactCollection(
                 AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                 AndroidArtifacts.ArtifactScope.EXTERNAL,
+                // Normally we would query for PROCESSED_JAR, but JAR is probably sufficient here
+                // since this task is interested in only the meta data of the jar files.
                 AndroidArtifacts.ArtifactType.JAR
             ).artifactFiles
 

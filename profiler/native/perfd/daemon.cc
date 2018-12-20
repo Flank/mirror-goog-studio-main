@@ -41,7 +41,7 @@
 using grpc::Service;
 using grpc::Status;
 using grpc::StatusCode;
-using profiler::proto::AgentStatusResponse;
+using profiler::proto::AgentData;
 using std::string;
 
 namespace profiler {
@@ -202,6 +202,12 @@ bool Daemon::TryAttachAppAgent(int32_t app_pid, const std::string& app_name,
     return false;
   }
 
+  auto agent_status = GetAgentStatus(app_pid);
+  // Only attempt to connect if our status is not unattachable
+  if (agent_status == AgentData::UNATTACHABLE) {
+    return false;
+  }
+
   // Copies the connector over to the package's data folder so we can run it
   // to send messages to perfa's Unix socket server.
   CopyFileToPackageFolder(package_name, kConnectorFileName);
@@ -267,55 +273,49 @@ bool Daemon::IsAppAgentAlive(int app_pid, const string& app_name) {
   return ping.RunAs(args.str(), app_name, nullptr);
 }
 
-void Daemon::GetAgentStatus(const proto::AgentStatusRequest* request,
-                            proto::AgentStatusResponse* response) {
-  int32_t pid = request->pid();
+AgentData::Status Daemon::GetAgentStatus(int32_t pid) {
   auto got = agent_status_map_.find(pid);
   if (got != agent_status_map_.end()) {
-    response->set_status(got->second);
-  } else {
-    response->set_status(AgentStatusResponse::DETACHED);
+    return got->second;
   }
 
   // Only query the app's debuggable state if we haven't already, to
   // avoid calling "run-as" repeatedly.
   auto attachable_itr = agent_attachable_map_.find(pid);
   if (attachable_itr != agent_attachable_map_.end()) {
-    response->set_is_agent_attachable(attachable_itr->second);
-  } else {
-    string app_name = ProcessManager::GetCmdlineForPid(pid);
-    if (app_name.empty()) {
-      // Process is not available. Do not cache the attachable result here since
-      // we couldn't retrieve the process.
-      response->set_is_agent_attachable(false);
-    } else {
-      if (profiler::DeviceInfo::feature_level() < proto::Device::O) {
-        // pre-O, since the agent is deployed with the app, we should receive a
-        // heartbeat right away. We can simply use that as a signal to determine
-        // whether an agent can be attached.
-        response->set_is_agent_attachable(response->status() ==
-                                          AgentStatusResponse::ATTACHED);
-      } else {
-        // In O+, we can attach an jvmti agent as long as the app is debuggable
-        // and the app's data folder is available to us.
-        string package_name =
-            ProcessManager::GetPackageNameFromAppName(app_name);
-        PackageManager package_manager;
-        string data_path;
-        string error;
-        bool has_data_path =
-            package_manager.GetAppDataPath(package_name, &data_path, &error);
-        response->set_is_agent_attachable(has_data_path);
-      }
-      agent_attachable_map_[pid] = response->is_agent_attachable();
-    }
+    return attachable_itr->second ? AgentData::UNSPECIFIED
+                                  : AgentData::UNATTACHABLE;
   }
+  string app_name = ProcessManager::GetCmdlineForPid(pid);
+  if (app_name.empty()) {
+    // Process is not available. Do not cache the attachable result here since
+    // we couldn't retrieve the process.
+    return AgentData::UNATTACHABLE;
+  }
+  if (profiler::DeviceInfo::feature_level() < proto::Device::O) {
+    // pre-O, since the agent is deployed with the app, we should receive a
+    // heartbeat right away. We can simply use that as a signal to determine
+    // whether an agent can be attached.
+    // Note: This will only be called if we have not had a heartbeat yet, so we
+    // will return unspecified by default.
+    return AgentData::UNSPECIFIED;
+  }
+  // In O+, we can attach an jvmti agent as long as the app is debuggable
+  // and the app's data folder is available to us.
+  string package_name = ProcessManager::GetPackageNameFromAppName(app_name);
+  PackageManager package_manager;
+  string data_path;
+  string error;
+  bool has_data_path =
+      package_manager.GetAppDataPath(package_name, &data_path, &error);
+  agent_attachable_map_[pid] = has_data_path;
+  return has_data_path ? AgentData::UNSPECIFIED : AgentData::UNATTACHABLE;
 }
 
 bool Daemon::CheckAppHeartBeat(int app_pid) {
   auto got = agent_status_map_.find(app_pid);
   if (got != agent_status_map_.end()) {
-    return got->second == proto::AgentStatusResponse::ATTACHED;
+    return got->second == proto::AgentData::ATTACHED;
   }
   return false;
 }

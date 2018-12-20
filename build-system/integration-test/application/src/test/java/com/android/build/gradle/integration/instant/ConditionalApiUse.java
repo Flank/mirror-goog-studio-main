@@ -96,8 +96,10 @@ public class ConditionalApiUse {
                 + "        return \"Some string\";\n"
                 + "    }\n"
                 + "}";
-        Files.write(updatedClass,
-                project.file("src/main/java/com/android/tests/conditionalApiUse/MyException.java"),
-                Charsets.UTF_8);
+        Files.asCharSink(
+                        project.file(
+                                "src/main/java/com/android/tests/conditionalApiUse/MyException.java"),
+                        Charsets.UTF_8)
+                .write(updatedClass);
     }
 }

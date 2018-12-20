@@ -27,6 +27,7 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantAppProjectBuildOutput;
 import com.android.builder.model.InstantAppVariantBuildOutput;
 import com.android.builder.model.ProjectBuildOutput;
+import com.android.builder.model.SyncIssue;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -35,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.junit.AfterClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -60,7 +62,10 @@ public class FeatureAndAbiPureSplitsTest {
     }
 
     private static void checkModel(ModelBuilder model) throws IOException {
-        Map<String, AndroidProject> projectModels = model.fetchAndroidProjects().getOnlyModelMap();
+        Map<String, AndroidProject> projectModels =
+                model.ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+                        .fetchAndroidProjects()
+                        .getOnlyModelMap();
         AndroidProject instantAppProject = projectModels.get(":bundle");
         assertThat(instantAppProject).isNotNull();
         assertThat(instantAppProject.getVariants()).hasSize(2);
@@ -239,8 +244,13 @@ public class FeatureAndAbiPureSplitsTest {
 
         AndroidProject model =
                 modelBuilder.fetchAndroidProjects().getOnlyModelMap().get(":feature_a");
-        assertThat(model.getSyncIssues()).named("Sync Issues").hasSize(1);
-        assertThat(Iterables.getOnlyElement(model.getSyncIssues()).getMessage())
+        List<SyncIssue> syncIssues =
+                model.getSyncIssues()
+                        .stream()
+                        .filter(issue -> issue.getType() != SyncIssue.TYPE_PLUGIN_OBSOLETE)
+                        .collect(Collectors.toList());
+        assertThat(syncIssues).named("Sync Issues").hasSize(1);
+        assertThat(Iterables.getOnlyElement(syncIssues).getMessage())
                 .contains(
                         "Configuration APKs targeting different device configurations are "
                                 + "automatically built when splits are enabled for a feature module.");

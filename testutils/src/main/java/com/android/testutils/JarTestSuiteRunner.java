@@ -159,7 +159,8 @@ public class JarTestSuiteRunner extends Suite {
                                         urls.add(relFile.toURI().toURL());
                                     } else {
                                         System.err.println(
-                                                "Cannot find class-path jar: " + relFile);
+                                                "Cannot find class-path jar: " + path
+                                            + " referenced from " + file.getName());
                                     }
                                 }
                             }

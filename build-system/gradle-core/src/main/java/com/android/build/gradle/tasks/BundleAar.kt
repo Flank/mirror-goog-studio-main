@@ -29,6 +29,7 @@ import org.gradle.api.file.CopySpec
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.file.FileCopyDetails
+import org.gradle.api.file.RegularFile
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Zip
@@ -109,14 +110,21 @@ open class BundleAar : Zip(), VariantAwareTask {
                     )
                 )
             }
-            task.from(artifacts.getFinalProduct<Directory>(InternalArtifactType.LIBRARY_MANIFEST))
-            // TODO: this should be unconditional b/69358522
+
             if (!variantScope.globalScope.extension.aaptOptions.namespaced) {
+                // TODO: this should be unconditional b/69358522
                 task.from(artifacts.getFinalArtifactFiles(InternalArtifactType.SYMBOL_LIST))
                 task.from(
                     artifacts.getFinalArtifactFiles(InternalArtifactType.PACKAGED_RES),
                     prependToCopyPath(SdkConstants.FD_RES)
                 )
+                // In non-namespaced projects bundle the library manifest straight to the AAR.
+                task.from(artifacts.getFinalProduct<Directory>(InternalArtifactType.LIBRARY_MANIFEST))
+            } else {
+                // In namespaced projects the bundled manifest needs to have stripped resource
+                // references for backwards compatibility.
+                task.from(artifacts.getFinalArtifactFiles(
+                    InternalArtifactType.NON_NAMESPACED_LIBRARY_MANIFEST))
             }
             task.from(
                 artifacts.getFinalArtifactFiles(InternalArtifactType.RENDERSCRIPT_HEADERS),

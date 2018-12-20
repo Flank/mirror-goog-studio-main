@@ -22,18 +22,18 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
-import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.ide.FilterDataImpl;
 import com.android.ide.common.build.ApkData;
 import com.android.utils.Pair;
 import com.android.utils.StringHelper;
 import com.google.common.base.Joiner;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /** Factory for {@link ApkData} instances. Cannot be stored in any model related objects. */
@@ -43,15 +43,14 @@ public class OutputFactory {
 
     private final String projectBaseName;
     private final GradleVariantConfiguration variantConfiguration;
-    private final OutputScope outputScope;
+    private final OutputScope.Builder outputScopeBuilder;
+    private final Supplier<OutputScope> outputSupplier;
 
-    public OutputFactory(
-            String projectBaseName,
-            GradleVariantConfiguration variantConfiguration,
-            OutputScope outputScope) {
+    public OutputFactory(String projectBaseName, GradleVariantConfiguration variantConfiguration) {
         this.projectBaseName = projectBaseName;
         this.variantConfiguration = variantConfiguration;
-        this.outputScope = outputScope;
+        this.outputScopeBuilder = new OutputScope.Builder();
+        this.outputSupplier = Suppliers.memoize(outputScopeBuilder::build);
     }
 
     private String getOutputFileName(String baseName) {
@@ -75,8 +74,7 @@ public class OutputFactory {
                 // return the top level folder and have all users use the getDirName() as part of
                 // the task output folder configuration.
                 new Main(baseName, variantConfiguration.getFullName(), "", defaultFilename);
-        checkNoDuplicate(mainOutput);
-        outputScope.addSplit(mainOutput);
+        outputScopeBuilder.addMainSplit(mainOutput);
         return mainOutput;
     }
 
@@ -92,21 +90,8 @@ public class OutputFactory {
                         baseName,
                         variantConfiguration.computeFullNameWithSplits(UNIVERSAL),
                         getOutputFileName(baseName));
-        checkNoDuplicate(mainApk);
-        outputScope.addSplit(mainApk);
+        outputScopeBuilder.addMainSplit(mainApk);
         return mainApk;
-    }
-
-    private void checkNoDuplicate(ApkData newApkData) {
-        List<ApkData> splitsByType = outputScope.getSplitsByType(VariantOutput.OutputType.MAIN);
-        if (!splitsByType.isEmpty()) {
-            throw new RuntimeException(
-                    "Cannot add "
-                            + newApkData
-                            + " in a scope that already"
-                            + " has "
-                            + Joiner.on(",").join(splitsByType));
-        }
     }
 
     public ApkData addFullSplit(ImmutableList<Pair<OutputFile.FilterType, String>> filters) {
@@ -127,7 +112,7 @@ public class OutputFactory {
                         variantConfiguration.computeFullNameWithSplits(filterName),
                         getOutputFileName(baseName),
                         filtersList);
-        outputScope.addSplit(apkData);
+        outputScopeBuilder.addSplit(apkData);
         return apkData;
     }
 
@@ -163,8 +148,12 @@ public class OutputFactory {
                         variantConfiguration.getDirName(),
                         fileName,
                         filtersList);
-        outputScope.addSplit(apkData);
+        outputScopeBuilder.addSplit(apkData);
         return apkData;
+    }
+
+    public OutputScope getOutput() {
+        return outputSupplier.get();
     }
 
     private static final class Main extends ApkData {
@@ -180,8 +169,8 @@ public class OutputFactory {
 
         @NonNull
         @Override
-        public OutputFile.OutputType getType() {
-            return OutputFile.OutputType.MAIN;
+        public OutputType getType() {
+            return OutputType.MAIN;
         }
 
         @Nullable
@@ -242,7 +231,7 @@ public class OutputFactory {
 
         @NonNull
         @Override
-        public OutputFile.OutputType getType() {
+        public OutputType getType() {
             return OutputType.FULL_SPLIT;
         }
 
@@ -316,11 +305,11 @@ public class OutputFactory {
 
         private static String _getFilterName(ImmutableList<FilterData> filters) {
             StringBuilder sb = new StringBuilder();
-            String densityFilter = ApkData.getFilter(filters, OutputFile.FilterType.DENSITY);
+            String densityFilter = ApkData.getFilter(filters, FilterType.DENSITY);
             if (densityFilter != null) {
                 sb.append(densityFilter);
             }
-            String abiFilter = getFilter(filters, OutputFile.FilterType.ABI);
+            String abiFilter = getFilter(filters, FilterType.ABI);
             if (abiFilter != null) {
                 StringHelper.appendCamelCase(sb, abiFilter);
             }
@@ -329,8 +318,8 @@ public class OutputFactory {
 
         @NonNull
         @Override
-        public OutputFile.OutputType getType() {
-            return OutputFile.OutputType.FULL_SPLIT;
+        public OutputType getType() {
+            return OutputType.FULL_SPLIT;
         }
 
         @NonNull
@@ -399,7 +388,7 @@ public class OutputFactory {
 
         @NonNull
         @Override
-        public OutputFile.OutputType getType() {
+        public OutputType getType() {
             return OutputType.SPLIT;
         }
 

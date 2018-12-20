@@ -313,7 +313,7 @@ public class InstantRunClient {
             //noinspection SSBasedInspection This should work
             File local = File.createTempFile("build-id", "txt");
             local.deleteOnExit();
-            Files.write(buildId, local, Charsets.UTF_8);
+            Files.asCharSink(local, Charsets.UTF_8).write(buildId);
             device.pushFile(local.getPath(), remoteIdFile);
         } catch (IOException ioe) {
             mLogger.warning("Couldn't write build id file: %s", ioe);

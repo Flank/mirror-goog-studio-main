@@ -44,7 +44,8 @@ public class IncrementalCodeChangeTest {
 
     @Test
     public void checkNonMultiDex() throws Exception {
-        Files.write("include 'app', 'library'", project.getSettingsFile(), Charsets.UTF_8);
+        Files.asCharSink(project.getSettingsFile(), Charsets.UTF_8)
+                .write("include 'app', 'library'");
         TestFileUtils.appendToFile(project.getSubproject("app").getBuildFile(),
                 "\n"
                 + "dependencies {\n"
@@ -71,7 +72,8 @@ public class IncrementalCodeChangeTest {
 
     @Test
     public void checkLegacyMultiDex() throws Exception {
-        Files.write("include 'app', 'library'", project.getSettingsFile(), Charsets.UTF_8);
+        Files.asCharSink(project.getSettingsFile(), Charsets.UTF_8)
+                .write("include 'app', 'library'");
         TestFileUtils.appendToFile(project.getSubproject("app").getBuildFile(),
                 "\n"
                 + "android {\n"
@@ -107,7 +109,8 @@ public class IncrementalCodeChangeTest {
 
     @Test
     public void checkNativeMultiDex() throws Exception {
-        Files.write("include 'app', 'library'", project.getSettingsFile(), Charsets.UTF_8);
+        Files.asCharSink(project.getSettingsFile(), Charsets.UTF_8)
+                .write("include 'app', 'library'");
         TestFileUtils.appendToFile(project.getSubproject("app").getBuildFile(),
                 "\n"
                 + "android {\n"

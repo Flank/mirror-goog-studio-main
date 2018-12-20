@@ -184,7 +184,7 @@ public class RemoteRepoLoaderImpl implements RemoteRepoLoader {
             // Collect & process the results, blocking where necessary & checking whether there is anything to wait for
             // before blocking again.
             progress.setIndeterminate(false);
-            double progressIncrement = 0.9 / sources.size() * 2;
+            double progressIncrement = 0.9 / (sources.size() * 2);
             while ((!sourceThreadPool.isTerminated() && (resultsReceived < threadsSubmitted))
                     || !downloadedRepoManifests.isEmpty()) {
                 Map.Entry<RepositorySource, InputStream> repoResult = null;

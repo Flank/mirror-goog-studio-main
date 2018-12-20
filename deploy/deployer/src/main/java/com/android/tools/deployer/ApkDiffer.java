@@ -25,10 +25,10 @@ import java.util.Map;
 
 public class ApkDiffer {
 
-    public List<FileDiff> diff(List<ApkEntry> oldFiles, List<ApkEntry> newFiles)
+    public List<FileDiff> diff(ApplicationDumper.Dump oldFiles, List<ApkEntry> newFiles)
             throws DeployerException {
 
-        Map<String, Map<String, ApkEntry>> oldMap = groupFiles(oldFiles);
+        Map<String, Map<String, ApkEntry>> oldMap = groupFiles(oldFiles.apkEntries);
         Map<String, Map<String, ApkEntry>> newMap = groupFiles(newFiles);
 
         if (newMap.size() != oldMap.size()) {
@@ -56,7 +56,7 @@ public class ApkDiffer {
             }
         }
 
-        for (ApkEntry oldFile : oldFiles) {
+        for (ApkEntry oldFile : oldFiles.apkEntries) {
             ApkEntry newFile = newMap.get(oldFile.apk.name).get(oldFile.name);
             if (newFile == null) {
                 diffs.add(new FileDiff(oldFile, null, FileDiff.Status.DELETED));

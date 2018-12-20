@@ -23,6 +23,27 @@ import org.junit.runners.JUnit4;
 public final class FoundryTest {
 
     @Test
+    public void testAapt2() throws Exception {
+        File testLocalDir = new File(".");
+        String osName = System.getProperty("os.name").toLowerCase();
+        String[] env = {
+            "LD_PRELOAD="
+                    + testLocalDir.getAbsolutePath()
+                    + "/prebuilts/tools/common/aapt/linux/lib64/libc++.so"
+        };
+        if (osName.equalsIgnoreCase("Linux")) {
+            execute("prebuilts/tools/common/aapt/" + osName + "/aapt2 -h", env, 1);
+        } else {
+            execute(
+                    "prebuilts/tools/common/aapt/"
+                            + osName
+                            + "/aapt2 -h".replace('/', File.separatorChar),
+                    null,
+                    1);
+        }
+    }
+
+    @Test
     public void testCA() throws Exception {
         TrustManagerFactory factory =
                 TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
@@ -68,23 +89,7 @@ public final class FoundryTest {
 
     @Test
     public void testArmLinuxLinker() {
-        try {
-            String command =
-                    "prebuilts/studio/sdk/linux/build-tools/28.0.3/arm-linux-androideabi-ld --help";
-            Process proc = Runtime.getRuntime().exec(command);
-            BufferedReader input = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-            int exitVal = proc.waitFor();
-            String line;
-            while ((line = input.readLine()) != null) {
-                System.out.println(line);
-            }
-            input.close();
-            System.out.println("Process exitValue: " + exitVal);
-            assertTrue(exitVal == 0);
-        } catch (Throwable t) {
-            t.printStackTrace();
-            fail("Could not run latest build-tools linker.");
-        }
+        execute("prebuilts/studio/sdk/linux/build-tools/28.0.3/arm-linux-androideabi-ld --help");
     }
 
     @Test
@@ -101,5 +106,37 @@ public final class FoundryTest {
         int openQuote = firstLine.substring(0, lastQuote).lastIndexOf("\"");
         String prebuiltsJavaVersion = firstLine.substring(openQuote + 1, lastQuote);
         assertEquals(javaVersionInUse, prebuiltsJavaVersion);
+    }
+
+    private void execute(String command) {
+        execute(command, null, 0);
+    }
+
+    private void execute(String command, String[] env, int expectedExitValue) {
+        try {
+            Process proc =
+                    env != null
+                            ? Runtime.getRuntime().exec(command, env)
+                            : Runtime.getRuntime().exec(command);
+
+            BufferedReader input = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+            BufferedReader error = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
+            int exitVal = proc.waitFor();
+            String line;
+            while ((line = input.readLine()) != null) {
+                System.out.println(line);
+            }
+            System.out.println("Error Stream");
+            while ((line = error.readLine()) != null) {
+                System.out.println(line);
+            }
+            input.close();
+            error.close();
+            System.out.println("Process exitValue: " + exitVal);
+            assertTrue(exitVal == expectedExitValue);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            fail("Could not run " + command);
+        }
     }
 }

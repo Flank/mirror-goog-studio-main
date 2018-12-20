@@ -27,21 +27,25 @@ namespace deploy {
 // should extend.
 class Command {
  public:
+  Command(Workspace& workspace) : workspace_(workspace) {}
   virtual ~Command() = default;
+
   // Parse parameters and set readyToRun to true if no error was encountered.
   virtual void ParseParameters(int argc, char** argv) = 0;
 
   // Execute command.
-  virtual void Run(Workspace& workspace) = 0;
+  virtual void Run() = 0;
 
   bool ReadyToRun() { return ready_to_run_; }
 
  protected:
+  Workspace& workspace_;
   bool ready_to_run_ = false;
 };
 
 // Search dispatch table for a Command object matching the command name.
-std::unique_ptr<Command> GetCommand(const char* command_name);
+std::unique_ptr<Command> GetCommand(const char* command_name,
+                                    Workspace& workspace);
 
 }  // namespace deploy
 

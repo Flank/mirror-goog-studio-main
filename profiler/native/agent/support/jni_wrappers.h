@@ -40,6 +40,8 @@ class JByteArrayWrapper {
   // represents binary data, it can contain 0's inside of it.
   const std::string &get() const { return byte_str_; }
 
+  const int32_t length() const { return byte_str_.length(); }
+
  private:
   std::string byte_str_;
 };

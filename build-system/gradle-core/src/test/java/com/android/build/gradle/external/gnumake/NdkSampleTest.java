@@ -324,7 +324,9 @@ public class NdkSampleTest {
                                 .replace(THIS_TEST_FOLDER, "{test}");
                 File variantBuildOutputFile =
                         getVariantBuildOutputFile(androidMkPath, variantName, operatingSystem);
-                Files.write(variantBuildOutputText, variantBuildOutputFile, Charsets.UTF_8);
+
+                Files.asCharSink(variantBuildOutputFile, Charsets.UTF_8)
+                        .write(variantBuildOutputText);
             }
         }
 
@@ -379,7 +381,7 @@ public class NdkSampleTest {
         if (REGENERATE_TEST_BASELINES
                 || !baselineJsonFile.exists()
                 || REGENERATE_TEST_JSON_FROM_TEXT) {
-            Files.write(actualResult, baselineJsonFile, Charsets.UTF_8);
+            Files.asCharSink(baselineJsonFile, Charsets.UTF_8).write(actualResult);
         }
 
         // Build the baseline result.

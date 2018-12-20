@@ -26,8 +26,7 @@
 
 namespace profiler {
 
-using AgentStatusChanged = std::function<void(
-    int processId, const profiler::proto::AgentStatusResponse::Status&)>;
+using AgentStatusChanged = std::function<void(int processId)>;
 
 class GenericComponent final : public ProfilerComponent {
  public:

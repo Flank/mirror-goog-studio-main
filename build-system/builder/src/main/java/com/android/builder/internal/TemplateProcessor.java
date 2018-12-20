@@ -77,7 +77,7 @@ class TemplateProcessor {
     }
 
     private void writeFile(File file, String content) throws IOException {
-        Files.write(content, file, Charsets.UTF_8);
+        Files.asCharSink(file, Charsets.UTF_8).write(content);
     }
 
     /**

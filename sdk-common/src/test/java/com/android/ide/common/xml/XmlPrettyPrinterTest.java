@@ -1277,7 +1277,7 @@ public class XmlPrettyPrinterTest {
                 + "<notclosed>\n"
                 + "</view>";
         File temp = File.createTempFile("mylayout", ".xml");
-        Files.write(brokenXml, temp, Charsets.UTF_8);
+        Files.asCharSink(temp, Charsets.UTF_8).write(brokenXml);
         checkDriver(
                 "",
                 "[Fatal Error] :3:3: The element type \"notclosed\" must be terminated by "
@@ -1303,7 +1303,7 @@ public class XmlPrettyPrinterTest {
                 + "        <!-- Comment -->\n"
                 + "</LinearLayout>";
         File temp = File.createTempFile("mylayout", ".xml");
-        Files.write(xml, temp, Charsets.UTF_8);
+        Files.asCharSink(temp, Charsets.UTF_8).write(xml);
         checkDriver(
                 "",
                 "",
@@ -1343,11 +1343,11 @@ public class XmlPrettyPrinterTest {
                 + "        <!-- Comment -->\n"
                 + "</LinearLayout>";
         File file1 = new File(root, "layout1.xml");
-        Files.write(xml, file1, Charsets.UTF_8);
+        Files.asCharSink(file1, Charsets.UTF_8).write(xml);
         File dir1 = new File(root, "layout");
         dir1.mkdirs();
         File file2 = new File(dir1, "layout2.xml");
-        Files.write(xml, file2, Charsets.UTF_8);
+        Files.asCharSink(file2, Charsets.UTF_8).write(xml);
 
         checkDriver(
                 "",
@@ -1388,7 +1388,7 @@ public class XmlPrettyPrinterTest {
                 + "<Button/>"
                 + "</LinearLayout>";
         File temp = File.createTempFile("mylayout", ".xml");
-        Files.write(xml, temp, Charsets.UTF_8);
+        Files.asCharSink(temp, Charsets.UTF_8).write(xml);
         checkDriver(
                 "",
                 "",

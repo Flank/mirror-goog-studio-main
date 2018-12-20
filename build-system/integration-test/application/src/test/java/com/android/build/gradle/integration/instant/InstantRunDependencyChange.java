@@ -83,13 +83,12 @@ public class InstantRunDependencyChange {
                 Files.asCharSource(project.file("build.gradle"), Charsets.UTF_8).read();
 
         // add the dependency and do a clean build.
-        Files.write(
-                originalBuildFile
-                        + "dependencies {\n"
-                        + "    compile 'com.google.guava:guava:19.0'\n"
-                        + "}",
-                project.file("build.gradle"),
-                Charsets.UTF_8);
+        Files.asCharSink(project.file("build.gradle"), Charsets.UTF_8)
+                .write(
+                        originalBuildFile
+                                + "dependencies {\n"
+                                + "    compile 'com.google.guava:guava:19.0'\n"
+                                + "}");
 
         project.execute("clean");
         project.executor()
@@ -97,11 +96,12 @@ public class InstantRunDependencyChange {
                 .run("assembleDebug");
 
         // change the dependency version on the project build.
-        Files.write(originalBuildFile + "dependencies {\n"
-                        + "    compile 'com.google.guava:guava:18.0'\n"
-                        + "}",
-                project.file("build.gradle"),
-                Charsets.UTF_8);
+        Files.asCharSink(project.file("build.gradle"), Charsets.UTF_8)
+                .write(
+                        originalBuildFile
+                                + "dependencies {\n"
+                                + "    compile 'com.google.guava:guava:18.0'\n"
+                                + "}");
 
         // now perform an incremental build.
         project.executor().withInstantRun(new AndroidVersion(23, null)).run("assembleDebug");

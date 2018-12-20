@@ -85,9 +85,8 @@ Status ProfilerServiceImpl::GetBytes(
 
 Status ProfilerServiceImpl::GetAgentStatus(
     ServerContext* context, const profiler::proto::AgentStatusRequest* request,
-    profiler::proto::AgentStatusResponse* response) {
-  daemon_->GetAgentStatus(request, response);
-
+    profiler::proto::AgentData* response) {
+  response->set_status(daemon_->GetAgentStatus(request->pid()));
   return Status::OK;
 }
 

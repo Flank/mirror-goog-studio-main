@@ -19,7 +19,7 @@ package com.android.tools.deployer;
 public class DeployerException extends Exception {
 
     private final Error error;
-
+    private final String code;
 
     public enum Error {
         DUMP_FAILED,
@@ -37,22 +37,33 @@ public class DeployerException extends Exception {
         ERROR_PUSHING_APK,
         DIFFERENT_NAMES_OF_APKS,
         INSTALL_FAILED,
-        UNABLE_TO_PREINSTALL
+        UNABLE_TO_PREINSTALL,
+        OPERATION_NOT_SUPPORTED, // (yet)
     }
 
     public DeployerException(Error error, String message) {
         super(message);
         this.error = error;
+        this.code = "";
     }
 
+    public <E extends Enum> DeployerException(Error error, E code, String message) {
+        super(message);
+        this.error = error;
+        this.code = code.name();
+    }
 
     public DeployerException(Error error, Throwable t) {
         super(t);
         this.error = error;
+        this.code = "";
     }
 
     public Error getError() {
         return error;
     }
 
+    public String getId() {
+        return error.name() + (code.isEmpty() ? "" : ".") + code;
+    }
 }

@@ -70,7 +70,7 @@ public class JavaPreCompileTaskTest {
         assertThat(processorMetaInfFile.createNewFile()).isTrue();
 
         nonJarFile = temporaryFolder.newFile("notJar.txt");
-        Files.write("This is not a jar file", nonJarFile, Charsets.UTF_8);
+        Files.asCharSink(nonJarFile, Charsets.UTF_8).write("This is not a jar file");
 
         jar = temporaryFolder.newFile("dependency.jar");
         ZipOutputStream jarOut = new ZipOutputStream(new FileOutputStream(jar));

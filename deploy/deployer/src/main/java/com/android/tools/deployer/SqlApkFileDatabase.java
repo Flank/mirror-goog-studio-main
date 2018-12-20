@@ -20,7 +20,6 @@ import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.DexClass;
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import java.io.File;
 import java.sql.Connection;
@@ -290,7 +289,7 @@ public class SqlApkFileDatabase implements ApkFileDatabase {
                 ResultSet result = s.executeQuery("SELECT DISTINCT checksum from archives")) {
             List<Apk> apks = new ArrayList<>();
             while (result.next()) {
-                apks.add(new Apk("", result.getString("checksum"), null, ImmutableList.of(), null));
+                apks.add(Apk.builder().setChecksum(result.getString("checksum")).build());
             }
             return apks;
         } catch (SQLException e) {

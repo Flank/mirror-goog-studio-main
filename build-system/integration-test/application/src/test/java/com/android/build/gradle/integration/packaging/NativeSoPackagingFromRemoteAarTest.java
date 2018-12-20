@@ -53,9 +53,8 @@ public class NativeSoPackagingFromRemoteAarTest {
         libProject = project.getSubproject("library");
 
         // rewrite settings.gradle to remove un-needed modules
-        Files.write("include 'app'\n"
-                + "include 'library'\n",
-                new File(project.getTestDir(), "settings.gradle"), Charsets.UTF_8);
+        Files.asCharSink(new File(project.getTestDir(), "settings.gradle"), Charsets.UTF_8)
+                .write("include 'app'\n" + "include 'library'\n");
 
         // setup dependencies.
         TestFileUtils.appendToFile(appProject.getBuildFile(),
@@ -103,7 +102,7 @@ public class NativeSoPackagingFromRemoteAarTest {
             throws Exception {
         File assetFolder = FileUtils.join(projectFolder, "src", dimension, "jniLibs", "x86");
         FileUtils.mkdirs(assetFolder);
-        Files.write(content, new File(assetFolder, filename), Charsets.UTF_8);
+        Files.asCharSink(new File(assetFolder, filename), Charsets.UTF_8).write(content);
     }
 
     @Test

@@ -82,7 +82,7 @@ public abstract class GradleModule {
         }
         content += "}\n";
 
-
-        Files.write(content, new File(moduleDir, "build.gradle"), Charset.defaultCharset());
+        Files.asCharSink(new File(moduleDir, "build.gradle"), Charset.defaultCharset())
+                .write(content);
     }
 }

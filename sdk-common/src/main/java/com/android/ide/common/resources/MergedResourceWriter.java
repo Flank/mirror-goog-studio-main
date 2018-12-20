@@ -545,7 +545,7 @@ public class MergedResourceWriter
                         content = XmlUtils.toXml(document);
                     }
 
-                    Files.write(content, outFile, Charsets.UTF_8);
+                    Files.asCharSink(outFile, Charsets.UTF_8).write(content);
 
                     CompileResourceRequest request =
                             new CompileResourceRequest(
@@ -596,7 +596,7 @@ public class MergedResourceWriter
                             }
                         }
                         String text = sb.toString();
-                        Files.write(text, mPublicFile, Charsets.UTF_8);
+                        Files.asCharSink(mPublicFile, Charsets.UTF_8).write(text);
                     }
                 } catch (Exception e) {
                     throw new ConsumerException(e);

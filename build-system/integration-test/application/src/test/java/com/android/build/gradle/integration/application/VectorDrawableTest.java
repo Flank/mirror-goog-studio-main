@@ -291,7 +291,7 @@ public class VectorDrawableTest {
         File heartXml = new File(project.getTestDir(), "src/main/res/drawable/heart.xml");
         String content = Files.toString(heartXml, UTF_8);
         // Change the heart to blue.
-        Files.write(content.replace("ff0000", "0000ff"), heartXml, UTF_8);
+        Files.asCharSink(heartXml, UTF_8).write(content.replace("ff0000", "0000ff"));
 
         TestUtils.waitForFileSystemTick();
         project.executor().run("assembleDebug");
@@ -314,11 +314,10 @@ public class VectorDrawableTest {
         long timestamp = intermediatesIconPng.lastModified();
 
         File heartXml = new File(project.getTestDir(), "src/main/res/drawable/heart.xml");
-        Files.write(
-                "<bitmap xmlns:android=\"http://schemas.android.com/apk/res/android\" " +
-                        "android:src=\"@drawable/icon\" />",
-                heartXml,
-                UTF_8);
+        Files.asCharSink(heartXml, UTF_8)
+                .write(
+                        "<bitmap xmlns:android=\"http://schemas.android.com/apk/res/android\" "
+                                + "android:src=\"@drawable/icon\" />");
 
         TestUtils.waitForFileSystemTick();
         project.executor().run("assembleDebug");
@@ -346,11 +345,10 @@ public class VectorDrawableTest {
 
         String vectorDrawable = Files.toString(heartXml, UTF_8);
 
-        Files.write(
-                "<bitmap xmlns:android=\"http://schemas.android.com/apk/res/android\" " +
-                "android:src=\"@drawable/icon\" />",
-                heartXml,
-                UTF_8);
+        Files.asCharSink(heartXml, UTF_8)
+                .write(
+                        "<bitmap xmlns:android=\"http://schemas.android.com/apk/res/android\" "
+                                + "android:src=\"@drawable/icon\" />");
 
         project.executor().run("clean", "assembleDebug");
         File intermediatesIconPng =
@@ -373,7 +371,7 @@ public class VectorDrawableTest {
                         "build/intermediates/res/merged/debug/drawable_heart.xml.flat");
         assertThat(heartXmlToUse).exists();
 
-        Files.write(vectorDrawable, heartXml, UTF_8);
+        Files.asCharSink(heartXml, UTF_8).write(vectorDrawable);
         TestUtils.waitForFileSystemTick();
         project.executor().run("assembleDebug");
         apk = project.getApk(GradleTestProject.ApkType.DEBUG);
@@ -561,18 +559,19 @@ public class VectorDrawableTest {
 
     @Test
     public void resourceReferences() throws Exception {
-        Files.write(
-                "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "        android:width=\"24dp\"\n"
-                        + "        android:height=\"24dp\"\n"
-                        + "        android:viewportWidth=\"24.0\"\n"
-                        + "        android:viewportHeight=\"24.0\">\n"
-                        + "    <path\n"
-                        + "            android:fillColor=\"#FF000000\"\n"
-                        + "            android:pathData=\"@string/pathDataAsString\"/>\n"
-                        + "</vector>\n",
-                new File(project.getTestDir(), "src/main/res/drawable/heart.xml"),
-                StandardCharsets.UTF_8);
+        Files.asCharSink(
+                        new File(project.getTestDir(), "src/main/res/drawable/heart.xml"),
+                        StandardCharsets.UTF_8)
+                .write(
+                        "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "        android:width=\"24dp\"\n"
+                                + "        android:height=\"24dp\"\n"
+                                + "        android:viewportWidth=\"24.0\"\n"
+                                + "        android:viewportHeight=\"24.0\">\n"
+                                + "    <path\n"
+                                + "            android:fillColor=\"#FF000000\"\n"
+                                + "            android:pathData=\"@string/pathDataAsString\"/>\n"
+                                + "</vector>\n");
 
         GradleBuildResult result = project.executor().expectFailure().run("assembleDebug");
         // Make sure we print out something useful.

@@ -15,25 +15,24 @@ cc_library(
     name = "installer_lib",
     srcs = [
         "apk_archive.cc",
-        "apk_retriever.cc",
         "command.cc",
         "command_cmd.cc",
         "delta_preinstall.cc",
         "dump.cc",
         "dump.h",
-        "executor.cc",
+        "executor_impl.cc",
         "package_manager.cc",
         "swap.cc",
         "workspace.cc",
     ],
     hdrs = [
         "apk_archive.h",
-        "apk_retriever.h",
         "command.h",
         "command_cmd.h",
         "delta_preinstall.h",
         "dump.h",
         "executor.h",
+        "executor_impl.h",
         "package_manager.h",
         "swap.h",
         "workspace.h",
@@ -276,7 +275,7 @@ sh_test(
         "//tools/base/deploy/proto:protobuffer_src",
     ] + glob(["tests/**/*"]),
     tags = [
-        "no_windows",
+        "manual",  # b/120995974
     ],
 )
 
@@ -292,7 +291,7 @@ sh_test(
         "//tools/base/deploy/proto:protobuffer_src",
     ] + glob(["tests/**/*"]),
     tags = [
-        "no_windows",
+        "manual",  # b/120995974
     ],
 )
 
@@ -308,6 +307,6 @@ sh_test(
         "//tools/base/deploy/proto:protobuffer_src",
     ] + glob(["tests/**/*"]),
     tags = [
-        "no_windows",
+        "manual",  # b/120995974
     ],
 )

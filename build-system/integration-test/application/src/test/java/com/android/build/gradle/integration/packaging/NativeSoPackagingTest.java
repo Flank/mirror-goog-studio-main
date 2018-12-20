@@ -66,14 +66,13 @@ public class NativeSoPackagingTest {
         jarProject = project.getSubproject("jar");
 
         // rewrite settings.gradle to remove un-needed modules
-        Files.write(
-                "include 'app'\n"
-                + "include 'library'\n"
-                + "include 'library2'\n"
-                + "include 'test'\n"
-                + "include 'jar'\n",
-                new File(project.getTestDir(), "settings.gradle"),
-                Charsets.UTF_8);
+        Files.asCharSink(new File(project.getTestDir(), "settings.gradle"), Charsets.UTF_8)
+                .write(
+                        "include 'app'\n"
+                                + "include 'library'\n"
+                                + "include 'library2'\n"
+                                + "include 'test'\n"
+                                + "include 'jar'\n");
 
         // setup dependencies.
         TestFileUtils.appendToFile(appProject.getBuildFile(),
@@ -117,7 +116,7 @@ public class NativeSoPackagingTest {
         File jarDir = jarProject.getTestDir();
         File resFolder = FileUtils.join(jarDir, "src", "main", "resources", "lib", "x86");
         FileUtils.mkdirs(resFolder);
-        Files.write("jar:abcd", new File(resFolder, "libjar.so"), Charsets.UTF_8);
+        Files.asCharSink(new File(resFolder, "libjar.so"), Charsets.UTF_8).write("jar:abcd");
     }
 
     private static void createOriginalSoFile(
@@ -128,7 +127,7 @@ public class NativeSoPackagingTest {
             throws Exception {
         File assetFolder = FileUtils.join(projectFolder, "src", dimension, "jniLibs", "x86");
         FileUtils.mkdirs(assetFolder);
-        Files.write(content, new File(assetFolder, filename), Charsets.UTF_8);
+        Files.asCharSink(new File(assetFolder, filename), Charsets.UTF_8).write(content);
     }
 
     @Test

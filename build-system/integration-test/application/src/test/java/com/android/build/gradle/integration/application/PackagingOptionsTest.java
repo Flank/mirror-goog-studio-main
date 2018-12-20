@@ -108,6 +108,13 @@ public class PackagingOptionsTest {
     }
 
     @Test
+    public void protobufMetaExcludedByDefault() throws IOException, InterruptedException {
+        createFile("src/main/resources/protobuf.meta");
+        project.execute("clean", "assembleDebug");
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG)).doesNotContain("protobuf.meta");
+    }
+
+    @Test
     public void checkPickFirst() throws IOException, InterruptedException {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),

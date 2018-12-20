@@ -15,153 +15,15 @@
  */
 #include "perfd/cpu/thread_monitor.h"
 
-#include <dirent.h>
-#include <cstdlib>  // for atoi()
-#include <cstring>  // for strncmp()
-#include <sstream>  // for std::ostringstream
-#include <vector>
+#include "perfd/cpu/thread_parser.h"
 
-#include "utils/file_reader.h"
+namespace profiler {
 
-using profiler::FileReader;
 using profiler::proto::CpuStartResponse;
 using profiler::proto::CpuStopResponse;
 using profiler::proto::CpuThreadData;
 using std::string;
 using std::vector;
-
-namespace {
-
-// Gets |entries| (not including . and ..) of a given directory |dir|. Returns
-// true on success.
-// TODO: Refactor this with upcoming utils/ routines.
-bool GetDirEntries(const string& dir, vector<string>* entries) {
-  DIR* dp;
-  struct dirent* dirp;
-  if ((dp = opendir(dir.c_str())) == nullptr) return false;
-  entries->clear();
-  while ((dirp = readdir(dp)) != nullptr) {
-    const char* const name = dirp->d_name;
-    if (strncmp(name, ".", 1) != 0 && strncmp(name, "..", 2) != 0) {
-      entries->push_back(name);
-    }
-  }
-  closedir(dp);
-  return true;
-}
-
-// Gets thread IDs under a given process of |pid|. Returns true on success.
-bool GetThreads(int32_t pid, vector<int32_t>* tids) {
-  std::ostringstream os;
-  os << "/proc/" << pid << "/task/";
-  vector<string> dir_entries;
-  if (!GetDirEntries(os.str(), &dir_entries)) return false;
-  for (const string& entry : dir_entries) {
-    // TODO: Use std::stoi() after we use libc++, and remove '.c_str()'.
-    tids->push_back(atoi(entry.c_str()));
-  }
-  return true;
-}
-
-// Reads /proc/[pid]/task/[tid]/stat file. Returns true on success.
-bool ReadThreadStatFile(int32_t pid, int32_t tid, std::string* content) {
-  // TODO: Use std::to_string() after we use libc++. NDK doesn't support itoa().
-  std::ostringstream os;
-  os << "/proc/" << pid << "/task/" << tid << "/stat";
-  return FileReader::Read(os.str(), content);
-}
-
-// Parses a thread's stat file (proc/[pid]/task/[tid]/stat). If success,
-// returns true and saves extracted info into |state| and |name|.
-//
-// For a thread, the following fields are read (the first field is numbered as
-// 1).
-//    (1) id  %d                      => For sanity checking.
-//    (2) comm  %s (in parentheses)   => Output |name|.
-//    (3) state  %c                   => Output |state|.
-// See more details at http://man7.org/linux/man-pages/man5/proc.5.html.
-bool ParseThreadStat(int32_t tid, const string& content, char* state,
-                     string* name) {
-  // Find the start and end positions of the second field.
-  // The number of tokens in the file is variable. The second field is the
-  // file name of the executable, in parentheses. The file name could include
-  // spaces, so if we blindly split the entire line, it would be hard to map
-  // words to fields.
-  size_t left_parentheses = content.find_first_of('(');
-  size_t right_parentheses = content.find_first_of(')');
-  if (left_parentheses == string::npos || right_parentheses == string::npos ||
-      right_parentheses <= left_parentheses || left_parentheses == 0) {
-    return false;
-  }
-
-  // Sanity check on tid.
-  // TODO: Use std::stoi() after we use libc++, and remove '.c_str()'.
-  int32_t tid_from_file = atoi(content.substr(0, left_parentheses - 1).c_str());
-  if (tid_from_file != tid) return false;
-
-  // Between left and right parentheses is the name.
-  *name = content.substr(left_parentheses + 1,
-                         right_parentheses - left_parentheses - 1);
-  // After right parenthese is a space. After the space it is a char standing
-  // for state.
-  *state = content[right_parentheses + 2];
-  return true;
-}
-
-// Converts a thread state from character type to an enum type.
-// According to http://man7.org/linux/man-pages/man5/proc.5.html, 'W' could mean
-// Paging (only before Linux 2.6.0) or Waking (Linux 2.6.33 to 3.13 only).
-// Android 1.0 already used kernel 2.6.25.
-CpuThreadData::State ThreadStateInEnum(char state_in_char) {
-  switch (state_in_char) {
-    case 'R':
-      return CpuThreadData::RUNNING;
-    case 'S':
-      return CpuThreadData::SLEEPING;
-    case 'D':
-      return CpuThreadData::WAITING;
-    case 'Z':
-      return CpuThreadData::ZOMBIE;
-    case 'T':
-      // TODO: Handle the subtle difference before and afer Linux 2.6.33.
-      return CpuThreadData::STOPPED;
-    case 't':
-      return CpuThreadData::TRACING;
-    case 'X':
-    case 'x':
-      return CpuThreadData::DEAD;
-    case 'K':
-      return CpuThreadData::WAKEKILL;
-    case 'W':
-      return CpuThreadData::WAKING;
-    case 'P':
-      return CpuThreadData::PARKED;
-    default:
-      return CpuThreadData::UNSPECIFIED;
-  }
-}
-
-// Gets |state| and |name| of a given thread of |tid| under process of |pid|.
-// Returns true on success.
-bool GetThreadState(int32_t pid, int32_t tid, CpuThreadData::State* state,
-                    string* name) {
-  string buffer;
-  if (ReadThreadStatFile(pid, tid, &buffer)) {
-    char state_in_char;
-    if (ParseThreadStat(tid, buffer, &state_in_char, name)) {
-      CpuThreadData::State enum_state = ThreadStateInEnum(state_in_char);
-      if (enum_state != CpuThreadData::UNSPECIFIED) {
-        *state = enum_state;
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-}  // namespace
-
-namespace profiler {
 
 CpuStartResponse::Status ThreadMonitor::AddProcess(int32_t pid) {
   std::lock_guard<std::mutex> lock(pids_mutex_);
@@ -312,13 +174,13 @@ bool ThreadMonitor::DetectActivities(int64_t timestamp,
 
 bool ThreadMonitor::CollectStates(int32_t pid, ThreadStates* states) const {
   vector<int32_t> tids{};  // Thread IDs.
-  if (!GetThreads(pid, &tids)) return false;
+  if (!GetThreads(procfs_.get(), pid, &tids)) return false;
 
   states->clear();
   for (auto tid : tids) {
     ThreadState state;
     // It is possible a thread is deleted right at this moment.
-    if (GetThreadState(pid, tid, &state.state, &state.name)) {
+    if (GetThreadState(procfs_.get(), pid, tid, &state.state, &state.name)) {
       state.timestamp = clock_->GetCurrentTime();
       states->emplace(tid, state);
     }

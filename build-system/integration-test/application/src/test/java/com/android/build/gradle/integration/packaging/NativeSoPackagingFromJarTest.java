@@ -66,8 +66,8 @@ public class NativeSoPackagingFromJarTest {
         appProject = project.getSubproject("app");
 
         // rewrite settings.gradle to remove un-needed modules
-        Files.write("include \"app\"\ninclude \"library\"\n"
-, new File(project.getTestDir(), "settings.gradle"), Charsets.UTF_8);
+        Files.asCharSink(new File(project.getTestDir(), "settings.gradle"), Charsets.UTF_8)
+                .write("include \"app\"\ninclude \"library\"\n");
 
         // setup dependencies.
         TestFileUtils.appendToFile(appProject.getBuildFile(),

@@ -32,14 +32,16 @@ void GenericComponent::RunAgentStatusThread() {
   while (true) {
     int64_t current_time = daemon_->clock()->GetCurrentTime();
     for (auto map : daemon_->heartbeat_timestamp_map()) {
-      proto::AgentStatusResponse::Status status =
-          kHeartbeatThresholdNs > (current_time - map.second)
-              ? proto::AgentStatusResponse::ATTACHED
-              : proto::AgentStatusResponse::DETACHED;
+      // If we have a heartbeat then we attached the agent once as such we
+      // update the status.
+      proto::AgentData::Status status = proto::AgentData::ATTACHED;
       auto got = daemon_->agent_status_map().find(map.first);
-      if (got == daemon_->agent_status_map().end() || got->second != status) {
+      // Call the callback if our heartbeat timeouts or its the first time we
+      // see the process.
+      if (got == daemon_->agent_status_map().end() ||
+          kHeartbeatThresholdNs > (current_time - map.second)) {
         for (auto callback : agent_status_changed_callbacks_) {
-          callback(map.first, status);
+          callback(map.first);
         }
       }
       daemon_->agent_status_map()[map.first] = status;

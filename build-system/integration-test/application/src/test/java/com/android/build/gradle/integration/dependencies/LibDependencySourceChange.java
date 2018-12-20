@@ -75,10 +75,10 @@ public class LibDependencySourceChange {
                         + "        }\n"
                         + "    }\n"
                         + "}\n";
-        Files.write(
-                javaCompile,
-                project.getSubproject(":lib")
-                        .file("src/main/java/com/example/helloworld/HelloWorld.java"),
-                Charsets.UTF_8);
+        Files.asCharSink(
+                        project.getSubproject(":lib")
+                                .file("src/main/java/com/example/helloworld/HelloWorld.java"),
+                        Charsets.UTF_8)
+                .write(javaCompile);
     }
 }

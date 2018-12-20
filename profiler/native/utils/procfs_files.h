@@ -28,10 +28,12 @@ class ProcfsFiles {
 
   virtual std::string GetSystemStatFilePath() const;
   virtual std::string GetProcessStatFilePath(int32_t pid) const;
+  virtual std::string GetProcessTaskDir(int32_t pid) const;
   virtual std::string GetSystemCpuPath() const;
   virtual std::string GetSystemCurrentCpuFrequencyPath(int32_t cpu) const;
   virtual std::string GetSystemMinCpuFrequencyPath(int32_t cpu) const;
   virtual std::string GetSystemMaxCpuFrequencyPath(int32_t cpu) const;
+  virtual std::string GetThreadStatFilePath(int32_t pid, int32_t tid) const;
 
   // Maps file usually is accessable only by the app itself or the root.
   virtual std::string GetMemoryMapFilePath(int32_t pid) const;

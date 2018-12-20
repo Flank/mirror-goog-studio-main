@@ -18,6 +18,7 @@
 #define INSTALLER_APK_TOOLKIT_H_
 
 #include "tools/base/deploy/installer/command.h"
+#include "tools/base/deploy/installer/workspace.h"
 
 #include <string>
 
@@ -25,13 +26,28 @@ namespace deploy {
 
 class DumpCommand : public Command {
  public:
-  DumpCommand();
+  DumpCommand(Workspace& workspace) : Command(workspace) {}
   virtual ~DumpCommand() {}
   virtual void ParseParameters(int argc, char** argv);
-  virtual void Run(Workspace& workspace);
+  virtual void Run();
 
  private:
-  std::string packageName_;
+  std::vector<std::string> package_names_;
+
+  std::vector<std::string> RetrieveApks(const std::string& package_name);
+
+  struct ProcStats {
+    char name[16];
+    int pid;
+    int ppid;
+    int uid;
+  };
+
+  bool GetApks(const std::string& package_name,
+               proto::PackageDump* package_dump);
+  bool GetProcessIds(const std::string& package_name,
+                     proto::PackageDump* package_dump);
+  bool ParseProc(dirent* entry, ProcStats* stats);
 };
 
 }  // namespace deploy

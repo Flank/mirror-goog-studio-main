@@ -47,4 +47,15 @@ grpc::Status AgentServiceImpl::SendEvent(grpc::ServerContext* context,
   return grpc::Status::OK;
 }
 
+grpc::Status AgentServiceImpl::SendPayload(
+    grpc::ServerContext* context, const proto::SendPayloadRequest* request,
+    proto::EmptyResponse* response) {
+  auto cache = daemon_->file_cache();
+  cache->AddChunk(request->name(), request->payload());
+  if (!request->is_partial()) {
+    cache->Complete(request->name());
+  }
+  return grpc::Status::OK;
+}
+
 }  // namespace profiler

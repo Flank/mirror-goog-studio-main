@@ -17,6 +17,7 @@
 package com.android.tools.tracer.agent;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -49,7 +50,7 @@ class TraceProfile {
         start = new MethodSet();
         trace = new MethodSet();
         flush = new MethodSet();
-        outputFile = "/tmp/report.json";
+        outputFile = getDefaultOutputPath();
         jvmArgs = initJvmArgs(configFile);
         annotations = new HashSet<>();
         annotations.add("Lcom/android/annotations/Trace;");
@@ -91,6 +92,15 @@ class TraceProfile {
         }
     }
 
+    private String getDefaultOutputPath() {
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.indexOf("win") >= 0) {
+            String tmp = System.getProperty("java.io.tmpdir");
+            return new File(tmp, "report.json").getAbsolutePath();
+        } else {
+            return "/tmp/report.json";
+        }
+    }
     private static String initJvmArgs(String path) {
         // We assume that the agent is called "trace_agent.jar"
         RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();

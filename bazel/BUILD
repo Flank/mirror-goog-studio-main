@@ -296,11 +296,22 @@ java_binary(
     runtime_deps = [":gradle"],
 )
 
+java_binary(
+    name = "apply_diff",
+    srcs = ["src/com/android/tools/binaries/ApplyDiff.java"],
+    main_class = "com.android.tools.binaries.ApplyDiff",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tools/base/testutils:tools.testutils",
+    ],
+)
+
 java_library(
     name = "gradle",
     srcs = glob(["src/com/android/tools/gradle/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
+        ":utils",
         "//tools/base/annotations",
         "//tools/base/build-system:gradle-tooling-api",
         "//tools/base/common:tools.common",
