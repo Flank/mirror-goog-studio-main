@@ -16,19 +16,16 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
+import com.android.build.gradle.internal.fixtures.FakeComponentIdentifier
 import com.android.build.gradle.internal.fixtures.FakeLogger
+import com.android.build.gradle.internal.fixtures.FakeResolvedComponentResult
+import com.android.build.gradle.internal.fixtures.FakeResolvedDependencyResult
 import com.android.ide.common.symbols.Symbol
 import com.android.resources.ResourceType
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
-import org.gradle.api.artifacts.ModuleVersionIdentifier
-import org.gradle.api.artifacts.component.ComponentIdentifier
-import org.gradle.api.artifacts.component.ComponentSelector
-import org.gradle.api.artifacts.result.ComponentSelectionReason
 import org.gradle.api.artifacts.result.DependencyResult
-import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
-import org.gradle.api.artifacts.result.ResolvedVariantResult
 import java.io.File
 import javax.tools.ToolProvider
 
@@ -38,11 +35,11 @@ import javax.tools.ToolProvider
 fun createDependency(
     id: String,
     children: MutableSet<DependencyResult> = ImmutableSet.of()
-): MockResolvedDependencyResult = MockResolvedDependencyResult(
-        MockResolvedComponentResult(
-                MockComponentIdentifier(id),
-                children
-        )
+): ResolvedDependencyResult = FakeResolvedDependencyResult(
+    selected = FakeResolvedComponentResult(
+        id = FakeComponentIdentifier(id),
+        dependencies = children
+    )
 )
 
 /**
@@ -53,10 +50,10 @@ fun compileSources(sources: ImmutableList<File>, javacOutput: File) {
     val manager = javac.getStandardFileManager(null, null, null)
 
     javac.getTask(
-            null,
-            manager, null,
-            ImmutableList.of("-d", javacOutput.absolutePath), null,
-            manager.getJavaFileObjectsFromFiles(sources)
+        null,
+        manager, null,
+        ImmutableList.of("-d", javacOutput.absolutePath), null,
+        manager.getJavaFileObjectsFromFiles(sources)
     )
         .call()
 }
@@ -75,34 +72,9 @@ fun symbol(type: String, name: String, maybeDefinition: Boolean = false): Symbol
     return Symbol.NormalSymbol(resType, name, 0)
 }
 
-class MockResolvedDependencyResult(
-    private val selected: ResolvedComponentResult
-) : ResolvedDependencyResult {
-    override fun isConstraint(): Boolean = error("not implemented")
-    override fun getSelected(): ResolvedComponentResult = selected
-    override fun getFrom(): ResolvedComponentResult = error("not implemented")
-    override fun getRequested(): ComponentSelector = error("not implemented")
-}
-
-class MockResolvedComponentResult(
-    private val id: ComponentIdentifier,
-    private val dependencies: MutableSet<DependencyResult>
-) : ResolvedComponentResult {
-    override fun getId(): ComponentIdentifier = id
-    override fun getDependencies(): MutableSet<DependencyResult> = dependencies
-    override fun getDependents(): MutableSet<ResolvedDependencyResult> = error("not implemented")
-    override fun getSelectionReason(): ComponentSelectionReason = error("not implemented")
-    override fun getModuleVersion(): ModuleVersionIdentifier? = error("not implemented")
-    override fun getVariant(): ResolvedVariantResult = error("not implemented")
-}
-
-private class MockComponentIdentifier(val name: String) : ComponentIdentifier {
-    override fun getDisplayName(): String = name
-}
-
 class MockLogger : FakeLogger() {
     val warnings = ArrayList<String>()
-    val infos = ArrayList<String>()
+    private val infos = ArrayList<String>()
 
     override fun warn(p0: String?) {
         warnings.add(p0!!)
