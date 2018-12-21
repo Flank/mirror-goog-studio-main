@@ -18,6 +18,7 @@
 #include "daemon/daemon.h"
 #include "perfd/samplers/cpu_thread_sampler.h"
 #include "perfd/samplers/cpu_usage_sampler.h"
+#include "perfd/samplers/memory_usage_sampler.h"
 #include "perfd/samplers/network_connection_count_sampler.h"
 #include "perfd/samplers/network_speed_sampler.h"
 #include "utils/procfs_files.h"
@@ -44,6 +45,9 @@ Session::Session(int64_t stream_id, int32_t pid, int64_t start_timestamp,
             *this, daemon->clock(), daemon->buffer())));
     samplers_.push_back(std::unique_ptr<Sampler>(new profiler::CpuThreadSampler(
         *this, daemon->clock(), daemon->buffer())));
+    samplers_.push_back(
+        std::unique_ptr<Sampler>(new profiler::MemoryUsageSampler(
+            *this, daemon->clock(), daemon->buffer())));
   }
 }
 

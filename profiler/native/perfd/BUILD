@@ -5,6 +5,7 @@ filegroup(
     srcs = glob([
         "samplers/cpu_thread_sampler.h",
         "samplers/cpu_usage_sampler.h",
+        "samplers/memory_usage_sampler.h",
         "samplers/network_connection_count_sampler.h",
         "samplers/network_speed_sampler.h",
         "samplers/sampler.h",
@@ -16,6 +17,7 @@ filegroup(
     srcs = glob([
         "samplers/cpu_thread_sampler.cc",
         "samplers/cpu_usage_sampler.cc",
+        "samplers/memory_usage_sampler.cc",
         "samplers/network_connection_count_sampler.cc",
         "samplers/network_speed_sampler.cc",
         "samplers/sampler.cc",
@@ -89,6 +91,7 @@ cc_test(
     srcs = [
         "samplers/cpu_thread_sampler_test.cc",
         "samplers/cpu_usage_sampler_test.cc",
+        "samplers/memory_usage_sampler_test.cc",
         "samplers/sampler_test.cc",
         "sessions/session_test.cc",
     ],

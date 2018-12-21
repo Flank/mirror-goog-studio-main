@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "memory_levels_sampler.h"
+#include "memory_usage_reader_impl.h"
 
 #include <cstdint>
 #include <cstdio>
@@ -43,8 +43,8 @@ enum MemoryType {
 
 namespace profiler {
 
-void MemoryLevelsSampler::GetProcessMemoryLevels(
-    int pid, proto::MemoryData_MemorySample* sample) {
+void MemoryUsageReaderImpl::GetProcessMemoryLevels(
+    int pid, proto::MemoryUsageData* data) {
   Trace trace("MEM:GetProcessMemoryLevels");
   char buffer[kBufferSize];
   char cmd[kCommandMaxLength];
@@ -81,12 +81,11 @@ void MemoryLevelsSampler::GetProcessMemoryLevels(
     output += buffer;
   }
 
-  ParseMemoryLevels(output, sample);
+  return ParseMemoryLevels(output, data);
 }
 
-void MemoryLevelsSampler::ParseMemoryLevels(
-    const std::string& memory_info_string,
-    proto::MemoryData_MemorySample* sample) {
+void MemoryUsageReaderImpl::ParseMemoryLevels(
+    const std::string& memory_info_string, proto::MemoryUsageData* data) {
   Trace trace("MEM:ParseMemoryLevels");
   std::unique_ptr<char, void (*)(void*)> delimited_memory_info(
       strdup(memory_info_string.c_str()), std::free);
@@ -232,20 +231,19 @@ void MemoryLevelsSampler::ParseMemoryLevels(
     }
   }
 
-  sample->set_java_mem(java_private);
-  sample->set_native_mem(native_private);
-  sample->set_stack_mem(stack);
-  sample->set_graphics_mem(graphics);
-  sample->set_code_mem(code);
-  sample->set_others_mem(other_private);
-  sample->set_total_mem(java_private + native_private + stack + graphics +
-                        code + other_private);
-
+  data->set_java_mem(java_private);
+  data->set_native_mem(native_private);
+  data->set_stack_mem(stack);
+  data->set_graphics_mem(graphics);
+  data->set_code_mem(code);
+  data->set_others_mem(other_private);
+  data->set_total_mem(java_private + native_private + stack + graphics + code +
+                      other_private);
   return;
 }
 
-int MemoryLevelsSampler::ParseInt(char** delimited_string,
-                                  const char* delimiter) {
+int MemoryUsageReaderImpl::ParseInt(char** delimited_string,
+                                    const char* delimiter) {
   char* result = strsep(delimited_string, delimiter);
   if (result == nullptr) {
     return 0;

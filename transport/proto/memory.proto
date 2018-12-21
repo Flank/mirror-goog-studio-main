@@ -20,6 +20,7 @@ option java_package = "com.android.tools.profiler.proto";
 option java_outer_classname = "MemoryProfiler";
 
 import "common.proto";
+import "memory_data.proto";
 
 service MemoryService {
   rpc StartMonitoringApp(MemoryStartRequest) returns (MemoryStartResponse) {
@@ -143,13 +144,7 @@ message MemoryRequest {
 message MemoryData {
   message MemorySample {
     int64 timestamp = 1;
-    int64 java_mem = 2;
-    int64 native_mem = 3;
-    int64 stack_mem = 4;
-    int64 graphics_mem = 5;
-    int64 code_mem = 6;
-    int64 others_mem = 7;
-    int64 total_mem = 8;
+    MemoryUsageData memory_usage = 2;
   }
 
   message AllocStatsSample {

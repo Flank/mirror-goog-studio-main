@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "memory_levels_sampler.h"
+#include "memory_usage_reader_impl.h"
 #include "proto/memory.pb.h"
 #include "test/utils.h"
 #include "utils/file_reader.h"
@@ -27,9 +27,9 @@ TEST(ParseMemoryLevels, MemoryDataVersion3Valid) {
   profiler::FileReader::Read(
       TestUtils::getMemoryTestData("memory_data_valid_v3.txt"), &content);
 
-  profiler::MemoryLevelsSampler sampler;
-  profiler::proto::MemoryData_MemorySample sample;
-  sampler.ParseMemoryLevels(content, &sample);
+  profiler::MemoryUsageReaderImpl reader;
+  profiler::proto::MemoryUsageData sample;
+  reader.ParseMemoryLevels(content, &sample);
 
   // The following values are obtained from the same dumpsys that generated the
   // test data file.
@@ -47,9 +47,9 @@ TEST(ParseMemoryLevels, MemoryDataVersion4Valid) {
   profiler::FileReader::Read(
       TestUtils::getMemoryTestData("memory_data_valid_v4.txt"), &content);
 
-  profiler::MemoryLevelsSampler sampler;
-  profiler::proto::MemoryData_MemorySample sample;
-  sampler.ParseMemoryLevels(content, &sample);
+  profiler::MemoryUsageReaderImpl reader;
+  profiler::proto::MemoryUsageData sample;
+  reader.ParseMemoryLevels(content, &sample);
 
   // The following values are obtained from the same dumpsys that generated the
   // test data file.

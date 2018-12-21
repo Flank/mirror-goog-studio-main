@@ -17,7 +17,7 @@
 #define MEMORY_COLLECTOR_H_
 
 #include "memory_cache.h"
-#include "memory_levels_sampler.h"
+#include "memory_usage_reader_impl.h"
 #include "proto/memory.grpc.pb.h"
 #include "utils/clock.h"
 #include "utils/file_cache.h"
@@ -54,7 +54,7 @@ class MemoryCollector {
 
  private:
   MemoryCache memory_cache_;
-  MemoryLevelsSampler memory_levels_sampler_;
+  MemoryUsageReaderImpl memory_usage_reader_;
   Clock* clock_;
   FileCache* file_cache_;
   std::thread server_thread_;

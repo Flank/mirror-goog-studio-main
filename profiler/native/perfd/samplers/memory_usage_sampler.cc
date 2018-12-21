@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,24 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef MEMORY_LEVELS_SAMPLER_H_
-#define MEMORY_LEVELS_SAMPLER_H_
+#include "memory_usage_sampler.h"
 
-#include <string>
-#include "proto/memory.pb.h"
+#include "proto/common.pb.h"
 
 namespace profiler {
 
-class MemoryLevelsSampler {
- public:
-  void GetProcessMemoryLevels(int pid, proto::MemoryData_MemorySample* sample);
-  void ParseMemoryLevels(const std::string& memory_info_string,
-                         proto::MemoryData_MemorySample* sample);
+using proto::Event;
 
- private:
-  int ParseInt(char** delimited_string, const char* delimiter);
-};
-
+void MemoryUsageSampler::Sample() {
+  Event event;
+  event.set_pid(pid_);
+  event.set_kind(Event::MEMORY_USAGE);
+  auto* usage = event.mutable_memory_usage();
+  reader_->GetProcessMemoryLevels(pid_, usage);
+  buffer()->Add(event);
+}
 }  // namespace profiler
-
-#endif  // MEMORY_LEVELS_SAMPLER_H_

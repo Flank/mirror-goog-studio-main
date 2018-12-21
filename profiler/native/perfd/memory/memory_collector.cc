@@ -122,7 +122,8 @@ void MemoryCollector::CollectorMain() {
     int64_t start_time_ns = stopwatch.GetElapsed();
 
     proto::MemoryData_MemorySample sample;
-    memory_levels_sampler_.GetProcessMemoryLevels(pid_, &sample);
+    auto data = sample.mutable_memory_usage();
+    memory_usage_reader_.GetProcessMemoryLevels(pid_, data);
     memory_cache_.SaveMemorySample(sample);
 
     Trace::End();
