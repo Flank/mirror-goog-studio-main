@@ -164,6 +164,7 @@ genrule(
     """,
     tools = ["//tools/base/bazel:matryoshka"],
     visibility = ["//visibility:public"],
+    tags = ["no_rbe_windows"],
 )
 
 cc_library(

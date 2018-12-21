@@ -27,6 +27,7 @@ maven_repo(
 
 coverage_report(
     name = "coverage_report",
+    tags = ["no_windows"],
     production_java_libraries = [
         ## tools/analytics-library
         # iml_modules

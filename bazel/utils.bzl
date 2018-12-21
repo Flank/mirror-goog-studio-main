@@ -66,7 +66,7 @@ _fileset = rule(
     implementation = _fileset_impl,
 )
 
-def fileset(name, srcs = [], mappings = {}, **kwargs):
+def fileset(name, srcs = [], mappings = {}, tags = [], **kwargs):
     outs = []
     maps = {}
     rem = []
@@ -87,11 +87,13 @@ def fileset(name, srcs = [], mappings = {}, **kwargs):
             srcs = srcs,
             maps = maps,
             outs = outs,
+            tags = tags,
         )
 
     native.filegroup(
         name = name,
         srcs = outs + rem,
+        tags = tags,
         **kwargs
     )
 
