@@ -50,6 +50,7 @@ coverage_java_test(
         "-Xms10000M",
         "-Xmx10000M",
     ],
+    tags = ["no_rbe_windows"], # Too much memory needed for rbe win.
     test_class = "FoundryPerfgateMetrics",
     deps = [
         "//tools/base/perf-logger:studio.perf-logger_testlib",
