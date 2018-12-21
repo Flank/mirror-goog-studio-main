@@ -1,6 +1,7 @@
 @echo off
 @rem Invoked by Android Build Launchcontrol for continuous builds.
 @rem Windows Android Studio Remote Bazel Execution Script.
+setlocal enabledelayedexpansion
 
 @rem Expected arguments:
 set OUTDIR=%1
@@ -39,9 +40,11 @@ SET COMMANDLOGLOC=%%F
 echo "Called with the following:  OUTDIR=%OUTDIR%, DISTDIR=%DISTDIR%, BUILDNUMBER=%BUILDNUMBER%, SCRIPTDIR=%SCRIPTDIR%, BASEDIR=%BASEDIR%"
 echo "Command Log Location: %COMMANDLOGLOC%"
 
-@rem Run Bazel
-CALL %SCRIPTDIR%bazel.cmd --max_idle_secs=60 test %CONFIGOPTIONS% %AUTHCREDS% --build_tag_filters=-no_windows --test_tag_filters=%TESTTAGFILTERS% -- //tools/base/... -//tools/base:coverage_report -//tools/base:coverage_report_collection_binary -//tools/base:coverage_report_source_and_classes -//tools/base:coverage_report_source_and_classes.map
+set TARGETS=
+for /f %%i in (%SCRIPTDIR%targets.win) do set TARGETS=!TARGETS! %%i
 
+@rem Run Bazel
+CALL %SCRIPTDIR%bazel.cmd --max_idle_secs=60 test %CONFIGOPTIONS% %AUTHCREDS% --build_tag_filters=-no_windows --test_tag_filters=%TESTTAGFILTERS% -- %TARGETS%
 SET EXITCODE=%errorlevel%
 
 IF NOT EXIST %DISTDIR%\ GOTO ENDSCRIPT
