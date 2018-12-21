@@ -87,7 +87,7 @@ gradle_integration_test(
         "//tools/base/third_party/kotlin:kotlin-m2repository",
     ],
     resources = glob(["src/test/resources/**"]),
-    shard_count = 8,  # Keep this in sync with logic in our bazel launcher script and CheckAllRunner.
+    shard_count = 20,
     #keep sorted
     tags = [
         "no_test_mac_psq",  # b/113099009
