@@ -23,6 +23,9 @@ if [[ -r "${HOME}/.android-studio-alphasource.json" ]]; then
   config_options="${config_options} --auth_credentials=${HOME}/.android-studio-alphasource.json"
 fi
 
+# We want to set local config however still stream results to upsalite
+config_options="${config_options} --config=local --config=results-local"
+
 # Grab the location of the command_log file for bazel daemon so we can search it later.
 readonly command_log="$("${script_dir}"/bazel info ${config_options} command_log)"
 
