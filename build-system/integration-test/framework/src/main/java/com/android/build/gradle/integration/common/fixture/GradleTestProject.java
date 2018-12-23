@@ -96,10 +96,6 @@ import org.junit.runners.model.Statement;
 public final class GradleTestProject implements TestRule {
     public static final String ENV_CUSTOM_REPO = "CUSTOM_REPO";
 
-    // Limit daemon idle time for tests. 10 seconds is enough for another test
-    // to start and reuse the daemon.
-    public static final int GRADLE_DEAMON_IDLE_TIME_IN_SECONDS = 10;
-
 
     public static final String DEFAULT_COMPILE_SDK_VERSION;
 
@@ -213,7 +209,7 @@ public final class GradleTestProject implements TestRule {
 
     @Nullable private final Path profileDirectory;
 
-    @NonNull private final GradleTestProjectBuilder.HeapSizeRequirement heapSize;
+    @Nullable private String heapSize;
     @Nullable private final List<Path> repoDirectories;
 
     @NonNull private final File androidHome;
@@ -237,7 +233,7 @@ public final class GradleTestProject implements TestRule {
             boolean withoutNdk,
             boolean withDependencyChecker,
             @NonNull Collection<String> gradleProperties,
-            @NonNull GradleTestProjectBuilder.HeapSizeRequirement heapSize,
+            @Nullable String heapSize,
             @Nullable String compileSdkVersion,
             @Nullable String buildToolsVersion,
             @Nullable Path profileDirectory,
@@ -292,12 +288,8 @@ public final class GradleTestProject implements TestRule {
      *
      * @param subProject name of the subProject, or the subProject's gradle project path
      * @param rootProject root GradleTestProject.
-     * @param heapSize
      */
-    private GradleTestProject(
-            @NonNull String subProject,
-            @NonNull GradleTestProject rootProject,
-            @NonNull GradleTestProjectBuilder.HeapSizeRequirement heapSize) {
+    private GradleTestProject(@NonNull String subProject, @NonNull GradleTestProject rootProject) {
         name = subProject.substring(subProject.lastIndexOf(':') + 1);
 
         testDir = new File(rootProject.getTestDir(), subProject.replace(":", "/"));
@@ -328,7 +320,6 @@ public final class GradleTestProject implements TestRule {
         this.gradleBuildCacheDirectory = rootProject.gradleBuildCacheDirectory;
         this.kotlinVersion = rootProject.kotlinVersion;
         this.outputLogOnFailure = rootProject.outputLogOnFailure;
-        this.heapSize = rootProject.getHeapSize();
     }
 
     private static Path getGradleUserHome(File buildDir) {
@@ -447,25 +438,17 @@ public final class GradleTestProject implements TestRule {
     }
 
     private static File computeTestDir(Class<?> testClass, String methodName, String projectName) {
+        // On Windows machines, make sure the test directory's path is short enough to avoid running
+        // into path too long exceptions. Typically, on local Windows machines, OUT_DIR's path is
+        // long, whereas on Windows build bots, OUT_DIR's path is already short (see
+        // https://issuetracker.google.com/69271554). In the first case, let's move the test
+        // directory close to root (user home), and in the second case, let's use OUT_DIR directly.
+        File testDir =
+                SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS
+                                && System.getenv("BUILDBOT_BUILDERNAME") == null
+                        ? new File(new File(System.getProperty("user.home")), "android-tests")
+                        : OUT_DIR;
 
-        File testDir = OUT_DIR;
-        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS
-                && System.getenv("BUILDBOT_BUILDERNAME") == null) {
-            // On Windows machines, make sure the test directory's path is short enough to avoid
-            // running into path too long exceptions. Typically, on local Windows machines,
-            // OUT_DIR's path is long, whereas on Windows build bots, OUT_DIR's path is already
-            // short (see https://issuetracker.google.com/69271554).
-            // In the first case, let's move the test directory close to root (user home), and in
-            // the second case, let's use OUT_DIR directly.
-            String outDir = FileUtils.join(System.getProperty("user.home"), "android-tests");
-
-            // when sharding is on, use a private sharded folder as tests can be split along
-            // shards and files will get locked on Windows.
-            if (System.getenv("TEST_TOTAL_SHARDS") != null) {
-                outDir = FileUtils.join(outDir, System.getenv("TEST_SHARD_INDEX"));
-            }
-            testDir = new File(outDir);
-        }
         String classDir = testClass.getSimpleName();
         String methodDir = null;
 
@@ -697,7 +680,7 @@ public final class GradleTestProject implements TestRule {
      * @param name name of the subProject, or the subProject's gradle project path
      */
     public GradleTestProject getSubproject(String name) {
-        return new GradleTestProject(name, rootProject, heapSize);
+        return new GradleTestProject(name, rootProject);
     }
 
     /** Return the name of the test project. */
@@ -1286,8 +1269,9 @@ public final class GradleTestProject implements TestRule {
         }
         GradleConnector connector = GradleConnector.newConnector();
 
-        ((DefaultGradleConnector) connector)
-                .daemonMaxIdleTime(GRADLE_DEAMON_IDLE_TIME_IN_SECONDS, TimeUnit.SECONDS);
+        // Limit daemon idle time for tests. 10 seconds is enough for another test
+        // to start and reuse the daemon.
+        ((DefaultGradleConnector) connector).daemonMaxIdleTime(10, TimeUnit.SECONDS);
 
         String distributionName = String.format("gradle-%s-bin.zip", targetGradleVersion);
         File distributionZip = new File(gradleDistributionDirectory, distributionName);
@@ -1474,8 +1458,8 @@ public final class GradleTestProject implements TestRule {
                 .write(Joiner.on(System.lineSeparator()).join(gradleProperties));
     }
 
-    @NonNull
-    GradleTestProjectBuilder.HeapSizeRequirement getHeapSize() {
+    @Nullable
+    String getHeapSize() {
         return heapSize;
     }
 

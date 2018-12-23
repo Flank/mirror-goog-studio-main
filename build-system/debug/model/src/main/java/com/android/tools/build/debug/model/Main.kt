@@ -17,7 +17,6 @@
 @file:JvmName("Main")
 package com.android.tools.build.debug.model
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProjectBuilder
 import com.android.build.gradle.integration.common.fixture.ModelBuilder
 import com.android.build.gradle.integration.common.fixture.ModelContainer
 import com.android.builder.model.AndroidProject
@@ -44,7 +43,7 @@ fun main(args : Array<String>) {
                 { _ -> },
                 projectLocation.toPath(),
                 null,
-                GradleTestProjectBuilder.HeapSizeRequirement.useDefault())
+                null)
 
         val models: ModelContainer<AndroidProject> = modelBuilder
                 .withSdkInLocalProperties()
