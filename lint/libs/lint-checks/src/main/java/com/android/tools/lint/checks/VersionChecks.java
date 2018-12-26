@@ -240,7 +240,7 @@ public class VersionChecks {
         }
 
         @Override
-        public boolean visitElement(UElement node) {
+        public boolean visitElement(@NonNull UElement node) {
             if (done) {
                 return true;
             }
@@ -253,7 +253,7 @@ public class VersionChecks {
         }
 
         @Override
-        public boolean visitIfExpression(UIfExpression ifStatement) {
+        public boolean visitIfExpression(@NonNull UIfExpression ifStatement) {
 
             if (done) {
                 return true;
@@ -267,7 +267,6 @@ public class VersionChecks {
                         isVersionCheckConditional(
                                 api, ifStatement.getCondition(), false, null, null);
 
-                //noinspection VariableNotUsedInsideIf
                 if (level != null && level) {
                     // See if the body does an immediate return
                     if (isUnconditionalReturn(thenBranch)) {
@@ -282,7 +281,6 @@ public class VersionChecks {
                         isVersionCheckConditional(
                                 api, ifStatement.getCondition(), true, null, null);
 
-                //noinspection VariableNotUsedInsideIf
                 if (level != null && level) {
                     if (isUnconditionalReturn(elseBranch)) {
                         found = true;
@@ -383,7 +381,8 @@ public class VersionChecks {
                         uMethod.accept(
                                 new AbstractUastVisitor() {
                                     @Override
-                                    public boolean visitCallExpression(UCallExpression node) {
+                                    public boolean visitCallExpression(
+                                            @NonNull UCallExpression node) {
                                         String callName = Lint.getMethodName(node);
                                         if (Objects.equals(callName, parameterName)) {
                                             // Potentially not correct due to scopes, but these lambda
@@ -530,8 +529,9 @@ public class VersionChecks {
         if (name.startsWith("isAtLeast")) {
             PsiClass containingClass = method.getContainingClass();
             if (containingClass != null
-                    && "android.support.v4.os.BuildCompat"
-                            .equals(containingClass.getQualifiedName())) {
+                    // android.support.v4.os.BuildCompat,
+                    // androidx.core.os.BuildCompat
+                    && "BuildCompat".equals(containingClass.getName())) {
                 if (name.equals("isAtLeastN")) {
                     return api <= 24;
                 } else if (name.equals("isAtLeastNMR1")) {
@@ -540,6 +540,14 @@ public class VersionChecks {
                     return api <= 26;
                 } else if (name.startsWith("isAtLeastP")) {
                     return api <= 28;
+                } else if (name.startsWith("isAtLeastQ")) {
+                    return api <= 29;
+                } else if (name.startsWith("isAtLeast")
+                        && name.length() == 10
+                        && Character.isUpperCase(name.charAt(9))
+                        && name.charAt(9) > 'Q') {
+                    // Try to guess future API levels before they're announced
+                    return api <= SdkVersionInfo.HIGHEST_KNOWN_API + 1;
                 }
             }
         }
@@ -708,6 +716,12 @@ public class VersionChecks {
             int version = SdkVersionInfo.getApiByPreviewName(codeName, false);
             if (version == -1) {
                 version = SdkVersionInfo.getApiByBuildCode(codeName, false);
+                if (version == -1
+                        && codeName.length() == 1
+                        && Character.isUpperCase(codeName.charAt(0))) {
+                    // Some future API level
+                    version = SdkVersionInfo.HIGHEST_KNOWN_API + 1;
+                }
             }
 
             return version;

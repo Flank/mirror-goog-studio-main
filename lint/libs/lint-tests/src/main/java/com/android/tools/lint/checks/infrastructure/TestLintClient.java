@@ -696,7 +696,16 @@ public class TestLintClient extends LintCliClient {
                         PsiErrorElement error =
                                 PsiTreeUtil.findChildOfType(file.getPsi(), PsiErrorElement.class);
                         if (error != null) {
-                            fail("Found error element " + error + " in " + context.file.getName());
+                            fail(
+                                    "Found error element "
+                                            + error
+                                            + " in "
+                                            + context.file.getName()
+                                            + " with text \""
+                                            + error.getText()
+                                            + "\" inside \""
+                                            + error.getParent().getText()
+                                            + "\"");
                         }
                     } else {
                         fail(
