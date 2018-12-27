@@ -144,6 +144,35 @@ class CmakeAndroidGradleBuildExtensionsKtTest {
     }
 
     @Test
+    fun cmakeRunWithDeletedCacheFolder() {
+        var deleteableRootFolder = File(base, "deleteable-cache-folder")
+        createNdkSourceProperties()
+        fun wrap() {
+            wrapCmakeListsForCompilerSettingsCaching(
+                deleteableRootFolder,
+                config,
+                cmakeListsFolder,
+                listOf(
+                    "-H${cmakeListsFolder.path}",
+                    "-D$CMAKE_TOOLCHAIN_FILE=$toolchain",
+                    "-D$ANDROID_NDK=$ndkFolder",
+                    "-DX=Y"
+                )
+            )
+        }
+        wrap()
+        simulateCmakeProjectGeneration()
+        writeCompilerSettingsToCache(deleteableRootFolder, config)
+        wrap()
+        simulateCmakeProjectGeneration()
+
+        // Above is setup, this is the test
+        deleteableRootFolder.deleteRecursively()
+        writeCompilerSettingsToCache(deleteableRootFolder, config)
+        assertStateWroteCache(false)
+    }
+
+    @Test
     fun noCmakeLists() {
         val executionContext = wrapCmakeListsForCompilerSettingsCaching(
             cacheRootFolder,
@@ -273,8 +302,11 @@ class CmakeAndroidGradleBuildExtensionsKtTest {
     /**
      * In this state, CMake has executed and gathered some settings that were then cached for later
      * use.
+     * When cache root folder has been deleted manually, there will be some leftover cached settings
+     * from previous cache generation. However as long as the compilerCacheUseFile content indicates
+     * cache was not used, it should satisfy our check.
      */
-    private fun assertStateWroteCache() {
+    private fun assertStateWroteCache(ensureClean: Boolean = true) {
         with(config.cmake!!) {
             // Things that exist on disk
             assertThat(gradleBuildOutputFolder.isDirectory).isTrue()
@@ -283,9 +315,11 @@ class CmakeAndroidGradleBuildExtensionsKtTest {
             assertThat(buildGenerationStateFile.isFile).isTrue()
             assertThat(compilerCacheWriteFile.isFile).isTrue()
             assertThat(compilerCacheUseFile.isFile).isTrue()
-            // Things that don't exist on disk
-            assertThat(toolchainSettingsFromCache.isFile).isFalse()
-            assertThat(toolchainWrapperFile.isFile).isFalse()
+            if (ensureClean) {
+                // Things that don't exist on disk
+                assertThat(toolchainSettingsFromCache.isFile).isFalse()
+                assertThat(toolchainWrapperFile.isFile).isFalse()
+            }
 
             val compilerCacheUse = CmakeCompilerCacheUse.fromFile(compilerCacheUseFile)
             assertThat(compilerCacheUse.isCacheUsed)

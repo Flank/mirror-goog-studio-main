@@ -227,16 +227,21 @@ fun writeCompilerSettingsToCache(
 ) {
     with(config.cmake!!) {
         var cacheWriteStatus = "Exception while writing cache, check the log."
+        var cacheUseStatus = false
         try {
 
-            if (compilerCacheUseFile.isFile) {
-                // If the compilerCacheUseFile is present then it means the toolchain was wrapped
-                // so there's a chance a cache was used. If a cache was used then we don't want
-                // to write the same cache values again.
+            if (cacheRootFolder.isDirectory && compilerCacheUseFile.isFile) {
+                // We check for cacheRootFolder existence just in case it is removed manually
+                // by user after we record the cache as being used, in which case we take that to
+                // mean user might want to not use the cache.
+                // If cacheRootFolder and the compilerCacheUseFile are present then it means the
+                // toolchain was wrapped so there's a chance a cache was used. If a cache was used
+                // then we don't want to write the same cache values again.
                 val compilerCacheUse = CmakeCompilerCacheUse.fromFile(compilerCacheUseFile)
 
                 // If the cache was used then there is no purpose in re-recording the cache output.
                 if (compilerCacheUse.isCacheUsed) {
+                    cacheUseStatus = true
                     cacheWriteStatus = "Cache was used in the build"
                     return
                 }
@@ -297,6 +302,7 @@ fun writeCompilerSettingsToCache(
                 cacheWriteStatus.isEmpty(),
                 cacheWriteStatus
             ).toFile(compilerCacheWriteFile)
+            CmakeCompilerCacheUse(cacheUseStatus).toFile(compilerCacheUseFile)
         }
     }
 }
