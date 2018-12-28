@@ -17,10 +17,7 @@ package com.android.ide.common.rendering.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
-import java.util.Collection;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -35,9 +32,9 @@ public interface AttrResourceValue extends ResourceValue {
      * returned map may be null. The returned map is guaranteed to contain the names of all declared
      * values, even the ones that don't have corresponding numeric values.
      *
-     * @return the map of (name, integer) values, or null if no enum/flag values were defined
+     * @return the map of (name, integer) values
      */
-    @Nullable
+    @NonNull
     Map<String, Integer> getAttributeValues();
 
     /**

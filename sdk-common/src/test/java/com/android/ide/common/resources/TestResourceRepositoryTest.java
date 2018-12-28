@@ -195,7 +195,6 @@ public class TestResourceRepositoryTest extends BaseTestCase {
         AttrResourceValue attrValue = (AttrResourceValue) value;
 
         Map<String, Integer> attrValues = attrValue.getAttributeValues();
-        assertNotNull(attrValues);
         assertEquals(3, attrValues.size());
 
         Integer i = attrValues.get("normal");
