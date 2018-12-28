@@ -18,7 +18,6 @@ package com.android.fakeadbserver.shellcommandhandlers;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.fakeadbserver.ClientState;
 import com.android.fakeadbserver.DeviceState;
 import com.android.fakeadbserver.DeviceState.LogcatChangeHandlerSubscriptionResult;
 import com.android.fakeadbserver.FakeAdbServer;
@@ -28,7 +27,6 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -66,29 +64,29 @@ public class LogcatCommandHandler extends ShellCommandHandler {
             return false;
         }
 
-        LogcatChangeHandlerSubscriptionResult subscriptionResult
-                = device.subscribeLogcatChangeHandler(new ClientStateChangeHandlerFactory() {
-            @NonNull
-            @Override
-            public Callable<HandlerResult> createClientListChangedHandler(
-                    @NonNull Collection<ClientState> clientList) {
-                return () -> new HandlerResult(true);
-            }
+        LogcatChangeHandlerSubscriptionResult subscriptionResult =
+                device.subscribeLogcatChangeHandler(
+                        new ClientStateChangeHandlerFactory() {
+                            @NonNull
+                            @Override
+                            public Callable<HandlerResult> createClientListChangedHandler() {
+                                return () -> new HandlerResult(true);
+                            }
 
-            @NonNull
-            @Override
-            public Callable<HandlerResult> createLogcatMessageAdditionHandler(
-                    @NonNull String message) {
-                return () -> {
-                    try {
-                        stream.write(message.getBytes(Charset.defaultCharset()));
-                    } catch (IOException ignored) {
-                        return new HandlerResult(false);
-                    }
-                    return new HandlerResult(true);
-                };
-            }
-        });
+                            @NonNull
+                            @Override
+                            public Callable<HandlerResult> createLogcatMessageAdditionHandler(
+                                    @NonNull String message) {
+                                return () -> {
+                                    try {
+                                        stream.write(message.getBytes(Charset.defaultCharset()));
+                                    } catch (IOException ignored) {
+                                        return new HandlerResult(false);
+                                    }
+                                    return new HandlerResult(true);
+                                };
+                            }
+                        });
 
         if (subscriptionResult == null) {
             return false;

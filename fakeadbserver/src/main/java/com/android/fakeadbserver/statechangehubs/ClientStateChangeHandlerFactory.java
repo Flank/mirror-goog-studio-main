@@ -17,8 +17,6 @@
 package com.android.fakeadbserver.statechangehubs;
 
 import com.android.annotations.NonNull;
-import com.android.fakeadbserver.ClientState;
-import java.util.Collection;
 import java.util.concurrent.Callable;
 
 /**
@@ -29,8 +27,7 @@ import java.util.concurrent.Callable;
 public interface ClientStateChangeHandlerFactory extends StateChangeHandlerFactory {
 
     @NonNull
-    Callable<HandlerResult> createClientListChangedHandler(
-            @NonNull Collection<ClientState> clientList);
+    Callable<HandlerResult> createClientListChangedHandler();
 
     @NonNull
     Callable<HandlerResult> createLogcatMessageAdditionHandler(@NonNull String message);

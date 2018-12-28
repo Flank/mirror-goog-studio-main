@@ -37,7 +37,8 @@ public class HeloHandler extends CommandHandler implements JdwpDdmsPacketHandler
             @NonNull JdwpDdmsPacket packet,
             @NonNull ClientState client,
             @NonNull OutputStream oStream) {
-        String appName = client.getPackageName();
+        // ADB has an issue of reporting the process name instead of the real not reporting the real package name.
+        String appName = client.getProcessName();
 
         int payloadLength =
                 HELO_CHUNK_HEADER_LENGTH + ((VM_IDENTIFIER.length() + appName.length()) * 2);

@@ -17,8 +17,6 @@
 package com.android.fakeadbserver.statechangehubs;
 
 import com.android.annotations.NonNull;
-import com.android.fakeadbserver.ClientState;
-import java.util.Collection;
 
 /**
  * This class is the primary class that effects the changes to client states and propagates the
@@ -27,12 +25,13 @@ import java.util.Collection;
  */
 public class ClientStateChangeHub extends StateChangeHub<ClientStateChangeHandlerFactory> {
 
-    public void clientListChanged(@NonNull Collection<ClientState> clientList) {
+    public void clientListChanged() {
         synchronized (mHandlers) {
             mHandlers.forEach(
-                    (stateChangeQueue, clientStateChangeHandlerFactory) -> stateChangeQueue
-                            .add(clientStateChangeHandlerFactory
-                                    .createClientListChangedHandler(clientList)));
+                    (stateChangeQueue, clientStateChangeHandlerFactory) ->
+                            stateChangeQueue.add(
+                                    clientStateChangeHandlerFactory
+                                            .createClientListChangedHandler()));
         }
     }
 

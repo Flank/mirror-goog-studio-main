@@ -24,15 +24,23 @@ public class ClientState {
 
     private final int mUid;
 
+    @NonNull private final String mProcessName;
+
     @NonNull
     private final String mPackageName;
 
     // Whether this client is waiting for a debugger connection or not
     private boolean mWaiting;
 
-    ClientState(int pid, int uid, @NonNull String packageName, boolean isWaiting) {
+    ClientState(
+            int pid,
+            int uid,
+            @NonNull String processName,
+            @NonNull String packageName,
+            boolean isWaiting) {
         mPid = pid;
         mUid = uid;
+        mProcessName = processName;
         mPackageName = packageName;
         mWaiting = isWaiting;
     }
@@ -43,6 +51,11 @@ public class ClientState {
 
     public int getUid() {
         return mUid;
+    }
+
+    @NonNull
+    public String getProcessName() {
+        return mProcessName;
     }
 
     @NonNull

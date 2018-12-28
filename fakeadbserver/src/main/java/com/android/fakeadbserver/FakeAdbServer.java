@@ -53,8 +53,6 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -89,12 +87,7 @@ public final class FakeAdbServer implements AutoCloseable {
     // the commands over the connection. There is one task for accepting connections, and multiple
     // tasks to handle the execution of the commands.
     private final ExecutorService mThreadPoolExecutor =
-            new ThreadPoolExecutor(
-                    6,
-                    21,
-                    1,
-                    TimeUnit.SECONDS,
-                    new LinkedBlockingQueue<>(Integer.MAX_VALUE),
+            Executors.newCachedThreadPool(
                     new ThreadFactoryBuilder()
                             .setNameFormat("fake-adb-server-connection-pool-%d")
                             .build());

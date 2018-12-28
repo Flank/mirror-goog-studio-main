@@ -17,7 +17,6 @@
 package com.android.fakeadbserver.devicecommandhandlers;
 
 import com.android.annotations.NonNull;
-import com.android.fakeadbserver.ClientState;
 import com.android.fakeadbserver.DeviceState;
 import com.android.fakeadbserver.FakeAdbServer;
 import com.android.fakeadbserver.statechangehubs.ClientStateChangeHandlerFactory;
@@ -26,9 +25,7 @@ import com.android.fakeadbserver.statechangehubs.StateChangeQueue;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.Collection;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 /**
  * track-jdwp tracks the device's Android Client list, sending change messages whenever a client
@@ -52,33 +49,34 @@ public class TrackJdwpCommandHandler extends DeviceCommandHandler {
             return false;
         }
 
-        StateChangeQueue queue = device.getClientChangeHub()
-                .subscribe(new ClientStateChangeHandlerFactory() {
-                    @NonNull
-                    @Override
-                    public Callable<HandlerResult> createClientListChangedHandler(
-                            @NonNull Collection<ClientState> clientList) {
-                        return () -> {
-                            try {
-                                String clientListString = clientList.stream()
-                                        .map(clientState -> Integer.toString(clientState.getPid()))
-                                        .collect(Collectors.joining("\n"));
-                                write4ByteHexIntString(stream, clientListString.length());
-                                writeString(stream, clientListString);
-                                return new StateChangeHandlerFactory.HandlerResult(true);
-                            } catch (IOException ignored) {
-                                return new StateChangeHandlerFactory.HandlerResult(false);
-                            }
-                        };
-                    }
+        StateChangeQueue queue =
+                device.getClientChangeHub()
+                        .subscribe(
+                                new ClientStateChangeHandlerFactory() {
+                                    @NonNull
+                                    @Override
+                                    public Callable<HandlerResult>
+                                            createClientListChangedHandler() {
+                                        return () -> {
+                                            try {
+                                                sendDeviceList(device, stream);
+                                                return new StateChangeHandlerFactory.HandlerResult(
+                                                        true);
+                                            } catch (IOException ignored) {
+                                                return new StateChangeHandlerFactory.HandlerResult(
+                                                        false);
+                                            }
+                                        };
+                                    }
 
-                    @NonNull
-                    @Override
-                    public Callable<HandlerResult> createLogcatMessageAdditionHandler(
-                            @NonNull String message) {
-                        return () -> new HandlerResult(true);
-                    }
-                });
+                                    @NonNull
+                                    @Override
+                                    public Callable<HandlerResult>
+                                            createLogcatMessageAdditionHandler(
+                                                    @NonNull String message) {
+                                        return () -> new HandlerResult(true);
+                                    }
+                                });
 
         if (queue == null) {
             return false; // Server has shutdown before we are able to start listening to the queue.
@@ -86,6 +84,8 @@ public class TrackJdwpCommandHandler extends DeviceCommandHandler {
 
         try {
             writeOkay(stream); // Send ok first.
+
+            sendDeviceList(device, stream); // Then send the initial device list.
 
             while (true) {
                 if (!queue.take().call().mShouldContinue) {
@@ -98,5 +98,12 @@ public class TrackJdwpCommandHandler extends DeviceCommandHandler {
         }
 
         return false;
+    }
+
+    private static void sendDeviceList(@NonNull DeviceState device, @NonNull OutputStream stream)
+            throws IOException {
+        String clientListString = device.getClientListString();
+        write4ByteHexIntString(stream, clientListString.length());
+        writeString(stream, clientListString);
     }
 }

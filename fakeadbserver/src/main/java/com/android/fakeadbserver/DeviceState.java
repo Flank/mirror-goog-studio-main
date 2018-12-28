@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class DeviceState {
 
@@ -141,10 +142,21 @@ public class DeviceState {
     @NonNull
     public ClientState startClient(
             int pid, int uid, @NonNull String packageName, boolean isWaiting) {
+        return startClient(pid, uid, packageName, packageName, isWaiting);
+    }
+
+    @NonNull
+    public ClientState startClient(
+            int pid,
+            int uid,
+            @NonNull String processName,
+            @NonNull String packageName,
+            boolean isWaiting) {
         synchronized (mClients) {
-            ClientState clientState = new ClientState(pid, uid, packageName, isWaiting);
+            ClientState clientState =
+                    new ClientState(pid, uid, processName, packageName, isWaiting);
             mClients.put(pid, clientState);
-            mClientStateChangeHub.clientListChanged(getClientListCopy());
+            mClientStateChangeHub.clientListChanged();
             return clientState;
         }
     }
@@ -152,7 +164,7 @@ public class DeviceState {
     public void stopClient(int pid) {
         synchronized (mClients) {
             mClients.remove(pid);
-            mClientStateChangeHub.clientListChanged(getClientListCopy());
+            mClientStateChangeHub.clientListChanged();
         }
     }
 
@@ -201,8 +213,13 @@ public class DeviceState {
     }
 
     @NonNull
-    private List<ClientState> getClientListCopy() {
-        return new ArrayList<>(mClients.values());
+    public String getClientListString() {
+        synchronized (mClients) {
+            return mClients.values()
+                    .stream()
+                    .map(clientState -> Integer.toString(clientState.getPid()))
+                    .collect(Collectors.joining("\n"));
+        }
     }
 
     /**
