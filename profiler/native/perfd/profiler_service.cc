@@ -17,6 +17,7 @@
 #include "perfd/event_writer.h"
 
 #include <sys/time.h>
+#include "perfd/sessions/sessions_manager.h"
 #include "utils/android_studio_version.h"
 #include "utils/file_reader.h"
 #include "utils/process_manager.h"
@@ -28,14 +29,6 @@ using grpc::Status;
 using grpc::StatusCode;
 using std::string;
 
-namespace {
-// Workaround to serve legacy GetSessions API via the new, generic cache in
-// which there is no device_id. This variable is set only by the legacy
-// BeginSession call and used by the legacy GetSessions call.
-// It's assumed perfd sees the same device ID during its lifetime.
-// TODO: Remove this workaround when we delete legacy APIs.
-int64_t device_id_in_last_begin_session_request = -1;
-}  // namespace
 namespace profiler {
 /**
  * Helper class to wrap the EventWriter interface. This class is passed to the
@@ -111,8 +104,8 @@ Status ProfilerServiceImpl::ConfigureStartupAgent(
 Status ProfilerServiceImpl::BeginSession(
     ServerContext* context, const profiler::proto::BeginSessionRequest* request,
     profiler::proto::BeginSessionResponse* response) {
-  device_id_in_last_begin_session_request = request->device_id();
   proto::Command command;
+  // In the legacy pipeline we don't have streams so use device ID instead.
   command.set_stream_id(request->device_id());
   command.set_type(proto::Command::BEGIN_SESSION);
   proto::BeginSession* begin = command.mutable_begin_session();
@@ -129,7 +122,8 @@ Status ProfilerServiceImpl::BeginSession(
   begin->set_session_name(request->session_name());
 
   return daemon_->Execute(command, [this, response]() {
-    profiler::Session* session = daemon_->sessions()->GetLastSession();
+    profiler::Session* session =
+        SessionsManager::GetInstance()->GetLastSession();
     if (session) {
       response->mutable_session()->CopyFrom(session->info());
     }
@@ -141,11 +135,13 @@ Status ProfilerServiceImpl::EndSession(
     profiler::proto::EndSessionResponse* response) {
   proto::Command command;
   command.set_type(proto::Command::END_SESSION);
+  // In the legacy pipeline we don't have streams so use device ID instead.
   command.set_stream_id(request->device_id());
   command.mutable_end_session()->set_session_id(request->session_id());
 
   return daemon_->Execute(command, [this, response]() {
-    profiler::Session* session = daemon_->sessions()->GetLastSession();
+    profiler::Session* session =
+        SessionsManager::GetInstance()->GetLastSession();
     if (session) {
       response->mutable_session()->CopyFrom(session->info());
     }
@@ -169,7 +165,7 @@ Status ProfilerServiceImpl::GetSessions(
       const auto& event = group.events(i);
       if (event.has_session()) {
         auto session_started = event.session().session_started();
-        session.set_device_id(device_id_in_last_begin_session_request);
+        session.set_stream_id(session_started.stream_id());
         session.set_pid(session_started.pid());
         session.set_start_timestamp(event.timestamp());
         session.set_end_timestamp(LLONG_MAX);

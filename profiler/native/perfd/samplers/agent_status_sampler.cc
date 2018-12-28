@@ -29,10 +29,11 @@ void AgentStatusSampler::Sample() {
   // UNSPECIFIED until an agent is attached upon attaching ATTACHED will be
   // returned and GetAgentStatus will only ever return ATTACHED for that
   // process.
-  auto updated_status = daemon_->GetAgentStatus(session().info().pid());
+  int32_t pid = session().info().pid();
+  auto updated_status = daemon_->GetAgentStatus(pid);
   if (updated_status != last_agent_status_) {
     Event event;
-    event.set_session_id(session().info().session_id());
+    event.set_pid(pid);
     event.set_kind(Event::AGENT);
     auto status = event.mutable_agent_data();
     status->set_status(updated_status);

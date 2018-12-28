@@ -24,7 +24,6 @@
 #include "perfd/event_buffer.h"
 #include "perfd/event_writer.h"
 #include "perfd/profiler_component.h"
-#include "perfd/sessions/sessions_manager.h"
 #include "proto/common.grpc.pb.h"
 #include "proto/profiler.grpc.pb.h"
 #include "utils/clock.h"
@@ -88,9 +87,6 @@ class Daemon {
   // Returns the configuration parameters.
   const Config* config() { return config_; }
 
-  // Return SessionsManager shared across all profilers.
-  SessionsManager* sessions() { return &session_manager_; }
-
   EventBuffer* buffer() { return buffer_; }
 
   // All current and new are written to the |writer|.
@@ -149,8 +145,6 @@ class Daemon {
   FileCache* file_cache_;
   // The buffer with all the events
   EventBuffer* buffer_;
-  // Session management across the profiling services in perfd.
-  SessionsManager session_manager_;
   // Maps types to factory functions that create commands from proto objects.
   std::map<proto::Command::CommandType, std::function<Command*(proto::Command)>>
       commands_;

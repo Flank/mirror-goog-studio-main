@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
   profiler::Daemon daemon(&clock, &config, &file_cache, &buffer);
   auto agent_config = daemon.config()->GetAgentConfig();
 
-  profiler::GenericComponent generic_component(&daemon, daemon.sessions());
+  profiler::GenericComponent generic_component(&daemon);
   daemon.RegisterComponent(&generic_component);
 
   profiler::CpuProfilerComponent cpu_component(
