@@ -181,8 +181,8 @@ void EnqueueHttpEvent(uint64_t uid, HttpEventRequest::Event event) {
 }  // namespace
 
 void PrepopulateEventRequest(SendEventRequest *request, int64_t connection_id) {
-  request->set_pid(getpid());
   auto event = request->mutable_event();
+  event->set_pid(getpid());
   event->set_group_id(connection_id);
   event->set_kind(Event::NETWORK_HTTP_CONNECTION);
   event->set_timestamp(GetClock().GetCurrentTime());
@@ -214,9 +214,8 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_trac
         {[timestamp, juid, thread_name, jthread_id](
             AgentService::Stub &stub, ClientContext &ctx) mutable {
           SendEventRequest request;
-          request.set_pid(getpid());
-          // session_id will be populated in perfd.
           auto *event = request.mutable_event();
+          event->set_pid(getpid());
           event->set_group_id(juid);
           event->set_kind(Event::NETWORK_HTTP_THREAD);
           event->set_timestamp(timestamp);
@@ -264,7 +263,6 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTrac
          },
          [request, juid, payload_name](AgentService::Stub &stub,
                                        ClientContext &ctx) mutable {
-           // session_id will be populated in perfd.
            auto *event = request.mutable_event();
            auto *data = event->mutable_network_http_connection()
                             ->mutable_http_response_completed();
@@ -275,7 +273,6 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTrac
            return stub.SendEvent(&ctx, request, &response);
          },
          [request](AgentService::Stub &stub, ClientContext &ctx) mutable {
-           // session_id will be populated in perfd.
            auto *event = request.mutable_event();
            event->set_is_ended(true);
            auto *data =
@@ -328,7 +325,6 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024OutputStreamTra
          },
          [request, juid, payload_name](AgentService::Stub &stub,
                                        ClientContext &ctx) mutable {
-           // session_id will be populated in perfd.
            auto *event = request.mutable_event();
            auto *data = event->mutable_network_http_connection()
                             ->mutable_http_request_completed();
@@ -368,7 +364,6 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onRe
     PrepopulateEventRequest(&request, juid);
     Agent::Instance().SubmitAgentTasks({[request, url, stack, fields, method](
         AgentService::Stub &stub, ClientContext &ctx) mutable {
-      // session_id will be populated in perfd.
       auto *event = request.mutable_event();
       auto *data = event->mutable_network_http_connection()
                        ->mutable_http_request_started();
@@ -411,7 +406,6 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onRe
     PrepopulateEventRequest(&request, juid);
     Agent::Instance().SubmitAgentTasks({[request, fields](
         AgentService::Stub &stub, ClientContext &ctx) mutable {
-      // session_id will be populated in perfd.
       auto *event = request.mutable_event();
       auto *data = event->mutable_network_http_connection()
                        ->mutable_http_response_started();
@@ -445,7 +439,6 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onEr
     PrepopulateEventRequest(&request, juid);
     Agent::Instance().SubmitAgentTasks(
         {[request](AgentService::Stub &stub, ClientContext &ctx) mutable {
-          // session_id will be populated in perfd.
           auto *event = request.mutable_event();
           event->set_is_ended(true);
           auto *data =

@@ -23,7 +23,8 @@ import "memory.proto";
 import "common.proto";
 
 service AgentService {
-  // A simple ping mechanism to notify perfd of the agent's existence, vice versa.
+  // A simple ping mechanism to notify perfd of the agent's existence, vice
+  // versa.
   rpc HeartBeat(HeartBeatRequest) returns (HeartBeatResponse) {}
 
   rpc SendEvent(SendEventRequest) returns (EmptyResponse) {}
@@ -32,21 +33,17 @@ service AgentService {
 }
 
 message HeartBeatRequest {
-  // The process' id. Note that the agent's pid is the same as the pid we use for
-  // the heartbeat because the agent resides within the process being profiled.
+  // The process' id. Note that the agent's pid is the same as the pid we use
+  // for the heartbeat because the agent resides within the process being
+  // profiled.
   int32 pid = 1;
 }
 
-message HeartBeatResponse {
-}
+message HeartBeatResponse {}
 
 message SendEventRequest {
-  // The id of the process generating the Event.
-  int32 pid = 1;
-  // The event. Note that the app agent does not have knowledge about sessions.
-  // So it is the responsibility of the server (perfd) to resolve and populate
-  // the |session_id| field in the Event based on the pid.
-  Event event = 2;
+  // The event. It contains the id of the process that generated the Event.
+  Event event = 1;
 }
 
 message SendPayloadRequest {
@@ -64,8 +61,7 @@ message SendPayloadRequest {
 // one in the external protobuf repo. For some reason it is not as simple
 // as including @protobuf_repo//:well_known_protos in cc_grpc_proto_library
 // rule, so more investigation is needed.
-message EmptyResponse {
-}
+message EmptyResponse {}
 
 enum SocketType {
   UNSPECIFIED_SOCKET = 0;

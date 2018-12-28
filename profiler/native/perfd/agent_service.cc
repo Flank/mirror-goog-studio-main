@@ -35,15 +35,9 @@ grpc::Status AgentServiceImpl::HeartBeat(ServerContext* context,
 grpc::Status AgentServiceImpl::SendEvent(grpc::ServerContext* context,
                                          const proto::SendEventRequest* request,
                                          proto::EmptyResponse* response) {
-  // Ignore data if no sessions associated with the pid is alive.
-  auto session = daemon_->sessions()->GetLastSession();
-  if (session->IsActive() && session->info().pid() == request->pid()) {
-    Event event;
-    event.CopyFrom(request->event());
-    event.set_session_id(session->info().session_id());
-    daemon_->buffer()->Add(event);
-  }
-
+  Event event;
+  event.CopyFrom(request->event());
+  daemon_->buffer()->Add(event);
   return grpc::Status::OK;
 }
 

@@ -157,11 +157,7 @@ bool RunAgent(const string& app_name, const string& package_name,
 
 Daemon::Daemon(Clock* clock, Config* config, FileCache* file_cache,
                EventBuffer* buffer)
-    : clock_(clock),
-      config_(config),
-      file_cache_(file_cache),
-      buffer_(buffer),
-      session_manager_(this) {
+    : clock_(clock), config_(config), file_cache_(file_cache), buffer_(buffer) {
   commands_[proto::Command::BEGIN_SESSION] = &BeginSession::Create;
   commands_[proto::Command::END_SESSION] = &EndSession::Create;
 }
@@ -257,8 +253,8 @@ grpc::Status Daemon::Execute(const proto::Command& command_data) {
 
 std::vector<proto::EventGroup> Daemon::GetEventGroups(
     const proto::GetEventGroupsRequest* request) {
-  return buffer_->Get(request->session_id(), request->kind(),
-                      request->from_timestamp(), request->to_timestamp());
+  return buffer_->Get(request->kind(), request->from_timestamp(),
+                      request->to_timestamp());
 }
 
 // Runs the connector as the application user and tries to send a message

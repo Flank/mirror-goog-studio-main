@@ -25,12 +25,13 @@ namespace profiler {
 using proto::Event;
 
 void CpuUsageDataSampler::Sample() {
+  int32_t pid = session().info().pid();
   Event event;
-  event.set_session_id(session().info().session_id());
-  event.set_group_id(pid_);
+  event.set_pid(pid);
+  event.set_group_id(pid);
   event.set_kind(Event::CPU_USAGE);
   auto* usage = event.mutable_cpu_usage();
-  usage_sampler_->SampleAProcess(pid_, usage);
+  usage_sampler_->SampleAProcess(pid, usage);
   buffer()->Add(event);
 }
 }  // namespace profiler

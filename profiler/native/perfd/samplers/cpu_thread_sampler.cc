@@ -27,8 +27,9 @@ using proto::CpuThreadData;
 using proto::Event;
 
 void CpuThreadSampler::Sample() {
+  int32_t pid = session().info().pid();
   std::vector<int32_t> tids{};
-  if (!GetThreads(procfs_.get(), pid_, &tids)) return;
+  if (!GetThreads(procfs_.get(), pid, &tids)) return;
 
   // Keep track of existing tids, remove one if seen in the new tids. The rest
   // are dead threads that need to be associated with thread-dead events.
@@ -40,7 +41,7 @@ void CpuThreadSampler::Sample() {
   for (const auto tid : tids) {
     CpuThreadData::State state;
     std::string name;
-    if (GetThreadState(procfs_.get(), pid_, tid, &state, &name)) {
+    if (GetThreadState(procfs_.get(), pid, tid, &state, &name)) {
       potentially_dead_tids.erase(tid);
       name_cache_[tid] = name;
       const auto& search = previous_states_.find(tid);
@@ -55,7 +56,7 @@ void CpuThreadSampler::Sample() {
         continue;
       }
       Event event;
-      event.set_session_id(session().info().session_id());
+      event.set_pid(pid);
       event.set_group_id(tid);
       event.set_kind(Event::CPU_THREAD);
       if (state == CpuThreadData::DEAD) {
@@ -74,7 +75,7 @@ void CpuThreadSampler::Sample() {
     auto& previous_state = previous_states_[tid];
     if (previous_state != CpuThreadData::DEAD) {
       Event event;
-      event.set_session_id(session().info().session_id());
+      event.set_pid(pid);
       event.set_group_id(tid);
       event.set_kind(Event::CPU_THREAD);
       event.set_is_ended(true);

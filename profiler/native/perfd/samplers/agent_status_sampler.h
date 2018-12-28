@@ -18,6 +18,7 @@
 
 #include "perfd/daemon.h"
 #include "perfd/samplers/sampler.h"
+#include "perfd/sessions/session.h"
 
 namespace profiler {
 
