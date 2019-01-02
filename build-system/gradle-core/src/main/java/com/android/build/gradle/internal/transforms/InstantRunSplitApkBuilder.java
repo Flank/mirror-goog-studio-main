@@ -44,7 +44,6 @@ import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.resources.configuration.VersionQualifier;
 import com.android.ide.common.signing.KeytoolException;
-import com.android.sdklib.IAndroidTarget;
 import com.android.utils.FileUtils;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.ImmutableList;
@@ -407,7 +406,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
             @NonNull File androidManifest,
             @NonNull File resFilePackageFile,
             @NonNull AaptOptions aaptOptions,
-            @NonNull IAndroidTarget androidTarget,
+            @NonNull String androidJarPath,
             @NonNull Set<File> importsFiles)
             throws IOException, ProcessException {
         List<File> importedAPKs =
@@ -425,7 +424,8 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
                         .setImports(ImmutableList.copyOf(importedAPKs))
                         .setResourceOutputApk(resFilePackageFile);
 
-        AndroidBuilder.processResources(aapt, aaptConfig, androidTarget, new LoggerWrapper(logger));
+        AndroidBuilder.processResources(
+                aapt, aaptConfig, androidJarPath, new LoggerWrapper(logger));
     }
 
     protected CloseableBlockingResourceLinker getLinker() {

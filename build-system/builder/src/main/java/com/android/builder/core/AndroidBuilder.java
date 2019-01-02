@@ -820,7 +820,8 @@ public class AndroidBuilder {
             @NonNull BlockingResourceLinker aapt,
             @NonNull AaptPackageConfig.Builder aaptConfigBuilder)
             throws IOException, ProcessException {
-        processResources(aapt, aaptConfigBuilder, getTarget(), mLogger);
+        processResources(
+                aapt, aaptConfigBuilder, getTarget().getPath(IAndroidTarget.ANDROID_JAR), mLogger);
     }
 
     /**
@@ -828,7 +829,7 @@ public class AndroidBuilder {
      *
      * @param aapt the interface to the {@code aapt} tool
      * @param aaptConfigBuilder aapt command invocation parameters
-     * @param androidTarget the android target used in {@link AaptPackageConfig}
+     * @param androidJarPath the android jar path used in {@link AaptPackageConfig}
      * @param logger the logger used to request package invocation in {@code aapt} (see {@link
      *     BlockingResourceLinker#link(AaptPackageConfig, ILogger)})
      * @throws IOException failed
@@ -837,11 +838,11 @@ public class AndroidBuilder {
     public static void processResources(
             @NonNull BlockingResourceLinker aapt,
             @NonNull AaptPackageConfig.Builder aaptConfigBuilder,
-            @NonNull IAndroidTarget androidTarget,
+            @NonNull String androidJarPath,
             @NonNull ILogger logger)
             throws IOException, ProcessException {
 
-        aaptConfigBuilder.setAndroidTarget(androidTarget);
+        aaptConfigBuilder.setAndroidJarPath(androidJarPath);
 
         AaptPackageConfig aaptConfig = aaptConfigBuilder.build();
         processResources(aapt, aaptConfig, logger);

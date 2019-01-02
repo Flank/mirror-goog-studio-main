@@ -106,7 +106,7 @@ open class InstantRunMainApkResourcesBuilder @Inject constructor(workerExecutor:
         val manifestFile: File,
         task: InstantRunMainApkResourcesBuilder
     ) : BuildElementsTransformParams() {
-        val androidTarget: IAndroidTarget = task.builder.target
+        val androidJarPath: String = task.builder.target.getPath(IAndroidTarget.ANDROID_JAR)
         val resourceFiles: Set<File> = task.resourceFiles.get().asFileTree.files
 
         override val output: File?
@@ -162,7 +162,7 @@ open class InstantRunMainApkResourcesBuilder @Inject constructor(workerExecutor:
                 com.android.builder.internal.aapt.AaptOptions(
                     ImmutableList.of(), false, ImmutableList.of()
                 ),
-                params.androidTarget,
+                params.androidJarPath,
                 params.resourceFiles
             )
         }
