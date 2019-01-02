@@ -152,6 +152,7 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
 
     private static class ApkBuilderRunnable extends BuildElementsTransformRunnable {
 
+        @Inject
         public ApkBuilderRunnable(@NonNull ApkBuilderParams params) {
             super(params);
         }
