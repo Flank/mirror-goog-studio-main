@@ -18,6 +18,7 @@ publishLocal {
                 description 'Android Asset Packaging Tool 2.'
                 url 'https://developer.android.com/studio'
                 inceptionYear '2007'
+                packaging 'pom'
                 licenses {
                     license {
                         name 'The Apache Software License, Version 2.0'
