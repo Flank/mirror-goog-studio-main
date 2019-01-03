@@ -68,6 +68,12 @@ public interface StyleResourceValue extends ResourceValue {
         return null;
     }
 
+    static boolean isDefaultParentStyleName(
+            @NonNull String parentStyleName, @NonNull String styleName) {
+        return styleName.lastIndexOf('.') == parentStyleName.length()
+                && styleName.startsWith(parentStyleName);
+    }
+
     /**
      * Finds the item for the given qualified attr name in this style (if it's defined in this
      * style).
