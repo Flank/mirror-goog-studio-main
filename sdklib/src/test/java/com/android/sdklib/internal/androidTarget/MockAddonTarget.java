@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.sdklib.internal.androidTarget;
 
 import com.android.annotations.NonNull;
@@ -21,9 +20,7 @@ import com.android.repository.io.FileOp;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.ISystemImage;
 import com.google.common.collect.ImmutableList;
-
 import java.io.File;
 import java.util.List;
 import java.util.Map;
@@ -33,11 +30,9 @@ import java.util.Map;
  * This reimplements the minimum needed from the interface for our limited testing needs.
  */
 public class MockAddonTarget implements IAndroidTarget {
-
     private final IAndroidTarget mParentTarget;
     private final int mRevision;
     private final String mName;
-    private ISystemImage[] mSystemImages;
     private ImmutableList<OptionalLibrary> mOptionalLibraries = ImmutableList.of();
 
     public MockAddonTarget(String name, IAndroidTarget parentTarget, int revision) {
@@ -76,19 +71,19 @@ public class MockAddonTarget implements IAndroidTarget {
         return "/sdk/add-ons/addon-" + mName;
     }
 
-    @NonNull
     @Override
+    @NonNull
     public List<OptionalLibrary> getAdditionalLibraries() {
         return mOptionalLibraries;
     }
 
-    @NonNull
     @Override
+    @NonNull
     public List<OptionalLibrary> getOptionalLibraries() {
         return ImmutableList.of();
     }
 
-    public void setOptionalLibraries(ImmutableList<OptionalLibrary> libraries) {
+    public void setOptionalLibraries(@NonNull ImmutableList<OptionalLibrary> libraries) {
         mOptionalLibraries = libraries;
     }
 
@@ -98,13 +93,9 @@ public class MockAddonTarget implements IAndroidTarget {
     }
 
     @Override
+    @NonNull
     public String getPath(int pathId) {
         throw new UnsupportedOperationException("Implement this as needed for tests");
-    }
-
-    @Override
-    public File getFile(int pathId) {
-        return new File(getPath(pathId));
     }
 
     @Override
@@ -112,7 +103,8 @@ public class MockAddonTarget implements IAndroidTarget {
         return null;
     }
 
-    @Override @NonNull
+    @Override
+    @NonNull
     public List<String> getBootClasspath() {
         throw new UnsupportedOperationException("Implement this as needed for tests");
     }
@@ -137,14 +129,14 @@ public class MockAddonTarget implements IAndroidTarget {
         return mRevision;
     }
 
-    @NonNull
     @Override
+    @NonNull
     public File[] getSkins() {
         return FileOp.EMPTY_FILE_ARRAY;
     }
 
-    @NonNull
     @Override
+    @NonNull
     public AndroidVersion getVersion() {
         return mParentTarget.getVersion();
     }
@@ -169,7 +161,7 @@ public class MockAddonTarget implements IAndroidTarget {
         return getVersionName();
     }
 
-    /** Returns false for an addon. */
+    /** Returns false for an add-on. */
     @Override
     public boolean isPlatform() {
         return false;

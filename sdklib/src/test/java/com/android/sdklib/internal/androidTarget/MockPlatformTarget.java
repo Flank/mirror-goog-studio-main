@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.sdklib.internal.androidTarget;
 
 import com.android.annotations.NonNull;
@@ -33,7 +32,6 @@ import java.util.Map;
  * This reimplements the minimum needed from the interface for our limited testing needs.
  */
 public class MockPlatformTarget implements IAndroidTarget {
-
     private final int mApiLevel;
     private final int mRevision;
     private ISystemImage[] mSystemImages;
@@ -73,14 +71,14 @@ public class MockPlatformTarget implements IAndroidTarget {
         return "/sdk/platforms/android-" + getVersion().getApiString();
     }
 
-    @NonNull
     @Override
+    @NonNull
     public List<OptionalLibrary> getOptionalLibraries() {
         return ImmutableList.of();
     }
 
-    @NonNull
     @Override
+    @NonNull
     public List<OptionalLibrary> getAdditionalLibraries() {
         return ImmutableList.of();
     }
@@ -91,13 +89,9 @@ public class MockPlatformTarget implements IAndroidTarget {
     }
 
     @Override
+    @NonNull
     public String getPath(int pathId) {
         throw new UnsupportedOperationException("Implement this as needed for tests");
-    }
-
-    @Override
-    public File getFile(int pathId) {
-        return new File(getPath(pathId));
     }
 
     @Override
@@ -105,7 +99,8 @@ public class MockPlatformTarget implements IAndroidTarget {
         return null;
     }
 
-    @Override @NonNull
+    @Override
+    @NonNull
     public List<String> getBootClasspath() {
         throw new UnsupportedOperationException("Implement this as needed for tests");
     }
@@ -130,8 +125,8 @@ public class MockPlatformTarget implements IAndroidTarget {
         return mRevision;
     }
 
-    @NonNull
     @Override
+    @NonNull
     public File[] getSkins() {
         return FileOp.EMPTY_FILE_ARRAY;
     }
@@ -154,8 +149,8 @@ public class MockPlatformTarget implements IAndroidTarget {
         return "platform r" + Integer.toString(mApiLevel);
     }
 
-    @NonNull
     @Override
+    @NonNull
     public AndroidVersion getVersion() {
         return new AndroidVersion(mApiLevel, null /*codename*/);
     }

@@ -54,7 +54,6 @@ import java.util.Set;
  * Represents a platform target in the SDK.
  */
 public class PlatformTarget implements IAndroidTarget {
-
     /**
      * Default vendor for platform targets
      */
@@ -236,8 +235,8 @@ public class PlatformTarget implements IAndroidTarget {
         return getName();
     }
 
-    @NonNull
     @Override
+    @NonNull
     public AndroidVersion getVersion() {
         return mDetails.getAndroidVersion();
     }
@@ -258,12 +257,13 @@ public class PlatformTarget implements IAndroidTarget {
     }
 
     @Override
+    @Nullable
     public IAndroidTarget getParent() {
         return null;
     }
 
-    @NonNull
     @Override
+    @NonNull
     public String getPath(int pathId) {
         switch (pathId) {
             case ANDROID_JAR:
@@ -320,32 +320,26 @@ public class PlatformTarget implements IAndroidTarget {
         }
     }
 
-    @NonNull
     @Override
-    public File getFile(int pathId) {
-        return new File(getPath(pathId));
-    }
-
     @Nullable
-    @Override
     public BuildToolInfo getBuildToolInfo() {
         return mBuildToolInfo;
     }
 
-    @NonNull
     @Override
+    @NonNull
     public List<String> getBootClasspath() {
         return ImmutableList.of(getPath(IAndroidTarget.ANDROID_JAR));
     }
 
-    @NonNull
     @Override
+    @NonNull
     public List<OptionalLibrary> getOptionalLibraries() {
         return mOptionalLibraries;
     }
 
-    @NonNull
     @Override
+    @NonNull
     public List<OptionalLibrary> getAdditionalLibraries() {
         return ImmutableList.of();
     }
@@ -355,8 +349,8 @@ public class PlatformTarget implements IAndroidTarget {
         return true;
     }
 
-    @NonNull
     @Override
+    @NonNull
     public File[] getSkins() {
         return mSkins.toArray(new File[0]);
     }
@@ -365,9 +359,8 @@ public class PlatformTarget implements IAndroidTarget {
         return mDetails.getLayoutlib().getApi();
     }
 
-
-    @Nullable
     @Override
+    @Nullable
     public File getDefaultSkin() {
         // TODO: validate choice to ignore property in sdk.properties
 
@@ -394,32 +387,32 @@ public class PlatformTarget implements IAndroidTarget {
      *
      * For platforms this is always {@link SdkConstants#ANDROID_TEST_RUNNER_LIB}.
      */
-    @NonNull
     @Override
+    @NonNull
     public String[] getPlatformLibraries() {
         return new String[]{SdkConstants.ANDROID_TEST_RUNNER_LIB};
     }
 
-    @Nullable
     @Override
+    @Nullable
     public String getProperty(@NonNull String name) {
         return mBuildProps.get(name);
     }
 
-    @Nullable
     @Override
+    @Nullable
     public Map<String, String> getProperties() {
         return mBuildProps;
     }
 
-    @NonNull
     @Override
+    @NonNull
     public String getShortClasspathName() {
         return getName();
     }
 
-    @NonNull
     @Override
+    @NonNull
     public String getClasspathName() {
         return getName();
     }
@@ -432,8 +425,8 @@ public class PlatformTarget implements IAndroidTarget {
         return target.getVersion().getApiLevel() > getVersion().getApiLevel();
     }
 
-    @NonNull
     @Override
+    @NonNull
     public String hashString() {
         return AndroidTargetHash.getPlatformHashString(getVersion());
     }

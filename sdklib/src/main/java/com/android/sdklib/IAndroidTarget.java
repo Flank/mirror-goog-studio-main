@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.sdklib;
 
 import static com.android.sdklib.repository.meta.DetailsTypes.AddonDetailsType;
@@ -26,52 +25,49 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
-
-
 /**
  * A version of Android that applications can target when building.
  */
 public interface IAndroidTarget extends Comparable<IAndroidTarget> {
-
-    /** OS Path to the "android.jar" file. */
+    /** OS path to the "android.jar" file. */
     int ANDROID_JAR         = 1;
-    /** OS Path to the "framework.aidl" file. */
+    /** OS path to the "framework.aidl" file. */
     int ANDROID_AIDL        = 2;
-    /** OS Path to the "samples" folder which contains sample projects. */
+    /** OS path to the "samples" folder which contains sample projects. */
     int SAMPLES             = 4;
-    /** OS Path to the "skins" folder which contains the emulator skins. */
+    /** OS path to the "skins" folder which contains the emulator skins. */
     int SKINS               = 5;
-    /** OS Path to the "templates" folder which contains the templates for new projects. */
+    /** OS path to the "templates" folder which contains the templates for new projects. */
     int TEMPLATES           = 6;
-    /** OS Path to the "data" folder which contains data and libraries for the SDK tools. */
+    /** OS path to the "data" folder which contains data and libraries for the SDK tools. */
     int DATA                = 7;
-    /** OS Path to the "attrs.xml" file. */
+    /** OS path to the "attrs.xml" file. */
     int ATTRIBUTES          = 8;
-    /** OS Path to the "attrs_manifest.xml" file. */
+    /** OS path to the "attrs_manifest.xml" file. */
     int MANIFEST_ATTRIBUTES = 9;
-    /** OS Path to the "data/layoutlib.jar" library. */
+    /** OS path to the "data/layoutlib.jar" library. */
     int LAYOUT_LIB          = 10;
-    /** OS Path to the "data/res" folder. */
+    /** OS path to the "data/res" folder. */
     int RESOURCES           = 11;
-    /** OS Path to the "data/fonts" folder. */
+    /** OS path to the "data/fonts" folder. */
     int FONTS               = 12;
-    /** OS Path to the "data/widgets.txt" file. */
+    /** OS path to the "data/widgets.txt" file. */
     int WIDGETS             = 13;
-    /** OS Path to the "data/activity_actions.txt" file. */
+    /** OS path to the "data/activity_actions.txt" file. */
     int ACTIONS_ACTIVITY    = 14;
-    /** OS Path to the "data/broadcast_actions.txt" file. */
+    /** OS path to the "data/broadcast_actions.txt" file. */
     int ACTIONS_BROADCAST   = 15;
-    /** OS Path to the "data/service_actions.txt" file. */
+    /** OS path to the "data/service_actions.txt" file. */
     int ACTIONS_SERVICE     = 16;
-    /** OS Path to the "data/categories.txt" file. */
+    /** OS path to the "data/categories.txt" file. */
     int CATEGORIES          = 17;
-    /** OS Path to the "sources" folder. */
+    /** OS path to the "sources" folder. */
     int SOURCES             = 18;
-    /** OS Path to the target specific docs */
+    /** OS path to the target specific docs */
     int DOCS                = 19;
-    /** OS Path to the "ant" folder which contains the ant build rules (ver 2 and above) */
+    /** OS path to the "ant" folder which contains the ant build rules (ver 2 and above) */
     int ANT                 = 24;
-    /** OS Path to the "uiautomator.jar" file. */
+    /** OS path to the "uiautomator.jar" file. */
     int UI_AUTOMATOR_JAR    = 27;
 
 
@@ -87,9 +83,11 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
          */
         @Nullable
         File getJar();
+
         /** Description of the library. */
         @NonNull
         String getDescription();
+
         /** Whether the library requires a manifest entry */
         boolean isManifestEntryRequired();
 
@@ -160,6 +158,7 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
      * Returns the parent target. This is likely to only be non <code>null</code> if
      * {@link #isPlatform()} returns <code>false</code>
      */
+    @Nullable
     IAndroidTarget getParent();
 
     /**
@@ -167,6 +166,7 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
      * @param pathId the id representing the path to return.
      *        Any of the constants defined in the {@link IAndroidTarget} interface can be used.
      */
+    @NonNull
     String getPath(int pathId);
 
     /**
@@ -177,7 +177,10 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
      * @param pathId the id representing the path to return.
      *        Any of the constants defined in the {@link IAndroidTarget} interface can be used.
      */
-    File getFile(int pathId);
+    @NonNull
+    default File getFile(int pathId) {
+        return new File(getPath(pathId));
+    }
 
     /**
      * Returns a BuildToolInfo for backward compatibility. If an older SDK is used this will return
@@ -185,6 +188,7 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
      * build-tools.
      * @return a BuildToolInfo or null if none are available.
      */
+    @Nullable
     BuildToolInfo getBuildToolInfo();
 
     /**
