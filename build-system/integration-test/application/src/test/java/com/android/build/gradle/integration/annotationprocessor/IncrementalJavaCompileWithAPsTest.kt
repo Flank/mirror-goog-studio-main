@@ -37,6 +37,7 @@ import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import org.junit.Assume.assumeTrue
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -512,6 +513,7 @@ class IncrementalJavaCompileWithAPsTest(
     }
 
     @Test
+    @Ignore("b/122308079")
     fun `change original source file`() {
         val fullBuildResult = runFullBuild()
 
