@@ -16,6 +16,7 @@
 package com.android.ide.common.rendering.api;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
@@ -30,7 +31,7 @@ import java.io.Serializable;
  * <p>This is an immutable class.
  */
 @Immutable
-public final class ResourceReference implements Serializable {
+public final class ResourceReference implements Comparable<ResourceReference>, Serializable {
     @NonNull private final ResourceType resourceType;
     @NonNull private final ResourceNamespace namespace;
     @NonNull private final String name;
@@ -157,11 +158,11 @@ public final class ResourceReference implements Serializable {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+    public boolean equals(@Nullable Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
 
-        ResourceReference reference = (ResourceReference) o;
+        ResourceReference reference = (ResourceReference) obj;
 
         if (resourceType != reference.resourceType) return false;
         if (!namespace.equals(reference.namespace)) return false;
@@ -173,6 +174,19 @@ public final class ResourceReference implements Serializable {
     @Override
     public int hashCode() {
         return HashCodes.mix(resourceType.hashCode(), namespace.hashCode(), name.hashCode());
+    }
+
+    @Override
+    public int compareTo(@NonNull ResourceReference other) {
+        int diff = resourceType.compareTo(other.resourceType);
+        if (diff != 0) {
+            return diff;
+        }
+        diff = namespace.compareTo(other.namespace);
+        if (diff != 0) {
+            return diff;
+        }
+        return name.compareTo(other.name);
     }
 
     @Override
