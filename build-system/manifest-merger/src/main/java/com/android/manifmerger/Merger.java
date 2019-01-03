@@ -64,6 +64,10 @@ public class Merger {
                 usage();
                 return 0;
             }
+            // no value for --remove-tools-declarations flag
+            if ("--remove-tools-declarations".equals(selector)) {
+                continue;
+            }
             if (!arguments.hasNext()) {
                 logger.error(null /* throwable */,
                         "Command switch " + selector + " has no value associated");
@@ -94,9 +98,12 @@ public class Merger {
         arguments = Arrays.asList(args).iterator();
         File outFile = null;
 
-        // first pass to get all mandatory parameters.
         while (arguments.hasNext()) {
             String selector = arguments.next();
+            if ("--remove-tools-declarations".equals(selector)) {
+                invoker.withFeatures(ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS);
+                continue;
+            }
             String value = arguments.next();
             if (Strings.isNullOrEmpty(value)) {
                 logger.error(null /* throwable */,
@@ -194,6 +201,7 @@ public class Merger {
                 + "=value]");
         System.out.println("\t--placeholder [name=value]");
         System.out.println("\t--out [path of the output file]");
+        System.out.println("\t--remove-tools-declarations");
     }
 
 
