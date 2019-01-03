@@ -15,6 +15,7 @@
  */
 package com.android.ide.common.rendering.api;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
@@ -28,7 +29,7 @@ import java.util.List;
  * convenience methods to resolve resource and theme references.
  */
 public class RenderResources {
-    public static final String REFERENCE_NULL = "@null";
+    public static final String REFERENCE_NULL = SdkConstants.NULL_RESOURCE;
     public static final String REFERENCE_EMPTY = "@empty";
     public static final String REFERENCE_UNDEFINED = "@undefined";
 
