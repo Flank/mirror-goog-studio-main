@@ -31,9 +31,10 @@ class FontDetail {
     val italics: Boolean
     val fontUrl: String
     val styleName: String
+    val hasExplicitStyle: Boolean
 
     val fontStyle: String
-        get() = if (italics) "italic" else "regular"
+        get() = if (italics) "italic" else "normal"
 
     constructor(fontFamily: FontFamily, font: MutableFontDetail) {
         family = fontFamily
@@ -41,6 +42,7 @@ class FontDetail {
         width = font.width
         italics = font.italics
         fontUrl = font.fontUrl
+        hasExplicitStyle = font.hasExplicitStyle
         styleName = generateStyleName(font)
     }
 
@@ -53,12 +55,13 @@ class FontDetail {
         width = withStyle.width
         italics = withStyle.italics
         fontUrl = detail.fontUrl
+        hasExplicitStyle = detail.hasExplicitStyle
         styleName = generateStyleName(withStyle)
     }
 
 
     fun toMutableFontDetail(): MutableFontDetail {
-        return MutableFontDetail(weight, width, italics, fontUrl, styleName, false)
+        return MutableFontDetail(weight, width, italics, fontUrl, styleName, false, hasExplicitStyle)
     }
 
     fun generateQuery(exact: Boolean): String {

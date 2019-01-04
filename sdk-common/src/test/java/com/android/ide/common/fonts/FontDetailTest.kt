@@ -71,7 +71,7 @@ class FontDetailTest {
     @Test
     fun testDerivedConstructor() {
         val font = createFontDetail(800, 110, true, "http://someurl.com/myfont2.ttf", "")
-        val derived = FontDetail(font, MutableFontDetail(700, 100, false, "whatever", "", false))
+        val derived = FontDetail(font, MutableFontDetail(700, 100, false, "whatever", "", false, false))
         assertThat(derived.family).isSameAs(font.family)
         assertThat(derived.weight).isEqualTo(700)
         assertThat(derived.width).isEqualTo(100)
@@ -95,7 +95,7 @@ class FontDetailTest {
 
         private fun createFontFamily(weight: Int, width: Int, italics: Boolean, url: String, styleName: String): FontFamily {
             return FontFamily(FontProvider.GOOGLE_PROVIDER, FontSource.DOWNLOADABLE, "MyFont", "http://someurl.com/mymenufont.ttf", "myMenu",
-                    listOf(MutableFontDetail(weight, width, italics, url, styleName, false)))
+                    listOf(MutableFontDetail(weight, width, italics, url, styleName, false, false)))
         }
 
         private fun generateStyleName(weight: Int, italics: Boolean): String {

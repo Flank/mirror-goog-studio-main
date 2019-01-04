@@ -22,10 +22,14 @@ class MutableFontDetail(
     var italics: Boolean,
     var fontUrl: String,
     var styleName: String,
-    var exact: Boolean) {
+    var exact: Boolean,
+    var hasExplicitStyle: Boolean) {
+
+    constructor(weight: Int, width: Int, italics: Boolean, hasExplicitStyle: Boolean)
+            : this(weight, width, italics, "", "", false, hasExplicitStyle)
 
     constructor(weight: Int, width: Int, italics: Boolean)
-            : this(weight, width, italics, "", "", false)
+            : this(weight, width, italics, false)
 
     constructor()
             : this(DEFAULT_WEIGHT, DEFAULT_WIDTH, false)

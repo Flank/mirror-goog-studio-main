@@ -45,6 +45,6 @@ class FontFamilyTest {
                                  name: String,
                                  menuUrl: String,
                                  menuName: String): FontFamily {
-        return FontFamily(provider, fontSource, name, menuUrl, menuName, listOf(MutableFontDetail(400, 100, false, "https://fonts.com/roboto/v15/qrs.ttf", "", false)))
+        return FontFamily(provider, fontSource, name, menuUrl, menuName, listOf(MutableFontDetail(400, 100, false, "https://fonts.com/roboto/v15/qrs.ttf", "", false, false)))
     }
 }
