@@ -21,6 +21,7 @@ import static com.google.common.base.Verify.verifyNotNull;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.annotations.concurrency.GuardedBy;
 import com.android.tools.analytics.AnalyticsSettings;
 import com.android.tools.analytics.AnalyticsSettingsData;
 import com.android.tools.analytics.Anonymizer;
@@ -47,59 +48,57 @@ import java.util.concurrent.TimeUnit;
  */
 public final class ProcessProfileWriterFactory {
 
-    @SuppressWarnings("UnusedReturnValue")
+    private static final Object LOCK = new Object();
+
+    @GuardedBy("LOCK")
     @Nullable
-    public static Future<Void> shutdownAndMaybeWrite(@Nullable Path outputFile) {
-        synchronized (LOCK) {
-            Future<Void> shutdownAction = null;
-            if (sINSTANCE.isInitialized()) {
-                ProcessProfileWriter processProfileWriter =
-                        verifyNotNull(sINSTANCE.processProfileWriter);
-                if (outputFile == null) {
-                    // Write analytics files in another thread as it might involve parsing manifest files.
-                    shutdownAction =
-                            sINSTANCE.mScheduledExecutorService.submit(
-                                    () -> {
-                                        processProfileWriter.finish();
-                                        return null;
-                                    });
-                } else {
-                    // If writing a GradleBuildProfile file for Benchmarking, go ahead and block
-                    processProfileWriter.finishAndWrite(outputFile);
-                    shutdownAction = CompletableFuture.completedFuture(null);
-                }
-            }
-            sINSTANCE.processProfileWriter = null;
-            return shutdownAction;
-        }
-    }
+    private static ProcessProfileWriterFactory sINSTANCE;
 
-
+    @GuardedBy("this")
     @NonNull
-    private ScheduledExecutorService mScheduledExecutorService = Executors.newScheduledThreadPool(1);
+    private ScheduledExecutorService mScheduledExecutorService =
+            Executors.newScheduledThreadPool(1);
 
-    @VisibleForTesting
-    ProcessProfileWriterFactory() {}
+    @GuardedBy("this")
     @Nullable
     private ILogger mLogger = null;
 
-    /** Set up the the ProcessProfileWriter. Idempotent for multi-project builds. */
+    @GuardedBy("this")
+    @Nullable
+    private ProcessProfileWriter processProfileWriter = null;
+
+    @GuardedBy("this")
+    private boolean enableChromeTracingOutput;
+
+    private ProcessProfileWriterFactory() {}
+
+    /**
+     * Set up the the ProcessProfileWriter.
+     *
+     * <p>Idempotent for multi-project builds, where the arguments are ignored for subsequent calls.
+     */
     public static void initialize(
             @NonNull File rootProjectDirectoryPath,
             @NonNull String gradleVersion,
             @NonNull ILogger logger,
             boolean enableChromeTracingOutput) {
+        getFactory()
+                .initializeInternal(
+                        rootProjectDirectoryPath, gradleVersion, logger, enableChromeTracingOutput);
+    }
 
-        synchronized (LOCK) {
-            if (sINSTANCE.isInitialized()) {
-                return;
-            }
-            sINSTANCE.setLogger(logger);
-            sINSTANCE.setEnableChromeTracingOutput(enableChromeTracingOutput);
-            ProcessProfileWriter recorder =
-                    sINSTANCE.get(); // Initialize the ProcessProfileWriter instance
-            setGlobalProperties(recorder, rootProjectDirectoryPath, gradleVersion, logger);
+    private synchronized void initializeInternal(
+            @NonNull File rootProjectDirectoryPath,
+            @NonNull String gradleVersion,
+            @NonNull ILogger logger,
+            boolean enableChromeTracingOutput) {
+        if (isInitialized()) {
+            return;
         }
+        this.mLogger = logger;
+        this.enableChromeTracingOutput = enableChromeTracingOutput;
+        ProcessProfileWriter recorder = get();
+        setGlobalProperties(recorder, rootProjectDirectoryPath, gradleVersion, logger);
     }
 
     private static void setGlobalProperties(
@@ -124,43 +123,36 @@ public final class ProcessProfileWriterFactory {
         recorder.getProperties().setProjectId(anonymizedProjectId);
     }
 
-    public synchronized void setLogger(@NonNull ILogger iLogger) {
-        assertRecorderNotCreated();
-        this.mLogger = iLogger;
-    }
-
     public static ProcessProfileWriterFactory getFactory() {
-        return sINSTANCE;
-    }
-
-    boolean isInitialized() {
-        return processProfileWriter != null;
-    }
-
-    @SuppressWarnings("VariableNotUsedInsideIf")
-    private void assertRecorderNotCreated() {
-        if (isInitialized()) {
-            throw new RuntimeException("ProcessProfileWriter already created.");
+        synchronized (LOCK) {
+            if (sINSTANCE == null) {
+                sINSTANCE = new ProcessProfileWriterFactory();
+            }
+            return sINSTANCE;
         }
     }
 
-    private static final Object LOCK = new Object();
-    static ProcessProfileWriterFactory sINSTANCE = new ProcessProfileWriterFactory();
+    synchronized boolean isInitialized() {
+        return processProfileWriter != null;
+    }
 
-    @Nullable private ProcessProfileWriter processProfileWriter = null;
+    @SuppressWarnings("UnusedReturnValue")
+    @NonNull
+    public static Future<Void> shutdownAndMaybeWrite(@Nullable Path outputFile) {
+        return getFactory().shutdownAndMaybeWriteInternal(outputFile);
+    }
 
     @VisibleForTesting
     public static void initializeForTests() {
         AnalyticsSettings.setInstanceForTest(new AnalyticsSettingsData());
-        sINSTANCE = new ProcessProfileWriterFactory();
-        ProcessProfileWriter recorder =
-                sINSTANCE.get(); // Initialize the ProcessProfileWriter instance
-        recorder.resetForTests();
-        setGlobalProperties(recorder,
-                new File("fake/path/to/test_project/"),
+        shutdownAndMaybeWrite(null);
+        initialize(
+                new File("fake/path/to/test_project"),
                 "2.10",
-                new StdLogger(StdLogger.Level.VERBOSE));
+                new StdLogger(StdLogger.Level.VERBOSE),
+                false);
     }
+
 
     private static void initializeAnalytics(@NonNull ILogger logger,
             @NonNull ScheduledExecutorService eventLoop) {
@@ -170,7 +162,30 @@ public final class ProcessProfileWriterFactory {
         UsageTracker.setMaxJournalSize(1000);
     }
 
-    private boolean enableChromeTracingOutput;
+    @NonNull
+    private synchronized Future<Void> shutdownAndMaybeWriteInternal(@Nullable Path outputFile) {
+        Future<Void> shutdownAction;
+        if (isInitialized()) {
+            ProcessProfileWriter processProfileWriter = verifyNotNull(this.processProfileWriter);
+            if (outputFile == null) {
+                // Write analytics files in another thread as it might involve parsing manifest files.
+                shutdownAction =
+                        mScheduledExecutorService.submit(
+                                () -> {
+                                    processProfileWriter.finish();
+                                    return null;
+                                });
+            } else {
+                // If writing a GradleBuildProfile file for Benchmarking, go ahead and block
+                processProfileWriter.finishAndWrite(outputFile);
+                shutdownAction = CompletableFuture.completedFuture(null);
+            }
+        } else {
+            shutdownAction = CompletableFuture.completedFuture(null);
+        }
+        this.processProfileWriter = null;
+        return shutdownAction;
+    }
 
     synchronized ProcessProfileWriter get() {
         if (processProfileWriter == null) {
@@ -182,9 +197,5 @@ public final class ProcessProfileWriterFactory {
         }
 
         return processProfileWriter;
-    }
-
-    public void setEnableChromeTracingOutput(boolean enableChromeTracingOutput) {
-        this.enableChromeTracingOutput = enableChromeTracingOutput;
     }
 }
