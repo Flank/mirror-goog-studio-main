@@ -22,7 +22,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.analytics.CommonMetricsData;
 import com.android.tools.analytics.UsageTracker;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -88,14 +87,9 @@ public final class ProcessProfileWriter implements ProfileRecordWriter {
         return lastRecordId.incrementAndGet();
     }
 
-    @VisibleForTesting
-    void resetForTests() {
-        lastRecordId.set(1);
-    }
-
     @NonNull
     public static ProcessProfileWriter get() {
-        return ProcessProfileWriterFactory.sINSTANCE.get();
+        return ProcessProfileWriterFactory.getFactory().get();
     }
 
 
