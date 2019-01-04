@@ -55,9 +55,8 @@ public final class ProcessProfileWriterFactory {
     private static ProcessProfileWriterFactory sINSTANCE;
 
     @GuardedBy("this")
-    @NonNull
-    private ScheduledExecutorService mScheduledExecutorService =
-            Executors.newScheduledThreadPool(1);
+    @Nullable
+    private ScheduledExecutorService mScheduledExecutorService = null;
 
     @GuardedBy("this")
     @Nullable
@@ -170,11 +169,12 @@ public final class ProcessProfileWriterFactory {
             if (outputFile == null) {
                 // Write analytics files in another thread as it might involve parsing manifest files.
                 shutdownAction =
-                        mScheduledExecutorService.submit(
-                                () -> {
-                                    processProfileWriter.finish();
-                                    return null;
-                                });
+                        getScheduledExecutorService()
+                                .submit(
+                                        () -> {
+                                            processProfileWriter.finish();
+                                            return null;
+                                        });
             } else {
                 // If writing a GradleBuildProfile file for Benchmarking, go ahead and block
                 processProfileWriter.finishAndWrite(outputFile);
@@ -184,6 +184,7 @@ public final class ProcessProfileWriterFactory {
             shutdownAction = CompletableFuture.completedFuture(null);
         }
         this.processProfileWriter = null;
+        deinitializeAnalytics();
         return shutdownAction;
     }
 
@@ -192,10 +193,25 @@ public final class ProcessProfileWriterFactory {
             if (mLogger == null) {
                 mLogger = new StdLogger(StdLogger.Level.INFO);
             }
-            initializeAnalytics(mLogger, mScheduledExecutorService);
+            initializeAnalytics(mLogger, getScheduledExecutorService());
             processProfileWriter = new ProcessProfileWriter(enableChromeTracingOutput);
         }
-
         return processProfileWriter;
+    }
+
+
+    private synchronized ScheduledExecutorService getScheduledExecutorService() {
+        if (mScheduledExecutorService == null) {
+            mScheduledExecutorService = Executors.newScheduledThreadPool(1);
+        }
+        return mScheduledExecutorService;
+    }
+
+    private synchronized void deinitializeAnalytics() {
+        if (mScheduledExecutorService != null) {
+            UsageTracker.deinitialize();
+            mScheduledExecutorService.shutdown();
+            mScheduledExecutorService = null;
+        }
     }
 }
