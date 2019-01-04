@@ -61,7 +61,9 @@ public final class InstallOptions {
 
         // Sets a string of user-specified installation flags to be passed to the installer.
         public Builder setUserInstallOptions(String userSpecifiedFlags) {
-            flags.add(userSpecifiedFlags);
+            if (userSpecifiedFlags != null && !userSpecifiedFlags.isEmpty()) {
+                flags.add(userSpecifiedFlags);
+            }
             return this;
         }
 

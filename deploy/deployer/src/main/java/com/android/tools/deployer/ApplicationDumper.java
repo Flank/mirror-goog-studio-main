@@ -67,20 +67,16 @@ public class ApplicationDumper {
             throw new DeployerException(DeployerException.Error.DUMP_FAILED, e);
         }
 
+        // TODO: To throw an exception here makes this component hard to re-use.
+        // The component using it should be the one to check apkEntries.size() and throw
+        // and exception if necessary. This check should be moved further down the
+        // pipeline.
         if (response.getStatus() == Deploy.DumpResponse.Status.ERROR_PACKAGE_NOT_FOUND) {
             throw new DeployerException(
                     DeployerException.Error.DUMP_UNKNOWN_PACKAGE,
                     "Cannot list apks for package "
                             + response.getFailedPackage()
                             + ". Is the app installed?");
-        }
-
-        if (response.getStatus() == Deploy.DumpResponse.Status.ERROR_PROCESS_NOT_FOUND) {
-            throw new DeployerException(
-                    DeployerException.Error.DUMP_UNKNOWN_PACKAGE,
-                    "Cannot list processes for package "
-                            + response.getFailedPackage()
-                            + ". Is the app running?");
         }
 
         return new Dump(GetApkEntries(response.getPackages(0)), GetPids(response));

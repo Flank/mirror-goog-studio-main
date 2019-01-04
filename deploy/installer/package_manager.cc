@@ -45,4 +45,26 @@ bool PackageManager::GetApks(const std::string& package_name,
 }
 void PackageManager::SetPath(const char* path) { PM_EXEC = path; }
 
+bool PackageManager::Install(const std::string& apk_path,
+                             const std::vector<std::string>& options,
+                             std::string* output) const noexcept {
+  Phase p("PackageManger::Install");
+
+  std::vector<std::string> parameters;
+  parameters.emplace_back("install");
+  for (const std::string& option : options) {
+    parameters.emplace_back(option);
+  }
+  parameters.emplace_back(apk_path);
+
+  std::string err;
+  bool success =
+      workspace_.GetExecutor().Run(PM_EXEC, parameters, output, &err);
+  if (!success) {
+    *output = err;
+    return false;
+  }
+  return true;
+}
+
 }  // namespace deploy

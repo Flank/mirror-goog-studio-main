@@ -69,11 +69,12 @@ public class Deployer {
      * Installs the given apks. This method will register the APKs in the database for subsequent
      * swaps
      */
-    public void install(String packageName, List<String> apks, InstallOptions options)
+    public List<InstallMetric> install(
+            String packageName, List<String> apks, InstallOptions options)
             throws DeployerException {
         try (Trace ignored = Trace.begin("install")) {
-            ApkInstaller apkInstaller = new ApkInstaller(adb, service);
-            apkInstaller.install(packageName, apks, options);
+            ApkInstaller apkInstaller = new ApkInstaller(adb, service, installer, logger);
+            List<InstallMetric> metrics = apkInstaller.install(packageName, apks, options);
 
 
             // Inputs
@@ -88,6 +89,7 @@ public class Deployer {
             runner.create(Tasks.CACHE, splitter::cache, entries);
 
             runner.runAsync();
+            return metrics;
         }
     }
 

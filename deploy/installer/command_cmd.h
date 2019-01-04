@@ -41,6 +41,9 @@ class CmdCommand {
                      std::string* error_string) const noexcept;
 
   bool CreateInstallSession(std::string* session) const noexcept;
+  bool CreateInstallSessionWithOptions(
+      std::string* session, const std::vector<std::string> options) const
+      noexcept;
 
   // Prepares an installation and returns an id that can be used
   // to finish the installation by calling |CommitInstall| or it

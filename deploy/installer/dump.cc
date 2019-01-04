@@ -58,12 +58,10 @@ void DumpCommand::Run() {
     proto::PackageDump* package_dump = response->add_packages();
     package_dump->set_name(package_name);
 
-    if (!GetProcessIds(package_name, package_dump)) {
-      response->set_status(proto::DumpResponse::ERROR_PROCESS_NOT_FOUND);
-      response->set_failed_package(package_name);
-      return;
-    }
+    GetProcessIds(package_name, package_dump);
 
+    // TODO: Since dump performs multiple operations, this should not
+    // terminate the command. Processing should continue here.
     if (!GetApks(package_name, package_dump)) {
       response->set_status(proto::DumpResponse::ERROR_PACKAGE_NOT_FOUND);
       response->set_failed_package(package_name);

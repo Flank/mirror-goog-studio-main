@@ -52,7 +52,8 @@ public class ApkSwapper {
             throws DeployerException {
         if (dump.pids.isEmpty()) {
             throw new DeployerException(
-                    DeployerException.Error.REDEFINER_ERROR, "No application process was running");
+                    DeployerException.Error.DUMP_UNKNOWN_PACKAGE,
+                    "Cannot list processes for package. Is the app running?");
         }
 
         // The native installer can't handle swapping more than one package in the same swap request. The dump

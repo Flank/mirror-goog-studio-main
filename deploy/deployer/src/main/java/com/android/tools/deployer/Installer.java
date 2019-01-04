@@ -27,4 +27,6 @@ public interface Installer {
 
     Deploy.DeltaPreinstallResponse deltaPreinstall(Deploy.DeltaPreinstallRequest request)
             throws IOException;
+
+    Deploy.DeltaInstallResponse deltaInstall(Deploy.DeltaInstallRequest request) throws IOException;
 }

@@ -98,13 +98,27 @@ int get_file_size(std::string path) {
 }
 
 bool CmdCommand::CreateInstallSession(std::string* output) const noexcept {
+  std::vector<std::string> options;
+  options.emplace_back("-t");
+  options.emplace_back("-r");
+  options.emplace_back("--dont-kill");
+  return CreateInstallSessionWithOptions(output, options);
+}
+
+bool CmdCommand::CreateInstallSessionWithOptions(
+    std::string* output, const std::vector<std::string> options) const
+    noexcept {
   Phase p("Create Install Session");
   std::vector<std::string> parameters;
   parameters.emplace_back("package");
   parameters.emplace_back("install-create");
-  parameters.emplace_back("-t");
-  parameters.emplace_back("-r");
-  parameters.emplace_back("--dont-kill");
+  for (const std::string& option : options) {
+    parameters.emplace_back(option);
+  }
+  for (auto& option : options) {
+    LogEvent(option);
+  }
+
   std::string err;
   workspace_.GetExecutor().Run(CMD_EXEC, parameters, output, &err);
   std::string match = "Success: created install session [";
@@ -153,6 +167,11 @@ bool CmdCommand::CommitInstall(const std::string& session,
   parameters.emplace_back("package");
   parameters.emplace_back("install-commit");
   parameters.emplace_back(session);
+
+  for (std::string& parameter : parameters) {
+    LogEvent(parameter);
+  }
+
   std::string err;
   return workspace_.GetExecutor().Run(CMD_EXEC, parameters, output, &err);
 }

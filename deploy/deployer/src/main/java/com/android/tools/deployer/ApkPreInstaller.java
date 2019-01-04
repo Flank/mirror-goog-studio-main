@@ -21,11 +21,9 @@ import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
-import com.google.protobuf.ByteString;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -97,9 +95,12 @@ public class ApkPreInstaller {
 
             Deploy.DeltaPreinstallRequest.Builder pushRequestBuilder =
                     Deploy.DeltaPreinstallRequest.newBuilder();
-            if (!generateDeltas(pushRequestBuilder, pairs)) {
+            List<Deploy.PatchInstruction> patches =
+                    new PatchSetGenerator().generateFromPairs(pairs);
+            if (patches.isEmpty()) {
                 return "";
             }
+            pushRequestBuilder.addAllPatchInstructions(patches);
 
             Deploy.DeltaPreinstallRequest request = pushRequestBuilder.build();
             // Don't push more than 40 MiB delta since it has to fit in RAM on the device.
@@ -120,38 +121,6 @@ public class ApkPreInstaller {
         }
     }
 
-    private boolean generateDeltas(
-            Deploy.DeltaPreinstallRequest.Builder pushRequestBuilder, List<Pair<Apk, Apk>> pairs)
-            throws IOException {
-        // Generate delta for each pairs.
-        for (Pair<Apk, Apk> pair : pairs) {
-            Apk localApk = pair.getFirst();
-            Apk remoteApk = pair.getSecond();
-            Deploy.PatchInstruction instruction = generateDelta(remoteApk, localApk);
-            pushRequestBuilder.addPatchInstructions(instruction);
-        }
-        return true;
-    }
-
-    @Trace
-    private Deploy.PatchInstruction buildPatchInstruction(
-            long size, String remotePath, ByteBuffer instruction, ByteBuffer data) {
-        Deploy.PatchInstruction.Builder patchInstructionBuidler =
-                Deploy.PatchInstruction.newBuilder();
-        patchInstructionBuidler.setSrcAbsolutePath(remotePath);
-        patchInstructionBuidler.setPatches(ByteString.copyFrom(data));
-        patchInstructionBuidler.setInstructions(ByteString.copyFrom(instruction));
-        patchInstructionBuidler.setDstFilesize(size);
-
-        Deploy.PatchInstruction patch = patchInstructionBuidler.build();
-        return patch;
-    }
-
-    private Deploy.PatchInstruction generateDelta(Apk remoteApk, Apk localApk) throws IOException {
-        PatchGenerator.Patch patch = new PatchGenerator().generate(remoteApk, localApk);
-        return buildPatchInstruction(
-                patch.destinationSize, patch.sourcePath, patch.instructions, patch.data);
-    }
 
     @Trace
     private String fullPreinstall(HashMap<String, Apk> fullApks) throws DeployerException {

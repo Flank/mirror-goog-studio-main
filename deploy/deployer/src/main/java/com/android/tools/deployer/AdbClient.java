@@ -52,6 +52,7 @@ public class AdbClient {
         SHELL_UNRESPONSIVE,
         MULTI_APKS_NO_SUPPORTED_BELOW21,
         INSTALL_FAILED_INSUFFICIENT_STORAGE,
+        INSTALL_PARSE_FAILED_NO_CERTIFICATES,
         ;
 
         private String reason = null;
@@ -83,16 +84,16 @@ public class AdbClient {
         }
     }
 
-    public InstallResult install(List<String> apks, List<String> options) {
+    public InstallResult install(List<String> apks, List<String> options, boolean reinstall) {
         List<File> files = apks.stream().map(File::new).collect(Collectors.toList());
         try {
             if (device.getVersion().isGreaterOrEqualThan(AndroidVersion.VersionCodes.LOLLIPOP)) {
-                device.installPackages(files, true, options, 5, TimeUnit.MINUTES);
+                device.installPackages(files, reinstall, options, 5, TimeUnit.MINUTES);
             } else {
                 if (apks.size() != 1) {
                     return InstallResult.MULTI_APKS_NO_SUPPORTED_BELOW21;
                 } else {
-                    device.installPackage(apks.get(0), true, options.toArray(new String[0]));
+                    device.installPackage(apks.get(0), reinstall, options.toArray(new String[0]));
                 }
             }
             return InstallResult.OK;
@@ -101,7 +102,7 @@ public class AdbClient {
             String code = e.getErrorCode();
             if (code != null) {
                 try {
-                    result = InstallResult.valueOf(code);
+                    result = ApkInstaller.parseInstallerResultErrorCode(code);
                 } catch (IllegalArgumentException | NullPointerException ignored) {
                     logger.warning(
                             "Unrecognized Installation Failure: %s\n%s\n", code, e.getMessage());
@@ -140,6 +141,10 @@ public class AdbClient {
         }
     }
 
+    public AndroidVersion getVersion() {
+        return device.getVersion();
+    }
+
     // TODO: Replace this to void copying the full byte[] incurred when calling stream.toByteArray()
     private class ByteArrayOutputReceiver implements IShellOutputReceiver {
 
@@ -162,4 +167,5 @@ public class AdbClient {
             return stream.toByteArray();
         }
     }
+
 }

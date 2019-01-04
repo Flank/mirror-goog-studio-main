@@ -87,6 +87,7 @@ message InstallerResponse {
     SwapResponse swap_response = 3;
     DumpResponse dump_response = 4;
     DeltaPreinstallResponse deltapreinstall_response = 5;
+    DeltaInstallResponse deltainstall_response = 6;
   }
 }
 
@@ -137,7 +138,6 @@ message DumpResponse {
     UNKNOWN = 0;
     OK = 1; // The dump completed successfully.
     ERROR_PACKAGE_NOT_FOUND = 2;
-    ERROR_PROCESS_NOT_FOUND = 3;
   }
 
   Status status = 1;
@@ -174,4 +174,27 @@ message DeltaPreinstallResponse{
   }
   Status status = 1;
   string session_id = 2;
+}
+
+message DeltaInstallRequest {
+  enum Status {
+    UNKNOWN = 0;
+    OK = 1;
+    ERROR = 2;
+  }
+  repeated string options = 2;
+  repeated PatchInstruction patchInstructions = 3;
+}
+
+message DeltaInstallResponse{
+  enum Status {
+    UNKNOWN = 0;
+    OK = 1;
+    ERROR = 2;
+  }
+  Status status = 1;
+  // The output returned by the package manager when calling
+  // either "pm install" or "pm commit". Parsed to determine
+  // reason upon failure.
+  string install_output = 2;
 }

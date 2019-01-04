@@ -117,6 +117,17 @@ public class AdbInstaller implements Installer {
         return response;
     }
 
+    @Override
+    public Deploy.DeltaInstallResponse deltaInstall(Deploy.DeltaInstallRequest request)
+            throws IOException {
+        String[] cmd = buildCmd(new String[] {"deltainstall"});
+        ByteArrayInputStream inputStream = wrap(request);
+        Deploy.InstallerResponse installerResponse = invokeRemoteCommand(cmd, inputStream);
+        Deploy.DeltaInstallResponse response = installerResponse.getDeltainstallResponse();
+        logger.info("DeltaInstall response:" + response.getStatus().toString());
+        return response;
+    }
+
     private Deploy.InstallerResponse invokeRemoteCommand(
             String[] cmd, ByteArrayInputStream inputStream) throws IOException {
         Trace.begin("./installer " + cmd[2]);
@@ -170,13 +181,18 @@ public class AdbInstaller implements Installer {
                 throw new IOException("Invalid installer response");
             }
             prepare();
-            inputStream.reset();
+            if (inputStream != null) {
+                inputStream.reset();
+            }
             return invokeRemoteCommand(cmd, inputStream, OnFail.DO_NO_RETRY);
         }
 
         // Parse response.
         if (response.getStatus() == Deploy.InstallerResponse.Status.ERROR_WRONG_VERSION) {
             prepare();
+            if (inputStream != null) {
+                inputStream.reset();
+            }
             return invokeRemoteCommand(cmd, inputStream, OnFail.DO_NO_RETRY);
         }
         return response;

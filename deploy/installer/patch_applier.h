@@ -14,32 +14,22 @@
  * limitations under the License.
  */
 
-#ifndef PACKAGEMANAGER_H
-#define PACKAGEMANAGER_H
+#ifndef DEPLOYER_PATCH_APPLIER_H
+#define DEPLOYER_PATCH_APPLIER_H
 
-#include <string>
-#include <vector>
-
-#include "tools/base/deploy/installer/workspace.h"
+#include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {
 
-// Wrapper around Android executable "pm" (Android Package Manager).
-class PackageManager {
+class PatchApplier {
  public:
-  PackageManager(Workspace& workspace) : workspace_(workspace) {}
-  bool GetApks(const std::string& package_name, std::vector<std::string>* apks,
-               std::string* error_string) const;
-  static void SetPath(const char* path);
-
-  bool Install(const std::string& apk_path,
-               const std::vector<std::string>& options,
-               std::string* output) const noexcept;
+  PatchApplier() = default;
+  ~PatchApplier() = default;
+  bool ApplyPatchToFD(const proto::PatchInstruction& patch, int dst_fd) const
+      noexcept;
 
  private:
-  Workspace& workspace_;
 };
 
 }  // namespace deploy
-
-#endif  // PACKAGEMANAGER_H
+#endif  // DEPLOYER_PATCH_APPLIER_H
