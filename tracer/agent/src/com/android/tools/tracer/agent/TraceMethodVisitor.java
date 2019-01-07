@@ -16,16 +16,20 @@
 
 package com.android.tools.tracer.agent;
 
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AdviceAdapter;
 
 class TraceMethodVisitor extends AdviceAdapter {
 
     private final String name;
     private final String className;
+    private final String tag;
     private final TraceProfile profile;
     private Label beginLabel;
     private boolean enabled;
@@ -40,6 +44,7 @@ class TraceMethodVisitor extends AdviceAdapter {
         super(Opcodes.ASM5, mv, access, name, desc);
         this.className = className;
         this.name = name;
+        this.tag = buildTag(className, name, desc);
         this.profile = profile;
         this.enabled = profile.shouldInstrument(className, name);
     }
@@ -59,7 +64,7 @@ class TraceMethodVisitor extends AdviceAdapter {
         if (profile.start(className, name)) {
             invoke("start", "()V");
         }
-        invoke("begin", "(Ljava/lang/String;)V", buildTag(className, name));
+        invoke("begin", "(Ljava/lang/String;)V", tag);
     }
 
     @Override
@@ -109,10 +114,25 @@ class TraceMethodVisitor extends AdviceAdapter {
         }
     }
 
-    private String buildTag(String className, String method) {
-        int i = className.lastIndexOf('/');
-        String name = i == -1 ? className : className.substring(i + 1);
-        return name + "." + method;
+    private static String buildTag(String className, String method, String desc) {
+        // className comes as "Ljava/lang/String"
+        String name = simplifyClassName(className, '/');
+
+        // getClassName from Type, comes as "java.lang.String".
+        String returnClass = simplifyClassName(Type.getReturnType(desc).getClassName(), '.');
+        String args =
+                Stream.of(Type.getArgumentTypes(desc))
+                        .map(t -> simplifyClassName(t.getClassName(), '.'))
+                        .collect(Collectors.joining(", "));
+
+        return returnClass + " " + name + "." + method + "(" + args + ")";
+    }
+
+    private static String simplifyClassName(String className, int charSeparator) {
+        // If the charSeparator is not found, it will return -1. When substring is called, it will
+        // return substring(0), which is optimized to return the same String object, so there is no
+        // waste of time.
+        return className.substring(className.lastIndexOf(charSeparator) + 1);
     }
 
     private void invoke(String method, String desc, String... args) {
