@@ -65,6 +65,7 @@ java_library(
     srcs = glob([
         "src/main/**/*.java",
     ]),
+    tags = ["no_rbe_windows"],
     # Embed android installer in the jar (x86_64, arm7, arm64)
     resources = ["//tools/base/deploy/installer:android"],
     visibility = ["//visibility:public"],
@@ -89,6 +90,7 @@ java_binary(
     data = ["//tools/base/tracer:trace_agent"],
     jvm_flags = ["-javaagent:$(location //tools/base/tracer:trace_agent)"],
     main_class = "com.android.tools.deployer.DeployerRunner",
+    tags = ["no_rbe_windows"],
     runtime_deps = [
         ":tools.deployer",
         "//tools/base/ddmlib:tools.ddmlib",
@@ -101,7 +103,7 @@ coverage_java_test(
     srcs = glob(["src/test/java/**/*.java"]),
     data = glob(["src/test/resource/**"]),
     jvm_flags = ["-Dtest.suite.jar=deployer.tests.jar"],
-    tags = ["no_test_windows"],  # b/116693861
+    tags = ["no_rbe_windows", "no_test_windows"],  # b/116693861
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":tools.deployer",

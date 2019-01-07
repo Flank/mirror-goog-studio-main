@@ -17,6 +17,8 @@
 #define PERFD_SAMPLERS_CPU_THREAD_SAMPLER_H_
 
 #include <memory>
+#include <string>
+#include <unordered_map>
 
 #include "perfd/samplers/sampler.h"
 #include "perfd/sessions/session.h"
@@ -50,6 +52,8 @@ class CpuThreadSampler final : public Sampler {
   int32_t pid_;
   // Map from thread ID to last known thread state.
   std::unordered_map<int32_t, proto::CpuThreadData::State> previous_states_{};
+  // Map from thread ID to last known thread name.
+  std::unordered_map<int32_t, std::string> name_cache_{};
   // Files that are used to sample CPU threads.
   std::unique_ptr<const ProcfsFiles> procfs_;
 };

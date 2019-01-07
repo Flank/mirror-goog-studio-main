@@ -27,6 +27,7 @@ import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.api.artifact.BuildableArtifact;
+import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
@@ -36,6 +37,8 @@ import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.BuildElements;
+import com.android.build.gradle.internal.scope.BuildElementsTransformParams;
+import com.android.build.gradle.internal.scope.BuildElementsTransformRunnable;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -52,7 +55,6 @@ import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
-import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.files.FileCacheByPath;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
@@ -62,6 +64,7 @@ import com.android.builder.utils.FileCache;
 import com.android.builder.utils.ZipEntryUtils;
 import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.resources.FileStatus;
+import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.sdklib.AndroidVersion;
 import com.android.tools.build.apkzlib.sign.SigningOptions;
 import com.android.tools.build.apkzlib.utils.IOExceptionWrapper;
@@ -80,6 +83,8 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -94,6 +99,7 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
+import javax.inject.Inject;
 import org.gradle.api.Project;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
@@ -104,7 +110,6 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.tooling.BuildException;
 
 /** Abstract task to package an Android artifact. */
 public abstract class PackageAndroidArtifact extends IncrementalTask {
@@ -226,6 +231,12 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     protected File outputDirectory;
 
     @Nullable protected OutputFileProvider outputFileProvider;
+
+    private final WorkerExecutorFacade workers;
+
+    public PackageAndroidArtifact(WorkerExecutorFacade workers) {
+        this.workers = workers;
+    }
 
     @Input
     public String getProjectBaseName() {
@@ -375,12 +386,16 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         return apkList;
     }
 
-    private BuildOutput computeBuildOutputFile(ApkInfo apkInfo) {
+    private static BuildOutput computeBuildOutputFile(
+            ApkInfo apkInfo,
+            OutputFileProvider outputFileProvider,
+            File outputDirectory,
+            InternalArtifactType expectedOutputType) {
         File outputFile =
                 outputFileProvider != null
                         ? outputFileProvider.getOutputFile(apkInfo)
                         : new File(outputDirectory, apkInfo.getOutputFileName());
-        return new BuildOutput(getInternalArtifactType(), apkInfo, outputFile);
+        return new BuildOutput(expectedOutputType, apkInfo, outputFile);
     }
 
 
@@ -397,16 +412,25 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
         // check that we don't have colliding output file names
         checkFileNameUniqueness();
+        List<File> inputList = new ArrayList<>();
+        List<File> outputList = new ArrayList<>();
+
         ExistingBuildElements.from(getTaskInputType(), resourceFiles)
                 .transform(
+                        workers,
+                        FullActionSplitterRunnable.class,
                         (ApkInfo apkInfo, File inputFile) -> {
-                            try {
-                                return splitFullAction(apkInfo, inputFile);
-                            } catch (IOException e) {
-                                throw new BuildException(e.getMessage(), e);
-                            }
+                            SplitterParams params = new SplitterParams(apkInfo, inputFile, this);
+                            inputList.add(inputFile);
+                            outputList.add(params.getOutput());
+                            return params;
                         })
                 .into(getInternalArtifactType(), outputDirectory);
+
+        for (int i = 0; i < inputList.size(); i++) {
+            instantRunContext.get().addChangedFile(instantRunFileType, outputList.get(i));
+            recordMetrics(outputList.get(i), inputList.get(i));
+        }
     }
 
     private void checkFileNameUniqueness() {
@@ -456,92 +480,180 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         }
     }
 
-    public File splitFullAction(@NonNull ApkInfo apkData, @Nullable File processedResources)
-            throws IOException {
+    private static class FullActionSplitterRunnable extends BuildElementsTransformRunnable {
 
-        File incrementalDirForSplit = new File(getIncrementalFolder(), apkData.getFullName());
-
-        /*
-         * Clear the intermediate build directory. We don't know if anything is in there and
-         * since this is a full build, we don't want to get any interference from previous state.
-         */
-        if (incrementalDirForSplit.exists()) {
-            FileUtils.deleteDirectoryContents(incrementalDirForSplit);
-        } else {
-            FileUtils.mkdirs(incrementalDirForSplit);
+        @Inject
+        public FullActionSplitterRunnable(@NonNull SplitterParams params) {
+            super(params);
         }
 
-        File cacheByPathDir = new File(incrementalDirForSplit, ZIP_DIFF_CACHE_DIR);
-        FileUtils.mkdirs(cacheByPathDir);
-        FileCacheByPath cacheByPath = new FileCacheByPath(cacheByPathDir);
+        @Override
+        public void run() {
+            try {
+                SplitterParams params = (SplitterParams) getParams();
 
-        /*
-         * Clear the cache to make sure we have do not do an incremental build.
-         */
-        cacheByPath.clear();
+                FileUtils.mkdirs(params.getOutput().getParentFile());
 
-        Set<File> androidResources = getAndroidResources(processedResources);
+                File incrementalDirForSplit =
+                        new File(params.incrementalFolder, params.apkInfo.getFullName());
 
-        FileUtils.mkdirs(outputDirectory);
+                /*
+                 * Clear the intermediate build directory. We don't know if anything is in there and
+                 * since this is a full build, we don't want to get any interference from previous state.
+                 */
+                if (incrementalDirForSplit.exists()) {
+                    FileUtils.deleteDirectoryContents(incrementalDirForSplit);
+                } else {
+                    FileUtils.mkdirs(incrementalDirForSplit);
+                }
 
-        BuildOutput buildOutput = computeBuildOutputFile(apkData);
-        File outputFile = buildOutput.getOutputFile();
+                File cacheByPathDir = new File(incrementalDirForSplit, ZIP_DIFF_CACHE_DIR);
+                FileUtils.mkdirs(cacheByPathDir);
+                FileCacheByPath cacheByPath = new FileCacheByPath(cacheByPathDir);
 
-        /*
-         * Additionally, make sure we have no previous package, if it exists.
-         */
-        FileUtils.deleteRecursivelyIfExists(outputFile);
+                /*
+                 * Clear the cache to make sure we have do not do an incremental build.
+                 */
+                cacheByPath.clear();
 
-        final ImmutableMap<RelativeFile, FileStatus> updatedDex;
-        final ImmutableMap<RelativeFile, FileStatus> updatedJavaResources;
-        if (!hasFeatureDexFiles()) {
-            updatedDex = IncrementalRelativeFileSets.fromZipsAndDirectories(getDexFolders());
-            updatedJavaResources = getJavaResourcesChanges();
-        } else {
-            // We reach this code if we're in a feature module and minification is enabled in the
-            // base module. In this case, we want to use the classes.dex file from the base
-            // module's DexSplitterTransform.
-            checkNotNull(getFeatureDexFolder());
-            updatedDex = IncrementalRelativeFileSets.fromZipsAndDirectories(getFeatureDexFolder());
-            // For now, java resources are in the base apk, so we exclude them here (b/77546738)
-            updatedJavaResources = ImmutableMap.of();
+                Set<File> androidResources = getAndroidResources(params.processedResources);
+
+                /*
+                 * Additionally, make sure we have no previous package, if it exists.
+                 */
+                FileUtils.deleteRecursivelyIfExists(params.getOutput());
+
+                final ImmutableMap<RelativeFile, FileStatus> updatedDex;
+                final ImmutableMap<RelativeFile, FileStatus> updatedJavaResources;
+                if (params.featureDexFiles == null || params.featureDexFiles.isEmpty()) {
+                    updatedDex =
+                            IncrementalRelativeFileSets.fromZipsAndDirectories(params.dexFiles);
+                    updatedJavaResources =
+                            getJavaResourcesChanges(
+                                    params.javaResourceFiles, params.incrementalFolder);
+                } else {
+                    // We reach this code if we're in a feature module and minification is enabled in the
+                    // base module. In this case, we want to use the classes.dex file from the base
+                    // module's DexSplitterTransform.
+                    checkNotNull(params.featureDexFiles);
+                    updatedDex =
+                            IncrementalRelativeFileSets.fromZipsAndDirectories(
+                                    params.featureDexFiles);
+                    // For now, java resources are in the base apk, so we exclude them here (b/77546738)
+                    updatedJavaResources = ImmutableMap.of();
+                }
+                ImmutableMap<RelativeFile, FileStatus> updatedAssets =
+                        IncrementalRelativeFileSets.fromZipsAndDirectories(params.assetsFiles);
+                ImmutableMap<RelativeFile, FileStatus> updatedAndroidResources =
+                        IncrementalRelativeFileSets.fromZipsAndDirectories(androidResources);
+                ImmutableMap<RelativeFile, FileStatus> updatedJniResources =
+                        IncrementalRelativeFileSets.fromZipsAndDirectories(params.jniFiles);
+
+                BuildElements manifestOutputs =
+                        ExistingBuildElements.from(params.manifestType, params.manifestDirectory);
+                doTask(
+                        incrementalDirForSplit,
+                        params.getOutput(),
+                        cacheByPath,
+                        manifestOutputs,
+                        updatedDex,
+                        updatedJavaResources,
+                        updatedAssets,
+                        updatedAndroidResources,
+                        updatedJniResources,
+                        params,
+                        false);
+
+                /*
+                 * Update the known files.
+                 */
+                KnownFilesSaveData saveData = KnownFilesSaveData.make(incrementalDirForSplit);
+                saveData.setInputSet(updatedDex.keySet(), InputSet.DEX);
+                saveData.setInputSet(updatedJavaResources.keySet(), InputSet.JAVA_RESOURCE);
+                saveData.setInputSet(updatedAssets.keySet(), InputSet.ASSET);
+                saveData.setInputSet(updatedAndroidResources.keySet(), InputSet.ANDROID_RESOURCE);
+                saveData.setInputSet(updatedJniResources.keySet(), InputSet.NATIVE_RESOURCE);
+                saveData.saveCurrentData();
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
         }
-        ImmutableMap<RelativeFile, FileStatus> updatedAssets =
-                IncrementalRelativeFileSets.fromZipsAndDirectories(assets.getFiles());
-        ImmutableMap<RelativeFile, FileStatus> updatedAndroidResources =
-                IncrementalRelativeFileSets.fromZipsAndDirectories(androidResources);
-        ImmutableMap<RelativeFile, FileStatus> updatedJniResources =
-                IncrementalRelativeFileSets.fromZipsAndDirectories(getJniFolders());
+    }
 
-        BuildElements manifestOutputs =
-                ExistingBuildElements.from(manifestType, manifests.get().getAsFile());
-        doTask(
-                apkData,
-                incrementalDirForSplit,
-                outputFile,
-                cacheByPath,
-                manifestOutputs,
-                updatedDex,
-                updatedJavaResources,
-                updatedAssets,
-                updatedAndroidResources,
-                updatedJniResources,
-                false);
+    private static class SplitterParams extends BuildElementsTransformParams {
+        @NonNull ApkInfo apkInfo;
+        @NonNull File processedResources;
+        @NonNull protected final File outputFile;
+        @NonNull protected final File incrementalFolder;
+        @NonNull protected final Set<File> dexFiles;
+        @Nullable protected final Set<File> featureDexFiles;
+        @NonNull protected final Set<File> assetsFiles;
+        @NonNull protected final Set<File> jniFiles;
+        @NonNull protected final Set<File> javaResourceFiles;
+        @NonNull protected final InternalArtifactType manifestType;
+        @NonNull protected final IncrementalPackagerBuilder.ApkFormat apkFormat;
+        @Nullable protected final File signingConfig;
+        @NonNull protected final Set<String> abiFilters;
+        @NonNull protected final FileType instantRunFileType;
+        @NonNull protected final File manifestDirectory;
+        @Nullable protected final Collection<String> aaptOptionsNoCompress;
+        @Nullable protected final String createdBy;
+        protected final int minSdkVersion;
+        protected final boolean isInInstantRunMode;
+        protected final boolean isDebuggableBuild;
+        protected final boolean isJniDebuggableBuild;
+        protected final boolean keepTimestampsInApk;
 
-        /*
-         * Update the known files.
+        /**
+         * This should only be used in instant run mode in incremental task action where parameters
+         * will not be serialized
          */
-        KnownFilesSaveData saveData = KnownFilesSaveData.make(incrementalDirForSplit);
-        saveData.setInputSet(updatedDex.keySet(), InputSet.DEX);
-        saveData.setInputSet(updatedJavaResources.keySet(), InputSet.JAVA_RESOURCE);
-        saveData.setInputSet(updatedAssets.keySet(), InputSet.ASSET);
-        saveData.setInputSet(updatedAndroidResources.keySet(), InputSet.ANDROID_RESOURCE);
-        saveData.setInputSet(updatedJniResources.keySet(), InputSet.NATIVE_RESOURCE);
-        saveData.saveCurrentData();
+        @Nullable protected transient InstantRunBuildContext instantRunBuildContext;
 
-        recordMetrics(outputFile, processedResources);
+        SplitterParams(
+                @NonNull ApkInfo apkInfo,
+                @NonNull File processedResources,
+                PackageAndroidArtifact task) {
+            this.apkInfo = apkInfo;
+            this.processedResources = processedResources;
 
-        return outputFile;
+            outputFile =
+                    computeBuildOutputFile(
+                                    apkInfo,
+                                    task.outputFileProvider,
+                                    task.outputDirectory,
+                                    task.getInternalArtifactType())
+                            .getOutputFile();
+
+            incrementalFolder = task.getIncrementalFolder();
+            dexFiles = task.getDexFolders().getFiles();
+            featureDexFiles =
+                    task.getFeatureDexFolder() == null
+                            ? null
+                            : task.getFeatureDexFolder().getFiles();
+            assetsFiles = task.getAssets().getFiles();
+            jniFiles = task.getJniFolders().getFiles();
+            javaResourceFiles = task.getJavaResourceFiles().getFiles();
+            manifestType = task.getManifestType();
+            apkFormat = task.apkFormat;
+            signingConfig = SigningConfigMetadata.Companion.getOutputFile(task.signingConfig);
+            abiFilters = task.abiFilters;
+            instantRunFileType = task.instantRunFileType;
+            manifestDirectory = task.getManifests().get().getAsFile();
+            aaptOptionsNoCompress = task.aaptOptionsNoCompress;
+            createdBy = task.getBuilder().getCreatedBy();
+            minSdkVersion = task.getMinSdkVersion();
+            isInInstantRunMode = task.isInInstantRunMode();
+            isDebuggableBuild = task.getDebugBuild();
+            isJniDebuggableBuild = task.getJniDebugBuild();
+            keepTimestampsInApk = AndroidGradleOptions.keepTimestampsInApk(task.getProject());
+        }
+
+        @NonNull
+        @Override
+        public File getOutput() {
+            return outputFile;
+        }
     }
 
     abstract void recordMetrics(File outputFile, File resourcesApFile);
@@ -585,11 +697,12 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         return copiedZip;
     }
 
-    ImmutableMap<RelativeFile, FileStatus> getJavaResourcesChanges() throws IOException {
+    private static ImmutableMap<RelativeFile, FileStatus> getJavaResourcesChanges(
+            Iterable<File> javaResourceFiles, File incrementalFolder) throws IOException {
 
         ImmutableMap.Builder<RelativeFile, FileStatus> updatedJavaResourcesBuilder =
                 ImmutableMap.builder();
-        for (File javaResourceFile : getJavaResourceFiles()) {
+        for (File javaResourceFile : javaResourceFiles) {
             try {
                 updatedJavaResourcesBuilder.putAll(
                         javaResourceFile.isFile()
@@ -598,7 +711,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             } catch (Zip64NotSupportedException e) {
                 updatedJavaResourcesBuilder.putAll(
                         IncrementalRelativeFileSets.fromZip(
-                                copyJavaResourcesOnly(getIncrementalFolder(), javaResourceFile)));
+                                copyJavaResourcesOnly(incrementalFolder, javaResourceFile)));
             }
         }
         return updatedJavaResourcesBuilder.build();
@@ -608,7 +721,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
      * Packages the application incrementally. In case of instant run packaging, this is not a
      * perfectly incremental task as some files are always rewritten even if no change has occurred.
      *
-     * @param apkData the split being built
      * @param outputFile expected output package file
      * @param changedDex incremental dex packaging data
      * @param changedJavaResources incremental java resources
@@ -617,8 +729,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
      * @param changedNLibs incremental native libraries changed
      * @throws IOException failed to package the APK
      */
-    private void doTask(
-            @NonNull ApkInfo apkData,
+    private static void doTask(
             @NonNull File incrementalDirForSplit,
             @NonNull File outputFile,
             @NonNull FileCacheByPath cacheByPath,
@@ -628,6 +739,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             @NonNull ImmutableMap<RelativeFile, FileStatus> changedAssets,
             @NonNull ImmutableMap<RelativeFile, FileStatus> changedAndroidResources,
             @NonNull ImmutableMap<RelativeFile, FileStatus> changedNLibs,
+            @NonNull SplitterParams params,
             boolean isIncremental)
             throws IOException {
 
@@ -635,36 +747,35 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                 ImmutableMap.builder();
         javaResourcesForApk.putAll(changedJavaResources);
 
-        if (isInInstantRunMode()) {
-            changedDex = ImmutableMap.copyOf(
-                    Maps.filterKeys(
-                            changedDex,
-                            Predicates.compose(
-                                    Predicates.in(getDexFolders().getFiles()),
-                                    RelativeFile::getBase
-                            )));
+        if (params.isInInstantRunMode) {
+            changedDex =
+                    ImmutableMap.copyOf(
+                            Maps.filterKeys(
+                                    changedDex,
+                                    Predicates.compose(
+                                            Predicates.in(params.dexFiles),
+                                            RelativeFile::getBase)));
         }
         final ImmutableMap<RelativeFile, FileStatus> dexFilesToPackage = changedDex;
 
         String filter = null;
-        FilterData abiFilter = apkData.getFilter(OutputFile.FilterType.ABI);
+        FilterData abiFilter = params.apkInfo.getFilter(OutputFile.FilterType.ABI);
         if (abiFilter != null) {
             filter = abiFilter.getIdentifier();
         }
 
         // find the manifest file for this split.
-        BuildOutput manifestForSplit = manifestOutputs.element(apkData);
+        BuildOutput manifestForSplit = manifestOutputs.element(params.apkInfo);
 
         if (manifestForSplit == null) {
             throw new RuntimeException(
                     "Found a .ap_ for split "
-                            + apkData
+                            + params.apkInfo
                             + " but no "
-                            + manifestType
+                            + params.manifestType
                             + " associated manifest file");
         }
         FileUtils.mkdirs(outputFile.getParentFile());
-        EvalIssueReporter issueReporter = getBuilder().getIssueReporter();
         // we are executing a task right now, so we can parse the manifest.
         BooleanSupplier isInExecutionPhase = () -> true;
         SigningOptions.Validation validation =
@@ -673,32 +784,31 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                         : SigningOptions.Validation.ASSUME_INVALID;
 
         try (IncrementalPackager packager =
-                new IncrementalPackagerBuilder(apkFormat)
+                new IncrementalPackagerBuilder(params.apkFormat)
                         .withOutputFile(outputFile)
                         .withSigning(
-                                SigningConfigMetadata.Companion.load(signingConfig), validation)
-                        .withCreatedBy(getBuilder().getCreatedBy())
-                        .withMinSdk(getMinSdkVersion())
+                                SigningConfigMetadata.Companion.load(params.signingConfig),
+                                validation)
+                        .withCreatedBy(params.createdBy)
+                        .withMinSdk(params.minSdkVersion)
                         // TODO: allow extra metadata to be saved in the split scope to avoid
                         // reparsing
                         // these manifest files.
                         .withNativeLibraryPackagingMode(
                                 PackagingUtils.getNativeLibrariesLibrariesPackagingMode(
-                                        manifestForSplit.getOutputFile(),
-                                        isInExecutionPhase,
-                                        issueReporter))
+                                        manifestForSplit.getOutputFile(), isInExecutionPhase, null))
                         .withNoCompressPredicate(
                                 PackagingUtils.getNoCompressPredicate(
-                                        aaptOptionsNoCompress,
+                                        params.aaptOptionsNoCompress,
                                         manifestForSplit.getOutputFile(),
                                         isInExecutionPhase,
-                                        issueReporter))
+                                        null))
                         .withIntermediateDir(incrementalDirForSplit)
-                        .withProject(getProject())
-                        .withDebuggableBuild(getDebugBuild())
-                        .withAcceptedAbis(filter == null ? abiFilters : ImmutableSet.of(filter))
-                        .withJniDebuggableBuild(getJniDebugBuild())
-                        .withIssueReporter(issueReporter)
+                        .withKeepTimestampsInApk(params.keepTimestampsInApk)
+                        .withDebuggableBuild(params.isDebuggableBuild)
+                        .withAcceptedAbis(
+                                filter == null ? params.abiFilters : ImmutableSet.of(filter))
+                        .withJniDebuggableBuild(params.isJniDebuggableBuild)
                         .build()) {
             packager.updateDex(dexFilesToPackage);
             packager.updateJavaResources(changedJavaResources);
@@ -710,7 +820,10 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                 // FIX-ME : below would not work in multi apk situations. There is code somewhere
                 // to ensure we only build ONE multi APK for the target device, make sure it is still
                 // active.
-                instantRunContext.get().addChangedFile(instantRunFileType, outputFile);
+                if (params.instantRunBuildContext != null) {
+                    params.instantRunBuildContext.addChangedFile(
+                            params.instantRunFileType, outputFile);
+                }
             }
         }
 
@@ -742,168 +855,203 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         return true;
     }
 
-
     @Override
     protected void doIncrementalTaskAction(Map<File, FileStatus> changedInputs) {
         checkNotNull(changedInputs, "changedInputs == null");
-        ExistingBuildElements.from(getTaskInputType(), resourceFiles)
-                .transform(
-                        (apkInfo, inputFile) -> {
-                            try {
-                                return splitIncrementalAction(apkInfo, inputFile, changedInputs);
-                            } catch (IOException e) {
-                                throw new BuildException(e.getMessage(), e);
-                            }
-                        })
-                .into(getInternalArtifactType(), outputDirectory);
-    }
 
-    private File splitIncrementalAction(
-            @NonNull ApkInfo apkData,
-            @Nullable File processedResources,
-            Map<File, FileStatus> changedInputs)
-            throws IOException {
-
-        Set<File> androidResources = getAndroidResources(processedResources);
-
-        File incrementalDirForSplit = new File(getIncrementalFolder(), apkData.getFullName());
-
-        File cacheByPathDir = new File(incrementalDirForSplit, ZIP_DIFF_CACHE_DIR);
-        if (!cacheByPathDir.exists()) {
-            FileUtils.mkdirs(cacheByPathDir);
-        }
-        FileCacheByPath cacheByPath = new FileCacheByPath(cacheByPathDir);
-
-        KnownFilesSaveData saveData = KnownFilesSaveData.make(incrementalDirForSplit);
-
-        final Set<File> assetsFiles = assets.getFiles();
-
-        Set<Runnable> cacheUpdates = new HashSet<>();
-
-        final Set<File> dexFiles;
-        final Set<File> javaResourceFiles;
-        if (!hasFeatureDexFiles()) {
-            dexFiles = getDexFolders().getFiles();
-            javaResourceFiles = getJavaResourceFiles().getFiles();
+        // in instant run mode we don't use worker API because we need to report which files changed
+        // in the incremental build to the instantRunBuildContext and that can't be done from the
+        // isolated worker items.
+        if (isInInstantRunMode()) {
+            ExistingBuildElements.from(getTaskInputType(), resourceFiles)
+                    .transform(
+                            (apkInfo, inputFile) -> {
+                                IncrementalSplitterParams params =
+                                        new IncrementalSplitterParams(
+                                                apkInfo, inputFile, changedInputs, this);
+                                new IncrementalSplitterRunnable(params).run();
+                                return params.getOutput();
+                            })
+                    .into(getInternalArtifactType(), outputDirectory);
         } else {
-            // We reach this code if we're in a feature module and minification is enabled in the
-            // base module. In this case, we want to use the classes.dex file from the base
-            // module's DexSplitterTransform.
-            checkNotNull(getFeatureDexFolder());
-            dexFiles = getFeatureDexFolder().getFiles();
-            // For now, java resources are in the base apk, so we exclude them here (b/77546738)
-            javaResourceFiles = ImmutableSet.of();
+            ExistingBuildElements.from(getTaskInputType(), resourceFiles)
+                    .transform(
+                            workers,
+                            IncrementalSplitterRunnable.class,
+                            (apkInfo, inputFile) ->
+                                    new IncrementalSplitterParams(
+                                            apkInfo, inputFile, changedInputs, this))
+                    .into(getInternalArtifactType(), outputDirectory);
         }
-
-        ImmutableMap<RelativeFile, FileStatus> changedDexFiles =
-                KnownFilesSaveData.getChangedInputs(
-                        changedInputs, saveData, InputSet.DEX, dexFiles, cacheByPath, cacheUpdates);
-
-        ImmutableMap<RelativeFile, FileStatus> changedJavaResources;
-        try {
-            changedJavaResources =
-                    KnownFilesSaveData.getChangedInputs(
-                            changedInputs,
-                            saveData,
-                            InputSet.JAVA_RESOURCE,
-                            javaResourceFiles,
-                            cacheByPath,
-                            cacheUpdates);
-        } catch (Zip64NotSupportedException e) {
-            // copy all changedInputs into a smaller jar and rerun.
-            ImmutableMap.Builder<File, FileStatus> copiedInputs = ImmutableMap.builder();
-            for (Map.Entry<File, FileStatus> fileFileStatusEntry : changedInputs.entrySet()) {
-                copiedInputs.put(
-                        copyJavaResourcesOnly(getIncrementalFolder(), fileFileStatusEntry.getKey()),
-                        fileFileStatusEntry.getValue());
-            }
-            changedJavaResources =
-                    KnownFilesSaveData.getChangedInputs(
-                            copiedInputs.build(),
-                            saveData,
-                            InputSet.JAVA_RESOURCE,
-                            getJavaResourceFiles().getFiles(),
-                            cacheByPath,
-                            cacheUpdates);
-        }
-
-        ImmutableMap<RelativeFile, FileStatus> changedAssets =
-                KnownFilesSaveData.getChangedInputs(
-                        changedInputs,
-                        saveData,
-                        InputSet.ASSET,
-                        assetsFiles,
-                        cacheByPath,
-                        cacheUpdates);
-
-        ImmutableMap<RelativeFile, FileStatus> changedAndroidResources =
-                KnownFilesSaveData.getChangedInputs(
-                        changedInputs,
-                        saveData,
-                        InputSet.ANDROID_RESOURCE,
-                        androidResources,
-                        cacheByPath,
-                        cacheUpdates);
-
-        ImmutableMap<RelativeFile, FileStatus> changedNLibs =
-                KnownFilesSaveData.getChangedInputs(
-                        changedInputs,
-                        saveData,
-                        InputSet.NATIVE_RESOURCE,
-                        getJniFolders().getFiles(),
-                        cacheByPath,
-                        cacheUpdates);
-
-        BuildOutput buildOutput = computeBuildOutputFile(apkData);
-        File outputFile = buildOutput.getOutputFile();
-
-        BuildElements manifestOutputs =
-                ExistingBuildElements.from(manifestType, manifests.get().getAsFile());
-
-        doTask(
-                apkData,
-                incrementalDirForSplit,
-                outputFile,
-                cacheByPath,
-                manifestOutputs,
-                changedDexFiles,
-                changedJavaResources,
-                changedAssets,
-                changedAndroidResources,
-                changedNLibs,
-                true);
-
-        /*
-         * Update the cache
-         */
-        cacheUpdates.forEach(Runnable::run);
-
-        /*
-         * Update the save data keep files.
-         */
-        ImmutableMap<RelativeFile, FileStatus> allDex =
-                IncrementalRelativeFileSets.fromZipsAndDirectories(getDexFolders());
-        ImmutableMap<RelativeFile, FileStatus> allJavaResources =
-                IncrementalRelativeFileSets.fromZipsAndDirectories(getJavaResourceFiles());
-        ImmutableMap<RelativeFile, FileStatus> allAssets =
-                IncrementalRelativeFileSets.fromZipsAndDirectories(assetsFiles);
-        ImmutableMap<RelativeFile, FileStatus> allAndroidResources =
-                IncrementalRelativeFileSets.fromZipsAndDirectories(androidResources);
-        ImmutableMap<RelativeFile, FileStatus> allJniResources =
-                IncrementalRelativeFileSets.fromZipsAndDirectories(getJniFolders());
-
-        saveData.setInputSet(allDex.keySet(), InputSet.DEX);
-        saveData.setInputSet(allJavaResources.keySet(), InputSet.JAVA_RESOURCE);
-        saveData.setInputSet(allAssets.keySet(), InputSet.ASSET);
-        saveData.setInputSet(allAndroidResources.keySet(), InputSet.ANDROID_RESOURCE);
-        saveData.setInputSet(allJniResources.keySet(), InputSet.NATIVE_RESOURCE);
-        saveData.saveCurrentData();
-        return outputFile;
     }
 
-    /** true if variant type is a feature split and minification is enabled in the base module. */
-    private boolean hasFeatureDexFiles() {
-        return (getFeatureDexFolder() != null && !getFeatureDexFolder().getFiles().isEmpty());
+    private static class IncrementalSplitterRunnable extends BuildElementsTransformRunnable {
+
+        @Inject
+        public IncrementalSplitterRunnable(@NonNull IncrementalSplitterParams params) {
+            super(params);
+        }
+
+        @Override
+        public void run() {
+            IncrementalSplitterParams params = (IncrementalSplitterParams) getParams();
+            try {
+                Set<File> androidResources = getAndroidResources(params.processedResources);
+
+                File incrementalDirForSplit =
+                        new File(params.incrementalFolder, params.apkInfo.getFullName());
+
+                File cacheByPathDir = new File(incrementalDirForSplit, ZIP_DIFF_CACHE_DIR);
+                if (!cacheByPathDir.exists()) {
+                    FileUtils.mkdirs(cacheByPathDir);
+                }
+                FileCacheByPath cacheByPath = new FileCacheByPath(cacheByPathDir);
+
+                KnownFilesSaveData saveData = KnownFilesSaveData.make(incrementalDirForSplit);
+
+                Set<Runnable> cacheUpdates = new HashSet<>();
+
+                final Set<File> dexFiles;
+                final Set<File> javaResourceFiles;
+                if (params.featureDexFiles == null || params.featureDexFiles.isEmpty()) {
+                    dexFiles = params.dexFiles;
+                    javaResourceFiles = params.javaResourceFiles;
+                } else {
+                    // We reach this code if we're in a feature module and minification is enabled in the
+                    // base module. In this case, we want to use the classes.dex file from the base
+                    // module's DexSplitterTransform.
+                    checkNotNull(params.featureDexFiles);
+                    dexFiles = params.featureDexFiles;
+                    // For now, java resources are in the base apk, so we exclude them here (b/77546738)
+                    javaResourceFiles = ImmutableSet.of();
+                }
+
+                ImmutableMap<RelativeFile, FileStatus> changedDexFiles =
+                        KnownFilesSaveData.getChangedInputs(
+                                params.changedInputs,
+                                saveData,
+                                InputSet.DEX,
+                                dexFiles,
+                                cacheByPath,
+                                cacheUpdates);
+
+                ImmutableMap<RelativeFile, FileStatus> changedJavaResources;
+                try {
+                    changedJavaResources =
+                            KnownFilesSaveData.getChangedInputs(
+                                    params.changedInputs,
+                                    saveData,
+                                    InputSet.JAVA_RESOURCE,
+                                    javaResourceFiles,
+                                    cacheByPath,
+                                    cacheUpdates);
+                } catch (Zip64NotSupportedException e) {
+                    // copy all changedInputs into a smaller jar and rerun.
+                    ImmutableMap.Builder<File, FileStatus> copiedInputs = ImmutableMap.builder();
+                    for (Map.Entry<File, FileStatus> fileFileStatusEntry :
+                            params.changedInputs.entrySet()) {
+                        copiedInputs.put(
+                                copyJavaResourcesOnly(
+                                        params.incrementalFolder, fileFileStatusEntry.getKey()),
+                                fileFileStatusEntry.getValue());
+                    }
+                    changedJavaResources =
+                            KnownFilesSaveData.getChangedInputs(
+                                    copiedInputs.build(),
+                                    saveData,
+                                    InputSet.JAVA_RESOURCE,
+                                    params.javaResourceFiles,
+                                    cacheByPath,
+                                    cacheUpdates);
+                }
+
+                ImmutableMap<RelativeFile, FileStatus> changedAssets =
+                        KnownFilesSaveData.getChangedInputs(
+                                params.changedInputs,
+                                saveData,
+                                InputSet.ASSET,
+                                params.assetsFiles,
+                                cacheByPath,
+                                cacheUpdates);
+
+                ImmutableMap<RelativeFile, FileStatus> changedAndroidResources =
+                        KnownFilesSaveData.getChangedInputs(
+                                params.changedInputs,
+                                saveData,
+                                InputSet.ANDROID_RESOURCE,
+                                androidResources,
+                                cacheByPath,
+                                cacheUpdates);
+
+                ImmutableMap<RelativeFile, FileStatus> changedNLibs =
+                        KnownFilesSaveData.getChangedInputs(
+                                params.changedInputs,
+                                saveData,
+                                InputSet.NATIVE_RESOURCE,
+                                params.jniFiles,
+                                cacheByPath,
+                                cacheUpdates);
+
+                BuildElements manifestOutputs =
+                        ExistingBuildElements.from(params.manifestType, params.manifestDirectory);
+
+                doTask(
+                        incrementalDirForSplit,
+                        params.getOutput(),
+                        cacheByPath,
+                        manifestOutputs,
+                        changedDexFiles,
+                        changedJavaResources,
+                        changedAssets,
+                        changedAndroidResources,
+                        changedNLibs,
+                        params,
+                        true);
+
+                /*
+                 * Update the cache
+                 */
+                cacheUpdates.forEach(Runnable::run);
+
+                /*
+                 * Update the save data keep files.
+                 */
+                ImmutableMap<RelativeFile, FileStatus> allDex =
+                        IncrementalRelativeFileSets.fromZipsAndDirectories(params.dexFiles);
+                ImmutableMap<RelativeFile, FileStatus> allJavaResources =
+                        IncrementalRelativeFileSets.fromZipsAndDirectories(
+                                params.javaResourceFiles);
+                ImmutableMap<RelativeFile, FileStatus> allAssets =
+                        IncrementalRelativeFileSets.fromZipsAndDirectories(params.assetsFiles);
+                ImmutableMap<RelativeFile, FileStatus> allAndroidResources =
+                        IncrementalRelativeFileSets.fromZipsAndDirectories(androidResources);
+                ImmutableMap<RelativeFile, FileStatus> allJniResources =
+                        IncrementalRelativeFileSets.fromZipsAndDirectories(params.jniFiles);
+
+                saveData.setInputSet(allDex.keySet(), InputSet.DEX);
+                saveData.setInputSet(allJavaResources.keySet(), InputSet.JAVA_RESOURCE);
+                saveData.setInputSet(allAssets.keySet(), InputSet.ASSET);
+                saveData.setInputSet(allAndroidResources.keySet(), InputSet.ANDROID_RESOURCE);
+                saveData.setInputSet(allJniResources.keySet(), InputSet.NATIVE_RESOURCE);
+                saveData.saveCurrentData();
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+    }
+
+    private static class IncrementalSplitterParams extends SplitterParams {
+        private final Map<File, FileStatus> changedInputs;
+
+        IncrementalSplitterParams(
+                @NonNull ApkInfo apkInfo,
+                @NonNull File processedResources,
+                Map<File, FileStatus> changedInputs,
+                PackageAndroidArtifact task) {
+            super(apkInfo, processedResources, task);
+            this.changedInputs = changedInputs;
+            this.instantRunBuildContext = task.instantRunContext.get();
+        }
     }
 
     // ----- CreationAction -----

@@ -17,6 +17,7 @@ package com.android.tools.deployer;
 
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.DexClass;
+import com.android.tools.r8.ByteDataView;
 import com.android.tools.r8.CompilationFailedException;
 import com.android.tools.r8.D8;
 import com.android.tools.r8.D8Command;
@@ -85,17 +86,20 @@ public class D8DexSplitter implements DexSplitter {
         public void join() throws InterruptedException {
             finished.await();
         }
-
+        
         @Override
         public synchronized void accept(
-                String name, byte[] dexData, Set<String> descriptors, DiagnosticsHandler handler) {
+                String name,
+                ByteDataView data,
+                Set<String> descriptors,
+                DiagnosticsHandler handler) {
             String className = typeNameToClassName(name);
             CRC32 crc = new CRC32();
-            crc.update(dexData);
+            crc.update(data.getBuffer(), data.getOffset(), data.getLength());
             long newChecksum = crc.getValue();
             DexClass clazz = new DexClass(className, newChecksum, null, dex);
             if (keepCode != null && keepCode.test(clazz)) {
-                clazz = new DexClass(className, newChecksum, dexData, dex);
+                clazz = new DexClass(className, newChecksum, data.copyByteData(), dex);
             }
             classes.add(clazz);
         }

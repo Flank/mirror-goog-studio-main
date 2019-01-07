@@ -25,6 +25,7 @@ import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.transform.SecondaryFile;
 import com.android.build.api.transform.Transform;
 import com.android.build.api.transform.TransformException;
+import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
@@ -43,6 +44,7 @@ import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.resources.configuration.VersionQualifier;
 import com.android.ide.common.signing.KeytoolException;
+import com.android.sdklib.IAndroidTarget;
 import com.android.utils.FileUtils;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.ImmutableList;
@@ -57,6 +59,7 @@ import java.io.OutputStreamWriter;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
@@ -394,21 +397,51 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
         return resFilePackageFile;
     }
 
+    /**
+     * Generate the compile resouces_ap file that contains the resources for this split plus the
+     * split definition.
+     */
+    public static void generateSplitApkResourcesAp(
+            @NonNull Logger logger,
+            @NonNull BlockingResourceLinker aapt,
+            @NonNull File androidManifest,
+            @NonNull File resFilePackageFile,
+            @NonNull AaptOptions aaptOptions,
+            @NonNull IAndroidTarget androidTarget,
+            @NonNull Set<File> importsFiles)
+            throws IOException, ProcessException {
+        List<File> importedAPKs =
+                importsFiles
+                        .stream()
+                        .filter(file -> file.getName().endsWith(SdkConstants.EXT_RES))
+                        .collect(Collectors.toList());
+
+        AaptPackageConfig.Builder aaptConfig =
+                new AaptPackageConfig.Builder()
+                        .setManifestFile(androidManifest)
+                        .setOptions(aaptOptions)
+                        .setDebuggable(true)
+                        .setVariantType(VariantTypeImpl.BASE_APK)
+                        .setImports(ImmutableList.copyOf(importedAPKs))
+                        .setResourceOutputApk(resFilePackageFile);
+
+        AndroidBuilder.processResources(aapt, aaptConfig, androidTarget, new LoggerWrapper(logger));
+    }
+
     protected CloseableBlockingResourceLinker getLinker() {
-        return getLinker(aapt2FromMaven, androidBuilder);
+        return getLinker(getAapt2ServiceKey(aapt2FromMaven, androidBuilder));
+    }
+
+    @NonNull
+    public static Aapt2ServiceKey getAapt2ServiceKey(
+            @Nullable FileCollection aapt2FromMaven, @NonNull AndroidBuilder androidBuilder) {
+        return Aapt2DaemonManagerService.registerAaptService(
+                aapt2FromMaven, androidBuilder.getBuildToolInfo(), androidBuilder.getLogger());
     }
 
     @NonNull
     public static CloseableBlockingResourceLinker getLinker(
-            @Nullable FileCollection aapt2FromMaven,
-            @NonNull AndroidBuilder androidBuilder) {
-        Aapt2ServiceKey aapt2ServiceKey =
-                Aapt2DaemonManagerService.registerAaptService(
-                        aapt2FromMaven,
-                        androidBuilder.getBuildToolInfo(),
-                        androidBuilder.getLogger());
-
+            @NonNull Aapt2ServiceKey aapt2ServiceKey) {
         return Aapt2DaemonManagerService.getAaptDaemon(aapt2ServiceKey);
     }
-
 }

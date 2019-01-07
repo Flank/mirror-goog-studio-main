@@ -43,6 +43,7 @@ import com.android.builder.model.level2.GraphItem;
 import com.android.builder.model.level2.Library;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
@@ -140,6 +141,37 @@ public class GradleModelMockerTest {
         assertThat(resolvedCoordinates.getGroupId()).isEqualTo("my.group.id");
         assertThat(resolvedCoordinates.getArtifactId()).isEqualTo("mylib");
         assertThat(resolvedCoordinates.getVersion()).isEqualTo("25.0.0-SNAPSHOT");
+    }
+
+    @Test
+    public void testKotlin() {
+        GradleModelMocker mocker =
+                createMocker(
+                        ""
+                                + "apply plugin: 'kotlin-android'\n"
+                                + "\n"
+                                + "dependencies {\n"
+                                + "    implementation \"org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version\"\n"
+                                + "}");
+        Variant variant = mocker.getVariant();
+        AndroidProject project = mocker.getProject();
+        assertThat(project.getProjectType()).isEqualTo(AndroidProject.PROJECT_TYPE_APP);
+
+        assertThat(variant.getMergedFlavor().getVersionCode()).isNull(); // not Integer.valueOf(0)!
+        Collection<JavaLibrary> libraries =
+                variant.getMainArtifact().getDependencies().getJavaLibraries();
+        assertThat(libraries).hasSize(3);
+        JavaLibrary library = libraries.iterator().next();
+        MavenCoordinates resolvedCoordinates = library.getResolvedCoordinates();
+        assertThat(resolvedCoordinates.getGroupId()).isEqualTo("org.jetbrains.kotlin");
+        assertThat(resolvedCoordinates.getArtifactId()).isEqualTo("kotlin-stdlib-jdk7");
+        assertThat(resolvedCoordinates.getVersion()).isEqualTo("$kotlin_version");
+
+        library = Iterators.get(libraries.iterator(), 1);
+        resolvedCoordinates = library.getResolvedCoordinates();
+        assertThat(resolvedCoordinates.getGroupId()).isEqualTo("org.jetbrains.kotlin");
+        assertThat(resolvedCoordinates.getArtifactId()).isEqualTo("kotlin-stdlib");
+        assertThat(resolvedCoordinates.getVersion()).isEqualTo("$kotlin_version");
     }
 
     @Test

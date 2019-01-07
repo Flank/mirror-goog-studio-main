@@ -37,7 +37,6 @@ import java.io.InputStreamReader;
 import java.lang.Thread.State;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,7 +65,6 @@ public class AndroidDebugBridge {
     private static final String SERVER_PORT_ENV_VAR = "ANDROID_ADB_SERVER_PORT"; //$NON-NLS-1$
 
     // Where to find the ADB bridge.
-    static final String DEFAULT_ADB_HOST = "localhost"; //$NON-NLS-1$
     static final int DEFAULT_ADB_PORT = 5037;
 
     // Only set when in unit testing mode. This is a hack until we move to devicelib.
@@ -1112,18 +1110,12 @@ public class AndroidDebugBridge {
      * Instantiates sSocketAddr with the address of the host's adb process.
      */
     private static void initAdbSocketAddr() {
-        try {
-            // If we're in unit test mode, we already manually set sAdbServerPort.
-            if (!sUnitTestMode) {
-                sAdbServerPort = getAdbServerPort();
-            }
-            sHostAddr = InetAddress.getByName(DEFAULT_ADB_HOST);
-            sSocketAddr = new InetSocketAddress(sHostAddr, sAdbServerPort);
-        } catch (UnknownHostException e) {
-            // localhost should always be known, but if it is not we would
-            // like to know.
-            Log.e(DDMS, "Unable to resolve: " + DEFAULT_ADB_HOST + ", due to:" + e);
+        // If we're in unit test mode, we already manually set sAdbServerPort.
+        if (!sUnitTestMode) {
+            sAdbServerPort = getAdbServerPort();
         }
+        sHostAddr = InetAddress.getLoopbackAddress();
+        sSocketAddr = new InetSocketAddress(sHostAddr, sAdbServerPort);
     }
 
     /**

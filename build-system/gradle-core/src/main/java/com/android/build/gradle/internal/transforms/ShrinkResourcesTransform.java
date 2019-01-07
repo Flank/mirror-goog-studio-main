@@ -26,7 +26,6 @@ import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.SecondaryFile;
 import com.android.build.api.transform.Transform;
-import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
@@ -36,16 +35,20 @@ import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildElements;
+import com.android.build.gradle.internal.scope.BuildElementsTransformParams;
+import com.android.build.gradle.internal.scope.BuildElementsTransformRunnable;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer;
 import com.android.builder.core.VariantType;
 import com.android.ide.common.build.ApkInfo;
+import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -60,10 +63,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.inject.Inject;
 import javax.xml.parsers.ParserConfigurationException;
 import org.gradle.api.file.Directory;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
+import org.gradle.api.logging.Logging;
 import org.gradle.api.provider.Provider;
 import org.xml.sax.SAXException;
 
@@ -237,31 +242,7 @@ public class ShrinkResourcesTransform extends Transform {
     }
 
     @Override
-    public void transform(@NonNull TransformInvocation invocation)
-            throws IOException, TransformException, InterruptedException {
-
-        BuildElements mergedManifestsOutputs =
-                ExistingBuildElements.from(InternalArtifactType.MERGED_MANIFESTS, mergedManifests);
-
-        ExistingBuildElements.from(InternalArtifactType.PROCESSED_RES, uncompressedResources)
-                .transform(
-                        (ApkInfo apkInfo, File buildInput) ->
-                                splitAction(
-                                        apkInfo, buildInput, mergedManifestsOutputs, invocation))
-                .into(InternalArtifactType.SHRUNK_PROCESSED_RES, compressedResources);
-
-    }
-
-    @Nullable
-    public File splitAction(
-            @NonNull ApkInfo apkInfo,
-            @Nullable File uncompressedResourceFile,
-            @NonNull BuildElements mergedManifests,
-            TransformInvocation invocation) {
-
-        if (uncompressedResourceFile == null) {
-            return null;
-        }
+    public void transform(@NonNull TransformInvocation invocation) {
 
         Collection<TransformInput> referencedInputs = invocation.getReferencedInputs();
         List<File> classes = new ArrayList<>();
@@ -274,100 +255,172 @@ public class ShrinkResourcesTransform extends Transform {
             }
         }
 
-        File reportFile = null;
-        File mappingFile =
-                mappingFileSrc != null ? BuildableArtifactUtil.singleFile(mappingFileSrc) : null;
-        if (mappingFile != null) {
-            File logDir = mappingFile.getParentFile();
-            if (logDir != null) {
-                reportFile = new File(logDir, "resources.txt");
-            }
+        BuildElements mergedManifestsOutputs =
+                ExistingBuildElements.from(InternalArtifactType.MERGED_MANIFESTS, mergedManifests);
+
+        try (WorkerExecutorFacade workers =
+                Workers.INSTANCE.getWorker(invocation.getContext().getWorkerExecutor())) {
+            ExistingBuildElements.from(InternalArtifactType.PROCESSED_RES, uncompressedResources)
+                    .transform(
+                            workers,
+                            SplitterRunnable.class,
+                            (ApkInfo apkInfo, File buildInput) ->
+                                    new SplitterParams(
+                                            apkInfo,
+                                            buildInput,
+                                            mergedManifestsOutputs,
+                                            classes,
+                                            this))
+                    .into(InternalArtifactType.SHRUNK_PROCESSED_RES, compressedResources);
+        }
+    }
+
+    private static class SplitterRunnable extends BuildElementsTransformRunnable {
+
+        @Inject
+        public SplitterRunnable(@NonNull SplitterParams params) {
+            super(params);
         }
 
-        File compressedResourceFile =
-                new File(
-                        compressedResources,
-                        "resources-" + apkInfo.getBaseName() + "-stripped.ap_");
-        FileUtils.mkdirs(compressedResourceFile.getParentFile());
-
-        BuildOutput mergedManifest = mergedManifests.element(apkInfo);
-        if (mergedManifest == null) {
-            try {
-                FileUtils.copyFile(uncompressedResourceFile, compressedResourceFile);
-            } catch (IOException e) {
-                logger.error("Failed to copy uncompressed resource file :", e);
-                throw new RuntimeException("Failed to copy uncompressed resource file", e);
-            }
-            return compressedResourceFile;
-        }
-
-        // Analyze resources and usages and strip out unused
-        ResourceUsageAnalyzer analyzer =
-                new ResourceUsageAnalyzer(
-                        Iterables.getOnlyElement(sourceDir.getFiles()),
-                        classes,
-                        mergedManifest.getOutputFile(),
-                        mappingFile,
-                        BuildableArtifactUtil.singleFile(resourceDir),
-                        reportFile,
-                        ResourceUsageAnalyzer.ApkFormat.BINARY);
-        try {
-            analyzer.setVerbose(logger.isEnabled(LogLevel.INFO));
-            analyzer.setDebug(logger.isEnabled(LogLevel.DEBUG));
-            try {
-                analyzer.analyze();
-            } catch (IOException | ParserConfigurationException | SAXException e) {
-                throw new RuntimeException(e);
+        @Override
+        public void run() {
+            SplitterParams params = (SplitterParams) getParams();
+            File reportFile = null;
+            if (params.mappingFile != null) {
+                File logDir = params.mappingFile.getParentFile();
+                if (logDir != null) {
+                    reportFile = new File(logDir, "resources.txt");
+                }
             }
 
-            // Just rewrite the .ap_ file to strip out the res/ files for unused resources
-            try {
-                analyzer.rewriteResourceZip(uncompressedResourceFile, compressedResourceFile);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            FileUtils.mkdirs(params.compressedResourceFile.getParentFile());
 
-            // Dump some stats
-            int unused = analyzer.getUnusedResourceCount();
-            if (unused > 0) {
-                StringBuilder sb = new StringBuilder(200);
-                sb.append("Removed unused resources");
-
-                // This is a bit misleading until we can strip out all resource types:
-                //int total = analyzer.getTotalResourceCount()
-                //sb.append("(" + unused + "/" + total + ")")
-
-                long before = uncompressedResourceFile.length();
-                long after = compressedResourceFile.length();
-                long percent = (int) ((before - after) * 100 / before);
-                sb.append(": Binary resource data reduced from ").
-                        append(toKbString(before)).
-                        append("KB to ").
-                        append(toKbString(after)).
-                        append("KB: Removed ").append(percent).append("%");
-                if (!ourWarned) {
-                    ourWarned = true;
-                    String name = variantData.getVariantConfiguration().getBuildType().getName();
-                    sb.append("\n")
-                            .append(
-                                    "Note: If necessary, you can disable resource shrinking by adding\n")
-                            .append("android {\n")
-                            .append("    buildTypes {\n")
-                            .append("        ")
-                            .append(name)
-                            .append(" {\n")
-                            .append("            shrinkResources false\n")
-                            .append("        }\n")
-                            .append("    }\n")
-                            .append("}");
+            if (params.mergedManifest == null) {
+                try {
+                    FileUtils.copyFile(
+                            params.uncompressedResourceFile, params.compressedResourceFile);
+                } catch (IOException e) {
+                    Logging.getLogger(ShrinkResourcesTransform.class)
+                            .error("Failed to copy uncompressed resource file :", e);
+                    throw new RuntimeException("Failed to copy uncompressed resource file", e);
                 }
 
-                System.out.println(sb.toString());
+                return;
             }
-        } finally {
-            analyzer.dispose();
+
+            // Analyze resources and usages and strip out unused
+            ResourceUsageAnalyzer analyzer =
+                    new ResourceUsageAnalyzer(
+                            params.sourceDir,
+                            params.classes,
+                            params.mergedManifest.getOutputFile(),
+                            params.mappingFile,
+                            params.resourceDir,
+                            reportFile,
+                            ResourceUsageAnalyzer.ApkFormat.BINARY);
+            try {
+                analyzer.setVerbose(params.isInfoLoggingEnabled);
+                analyzer.setDebug(params.isDebugLoggingEnabled);
+                try {
+                    analyzer.analyze();
+                } catch (IOException | ParserConfigurationException | SAXException e) {
+                    throw new RuntimeException(e);
+                }
+
+                // Just rewrite the .ap_ file to strip out the res/ files for unused resources
+                try {
+                    analyzer.rewriteResourceZip(
+                            params.uncompressedResourceFile, params.compressedResourceFile);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+                // Dump some stats
+                int unused = analyzer.getUnusedResourceCount();
+                if (unused > 0) {
+                    StringBuilder sb = new StringBuilder(200);
+                    sb.append("Removed unused resources");
+
+                    // This is a bit misleading until we can strip out all resource types:
+                    //int total = analyzer.getTotalResourceCount()
+                    //sb.append("(" + unused + "/" + total + ")")
+
+                    long before = params.uncompressedResourceFile.length();
+                    long after = params.compressedResourceFile.length();
+                    long percent = (int) ((before - after) * 100 / before);
+                    sb.append(": Binary resource data reduced from ")
+                            .append(toKbString(before))
+                            .append("KB to ")
+                            .append(toKbString(after))
+                            .append("KB: Removed ")
+                            .append(percent)
+                            .append("%");
+                    if (!ourWarned) {
+                        ourWarned = true;
+                        sb.append("\n")
+                                .append(
+                                        "Note: If necessary, you can disable resource shrinking by adding\n")
+                                .append("android {\n")
+                                .append("    buildTypes {\n")
+                                .append("        ")
+                                .append(params.buildTypeName)
+                                .append(" {\n")
+                                .append("            shrinkResources false\n")
+                                .append("        }\n")
+                                .append("    }\n")
+                                .append("}");
+                    }
+
+                    System.out.println(sb.toString());
+                }
+            } finally {
+                analyzer.dispose();
+            }
         }
-        return compressedResourceFile;
+    }
+
+    private static class SplitterParams extends BuildElementsTransformParams {
+        @NonNull private final File uncompressedResourceFile;
+        @NonNull private final File compressedResourceFile;
+        @Nullable private final BuildOutput mergedManifest;
+        @NonNull private final List<File> classes;
+        @Nullable private final File mappingFile;
+        private final String buildTypeName;
+        private final File sourceDir;
+        private final File resourceDir;
+        private final boolean isInfoLoggingEnabled;
+        private final boolean isDebugLoggingEnabled;
+
+        SplitterParams(
+                @NonNull ApkInfo apkInfo,
+                @NonNull File uncompressedResourceFile,
+                @NonNull BuildElements mergedManifests,
+                @NonNull List<File> classes,
+                ShrinkResourcesTransform transform) {
+            this.uncompressedResourceFile = uncompressedResourceFile;
+            this.mergedManifest = mergedManifests.element(apkInfo);
+            this.classes = classes;
+            compressedResourceFile =
+                    new File(
+                            transform.compressedResources,
+                            "resources-" + apkInfo.getBaseName() + "-stripped.ap_");
+            mappingFile =
+                    transform.mappingFileSrc != null
+                            ? BuildableArtifactUtil.singleFile(transform.mappingFileSrc)
+                            : null;
+            buildTypeName =
+                    transform.variantData.getVariantConfiguration().getBuildType().getName();
+            sourceDir = Iterables.getOnlyElement(transform.sourceDir.getFiles());
+            resourceDir = BuildableArtifactUtil.singleFile(transform.resourceDir);
+            isInfoLoggingEnabled = transform.logger.isEnabled(LogLevel.INFO);
+            isDebugLoggingEnabled = transform.logger.isEnabled(LogLevel.DEBUG);
+        }
+
+        @NonNull
+        @Override
+        public File getOutput() {
+            return compressedResourceFile;
+        }
     }
 
     private static String toKbString(long size) {

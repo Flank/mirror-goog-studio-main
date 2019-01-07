@@ -23,6 +23,7 @@ import com.android.builder.testing.api.DeviceConnector;
 import com.android.ddmlib.testrunner.AndroidTestOrchestratorRemoteAndroidTestRunner;
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
 import com.android.ide.common.process.ProcessExecutor;
+import com.android.ide.common.workers.ExecutorServiceAdapter;
 import com.google.common.base.Preconditions;
 import java.io.File;
 
@@ -34,8 +35,9 @@ public class OnDeviceOrchestratorTestRunner extends SimpleTestRunner {
     public OnDeviceOrchestratorTestRunner(
             @Nullable File splitSelectExec,
             @NonNull ProcessExecutor processExecutor,
-            @NonNull TestOptions.Execution execution) {
-        super(splitSelectExec, processExecutor);
+            @NonNull TestOptions.Execution execution,
+            @NonNull ExecutorServiceAdapter executor) {
+        super(splitSelectExec, processExecutor, executor);
         Preconditions.checkArgument(
                 execution == TestOptions.Execution.ANDROID_TEST_ORCHESTRATOR
                         || execution == TestOptions.Execution.ANDROIDX_TEST_ORCHESTRATOR);

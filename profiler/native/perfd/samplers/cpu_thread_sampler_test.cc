@@ -16,6 +16,7 @@
 #include "cpu_thread_sampler.h"
 
 #include <gtest/gtest.h>
+#include <algorithm>
 #include <sstream>
 
 #include "perfd/daemon.h"
@@ -73,6 +74,10 @@ class MockProcfsFiles final : public ProcfsFiles {
 
 namespace profiler {
 
+bool cmp(const proto::EventGroup& first, const proto::EventGroup& second) {
+  return first.group_id() < second.group_id();
+}
+
 TEST(CpuThreadSamplerTest, SampleCpuThreads) {
   FakeClock clock;
   proto::AgentConfig agent_config;
@@ -86,12 +91,14 @@ TEST(CpuThreadSamplerTest, SampleCpuThreads) {
   CpuThreadSampler sampler(session, &clock, &event_buffer,
                            new MockProcfsFiles(&clock, fs.GetWorkingDir()));
 
-  // t0
+  // t=t0
+  // query range: (0, +inf)
   {
     sampler.Sample();
     size_t expected_thread_count = 3;
     int32_t thread_ids[] = {1, 2, 3};
     string thread_names[] = {"foo", "bar", "foobar"};
+    bool is_ended_states[] = {false, false, false};
     CpuThreadData::State thread_states[] = {CpuThreadData::RUNNING,
                                             CpuThreadData::RUNNING,
                                             CpuThreadData::SLEEPING};
@@ -99,26 +106,29 @@ TEST(CpuThreadSamplerTest, SampleCpuThreads) {
     auto groups = event_buffer.Get(session.info().session_id(),
                                    Event::CPU_THREAD, 0, LONG_MAX);
     ASSERT_EQ(expected_thread_count, groups.size());
+    // Sort groups by group ID.
+    std::sort(groups.begin(), groups.end(), cmp);
     for (size_t i = 0; i < expected_thread_count; ++i) {
-      EventGroup group;
-      ASSERT_TRUE(event_buffer.GetGroup(thread_ids[i], &group));
-      ASSERT_EQ(1, group.events().size());
-      ASSERT_TRUE(group.events(0).has_cpu_thread());
-      const auto& thread = group.events(0).cpu_thread();
+      ASSERT_EQ(1, groups[i].events().size());
+      ASSERT_EQ(is_ended_states[i], groups[i].events(0).is_ended());
+      ASSERT_TRUE(groups[i].events(0).has_cpu_thread());
+      const auto& thread = groups[i].events(0).cpu_thread();
       ASSERT_EQ(thread_ids[i], thread.tid());
       ASSERT_EQ(thread_names[i], thread.name());
       ASSERT_EQ(thread_states[i], thread.state());
     }
   }
 
-  // t1
+  // t=t1
+  // query range: (0, +inf)
   {
     clock.Elapse(1);
     sampler.Sample();
     size_t expected_thread_count = 4;
     size_t expected_events_count[] = {1, 2, 2, 1};
     int32_t thread_ids[] = {1, 2, 3, 4};
-    string thread_names[] = {"foo", "bar", "", "barfoo"};
+    string thread_names[] = {"foo", "bar", "foobar", "barfoo"};
+    bool is_ended_states[] = {false, false, true, false};
     CpuThreadData::State thread_states[] = {
         CpuThreadData::RUNNING, CpuThreadData::SLEEPING, CpuThreadData::DEAD,
         CpuThreadData::RUNNING};
@@ -126,14 +136,46 @@ TEST(CpuThreadSamplerTest, SampleCpuThreads) {
     auto groups = event_buffer.Get(session.info().session_id(),
                                    Event::CPU_THREAD, 0, LONG_MAX);
     ASSERT_EQ(expected_thread_count, groups.size());
+    // Sort groups by group ID.
+    std::sort(groups.begin(), groups.end(), cmp);
     for (size_t i = 0; i < expected_thread_count; ++i) {
-      EventGroup group;
-      ASSERT_TRUE(event_buffer.GetGroup(thread_ids[i], &group));
-      ASSERT_EQ(expected_events_count[i], group.events().size());
+      ASSERT_EQ(expected_events_count[i], groups[i].events().size());
       // Only verify the last event.
       size_t last_index = expected_events_count[i] - 1;
-      ASSERT_TRUE(group.events(last_index).has_cpu_thread());
-      const auto& thread = group.events(last_index).cpu_thread();
+      ASSERT_EQ(is_ended_states[i], groups[i].events(last_index).is_ended());
+      ASSERT_TRUE(groups[i].events(last_index).has_cpu_thread());
+      const auto& thread = groups[i].events(last_index).cpu_thread();
+      ASSERT_EQ(thread_ids[i], thread.tid());
+      ASSERT_EQ(thread_names[i], thread.name());
+      ASSERT_EQ(thread_states[i], thread.state());
+    }
+  }
+
+  // t=t2
+  // query range: (t2, +inf)
+  {
+    // No new data
+    size_t expected_thread_count = 3;
+    size_t expected_events_count[] = {1, 2, 1};
+    int32_t thread_ids[] = {1, 2, 4};
+    string thread_names[] = {"foo", "bar", "barfoo"};
+    bool is_ended_states[] = {false, false, false};
+    CpuThreadData::State thread_states[] = {CpuThreadData::RUNNING,
+                                            CpuThreadData::SLEEPING,
+                                            CpuThreadData::RUNNING};
+
+    auto groups = event_buffer.Get(session.info().session_id(),
+                                   Event::CPU_THREAD, 2, LONG_MAX);
+    ASSERT_EQ(expected_thread_count, groups.size());
+    // Sort groups by group ID.
+    std::sort(groups.begin(), groups.end(), cmp);
+    for (size_t i = 0; i < expected_thread_count; ++i) {
+      ASSERT_EQ(expected_events_count[i], groups[i].events().size());
+      // Only verify the last event.
+      size_t last_index = expected_events_count[i] - 1;
+      ASSERT_EQ(is_ended_states[i], groups[i].events(last_index).is_ended());
+      ASSERT_TRUE(groups[i].events(last_index).has_cpu_thread());
+      const auto& thread = groups[i].events(last_index).cpu_thread();
       ASSERT_EQ(thread_ids[i], thread.tid());
       ASSERT_EQ(thread_names[i], thread.name());
       ASSERT_EQ(thread_states[i], thread.state());

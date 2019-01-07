@@ -73,6 +73,10 @@ public class Gradle implements Closeable {
         arguments.add(argument);
     }
 
+    public void withProfiler() {
+        arguments.add("--profile");
+    }
+
     @NonNull
     private File getInitScript() {
         return new File(outDir, "init.script");
@@ -108,7 +112,6 @@ public class Gradle implements Closeable {
 
         List<String> arguments = new ArrayList<>();
         arguments.add("--offline");
-        arguments.add("--profile");
         arguments.add("--init-script");
         arguments.add(getInitScript().getAbsolutePath());
         arguments.add("-Dmaven.repo.local=" + tmpLocalMaven.toAbsolutePath().toString());

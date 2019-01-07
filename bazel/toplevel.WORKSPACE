@@ -18,11 +18,11 @@ local_repository(
 http_archive(
   name = "bazel_toolchains",
   urls = [
-    "https://mirror.bazel.build/github.com/bazelbuild/bazel-toolchains/archive/bc09b995c137df042bb80a395b73d7ce6f26afbe.tar.gz",
-    "https://github.com/bazelbuild/bazel-toolchains/archive/bc09b995c137df042bb80a395b73d7ce6f26afbe.tar.gz",
+    "https://mirror.bazel.build/github.com/bazelbuild/bazel-toolchains/archive/de25e8f33fb50ba5870bed2fe644736c06afb8c5.tar.gz",
+    "https://github.com/bazelbuild/bazel-toolchains/archive/de25e8f33fb50ba5870bed2fe644736c06afb8c5.tar.gz",
   ],
-  strip_prefix = "bazel-toolchains-bc09b995c137df042bb80a395b73d7ce6f26afbe",
-  sha256 = "4329663fe6c523425ad4d3c989a8ac026b04e1acedeceb56aa4b190fa7f3973c",
+  strip_prefix = "bazel-toolchains-de25e8f33fb50ba5870bed2fe644736c06afb8c5",
+  sha256 = "238bcd5cfe4cc79a00bb3886df089f7912ee579d955cae78eb9e9a02287a4821",
 )
 
 setup_external_sdk(

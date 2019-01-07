@@ -210,7 +210,10 @@ class CmakeAndroidGradleBuildExtensionsTest(
             .named(cacheFolder.toString())
             .isTrue()
         val cache = CmakeCompilerSettingsCache(cacheFolder)
-        assertThat(cmake.compilerCacheUseFile.isFile).isFalse()
+
+        assertThat(cmake.compilerCacheUseFile.isFile).isTrue()
+        val cacheUse = CmakeCompilerCacheUse.fromFile(cmake.compilerCacheUseFile)
+        assertThat(cacheUse.isCacheUsed).isFalse()
 
         val cacheWrite = CmakeCompilerCacheWrite.fromFile(cmake.compilerCacheWriteFile)
         assertThat(cacheWrite.cacheWritten).isTrue()

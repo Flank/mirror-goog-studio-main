@@ -1667,6 +1667,10 @@ public final class SdkConstants {
     public static final String ATTR_LAYOUT_CHAIN_HELPER_USE_RTL = "chainUseRtl"; //$NON_NLS-1$
     public static final String ATTR_LAYOUT_CONSTRAINTSET = "constraintSet"; //$NON_NLS-1$
     public static final String ATTR_LAYOUT_CONSTRAINT_CIRCLE = "layout_constraintCircle"; //$NON_NLS-1$
+    public static final String ATTR_LAYOUT_CONSTRAINT_CIRCLE_ANGLE = "layout_constraintCircleAngle"; //$NON_NLS-1$
+    public static final String ATTR_LAYOUT_CONSTRAINT_CIRCLE_RADIUS = "layout_constraintCircleRadius"; //$NON_NLS-1$
+    public static final String ATTR_LAYOUT_CONSTRAINED_HEIGHT = "layout_constrainedHeight"; //$NON_NLS-1$
+    public static final String ATTR_LAYOUT_CONSTRAINED_WIDTH = "layout_constrainedWidth"; //$NON_NLS-1$
 
     public static final String ATTR_GUIDELINE_ORIENTATION_HORIZONTAL = "horizontal"; //$NON-NLS-1$
     public static final String ATTR_GUIDELINE_ORIENTATION_VERTICAL = "vertical"; //$NON-NLS-1$

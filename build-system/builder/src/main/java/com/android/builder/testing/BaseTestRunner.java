@@ -29,9 +29,10 @@ import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.TestException;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.testrunner.TestIdentifier;
-import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
+import com.android.ide.common.workers.ExecutorServiceAdapter;
+import com.android.ide.common.workers.WorkerExecutorException;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -47,11 +48,15 @@ public abstract class BaseTestRunner implements TestRunner {
 
     @Nullable protected final File splitSelectExec;
     @NonNull protected final ProcessExecutor processExecutor;
+    @NonNull protected final ExecutorServiceAdapter executor;
 
     public BaseTestRunner(
-            @Nullable File splitSelectExec, @NonNull ProcessExecutor processExecutor) {
+            @Nullable File splitSelectExec,
+            @NonNull ProcessExecutor processExecutor,
+            @NonNull ExecutorServiceAdapter executor) {
         this.splitSelectExec = splitSelectExec;
         this.processExecutor = checkNotNull(processExecutor);
+        this.executor = executor;
     }
 
     private static void generateXmlOutputForNoDevices(
@@ -119,7 +124,7 @@ public abstract class BaseTestRunner implements TestRunner {
             @NonNull File resultsDir,
             @NonNull File coverageDir,
             @NonNull ILogger logger)
-            throws TestException, NoAuthorizedDeviceFoundException, InterruptedException {
+            throws TestException {
 
         int totalDevices = deviceList.size();
         int unauthorizedDevices = 0;
@@ -174,7 +179,7 @@ public abstract class BaseTestRunner implements TestRunner {
                         projectName, variantName, resultsDir, logger, unauthorizedDevices);
             }
 
-            WaitableExecutor executor =
+            List<TestResult> results =
                     scheduleTests(
                             projectName,
                             variantName,
@@ -187,17 +192,19 @@ public abstract class BaseTestRunner implements TestRunner {
                             coverageDir,
                             logger);
 
-            List<WaitableExecutor.TaskResult<Boolean>> results = executor.waitForAllTasks();
+            try {
+                executor.await();
+            } catch (WorkerExecutorException e) {
+                e.getCauses().forEach(cause -> logger.error(cause, null));
+                return false;
+            }
 
             boolean success = unauthorizedDevices == 0;
 
-            // check if one test failed or if there was an exception.
-            for (WaitableExecutor.TaskResult<Boolean> result : results) {
-                if (result.getValue() != null) {
-                    success &= result.getValue();
-                } else {
+            // check if one test failed.
+            for (TestResult result : results) {
+                if (result.getTestResult() == TestResult.Result.FAILED) {
                     success = false;
-                    logger.error(result.getException(), null);
                 }
             }
             return success;
@@ -205,7 +212,7 @@ public abstract class BaseTestRunner implements TestRunner {
     }
 
     @NonNull
-    protected abstract WaitableExecutor scheduleTests(
+    protected abstract List<TestResult> scheduleTests(
             @NonNull String projectName,
             @NonNull String variantName,
             @NonNull TestData testData,
@@ -216,4 +223,21 @@ public abstract class BaseTestRunner implements TestRunner {
             @NonNull File resultsDir,
             @NonNull File coverageDir,
             @NonNull ILogger logger);
+
+    public static class TestResult {
+        public enum Result {
+            SUCCEEDED,
+            FAILED
+        }
+
+        Result testResult;
+
+        public void setTestResult(Result testResult) {
+            this.testResult = testResult;
+        }
+
+        public Result getTestResult() {
+            return testResult;
+        }
+    }
 }

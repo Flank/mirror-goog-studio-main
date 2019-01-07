@@ -18,11 +18,13 @@ package com.android.builder.internal.testing;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.testing.BaseTestRunner;
 import com.android.builder.testing.TestData;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
 import com.android.ddmlib.InstallException;
 import com.android.ddmlib.MultiLineReceiver;
+import com.android.ddmlib.TimeoutException;
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
 import com.android.ddmlib.testrunner.TestIdentifier;
 import com.android.ddmlib.testrunner.TestRunResult;
@@ -33,79 +35,50 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import javax.inject.Inject;
 
 /**
  * Basic Callable to distribute and run tests on a given {@link DeviceConnector} using {@link
- * RemoteAndroidTestRunner}.
- * The boolean return value is true if success.
+ * RemoteAndroidTestRunner}. The boolean return value is true if success.
  */
-public class ShardedTestCallable implements Callable<Boolean> {
+public class ShardedTestRunnable implements Runnable {
 
     public static final String FILE_COVERAGE_EC_SUFFIX = "coverage.ec";
 
-    @NonNull
-    private final String projectName;
-
-    @NonNull
-    private final DeviceConnector device;
-
-    @NonNull
-    private final String flavorName;
-
-    @NonNull
-    private final TestData testData;
-
-    @NonNull
-    private final File resultsDir;
-
-    @NonNull
-    private final File coverageDir;
-
-    @NonNull
-    private final List<File> testedApks;
-
-    @NonNull
-    private final ILogger logger;
-
-    @NonNull
-    private final ShardProvider shardProvider;
+    @NonNull private final String projectName;
+    @NonNull private final DeviceConnector device;
+    @NonNull private final String flavorName;
+    @NonNull private final TestData testData;
+    @NonNull private final File resultsDir;
+    @NonNull private final File coverageDir;
+    @NonNull private final List<File> testedApks;
+    @NonNull private final ILogger logger;
+    @NonNull private final ShardProvider shardProvider;
+    @NonNull private final BaseTestRunner.TestResult testResult;
 
     private final int timeoutInMs;
+    private final ProgressListener progressListener;
 
-    private ProgressListener progressListener;
-
-    public ShardedTestCallable(
-            @NonNull DeviceConnector device,
-            @NonNull String projectName,
-            @NonNull String flavorName,
-            @NonNull List<File> testedApks,
-            @NonNull TestData testData,
-            @NonNull File resultsDir,
-            @NonNull File coverageDir,
-            int timeoutInMs,
-            @NonNull ILogger logger,
-            @NonNull ShardProvider shardProvider) {
-        this.projectName = projectName;
-        this.device = device;
-        this.flavorName = flavorName;
-        this.resultsDir = resultsDir;
-        this.coverageDir = coverageDir;
-        this.testedApks = testedApks;
-        this.testData = testData;
-        this.timeoutInMs = timeoutInMs;
-        this.logger = logger;
-        this.shardProvider = shardProvider;
-    }
-
-    public void setProgressListener(
-            ProgressListener progressListener) {
-        this.progressListener = progressListener;
+    @Inject
+    public ShardedTestRunnable(ShardedTestParams params) {
+        this.projectName = params.projectName;
+        this.device = params.device;
+        this.flavorName = params.flavorName;
+        this.resultsDir = params.resultsDir;
+        this.coverageDir = params.coverageDir;
+        this.testedApks = params.testedApks;
+        this.testData = params.testData;
+        this.timeoutInMs = params.timeoutInMs;
+        this.logger = params.logger;
+        this.shardProvider = params.shardProvider;
+        this.progressListener = params.progressListener;
+        this.testResult = params.testResult;
     }
 
     private String createCoverageFileName(int shard) {
@@ -113,19 +86,19 @@ public class ShardedTestCallable implements Callable<Boolean> {
     }
 
     @Override
-    public Boolean call() throws Exception {
+    public void run() {
         final String deviceName = device.getName();
         boolean isInstalled = false;
 
         long time = System.currentTimeMillis();
         boolean failed = false;
-        List<String> coverageFiles = new ArrayList<String>();
+        List<String> coverageFiles = new ArrayList<>();
         String coverageFileLocation = "/data/data/" + testData.getTestedApplicationId() + "/";
         CustomTestRunListener runListener = null;
         try {
             device.connect(timeoutInMs, logger);
             logger.verbose("Connected to %s to run tests", deviceName);
-            synchronized (ShardedTestCallable.class) {
+            synchronized (ShardedTestRunnable.class) {
                 if (!testedApks.isEmpty()) {
                     logger.verbose("DeviceConnector '%s': installing %s", deviceName,
                             Joiner.on(',').join(testedApks));
@@ -135,12 +108,16 @@ public class ShardedTestCallable implements Callable<Boolean> {
                                         + " require a device with API level 21+");
                     }
                     if (testedApks.size() > 1) {
-                        device.installPackages(testedApks,
-                                ImmutableList.<String>of() /* installOptions */, timeoutInMs,
+                        device.installPackages(
+                                testedApks,
+                                ImmutableList.of() /* installOptions */,
+                                timeoutInMs,
                                 logger);
                     } else {
-                        device.installPackage(testedApks.get(0),
-                                ImmutableList.<String>of() /* installOptions */, timeoutInMs,
+                        device.installPackage(
+                                testedApks.get(0),
+                                ImmutableList.of() /* installOptions */,
+                                timeoutInMs,
                                 logger);
                     }
                 }
@@ -150,13 +127,13 @@ public class ShardedTestCallable implements Callable<Boolean> {
                 if (device.getApiLevel() >= 21) {
                     device.installPackages(
                             ImmutableList.of(testData.getTestApk()),
-                            ImmutableList.<String>of() /* installOptions */,
+                            ImmutableList.of() /* installOptions */,
                             timeoutInMs,
                             logger);
                 } else {
                     device.installPackage(
                             testData.getTestApk(),
-                            ImmutableList.<String>of() /* installOptions */,
+                            ImmutableList.of() /* installOptions */,
                             timeoutInMs,
                             logger);
                 }
@@ -204,7 +181,11 @@ public class ShardedTestCallable implements Callable<Boolean> {
                 failed |= testRunResult.hasFailedTests() || testRunResult.isRunFailure();
                 logger.verbose("done running shard %d on %s", shard, deviceName);
             }
-            return !failed;
+
+            testResult.setTestResult(
+                    failed
+                            ? BaseTestRunner.TestResult.Result.FAILED
+                            : BaseTestRunner.TestResult.Result.SUCCEEDED);
         } catch (Exception e) {
             Map<String, String> emptyMetrics = Collections.emptyMap();
 
@@ -223,7 +204,7 @@ public class ShardedTestCallable implements Callable<Boolean> {
             }
 
             // and throw
-            throw e;
+            throw new RuntimeException(e);
         } finally {
             if (isInstalled) {
                 // Get the coverage if needed.
@@ -249,33 +230,55 @@ public class ShardedTestCallable implements Callable<Boolean> {
                         String coverageFile = coverageFileLocation + name;
                         logger.verbose("DeviceConnector '%s': fetching coverage data from %s",
                                 deviceName, coverageFile);
-                        device.executeShellCommand("run-as " + testData.getTestedApplicationId()
-                                        + " cat " + coverageFile + " | cat > " + temporaryCoverageCopy,
-                                outputReceiver,
-                                30, TimeUnit.SECONDS);
-                        device.pullFile(
-                                temporaryCoverageCopy,
-                                new File(coverageDir, name).getPath());
-                        device.executeShellCommand("rm " + temporaryCoverageCopy,
-                                outputReceiver,
-                                30, TimeUnit.SECONDS);
+                        try {
+                            device.executeShellCommand(
+                                    "run-as "
+                                            + testData.getTestedApplicationId()
+                                            + " cat "
+                                            + coverageFile
+                                            + " | cat > "
+                                            + temporaryCoverageCopy,
+                                    outputReceiver,
+                                    30,
+                                    TimeUnit.SECONDS);
+                            device.pullFile(
+                                    temporaryCoverageCopy, new File(coverageDir, name).getPath());
+                            device.executeShellCommand(
+                                    "rm " + temporaryCoverageCopy,
+                                    outputReceiver,
+                                    30,
+                                    TimeUnit.SECONDS);
+                        } catch (Throwable e) {
+                            throw new RuntimeException(e);
+                        }
                     }
-
                 }
 
                 // uninstall the apps
                 // This should really not be null, because if it was the build
                 // would have broken before.
-                uninstall(testData.getTestApk(), testData.getApplicationId(), deviceName);
+                try {
+                    uninstall(testData.getTestApk(), testData.getApplicationId(), deviceName);
+                } catch (DeviceException e) {
+                    throw new RuntimeException(e);
+                }
 
                 if (!testedApks.isEmpty()) {
                     for (File testedApk : testedApks) {
-                        uninstall(testedApk, testData.getTestedApplicationId(), deviceName);
+                        try {
+                            uninstall(testedApk, testData.getTestedApplicationId(), deviceName);
+                        } catch (DeviceException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
                 }
             }
 
-            device.disconnect(timeoutInMs, logger);
+            try {
+                device.disconnect(timeoutInMs, logger);
+            } catch (TimeoutException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -371,6 +374,49 @@ public class ShardedTestCallable implements Callable<Boolean> {
             logger.verbose("finished %d of estimated %d tests. %.2f%%", finishedTestCount,
                     estimatedTestCount,
                     estimatedTestCount == 0 ? 0 : 100f * finishedTestCount / estimatedTestCount);
+        }
+    }
+
+    public static class ShardedTestParams implements Serializable {
+        @NonNull private final String projectName;
+        @NonNull private final DeviceConnector device;
+        @NonNull private final String flavorName;
+        @NonNull private final TestData testData;
+        @NonNull private final File resultsDir;
+        @NonNull private final File coverageDir;
+        @NonNull private final List<File> testedApks;
+        @NonNull private final ILogger logger;
+        @NonNull private final ShardProvider shardProvider;
+        @NonNull private final BaseTestRunner.TestResult testResult;
+
+        private final int timeoutInMs;
+        private final ProgressListener progressListener;
+
+        public ShardedTestParams(
+                @NonNull DeviceConnector device,
+                @NonNull String projectName,
+                @NonNull String flavorName,
+                @NonNull List<File> testedApks,
+                @NonNull TestData testData,
+                @NonNull File resultsDir,
+                @NonNull File coverageDir,
+                int timeoutInMs,
+                @NonNull ILogger logger,
+                @NonNull ShardProvider shardProvider,
+                ProgressListener progressListener,
+                @NonNull BaseTestRunner.TestResult testResult) {
+            this.projectName = projectName;
+            this.device = device;
+            this.flavorName = flavorName;
+            this.resultsDir = resultsDir;
+            this.coverageDir = coverageDir;
+            this.testedApks = testedApks;
+            this.testData = testData;
+            this.timeoutInMs = timeoutInMs;
+            this.logger = logger;
+            this.shardProvider = shardProvider;
+            this.progressListener = progressListener;
+            this.testResult = testResult;
         }
     }
 }

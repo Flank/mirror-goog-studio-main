@@ -20,12 +20,14 @@ def coverage_report(
             collection_binary_name + "_deploy.jar": "classes.jar",
             collection_binary_name + "_deploy-src.jar": "sources.jar",
         },
+        tags = tags,
     )
 
     native.java_binary(
         name = collection_binary_name,
         main_class = "fake_do_not_execute",
         runtime_deps = production_java_libraries,
+        tags = tags,
     )
 
     native.java_binary(

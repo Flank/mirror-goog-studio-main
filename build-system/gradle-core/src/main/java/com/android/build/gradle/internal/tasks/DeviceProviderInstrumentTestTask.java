@@ -44,7 +44,7 @@ import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
-import com.android.builder.internal.testing.SimpleTestCallable;
+import com.android.builder.internal.testing.SimpleTestRunnable;
 import com.android.builder.model.TestOptions;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.testing.ConnectedDeviceProvider;
@@ -56,6 +56,7 @@ import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestException;
 import com.android.ide.common.process.ProcessExecutor;
+import com.android.ide.common.workers.ExecutorServiceAdapter;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.base.Joiner;
@@ -68,6 +69,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ForkJoinPool;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -119,8 +121,19 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
     private boolean codeCoverageEnabled;
     private TestOptions.Execution testExecution;
     private Configuration dependencies;
+    
+    /**
+     * The workers object is of type ExecutorServiceAdapter instead of WorkerExecutorFacade to
+     * assert that the object returned is of type ExecutorServiceAdapter as Gradle workers can not
+     * be used here because the device tests doesn't run within gradle.
+     */
+    private final ExecutorServiceAdapter executor;
 
     @Nullable private Collection<String> installOptions;
+
+    public DeviceProviderInstrumentTestTask() {
+        executor = new ExecutorServiceAdapter(ForkJoinPool.commonPool());
+    }
 
     @TaskAction
     protected void runTests() throws DeviceException, IOException, InterruptedException,
@@ -150,7 +163,7 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
         if (!testsFound()) {
             getLogger().info("No tests found, nothing to do.");
             // If we don't create the coverage file, createXxxCoverageReport task will fail.
-            File emptyCoverageFile = new File(coverageOutDir, SimpleTestCallable.FILE_COVERAGE_EC);
+            File emptyCoverageFile = new File(coverageOutDir, SimpleTestRunnable.FILE_COVERAGE_EC);
             emptyCoverageFile.createNewFile();
             success = true;
         } else {
@@ -485,7 +498,10 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
                     task.testRunnerFactory =
                             (splitSelect, processExecutor) ->
                                     new OnDeviceOrchestratorTestRunner(
-                                            splitSelect, processExecutor, executionEnum);
+                                            splitSelect,
+                                            processExecutor,
+                                            executionEnum,
+                                            task.executor);
                     break;
                 case HOST:
                     if (shardBetweenDevices) {
@@ -494,9 +510,15 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
                         task.testRunnerFactory =
                                 (splitSelect, processExecutor) ->
                                         new ShardedTestRunner(
-                                                splitSelect, processExecutor, numShards);
+                                                splitSelect,
+                                                processExecutor,
+                                                numShards,
+                                                task.executor);
                     } else {
-                        task.testRunnerFactory = SimpleTestRunner::new;
+                        task.testRunnerFactory =
+                                (splitSelect, processExecutor) ->
+                                        new SimpleTestRunner(
+                                                splitSelect, processExecutor, task.executor);
                     }
                     break;
                 default:
