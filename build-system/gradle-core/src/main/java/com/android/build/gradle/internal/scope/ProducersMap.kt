@@ -55,7 +55,7 @@ class ProducersMap<T: FileSystemLocation>(
      * [ArtifactType]
      *
      * @param artifactType the artifact type for looked up producers.
-     * @return a [Producer] instance for that [ArtifactType]
+     * @return a [Producers] instance for that [ArtifactType]
      */
     fun getProducers(artifactType: ArtifactType)=
         producersMap.getOrPut(artifactType) {
@@ -83,12 +83,23 @@ class ProducersMap<T: FileSystemLocation>(
     }
 
     /**
-     * possibly empty list of all the [Task]s (and decoraction) producing this artifact type.
+     * Copies all present and future [Producer] of [ArtifactType] from the source producers map.
+     *
+     * @param artifactType the artifact type for the producers to be copied in this map.
+     * @param source the originating producers map to copy from.
+     */
+    fun copy(artifactType: ArtifactType, source: ProducersMap<out FileSystemLocation>) {
+        producersMap[artifactType] = source.getProducers(artifactType) as Producers<T>
+    }
+
+    /**
+     * possibly empty list of all the [org.gradle.api.Task]s (and decoration) producing this
+     * artifact type.
      */
     class Producers<T : FileSystemLocation>(
         val artifactType: ArtifactType,
         val identifier: () -> String,
-        buildDirectory: DirectoryProperty,
+        val buildDirectory: DirectoryProperty,
         val listProperty: ListProperty<T>) : ArrayList<Producer<T>>() {
 
         val buildDir:File = buildDirectory.get().asFile
@@ -135,7 +146,7 @@ class ProducersMap<T: FileSystemLocation>(
         }
 
         fun getAllProducers(): ListProperty<T> {
-            return listProperty;
+            return listProperty
         }
 
         fun resolve(producer: Producer<T>) =

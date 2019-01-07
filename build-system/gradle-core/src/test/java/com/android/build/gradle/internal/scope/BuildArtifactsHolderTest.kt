@@ -31,10 +31,12 @@ import com.google.common.truth.Truth.assertThat
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.testfixtures.ProjectBuilder
@@ -154,7 +156,7 @@ class BuildArtifactsHolderTest(
             assertThat(appendShouldFail).isTrue()
         }
 
-        val files = newHolder.getFinalProducts(MERGED_MANIFESTS)
+        val files: ListProperty<Directory> = newHolder.getFinalProducts(MERGED_MANIFESTS)
         assertThat(files).isNotNull()
         assertThat(files.get()).hasSize(if (appendShouldFail) 1 else 2)
 
@@ -256,7 +258,7 @@ class BuildArtifactsHolderTest(
                 "secondFile")
         }
 
-        val finalArtifactFiles = newHolder.getFinalProducts(artifactType)
+        val finalArtifactFiles: ListProperty<out FileSystemLocation> = newHolder.getFinalProducts(artifactType)
         assertThat(finalArtifactFiles.get()).hasSize(2)
         var outputFile = finalArtifactFiles.get()[0].asFile
         var relativeFile = outputFile.relativeTo(project.buildDir)

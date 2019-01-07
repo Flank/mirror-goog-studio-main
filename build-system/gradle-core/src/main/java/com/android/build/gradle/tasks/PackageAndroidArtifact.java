@@ -88,6 +88,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -102,6 +103,7 @@ import javax.inject.Inject;
 import org.gradle.api.Project;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -172,7 +174,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     @Nullable protected FileCollection featureDexFolder;
 
-    protected BuildableArtifact assets;
+    protected ListProperty<Directory> assets;
 
     // Path sensitivity here is absolute due to http://b/72085541
     @InputFiles
@@ -194,7 +196,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     // Path sensitivity here is absolute due to http://b/72085541
     @InputFiles
     @PathSensitive(PathSensitivity.ABSOLUTE)
-    public BuildableArtifact getAssets() {
+    public ListProperty<Directory> getAssets() {
         return assets;
     }
 
@@ -646,7 +648,12 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                     task.getFeatureDexFolder() == null
                             ? null
                             : task.getFeatureDexFolder().getFiles();
-            assetsFiles = task.getAssets().getFiles();
+            assetsFiles =
+                    task.getAssets()
+                            .get()
+                            .stream()
+                            .map(it -> it.getAsFile())
+                            .collect(Collectors.toCollection(LinkedHashSet::new));
             jniFiles = task.getJniFolders().getFiles();
             javaResourceFiles = task.getJavaResourceFiles().getFiles();
             manifestType = task.getManifestType();
@@ -1138,7 +1145,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             packageAndroidArtifact.javaResourceFiles = getJavaResources();
 
             packageAndroidArtifact.assets =
-                    variantScope.getArtifacts().getFinalArtifactFiles(MERGED_ASSETS);
+                    variantScope.getArtifacts().getFinalProducts(MERGED_ASSETS);
             packageAndroidArtifact.setAbiFilters(variantConfiguration.getSupportedAbis());
             packageAndroidArtifact.setJniDebugBuild(
                     variantConfiguration.getBuildType().isJniDebuggable());

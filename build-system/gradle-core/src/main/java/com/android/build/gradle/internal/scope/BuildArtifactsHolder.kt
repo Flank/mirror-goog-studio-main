@@ -156,12 +156,25 @@ abstract class BuildArtifactsHolder(
      * Republishes an [ArtifactType] under a different type. This is useful when a level of
      * indirection is used.
      *
-     * @param from the original [ArtifactType] for the built artifacts.
-     * @param to the supplemental [ArtifactType] the same built artifacts will also be published
-     * under.
+     * @param sourceType the original [ArtifactType] for the built artifacts.
+     * @param targetType the supplemental [ArtifactType] the same built artifacts will also be
+     * published under.
      */
-    fun republish(from: ArtifactType, to: ArtifactType) {
-        getProducerMap(from).republish(from, to)
+    fun republish(sourceType: ArtifactType, targetType: ArtifactType) {
+        getProducerMap(sourceType).republish(sourceType, targetType)
+    }
+
+    /**
+     * Copies a published [ArtifactType] from another instance of [BuildArtifactsHolder] to this
+     * instance.
+     * This does not remove the original elements from the source [BuildArtifactsHolder].
+     *
+     * @param artifactType artifact type to copy to this holder.
+     * @param from souce [BuildArtifactsHolder] to copy the produced artifacts from.
+     */
+    fun copy(artifactType: ArtifactType, from: BuildArtifactsHolder) {
+        getProducerMap(artifactType).copy(artifactType,
+            from.getProducerMap(artifactType))
     }
 
     /**
@@ -272,23 +285,12 @@ abstract class BuildArtifactsHolder(
 
         val producers = producersMap.getProducers(artifactType)
 
-        taskProvider.configure {
-
-            product.get().set(settableFileLocation)
-
-            // add a new configuration action to make sure the producers are configured even
-            // if no one injects the result. The task is being configured so it will be executed
-            // and output folders must be set correctly.
-            // this can happen when users request an intermediary task execution (instead of
-            // assemble for instance).
-            producers.resolveAllAndReturnLast()
-        }
         when(operationType) {
             OperationType.INITIAL -> {
                 if (!producers.isEmpty()) {
                     val plural = producers.hasMultipleProducers()
                     throw RuntimeException(
-                        """|Task ${taskProvider.name} is expecting to be the initial producer of
+                        """|Task ${taskProvider?.name} is expecting to be the initial producer of
                                 |$artifactType, but the following ${if (plural) "tasks" else "task"} : ${Joiner.on(',').join(producers.map { it.taskName})}
                                 |${if (plural) "are" else "is"} already registered as ${if (plural) "producers" else "producer"}"""
                             .trimMargin()
@@ -302,6 +304,20 @@ abstract class BuildArtifactsHolder(
             }
         }
         producers.add(settableFileLocation, product, taskProvider.name, fileName)
+
+        // note that this configuration block may be called immediately in case the task has
+        // already been initialized.
+        taskProvider.configure {
+
+            product.get().set(settableFileLocation)
+
+            // add a new configuration action to make sure the producers are configured even
+            // if no one injects the result. The task is being configured so it will be executed
+            // and output folders must be set correctly.
+            // this can happen when users request an intermediary task execution (instead of
+            // assemble for instance).
+            producers.resolveAllAndReturnLast()
+        }
     }
 
     private fun getProducerMap(artifactType: ArtifactType): ProducersMap<out FileSystemLocation> {
@@ -381,9 +397,9 @@ abstract class BuildArtifactsHolder(
      *
      * @param artifactType the identifier for the built artifact.
      */
-    fun getFinalProducts(artifactType: ArtifactType): ListProperty<out FileSystemLocation> {
+    fun <T: FileSystemLocation> getFinalProducts(artifactType: ArtifactType): ListProperty<T> {
         val producers = getProducerMap(artifactType).getProducers(artifactType)
-        return producers.getAllProducers();
+        return producers.getAllProducers() as ListProperty<T>;
     }
 
     /**

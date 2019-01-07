@@ -30,7 +30,9 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.builder.files.NativeLibraryAbiPredicate
 import com.android.builder.packaging.JarMerger
 import com.android.utils.FileUtils
+import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
@@ -78,7 +80,7 @@ open class PerModuleBundleTask : AndroidVariantTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var assetsFiles: BuildableArtifact
+    lateinit var assetsFiles: Provider<Directory>
         private set
 
     @get:InputFiles
@@ -108,7 +110,7 @@ open class PerModuleBundleTask : AndroidVariantTask() {
         jarMerger.use { it ->
 
             it.addDirectory(
-                assetsFiles.single().toPath(),
+                assetsFiles.get().asFile.toPath(),
                 null,
                 null,
                 Relocator(FD_ASSETS)
@@ -199,7 +201,7 @@ open class PerModuleBundleTask : AndroidVariantTask() {
 
             task.outputDir = outputDir
 
-            task.assetsFiles = artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_ASSETS)
+            task.assetsFiles = artifacts.getFinalProduct(InternalArtifactType.MERGED_ASSETS)
             task.resFiles = artifacts.getFinalArtifactFiles(
                     if (variantScope.useResourceShrinker()) {
                         InternalArtifactType.SHRUNK_LINKED_RES_FOR_BUNDLE

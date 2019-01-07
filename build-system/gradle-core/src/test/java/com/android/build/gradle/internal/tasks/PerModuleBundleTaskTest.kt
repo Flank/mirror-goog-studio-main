@@ -34,7 +34,9 @@ import com.google.common.truth.Truth.assertThat
 import org.bouncycastle.util.io.Streams
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
@@ -50,7 +52,8 @@ import java.util.zip.ZipFile
 
 class PerModuleBundleTaskTest {
 
-    @Mock private lateinit var assetsFiles: BuildableArtifact
+    @Mock private lateinit var assetsFilesProvider: Provider<Directory>
+    @Mock private lateinit var assetsFiles: Directory
     @Mock private lateinit var resFiles: BuildableArtifact
     @Mock private lateinit var dexFiles: FileCollection
     @Mock private lateinit var javaResFiles: FileCollection
@@ -80,10 +83,12 @@ class PerModuleBundleTaskTest {
         Mockito.`when`(variantScope.variantConfiguration).thenReturn(variantConfiguration)
         Mockito.`when`(variantConfiguration.supportedAbis).thenReturn(setOf())
 
-        Mockito.`when`(artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_ASSETS))
-            .thenReturn(assetsFiles)
-        Mockito.`when`(assetsFiles.iterator()).thenReturn(
-            listOf(testFolder.newFolder("assets")).iterator())
+        Mockito.`when`(artifacts.getFinalProduct<Directory>(InternalArtifactType.MERGED_ASSETS))
+            .thenReturn(assetsFilesProvider)
+
+        Mockito.`when`(assetsFilesProvider.get()).thenReturn(assetsFiles)
+        Mockito.`when`(assetsFiles.asFile).thenReturn(
+            testFolder.newFolder("assets"))
         Mockito.`when`(artifacts.getFinalArtifactFiles(InternalArtifactType.LINKED_RES_FOR_BUNDLE))
             .thenReturn(resFiles)
         Mockito.`when`(resFiles.iterator()).thenReturn(

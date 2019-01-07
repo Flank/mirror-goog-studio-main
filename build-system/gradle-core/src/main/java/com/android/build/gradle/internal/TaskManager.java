@@ -941,10 +941,10 @@ public abstract class TaskManager {
                                 .addContentType(ExtendedContentType.NATIVE_LIBS)
                                 .addScope(Scope.PROJECT)
                                 .setFileCollection(
-                                        variantScope
-                                                .getArtifacts()
-                                                .getFinalArtifactFiles(MERGED_JNI_LIBS)
-                                                .get())
+                                        project.files(
+                                                variantScope
+                                                        .getArtifacts()
+                                                        .getFinalProduct(MERGED_JNI_LIBS)))
                                 .build());
 
 
@@ -1644,12 +1644,8 @@ public abstract class TaskManager {
                                             .getFinalArtifactFiles(PROCESSED_RES));
                     variantScope
                             .getArtifacts()
-                            .createBuildableArtifact(
-                                    MERGED_ASSETS,
-                                    BuildArtifactsHolder.OperationType.INITIAL,
-                                    testedVariantScope
-                                            .getArtifacts()
-                                            .getFinalArtifactFiles(MERGED_ASSETS));
+                            .copy(MERGED_ASSETS, testedVariantScope.getArtifacts());
+
                     taskFactory.register(new PackageForUnitTest.CreationAction(variantScope));
                 } else {
                     // TODO: don't implicitly subtract tested component in APKs, as that only

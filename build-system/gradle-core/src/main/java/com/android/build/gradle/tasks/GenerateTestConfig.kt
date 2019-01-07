@@ -38,7 +38,6 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
@@ -153,7 +152,7 @@ open class GenerateTestConfig @Inject constructor(workerExecutor: WorkerExecutor
 
         @get:InputFiles
         @get:PathSensitive(PathSensitivity.RELATIVE)
-        val mergedAssets: BuildableArtifact
+        val mergedAssets: Provider<Directory>
 
         @get:InputFiles
         @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -185,7 +184,7 @@ open class GenerateTestConfig @Inject constructor(workerExecutor: WorkerExecutor
             } else {
                 scope.artifacts.getFinalArtifactFiles(MERGED_RES)
             }
-            mergedAssets = testedScope.artifacts.getFinalArtifactFiles(MERGED_ASSETS)
+            mergedAssets = testedScope.artifacts.getFinalProduct(MERGED_ASSETS)
             mergedManifest = testedScope.artifacts.getFinalProduct(MERGED_MANIFESTS)
             mainApkInfo = testedScope.outputScope.mainSplit
             packageNameOfFinalRClassProvider = {
@@ -206,7 +205,7 @@ open class GenerateTestConfig @Inject constructor(workerExecutor: WorkerExecutor
             return TestConfigProperties(
                 resourceApk?.let { getRelativePathIfRequired(it.singleFile(), rootProjectDir) },
                 mergedResources?.let { getRelativePathIfRequired(it.singleFile(), rootProjectDir) },
-                getRelativePathIfRequired(mergedAssets.singleFile(), rootProjectDir),
+                getRelativePathIfRequired(mergedAssets.get().asFile, rootProjectDir),
                 getRelativePathIfRequired(manifestOutput.outputFile, rootProjectDir),
                 packageNameOfFinalRClass
             )

@@ -19,8 +19,6 @@ package com.android.build.gradle.tasks;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_SHADERS;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.artifact.BuildableArtifact;
-import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -38,7 +36,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileTree;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -78,10 +78,10 @@ public class ShaderCompile extends AndroidBuilderTask {
         return getBuildTools().getRevision().toString();
     }
 
-    private BuildableArtifact sourceDir;
+    private Provider<Directory> sourceDir;
 
     @InputFiles
-    public BuildableArtifact getSourceDir() {
+    public Provider<Directory> getSourceDir() {
         return sourceDir;
     }
 
@@ -94,7 +94,7 @@ public class ShaderCompile extends AndroidBuilderTask {
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
     public FileTree getSourceFiles() {
-        File sourceDirFile = BuildableArtifactUtil.singleFile(sourceDir);
+        File sourceDirFile = sourceDir.get().getAsFile();
         FileTree src = null;
         if (sourceDirFile.isDirectory()) {
             src = getProject().files(sourceDirFile).getAsFileTree().matching(PATTERN_SET);
@@ -111,7 +111,7 @@ public class ShaderCompile extends AndroidBuilderTask {
         try {
             getBuilder()
                     .compileAllShaderFiles(
-                            BuildableArtifactUtil.singleFile(sourceDir),
+                            sourceDir.get().getAsFile(),
                             getOutputDir(),
                             defaultArgs,
                             scopedArgs,
@@ -191,7 +191,7 @@ public class ShaderCompile extends AndroidBuilderTask {
 
             task.ndkLocation = scope.getGlobalScope().getNdkHandler().getNdkDirectory();
 
-            task.sourceDir = scope.getArtifacts().getFinalArtifactFiles(MERGED_SHADERS);
+            task.sourceDir = scope.getArtifacts().getFinalProduct(MERGED_SHADERS);
             task.setOutputDir(outputDir);
             task.setDefaultArgs(variantConfiguration.getDefautGlslcArgs());
             task.setScopedArgs(variantConfiguration.getScopedGlslcArgs());

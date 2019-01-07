@@ -154,7 +154,7 @@ open class BundleAar : Zip(), VariantAwareTask {
             )
             task.from(
                 variantScope.artifacts
-                    .getFinalArtifactFiles(InternalArtifactType.LIBRARY_ASSETS),
+                    .getFinalProduct<Directory>(InternalArtifactType.LIBRARY_ASSETS),
                 prependToCopyPath(SdkConstants.FD_ASSETS))
         }
 
