@@ -35,11 +35,13 @@ public final class ActivityThreadInstrumentation {
 
     public static void handleDispatchPackageBroadcastEntry(
             Object activityThread, int cmd, String[] packages) {
+        Log.v(TAG, "Package broadcast entry hook");
         mActivityThread = activityThread;
         mCmd = cmd;
     }
 
     public static void handleDispatchPackageBroadcastExit() {
+        Log.v(TAG, "Package broadcast exit hook");
         if (mCmd != PACKAGE_REPLACED) {
             return;
         }
