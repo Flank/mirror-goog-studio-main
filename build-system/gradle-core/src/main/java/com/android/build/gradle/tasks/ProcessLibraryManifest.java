@@ -39,6 +39,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
@@ -73,6 +74,8 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
 
     private final Provider<RegularFile> manifestOutputFile;
 
+    private boolean isNamespaced;
+
     @Inject
     public ProcessLibraryManifest(ObjectFactory objectFactory) {
         super(objectFactory);
@@ -88,6 +91,11 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
     @Override
     protected void doFullTaskAction() {
         File aaptFriendlyManifestOutputFile = getAaptFriendlyManifestOutputFile();
+        Collection<ManifestMerger2.Invoker.Feature> optionalFeatures =
+                isNamespaced
+                        ? Collections.singletonList(
+                                ManifestMerger2.Invoker.Feature.FULLY_NAMESPACE_LOCAL_RESOURCES)
+                        : Collections.emptyList();
         MergingReport mergingReport =
                 getBuilder()
                         .mergeManifestsForApplication(
@@ -112,7 +120,7 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
                                 null /* outInstantAppManifestLocation */,
                                 ManifestMerger2.MergeType.LIBRARY,
                                 variantConfiguration.getManifestPlaceholders(),
-                                Collections.emptyList(),
+                                optionalFeatures,
                                 getReportFile());
 
         XmlDocument mergedXmlDocument =
@@ -356,6 +364,13 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
             task.outputScope = getVariantScope().getOutputScope();
 
             task.setReportFile(reportFile);
+
+            task.isNamespaced =
+                    getVariantScope()
+                            .getGlobalScope()
+                            .getExtension()
+                            .getAaptOptions()
+                            .getNamespaced();
         }
     }
 }

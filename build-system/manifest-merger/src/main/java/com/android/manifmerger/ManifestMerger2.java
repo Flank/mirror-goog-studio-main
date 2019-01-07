@@ -988,6 +988,9 @@ public class ManifestMerger2 {
             @NonNull MergingReport.Builder mergingReportBuilder)
             throws MergeFailureException {
 
+        boolean rewriteNamespaces =
+                mOptionalFeatures.contains(Invoker.Feature.FULLY_NAMESPACE_LOCAL_RESOURCES);
+
         File xmlFile = manifestInfo.mLocation;
         XmlDocument xmlDocument;
         try {
@@ -1001,7 +1004,8 @@ public class ManifestMerger2 {
                             inputStream,
                             manifestInfo.getType(),
                             manifestInfo.getMainManifestPackageName(),
-                            mModel);
+                            mModel,
+                            rewriteNamespaces);
         } catch (Exception e) {
             throw new MergeFailureException(e);
         }
@@ -1145,7 +1149,8 @@ public class ManifestMerger2 {
                                 inputStream,
                                 XmlDocument.Type.LIBRARY,
                                 Optional.absent(), /* mainManifestPackageName */
-                                mModel);
+                                mModel,
+                                false);
             } catch (Exception e) {
                 throw new MergeFailureException(e);
             }
@@ -1475,6 +1480,9 @@ public class ManifestMerger2 {
              * application name if none is specified. Used for legacy multidex.
              */
             ADD_SUPPORT_MULTIDEX_APPLICATION_IF_NO_NAME,
+
+            /** Rewrite local resource references with fully qualified namespace */
+            FULLY_NAMESPACE_LOCAL_RESOURCES,
         }
 
         /**

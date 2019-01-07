@@ -920,6 +920,7 @@ public class JarContentsTest {
                 "com/android/ide/common/blame/",
                 "com/android/io/",
                 "com/android/prefs/",
+                "com/android/resources/",
                 "com/android/sdklib/",
                 "com/android/support/",
                 "com/android/tools/",
