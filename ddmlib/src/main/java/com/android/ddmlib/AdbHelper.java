@@ -28,6 +28,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
+import javax.swing.SwingUtilities;
 
 /**
  * Helper class to handle requests and connections to adb.
@@ -476,6 +477,9 @@ final class AdbHelper {
             throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
                     IOException {
 
+        if (SwingUtilities.isEventDispatchThread()) {
+            Log.e("ddms", "execute: called '" + command + "' from the Event Dispatch Thread!");
+        }
         long maxTimeToOutputMs = 0;
         if (maxTimeToOutputResponse > 0) {
             if (maxTimeUnits == null) {
