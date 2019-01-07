@@ -67,6 +67,19 @@ For those cases where the code is not available or recompiling is not an options
 * ``Flush`` at the end of which method will a synchronous flush be performed.
 * ``Trace-Agent`` if set to ```true``` a special event is traced from the agent's ```premain``` to the VM shutdown. 
 
+## How to build the tracing agent
+
+Use bazel to build the tracing agent:
+
+```
+bazel build //tools/base/tracer:trace_agent
+```
+
+Now the agent is located at:
+
+```
+$SRC/bazel-genfiles/tools/base/tracer/trace_agent.jar
+```
 
 ## How to enable tracing
 
@@ -91,6 +104,27 @@ In a BUILD file, the following can be added to have a ``java_binary`` always tra
 jvm_flags = ["-javaagent:$(location //tools/base/tracer:trace_agent)"],
 ```
 
+## How to use tracing in Gradle directly
+
+In your gradle project directory, edit gradle.properties file and add:
+
+```
+org.gradle.jvmargs = "-javaagent:$SRC/bazel-genfiles/tools/base/tracer/trace_agent.jar"
+```
+
+Where $SRC is your studio-master-dev full path.
+
+In order to use a trace profile:
+
+```
+org.gradle.jvmargs = "-javaagent:$SRC/bazel-genfiles/tools/base/tracer/trace_agent.jar=/path/to/profile.json"
+```
+
+It might be necessary to stop gradle daemons to force a reload of your profile:
+
+```
+./gradlew --stop
+```
 
 ## The report
 
