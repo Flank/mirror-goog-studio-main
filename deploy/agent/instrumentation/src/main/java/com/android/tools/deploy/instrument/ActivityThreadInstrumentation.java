@@ -17,6 +17,7 @@
 package com.android.tools.deploy.instrument;
 
 import android.util.Log;
+import java.time.LocalTime;
 import java.util.Collection;
 
 @SuppressWarnings("unused") // Used by native instrumentation code.
@@ -35,13 +36,23 @@ public final class ActivityThreadInstrumentation {
 
     public static void handleDispatchPackageBroadcastEntry(
             Object activityThread, int cmd, String[] packages) {
-        Log.v(TAG, "Package broadcast entry hook");
+        Log.v(
+                TAG,
+                String.format(
+                        "Package broadcast entry hook { cmd=%d, time=%d, thread=%d }",
+                        cmd, LocalTime.now().toNanoOfDay(), Thread.currentThread().getId()));
+
         mActivityThread = activityThread;
         mCmd = cmd;
     }
 
     public static void handleDispatchPackageBroadcastExit() {
-        Log.v(TAG, "Package broadcast exit hook");
+        Log.v(
+                TAG,
+                String.format(
+                        "Package broadcast exit hook { cmd=%d, time=%d, thread=%d }",
+                        mCmd, LocalTime.now().toNanoOfDay(), Thread.currentThread().getId()));
+
         if (mCmd != PACKAGE_REPLACED) {
             return;
         }
