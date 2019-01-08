@@ -7,7 +7,7 @@ readonly build_number="$2"
 readonly script_dir="$(dirname "$0")"
 
 # Grab the location of the command_log file for bazel daemon so we can search it later.
-readonly command_log="$("${script_dir}"/bazel info --config=remote command_log)"
+readonly command_log="$("${script_dir}"/bazel info --config=coverage command_log)"
 
 # Conditionally add --auth_credentials option for BYOB machines.
 if [[ -r "${HOME}/.android-studio-alphasource.json" ]]; then
@@ -18,7 +18,7 @@ fi
 "${script_dir}/bazel" \
   --max_idle_secs=60 \
   test \
-  --config=remote \
+  --config=coverage \
   ${auth_options} \
   --test_tag_filters=-no_linux,-no_test_linux \
   --define agent_coverage=true \
@@ -45,12 +45,12 @@ readonly universe="//tools/... - //tools/adt/idea/android-uitests/..."
   || exit $?
 
 # Generate the Jacoco report
-readonly testlogs_dir="$(${script_dir}/bazel info bazel-testlogs --config=remote)"
+readonly testlogs_dir="$(${script_dir}/bazel info bazel-testlogs --config=coverage)"
 
 "${script_dir}/bazel" \
   run \
   //tools/base:coverage_report \
-  --config=remote \
+  --config=coverage \
   ${auth_options} \
   -- \
   tools/base/coverage_report \

@@ -15,7 +15,7 @@ test --test_output=errors
 test --verbose_failures
 
 # Local runs require longer timeouts.
-build:local --test_timeout=120,600,1800,7200
+test:local --test_timeout=120,600,1800,7200
 
 # Test results caching is on by default. This is here so we have a presubmit
 # config as bazel rules can use the config to determine presubmit invocation.
@@ -107,11 +107,6 @@ build:remote --nobuild_runfile_links
 build:remote --strategy=CppCompile=remote
 build:remote --strategy=CppLink=remote
 
-# Depending on how many machines are in the remote execution instance, setting
-# this higher can make builds faster by allowing more jobs to run in parallel.
-# Setting it too high can result in jobs that timeout, however, while waiting
-# for a remote machine to execute them.
-build:remote --jobs=110
 build:remote --show_timestamps
 
 # Import several flags related to specifying the toolchain and (if applicable)

@@ -1,5 +1,8 @@
 import %workspace%/tools/base/bazel/common.bazel.rc
 
+build:remote --config=remote_common
+build:remote --jobs=50
+
 build:remote_common --remote_instance_name=projects/google.com:android-studio-alphasource/instances/windows
 
 build:remote --crosstool_top=@bazel_toolchains//configs/experimental/windows/0.1.0/bazel_0.19.0:toolchain

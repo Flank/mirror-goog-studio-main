@@ -1,5 +1,14 @@
 import %workspace%/tools/base/bazel/common.bazel.rc
 
+# Depending on how many machines are in the remote execution instance, setting
+# this higher can make builds faster by allowing more jobs to run in parallel.
+# Setting it too high can result in jobs that timeout, however, while waiting
+# for a remote machine to execute them.
+build:remote --jobs=110
+
+build:coverage --jobs=70
+build:coverage --config=remote
+
 build:remote_common --remote_instance_name=projects/google.com:android-studio-alphasource/instances/default_instance
 
 build:remote --experimental_remote_platform_override='properties:{ name:"container-image" value:"docker://gcr.io/google.com/android-studio-alphasource/nosla-debian8-clang-as@sha256:71c886770d70dd28c1e8a8f58eab8f8ed8bc7322550ec0dcca3cf28ae6eeac19"}'
