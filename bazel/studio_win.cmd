@@ -12,8 +12,8 @@ set TESTTAGFILTERSPOST=-no_windows,-no_test_windows,-qa_sanity,-qa_fast,-qa_unre
 set TESTTAGFILTERSPSQ=-no_windows,-no_test_windows,-qa_sanity,-qa_fast,-qa_unreliable,-no_psq
 set TESTTAGFILTERS=%TESTTAGFILTERSPOST%
 
-set CONFIGOPTIONSPOST=--config=local --config=remote_common --config=postsubmit
-set CONFIGOPTIONSPSQ=--config=local --config=remote_common --config=presubmit
+set CONFIGOPTIONSPOST=--config=postsubmit
+set CONFIGOPTIONSPSQ=--config=presubmit
 set CONFIGOPTIONS=%CONFIGOPTIONSPOST%
 
 set AUTHCREDS=--auth_credentials=C:\buildbot\android-studio-alphasource.json
