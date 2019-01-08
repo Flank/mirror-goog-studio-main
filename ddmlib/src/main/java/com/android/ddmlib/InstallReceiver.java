@@ -29,11 +29,19 @@ import java.util.regex.Pattern;
 public class InstallReceiver extends MultiLineReceiver {
 
     private static final String SUCCESS_OUTPUT = "Success"; //$NON-NLS-1$
+
+    /**
+     * A pattern to parse strings of the form
+     * Failure [ERROR] or Failure [ERROR: description].
+     * Will capture the "ERROR: description", to use as message, and
+     * the "ERROR" part as error code.
+     */
     private static final Pattern FAILURE_PATTERN =
-            Pattern.compile("Failure\\s+\\[(.*)\\]"); //$NON-NLS-1$
+            Pattern.compile("Failure\\s+\\[(([^:]*)(:.*)?)\\]"); //$NON-NLS-1$
 
     private String mErrorMessage = null;
     private String mSuccessMessage = null;
+    private String mErrorCode = null;
     /**
      * Track whether the installation was actually successful, regardless of if we get an output
      * from the command or not.
@@ -55,12 +63,14 @@ public class InstallReceiver extends MultiLineReceiver {
                     Matcher m = FAILURE_PATTERN.matcher(line);
                     if (m.matches()) {
                         mErrorMessage = m.group(1);
+                        mErrorCode = m.group(2);
                         mSuccessMessage = null;
                         mSuccessfullyCompleted = false;
                         break;
                     } else {
                         if (mErrorMessage == null) {
                             mErrorMessage = "Unknown failure: " + line;
+                            mErrorCode = "UNKNOWN";
                         } else {
                             mErrorMessage = mErrorMessage + "\n" + line;
                         }
@@ -86,6 +96,11 @@ public class InstallReceiver extends MultiLineReceiver {
     /** Returns the success message from the installation. Returns null if failure is seen. */
     public String getSuccessMessage() {
         return mSuccessMessage;
+    }
+
+    /** @return The ERROR_CODE part of a message like: "Failure [ERROR_CODE: description]" */
+    public String getErrorCode() {
+        return mErrorCode;
     }
 
     /**
