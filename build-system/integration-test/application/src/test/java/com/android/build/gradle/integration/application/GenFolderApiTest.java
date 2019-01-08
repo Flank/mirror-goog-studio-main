@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.ApkSubject.assertThat;
-import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -27,6 +26,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
+import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.util.Collection;
@@ -37,7 +37,17 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-/** Assemble tests for genFolderApi. */
+/**
+ * Tests for generated source registration APIs.
+ *
+ * <p>Includes the following APIs:
+ *
+ * <ul>
+ *   <li>registerJavaGeneratingTask
+ *   <li>registerResGeneratingTask
+ *   <li>registerGeneratedResFolders
+ * </ul>
+ */
 public class GenFolderApiTest {
     @ClassRule
     public static GradleTestProject project =
@@ -48,11 +58,11 @@ public class GenFolderApiTest {
     @BeforeClass
     public static void setUp() throws Exception {
         project.executor()
-                .withProperty("inject_enable_generate_values_res", "true")
-                .run("clean", "assembleDebug");
+                .withArgument("-P" + "inject_enable_generate_values_res=true")
+                .run("assembleDebug");
         model =
                 project.model()
-                        .withProperty("inject_enable_generate_values_res", "true")
+                        .withArgument("-P" + "inject_enable_generate_values_res=true")
                         .fetchAndroidProjects()
                         .getOnlyModel();
     }
@@ -65,50 +75,43 @@ public class GenFolderApiTest {
 
     @Test
     public void checkTheCustomJavaGenerationTaskRan() throws Exception {
-        assertThat(project.getApk("debug")).containsClass("Lcom/custom/Foo;");
+        try (Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG)) {
+            assertThat(apk).containsClass("Lcom/custom/Foo;");
+        }
     }
 
     @Test
     public void checkTheCustomResGenerationTaskRan() throws Exception {
-        assertThat(project.getApk("debug")).contains("res/xml/generated.xml");
-        File intermediateFile =
-                project.file("build/intermediates/res/merged/debug/values/values.xml");
-        if (!intermediateFile.exists()) {
-            intermediateFile =
-                    project.file("build/intermediates/res/merged/debug/values_values.arsc.flat");
-            // we can't read the contents
-            assertThat(intermediateFile).exists();
-        } else {
-            assertThat(intermediateFile).contains("generated_string");
+        try (Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG)) {
+            assertThat(apk).contains("res/xml/generated.xml");
+            assertThat(apk)
+                    .hasClass("Lcom/android/tests/basic/R$string;")
+                    .that()
+                    .hasField("generated_string");
         }
     }
-
 
     @Test
     public void checkAddingAndRemovingGeneratingTasks() throws Exception {
         project.executor()
-                .withProperty("inject_enable_generate_values_res", "false")
+                .withArgument("-P" + "inject_enable_generate_values_res=false")
                 .run("assembleDebug");
-        assertThat(project.getApk("debug")).contains("res/xml/generated.xml");
-        File intermediateFile =
-                project.file("build/intermediates/res/merged/debug/values/values.xml");
-        if (!intermediateFile.exists()) {
-            intermediateFile =
-                    project.file("build/intermediates/res/merged/debug/values_values.arsc.flat");
-            assertThat(intermediateFile).exists();
-        } else {
-            assertThat(intermediateFile).doesNotContain("generated_string");
+
+        try (Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG)) {
+            assertThat(apk)
+                    .hasClass("Lcom/android/tests/basic/R$string;")
+                    .that()
+                    .doesNotHaveField("generated_string");
         }
 
         project.executor()
-                .withProperty("inject_enable_generate_values_res", "true")
+                .withArgument("-P" + "inject_enable_generate_values_res=true")
                 .run("assembleDebug");
-        assertThat(project.getApk("debug")).contains("res/xml/generated.xml");
-
-        if (intermediateFile.getName().endsWith(".flat")) {
-            assertThat(intermediateFile).exists();
-        } else {
-            assertThat(intermediateFile).contains("generated_string");
+        try (Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG)) {
+            assertThat(apk)
+                    .hasClass("Lcom/android/tests/basic/R$string;")
+                    .that()
+                    .hasField("generated_string");
         }
     }
 
