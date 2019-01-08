@@ -17,17 +17,23 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.ApkSubject.assertThat;
+import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
+import com.android.build.gradle.integration.common.utils.ModelContainerUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
+import com.google.common.collect.MoreCollectors;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
@@ -55,16 +61,19 @@ public class GenFolderApiTest {
 
     private static AndroidProject model;
 
+    private static List<String> ideSetupTasks;
+
     @BeforeClass
     public static void setUp() throws Exception {
         project.executor()
                 .withArgument("-P" + "inject_enable_generate_values_res=true")
                 .run("assembleDebug");
-        model =
+        ModelContainer<AndroidProject> modelContainer =
                 project.model()
                         .withArgument("-P" + "inject_enable_generate_values_res=true")
-                        .fetchAndroidProjects()
-                        .getOnlyModel();
+                        .fetchAndroidProjects();
+        ideSetupTasks = ModelContainerUtils.getDebugGenerateSourcesCommands(modelContainer);
+        model = modelContainer.getOnlyModel();
     }
 
     @AfterClass
@@ -90,6 +99,45 @@ public class GenFolderApiTest {
                     .hasField("generated_string");
         }
     }
+
+    /** Regression test for b/120750247 */
+    @Test
+    public void checkCustomGenerationRunAtSync() throws Exception {
+        project.executor()
+                .withArgument("-P" + "inject_enable_generate_values_res=true")
+                .run("clean");
+        project.executor()
+                .withArgument("-P" + "inject_enable_generate_values_res=true")
+                .run(ideSetupTasks);
+
+        AndroidArtifact debugArtifact =
+                AndroidProjectUtils.getDebugVariant(model).getMainArtifact();
+
+        File customCode =
+                debugArtifact
+                        .getGeneratedSourceFolders()
+                        .stream()
+                        .filter(it -> it.getAbsolutePath().startsWith(getSourceFolderStart()))
+                        .collect(MoreCollectors.onlyElement());
+        assertThat(customCode).isDirectory();
+
+        File customResources =
+                debugArtifact
+                        .getGeneratedResourceFolders()
+                        .stream()
+                        .filter(it -> it.getAbsolutePath().startsWith(getCustomResPath()))
+                        .collect(MoreCollectors.onlyElement());
+        assertThat(customResources).isDirectory();
+
+        File customResources2 =
+                debugArtifact
+                        .getGeneratedResourceFolders()
+                        .stream()
+                        .filter(it -> it.getAbsolutePath().startsWith(getCustomRes2Path()))
+                        .collect(MoreCollectors.onlyElement());
+        assertThat(customResources2).isDirectory();
+    }
+
 
     @Test
     public void checkAddingAndRemovingGeneratingTasks() throws Exception {
@@ -117,9 +165,6 @@ public class GenFolderApiTest {
 
     @Test
     public void checkJavaFolderInModel() throws Exception {
-        File projectDir = project.getTestDir();
-
-        File buildDir = new File(projectDir, "build");
 
         for (Variant variant : model.getVariants()) {
 
@@ -131,8 +176,7 @@ public class GenFolderApiTest {
             Collection<File> genSourceFolder = mainInfo.getGeneratedSourceFolders();
 
             // We're looking for a custom folder
-            String sourceFolderStart =
-                    new File(buildDir, "customCode").getAbsolutePath() + File.separatorChar;
+            String sourceFolderStart = getSourceFolderStart();
             boolean found = false;
             for (File f : genSourceFolder) {
                 if (f.getAbsolutePath().startsWith(sourceFolderStart)) {
@@ -145,11 +189,14 @@ public class GenFolderApiTest {
         }
     }
 
+    @NonNull
+    private String getSourceFolderStart() {
+        return FileUtils.join(project.getTestDir().getAbsolutePath(), "build", "customCode")
+                + File.separatorChar;
+    }
+
     @Test
     public void checkResFolderInModel() throws Exception {
-        File projectDir = project.getTestDir();
-
-        File buildDir = new File(projectDir, "build");
 
         for (Variant variant : model.getVariants()) {
 
@@ -165,15 +212,25 @@ public class GenFolderApiTest {
                             .collect(Collectors.toList());
 
             assertThat(genResFolders).containsNoDuplicates();
-            String buildDirPath = buildDir.getAbsolutePath();
 
             assertThat(genResFolders)
                     .containsAllOf(
-                            FileUtils.join(buildDirPath, "customRes", variant.getName()),
-                            FileUtils.join(buildDirPath, "customRes2", variant.getName()));
+                            getCustomResPath() + variant.getName(),
+                            getCustomRes2Path() + variant.getName());
         }
     }
 
+    @NonNull
+    private String getCustomResPath() {
+        return FileUtils.join(project.getTestDir().getAbsolutePath(), "build", "customRes")
+                + File.separatorChar;
+    }
+
+    @NonNull
+    private String getCustomRes2Path() {
+        return FileUtils.join(project.getTestDir().getAbsolutePath(), "build", "customRes2")
+                + File.separatorChar;
+    }
 
     @Test
     public void backwardsCompatible() throws Exception {

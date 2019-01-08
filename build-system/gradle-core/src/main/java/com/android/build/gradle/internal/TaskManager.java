@@ -3770,7 +3770,10 @@ public abstract class TaskManager {
                 .setSourceGenTask(
                         taskFactory.register(
                                 scope.getTaskName("generate", "Sources"),
-                                task -> task.dependsOn(PrepareLintJar.NAME)));
+                                task -> {
+                                    task.dependsOn(PrepareLintJar.NAME);
+                                    task.dependsOn(variantData.getExtraGeneratedResFolders());
+                                }));
         // and resGenTask
         scope.getTaskContainer()
                 .setResourceGenTask(
