@@ -160,6 +160,10 @@ bool SwapCommand::CopyBinaries(const std::string& src_path,
     return false;
   }
 
+  for (auto& doll : dolls) {
+    LogEvent("Matryoshka binary found:" + doll->name);
+  }
+
   if (!RunCmd("stat", User::APP_PACKAGE, {agent_dst_path}, nullptr)) {
     // If the agent library is not already on disk, write it there now.
     if (access(agent_src_path.c_str(), F_OK) == -1) {
@@ -363,7 +367,7 @@ bool SwapCommand::AttachAgents() const {
   for (int pid : request_.process_ids()) {
     std::string output;
     std::string agent = kAgentFilename;
-#if defined(__aarch64__)
+#if defined(__aarch64__) || defined(__x86_64__)
     // TODO: This is a temp solution, we are going to get this info from dump
     // and read that from the request PB anyways.
     //
@@ -374,6 +378,7 @@ bool SwapCommand::AttachAgents() const {
       agent = kAgentAltFilename;
     }
 #endif
+    LogEvent("Attaching agent: '"_s + agent + "'");
     if (!cmd.AttachAgent(pid, target_dir_ + agent, {Socket::kDefaultAddress},
                          &output)) {
       ErrEvent("Could not attach agent to process: "_s + output);

@@ -122,6 +122,7 @@ android_cc_binary(
     name = "android-no-matryoshka",
     abis = [
         "x86",
+        "x86_64",
         "armeabi-v7a",
         "arm64-v8a",
     ],
@@ -134,14 +135,17 @@ genrule(
     name = "android",
     srcs = [
         ":android-no-matryoshka/x86/installer",
+        ":android-no-matryoshka/x86_64/installer",
         ":android-no-matryoshka/armeabi-v7a/installer",
         ":android-no-matryoshka/arm64-v8a/installer",
         "//tools/base/deploy/agent/native:android/x86/libswap.so",
+        "//tools/base/deploy/agent/native:android/x86_64/libswap.so",
         "//tools/base/deploy/agent/native:android/armeabi-v7a/libswap.so",
         "//tools/base/deploy/agent/native:android/arm64-v8a/libswap.so",
     ],
     outs = [
         "android/x86/installer",
+        "android/x86_64/installer",
         "android/armeabi-v7a/installer",
         "android/arm64-v8a/installer",
     ],
@@ -150,6 +154,12 @@ genrule(
            -i $(location //tools/base/deploy/installer:android-no-matryoshka/x86/installer) \
            -o $(location android/x86/installer) \
            -p agent.so=$(location //tools/base/deploy/agent/native:android/x86/libswap.so);
+
+       $(location //tools/base/bazel:matryoshka) \
+           -i $(location //tools/base/deploy/installer:android-no-matryoshka/x86_64/installer) \
+           -o $(location android/x86_64/installer) \
+           -p agent.so=$(location //tools/base/deploy/agent/native:android/x86_64/libswap.so) \
+           -p agent-alt.so=$(location //tools/base/deploy/agent/native:android/x86/libswap.so);
 
        $(location //tools/base/bazel:matryoshka) \
            -i $(location //tools/base/deploy/installer:android-no-matryoshka/armeabi-v7a/installer) \
@@ -162,9 +172,9 @@ genrule(
            -p agent.so=$(location //tools/base/deploy/agent/native:android/arm64-v8a/libswap.so) \
            -p agent-alt.so=$(location //tools/base/deploy/agent/native:android/armeabi-v7a/libswap.so);
     """,
+    tags = ["no_rbe_windows"],
     tools = ["//tools/base/bazel:matryoshka"],
     visibility = ["//visibility:public"],
-    tags = ["no_rbe_windows"],
 )
 
 cc_library(
