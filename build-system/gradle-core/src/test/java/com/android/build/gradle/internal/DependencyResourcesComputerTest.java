@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.tasks;
+package com.android.build.gradle;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.mock;
@@ -25,6 +25,7 @@ import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl;
 import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter;
 import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter;
+import com.android.build.gradle.internal.fixtures.FakeFileCollection;
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory;
 import com.android.build.gradle.internal.variant2.DslScopeImpl;
 import com.android.builder.core.BuilderConstants;
@@ -42,171 +43,164 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
-import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.component.ComponentArtifactIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
-import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-public class MergeResourcesTest {
+public class DependencyResourcesComputerTest {
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
-    public Project project;
-    public MergeResources task;
+    private DependecyResourcesComputer computer;
     private List<ResourceSet> folderSets;
     private Map<String, BuildableArtifact> artifactMap;
 
     @Before
     public void setUp() throws IOException {
         BuildableArtifactImpl.Companion.enableResolution();
-        File testDir = temporaryFolder.newFolder();
-        project = ProjectBuilder.builder().withProjectDir(testDir).build();
-
-        task = project.getTasks().create("test", MergeResources.class);
+        computer = new DependecyResourcesComputer();
 
         // set some default file collection on the required inputs
         FileCollection empty = mock(FileCollection.class);
-        task.setRenderscriptResOutputDir(empty);
-        task.setGeneratedResOutputDir(empty);
+        computer.setRenderscriptResOutputDir(empty);
+        computer.setGeneratedResOutputDir(empty);
 
         folderSets = Lists.newArrayList();
         artifactMap = new LinkedHashMap<>();
-        task.setResources(artifactMap);
+        computer.setResources(artifactMap);
     }
 
     @After
     public void tearDown() {
-        project = null;
-        task = null;
+        computer = null;
         folderSets = null;
     }
 
     @Test
     public void singleSetWithSingleFile() throws Exception {
-        File file = project.file("src/main");
+        File file = temporaryFolder.newFolder("src", "main");
         ResourceSet mainSet =
                 createResourceSet(folderSets, artifactMap, BuilderConstants.MAIN, file);
 
-        assertThat(task.computeResourceSetList()).containsExactly(mainSet);
+        assertThat(computer.compute()).containsExactly(mainSet);
     }
 
     @Test
     public void singleSetWithMultiFiles() throws Exception {
-        File file = project.file("src/main");
-        File file2 = project.file("src/main2");
+        File file = temporaryFolder.newFolder("src", "main");
+        File file2 = temporaryFolder.newFolder("src", "main2");
         ResourceSet mainSet =
                 createResourceSet(folderSets, artifactMap, BuilderConstants.MAIN, file, file2);
 
-        assertThat(task.computeResourceSetList()).containsExactly(mainSet);
+        assertThat(computer.compute()).containsExactly(mainSet);
     }
 
     @Test
     public void twoSetsWithSingleFile() throws Exception {
-        File file = project.file("src/main");
+        File file = temporaryFolder.newFolder("src", "main");
         ResourceSet mainSet =
                 createResourceSet(folderSets, artifactMap, BuilderConstants.MAIN, file);
 
-        File file2 = project.file("src/debug");
+        File file2 = temporaryFolder.newFolder("src", "debug");
         ResourceSet debugSet = createResourceSet(folderSets, artifactMap, "debug", file2);
 
-        assertThat(task.computeResourceSetList()).containsExactly(mainSet, debugSet);
+        assertThat(computer.compute()).containsExactly(mainSet, debugSet);
     }
 
     @Test
     public void singleSetWithDependency() throws Exception {
-        File file = project.file("src/main");
+        File file = temporaryFolder.newFolder("src", "main");
         ResourceSet mainSet =
                 createResourceSet(folderSets, artifactMap, BuilderConstants.MAIN, file);
 
-        File file2 = project.file("foo/bar/1.0");
+        File file2 = temporaryFolder.newFolder("foo", "bar", "1.0");
         List<ResourceSet> librarySets = setupLibraryDependencies(file2, ":path");
 
-        assertThat(task.getLibraries().getFiles()).containsExactly(file2);
+        assertThat(computer.getLibraries().getArtifactFiles()).containsExactly(file2);
 
-        List<ResourceSet> computedSets = task.computeResourceSetList();
+        List<ResourceSet> computedSets = computer.compute();
         assertThat(computedSets).containsExactly(librarySets.get(0), mainSet).inOrder();
     }
 
     @Test
     public void singleSetWithRenderscript() throws Exception {
-        File file = project.file("src/main");
+        File file = temporaryFolder.newFolder("src", "main");
         ResourceSet mainSet =
                 createResourceSet(folderSets, artifactMap, BuilderConstants.MAIN, file);
 
-        File rsFile = project.file("rs");
-        setFileCollection(task::setRenderscriptResOutputDir, rsFile);
+        File rsFile = temporaryFolder.newFolder("rs");
+        setFileCollection(computer::setRenderscriptResOutputDir, rsFile);
         mainSet.addSource(rsFile);
 
-        assertThat(task.computeResourceSetList()).containsExactly(mainSet);
+        assertThat(computer.compute()).containsExactly(mainSet);
         // rs file should have been added to the main resource sets.
         assertThat(mainSet.getSourceFiles()).containsExactly(file, rsFile);
     }
 
     @Test
     public void singleSetWithGeneratedRes() throws Exception {
-        File file = project.file("src/main");
+        File file = temporaryFolder.newFolder("src", "main");
         ResourceSet mainSet =
                 createResourceSet(folderSets, artifactMap, BuilderConstants.MAIN, file);
 
-        File genFile = project.file("generated");
-        setFileCollection(task::setGeneratedResOutputDir, genFile);
+        File genFile = temporaryFolder.newFolder("generated");
+        setFileCollection(computer::setGeneratedResOutputDir, genFile);
         mainSet.addSource(genFile);
 
-        assertThat(task.computeResourceSetList()).containsExactly(mainSet);
+        assertThat(computer.compute()).containsExactly(mainSet);
         // generated file should have been added to the main resource sets.
         assertThat(mainSet.getSourceFiles()).containsExactly(file, genFile);
     }
 
     @Test
     public void singleSetWithMicroApkRes() throws Exception {
-        File file = project.file("src/main");
+        File file = temporaryFolder.newFolder("src", "main");
         ResourceSet mainSet =
                 createResourceSet(folderSets, artifactMap, BuilderConstants.MAIN, file);
 
-        File microFile = project.file("micro");
-        setFileCollection(task::setMicroApkResDirectory, microFile);
+        File microFile = temporaryFolder.newFolder("micro");
+        setFileCollection(computer::setMicroApkResDirectory, microFile);
         mainSet.addSource(microFile);
 
-        assertThat(task.computeResourceSetList()).containsExactly(mainSet);
+        assertThat(computer.compute()).containsExactly(mainSet);
         // micro file should have been added to the main resource sets.
         assertThat(mainSet.getSourceFiles()).containsExactly(file, microFile);
     }
 
     @Test
     public void singleSetWithExtraRes() throws Exception {
-        File file = project.file("src/main");
+        File file = temporaryFolder.newFolder("src", "main");
         ResourceSet mainSet =
                 createResourceSet(folderSets, artifactMap, BuilderConstants.MAIN, file);
 
-        File extraFile = project.file("extra");
-        setFileCollectionSupplier(task::setExtraGeneratedResFolders, extraFile);
+        File extraFile = temporaryFolder.newFolder("extra");
+        setFileCollectionSupplier(computer::setExtraGeneratedResFolders, extraFile);
         mainSet.addSource(extraFile);
 
-        assertThat(task.computeResourceSetList()).containsExactly(mainSet);
+        assertThat(computer.compute()).containsExactly(mainSet);
         // rs file should have been added to the main resource sets.
         assertThat(mainSet.getSourceFiles()).containsExactly(file, extraFile);
     }
 
     @Test
     public void everything() throws Exception {
-        File file = project.file("src/main");
-        File file2 = project.file("src/main2");
+        File file = temporaryFolder.newFolder("src", "main");
+        File file2 = temporaryFolder.newFolder("src", "main2");
         ResourceSet mainSet =
                 createResourceSet(folderSets, artifactMap, BuilderConstants.MAIN, file, file2);
 
-        File debugFile = project.file("src/debug");
+        File debugFile = temporaryFolder.newFolder("src", "debug");
         ResourceSet debugSet = createResourceSet(folderSets, artifactMap, "debug", debugFile);
 
-        File libFile = project.file("foo/bar/1.0");
-        File libFile2 = project.file("foo/bar/2.0");
+        File libFile = temporaryFolder.newFolder("foo", "bar", "1.0");
+        File libFile2 = temporaryFolder.newFolder("foo", "bar", "2.0");
 
         // the order returned by the dependency is meant to be in the wrong order (consumer first,
         // when we want dependent first for the merger), so the order in the res set should be
@@ -218,30 +212,30 @@ public class MergeResourcesTest {
         ResourceSet librarySet2 = librarySets.get(1);
 
         // Note: the order of files are added to mainSet matters.
-        File rsFile = project.file("rs");
-        setFileCollection(task::setRenderscriptResOutputDir, rsFile);
+        File rsFile = temporaryFolder.newFolder("rs");
+        setFileCollection(computer::setRenderscriptResOutputDir, rsFile);
         mainSet.addSource(rsFile);
 
-        File genFile = project.file("generated");
-        setFileCollection(task::setGeneratedResOutputDir, genFile);
+        File genFile = temporaryFolder.newFolder("generated");
+        setFileCollection(computer::setGeneratedResOutputDir, genFile);
         mainSet.addSource(genFile);
 
-        File extraFile = project.file("extra");
-        setFileCollectionSupplier(task::setExtraGeneratedResFolders, extraFile);
+        File extraFile = temporaryFolder.newFolder("extra");
+        setFileCollectionSupplier(computer::setExtraGeneratedResFolders, extraFile);
         mainSet.addSource(extraFile);
 
-        File microFile = project.file("micro");
-        setFileCollection(task::setMicroApkResDirectory, microFile);
+        File microFile = temporaryFolder.newFolder("micro");
+        setFileCollection(computer::setMicroApkResDirectory, microFile);
         mainSet.addSource(microFile);
 
-        assertThat(task.getLibraries().getFiles()).containsExactly(libFile, libFile2);
-        assertThat(task.computeResourceSetList())
+        assertThat(computer.getLibraries().getArtifactFiles()).containsExactly(libFile, libFile2);
+        assertThat(computer.compute())
                 .containsExactly(librarySet2, librarySet, mainSet, debugSet)
                 .inOrder();
         // generated files should have been added to the main resource sets.
         assertThat(mainSet.getSourceFiles())
                 .containsExactly(file, file2, rsFile, genFile, extraFile, microFile);
-        assertThat(task.getLibraries().getFiles()).containsExactly(libFile, libFile2);
+        assertThat(computer.getLibraries().getArtifactFiles()).containsExactly(libFile, libFile2);
     }
 
     @NonNull
@@ -253,7 +247,7 @@ public class MergeResourcesTest {
         ResourceSet mainSet = new ResourceSet(name, ResourceNamespace.RES_AUTO, null, false);
         BuildableArtifact artifact =
                 new BuildableArtifactImpl(
-                        project.files(Arrays.asList(files)),
+                        new FakeFileCollection(Arrays.asList(files)),
                         new DslScopeImpl(
                                 new FakeEvalIssueReporter(true),
                                 new FakeDeprecationReporter(),
@@ -315,13 +309,10 @@ public class MergeResourcesTest {
             resourceSets.add(set);
         }
 
-        FileCollection fileCollection = mock(FileCollection.class);
-        when(fileCollection.getFiles()).thenReturn(files);
-
         when(libraries.getArtifacts()).thenReturn(artifacts);
-        when(libraries.getArtifactFiles()).thenReturn(fileCollection);
+        when(libraries.getArtifactFiles()).thenReturn(new FakeFileCollection(files));
 
-        task.setLibraries(libraries);
+        computer.setLibraries(libraries);
 
         return resourceSets;
     }

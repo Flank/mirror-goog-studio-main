@@ -16,9 +16,6 @@
 package com.android.build.gradle.tasks;
 
 import static com.android.build.gradle.internal.TaskManager.MergeType.MERGE;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ANDROID_RES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_LAYOUT_INFO_TYPE_MERGE;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE;
 
@@ -26,6 +23,7 @@ import android.databinding.tool.LayoutXmlProcessor;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
+import com.android.build.gradle.DependecyResourcesComputer;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.aapt.WorkerExecutorResourceCompilationService;
@@ -40,14 +38,11 @@ import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.VectorDrawablesOptions;
 import com.android.builder.png.VectorDrawableRenderer;
 import com.android.ide.common.blame.MergingLog;
-import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.resources.CopyToOutputDirectoryResourceCompilationService;
 import com.android.ide.common.resources.FileStatus;
 import com.android.ide.common.resources.FileValidity;
@@ -65,8 +60,6 @@ import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.resources.Density;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
@@ -75,15 +68,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.xml.bind.JAXBException;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.ArtifactCollection;
-import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
@@ -97,7 +87,7 @@ import org.gradle.api.tasks.TaskProvider;
 import org.gradle.workers.WorkerExecutor;
 
 @CacheableTask
-public class MergeResources extends IncrementalTask {
+public class MergeResources extends ResourceAwareTask {
     // ----- PUBLIC TASK API -----
 
     /**
@@ -118,23 +108,12 @@ public class MergeResources extends IncrementalTask {
 
     private boolean crunchPng;
 
-    private boolean validateEnabled;
-
     private File blameLogFolder;
 
     // file inputs as raw files, lazy behind a memoized/bypassed supplier
     private Supplier<Collection<File>> sourceFolderInputs;
-    private Map<String, BuildableArtifact> resources;
-    //private Supplier<List<ResourceSet>> resSetSupplier;
 
     private List<ResourceSet> processedInputs;
-
-    private ArtifactCollection libraries;
-
-    private FileCollection renderscriptResOutputDir;
-    private FileCollection generatedResOutputDir;
-    private FileCollection microApkResDirectory;
-    private FileCollection extraGeneratedResFolders;
 
     private final FileValidity<ResourceSet> fileValidity = new FileValidity<>();
 
@@ -427,7 +406,7 @@ public class MergeResources extends IncrementalTask {
         // back to full task run. Because the cached ResourceList is modified we don't want
         // to recompute this twice (plus, why recompute it twice anyway?)
         if (processedInputs == null) {
-            processedInputs = computeResourceSetList();
+            processedInputs = getResourcesComputer().compute();
             List<ResourceSet> generatedSets = new ArrayList<>(processedInputs.size());
 
             for (ResourceSet resourceSet : processedInputs) {
@@ -469,68 +448,6 @@ public class MergeResources extends IncrementalTask {
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getRenderscriptResOutputDir() {
-        return renderscriptResOutputDir;
-    }
-
-    @VisibleForTesting
-    void setRenderscriptResOutputDir(@NonNull FileCollection renderscriptResOutputDir) {
-        this.renderscriptResOutputDir = renderscriptResOutputDir;
-    }
-
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getGeneratedResOutputDir() {
-        return generatedResOutputDir;
-    }
-
-    @VisibleForTesting
-    void setGeneratedResOutputDir(@NonNull FileCollection generatedResOutputDir) {
-        this.generatedResOutputDir = generatedResOutputDir;
-    }
-
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    @Optional
-    public FileCollection getMicroApkResDirectory() {
-        return microApkResDirectory;
-    }
-
-    @VisibleForTesting
-    void setMicroApkResDirectory(@NonNull FileCollection microApkResDirectory) {
-        this.microApkResDirectory = microApkResDirectory;
-    }
-
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    @Optional
-    public FileCollection getExtraGeneratedResFolders() {
-        return extraGeneratedResFolders;
-    }
-
-    @VisibleForTesting
-    void setExtraGeneratedResFolders(@NonNull FileCollection extraGeneratedResFolders) {
-        this.extraGeneratedResFolders = extraGeneratedResFolders;
-    }
-
-    @Optional
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getLibraries() {
-        if (libraries != null) {
-            return libraries.getArtifactFiles();
-        }
-
-        return null;
-    }
-
-    @VisibleForTesting
-    void setLibraries(ArtifactCollection libraries) {
-        this.libraries = libraries;
-    }
-
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
     public Collection<File> getSourceFolderInputs() {
         return sourceFolderInputs.get();
     }
@@ -567,7 +484,7 @@ public class MergeResources extends IncrementalTask {
     // Synthetic input: the validation flag is set on the resource sets in CreationAction.execute.
     @Input
     public boolean isValidateEnabled() {
-        return validateEnabled;
+        return getResourcesComputer().getValidateEnabled();
     }
 
     @OutputDirectory
@@ -624,89 +541,6 @@ public class MergeResources extends IncrementalTask {
     @Input
     public String getFlags() {
         return flags.stream().map(Enum::name).sorted().collect(Collectors.joining(","));
-    }
-
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public Collection<BuildableArtifact> getResources() {
-        return resources.values();
-    }
-
-    @VisibleForTesting
-    public void setResources(Map<String, BuildableArtifact> resources) {
-        this.resources = resources;
-    }
-
-    private List<ResourceSet> getResSet() {
-        ImmutableList.Builder<ResourceSet> builder = ImmutableList.builder();
-        for (Map.Entry<String, BuildableArtifact> entry : resources.entrySet()) {
-            ResourceSet resourceSet =
-                    new ResourceSet(
-                            entry.getKey(), ResourceNamespace.RES_AUTO, null, validateEnabled);
-            resourceSet.addSources(entry.getValue().getFiles());
-            builder.add(resourceSet);
-        }
-        return builder.build();
-    }
-
-    /**
-     * Computes the list of resource sets to be used during execution based all the inputs.
-     */
-    @VisibleForTesting
-    @NonNull
-    List<ResourceSet> computeResourceSetList() {
-        List<ResourceSet> sourceFolderSets = getResSet();
-        int size = sourceFolderSets.size() + 4;
-        if (libraries != null) {
-            size += libraries.getArtifacts().size();
-        }
-
-        List<ResourceSet> resourceSetList = new ArrayList<>(size);
-
-        // add at the beginning since the libraries are less important than the folder based
-        // resource sets.
-        // get the dependencies first
-        if (libraries != null) {
-            Set<ResolvedArtifactResult> libArtifacts = libraries.getArtifacts();
-            // the order of the artifact is descending order, so we need to reverse it.
-            for (ResolvedArtifactResult artifact : libArtifacts) {
-                ResourceSet resourceSet =
-                        new ResourceSet(
-                                ProcessApplicationManifest.getArtifactName(artifact),
-                                ResourceNamespace.RES_AUTO,
-                                null,
-                                validateEnabled);
-                resourceSet.setFromDependency(true);
-                resourceSet.addSource(artifact.getFile());
-
-                // add to 0 always, since we need to reverse the order.
-                resourceSetList.add(0,resourceSet);
-            }
-        }
-
-        // add the folder based next
-        resourceSetList.addAll(sourceFolderSets);
-
-        // We add the generated folders to the main set
-        List<File> generatedResFolders = new ArrayList<>();
-
-        generatedResFolders.addAll(renderscriptResOutputDir.getFiles());
-        generatedResFolders.addAll(generatedResOutputDir.getFiles());
-
-        FileCollection extraFolders = getExtraGeneratedResFolders();
-        if (extraFolders != null) {
-            generatedResFolders.addAll(extraFolders.getFiles());
-        }
-        if (microApkResDirectory != null) {
-            generatedResFolders.addAll(microApkResDirectory.getFiles());
-        }
-
-        // add the generated files to the main set.
-        final ResourceSet mainResourceSet = sourceFolderSets.get(0);
-        assert mainResourceSet.getConfigName().equals(BuilderConstants.MAIN);
-        mainResourceSet.addSources(generatedResFolders);
-
-        return resourceSetList;
     }
 
     public static class CreationAction extends VariantTaskCreationAction<MergeResources> {
@@ -830,28 +664,12 @@ public class MergeResources extends IncrementalTask {
             task.vectorSupportLibraryIsUsed =
                     Boolean.TRUE.equals(vectorDrawablesOptions.getUseSupportLibrary());
 
-            task.validateEnabled =
-                    !globalScope.getProjectOptions().get(BooleanOption.DISABLE_RESOURCE_VALIDATION);
-
-            if (includeDependencies) {
-                task.libraries =
-                        variantScope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, ANDROID_RES);
-            }
-
-            task.resources = variantData.getAndroidResources();
+            task.getResourcesComputer().initFromVariantScope(variantScope, includeDependencies);
             task.sourceFolderInputs =
                     () ->
                             variantData
                                     .getVariantConfiguration()
                                     .getSourceFiles(SourceProvider::getResDirectories);
-            task.extraGeneratedResFolders = variantData.getExtraGeneratedResFolders();
-            task.renderscriptResOutputDir =
-                    project.files(variantScope.getRenderscriptResOutputDir());
-            task.generatedResOutputDir = project.files(variantScope.getGeneratedResOutputDir());
-            if (variantScope.getTaskContainer().getMicroApkTask() != null
-                    && variantData.getVariantConfiguration().getBuildType().isEmbedMicroApp()) {
-                task.microApkResDirectory = project.files(variantScope.getMicroApkResDirectory());
-            }
 
             task.outputDir = outputLocation;
             if (!task.disableVectorDrawables) {
