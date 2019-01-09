@@ -50,22 +50,26 @@ public class ApkSwapper {
      */
     public boolean swap(ApplicationDumper.Dump dump, String sessionId, List<DexClass> toSwap)
             throws DeployerException {
-        if (dump.pids.isEmpty()) {
+        // The application dump contains a map of [package name --> process ids]. If there are no
+        // packages with running processes, the swap cannot be performed.
+        if (dump.packagePids.isEmpty()) {
             throw new DeployerException(
                     DeployerException.Error.DUMP_UNKNOWN_PACKAGE,
                     "Cannot list processes for package. Is the app running?");
         }
 
-        // The native installer can't handle swapping more than one package in the same swap request. The dump
-        // returns a map because the dump should not be gated by this limitation, since we may eventually address it.
-        if (dump.pids.size() > 1) {
+        // The native installer can't handle swapping more than one package at a time. The dump does
+        // not enforce this limitation, so we need to check here to make sure we haven't been given
+        // multiple applications to swap. This could happen if an instrumentation package targets
+        // multiple other packages; we may elect to fix this limitation in the future.
+        if (dump.packagePids.size() > 1) {
             throw new DeployerException(
                     DeployerException.Error.REDEFINER_ERROR, "Cannot swap multiple packages");
         }
 
         Deploy.SwapRequest request = buildSwapRequest(dump, sessionId, toSwap);
 
-        // TODO: If multiple pids have a debugger attached, we'll do extra swaps. Fix?
+        // TODO: If multiple processes have a debugger attached, we'll do extra swaps. Fix?
         sendSwapRequest(request, new InstallerBasedClassRedefiner(installer));
         for (Map.Entry<Integer, ClassRedefiner> entry : redefiners.entrySet()) {
             sendSwapRequest(request, entry.getValue());
@@ -77,7 +81,7 @@ public class ApkSwapper {
     private Deploy.SwapRequest buildSwapRequest(
             ApplicationDumper.Dump dump, String sessionId, List<DexClass> toSwap) {
         Map.Entry<String, List<Integer>> onlyPackage =
-                Iterables.getOnlyElement(dump.pids.entrySet());
+                Iterables.getOnlyElement(dump.packagePids.entrySet());
 
         Deploy.SwapRequest.Builder request =
                 Deploy.SwapRequest.newBuilder()

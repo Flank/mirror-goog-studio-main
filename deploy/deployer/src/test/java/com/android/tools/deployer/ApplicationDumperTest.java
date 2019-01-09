@@ -134,7 +134,7 @@ public class ApplicationDumperTest {
                                 .setTargetPackages(ImmutableList.of("target"))
                                 .build());
         Map<String, List<Integer>> pids =
-                new ApplicationDumper(installer).dump(ImmutableList.of(entry)).pids;
+                new ApplicationDumper(installer).dump(ImmutableList.of(entry)).packagePids;
         assertEquals(ImmutableList.of(1, 2), pids.get("target"));
         assertEquals(ImmutableList.of(3, 4), pids.get("instrument"));
     }

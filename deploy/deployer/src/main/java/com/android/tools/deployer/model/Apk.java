@@ -25,6 +25,10 @@ public class Apk {
     public final String checksum;
     public final String path;
     public final String packageName;
+
+    // If this APK contains instrumentation, this list specifies the other packages that the APK is
+    // intended to instrument. The code in the APK will run in these packages' processes. This is
+    // most common in the form of an instrumented unit test run from studio.
     public final List<String> targetPackages;
     // TODO: This should either be in the ApkEntry loosely connected to this Apk
     //       or we change the model and have a list of ApkEntry in the APK since

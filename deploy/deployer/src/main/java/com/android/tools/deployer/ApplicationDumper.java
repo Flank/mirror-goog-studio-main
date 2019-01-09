@@ -34,15 +34,38 @@ public class ApplicationDumper {
         this.installer = installer;
     }
 
-    // TODO: Improve this method signature; it's unintuitive what it does.
+    /*
+     * This method retrieves information on the application to be swapped; specifically, process ids
+     * and currently installed files.
+     *
+     * Process ids are determined by first looking at the manifests of the local APKs:
+     *  - If the local APK contains instrumentation targeting a specific package, we look up
+     *    process ids for that package.
+     *  - If the local APK does not contain instrumentation, we look up process ids for the APK
+     *    package.
+     *
+     * Currently installed files are always retrieved from the package manager on device.
+     *
+     * The final result is an application dump consisting of:
+     *  - The files that will be diffed when performing the swap.
+     *  - The process ids of the ART instances that the agents will attach to.
+     *
+     *  The returned process ids are in the form of a map of [package name --> list of packages], as
+     *  there may be multiple instrumentation target packages.
+     */
     public Dump dump(List<ApkEntry> apkEntries) throws DeployerException {
         // The name of the package being swapped (the one that will actually be installed).
         String packageName = null;
 
-        // Additional packages whose processes should be targeted while swapping. Used to account for instrumentation
-        // which doesn't run in its own process but instead the processes of other packages.
+        // Additional packages whose processes should be targeted while swapping. Used to account
+        // for instrumentation which doesn't run in its own process but instead the processes of
+        // other packages.
         HashSet<String> targetPackages = new HashSet<>();
 
+        // In an ideal world, our model structure would allow us to obtain this from the Apk
+        // object(s) directly; however, we currently must iterate over every entry, retrieve its
+        // parent Apk, and check the package name/target packages. We cannot simply use the first
+        // Apk we see, as we may have been passed the contents of a split.
         for (ApkEntry entry : apkEntries) {
             if (packageName == null) {
                 packageName = entry.apk.packageName;
@@ -84,11 +107,11 @@ public class ApplicationDumper {
 
     public static class Dump {
         public final List<ApkEntry> apkEntries;
-        public final Map<String, List<Integer>> pids;
+        public final Map<String, List<Integer>> packagePids;
 
-        public Dump(List<ApkEntry> apkEntries, Map<String, List<Integer>> pids) {
+        public Dump(List<ApkEntry> apkEntries, Map<String, List<Integer>> packagePids) {
             this.apkEntries = apkEntries;
-            this.pids = pids;
+            this.packagePids = packagePids;
         }
     }
 
