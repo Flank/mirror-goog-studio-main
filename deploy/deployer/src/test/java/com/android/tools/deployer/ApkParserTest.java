@@ -122,24 +122,6 @@ public class ApkParserTest {
     }
 
     @Test
-    public void testGetApkProcesses() throws Exception {
-        File file = TestUtils.getWorkspaceFile(BASE + "multiprocess.apk");
-        List<ApkEntry> files = new ApkParser().parsePaths(ImmutableList.of(file.getAbsolutePath()));
-        Apk apk = files.get(0).apk;
-        assertEquals("base.apk", apk.name);
-        assertEquals(5, apk.processes.size());
-
-        Set<String> expected =
-                ImmutableSet.of(
-                        "com.test.multiprocess",
-                        "alternate.default",
-                        "com.test.multiprocess:service",
-                        "com.test.multiprocess:private",
-                        ".global");
-        assertEquals(expected, new HashSet<>(apk.processes));
-    }
-
-    @Test
     public void testGetApkInstrumentation() throws Exception {
         File file = TestUtils.getWorkspaceFile(BASE + "instrument.apk");
         List<ApkEntry> files = new ApkParser().parsePaths(ImmutableList.of(file.getAbsolutePath()));

@@ -25,7 +25,6 @@ public class Apk {
     public final String checksum;
     public final String path;
     public final String packageName;
-    public final List<String> processes;
     public final List<String> targetPackages;
     // TODO: This should either be in the ApkEntry loosely connected to this Apk
     //       or we change the model and have a list of ApkEntry in the APK since
@@ -37,14 +36,12 @@ public class Apk {
             String checksum,
             String path,
             String packageName,
-            List<String> processes,
             List<String> targetPackages,
             HashMap<String, ZipUtils.ZipEntry> zipEntries) {
         this.name = name;
         this.checksum = checksum;
         this.path = path;
         this.packageName = packageName;
-        this.processes = processes;
         this.targetPackages = targetPackages;
         this.zipEntries = zipEntries;
     }
@@ -58,7 +55,6 @@ public class Apk {
         private String checksum;
         private String path;
         private String packageName;
-        private List<String> processNames;
         private List<String> targetPackages;
         private HashMap<String, ZipUtils.ZipEntry> zipEntries;
 
@@ -67,7 +63,6 @@ public class Apk {
             this.checksum = "";
             this.path = "";
             this.packageName = "";
-            this.processNames = null;
             this.targetPackages = null;
             this.zipEntries = null;
         }
@@ -92,11 +87,6 @@ public class Apk {
             return this;
         }
 
-        public Builder setProcessNames(List<String> processNames) {
-            this.processNames = processNames;
-            return this;
-        }
-
         public Builder setTargetPackages(List<String> targetPackages) {
             this.targetPackages = targetPackages;
             return this;
@@ -108,11 +98,9 @@ public class Apk {
         }
 
         public Apk build() {
-            processNames = processNames == null ? ImmutableList.of() : processNames;
             targetPackages = targetPackages == null ? ImmutableList.of() : targetPackages;
             zipEntries = zipEntries == null ? new HashMap<>() : zipEntries;
-            return new Apk(
-                    name, checksum, path, packageName, processNames, targetPackages, zipEntries);
+            return new Apk(name, checksum, path, packageName, targetPackages, zipEntries);
         }
     }
 }

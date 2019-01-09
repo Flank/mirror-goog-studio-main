@@ -18,7 +18,6 @@ package com.android.tools.deployer;
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.tracer.Trace;
-import com.google.common.collect.ImmutableList;
 import com.google.devrel.gmscore.tools.apk.arsc.*;
 import java.io.File;
 import java.io.IOException;
@@ -37,11 +36,6 @@ public class ApkParser {
     private static final int CD_SIGNATURE = 0x02014b50;
     private static final byte[] SIGNATURE_BLOCK_MAGIC = "APK Sig Block 42".getBytes();
 
-    // Manifest elements that may have an android:process attribute.
-    private static final HashSet<String> MANIFEST_PROCESS_ELEMENTS =
-            new HashSet<>(
-                    Arrays.asList("activity", "application", "provider", "receiver", "service"));
-
     private static class ApkArchiveMap {
         public static final long UNINITIALIZED = -1;
         long cdOffset = UNINITIALIZED;
@@ -57,17 +51,14 @@ public class ApkParser {
     private static class ApkDetails {
         private final String fileName;
         private final String packageName;
-        private final List<String> processNames;
         private final List<String> targetPackages;
 
         private ApkDetails(
                 String fileName,
                 String packageName,
-                List<String> processNames,
                 List<String> targetPackages) {
             this.fileName = fileName;
             this.packageName = packageName;
-            this.processNames = processNames;
             this.targetPackages = targetPackages;
         }
     }
@@ -114,7 +105,6 @@ public class ApkParser {
                         .setChecksum(digest)
                         .setPath(absolutePath)
                         .setPackageName(apkDetails.packageName)
-                        .setProcessNames(apkDetails.processNames)
                         .setTargetPackages(apkDetails.targetPackages)
                         .setZipEntries(zipEntries)
                         .build();
@@ -232,7 +222,6 @@ public class ApkParser {
 
         String packageName = null;
         String splitName = null;
-        HashSet<String> processNames = new HashSet<>();
         List<String> targetPackages = new ArrayList<>();
 
         XmlChunk xmlChunk = (XmlChunk) chunks.get(0);
@@ -254,14 +243,6 @@ public class ApkParser {
                 }
             }
 
-            if (MANIFEST_PROCESS_ELEMENTS.contains(startChunk.getName())) {
-                for (XmlAttribute attribute : startChunk.getAttributes()) {
-                    if (attribute.name().equals("process")) {
-                        processNames.add(attribute.rawValue());
-                    }
-                }
-            }
-
             if (startChunk.getName().equals("instrumentation")) {
                 for (XmlAttribute attribute : startChunk.getAttributes()) {
                     if (attribute.name().equals("targetPackage")) {
@@ -276,21 +257,6 @@ public class ApkParser {
         }
 
         String apkFileName = splitName == null ? "base.apk" : "split_" + splitName + ".apk";
-
-        ImmutableList.Builder<String> builder = ImmutableList.builder();
-        for (String processName : processNames) {
-            if (processName.charAt(0) == ':') {
-                // Private processes are prefixed with the package name, and are indicated in the
-                // manifest with a leading ':'.
-                builder.add(packageName + processName);
-            } else {
-                // Global processes are as-written in the manifest, and do not have a leading ':'.
-                builder.add(processName);
-            }
-        }
-
-        // Default process name is the name of the package.
-        builder.add(packageName);
-        return new ApkDetails(apkFileName, packageName, builder.build(), targetPackages);
+        return new ApkDetails(apkFileName, packageName, targetPackages);
     }
 }
