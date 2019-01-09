@@ -173,18 +173,19 @@ public final class ProcessProfileWriterFactory {
                                 .submit(
                                         () -> {
                                             processProfileWriter.finish();
+                                            deinitializeAnalytics();
                                             return null;
                                         });
             } else {
                 // If writing a GradleBuildProfile file for Benchmarking, go ahead and block
                 processProfileWriter.finishAndWrite(outputFile);
+                deinitializeAnalytics();
                 shutdownAction = CompletableFuture.completedFuture(null);
             }
         } else {
             shutdownAction = CompletableFuture.completedFuture(null);
         }
         this.processProfileWriter = null;
-        deinitializeAnalytics();
         return shutdownAction;
     }
 
