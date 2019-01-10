@@ -27,7 +27,6 @@ maven_repo(
 
 coverage_report(
     name = "coverage_report",
-    tags = ["no_windows"],
     production_java_libraries = [
         ## tools/analytics-library
         # iml_modules
@@ -127,7 +126,6 @@ coverage_report(
         "//tools/base/profiler/app:perfa_okhttp_java",
         "//tools/base/profiler/app:studio-profiler",
         "//tools/base/profiler:netty-grpc-jar",
-        "//tools/base/profiler/proto:profiler_java_proto",
         "//tools/base/profiler/transform:transform",
         "//tools/base/repository:tools.repository.java",
         "//tools/base/sdk-common/aia-manifest-jar-generator:proto",
@@ -294,6 +292,7 @@ coverage_report(
         "//tools/base/third_party:org.smali_dexlib2",
         "//tools/base/third_party:org.smali_util",
         "//tools/base/third_party:relaxngDatatype_relaxngDatatype",
+        "//tools/base/transport/proto:java_proto",
         ## tools/data-binding
         # iml_module
         "//tools/data-binding:studio.baseLibrary",
@@ -442,4 +441,5 @@ coverage_report(
         "//tools/adt/idea/android/src/com/android/tools/idea/gradle/project/sync/ng/nosyncbuilder/proto:nosyncbuilder-jarjar-lib",
         "//tools/adt/idea/android/src/com/android/tools/idea/gradle/project/sync/ng/nosyncbuilder/proto:nosyncbuilder_java_proto",
     ],
+    tags = ["no_windows"],
 )

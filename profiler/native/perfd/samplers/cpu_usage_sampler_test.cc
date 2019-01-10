@@ -17,8 +17,8 @@
 
 #include <gtest/gtest.h>
 
+#include "daemon/daemon.h"
 #include "perfd/cpu/cpu_usage_sampler.h"
-#include "perfd/daemon.h"
 #include "perfd/sessions/session.h"
 #include "proto/agent_service.grpc.pb.h"
 #include "proto/profiler.grpc.pb.h"

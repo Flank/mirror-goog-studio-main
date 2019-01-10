@@ -20,7 +20,7 @@
 #include <string>
 #include <thread>
 
-#include "perfd/event_buffer.h"
+#include "daemon/event_buffer.h"
 #include "proto/profiler.grpc.pb.h"
 #include "utils/log.h"
 

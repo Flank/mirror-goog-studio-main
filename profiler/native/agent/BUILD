@@ -34,15 +34,16 @@ cc_library(
     ],
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",
-        "-I$(GENDIR)/tools/base/profiler",
+        "-Itools/base/transport",
+        "-I$(GENDIR)/tools/base/transport",
     ],
     linkstatic = 1,
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
     deps = [
         "//prebuilts/studio/jdk:jni_headers",
-        "//tools/base/profiler/native/utils:profiler_utils",
-        "//tools/base/profiler/proto:profiler_cc_proto",
+        "//tools/base/transport/proto:cc_proto",
+        "//tools/base/transport/utils",
     ],
 )
 

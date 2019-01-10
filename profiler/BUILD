@@ -28,7 +28,7 @@ java_jarjar(
         "//prebuilts/tools/common/m2/repository/io/netty/netty-handler/4.1.6.Final:jar",
         "//prebuilts/tools/common/m2/repository/io/netty/netty-resolver/4.1.6.Final:jar",
         "//prebuilts/tools/common/m2/repository/io/netty/netty-transport/4.1.6.Final:jar",
-        "//tools/base/profiler/proto:libprofiler_java_proto.jar",
+        "//tools/base/transport/proto:java_proto",
     ],
     rules = "jarjar_rules.txt",
     visibility = ["//visibility:public"],

@@ -18,9 +18,9 @@
 
 #include <unordered_map>
 
+#include "daemon/profiler_component.h"
 #include "internal_memory_service.h"
 #include "memory_service.h"
-#include "perfd/profiler_component.h"
 
 namespace profiler {
 

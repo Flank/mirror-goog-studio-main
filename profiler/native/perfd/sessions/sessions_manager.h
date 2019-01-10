@@ -23,7 +23,7 @@
 #include <string>
 #include <vector>
 
-#include "perfd/daemon.h"
+#include "daemon/daemon.h"
 #include "perfd/sessions/session.h"
 #include "proto/common.pb.h"
 #include "proto/profiler.grpc.pb.h"

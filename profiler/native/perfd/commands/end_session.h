@@ -16,7 +16,7 @@
 #ifndef PERFD_COMMANDS_END_SESSION_H_
 #define PERFD_COMMANDS_END_SESSION_H_
 
-#include "perfd/daemon.h"
+#include "daemon/daemon.h"
 #include "proto/profiler.grpc.pb.h"
 
 namespace profiler {

@@ -18,7 +18,7 @@
 
 #include <grpc++/grpc++.h>
 
-#include "perfd/daemon.h"
+#include "daemon/daemon.h"
 #include "proto/agent_service.grpc.pb.h"
 #include "utils/clock.h"
 

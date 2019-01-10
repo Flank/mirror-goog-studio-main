@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef TEST_UTILS_H_
-#define TEST_UTILS_H_
+#ifndef PROFILER_TEST_UTILS_H_
+#define PROFILER_TEST_UTILS_H_
 
 #include <string>
 
@@ -26,10 +26,6 @@ class TestUtils {
   // Returns the correct testdata path correspondent to perfd cpu package
   // given a relative path.
   static std::string getCpuTestData(const std::string &path);
-
-  // Returns the correct testdata path correspondent to the utils package
-  // given a relative path.
-  static std::string getUtilsTestData(const std::string &path);
 
   // Returns the correct testdata path correspondent to perfd network package
   // given a relative path.
@@ -46,4 +42,4 @@ class TestUtils {
 
 }  // namespace profiler
 
-#endif  // TEST_UTILS_H_
+#endif  // PROFILER_TEST_UTILS_H_

@@ -20,8 +20,8 @@
 #include <sstream>  // for std::ostringstream
 #include <string>
 #include <vector>
+#include "daemon/daemon.h"
 #include "perfd/cpu/cpu_cache.h"
-#include "perfd/daemon.h"
 #include "test/utils.h"
 #include "utils/fake_clock.h"
 #include "utils/fs/memory_file_system.h"

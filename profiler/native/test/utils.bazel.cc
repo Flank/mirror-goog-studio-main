@@ -23,10 +23,6 @@ std::string TestUtils::getCpuTestData(const std::string &path) {
   return "tools/base/profiler/native/testdata/perfd/cpu/" + path;
 }
 
-std::string TestUtils::getUtilsTestData(const std::string &path) {
-  return "tools/base/profiler/native/testdata/utils/" + path;
-}
-
 std::string TestUtils::getNetworkTestData(const std::string &path) {
   return "tools/base/profiler/native/testdata/perfd/network/" + path;
 }

@@ -18,8 +18,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "perfd/daemon.h"
-#include "perfd/event_buffer.h"
+#include "daemon/daemon.h"
+#include "daemon/event_buffer.h"
 #include "perfd/samplers/sampler.h"
 #include "perfd/sessions/session.h"
 #include "utils/clock.h"

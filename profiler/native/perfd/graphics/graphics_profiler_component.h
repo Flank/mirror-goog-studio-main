@@ -19,8 +19,8 @@
 #include <map>
 #include <string>
 
+#include "daemon/profiler_component.h"
 #include "perfd/graphics/graphics_service.h"
-#include "perfd/profiler_component.h"
 
 namespace profiler {
 

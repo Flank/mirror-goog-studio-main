@@ -15,7 +15,7 @@
  */
 #include "network_speed_sampler.h"
 
-#include "perfd/event_buffer.h"
+#include "daemon/event_buffer.h"
 
 #include "proto/common.pb.h"
 #include "proto/network.pb.h"

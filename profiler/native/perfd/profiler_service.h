@@ -18,8 +18,8 @@
 
 #include <grpc++/grpc++.h>
 
-#include "perfd/commands/command.h"
-#include "perfd/daemon.h"
+#include "daemon/commands/command.h"
+#include "daemon/daemon.h"
 #include "proto/profiler.grpc.pb.h"
 
 namespace profiler {

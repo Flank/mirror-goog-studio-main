@@ -16,10 +16,10 @@
 #ifndef PERFD_NETWORK_NETWORK_PROFILER_COMPONENT_H_
 #define PERFD_NETWORK_NETWORK_PROFILER_COMPONENT_H_
 
+#include "daemon/profiler_component.h"
 #include "perfd/network/internal_network_service.h"
 #include "perfd/network/network_collector.h"
 #include "perfd/network/network_service.h"
-#include "perfd/profiler_component.h"
 #include "utils/config.h"
 #include "utils/file_cache.h"
 

@@ -19,9 +19,9 @@
 #include <grpc++/grpc++.h>
 #include <unordered_map>
 
+#include "daemon/daemon.h"
 #include "internal_memory_service.h"
 #include "memory_collector.h"
-#include "perfd/daemon.h"
 #include "proto/common.pb.h"
 #include "proto/memory.grpc.pb.h"
 #include "utils/clock.h"

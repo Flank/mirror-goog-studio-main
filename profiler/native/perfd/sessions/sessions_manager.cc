@@ -16,7 +16,7 @@
 #include "sessions_manager.h"
 
 #include <algorithm>
-#include "perfd/daemon.h"
+#include "daemon/daemon.h"
 #include "proto/profiler.pb.h"
 
 namespace profiler {
@@ -35,7 +35,7 @@ void SessionsManager::BeginSession(Daemon* daemon, int64_t stream_id,
                                    const proto::BeginSession& data) {
   int64_t now = daemon->clock()->GetCurrentTime();
   int32_t pid = data.pid();
-  for (const auto& component : daemon->GetComponents()) {
+  for (const auto& component : daemon->GetProfilerComponents()) {
     now = std::min(now, component->GetEarliestDataTime(pid));
   }
 

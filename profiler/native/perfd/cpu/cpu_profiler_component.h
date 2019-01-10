@@ -16,13 +16,13 @@
 #ifndef PERFD_CPU_CPU_PROFILER_COMPONENT_H_
 #define PERFD_CPU_CPU_PROFILER_COMPONENT_H_
 
+#include "daemon/daemon.h"
+#include "daemon/profiler_component.h"
 #include "perfd/cpu/cpu_cache.h"
 #include "perfd/cpu/cpu_collector.h"
 #include "perfd/cpu/cpu_service.h"
 #include "perfd/cpu/internal_cpu_service.h"
 #include "perfd/cpu/thread_monitor.h"
-#include "perfd/daemon.h"
-#include "perfd/profiler_component.h"
 #include "perfd/termination_service.h"
 #include "proto/agent_service.grpc.pb.h"
 

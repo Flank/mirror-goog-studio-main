@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 #include "perfd/profiler_service.h"
-#include "perfd/event_writer.h"
+#include "daemon/event_writer.h"
 
 #include <sys/time.h>
 #include "perfd/sessions/sessions_manager.h"

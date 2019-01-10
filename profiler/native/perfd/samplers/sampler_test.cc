@@ -16,8 +16,8 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-#include "perfd/daemon.h"
-#include "perfd/event_buffer.h"
+#include "daemon/daemon.h"
+#include "daemon/event_buffer.h"
 #include "perfd/samplers/sampler.h"
 #include "perfd/sessions/session.h"
 #include "proto/agent_service.grpc.pb.h"

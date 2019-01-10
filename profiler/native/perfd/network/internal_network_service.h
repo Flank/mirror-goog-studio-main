@@ -20,7 +20,7 @@
 
 #include "proto/internal_network.grpc.pb.h"
 
-#include "perfd/daemon.h"
+#include "daemon/daemon.h"
 #include "perfd/network/network_cache.h"
 
 namespace profiler {

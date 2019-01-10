@@ -27,11 +27,6 @@ filegroup(
 cc_library(
     name = "perfd_internal_headers",
     hdrs = [
-        "commands/command.h",
-        "daemon.h",
-        "event_buffer.h",
-        "event_writer.h",
-        "profiler_component.h",
         "profiler_service.h",
         "sessions/session.h",
         "sessions/sessions_manager.h",
@@ -47,25 +42,18 @@ cc_library(
 )
 
 cc_library(
-    name = "daemon",
+    name = "perfd",
     srcs = [
         "agent_service.cc",
         "agent_service.h",
         "commands/begin_session.cc",
         "commands/begin_session.h",
-        "commands/command.h",
         "commands/end_session.cc",
         "commands/end_session.h",
-        "connector.cc",
-        "connector.h",
-        "daemon.cc",
-        "daemon.h",
-        "event_buffer.cc",
-        "event_buffer.h",
-        "event_writer.h",
         "generic_component.cc",
         "generic_component.h",
-        "profiler_component.h",
+        "perfd.cc",
+        "perfd.h",
         "profiler_service.cc",
         "profiler_service.h",
         "sessions/session.cc",
@@ -79,7 +67,8 @@ cc_library(
     ],
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",
-        "-I$(GENDIR)/tools/base/profiler",
+        "-Itools/base/transport",
+        "-I$(GENDIR)/tools/base/transport",
     ],
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
@@ -90,31 +79,14 @@ cc_library(
         "//tools/base/profiler/native/perfd/graphics:profiler_graphics",
         "//tools/base/profiler/native/perfd/memory:profiler_memory",
         "//tools/base/profiler/native/perfd/network:profiler_network",
-        "//tools/base/profiler/proto:profiler_cc_proto",
-    ],
-)
-
-cc_binary(
-    name = "perfd",
-    srcs = ["perfd.cc"],
-    copts = ANDROID_COPTS + [
-        "-Itools/base/profiler/native",
-        "-I$(GENDIR)/tools/base/profiler",
-    ],
-    linkopts = ANDROID_LINKOPTS,
-    tags = ["no_windows"],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":daemon",
-        "@gflags_repo//:gflags_nothreads",
+        "//tools/base/transport/daemon",
+        "//tools/base/transport/proto:cc_proto",
     ],
 )
 
 cc_test(
     name = "perfd_test",
     srcs = [
-        "event_buffer_test.cc",
-        "profiler_service_test.cc",
         "samplers/cpu_thread_sampler_test.cc",
         "samplers/cpu_usage_sampler_test.cc",
         "samplers/sampler_test.cc",
@@ -122,7 +94,8 @@ cc_test(
     ],
     copts = [
         "-Itools/base/profiler/native",
-        "-I$(GENDIR)/tools/base/profiler",
+        "-Itools/base/transport",
+        "-I$(GENDIR)/tools/base/transport",
     ],
     data = [
         "//tools/base/profiler/native/testdata:perfd/cpu",
@@ -130,21 +103,10 @@ cc_test(
     linkstatic = 1,
     tags = ["no_windows"],
     deps = [
-        ":daemon",
+        ":perfd",
         "//external:gmock_main",
         "//tools/base/profiler/native/test:testutils",
+        "//tools/base/transport/daemon",
+        "//tools/base/transport/proto:cc_proto",
     ],
-)
-
-android_cc_binary(
-    name = "android",
-    abis = [
-        "x86",
-        "armeabi-v7a",
-        "arm64-v8a",
-    ],
-    binary = ":perfd.stripped",
-    filename = "perfd",
-    tags = ["no_windows"],
-    visibility = ["//visibility:public"],
 )

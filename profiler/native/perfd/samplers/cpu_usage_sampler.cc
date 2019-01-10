@@ -15,8 +15,8 @@
  */
 #include "cpu_usage_sampler.h"
 
+#include "daemon/event_buffer.h"
 #include "perfd/cpu/cpu_usage_sampler.h"
-#include "perfd/event_buffer.h"
 #include "proto/common.pb.h"
 #include "proto/cpu.pb.h"
 

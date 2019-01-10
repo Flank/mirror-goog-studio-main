@@ -17,9 +17,9 @@
 #define PERFD_ENERGY_PROFILER_COMPONENT_H_
 
 #include <grpc++/grpc++.h>
+#include "daemon/profiler_component.h"
 #include "perfd/energy/energy_service.h"
 #include "perfd/energy/internal_energy_service.h"
-#include "perfd/profiler_component.h"
 #include "proto/internal_energy.grpc.pb.h"
 
 namespace profiler {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 #include "agent_status_sampler.h"
-#include "perfd/event_buffer.h"
+#include "daemon/event_buffer.h"
 #include "proto/common.pb.h"
 
 namespace profiler {

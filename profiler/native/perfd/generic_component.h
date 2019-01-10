@@ -18,9 +18,9 @@
 
 #include <unordered_map>
 
+#include "daemon/daemon.h"
+#include "daemon/profiler_component.h"
 #include "perfd/agent_service.h"
-#include "perfd/daemon.h"
-#include "perfd/profiler_component.h"
 #include "perfd/profiler_service.h"
 
 namespace profiler {

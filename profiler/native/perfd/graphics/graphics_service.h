@@ -19,7 +19,7 @@
 #include <grpc++/grpc++.h>
 #include <map>
 
-#include "perfd/daemon.h"
+#include "daemon/daemon.h"
 #include "perfd/graphics/graphics_collector.h"
 #include "proto/graphics.grpc.pb.h"
 #include "utils/clock.h"

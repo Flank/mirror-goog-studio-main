@@ -16,7 +16,7 @@
 #ifndef PERFD_SAMPLERS_AGENT_SAMPLER_H_
 #define PERFD_SAMPLERS_AGENT_SAMPLER_H_
 
-#include "perfd/daemon.h"
+#include "daemon/daemon.h"
 #include "perfd/samplers/sampler.h"
 #include "perfd/sessions/session.h"
 

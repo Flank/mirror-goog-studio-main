@@ -15,7 +15,7 @@
  */
 #include "session.h"
 
-#include "perfd/daemon.h"
+#include "daemon/daemon.h"
 #include "perfd/samplers/agent_status_sampler.h"
 #include "perfd/samplers/cpu_thread_sampler.h"
 #include "perfd/samplers/cpu_usage_sampler.h"
