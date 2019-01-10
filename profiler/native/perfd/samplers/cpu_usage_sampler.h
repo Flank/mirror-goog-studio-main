@@ -45,7 +45,7 @@ class CpuUsageDataSampler final : public Sampler {
 
  private:
   static constexpr const char* const kSamplerName = "CPU:Usage";
-  static const int32_t kSampleRateMs = 500;
+  static const int32_t kSampleRateMs = 200;
 
   virtual const char* name() override { return kSamplerName; }
 
