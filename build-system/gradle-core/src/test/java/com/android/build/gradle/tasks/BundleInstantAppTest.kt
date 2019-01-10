@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.ModuleMetadata
-import com.android.ide.common.build.ApkInfo
+import com.android.build.gradle.internal.scope.ApkInfo
 import com.android.tools.build.apkzlib.zip.ZFile
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet

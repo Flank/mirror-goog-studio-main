@@ -22,7 +22,6 @@ import static org.mockito.Mockito.when;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.ide.FilterDataImpl;
-import com.android.ide.common.build.ApkInfo;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import nl.jqno.equalsverifier.EqualsVerifier;

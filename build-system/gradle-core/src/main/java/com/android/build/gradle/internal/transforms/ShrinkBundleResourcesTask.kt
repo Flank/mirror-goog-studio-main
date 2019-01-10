@@ -25,12 +25,11 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer
-import com.android.ide.common.build.ApkData
+import com.android.build.gradle.internal.scope.ApkData
 import com.android.utils.FileUtils
 import com.google.common.collect.Iterables
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.LogLevel
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile

@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
-import com.android.ide.common.build.ApkData;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.io.Serializable;

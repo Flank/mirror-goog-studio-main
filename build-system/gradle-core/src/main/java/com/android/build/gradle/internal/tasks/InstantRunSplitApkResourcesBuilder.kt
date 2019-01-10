@@ -38,7 +38,7 @@ import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.CloseableBlockingResourceLinker
-import com.android.ide.common.build.ApkInfo
+import com.android.build.gradle.internal.scope.ApkInfo
 import com.android.sdklib.IAndroidTarget
 import com.android.utils.FileUtils
 import com.google.common.base.Stopwatch

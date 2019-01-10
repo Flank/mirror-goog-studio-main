@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.scope
 
 import com.android.build.VariantOutput
-import com.android.ide.common.build.ApkInfo
 import com.android.ide.common.internal.WaitableExecutor
 import com.android.ide.common.workers.WorkerExecutorException
 import com.android.ide.common.workers.WorkerExecutorFacade
