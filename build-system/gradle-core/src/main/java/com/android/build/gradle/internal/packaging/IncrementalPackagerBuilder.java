@@ -222,11 +222,13 @@ public class IncrementalPackagerBuilder {
                                     signingConfig.getKeyPassword(), error, "keyPassword"),
                             Preconditions.checkNotNull(
                                     signingConfig.getKeyAlias(), error, "keyAlias"));
+            // V1 signature is useless if minSdk is 24+
+            boolean enableV1Signing = minSdk < 24 && signingConfig.isV1SigningEnabled();
             creationDataBuilder.setSigningOptions(
                     SigningOptions.builder()
                             .setKey(certificateInfo.getKey())
                             .setCertificates(certificateInfo.getCertificate())
-                            .setV1SigningEnabled(signingConfig.isV1SigningEnabled())
+                            .setV1SigningEnabled(enableV1Signing)
                             .setV2SigningEnabled(signingConfig.isV2SigningEnabled())
                             .setMinSdkVersion(minSdk)
                             .setValidation(computeValidation())
