@@ -146,6 +146,7 @@ bool DumpCommand::GetProcessIds(const std::string& package_name,
     }
 
     // Try to parse this process. If we fail, just continue to the next one.
+    // Default constructor handles proper intialization of the stats struct.
     ProcStats stats;
     if (!ParseProc(proc_entry, &stats)) {
       continue;

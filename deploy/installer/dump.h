@@ -41,6 +41,8 @@ class DumpCommand : public Command {
     int pid;
     int ppid;
     int uid;
+
+    ProcStats() : name(), pid(0), ppid(0), uid(0) {}
   };
 
   bool GetApks(const std::string& package_name,
