@@ -22,7 +22,6 @@ import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.api.artifact.forName
 import com.android.build.gradle.internal.ide.FilterDataImpl
-import com.android.ide.common.build.ApkInfo
 import com.google.common.collect.ImmutableList
 import com.google.gson.GsonBuilder
 import com.google.gson.TypeAdapter

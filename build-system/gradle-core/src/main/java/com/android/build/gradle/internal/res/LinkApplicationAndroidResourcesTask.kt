@@ -59,8 +59,8 @@ import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.v2.Aapt2Exception
 import com.android.ide.common.blame.MergingLog
-import com.android.ide.common.build.ApkData
-import com.android.ide.common.build.ApkInfo
+import com.android.build.gradle.internal.scope.ApkData
+import com.android.build.gradle.internal.scope.ApkInfo
 import com.android.ide.common.process.ProcessException
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.workers.WorkerExecutorException

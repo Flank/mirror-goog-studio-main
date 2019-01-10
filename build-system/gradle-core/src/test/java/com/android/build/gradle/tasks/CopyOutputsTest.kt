@@ -30,7 +30,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant2.DslScopeImpl
-import com.android.ide.common.build.ApkInfo
+import com.android.build.gradle.internal.scope.ApkInfo
 import com.google.common.collect.ImmutableList
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before

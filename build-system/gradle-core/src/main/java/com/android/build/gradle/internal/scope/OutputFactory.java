@@ -24,7 +24,6 @@ import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.ide.FilterDataImpl;
-import com.android.ide.common.build.ApkData;
 import com.android.utils.Pair;
 import com.android.utils.StringHelper;
 import com.google.common.base.Joiner;

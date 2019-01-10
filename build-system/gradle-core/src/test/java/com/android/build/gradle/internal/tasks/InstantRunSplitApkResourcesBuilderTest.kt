@@ -30,7 +30,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.internal.aapt.CloseableBlockingResourceLinker
-import com.android.ide.common.build.ApkData
+import com.android.build.gradle.internal.scope.ApkData
 import com.android.repository.Revision
 import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.IAndroidTarget

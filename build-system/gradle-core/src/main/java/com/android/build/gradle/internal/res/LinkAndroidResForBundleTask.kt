@@ -33,7 +33,7 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.options.StringOption
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptPackageConfig
-import com.android.ide.common.build.ApkInfo
+import com.android.build.gradle.internal.scope.ApkInfo
 import com.android.sdklib.AndroidVersion
 import com.android.sdklib.IAndroidTarget
 import com.android.utils.FileUtils

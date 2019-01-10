@@ -24,7 +24,7 @@ import com.android.build.gradle.internal.scope.AnchorOutputType
 import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.ide.common.build.ApkInfo
+import com.android.build.gradle.internal.scope.ApkInfo
 import com.google.common.collect.ImmutableList
 import com.google.gson.GsonBuilder
 import com.google.gson.TypeAdapter
