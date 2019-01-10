@@ -51,6 +51,7 @@ public class TaskRunnerTest {
         String output = add.get();
 
         Assert.assertEquals("text added", output);
+        service.shutdown();
     }
 
     @Test
@@ -69,10 +70,11 @@ public class TaskRunnerTest {
         String output = add.get();
 
         Assert.assertEquals("text task1.text task2", output);
+        service.shutdown();
     }
 
     @Test
-    public void testPreviousTasksFailed() throws Exception {
+    public void testPreviousTasksFailed() {
         String input = "text";
 
         // We test with one thread, they should run sequentially
@@ -95,6 +97,7 @@ public class TaskRunnerTest {
         } catch (Exception de) {
             assertEquals("java.lang.RuntimeException: abc", de.getCause().getMessage());
         }
+        service.shutdown();
     }
 
     @Test
@@ -141,6 +144,7 @@ public class TaskRunnerTest {
 
         String output = add.get();
         Assert.assertEquals("text task1.text task2", output);
+        service.shutdown();
     }
 
     @Test
@@ -162,13 +166,18 @@ public class TaskRunnerTest {
                         },
                         start);
 
-        // Test that the first task is not blbocked by the second one.
-        runner.runAsync();
+        // The order in which task1 and task2 is run cannot be guaranteed, but blocking task2 should not prevent task1 to finish.
+        // We have two threads in the executor, so we give a different one to runAsync to not block any thread in there.
+        ExecutorService async = Executors.newSingleThreadExecutor();
+        runner.runAsync(async);
         String output = task1.get();
         task2Latch.countDown();
 
         runner.run();
         Assert.assertEquals("text task1", output);
+
+        service.shutdown();
+        async.shutdown();
     }
 
     @Test
@@ -192,7 +201,7 @@ public class TaskRunnerTest {
         Task<String> task2 = runner.create(Tasks.TASK2, a -> a + "2", task1);
         Task<String> task3 = runner.create(Tasks.TASK3, a -> a + "3", start);
 
-        // We have room to run two tasks in parallel. Task 1 should start first, and until it's done
+        // We have room to run two tasks in parallel. Task 1 or 3 can start first, and until it's done
         // task2 wouldn't be available to run. But task3 can run to completion.
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -229,6 +238,7 @@ public class TaskRunnerTest {
         runner.run();
         List<Runnable> runnables = service.shutdownNow();
         assertTrue(runnables.isEmpty());
+        service.shutdown();
     }
 
     @Test
@@ -254,6 +264,7 @@ public class TaskRunnerTest {
             assertEquals(DeployerException.Error.INSTALL_FAILED, e.getError());
             assertEquals("failed", e.getMessage());
         }
+        service.shutdown();
     }
 
     @Test
@@ -280,10 +291,11 @@ public class TaskRunnerTest {
             assertEquals(DeployerException.Error.INSTALL_FAILED, e.getError());
             assertEquals("failed", e.getMessage());
         }
+        service.shutdown();
     }
 
     @Test
-    public void testReleasedTaskCanThrow() throws InterruptedException {
+    public void testReleasedTaskCanThrow() {
         String input = "text";
 
         ConcurrentLinkedQueue<Throwable> exceptions = new ConcurrentLinkedQueue<>();
@@ -331,6 +343,7 @@ public class TaskRunnerTest {
         DeployerException e = (DeployerException) t.getCause();
         assertEquals(DeployerException.Error.INSTALL_FAILED, e.getError());
         assertEquals("async failed", e.getMessage());
+        service.shutdown();
     }
 
     private static void waitLatch(CountDownLatch latch) {
