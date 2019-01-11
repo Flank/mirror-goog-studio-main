@@ -190,6 +190,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(InstantAppDetector.ISSUE);
         issues.add(InvalidImeActionIdDetector.ISSUE);
         issues.add(InvalidPackageDetector.ISSUE);
+        issues.add(IteratorDetector.ISSUE);
         issues.add(ItemDecoratorDetector.ISSUE);
         issues.add(JavaPerformanceDetector.PAINT_ALLOC);
         issues.add(JavaPerformanceDetector.USE_SPARSE_ARRAY);
