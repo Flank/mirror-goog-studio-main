@@ -178,7 +178,7 @@ public class CharSequences {
             int start) {
         int sequenceLength = sequence.length();
         int prefixLength = prefix.length();
-        if (sequenceLength + start < prefixLength) {
+        if (sequenceLength < start + prefixLength) {
             return false;
         }
 
