@@ -838,7 +838,6 @@ public class JarContentsTest {
                 "com/",
                 "com/android/",
                 "com/android/sdklib/",
-                "com/android/sdklib/build/",
                 "com/android/sdklib/devices/",
                 "com/android/sdklib/devices/devices.xml",
                 "com/android/sdklib/devices/nexus.xml",
