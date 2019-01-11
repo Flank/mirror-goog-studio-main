@@ -225,7 +225,9 @@ public class BenchmarkTest {
                 listeners.forEach(it -> it.benchmarkStarting(benchmark));
 
                 for (int i = 0; i < benchmarkRun.warmUps + benchmarkRun.iterations; i++) {
-                    gradle.run(cleanups);
+                    if (!cleanups.isEmpty()) {
+                        gradle.run(cleanups);
+                    }
 
                     for (int j = 0; j < diffs.length; j++) {
                         diffs[j].apply(src, 3);
