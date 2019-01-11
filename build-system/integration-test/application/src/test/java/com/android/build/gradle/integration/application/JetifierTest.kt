@@ -186,7 +186,7 @@ class JetifierTest(private val withKotlin: Boolean) {
             .with(BooleanOption.ENABLE_JETIFIER, true)
             .expectFailure()
             .run("assembleDebug")
-        assertThat(result.stderr).contains("Failed to transform file 'doNotJetifyLib-1.0.jar'")
+        assertThat(result.stderr).contains("Failed to transform artifact 'doNotJetifyLib.jar (com.example.javalib:doNotJetifyLib:1.0)")
 
         // Add doNotJetifyLib to a blacklist, the build should succeed
         TestFileUtils.appendToFile(
