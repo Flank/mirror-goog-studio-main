@@ -36,5 +36,7 @@
     <orderEntry type="library" scope="TEST" name="equalsverifier" level="project" />
     <orderEntry type="library" exported="" name="protobuf" level="project" />
     <orderEntry type="library" name="javax-inject" level="project" />
+    <orderEntry type="library" name="Trove4j" level="project" />
+    <orderEntry type="library" name="aapt2-proto" level="project" />
   </component>
 </module>
