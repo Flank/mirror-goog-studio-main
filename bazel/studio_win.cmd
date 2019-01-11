@@ -44,7 +44,7 @@ set TARGETS=
 for /f %%i in (%SCRIPTDIR%targets.win) do set TARGETS=!TARGETS! %%i
 
 @rem Run Bazel
-CALL %SCRIPTDIR%bazel.cmd --max_idle_secs=60 test %CONFIGOPTIONS% %AUTHCREDS% --config=remote --build_tag_filters=-no_rbe_windows,-no_windows --test_tag_filters=-no_rbe_windows,%TESTTAGFILTERS% -- %TARGETS%
+CALL %SCRIPTDIR%bazel.cmd --max_idle_secs=60 test %CONFIGOPTIONS% %AUTHCREDS% --config=remote --build_tag_filters=-no_rbe_windows,-no_windows --test_tag_filters=-no_rbe_windows,%TESTTAGFILTERS% --profile=%DISTDIR%\prof  -- %TARGETS%
 SET EXITCODE=%errorlevel%
 
 IF NOT EXIST %DISTDIR%\ GOTO ENDSCRIPT
@@ -54,6 +54,9 @@ FOR /F "tokens=*" %%F IN ('sed -n -e "s/.*invocation_id: //p" %COMMANDLOGLOC%') 
 SET UPSALITEID=%%F
 )
 echo "<meta http-equiv="refresh" content="0; URL='https://source.cloud.google.com/results/invocations/%UPSALITEID%" />" > %DISTDIR%\upsalite_test_results.html
+
+@rem Create profile html in %DISTDIR% so it ends up in Artifacts.
+CALL %SCRIPTDIR%bazel.cmd analyze-profile --html %DISTDIR%\prof
 
 :ENDSCRIPT
 @rem On windows we must explicitly shut down bazel.  Otherwise file handles remain open.

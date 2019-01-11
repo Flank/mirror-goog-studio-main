@@ -12,7 +12,7 @@ readonly script_dir="$(dirname "$0")"
 readonly command_log="$(${script_dir}/bazel --bazelrc=${script_dir}/toplevel.bazel.rc info command_log --config=postsubmit --config=local --config=mac-experimental --auth_credentials=/buildbot/android-studio-alphasource.json)"
 
 # Run Bazel
-"${script_dir}/bazel" --max_idle_secs=60 --bazelrc=${script_dir}/toplevel.bazel.rc test --config=postsubmit --config=local --config=mac-experimental --build_tag_filters=-no_mac --test_tag_filters=-no_mac,-no_test_mac,-qa_sanity,-qa_fast,-qa_unreliable --auth_credentials=/buildbot/android-studio-alphasource.json -- $(< "${script_dir}/targets")
+"${script_dir}/bazel" --max_idle_secs=60 --bazelrc=${script_dir}/toplevel.bazel.rc test --config=postsubmit --config=local --config=mac-experimental --build_tag_filters=-no_mac --test_tag_filters=-no_mac,-no_test_mac,-qa_sanity,-qa_fast,-qa_unreliable --auth_credentials=/buildbot/android-studio-alphasource.json --profile=${dist_dir}/prof -- $(< "${script_dir}/targets")
 
 readonly bazel_status=$?
 
@@ -32,6 +32,9 @@ if [[ -d "${dist_dir}" ]]; then
     # GTestXmlResultParser requires the testsuites element to have tests and time attributes.
     sed -i '' 's/<testsuites>/<testsuites tests="0" time="0">/' "${dist_dir}/gtest/${target_xml}"
   done
+
+  # Create profile html in ${dist_dir} so it ends up in Artifacts.
+  ${script_dir}/bazel analyze-profile --html ${dist_dir}/prof
 fi
 
 exit $bazel_status

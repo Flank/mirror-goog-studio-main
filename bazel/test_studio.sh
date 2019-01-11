@@ -36,6 +36,7 @@ readonly command_log="$("${script_dir}"/bazel info ${config_options} command_log
   ${config_options} \
   --build_tag_filters=${build_tag_filters} \
   --test_tag_filters=${test_tag_filters} \
+  --profile=${dist_dir}/prof \
   -- \
   $(< "${script_dir}/targets") \
   //tools/base/bazel/foundry:test
@@ -51,6 +52,10 @@ if [[ -d "${dist_dir}" ]]; then
   readonly testlogs_dir="$("${script_dir}/bazel" info bazel-testlogs ${config_options})"
   mkdir "${dist_dir}"/bazel-testlogs
   (cd "${testlogs_dir}" && zip -R "${dist_dir}"/bazel-testlogs/xml_files.zip "*.xml")
+
+  # Create profile html in ${dist_dir} so it ends up in Artifacts.
+${script_dir}/bazel analyze-profile --html ${dist_dir}/prof
+
 fi
 
 exit $bazel_status
