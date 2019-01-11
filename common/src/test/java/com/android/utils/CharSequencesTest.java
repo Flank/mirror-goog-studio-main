@@ -75,6 +75,8 @@ public class CharSequencesTest extends TestCase {
         assertFalse(startsWith("haystack", "stack"));
         assertFalse(startsWith("haystack", "stack", 2));
         assertTrue(startsWith("haystack", "stack", 3));
+        assertFalse(startsWith("haystack", "stack", 4));
+        assertFalse(startsWith("hay", "stack", 4));
     }
 
     public void testEndsWith() {
@@ -87,6 +89,7 @@ public class CharSequencesTest extends TestCase {
         assertTrue(endsWith("haystack", "CK", false));
         assertTrue(endsWith("haystack", "ck", true));
         assertFalse(endsWith("haystack", "hay", true));
+        assertFalse(endsWith("stack", "haystack", true));
     }
 
     public void testRegionMatches() {
@@ -103,6 +106,8 @@ public class CharSequencesTest extends TestCase {
         assertFalse(regionMatches("For", false, 0, "fob", 0, 2));
         assertFalse(regionMatches("For", true, 0, "fob", 0, 20));
         assertFalse(regionMatches("For", 0, "fob", 0, 20));
+        assertFalse(regionMatches("For", 0, "fob", 3, 20));
+        assertFalse(regionMatches("For", 0, "fobfoo", 0, 20));
     }
 
     public void testContainsUpperCase() {
