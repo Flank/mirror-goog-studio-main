@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.api.artifact.singlePath
 import com.android.build.gradle.internal.crash.PluginCrashReporter
 import com.android.build.gradle.internal.dependency.getAttributeMap
 import com.android.build.gradle.internal.pipeline.StreamFilter
-import com.android.build.gradle.internal.pipeline.SubStream.FN_FOLDER_CONTENT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -109,21 +108,10 @@ open class DexMergingTask : AndroidVariantTask() {
     var mainDexListFile: BuildableArtifact? = null
         private set
 
-    private lateinit var dexFiles: FileCollection
-    /**
-     * Until we migrate dexing transform to use buildable artifacts (b/111156401), we need to filter
-     * out the __content__.json file from inputs, as it breaks caching (see b/120413559).
-     *
-     * DO NOT USE THIS WITHIN TASK, USE THE PROPERTY:
-     * Dex merger knows how to handle jars and directories containing dex files. Because of that,
-     * getDexFilesForInput() cannot be used to pass files for merging as that would contain actual
-     * .dex files. Therefore, we need to compute input separately, until we migrate dexing off the
-     * transforms.
-     */
-    @InputFiles
-    @PathSensitive(PathSensitivity.NONE)
-    fun getDexFilesForInput(): FileCollection =
-        dexFiles.asFileTree.filter { it.name != FN_FOLDER_CONTENT }
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    lateinit var dexFiles: FileCollection
+        private set
 
     // Dummy folder, used as a way to set up dependency
     @get:Optional
