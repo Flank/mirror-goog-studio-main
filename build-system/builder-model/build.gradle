@@ -32,7 +32,7 @@ apply from: "$rootDir/buildSrc/base/javadoc.gradle"
     sdkJar.manifest.attributes((key): value)
 }
 
-def generated = new File("${project.buildDir}/generated/resources")
+def generated = project.layout.buildDirectory.dir("generated/resources")
 
 sourceSets {
     main {
@@ -42,10 +42,9 @@ sourceSets {
     }
 }
 
-task copyVersionProperties(type: Copy) {
-    from project.file(project.getRootProject().getProperty("versionProperties"))
-    rename({"version.properties"})
-    into project.file("$generated/com/android/builder/model")
+task writeVersionProperties(type: com.android.tools.internal.VersionPropertiesWriter) {
+    outputFilePath = "com/android/builder/model/version.properties"
+    outputDirectory = generated
 }
 
-tasks.compileJava.dependsOn copyVersionProperties
+tasks.compileJava.dependsOn writeVersionProperties
