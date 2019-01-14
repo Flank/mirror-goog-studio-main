@@ -449,6 +449,7 @@ public abstract class Reporter {
                             GradleDetector.COMPATIBILITY,
                             GradleDetector.DEPENDENCY,
                             GradleDetector.DEPRECATED,
+                            GradleDetector.DEPRECATED_CONFIGURATION,
                             GradleDetector.DUPLICATE_CLASSES,
                             GradleDetector.MIN_SDK_TOO_LOW,
                             GradleDetector.NOT_INTERPOLATED,

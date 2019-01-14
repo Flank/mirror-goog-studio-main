@@ -30,4 +30,5 @@ enum class ProjectType(val isApplication: Boolean) {
     ATOM(false),
     INSTANT_APP(true),
     FEATURE(false),
+    DYNAMIC_FEATURE(false),
 }

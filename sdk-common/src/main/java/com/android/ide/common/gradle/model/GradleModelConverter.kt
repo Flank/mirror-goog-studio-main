@@ -75,6 +75,7 @@ fun getProjectType(typeId: Int): ProjectType {
         2 -> ProjectType.TEST
         4 -> ProjectType.INSTANT_APP
         5 -> ProjectType.FEATURE
+        6 -> ProjectType.DYNAMIC_FEATURE
         else -> throw IllegalArgumentException("The value $typeId is not a valid project type ID")
     }
 }

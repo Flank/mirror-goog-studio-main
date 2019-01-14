@@ -37,6 +37,8 @@ import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.Variant;
+import com.android.ide.common.gradle.model.GradleModelConverterUtil;
+import com.android.projectmodel.ProjectType;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
@@ -246,6 +248,17 @@ public class LintGradleProject extends Project {
         @Override
         public AndroidProject getGradleProjectModel() {
             return mProject;
+        }
+
+        @NonNull
+        @Override
+        public ProjectType getProjectType() {
+            return GradleModelConverterUtil.getProjectType(mProject.getProjectType());
+        }
+
+        @Override
+        public boolean hasDynamicFeatures() {
+            return getProjectType() == ProjectType.APP && !mProject.getDynamicFeatures().isEmpty();
         }
 
         @Override

@@ -61,6 +61,7 @@ import com.android.builder.model.Variant;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.ide.common.repository.ResourceVisibilityLookup;
+import com.android.projectmodel.ProjectType;
 import com.android.resources.Density;
 import com.android.resources.ResourceFolderType;
 import com.android.sdklib.AndroidTargetHash;
@@ -1054,6 +1055,26 @@ public class Project {
             library.addLibraryProjects(collection, seen, path);
             path.remove(library);
         }
+    }
+
+    /** The type of artifact produced by this Android project. */
+    @NonNull
+    public ProjectType getProjectType() {
+        if (isLibrary()) {
+            return ProjectType.LIBRARY;
+        } else {
+            return ProjectType.APP;
+        }
+    }
+
+    /**
+     * Whether this project is a base application with dynamic features.
+     *
+     * @return true if this is an application project that has any dynamic features,
+     * false in all other cases.
+     */
+    public boolean hasDynamicFeatures() {
+        return false;
     }
 
     /**

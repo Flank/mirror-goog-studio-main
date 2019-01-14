@@ -32,6 +32,7 @@ import com.android.ide.common.repository.GradleCoordinate
 import com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_HIGHER
 import com.android.ide.common.repository.GradleVersion
 import com.android.ide.common.repository.MavenRepositories
+import com.android.projectmodel.ProjectType
 import com.android.repository.io.FileOpUtils
 import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.SdkVersionInfo
@@ -58,6 +59,7 @@ import com.android.tools.lint.detector.api.guessGradleLocation
 import com.android.tools.lint.detector.api.isNumberString
 import com.android.tools.lint.detector.api.readUrlData
 import com.android.tools.lint.detector.api.readUrlDataAsString
+import com.android.utils.capitalize
 import com.google.common.base.Charsets.UTF_8
 import com.google.common.base.Joiner
 import com.google.common.base.Splitter
@@ -438,6 +440,8 @@ open class GradleDetector : Detector(), GradleScanner {
                         })
                     }
                 }
+                checkDeprecatedConfigurations(property, context, propertyCookie)
+
             }
         } else if (property == "packageNameSuffix") {
             val message = "Deprecated: Replace 'packageNameSuffix' with 'applicationIdSuffix'"
@@ -469,6 +473,114 @@ open class GradleDetector : Detector(), GradleScanner {
                 if (mAppliedKotlinAndroidPlugin && !mAppliedKotlinKaptPlugin) {
                   val message = "If you plan to use data binding in a Kotlin project, you should apply the kotlin-kapt plugin."
                   report(context, valueCookie, DATA_BINDING_WITHOUT_KAPT, message, null)
+                }
+            }
+        }
+    }
+
+    private enum class DeprecatedConfiguration(
+        private val deprecatedName: String,
+        private val replacementName: String
+    ) {
+        COMPILE("compile", "implementation"),
+        PROVIDED("provided", "compileOnly"),
+        APK("apk", "runtimeOnly"),
+        ;
+
+        private val deprecatedSuffix: String = deprecatedName.capitalize()
+        private val replacementSuffix: String = replacementName.capitalize()
+
+        fun matches(configurationName: String): Boolean {
+            return configurationName == deprecatedName || configurationName.endsWith(
+                deprecatedSuffix
+            )
+        }
+
+        fun replacement(configurationName: String): String {
+            return if (configurationName == deprecatedName) {
+                replacementName
+            } else {
+                configurationName.removeSuffix(deprecatedSuffix) + replacementSuffix
+            }
+        }
+    }
+
+    private fun checkDeprecatedConfigurations(
+        configuration: String,
+        context: GradleContext,
+        propertyCookie: Any
+    ) {
+        if (context.project.gradleModelVersion?.isAtLeastIncludingPreviews(3, 0, 0) == false) {
+            // All of these deprecations were made in AGP 3.0.0
+            return
+        }
+
+        for (deprecatedConfiguration in DeprecatedConfiguration.values()) {
+            if (deprecatedConfiguration.matches(configuration)) {
+                // Compile was replaced by API and Implementation, but only suggest API if it was used
+                if (deprecatedConfiguration == DeprecatedConfiguration.COMPILE
+                    && suggestApiConfigurationUse(context.project, configuration)
+                ) {
+                    val implementation: String
+                    val api: String
+                    if (configuration == "compile") {
+                        implementation = "implementation"
+                        api = "api"
+                    } else {
+                        val prefix = configuration.removeSuffix("Compile")
+                        implementation = "${prefix}Implementation"
+                        api = "${prefix}Api"
+                    }
+
+                    val message =
+                        "`$configuration` is deprecated; " +
+                                "replace with either `$api` to maintain current behavior, " +
+                                "or `$implementation` to improve build performance " +
+                                "by not sharing this dependency transitively."
+                    val apiFix = fix()
+                        .name("Replace '$configuration' with '$api'")
+                        .family("Replace compile with api")
+                        .replace()
+                        .text(configuration)
+                        .with(api)
+                        .independent(true)
+                        .build()
+                    val implementationFix = fix()
+                        .name("Replace '$configuration' with '$implementation'")
+                        .family("Replace compile with implementation")
+                        .replace()
+                        .text(configuration)
+                        .with(implementation)
+                        .independent(true)
+                        .build()
+
+                    val fixes = fix()
+                        .alternatives()
+                        .name("Replace '$configuration' with '$api' or '$implementation'")
+                        .add(apiFix)
+                        .add(implementationFix)
+                        .build()
+
+                    report(
+                        context,
+                        propertyCookie,
+                        DEPRECATED_CONFIGURATION,
+                        message,
+                        fixes
+                    )
+                } else {
+                    // Unambiguous replacement case
+                    val replacement = deprecatedConfiguration.replacement(configuration)
+                    val message = "`$configuration` is deprecated; replace with `$replacement`"
+                    val fix = fix()
+                        .name("Replace '$configuration' with '$replacement'")
+                        .family("Replace deprecated configurations")
+                        .replace()
+                        .text(configuration)
+                        .with(replacement)
+                        .autoFix()
+                        .build()
+                    report(context, propertyCookie, DEPRECATED_CONFIGURATION, message, fix)
                 }
             }
         }
@@ -1798,6 +1910,22 @@ open class GradleDetector : Detector(), GradleScanner {
             implementation = IMPLEMENTATION
         )
 
+        /** Deprecated Gradle configurations */
+        @JvmField
+        val DEPRECATED_CONFIGURATION = Issue.create(
+            id = "GradleDeprecatedConfiguration",
+            briefDescription = "Deprecated Gradle Configuration",
+            explanation = """
+                Some Gradle configurations have been deprecated since Android Gradle Plugin 3.0.0 \
+                and will be removed in a future version of the Android Gradle Plugin.
+             """,
+            category = Category.CORRECTNESS,
+            moreInfo = "https://d.android.com/r/tools/update-dependency-configurations",
+            priority = 6,
+            severity = Severity.WARNING,
+            implementation = IMPLEMENTATION
+        )
+
         /** Incompatible Android Gradle plugin */
         @JvmField
         val GRADLE_PLUGIN_COMPATIBILITY = Issue.create(
@@ -2493,6 +2621,22 @@ open class GradleDetector : Detector(), GradleScanner {
             }
 
             return latestBuildTools
+        }
+
+        private fun suggestApiConfigurationUse(project: Project, configuration: String): Boolean {
+            return when {
+                configuration.startsWith("test") || configuration.startsWith("androidTest") -> false
+                else -> when (project.projectType) {
+                    ProjectType.APP ->
+                        // Applications can only generally be consumed if there are dynamic features
+                        // (Ignoring the test-only project for this purpose)
+                        project.hasDynamicFeatures()
+                    ProjectType.LIBRARY -> true
+                    ProjectType.FEATURE, ProjectType.DYNAMIC_FEATURE, ProjectType.ATOM -> true
+                    ProjectType.TEST -> false
+                    ProjectType.INSTANT_APP -> false
+                }
+            }
         }
     }
 }

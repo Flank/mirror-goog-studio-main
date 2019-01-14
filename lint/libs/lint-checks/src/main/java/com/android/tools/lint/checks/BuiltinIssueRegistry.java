@@ -134,6 +134,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(GradleDetector.DATA_BINDING_WITHOUT_KAPT);
         issues.add(GradleDetector.DEPENDENCY);
         issues.add(GradleDetector.DEPRECATED);
+        issues.add(GradleDetector.DEPRECATED_CONFIGURATION);
         issues.add(GradleDetector.DEPRECATED_LIBRARY);
         issues.add(GradleDetector.DEV_MODE_OBSOLETE);
         issues.add(GradleDetector.DUPLICATE_CLASSES);

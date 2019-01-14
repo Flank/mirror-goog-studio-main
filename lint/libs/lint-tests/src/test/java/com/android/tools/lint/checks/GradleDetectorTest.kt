@@ -31,6 +31,7 @@ import com.android.tools.lint.checks.GradleDetector.Companion.COMPATIBILITY
 import com.android.tools.lint.checks.GradleDetector.Companion.DATA_BINDING_WITHOUT_KAPT
 import com.android.tools.lint.checks.GradleDetector.Companion.DEPENDENCY
 import com.android.tools.lint.checks.GradleDetector.Companion.DEPRECATED
+import com.android.tools.lint.checks.GradleDetector.Companion.DEPRECATED_CONFIGURATION
 import com.android.tools.lint.checks.GradleDetector.Companion.DEPRECATED_LIBRARY
 import com.android.tools.lint.checks.GradleDetector.Companion.DEV_MODE_OBSOLETE
 import com.android.tools.lint.checks.GradleDetector.Companion.DUPLICATE_CLASSES
@@ -2741,6 +2742,147 @@ class GradleDetectorTest : AbstractCheckTest() {
                         "0 errors, 1 warnings"
             )
     }
+
+    fun testCompileDeprecationInConsumableModule() {
+        val expected = """
+            build.gradle:9: Warning: compile is deprecated; replace with either api to maintain current behavior, or implementation to improve build performance by not sharing this dependency transitively. [GradleDeprecatedConfiguration]
+                compile 'androidx.appcompat:appcompat:1.0.0'
+                ~~~~~~~
+            build.gradle:10: Warning: debugCompile is deprecated; replace with either debugApi to maintain current behavior, or debugImplementation to improve build performance by not sharing this dependency transitively. [GradleDeprecatedConfiguration]
+                debugCompile 'androidx.appcompat:appcompat:1.0.0'
+                ~~~~~~~~~~~~
+            0 errors, 2 warnings"""
+
+        val expectedFix = """
+            Fix for build.gradle line 9: Replace 'compile' with 'api':
+            @@ -9 +9
+            -     compile 'androidx.appcompat:appcompat:1.0.0'
+            +     api 'androidx.appcompat:appcompat:1.0.0'
+            Fix for build.gradle line 9: Replace 'compile' with 'implementation':
+            @@ -9 +9
+            -     compile 'androidx.appcompat:appcompat:1.0.0'
+            +     implementation 'androidx.appcompat:appcompat:1.0.0'
+            Fix for build.gradle line 10: Replace 'debugCompile' with 'debugApi':
+            @@ -10 +10
+            -     debugCompile 'androidx.appcompat:appcompat:1.0.0'
+            +     debugApi 'androidx.appcompat:appcompat:1.0.0'
+            Fix for build.gradle line 10: Replace 'debugCompile' with 'debugImplementation':
+            @@ -10 +10
+            -     debugCompile 'androidx.appcompat:appcompat:1.0.0'
+            +     debugImplementation 'androidx.appcompat:appcompat:1.0.0'""".trimIndent()
+
+
+        lint()
+            .files(
+                gradle(
+                    """
+                        buildscript {
+                            dependencies {
+                                classpath 'com.android.tools.build:gradle:3.0.0'
+                            }
+                        }
+                        apply plugin: 'com.android.library'
+
+                        dependencies {
+                            compile 'androidx.appcompat:appcompat:1.0.0'
+                            debugCompile 'androidx.appcompat:appcompat:1.0.0'
+                        }
+                        """.trimIndent()
+            )
+        )
+            .issues(DEPRECATED_CONFIGURATION)
+            .run()
+            .expect(expected)
+            .expectFixDiffs(expectedFix)
+    }
+
+    fun testCompileDeprecationInLeafModule() {
+        val expected = """
+            build.gradle:9: Warning: compile is deprecated; replace with implementation [GradleDeprecatedConfiguration]
+                compile 'androidx.appcompat:appcompat:1.0.0'
+                ~~~~~~~
+            0 errors, 1 warnings"""
+
+        val expectedFix = """
+            Fix for build.gradle line 9: Replace 'compile' with 'implementation':
+            @@ -9 +9
+            -     compile 'androidx.appcompat:appcompat:1.0.0'
+            +     implementation 'androidx.appcompat:appcompat:1.0.0'
+            """.trimIndent()
+
+        lint()
+            .files(
+                gradle(
+                    """
+                        buildscript {
+                            dependencies {
+                                classpath 'com.android.tools.build:gradle:3.0.0'
+                            }
+                        }
+                        apply plugin: 'com.android.application'
+
+                        dependencies {
+                            compile 'androidx.appcompat:appcompat:1.0.0'
+                        }
+                        """.trimIndent()
+                )
+            )
+            .issues(DEPRECATED_CONFIGURATION)
+            .run()
+            .expect(expected)
+            .expectFixDiffs(expectedFix)
+    }
+
+    fun testTestCompileDeprecation() {
+        val expected = """
+            build.gradle:7: Warning: testCompile is deprecated; replace with testImplementation [GradleDeprecatedConfiguration]
+                testCompile 'androidx.appcompat:appcompat:1.0.0'
+                ~~~~~~~~~~~
+            build.gradle:8: Warning: testDebugCompile is deprecated; replace with testDebugImplementation [GradleDeprecatedConfiguration]
+                testDebugCompile 'androidx.appcompat:appcompat:1.0.0'
+                ~~~~~~~~~~~~~~~~
+            build.gradle:9: Warning: androidTestDebugCompile is deprecated; replace with androidTestDebugImplementation [GradleDeprecatedConfiguration]
+                androidTestDebugCompile 'androidx.appcompat:appcompat:1.0.0'
+                ~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 3 warnings
+            """
+
+        val fixDiff =
+            "Fix for build.gradle line 7: Replace 'testCompile' with 'testImplementation':\n" +
+                    "@@ -7 +7\n" +
+                    "-     testCompile 'androidx.appcompat:appcompat:1.0.0'\n" +
+                    "+     testImplementation 'androidx.appcompat:appcompat:1.0.0'\n" +
+                    "Fix for build.gradle line 8: Replace 'testDebugCompile' with 'testDebugImplementation':\n" +
+                    "@@ -8 +8\n" +
+                    "-     testDebugCompile 'androidx.appcompat:appcompat:1.0.0'\n" +
+                    "+     testDebugImplementation 'androidx.appcompat:appcompat:1.0.0'\n" +
+                    "Fix for build.gradle line 9: Replace 'androidTestDebugCompile' with 'androidTestDebugImplementation':\n" +
+                    "@@ -9 +9\n" +
+                    "-     androidTestDebugCompile 'androidx.appcompat:appcompat:1.0.0'\n" +
+                    "+     androidTestDebugImplementation 'androidx.appcompat:appcompat:1.0.0'"
+
+        lint().files(
+            gradle(
+                """
+                    buildscript {
+                        dependencies {
+                            classpath 'com.android.tools.build:gradle:3.0.0'
+                        }
+                    }
+                    dependencies {
+                        testCompile 'androidx.appcompat:appcompat:1.0.0'
+                        testDebugCompile 'androidx.appcompat:appcompat:1.0.0'
+                        androidTestDebugCompile 'androidx.appcompat:appcompat:1.0.0'
+                    }
+                    """.trimIndent()
+            )
+        )
+            .issues(DEPRECATED_CONFIGURATION)
+            .run()
+            .expect(expected)
+            .expectFixDiffs(fixDiff)
+    }
+
 
     // -------------------------------------------------------------------------------------------
     // Test infrastructure below here
