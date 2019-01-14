@@ -192,7 +192,14 @@ public class GroovyGradleVisitor extends GradleVisitor {
                         String value = getText(c.getArguments());
                         for (GradleScanner scanner : detectors) {
                             scanner.checkDslPropertyAssignment(
-                                    context, property, value, parent, parentParent, c, c);
+                                    context,
+                                    property,
+                                    value,
+                                    parent,
+                                    parentParent,
+                                    c.getMethod(),
+                                    c,
+                                    c);
                         }
                     }
 

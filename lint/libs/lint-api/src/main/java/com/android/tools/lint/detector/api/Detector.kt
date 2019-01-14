@@ -418,6 +418,28 @@ abstract class Detector {
     ) {
     }
 
+    open fun checkDslPropertyAssignment(
+        context: GradleContext,
+        property: String,
+        value: String,
+        parent: String,
+        parentParent: String?,
+        propertyCookie: Any,
+        valueCookie: Any,
+        statementCookie: Any
+    ) {
+        // Backward compatibility
+        checkDslPropertyAssignment(
+            context,
+            property,
+            value,
+            parent,
+            parentParent,
+            valueCookie,
+            statementCookie
+        )
+    }
+
     open fun checkMethodCall(
         context: GradleContext,
         statement: String,

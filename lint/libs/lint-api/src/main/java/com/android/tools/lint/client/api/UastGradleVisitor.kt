@@ -71,6 +71,7 @@ class UastGradleVisitor(private val javaContext: JavaContext) : GradleVisitor() 
                             value,
                             parentName,
                             parentParentName,
+                            node.leftOperand,
                             node.rightOperand,
                             node
                         )
@@ -138,6 +139,7 @@ class UastGradleVisitor(private val javaContext: JavaContext) : GradleVisitor() 
                                         value,
                                         parentName,
                                         parentParentName,
+                                        left,
                                         arg,
                                         node
                                     )
@@ -182,6 +184,7 @@ class UastGradleVisitor(private val javaContext: JavaContext) : GradleVisitor() 
                                 value,
                                 parentName,
                                 parentParentName,
+                                node.methodIdentifier ?: node,
                                 arg,
                                 node
                             )

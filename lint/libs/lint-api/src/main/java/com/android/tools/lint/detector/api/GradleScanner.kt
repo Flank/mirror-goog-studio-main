@@ -29,12 +29,37 @@ interface GradleScanner : FileScanner {
      * value portion of the assignment (which can be passed to {@link GradleContext#getLocation}
      * and the statementCookie is the full range of the whole assignment.
      */
+    @Deprecated("Replace with checkDslPropertyAssignment that includes a property cookie")
     fun checkDslPropertyAssignment(
         context: GradleContext,
         property: String,
         value: String,
         parent: String,
         parentParent: String?,
+        valueCookie: Any,
+        statementCookie: Any
+    )
+
+    /**
+     * Visits the given DSL construct.
+     *
+     * The [context] describes the file being analyzed, the [property] describes
+     * the property being set, the [value] is the value it is set to, the [parent]
+     * is the parent property name, and the (optional) [parentParent] is the parent of
+     * the parent property name.
+     *
+     * The [propertyCookie] is a cookie for referencing the property being assigned,
+     * the [valueCookie] is a cookie for referencing the value portion of the assignment
+     * (which can be passed to {@link GradleContext#getLocation}
+     * and the [statementCookie] is the full range of the whole assignment.
+     */
+    fun checkDslPropertyAssignment(
+        context: GradleContext,
+        property: String,
+        value: String,
+        parent: String,
+        parentParent: String?,
+        propertyCookie: Any,
         valueCookie: Any,
         statementCookie: Any
     )

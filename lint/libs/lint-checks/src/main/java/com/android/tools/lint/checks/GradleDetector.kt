@@ -165,6 +165,7 @@ open class GradleDetector : Detector(), GradleScanner {
         value: String,
         parent: String,
         parentParent: String?,
+        propertyCookie: Any,
         valueCookie: Any,
         statementCookie: Any
     ) {
