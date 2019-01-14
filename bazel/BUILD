@@ -330,6 +330,7 @@ java_library(
         "//tools/analytics-library/shared:tools.analytics-shared",
         "//tools/base/annotations",
         "//tools/base/bazel:gradle",
+        "//tools/base/common:tools.common",
         "//tools/base/perf-logger:studio.perf-logger_testlib",
         "//tools/base/third_party:com.google.guava_guava",
     ],

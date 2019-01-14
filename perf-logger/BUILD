@@ -20,5 +20,6 @@ iml_module(
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/idea/.idea/libraries:truth[test]",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module, test]",
+        "//tools/base/common:studio.android.sdktools.common[module, test]",
     ],
 )
