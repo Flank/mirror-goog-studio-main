@@ -65,15 +65,11 @@ public class OutputFactory {
     }
 
     public ApkData addMainOutput(String defaultFilename) {
-        String baseName = variantConfiguration.getBaseName();
         ApkData mainOutput =
-                // the main output basename comes from the variant configuration.
-                // the main output should not have a dirName set as all the getXXXOutputDirectory
-                // in variant scope already include the variant name.
-                // TODO : we probably should clean this up, having the getXXXOutputDirectory APIs
-                // return the top level folder and have all users use the getDirName() as part of
-                // the task output folder configuration.
-                new Main(baseName, variantConfiguration.getFullName(), "", defaultFilename);
+                new Main(
+                        variantConfiguration.getBaseName(),
+                        variantConfiguration.getFullName(),
+                        defaultFilename);
         outputScopeBuilder.addMainSplit(mainOutput);
         return mainOutput;
     }
@@ -158,12 +154,11 @@ public class OutputFactory {
 
     private static final class Main extends ApkData {
 
-        private final String baseName, fullName, dirName;
+        private final String baseName, fullName;
 
-        private Main(String baseName, String fullName, String dirName, String fileName) {
+        private Main(String baseName, String fullName, String fileName) {
             this.baseName = baseName;
             this.fullName = fullName;
-            this.dirName = dirName;
             setOutputFileName(fileName);
         }
 
@@ -191,15 +186,20 @@ public class OutputFactory {
             return fullName;
         }
 
+        // The main output should not have a dirName set as all the getXXXOutputDirectory
+        // in variant scope already include the variant name.
+        // TODO: We probably should clean this up, having the getXXXOutputDirectory APIs
+        // return the top level folder and have all users use the getDirName() as part of
+        // the task output folder configuration.
         @NonNull
         @Override
         public String getDirName() {
-            return dirName;
+            return "";
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(super.hashCode(), baseName, fullName, dirName);
+            return Objects.hash(super.hashCode(), baseName, fullName);
         }
 
         @Override
@@ -215,8 +215,7 @@ public class OutputFactory {
             }
             Main that = (Main) o;
             return Objects.equals(baseName, that.baseName)
-                    && Objects.equals(fullName, that.fullName)
-                    && Objects.equals(dirName, that.dirName);
+                    && Objects.equals(fullName, that.fullName);
         }
     }
 
