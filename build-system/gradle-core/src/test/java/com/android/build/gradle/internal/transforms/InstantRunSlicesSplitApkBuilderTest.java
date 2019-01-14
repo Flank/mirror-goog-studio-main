@@ -32,7 +32,7 @@ import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
-import com.android.build.gradle.internal.scope.ApkInfo;
+import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.internal.aapt.AaptOptions;
@@ -86,7 +86,7 @@ public class InstantRunSlicesSplitApkBuilderTest {
     final List<InstantRunSplitApkBuilder.DexFiles> dexFilesList =
             new CopyOnWriteArrayList<>();
 
-    final ApkInfo apkInfo = ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), 12345);
+    final ApkData apkInfo = ApkData.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), 12345);
 
     @Before
     public void setUpMock() throws IOException {

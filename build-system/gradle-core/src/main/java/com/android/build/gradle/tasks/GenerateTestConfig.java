@@ -28,7 +28,7 @@ import com.android.annotations.VisibleForTesting;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.dsl.TestOptions;
-import com.android.build.gradle.internal.scope.ApkInfo;
+import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -66,13 +66,13 @@ public class GenerateTestConfig extends AndroidVariantTask {
     BuildableArtifact assets;
     Path sdkHome;
     File generatedJavaResourcesDirectory;
-    ApkInfo mainApkInfo;
+    ApkData mainApkInfo;
     Provider<Directory> manifests;
     BuildableArtifact compiledResourcesZip;
     Supplier<String> packageForR;
 
     @Input
-    public ApkInfo getMainApkInfo() {
+    public ApkData getMainApkInfo() {
         return mainApkInfo;
     }
 

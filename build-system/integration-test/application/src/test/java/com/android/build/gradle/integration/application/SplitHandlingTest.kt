@@ -123,7 +123,7 @@ class SplitHandlingTest(private val pureSplit: Boolean) {
                 null,
                 FileReader(ExistingBuildElements.getMetadataFile(apkOutputFolder)))
                 .forEach { output ->
-                    when(output.apkInfo.type) {
+                    when(output.apkData.type) {
                         VariantOutput.OutputType.SPLIT -> {
                             val languageFilter = output.getFilter(VariantOutput.FilterType.LANGUAGE.name)
                             // no language splits.
@@ -179,7 +179,7 @@ class SplitHandlingTest(private val pureSplit: Boolean) {
                 null,
                 FileReader(ExistingBuildElements.getMetadataFile(apkOutputFolder)))
                 .forEach { output ->
-            when(output.apkInfo.type) {
+            when(output.apkData.type) {
                 VariantOutput.OutputType.SPLIT -> {
                     val manifestContent = ApkSubject.getManifestContent(output.outputPath)
                     val languageFilter = output.getFilter(VariantOutput.FilterType.LANGUAGE.name)
@@ -234,7 +234,7 @@ class SplitHandlingTest(private val pureSplit: Boolean) {
                 null,
                 FileReader(ExistingBuildElements.getMetadataFile(apkOutputFolder)))
                 .forEach { output ->
-                    when(output.apkInfo.type) {
+                    when(output.apkData.type) {
                         VariantOutput.OutputType.SPLIT -> {
                             val manifestContent = ApkSubject.getManifestContent(output.outputPath)
                             val languageFilter = output.getFilter(VariantOutput.FilterType.LANGUAGE.name)

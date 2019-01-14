@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.packaging.ApkCreatorFactories;
-import com.android.build.gradle.internal.scope.ApkInfo;
+import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildElementsTransformParams;
 import com.android.build.gradle.internal.scope.BuildElementsTransformRunnable;
@@ -122,7 +122,7 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
             getResInputBuildArtifacts()
                     .forEach(
                             buildOutput -> {
-                                ApkInfo apkInfo = buildOutput.getApkInfo();
+                                ApkData apkInfo = buildOutput.getApkData();
                                 final File outputFile =
                                         new File(
                                                 outputDirectory,
@@ -195,7 +195,7 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
         private final String createdBy;
         private final boolean keepTimestampsInApk;
 
-        ApkBuilderParams(ApkInfo apkInfo, @NonNull File input, InstantRunResourcesApkBuilder task) {
+        ApkBuilderParams(ApkData apkInfo, @NonNull File input, InstantRunResourcesApkBuilder task) {
             this.input = input;
             outputFile =
                     new File(
@@ -219,7 +219,7 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
         return ExistingBuildElements.from(resInputType, resources);
     }
 
-    static String mangleApkName(ApkInfo apkData) {
+    static String mangleApkName(ApkData apkData) {
         return APK_FILE_NAME + "-" + apkData.getBaseName();
     }
 

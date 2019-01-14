@@ -43,18 +43,18 @@ open class BuildElements(val elements: Collection<BuildOutput>) : Iterable<Build
 
     override fun iterator(): Iterator<BuildOutput> = elements.iterator()
 
-    fun element(apkInfo: ApkInfo): BuildOutput? {
+    fun element(apkData: ApkData): BuildOutput? {
         return elements.find {
             // TODO : simplify once ApkInfo can become a data class.
-            it.apkInfo.type == apkInfo.type
-                    && it.apkInfo.filters == apkInfo.filters
-                    && it.apkInfo.fullName == apkInfo.fullName
+            it.apkData.type == apkData.type
+                    && it.apkData.filters == apkData.filters
+                    && it.apkData.fullName == apkData.fullName
         }
     }
 
     fun elementByType(type: VariantOutput.OutputType): BuildOutput? {
         return elements.find {
-            it.apkInfo.type == type
+            it.apkData.type == type
         }
     }
 
@@ -75,7 +75,7 @@ open class BuildElements(val elements: Collection<BuildOutput>) : Iterable<Build
             "com.android.build.gradle.internal.scope.BuildElements"
         )
     )
-    open fun transform(action: (apkInfo: ApkInfo, input: File) -> File?): BuildElementActionScheduler {
+    open fun transform(action: (apkData: ApkData, input: File) -> File?): BuildElementActionScheduler {
         return ExecutorBasedScheduler(this, action)
     }
 
@@ -91,7 +91,7 @@ open class BuildElements(val elements: Collection<BuildOutput>) : Iterable<Build
     open fun transform(
         workers: WorkerExecutorFacade,
         transformRunnableClass: Class<out BuildElementsTransformRunnable>,
-        paramsFactory: (apkInfo: ApkInfo, input: File) -> BuildElementsTransformParams
+        paramsFactory: (apkData: ApkData, input: File) -> BuildElementsTransformParams
     ): BuildElementActionScheduler {
         return WorkersBasedScheduler(this, transformRunnableClass, paramsFactory, workers)
     }
@@ -104,7 +104,7 @@ open class BuildElements(val elements: Collection<BuildOutput>) : Iterable<Build
      */
     fun persist(projectPath: Path): String {
         val gsonBuilder = GsonBuilder()
-        gsonBuilder.registerTypeAdapter(ApkInfo::class.java, ExistingBuildElements.ApkInfoAdapter())
+        gsonBuilder.registerTypeAdapter(ApkData::class.java, ExistingBuildElements.ApkDataAdapter())
         gsonBuilder.registerTypeAdapter(
             InternalArtifactType::class.java, ExistingBuildElements.OutputTypeTypeAdapter()
         )
@@ -120,7 +120,7 @@ open class BuildElements(val elements: Collection<BuildOutput>) : Iterable<Build
             .map { buildOutput ->
                 BuildOutput(
                     buildOutput.type,
-                    buildOutput.apkInfo,
+                    buildOutput.apkData,
                     projectPath.relativize(buildOutput.outputPath),
                     buildOutput.properties
                 )
@@ -145,7 +145,7 @@ open class BuildElements(val elements: Collection<BuildOutput>) : Iterable<Build
     )
     private class ExecutorBasedScheduler(
         val input: BuildElements,
-        val action: (apkInfo: ApkInfo, input: File) -> File?
+        val action: (apkData: ApkData, input: File) -> File?
     ) : BuildElementActionScheduler() {
 
         @Throws(BuildException::class)
@@ -156,11 +156,11 @@ open class BuildElements(val elements: Collection<BuildOutput>) : Iterable<Build
         @Throws(BuildException::class)
         private fun transform(
             to: InternalArtifactType,
-            action: (apkInfo: ApkInfo, input: File) -> File?
+            action: (apkData: ApkData, input: File) -> File?
         ): BuildElements {
             input.elements.forEach {
                 input.executor.execute {
-                    ActionItem(it.apkInfo, action(it.apkInfo, it.outputFile))
+                    ActionItem(it.apkData, action(it.apkData, it.outputFile))
                 }
             }
 
@@ -180,7 +180,7 @@ open class BuildElements(val elements: Collection<BuildOutput>) : Iterable<Build
                 .map {
                     BuildOutput(
                         to,
-                        (it.value as ActionItem).apkInfo,
+                        (it.value as ActionItem).apkData,
                         (it.value as ActionItem).output!!
                     )
                 }.toList()
@@ -188,12 +188,12 @@ open class BuildElements(val elements: Collection<BuildOutput>) : Iterable<Build
         }
     }
 
-    internal data class ActionItem(val apkInfo: ApkInfo, val output: File?)
+    internal data class ActionItem(val apkData: ApkData, val output: File?)
 
     private class WorkersBasedScheduler(
         val input: BuildElements,
         val transformRunnableClass: Class<out BuildElementsTransformRunnable>,
-        val paramsFactory: (apkInfo: ApkInfo, input: File) -> BuildElementsTransformParams,
+        val paramsFactory: (apkData: ApkData, input: File) -> BuildElementsTransformParams,
         val workers: WorkerExecutorFacade
     ) : BuildElementActionScheduler() {
 
@@ -211,14 +211,14 @@ open class BuildElements(val elements: Collection<BuildOutput>) : Iterable<Build
         private fun transform(
             to: InternalArtifactType,
             transformRunnableClass: Class<out BuildElementsTransformRunnable>,
-            paramsFactory: (apkInfo: ApkInfo, input: File) -> BuildElementsTransformParams
+            paramsFactory: (apkData: ApkData, input: File) -> BuildElementsTransformParams
         ): Callable<BuildElements> {
             val buildOutputs = ImmutableList.Builder<BuildOutput>()
             input.elements.forEach {
-                val params = paramsFactory(it.apkInfo, it.outputFile)
+                val params = paramsFactory(it.apkData, it.outputFile)
                 workers.submit(transformRunnableClass, params)
                 if (params.output != null) {
-                    buildOutputs.add(BuildOutput(to, it.apkInfo, params.output!!))
+                    buildOutputs.add(BuildOutput(to, it.apkData, params.output!!))
                 }
             }
 
