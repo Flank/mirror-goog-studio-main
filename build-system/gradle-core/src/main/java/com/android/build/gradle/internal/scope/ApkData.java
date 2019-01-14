@@ -55,9 +55,9 @@ public abstract class ApkData implements ApkInfo, VariantOutput, Comparable<ApkD
                                     Comparator.nullsLast(String::compareTo))
                             .thenComparing(ApkData::isEnabled));
 
-    // TO DO : move it to a subclass, we cannot override versions for SPLIT
-    private Supplier<String> versionName = () -> null;
-    private IntSupplier versionCode = () -> 0;
+    // TODO : move it to a subclass, we cannot override versions for SPLIT
+    private transient Supplier<String> versionName = () -> null;
+    private transient IntSupplier versionCode = () -> 0;
     private AtomicBoolean enabled = new AtomicBoolean(true);
     private String outputFileName;
 

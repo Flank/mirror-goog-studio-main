@@ -74,7 +74,7 @@ public interface ApkInfo extends Serializable {
             @NonNull OutputFile.OutputType outputType,
             @NonNull Collection<FilterData> filters,
             int versionCode) {
-        return of(outputType, filters, versionCode, null, null, null, null, "", true);
+        return of(outputType, filters, versionCode, null, null, null, "", "", true);
     }
 
     static ApkInfo of(
@@ -84,10 +84,10 @@ public interface ApkInfo extends Serializable {
             @Nullable String versionName,
             @Nullable String filterName,
             @Nullable String outputFileName,
-            @Nullable String fullName,
+            @NonNull String fullName,
             @NonNull String baseName,
             boolean enabled) {
-        return new DefaultApkInfo(
+        return new DefaultApkData(
                 outputType,
                 filters,
                 versionCode,

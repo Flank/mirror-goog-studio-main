@@ -19,16 +19,16 @@ package com.android.build.gradle.internal.scope
 import com.android.build.FilterData
 import com.android.build.VariantOutput
 
-data class DefaultApkInfo(
+data class DefaultApkData(
         private val _type: VariantOutput.OutputType,
         private val _filters: MutableCollection<FilterData>,
         private val _versionCode: Int,
         private val _versionName: String?,
         private val _filterName: String?,
         private val _outputFileName: String?,
-        private val _fullName: String?,
+        private val _fullName: String = "",
         private val _baseName: String,
-        private val _enabled: Boolean) : ApkInfo {
+        private val _enabled: Boolean) : ApkData() {
 
     override fun getFilter(filterType: VariantOutput.FilterType): FilterData? {
         for (filter in filters) {
@@ -45,8 +45,9 @@ data class DefaultApkInfo(
     override fun getOutputFileName(): String? = _outputFileName
     override fun requiresAapt(): Boolean = _type != VariantOutput.OutputType.SPLIT
     override fun getFilterName(): String? = _filterName
-    override fun getFullName(): String? = _fullName
+    override fun getFullName(): String = _fullName
     override fun getBaseName(): String = _baseName
     override fun getType(): VariantOutput.OutputType = _type
     override fun getFilters(): MutableCollection<FilterData> = _filters
+    override fun getDirName(): String = ""
 }
