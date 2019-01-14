@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.ide.FilterDataImpl;
 import com.android.utils.Pair;
 import com.android.utils.StringHelper;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -255,14 +256,9 @@ public class OutputFactory {
         @NonNull
         @Override
         public String getDirName() {
-            if (getFilters().isEmpty()) {
-                return UNIVERSAL;
-            }
-            StringBuilder sb = new StringBuilder();
-            for (FilterData filter : getFilters()) {
-                sb.append(filter.getIdentifier()).append(File.separatorChar);
-            }
-            return sb.toString();
+            Preconditions.checkState(
+                    getFilters().isEmpty(), "Universal APKs shouldn't have any filters set.");
+            return UNIVERSAL;
         }
 
         @Override
