@@ -20,12 +20,16 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.tools.build.bundletool.commands.BuildApksCommand
 import com.android.tools.build.bundletool.model.SigningConfiguration
-import com.android.tools.build.bundletool.utils.flags.Flag
+import com.android.tools.build.bundletool.model.Password
 import java.io.File
+import java.security.KeyStore
+import java.util.function.Supplier
 import java.util.Optional
 
-private fun toPasswordFlag(password: String?): Optional<Flag.Password> =
-    Optional.ofNullable(password?.let { Flag.Password.createFromFlagValue("pass:$it") })
+private fun toPassword(password: String?): Optional<Password> =
+    Optional.ofNullable(password?.let {
+        Password(Supplier { KeyStore.PasswordProtection("$it".toCharArray()) })
+    })
 
 internal fun BuildApksCommand.Builder.setSigningConfiguration(
     keystoreFile: File?, keystorePassword: String?, keyAlias: String?, keyPassword: String?):
@@ -37,8 +41,8 @@ internal fun BuildApksCommand.Builder.setSigningConfiguration(
         SigningConfiguration.extractFromKeystore(
             keystoreFile.toPath(),
             keyAlias,
-            toPasswordFlag(keystorePassword),
-            toPasswordFlag(keyPassword)
+            toPassword(keystorePassword),
+            toPassword(keyPassword)
         )
     )
     return this
