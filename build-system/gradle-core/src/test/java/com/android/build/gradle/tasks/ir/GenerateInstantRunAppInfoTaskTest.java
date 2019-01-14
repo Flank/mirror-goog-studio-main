@@ -24,7 +24,7 @@ import static org.mockito.Mockito.when;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.incremental.AsmUtils;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
-import com.android.build.gradle.internal.scope.ApkInfo;
+import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
@@ -53,7 +53,7 @@ import org.objectweb.asm.tree.FieldNode;
 public class GenerateInstantRunAppInfoTaskTest {
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    @Mock ApkInfo apkInfo;
+    @Mock ApkData apkInfo;
     @Mock Directory directory;
     @Mock Provider<Directory> providerOfDirectory;
     @Mock InstantRunBuildContext buildContext;

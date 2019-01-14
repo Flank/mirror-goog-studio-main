@@ -23,7 +23,7 @@ import com.android.annotations.concurrency.Immutable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
-import com.android.build.gradle.internal.scope.ApkInfo;
+import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
@@ -201,7 +201,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
     }
 
     private Collection<AndroidArtifactOutput> guessOutputsBasedOnNothing() {
-        ApkInfo mainApkInfo = ApkInfo.of(OutputFile.OutputType.MAIN, ImmutableList.of(), -1);
+        ApkData mainApkInfo = ApkData.of(OutputFile.OutputType.MAIN, ImmutableList.of(), -1);
 
         return ImmutableList.of(
                 new AndroidArtifactOutputImpl(

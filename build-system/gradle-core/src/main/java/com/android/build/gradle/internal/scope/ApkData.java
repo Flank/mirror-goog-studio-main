@@ -23,6 +23,7 @@ import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Objects;
@@ -41,7 +42,7 @@ import java.util.stream.Collectors;
  * <p>this is used to model outputs of a variant during configuration and it is sometimes altered at
  * execution when new pure splits are discovered.
  */
-public abstract class ApkData implements ApkInfo, VariantOutput, Comparable<ApkData> {
+public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Serializable {
 
     private static final Comparator<ApkData> COMPARATOR =
             Comparator.nullsLast(
@@ -64,6 +65,35 @@ public abstract class ApkData implements ApkInfo, VariantOutput, Comparable<ApkD
 
     public ApkData() {}
 
+    public static ApkData of(
+            @NonNull OutputType outputType,
+            @NonNull Collection<FilterData> filters,
+            int versionCode) {
+        return of(outputType, filters, versionCode, null, null, null, "", "", true);
+    }
+
+    public static ApkData of(
+            @NonNull OutputType outputType,
+            @NonNull Collection<FilterData> filters,
+            int versionCode,
+            @Nullable String versionName,
+            @Nullable String filterName,
+            @Nullable String outputFileName,
+            @NonNull String fullName,
+            @NonNull String baseName,
+            boolean enabled) {
+        return new DefaultApkData(
+                outputType,
+                filters,
+                versionCode,
+                versionName,
+                filterName,
+                outputFileName,
+                fullName,
+                baseName,
+                enabled);
+    }
+
     @NonNull
     @Override
     public Collection<FilterData> getFilters() {
@@ -78,7 +108,6 @@ public abstract class ApkData implements ApkInfo, VariantOutput, Comparable<ApkD
 
     // FIX-ME: we can have more than one value, especially for languages...
     // so far, we will return things like "fr,fr-rCA" for a single value.
-    @Override
     @Nullable
     public FilterData getFilter(@NonNull FilterType filterType) {
         for (FilterData filter : getFilters()) {
@@ -94,21 +123,17 @@ public abstract class ApkData implements ApkInfo, VariantOutput, Comparable<ApkD
         return ApkData.getFilter(getFilters(), FilterType.valueOf(filterType));
     }
 
-    @Override
     public boolean requiresAapt() {
         return true;
     }
 
     @NonNull
-    @Override
     public abstract String getBaseName();
 
     @NonNull
-    @Override
     public abstract String getFullName();
 
     @NonNull
-    @Override
     public abstract OutputType getType();
 
     /**
@@ -138,13 +163,11 @@ public abstract class ApkData implements ApkInfo, VariantOutput, Comparable<ApkD
     }
 
     @Nullable
-    @Override
     public String getVersionName() {
         return versionName.get();
     }
 
     @Nullable
-    @Override
     public String getOutputFileName() {
         return outputFileName;
     }
@@ -200,7 +223,6 @@ public abstract class ApkData implements ApkInfo, VariantOutput, Comparable<ApkD
         enabled.set(false);
     }
 
-    @Override
     public boolean isEnabled() {
         return enabled.get();
     }
@@ -229,4 +251,7 @@ public abstract class ApkData implements ApkInfo, VariantOutput, Comparable<ApkD
     public int compareTo(ApkData other) {
         return COMPARATOR.compare(this, other);
     }
+
+    @Nullable
+    public abstract String getFilterName();
 }

@@ -34,7 +34,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.LintOptions;
 import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
-import com.android.build.gradle.internal.scope.ApkInfo;
+import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.InstantAppOutputScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -255,7 +255,7 @@ public class InstantAppModelBuilder
                                 instantAppOutputScope.getApplicationId(),
                                 new BuildOutput(
                                         InternalArtifactType.INSTANTAPP_BUNDLE,
-                                        ApkInfo.of(
+                                        ApkData.of(
                                                 VariantOutput.OutputType.MAIN,
                                                 ImmutableList.of(),
                                                 0),

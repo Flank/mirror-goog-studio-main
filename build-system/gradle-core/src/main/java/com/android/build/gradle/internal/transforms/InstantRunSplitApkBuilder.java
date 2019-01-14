@@ -32,7 +32,7 @@ import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.internal.packaging.ApkCreatorFactories;
 import com.android.build.gradle.internal.res.namespaced.Aapt2DaemonManagerService;
 import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey;
-import com.android.build.gradle.internal.scope.ApkInfo;
+import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.tasks.SigningConfigMetadata;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantTypeImpl;
@@ -95,7 +95,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
     @NonNull protected final BuildableArtifact resourcesWithMainManifest;
 
     @NonNull private final BuildableArtifact apkList;
-    @NonNull protected final ApkInfo mainApk;
+    @NonNull protected final ApkData mainApk;
 
     public InstantRunSplitApkBuilder(
             @NonNull Logger logger,
@@ -111,7 +111,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
             @NonNull BuildableArtifact resources,
             @NonNull BuildableArtifact resourcesWithMainManifest,
             @NonNull BuildableArtifact apkList,
-            @NonNull ApkInfo mainApk) {
+            @NonNull ApkData mainApk) {
         this.logger = logger;
         this.project = project;
         this.buildContext = buildContext;
@@ -211,7 +211,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
     }
 
     @NonNull
-    protected File generateSplitApk(@NonNull ApkInfo apkData, @NonNull DexFiles dexFiles)
+    protected File generateSplitApk(@NonNull ApkData apkData, @NonNull DexFiles dexFiles)
             throws IOException, KeytoolException, PackagerException, ProcessException,
                     TransformException {
 
@@ -318,7 +318,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
             @NonNull Logger logger,
             @NonNull BlockingResourceLinker aapt,
             @NonNull Supplier<String> applicationIdSupplier,
-            @NonNull ApkInfo apkInfo,
+            @NonNull ApkData apkData,
             @NonNull File supportDirectory,
             @NonNull AaptOptions aaptOptions,
             @NonNull AndroidBuilder androidBuilder,
@@ -335,8 +335,8 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
                         apkSupportDir,
                         uniqueName,
                         applicationIdSupplier,
-                        apkInfo.getVersionName(),
-                        apkInfo.getVersionCode(),
+                        apkData.getVersionName(),
+                        apkData.getVersionCode(),
                         null);
 
         return generateSplitApkResourcesAp(

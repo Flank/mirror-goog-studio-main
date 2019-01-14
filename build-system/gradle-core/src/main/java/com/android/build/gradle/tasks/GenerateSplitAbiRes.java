@@ -33,7 +33,7 @@ import com.android.build.gradle.internal.res.Aapt2MavenUtils;
 import com.android.build.gradle.internal.res.Aapt2ProcessResourcesRunnable;
 import com.android.build.gradle.internal.res.namespaced.Aapt2DaemonManagerService;
 import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey;
-import com.android.build.gradle.internal.scope.ApkInfo;
+import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -93,7 +93,7 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
     private IntSupplier versionCode;
 
     // We use a sorted map so the key set order is consistent since it's considered an input.
-    private ImmutableSortedMap<String, ApkInfo> splits;
+    private ImmutableSortedMap<String, ApkData> splits;
     private File outputDirectory;
     private boolean debuggable;
     private AaptOptions aaptOptions;
@@ -204,7 +204,7 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
     }
 
     @VisibleForTesting
-    File generateSplitManifest(String split, ApkInfo apkInfo) throws IOException {
+    File generateSplitManifest(String split, ApkData apkInfo) throws IOException {
         // Split name can only contains 0-9, a-z, A-Z, '.' and '_'.  Replace all other
         // characters with underscore.
         CharMatcher charMatcher =
@@ -361,7 +361,7 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
             }
         }
 
-        private static ImmutableSortedMap<String, ApkInfo> getAbiSplitData(
+        private static ImmutableSortedMap<String, ApkData> getAbiSplitData(
                 VariantScope variantScope) {
             return variantScope
                     .getOutputScope()

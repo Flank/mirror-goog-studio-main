@@ -125,7 +125,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
                             .stream()
                             .filter(
                                     output ->
-                                            output.getApkInfo().getType()
+                                            output.getApkData().getType()
                                                     != VariantOutput.OutputType.SPLIT)
                             .findFirst();
 

@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
 import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
 import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
+import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildElements
 import com.android.build.gradle.internal.scope.BuildOutput
@@ -30,7 +31,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant2.DslScopeImpl
-import com.android.build.gradle.internal.scope.ApkInfo
 import com.google.common.collect.ImmutableList
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
@@ -91,7 +91,11 @@ class CopyOutputsTest {
         )
 
         val apkInfo =
-            ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of<FilterData>(), 12345)
+            ApkData.of(
+                VariantOutput.OutputType.MAIN,
+                ImmutableList.of<FilterData>(),
+                12345
+            )
 
         BuildElements(
             listOf(

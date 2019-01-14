@@ -189,6 +189,6 @@ open class InstantRunMainApkResourcesBuilderTest {
         val buildArtifact = Iterables.getOnlyElement(buildArtifacts)
         assertThat(buildArtifact.type).isEqualTo(
                 InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES)
-        assertThat(buildArtifact.apkInfo.type.toString()).isEqualTo("MAIN")
+        assertThat(buildArtifact.apkData.type.toString()).isEqualTo("MAIN")
     }
 }

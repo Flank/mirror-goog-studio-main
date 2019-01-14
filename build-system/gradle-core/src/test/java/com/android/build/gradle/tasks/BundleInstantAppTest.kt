@@ -22,13 +22,13 @@ import com.android.build.VariantOutput
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.fixtures.FakeFileCollection
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildElements
 import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.ModuleMetadata
-import com.android.build.gradle.internal.scope.ApkInfo
 import com.android.tools.build.apkzlib.zip.ZFile
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
@@ -74,7 +74,11 @@ class BundleInstantAppTest {
         val apkDirectory2 = temporaryFolder.newFolder("apkDirectory2")
 
         val apkInfo =
-            ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of<FilterData>(), 12345)
+            ApkData.of(
+                VariantOutput.OutputType.MAIN,
+                ImmutableList.of<FilterData>(),
+                12345
+            )
 
         BuildElements(
             ImmutableList.of(

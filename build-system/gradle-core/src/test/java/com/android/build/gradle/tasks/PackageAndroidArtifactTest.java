@@ -21,7 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.SdkConstants;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.ide.FilterDataImpl;
-import com.android.build.gradle.internal.scope.ApkInfo;
+import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -113,11 +113,11 @@ public class PackageAndroidArtifactTest {
                 ImmutableList.of(
                         new BuildOutput(
                                 InternalArtifactType.APK,
-                                ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), -1),
+                                ApkData.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), -1),
                                 new File("/tmp/file_main.out")),
                         new BuildOutput(
                                 InternalArtifactType.APK,
-                                ApkInfo.of(
+                                ApkData.of(
                                         VariantOutput.OutputType.SPLIT,
                                         ImmutableList.of(
                                                 new FilterDataImpl(
@@ -127,7 +127,7 @@ public class PackageAndroidArtifactTest {
                                 new File("/tmp/file_xxhdpi.out")),
                         new BuildOutput(
                                 InternalArtifactType.APK,
-                                ApkInfo.of(
+                                ApkData.of(
                                         VariantOutput.OutputType.SPLIT,
                                         ImmutableList.of(
                                                 new FilterDataImpl(
@@ -136,7 +136,7 @@ public class PackageAndroidArtifactTest {
                                 new File("/tmp/filefr.out")),
                         new BuildOutput(
                                 InternalArtifactType.APK,
-                                ApkInfo.of(
+                                ApkData.of(
                                         VariantOutput.OutputType.SPLIT,
                                         ImmutableList.of(
                                                 new FilterDataImpl(
@@ -153,7 +153,7 @@ public class PackageAndroidArtifactTest {
                 ImmutableList.of(
                         new BuildOutput(
                                 InternalArtifactType.APK,
-                                ApkInfo.of(
+                                ApkData.of(
                                         VariantOutput.OutputType.FULL_SPLIT,
                                         ImmutableList.of(
                                                 new FilterDataImpl(
@@ -162,7 +162,7 @@ public class PackageAndroidArtifactTest {
                                 new File("/tmp/file.out")),
                         new BuildOutput(
                                 InternalArtifactType.APK,
-                                ApkInfo.of(
+                                ApkData.of(
                                         VariantOutput.OutputType.SPLIT,
                                         ImmutableList.of(
                                                 new FilterDataImpl(

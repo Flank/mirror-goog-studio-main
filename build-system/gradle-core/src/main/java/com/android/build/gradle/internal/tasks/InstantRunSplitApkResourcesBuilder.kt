@@ -38,7 +38,7 @@ import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.CloseableBlockingResourceLinker
-import com.android.build.gradle.internal.scope.ApkInfo
+import com.android.build.gradle.internal.scope.ApkData
 import com.android.sdklib.IAndroidTarget
 import com.android.utils.FileUtils
 import com.google.common.base.Stopwatch
@@ -67,7 +67,7 @@ open class InstantRunSplitApkResourcesBuilder
         private set
     lateinit var aaptOptions: AaptOptions
         private set
-    lateinit var mainApkInfo: ApkInfo
+    lateinit var mainApkData: ApkData
         private set
 
     @get:Input @get:Optional
@@ -133,7 +133,7 @@ open class InstantRunSplitApkResourcesBuilder
                     bucket,
                     nbOfProcesses,
                     applicationId,
-                    mainApkInfo,
+                    mainApkData,
                     aaptOptions,
                     resources.get().asFileTree.files,
                     outputDir
@@ -206,8 +206,8 @@ open class InstantRunSplitApkResourcesBuilder
                     apkSupportDir,
                     uniqueName,
                     Suppliers.ofInstance(params.applicationId),
-                    params.mainApkInfo.versionName,
-                    params.mainApkInfo.versionCode,
+                    params.mainApkData.versionName,
+                    params.mainApkData.versionCode,
                     null
                 )
 
@@ -235,7 +235,7 @@ open class InstantRunSplitApkResourcesBuilder
             val bucketNumber: Int,
             val stepSize: Int,
             val applicationId : String,
-            val mainApkInfo: ApkInfo,
+            val mainApkData: ApkData,
             val aaptOptions: AaptOptions,
             val resources: Collection<File>,
             val outputDirectory: File): Serializable
@@ -281,7 +281,7 @@ open class InstantRunSplitApkResourcesBuilder
 
             task.buildContext = variantScope.instantRunBuildContext
             task.aaptOptions = globalScope.extension.aaptOptions.convert()
-            task.mainApkInfo = variantScope.outputScope.mainSplit
+            task.mainApkData = variantScope.outputScope.mainSplit
 
             // This task theoretically depends on the resources bundle as the split manifest file
             // generated can contain resource references: android:versionName="@string/version_name"

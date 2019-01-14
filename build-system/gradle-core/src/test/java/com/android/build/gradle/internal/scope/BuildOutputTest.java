@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.ide.FilterDataImpl;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import nl.jqno.equalsverifier.EqualsVerifier;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -32,16 +33,23 @@ import org.mockito.MockitoAnnotations;
 /** Tests for the {@link BuildOutput} class. */
 public class BuildOutputTest {
 
-    @Mock ApkInfo apkInfo;
+    @Mock ApkData apkInfo;
 
-    @org.junit.Before
+    @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
     }
 
     @Test
-    public void testEquals() throws Exception {
-        EqualsVerifier.forClass(BuildOutput.class).verify();
+    public void testEquals() {
+        EqualsVerifier.forClass(BuildOutput.class)
+                // This is done because EqualsVerifier can't instantiate some fields of ApkData
+                // so we need to give it a little help to build a valid BuildOutput object.
+                .withPrefabValues(
+                        ApkData.class,
+                        ApkData.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), 0),
+                        ApkData.of(VariantOutput.OutputType.FULL_SPLIT, ImmutableList.of(), 1))
+                .verify();
     }
 
     @Test

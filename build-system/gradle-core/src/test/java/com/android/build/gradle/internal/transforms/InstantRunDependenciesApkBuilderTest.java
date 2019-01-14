@@ -32,7 +32,7 @@ import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
-import com.android.build.gradle.internal.scope.ApkInfo;
+import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.internal.aapt.AaptOptions;
@@ -82,7 +82,7 @@ public class InstantRunDependenciesApkBuilderTest {
     final List<InstantRunSplitApkBuilder.DexFiles> dexFilesList =
             new CopyOnWriteArrayList<>();
 
-    final ApkInfo apkInfo = ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), 12345);
+    final ApkData apkInfo = ApkData.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), 12345);
 
     @Before
     public void setUpMock() {
@@ -119,7 +119,7 @@ public class InstantRunDependenciesApkBuilderTest {
                     @NonNull
                     @Override
                     protected File generateSplitApk(
-                            @NonNull ApkInfo apkInfo, @NonNull DexFiles dexFiles) {
+                            @NonNull ApkData apkInfo, @NonNull DexFiles dexFiles) {
                         dexFilesList.add(dexFiles);
                         return new File("/dev/null");
                     }
