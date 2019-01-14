@@ -253,7 +253,7 @@ class ExistingBuildElements {
                     versionName,
                     filterName,
                     outputFile,
-                    fullName,
+                    fullName ?: "",
                     baseName ?: "",
                     enabled)
         }
