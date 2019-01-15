@@ -18,32 +18,16 @@ package com.android.build.gradle.integration.common.truth;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.Variant;
-import com.google.common.truth.FailureStrategy;
+import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
-import com.google.common.truth.SubjectFactory;
-
 
 public class VariantSubject extends Subject<VariantSubject, Variant> {
 
-    static class Factory extends SubjectFactory<VariantSubject, Variant> {
-        @NonNull
-        public static Factory get() {
-            return new Factory();
-        }
-
-        private Factory() {}
-
-        @Override
-        public VariantSubject getSubject(
-                @NonNull FailureStrategy failureStrategy,
-                @NonNull Variant subject) {
-            return new VariantSubject(failureStrategy, subject);
-        }
+    public static Subject.Factory<VariantSubject, Variant> variants() {
+        return VariantSubject::new;
     }
 
-    public VariantSubject(
-            @NonNull FailureStrategy failureStrategy,
-            @NonNull Variant subject) {
-        super(failureStrategy, subject);
+    public VariantSubject(@NonNull FailureMetadata failureMetadata, @NonNull Variant subject) {
+        super(failureMetadata, subject);
     }
 }

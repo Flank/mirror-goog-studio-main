@@ -19,9 +19,8 @@ package com.android.testutils.truth;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.base.Joiner;
-import com.google.common.truth.FailureStrategy;
+import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
-import com.google.common.truth.SubjectFactory;
 import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -36,20 +35,16 @@ import java.util.List;
 @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")  // Functions do not return.
 public class PathSubject extends Subject<PathSubject, Path> {
 
-    public static final SubjectFactory<PathSubject, Path> FACTORY =
-            new SubjectFactory<PathSubject, Path>() {
-                @Override
-                public PathSubject getSubject(FailureStrategy fs, Path that) {
-                    return new PathSubject(fs, that);
-                }
-            };
+    public static Subject.Factory<PathSubject, Path> paths() {
+        return PathSubject::new;
+    }
 
-    public PathSubject(FailureStrategy failureStrategy, Path subject) {
-        super(failureStrategy, subject);
+    public PathSubject(FailureMetadata failureMetadata, Path subject) {
+        super(failureMetadata, subject);
     }
 
     public static PathSubject assertThat(@Nullable Path path) {
-        return Truth.assert_().about(PathSubject.FACTORY).that(path);
+        return Truth.assertAbout(paths()).that(path);
     }
 
     public static PathSubject assertThat(@Nullable java.io.File file) {
@@ -57,36 +52,35 @@ public class PathSubject extends Subject<PathSubject, Path> {
     }
 
     public void hasName(String name) {
-        check().that(getSubject().getFileName().toString())
-                .named(getDisplaySubject()).isEqualTo(name);
+        check().that(actual().getFileName().toString()).named(actualAsString()).isEqualTo(name);
     }
 
     public void exists() {
-        if (!Files.exists(getSubject())) {
+        if (!Files.exists(actual())) {
             fail("exists");
         }
     }
 
     public void doesNotExist() {
-        if (Files.exists(getSubject())) {
+        if (Files.exists(actual())) {
             fail("does not exist");
         }
     }
 
     public void isFile() {
-        if (!Files.isRegularFile(getSubject())) {
+        if (!Files.isRegularFile(actual())) {
             fail("is a file");
         }
     }
 
     public void isDirectory() {
-        if (!Files.isDirectory(getSubject())) {
+        if (!Files.isDirectory(actual())) {
             fail("is a directory");
         }
     }
 
     public void isExecutable() {
-        if (!Files.isExecutable(getSubject())) {
+        if (!Files.isExecutable(actual())) {
             fail("is not executable");
         }
     }
@@ -94,7 +88,7 @@ public class PathSubject extends Subject<PathSubject, Path> {
     public void hasContents(byte[] expectedContents) throws IOException {
         exists();
         try {
-            byte[] contents = Files.readAllBytes(getSubject());
+            byte[] contents = Files.readAllBytes(actual());
             if (!Arrays.equals(contents, expectedContents)) {
                 failWithBadResults(
                         "contains",
@@ -103,14 +97,14 @@ public class PathSubject extends Subject<PathSubject, Path> {
                         "byte[" + contents.length + "]");
             }
         } catch (IOException e) {
-            failWithRawMessage("Unable to read %s", getSubject());
+            failWithRawMessage("Unable to read %s", actual());
         }
     }
 
     public void hasContents(String... expectedContents) throws IOException {
         exists();
         try {
-            List<String> contents = Files.readAllLines(getSubject());
+            List<String> contents = Files.readAllLines(actual());
             if (!Arrays.asList(expectedContents).equals(contents)) {
                 failWithBadResults(
                         "contains",
@@ -119,12 +113,12 @@ public class PathSubject extends Subject<PathSubject, Path> {
                         Joiner.on('\n').join(contents));
             }
         } catch (IOException e) {
-            failWithRawMessage("Unable to read %s", getSubject());
+            failWithRawMessage("Unable to read %s", actual());
         }
     }
 
     public void wasModifiedAt(@NonNull FileTime expectedTime) throws IOException {
-        FileTime actualTime = Files.getLastModifiedTime(getSubject());
+        FileTime actualTime = Files.getLastModifiedTime(actual());
         if (!actualTime.equals(expectedTime)) {
             failWithBadResults(
                     "was last modified at", expectedTime, "was last modified at", actualTime);
@@ -132,7 +126,7 @@ public class PathSubject extends Subject<PathSubject, Path> {
     }
 
     public void isNewerThan(@NonNull FileTime expectedTime) throws IOException {
-        FileTime actualTime = Files.getLastModifiedTime(getSubject());
+        FileTime actualTime = Files.getLastModifiedTime(actual());
         if (actualTime.compareTo(expectedTime) <= 0) {
             failWithBadResults(
                     "was modified after", expectedTime, "was last modified at", actualTime);

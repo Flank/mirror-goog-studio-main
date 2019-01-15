@@ -16,6 +16,8 @@
 
 package com.android.testutils.truth;
 
+import static com.google.common.truth.Truth.assertAbout;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.testutils.apk.Dex;
@@ -23,9 +25,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-import com.google.common.truth.FailureStrategy;
+import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
-import com.google.common.truth.SubjectFactory;
 import com.google.common.truth.Truth;
 import java.io.File;
 import java.io.IOException;
@@ -35,21 +36,17 @@ import org.jf.dexlib2.dexbacked.DexBackedClassDef;
 @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
 public class DexSubject extends Subject<DexSubject, Dex> {
 
-    public static final SubjectFactory<DexSubject, Dex> FACTORY =
-            new SubjectFactory<DexSubject, Dex>() {
-                @Override
-                public DexSubject getSubject(@NonNull FailureStrategy fs, @Nullable Dex that) {
-                    return new DexSubject(fs, that);
-                }
-            };
+    public static Subject.Factory<DexSubject, Dex> dexes() {
+        return DexSubject::new;
+    }
 
-    private DexSubject(@NonNull FailureStrategy fs, @Nullable Dex that) {
-        super(fs, that);
+    private DexSubject(@NonNull FailureMetadata failureMetadata, @Nullable Dex that) {
+        super(failureMetadata, that);
     }
 
     @NonNull
     public static DexSubject assertThat(@Nullable Dex dex) {
-        return Truth.assert_().about(DexSubject.FACTORY).that(dex);
+        return Truth.assert_().about(DexSubject.dexes()).that(dex);
     }
 
     @NonNull
@@ -62,13 +59,13 @@ public class DexSubject extends Subject<DexSubject, Dex> {
         checkClassName(className);
 
         if (assertSubjectIsNonNull()) {
-            DexBackedClassDef classDef = getSubject().getClasses().get(className);
+            DexBackedClassDef classDef = actual().getClasses().get(className);
             if (classDef == null) {
                 fail("contains class", className);
             }
-            return () -> DexClassSubject.FACTORY.getSubject(failureStrategy, classDef);
+            return () -> assertAbout(DexClassSubject.dexClasses()).that(classDef);
         }
-        return () -> DexClassSubject.FACTORY.getSubject(failureStrategy, null);
+        return () -> assertAbout(DexClassSubject.dexClasses()).that(null);
     }
 
     public void containsClassesIn(@NonNull Iterable<String> expected) throws IOException {
@@ -78,8 +75,7 @@ public class DexSubject extends Subject<DexSubject, Dex> {
 
         if (assertSubjectIsNonNull()) {
             Sets.SetView<String> missing =
-                    Sets.difference(
-                            ImmutableSet.copyOf(expected), getSubject().getClasses().keySet());
+                    Sets.difference(ImmutableSet.copyOf(expected), actual().getClasses().keySet());
 
             if (!missing.isEmpty()) {
                 failWithBadResults(
@@ -95,18 +91,16 @@ public class DexSubject extends Subject<DexSubject, Dex> {
 
         if (assertSubjectIsNonNull()) {
             Sets.SetView<String> missing =
-                    Sets.difference(
-                            ImmutableSet.copyOf(expected), getSubject().getClasses().keySet());
+                    Sets.difference(ImmutableSet.copyOf(expected), actual().getClasses().keySet());
 
             Sets.SetView<String> unexpectedElements =
-                    Sets.difference(
-                            getSubject().getClasses().keySet(), ImmutableSet.copyOf(expected));
+                    Sets.difference(actual().getClasses().keySet(), ImmutableSet.copyOf(expected));
 
             if (!missing.isEmpty()) {
                 if (!unexpectedElements.isEmpty()) {
                     failWithRawMessage(
                             "Not true that %s %s <%s>. It is missing <%s> and has unexpected items <%s>",
-                            getDisplaySubject(),
+                            actualAsString(),
                             "contains exactly",
                             expected,
                             Iterables.toString(missing),
@@ -141,7 +135,7 @@ public class DexSubject extends Subject<DexSubject, Dex> {
         if (assertSubjectIsNonNull()) {
             Sets.SetView<String> present =
                     Sets.intersection(
-                            ImmutableSet.copyOf(unexpected), getSubject().getClasses().keySet());
+                            ImmutableSet.copyOf(unexpected), actual().getClasses().keySet());
 
             if (!present.isEmpty()) {
                 failWithBadResults(
@@ -154,19 +148,18 @@ public class DexSubject extends Subject<DexSubject, Dex> {
     }
 
     public void hasClassesCount(int expected) throws IOException {
-        if (expected != getSubject().getClasses().size()) {
-            failWithBadResults(
-                    "does not have size", expected, "has", getSubject().getClasses().size());
+        if (expected != actual().getClasses().size()) {
+            failWithBadResults("does not have size", expected, "has", actual().getClasses().size());
         }
     }
 
     @Override
-    protected String getDisplaySubject() {
+    protected String actualCustomStringRepresentation() {
         return "dex file";
     }
 
     private boolean assertSubjectIsNonNull() {
-        if (getSubject() == null) {
+        if (actual() == null) {
             failWithRawMessage(
                     "Cannot assert about the contents of a dex file that does not exist.");
             return false;

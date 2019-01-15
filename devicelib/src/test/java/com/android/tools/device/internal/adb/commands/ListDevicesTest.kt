@@ -16,7 +16,6 @@
 
 package com.android.tools.device.internal.adb.commands
 
-import com.android.testutils.truth.MoreTruth
 import com.android.tools.device.internal.adb.ChannelConnection
 import com.android.tools.device.internal.adb.PipeAdbServer
 import com.google.common.base.Charsets
@@ -43,7 +42,7 @@ class ListDevicesTest {
                 assertThat(devices[0].serial).isEqualTo("emulator-5554")
                 assertThat(devices[1].serial).isEqualTo("412KPGS0147439")
                 assertThat(devices[2].serial).isEqualTo("0871182e")
-                MoreTruth.assertThat(devices[2].devicePath).isAbsent()
+                assertThat(devices[2].devicePath.isPresent).isFalse()
             }
         }
     }

@@ -16,46 +16,34 @@
 
 package com.android.build.gradle.integration.common.truth;
 
-import static com.google.common.truth.Truth.assert_;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.Format;
 import com.android.build.gradle.internal.pipeline.SubStream;
-import com.google.common.truth.FailureStrategy;
+import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
-import com.google.common.truth.SubjectFactory;
+import com.google.common.truth.Truth;
 
 /** Truth Subject for {@link com.android.build.gradle.internal.pipeline.SubStream} */
 public class SubStreamSubject extends Subject<SubStreamSubject, SubStream> {
 
+    public static Subject.Factory<SubStreamSubject, SubStream> subStreams() {
+        return SubStreamSubject::new;
+    }
+
     @NonNull
     public static SubStreamSubject assertThat(@Nullable SubStream stream) {
-        return assert_().about(Factory.get()).that(stream);
+        return Truth.assertAbout(subStreams()).that(stream);
     }
 
-    static class Factory extends SubjectFactory<SubStreamSubject, SubStream> {
-        @NonNull
-        public static Factory get() {
-            return new SubStreamSubject.Factory();
-        }
-
-        private Factory() {}
-
-        @Override
-        public SubStreamSubject getSubject(
-                @NonNull FailureStrategy failureStrategy, @NonNull SubStream subject) {
-            return new SubStreamSubject(failureStrategy, subject);
-        }
-    }
-
-    SubStreamSubject(@NonNull FailureStrategy failureStrategy, @NonNull SubStream subject) {
-        super(failureStrategy, subject);
+    SubStreamSubject(@NonNull FailureMetadata failureMetadata, @NonNull SubStream subject) {
+        super(failureMetadata, subject);
     }
 
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
     public void hasName(@NonNull String name) {
-        final String actualName = getSubject().getName();
+        final String actualName = actual().getName();
         if (!name.equals(actualName)) {
             failWithBadResults("has name", name, "is", actualName);
         }
@@ -63,7 +51,7 @@ public class SubStreamSubject extends Subject<SubStreamSubject, SubStream> {
 
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
     public void hasFormat(@NonNull Format format) {
-        final Format actualFormat = getSubject().getFormat();
+        final Format actualFormat = actual().getFormat();
 
         if (format != actualFormat) {
             failWithBadResults("has format", format, "is", actualFormat);

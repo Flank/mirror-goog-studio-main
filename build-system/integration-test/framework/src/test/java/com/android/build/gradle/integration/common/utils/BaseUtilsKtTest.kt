@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.common.utils
 
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.google.common.collect.ImmutableList.of
+import com.google.common.truth.Truth8
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ExpectedException
@@ -31,8 +32,8 @@ class BaseUtilsKtTest {
     @Test
     @Throws(Exception::class)
     fun searchForSingleItemWithTriplets() {
-        assertThat(searchForSingleItemInList(of("a", "b", "c"), "a", { i -> i }))
-                .hasValueEqualTo("a")
+        Truth8.assertThat(searchForSingleItemInList(of("a", "b", "c"), "a", { i -> i }))
+            .hasValue("a")
     }
 
     @Test
@@ -59,7 +60,7 @@ class BaseUtilsKtTest {
     @Test
     @Throws(Exception::class)
     fun searchForSingleItemWithMissingValue() {
-        assertThat(searchForSingleItemInList(of("a", "b", "c"), "d", { i -> i }))
-                .isAbsent()
+        assertThat(searchForSingleItemInList(of("a", "b", "c"), "d", { i -> i }).isPresent)
+            .isFalse()
     }
 }

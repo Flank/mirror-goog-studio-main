@@ -26,6 +26,7 @@ import com.android.builder.model.NativeFile;
 import com.android.builder.model.NativeSettings;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
+import com.google.common.truth.Truth8;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
@@ -130,7 +131,7 @@ public class NativeModelHelper {
         Optional<NativeSettings> setting = settings.stream()
                 .filter(s -> s.getName().equals(settingName))
                 .findFirst();
-        assertThat(setting).isPresent();
+        Truth8.assertThat(setting).isPresent();
         return setting.get().getCompilerFlags();
     }
 }

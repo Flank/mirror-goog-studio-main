@@ -28,6 +28,7 @@ TEST_DEPS = [
     "//tools/base/third_party:com.google.guava_guava",
     "//tools/base/third_party:com.google.protobuf_protobuf-java",
     "//tools/base/third_party:com.google.protobuf_protobuf-java-util",
+    "//tools/base/third_party:com.google.truth.extensions_truth-java8-extension",
     "//tools/base/third_party:com.google.truth_truth",
     "//tools/base/third_party:commons-io_commons-io",  # TODO: remove?
     "//tools/base/third_party:org.apache.commons_commons-compress",

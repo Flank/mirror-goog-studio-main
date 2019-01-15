@@ -19,6 +19,7 @@ package com.android.build.gradle.truth;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue;
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValue;
 import com.android.build.gradle.internal.cxx.json.NativeSourceFileValue;
@@ -27,9 +28,8 @@ import com.android.build.gradle.internal.cxx.json.NativeToolchainValue;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.common.truth.FailureStrategy;
+import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
-import com.google.common.truth.SubjectFactory;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.Collections;
@@ -49,25 +49,21 @@ public class NativeBuildConfigValueSubject
             "/cFileExtensions",
             "/cppFileExtensions");
 
-    public static final SubjectFactory<NativeBuildConfigValueSubject, NativeBuildConfigValue>
-            FACTORY =  new SubjectFactory<NativeBuildConfigValueSubject, NativeBuildConfigValue>() {
-                @Override
-                public NativeBuildConfigValueSubject getSubject(
-                        FailureStrategy fs, NativeBuildConfigValue that) {
-                    return new NativeBuildConfigValueSubject(fs, that);
-                }
-            };
+    public static Subject.Factory<NativeBuildConfigValueSubject, NativeBuildConfigValue>
+            nativebuildConfigValues() {
+        return NativeBuildConfigValueSubject::new;
+    }
 
     public NativeBuildConfigValueSubject(
-            FailureStrategy failureStrategy, NativeBuildConfigValue subject) {
-        super(failureStrategy, subject);
+            @NonNull FailureMetadata failureMetadata, @Nullable NativeBuildConfigValue subject) {
+        super(failureMetadata, subject);
     }
 
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
     public void isEqualTo(NativeBuildConfigValue other) {
 
         try {
-            assertEqual("", getSubject(), other);
+            assertEqual("", actual(), other);
         } catch (IllegalAccessException e) {
             throw new RuntimeException("Illegal Access", e);
         }
@@ -155,8 +151,8 @@ public class NativeBuildConfigValueSubject
     @NonNull
     private Set<String> getIntermediatesNames() {
         Set<String> names = Sets.newHashSet();
-        checkNotNull(getSubject().libraries);
-        for (NativeLibraryValue library : getSubject().libraries.values()) {
+        checkNotNull(actual().libraries);
+        for (NativeLibraryValue library : actual().libraries.values()) {
             if (library.output != null) {
                 names.add(library.output.toString());
             }
@@ -167,8 +163,8 @@ public class NativeBuildConfigValueSubject
     @NonNull
     private Set<String> getLibraryNames() {
         Set<String> names = Sets.newHashSet();
-        checkNotNull(getSubject().libraries);
-        for (String library : getSubject().libraries.keySet()) {
+        checkNotNull(actual().libraries);
+        for (String library : actual().libraries.keySet()) {
             names.add(library);
         }
         return names;
@@ -177,8 +173,8 @@ public class NativeBuildConfigValueSubject
     @NonNull
     private Set<String> getSourceFileNames() {
         Set<String> names = Sets.newHashSet();
-        checkNotNull(getSubject().libraries);
-        for (NativeLibraryValue library : getSubject().libraries.values()) {
+        checkNotNull(actual().libraries);
+        for (NativeLibraryValue library : actual().libraries.values()) {
             if (library.files == null) {
                 continue;
             }
@@ -200,21 +196,18 @@ public class NativeBuildConfigValueSubject
         expectedNotFound.addAll(expected);
         expectedNotFound.removeAll(intermediateNames);
         if (!expectedNotFound.isEmpty()) {
-            failWithRawMessage("Not true that %s build outputs was %s. Set %s was missing %s",
-                    getDisplaySubject(),
-                    expected,
-                    intermediateNames,
-                    expectedNotFound);
+            failWithRawMessage(
+                    "Not true that %s build outputs was %s. Set %s was missing %s",
+                    actualAsString(), expected, intermediateNames, expectedNotFound);
         }
 
         Set<String> foundNotExpected = Sets.newHashSet();
         foundNotExpected.addAll(intermediateNames);
         foundNotExpected.removeAll(expected);
         if (!foundNotExpected.isEmpty()) {
-            failWithRawMessage("Not true that %s build outputs was %s. It had extras %s",
-                    getDisplaySubject(),
-                    expected,
-                    foundNotExpected);
+            failWithRawMessage(
+                    "Not true that %s build outputs was %s. It had extras %s",
+                    actualAsString(), expected, foundNotExpected);
         }
     }
 
@@ -231,21 +224,18 @@ public class NativeBuildConfigValueSubject
         expectedNotFound.addAll(expected);
         expectedNotFound.removeAll(intermediateNames);
         if (!expectedNotFound.isEmpty()) {
-            failWithRawMessage("Not true that %s build targets was %s. Set %s was missing %s",
-                    getDisplaySubject(),
-                    expected,
-                    intermediateNames,
-                    expectedNotFound);
+            failWithRawMessage(
+                    "Not true that %s build targets was %s. Set %s was missing %s",
+                    actualAsString(), expected, intermediateNames, expectedNotFound);
         }
 
         Set<String> foundNotExpected = Sets.newHashSet();
         foundNotExpected.addAll(intermediateNames);
         foundNotExpected.removeAll(expected);
         if (!foundNotExpected.isEmpty()) {
-            failWithRawMessage("Not true that %s build targets was %s. It had extras %s",
-                    getDisplaySubject(),
-                    expected,
-                    foundNotExpected);
+            failWithRawMessage(
+                    "Not true that %s build targets was %s. It had extras %s",
+                    actualAsString(), expected, foundNotExpected);
         }
     }
 
@@ -253,8 +243,8 @@ public class NativeBuildConfigValueSubject
     public void hasUniqueLibraryNames() {
         Set<String> names = Sets.newHashSet();
         Set<String> duplicates = Sets.newHashSet();
-        checkNotNull(getSubject().libraries);
-        for (String library : getSubject().libraries.keySet()) {
+        checkNotNull(actual().libraries);
+        for (String library : actual().libraries.keySet()) {
             if (names.contains(library)) {
                 duplicates.add(library);
             }
@@ -264,8 +254,7 @@ public class NativeBuildConfigValueSubject
         if (!duplicates.isEmpty()) {
             failWithRawMessage(
                     "Not true that %s libraries have unique names. It had duplications %s",
-                    getDisplaySubject(),
-                    duplicates);
+                    actualAsString(), duplicates);
         }
     }
 
@@ -277,21 +266,18 @@ public class NativeBuildConfigValueSubject
         expectedNotFound.addAll(expected);
         expectedNotFound.removeAll(intermediateNames);
         if (!expectedNotFound.isEmpty()) {
-            failWithRawMessage("Not true that %s source files was %s. Set %s was missing %s",
-                    getDisplaySubject(),
-                    expected,
-                    intermediateNames,
-                    expectedNotFound);
+            failWithRawMessage(
+                    "Not true that %s source files was %s. Set %s was missing %s",
+                    actualAsString(), expected, intermediateNames, expectedNotFound);
         }
 
         Set<String> foundNotExpected = Sets.newHashSet();
         foundNotExpected.addAll(intermediateNames);
         foundNotExpected.removeAll(expected);
         if (!foundNotExpected.isEmpty()) {
-            failWithRawMessage("Not true that %s source files was %s. It had extras %s",
-                    getDisplaySubject(),
-                    expected,
-                    foundNotExpected);
+            failWithRawMessage(
+                    "Not true that %s source files was %s. It had extras %s",
+                    actualAsString(), expected, foundNotExpected);
         }
     }
 
@@ -303,11 +289,9 @@ public class NativeBuildConfigValueSubject
         expectedNotFound.addAll(expected);
         expectedNotFound.removeAll(intermediateNames);
         if (!expectedNotFound.isEmpty()) {
-            failWithRawMessage("Not true that %s source files contained %s. Set %s was missing %s",
-                    getDisplaySubject(),
-                    expected,
-                    intermediateNames,
-                    expectedNotFound);
+            failWithRawMessage(
+                    "Not true that %s source files contained %s. Set %s was missing %s",
+                    actualAsString(), expected, intermediateNames, expectedNotFound);
         }
     }
 }

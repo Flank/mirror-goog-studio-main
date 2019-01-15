@@ -16,8 +16,8 @@
 package com.android.build.gradle.external.gnumake;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.truth.Truth.assertAbout;
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assert_;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -595,7 +595,7 @@ public class NdkSampleTest {
     @NonNull
     public static NativeBuildConfigValueSubject assertConfig(
             @Nullable NativeBuildConfigValue project) {
-        return assert_().about(NativeBuildConfigValueSubject.FACTORY).that(project);
+        return assertAbout(NativeBuildConfigValueSubject.nativebuildConfigValues()).that(project);
     }
 
     @Test

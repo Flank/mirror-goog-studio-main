@@ -17,20 +17,18 @@
 package com.android.ide.common.resources.configuration
 
 import com.android.resources.Density
-import com.google.common.truth.Truth.assert_
 import com.android.resources.ScreenRound
 import com.android.resources.UiMode
-import com.google.common.truth.FailureStrategy
+import com.google.common.truth.FailureMetadata
 import com.google.common.truth.Subject
-import com.google.common.truth.SubjectFactory
 import com.google.common.truth.Truth
 
 /**
  * Custom [Truth] subject for testing [FolderConfiguration] with a nicer API and better failure
  * messages
  */
-class FolderConfigurationSubject(failureStrategy: FailureStrategy, subject: FolderConfiguration) :
-    Subject<FolderConfigurationSubject, FolderConfiguration>(failureStrategy, subject) {
+class FolderConfigurationSubject(failureMetadata: FailureMetadata, subject: FolderConfiguration) :
+    Subject<FolderConfigurationSubject, FolderConfiguration>(failureMetadata, subject) {
 
     fun isMatchFor(folderConfiguration: FolderConfiguration) {
         if (!actual().isMatchFor(folderConfiguration)) {
@@ -127,19 +125,18 @@ class FolderConfigurationSubject(failureStrategy: FailureStrategy, subject: Fold
     }
 
     companion object {
-        private val FACTORY: SubjectFactory<FolderConfigurationSubject, FolderConfiguration> =
-            object : SubjectFactory<FolderConfigurationSubject, FolderConfiguration>() {
-                override fun getSubject(
-                    fs: FailureStrategy,
-                    that: FolderConfiguration
-                ): FolderConfigurationSubject {
-                    return FolderConfigurationSubject(fs, that)
-                }
+        fun folderConfigurations(): Subject.Factory<FolderConfigurationSubject, FolderConfiguration> {
+            return Subject.Factory<FolderConfigurationSubject, FolderConfiguration> { failureMetadata, subject ->
+                FolderConfigurationSubject(
+                    failureMetadata,
+                    subject
+                )
             }
+        }
 
         @JvmStatic
         fun assertThat(folderConfiguration: FolderConfiguration?): FolderConfigurationSubject {
-            return assert_().about(FolderConfigurationSubject.FACTORY).that(folderConfiguration)
+            return Truth.assertAbout(folderConfigurations()).that(folderConfiguration)
         }
     }
 }

@@ -10,9 +10,9 @@
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
     <orderEntry type="module" module-name="transform" scope="TEST" />
     <orderEntry type="module-library" scope="TEST">
-      <library name="truth-0.34">
+      <library name="truth-0.42">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../../../prebuilts/tools/common/m2/repository/com/google/truth/truth/0.34/truth-0.34.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../../../prebuilts/tools/common/m2/repository/com/google/truth/truth/0.42/truth-0.42.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

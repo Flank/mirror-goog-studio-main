@@ -16,53 +16,47 @@
 
 package com.android.testutils.truth;
 
-
-import static com.google.common.truth.Truth.assert_;
-
 import com.android.annotations.NonNull;
 import com.android.testutils.apk.Zip;
-import com.google.common.truth.FailureStrategy;
-import com.google.common.truth.SubjectFactory;
+import com.google.common.truth.FailureMetadata;
+import com.google.common.truth.Subject;
+import com.google.common.truth.Truth;
 import java.io.File;
 import java.io.IOException;
 
 /** Truth support for zip files. */
 public class ZipFileSubject extends AbstractZipSubject<ZipFileSubject, Zip> {
 
-    public static final SubjectFactory<ZipFileSubject, Zip> FACTORY =
-            new SubjectFactory<ZipFileSubject, Zip>() {
-                @Override
-                public ZipFileSubject getSubject(@NonNull FailureStrategy fs, @NonNull Zip that) {
-                    return new ZipFileSubject(fs, that);
-                }
-            };
+    public static Subject.Factory<ZipFileSubject, Zip> zips() {
+        return ZipFileSubject::new;
+    }
 
-    public ZipFileSubject(@NonNull FailureStrategy failureStrategy, @NonNull Zip subject) {
-        super(failureStrategy, subject);
+    public ZipFileSubject(@NonNull FailureMetadata failureMetadata, @NonNull Zip subject) {
+        super(failureMetadata, subject);
     }
 
     public static ZipFileSubject assertThat(@NonNull Zip zip) {
-        return assert_().about(ZipFileSubject.FACTORY).that(zip);
+        return Truth.assertAbout(zips()).that(zip);
     }
 
     public static ZipFileSubject assertThatZip(@NonNull File file) throws IOException {
         Zip zip = new Zip(file.toPath());
-        return assert_().about(ZipFileSubject.FACTORY).that(zip);
+        return Truth.assertAbout(zips()).that(zip);
     }
 
     @Override
-    public void contains(@NonNull String path) throws IOException {
+    public void contains(@NonNull String path) {
         exists();
-        if (getSubject().getEntry(path) == null) {
-            failWithRawMessage("'%s' does not contain '%s'", getSubject(), path);
+        if (actual().getEntry(path) == null) {
+            failWithRawMessage("'%s' does not contain '%s'", actual(), path);
         }
     }
 
     @Override
-    public void doesNotContain(@NonNull String path) throws IOException {
+    public void doesNotContain(@NonNull String path) {
         exists();
-        if (getSubject().getEntry(path) != null) {
-            failWithRawMessage("'%s' unexpectedly contains '%s'", getSubject(), path);
+        if (actual().getEntry(path) != null) {
+            failWithRawMessage("'%s' unexpectedly contains '%s'", actual(), path);
         }
     }
 

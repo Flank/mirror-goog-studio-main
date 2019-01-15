@@ -19,7 +19,6 @@ package com.android.tools.device.internal.adb;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
-import com.android.testutils.truth.MoreTruth;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.Test;
 
@@ -32,7 +31,7 @@ public class DeviceHandleTest {
 
         assertThat(handle.getSerial()).isEqualTo("2fe6c14a");
         assertThat(handle.getConnectionState()).isEqualTo(ConnectionState.DEVICE);
-        MoreTruth.assertThat(handle.getDevicePath()).isAbsent();
+        assertThat(handle.getDevicePath().isPresent()).isFalse();
         assertThat(handle.getProduct().get()).isEqualTo("kltexx");
         assertThat(handle.getModel().get()).isEqualTo("SM_G900F");
         assertThat(handle.getDevice().get()).isEqualTo("klte");

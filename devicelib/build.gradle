@@ -9,6 +9,7 @@ dependencies {
     testCompile project(':base:testutils')
     testCompile libs.junit
     testCompile libs.truth
+    testCompile libs.truth_java8_extension
     testCompile libs.mockito_core
     testCompile libs.equalsverifier
     testCompile libs.kotlin_stdlib

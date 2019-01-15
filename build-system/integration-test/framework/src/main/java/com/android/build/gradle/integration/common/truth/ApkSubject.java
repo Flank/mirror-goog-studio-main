@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.integration.common.truth;
 
-import static com.google.common.truth.Truth.assert_;
+import static com.google.common.truth.Truth.assertAbout;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -30,9 +30,11 @@ import com.android.testutils.apk.Apk;
 import com.android.utils.StdLogger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.truth.FailureStrategy;
+import com.google.common.base.Strings;
+import com.google.common.truth.Fact;
+import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.IterableSubject;
-import com.google.common.truth.SubjectFactory;
+import com.google.common.truth.Subject;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -48,14 +50,9 @@ import org.junit.Assert;
 @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
 public final class ApkSubject extends AbstractDexAndroidSubject<ApkSubject, Apk> {
 
-    public static final SubjectFactory<ApkSubject, Apk> FACTORY =
-            new SubjectFactory<ApkSubject, Apk>() {
-                @Override
-                public ApkSubject getSubject(
-                        @NonNull FailureStrategy failureStrategy, @NonNull Apk subject) {
-                    return new ApkSubject(failureStrategy, subject);
-                }
-            };
+    public static Subject.Factory<ApkSubject, Apk> apks() {
+        return ApkSubject::new;
+    }
 
     private static final Pattern PATTERN_MAX_SDK_VERSION =
             Pattern.compile("^maxSdkVersion\\W*:\\W*'(.+)'$");
@@ -64,13 +61,13 @@ public final class ApkSubject extends AbstractDexAndroidSubject<ApkSubject, Apk>
         0x32
     };
 
-    public ApkSubject(@NonNull FailureStrategy failureStrategy, @NonNull Apk subject) {
-        super(failureStrategy, subject);
+    public ApkSubject(@NonNull FailureMetadata failureMetadata, @NonNull Apk subject) {
+        super(failureMetadata, subject);
     }
 
     @NonNull
     public static ApkSubject assertThat(@Nullable Apk apk) {
-        return assert_().about(ApkSubject.FACTORY).that(apk);
+        return assertAbout(apks()).that(apk);
     }
 
     @NonNull
@@ -99,7 +96,7 @@ public final class ApkSubject extends AbstractDexAndroidSubject<ApkSubject, Apk>
 
     @NonNull
     public IterableSubject locales() {
-        File apk = getSubject().getFile().toFile();
+        File apk = actual().getFile().toFile();
         List<String> locales = ApkHelper.getLocales(apk);
 
         if (locales == null) {
@@ -110,7 +107,7 @@ public final class ApkSubject extends AbstractDexAndroidSubject<ApkSubject, Apk>
     }
 
     public void hasPackageName(@NonNull String packageName) {
-        Path apk = getSubject().getFile();
+        Path apk = actual().getFile();
 
         ApkInfoParser.ApkInfo apkInfo = getApkInfo(apk);
 
@@ -122,13 +119,13 @@ public final class ApkSubject extends AbstractDexAndroidSubject<ApkSubject, Apk>
     }
 
     public void hasVersionCode(int versionCode) {
-        Path apk = getSubject().getFile();
+        Path apk = actual().getFile();
 
         ApkInfoParser.ApkInfo apkInfo = getApkInfo(apk);
 
         Integer actualVersionCode = apkInfo.getVersionCode();
         if (actualVersionCode == null) {
-            failWithRawMessage("Unable to query %s for versionCode", getDisplaySubject());
+            failWithRawMessage("Unable to query %s for versionCode", actualAsString());
         }
 
         if (!apkInfo.getVersionCode().equals(versionCode)) {
@@ -137,7 +134,7 @@ public final class ApkSubject extends AbstractDexAndroidSubject<ApkSubject, Apk>
     }
 
     public void hasManifestContent(Pattern pattern) {
-        Path apk = getSubject().getFile();
+        Path apk = actual().getFile();
 
         List<String> manifestContent = getManifestContent(apk);
         Optional<String> matchingLine =
@@ -152,13 +149,13 @@ public final class ApkSubject extends AbstractDexAndroidSubject<ApkSubject, Apk>
     }
 
     public void hasVersionName(@NonNull String versionName) {
-        Path apk = getSubject().getFile();
+        Path apk = actual().getFile();
 
         ApkInfoParser.ApkInfo apkInfo = getApkInfo(apk);
 
         String actualVersionName = apkInfo.getVersionName();
         if (actualVersionName == null) {
-            failWithRawMessage("Unable to query %s for versionName", getDisplaySubject());
+            failWithRawMessage("Unable to query %s for versionName", actualAsString());
         }
 
         if (!apkInfo.getVersionName().equals(versionName)) {
@@ -168,7 +165,7 @@ public final class ApkSubject extends AbstractDexAndroidSubject<ApkSubject, Apk>
 
     public void hasMaxSdkVersion(int maxSdkVersion) {
 
-        List<String> output = ApkHelper.getApkBadging(getSubject().getFile().toFile());
+        List<String> output = ApkHelper.getApkBadging(actual().getFile().toFile());
 
         checkMaxSdkVersion(output, maxSdkVersion);
     }
@@ -200,7 +197,7 @@ public final class ApkSubject extends AbstractDexAndroidSubject<ApkSubject, Apk>
         // APK Signing Block magic bitstring. If the string is there in the file, it's assumed to
         // contain an APK Signing Block.
         try {
-            byte[] contents = Files.readAllBytes(getSubject().getFile());
+            byte[] contents = Files.readAllBytes(actual().getFile());
             outer:
             for (int contentsOffset = contents.length - APK_SIG_BLOCK_MAGIC.length;
                     contentsOffset >= 0; contentsOffset--) {
@@ -217,7 +214,7 @@ public final class ApkSubject extends AbstractDexAndroidSubject<ApkSubject, Apk>
             return false;
         } catch (IOException e) {
             throw new UncheckedIOException(
-                    "Failed to check for APK Signing Block presence in " + getSubject(), e);
+                    "Failed to check for APK Signing Block presence in " + actual(), e);
         }
     }
 
@@ -234,16 +231,16 @@ public final class ApkSubject extends AbstractDexAndroidSubject<ApkSubject, Apk>
                     }
                     return;
                 } catch (NumberFormatException e) {
-                    failureStrategy.fail(
-                            String.format(
-                                    "maxSdkVersion in badging for %s is not a number: %s",
-                                    getDisplaySubject(), actual),
-                            e);
+                    failWithActual(
+                            Fact.simpleFact(
+                                    Strings.lenientFormat(
+                                            "maxSdkVersion in badging for %s is not a number: %s",
+                                            actualAsString(), actual, e)));
                 }
             }
         }
 
-        failWithRawMessage("maxSdkVersion not found in badging output for %s", getDisplaySubject());
+        failWithRawMessage("maxSdkVersion not found in badging output for %s", actualAsString());
     }
 
 }

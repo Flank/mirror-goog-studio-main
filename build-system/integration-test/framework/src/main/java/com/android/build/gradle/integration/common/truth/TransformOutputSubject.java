@@ -20,41 +20,30 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.app.TransformOutputContent;
 import com.android.build.gradle.internal.pipeline.SubStream;
-import com.google.common.truth.FailureStrategy;
+import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
-import com.google.common.truth.SubjectFactory;
 
 public class TransformOutputSubject
         extends Subject<TransformOutputSubject, TransformOutputContent> {
 
-    static class Factory extends SubjectFactory<TransformOutputSubject, TransformOutputContent> {
-        @NonNull
-        public static Factory get() {
-            return new Factory();
-        }
-
-        private Factory() {}
-
-        @Override
-        public TransformOutputSubject getSubject(
-                @NonNull FailureStrategy failureStrategy, @NonNull TransformOutputContent subject) {
-            return new TransformOutputSubject(failureStrategy, subject);
-        }
+    public static Subject.Factory<TransformOutputSubject, TransformOutputContent>
+            transformOutputs() {
+        return TransformOutputSubject::new;
     }
 
     TransformOutputSubject(
-            @NonNull FailureStrategy failureStrategy, @NonNull TransformOutputContent subject) {
-        super(failureStrategy, subject);
+            @NonNull FailureMetadata failureMetadata, @NonNull TransformOutputContent subject) {
+        super(failureMetadata, subject);
     }
 
     /** Attests (with a side-effect failure) that the subject contains the supplied item. */
     public final void containsByName(@Nullable String name) {
-        for (SubStream subStream : getSubject()) {
+        for (SubStream subStream : actual()) {
             if (subStream.getName().equals(name)) {
                 return;
             }
         }
 
-        failWithRawMessage("%s should have contained stream named <%s>", getDisplaySubject(), name);
+        failWithRawMessage("%s should have contained stream named <%s>", actualAsString(), name);
     }
 }

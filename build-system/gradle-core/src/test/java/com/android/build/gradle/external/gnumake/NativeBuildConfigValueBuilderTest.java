@@ -30,11 +30,12 @@
  */
 package com.android.build.gradle.external.gnumake;
 
+import static com.google.common.truth.Truth.assertAbout;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue;
 import com.android.build.gradle.truth.NativeBuildConfigValueSubject;
-import com.google.common.truth.Truth;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.io.File;
@@ -64,8 +65,9 @@ public class NativeBuildConfigValueBuilderTest {
         NativeBuildConfigValue expectedValue =
                 new Gson().fromJson(expected, NativeBuildConfigValue.class);
 
-        Truth.assert_().about(NativeBuildConfigValueSubject.FACTORY)
-                .that(actualValue).isEqualTo(expectedValue);
+        assertAbout(NativeBuildConfigValueSubject.nativebuildConfigValues())
+                .that(actualValue)
+                .isEqualTo(expectedValue);
     }
 
     @Test

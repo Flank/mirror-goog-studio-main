@@ -54,11 +54,4 @@ public class MoreTruth {
     public static DexSubject assertThat(@Nullable Dex dex) {
         return DexSubject.assertThat(dex);
     }
-
-    @NonNull
-    public static <T> Java8OptionalSubject<T> assertThat(
-            @SuppressWarnings("OptionalUsedAsFieldOrParameterType") @NonNull
-                    java.util.Optional<T> optional) {
-        return Java8OptionalSubject.assertThat(optional);
-    }
 }

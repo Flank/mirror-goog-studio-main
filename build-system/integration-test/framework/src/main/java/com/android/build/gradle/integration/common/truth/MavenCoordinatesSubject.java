@@ -20,34 +20,19 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.MavenCoordinates;
 import com.google.common.base.Preconditions;
-import com.google.common.truth.FailureStrategy;
+import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
-import com.google.common.truth.SubjectFactory;
 
 
 public class MavenCoordinatesSubject extends Subject<MavenCoordinatesSubject, MavenCoordinates> {
 
-    static class Factory extends
-            SubjectFactory<MavenCoordinatesSubject, MavenCoordinates> {
-        @NonNull
-        public static Factory get() {
-            return new Factory();
-        }
-
-        private Factory() {}
-
-        @Override
-        public MavenCoordinatesSubject getSubject(
-                @NonNull FailureStrategy failureStrategy,
-                @NonNull MavenCoordinates subject) {
-            return new MavenCoordinatesSubject(failureStrategy, subject);
-        }
+    public static Subject.Factory<MavenCoordinatesSubject, MavenCoordinates> mavenCoordinates() {
+        return MavenCoordinatesSubject::new;
     }
 
     public MavenCoordinatesSubject(
-            @NonNull FailureStrategy failureStrategy,
-            @NonNull MavenCoordinates subject) {
-        super(failureStrategy, subject);
+            @NonNull FailureMetadata failureMetadata, @NonNull MavenCoordinates subject) {
+        super(failureMetadata, subject);
     }
 
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
@@ -64,41 +49,47 @@ public class MavenCoordinatesSubject extends Subject<MavenCoordinatesSubject, Ma
             @Nullable String classifier) {
         Preconditions.checkState(groupId != null || artifactId != null || version != null || packaging != null || classifier != null);
 
-        MavenCoordinates coordinates = getSubject();
+        MavenCoordinates coordinates = actual();
 
         if (groupId != null && !groupId.equals(coordinates.getGroupId())) {
-            failWithRawMessage("Not true that groupId of %s is equal to %s. It is %s",
-                    getDisplaySubject(), groupId, coordinates.getGroupId());
+            failWithRawMessage(
+                    "Not true that groupId of %s is equal to %s. It is %s",
+                    actualAsString(), groupId, coordinates.getGroupId());
         }
 
         if (artifactId != null && !artifactId.equals(coordinates.getArtifactId())) {
-            failWithRawMessage("Not true that artifactId of %s is equal to %s. It is %s",
-                    getDisplaySubject(), artifactId, coordinates.getArtifactId());
+            failWithRawMessage(
+                    "Not true that artifactId of %s is equal to %s. It is %s",
+                    actualAsString(), artifactId, coordinates.getArtifactId());
         }
 
         if (version != null && !version.equals(coordinates.getVersion())) {
-            failWithRawMessage("Not true that version of %s is equal to %s. It is %s",
-                    getDisplaySubject(), version, coordinates.getVersion());
+            failWithRawMessage(
+                    "Not true that version of %s is equal to %s. It is %s",
+                    actualAsString(), version, coordinates.getVersion());
         }
 
         if (packaging != null && !packaging.equals(coordinates.getPackaging())) {
-            failWithRawMessage("Not true that packaging of %s is equal to %s. It is %s",
-                    getDisplaySubject(), packaging, coordinates.getPackaging());
+            failWithRawMessage(
+                    "Not true that packaging of %s is equal to %s. It is %s",
+                    actualAsString(), packaging, coordinates.getPackaging());
         }
 
         if (classifier != null && !classifier.equals(coordinates.getClassifier())) {
-            failWithRawMessage("Not true that classifier of %s is equal to %s. It is %s",
-                    getDisplaySubject(), classifier, coordinates.getClassifier());
+            failWithRawMessage(
+                    "Not true that classifier of %s is equal to %s. It is %s",
+                    actualAsString(), classifier, coordinates.getClassifier());
         }
     }
 
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
     public void hasVersion(@NonNull String version) {
-        MavenCoordinates coordinates = getSubject();
+        MavenCoordinates coordinates = actual();
 
         if (!version.equals(coordinates.getVersion())) {
-            failWithRawMessage("Not true that version of %s is equal to %s. It is %s",
-                    getDisplaySubject(), version, coordinates.getVersion());
+            failWithRawMessage(
+                    "Not true that version of %s is equal to %s. It is %s",
+                    actualAsString(), version, coordinates.getVersion());
         }
     }
 }

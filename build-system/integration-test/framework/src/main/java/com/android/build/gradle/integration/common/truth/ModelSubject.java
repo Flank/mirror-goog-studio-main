@@ -16,17 +16,16 @@
 
 package com.android.build.gradle.integration.common.truth;
 
-import static com.google.common.truth.Truth.assert_;
+import static com.android.build.gradle.integration.common.truth.IssueSubject.issues;
+import static com.google.common.truth.Truth.assertAbout;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.android.testutils.truth.IndirectSubject;
 import com.google.common.collect.Iterables;
-import com.google.common.truth.FailureStrategy;
+import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
-import com.google.common.truth.SubjectFactory;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
@@ -35,40 +34,22 @@ import java.util.stream.Collectors;
  */
 public class ModelSubject extends Subject<ModelSubject, AndroidProject> {
 
-    static class Factory extends SubjectFactory<ModelSubject, AndroidProject> {
-
-        @NonNull
-        public static Factory get() {
-            return new Factory();
-        }
-
-        private Factory() {}
-
-        @Override
-        public ModelSubject getSubject(
-                @NonNull FailureStrategy failureStrategy,
-                @NonNull AndroidProject subject) {
-            return new ModelSubject(failureStrategy, subject);
-        }
+    public static Subject.Factory<ModelSubject, AndroidProject> models() {
+        return ModelSubject::new;
     }
 
-    public ModelSubject(
-            @NonNull FailureStrategy failureStrategy,
-            @NonNull AndroidProject subject) {
-        super(failureStrategy, subject);
+    public static ModelSubject assertThat(AndroidProject androidProject) {
+        return assertAbout(models()).that(androidProject);
     }
 
-    @NonNull
-    public static ModelSubject assertThat(@Nullable AndroidProject androidProject) {
-        return assert_().about(ModelSubject.Factory.get()).that(androidProject);
+    public ModelSubject(@NonNull FailureMetadata failureMetadata, @NonNull AndroidProject subject) {
+        super(failureMetadata, subject);
     }
 
     public void hasIssueSize(int size) {
-        Collection<SyncIssue> issues = getSubject().getSyncIssues();
+        Collection<SyncIssue> issues = actual().getSyncIssues();
 
-        check().that(issues)
-                .named("Issue count for project " + getSubject().getName())
-                .hasSize(size);
+        check().that(issues).named("Issue count for project " + actual().getName()).hasSize(size);
     }
 
     /**
@@ -81,14 +62,14 @@ public class ModelSubject extends Subject<ModelSubject, AndroidProject> {
      */
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
     public SyncIssue hasSingleIssue(int severity, int type) {
-        Collection<SyncIssue> subject = getSubject().getSyncIssues();
+        Collection<SyncIssue> subject = actual().getSyncIssues();
 
         check().that(subject).hasSize(1);
 
         SyncIssue issue = subject.iterator().next();
-        check().that(issue).isNotNull();
-        check().that(issue).hasSeverity(severity);
-        check().that(issue).hasType(type);
+        IssueSubject.assertThat(issue).isNotNull();
+        IssueSubject.assertThat(issue).hasSeverity(severity);
+        IssueSubject.assertThat(issue).hasType(type);
 
         return issue;
     }
@@ -111,10 +92,10 @@ public class ModelSubject extends Subject<ModelSubject, AndroidProject> {
         check().that(syncIssues).hasSize(1);
 
         SyncIssue issue = Iterables.getOnlyElement(syncIssues);
-        check().that(issue).isNotNull();
-        check().that(issue).hasType(type);
+        IssueSubject.assertThat(issue).isNotNull();
+        IssueSubject.assertThat(issue).hasType(type);
 
-        return () -> new IssueSubject(failureStrategy, issue);
+        return () -> IssueSubject.assertThat(issue);
     }
 
     /**
@@ -128,15 +109,15 @@ public class ModelSubject extends Subject<ModelSubject, AndroidProject> {
      */
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
     public SyncIssue hasSingleIssue(int severity, int type, String data) {
-        Collection<SyncIssue> subject = getSubject().getSyncIssues();
+        Collection<SyncIssue> subject = actual().getSyncIssues();
 
         check().that(subject).hasSize(1);
 
         SyncIssue issue = subject.iterator().next();
-        check().that(issue).isNotNull();
-        check().that(issue).hasSeverity(severity);
-        check().that(issue).hasType(type);
-        check().that(issue).hasData(data);
+        IssueSubject.assertThat(issue).isNotNull();
+        IssueSubject.assertThat(issue).hasSeverity(severity);
+        IssueSubject.assertThat(issue).hasType(type);
+        IssueSubject.assertThat(issue).hasData(data);
 
         return issue;
     }
@@ -151,16 +132,16 @@ public class ModelSubject extends Subject<ModelSubject, AndroidProject> {
      */
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
     public void hasSingleIssue(int severity, int type, String data, String message) {
-        Collection<SyncIssue> subject = getSubject().getSyncIssues();
+        Collection<SyncIssue> subject = actual().getSyncIssues();
 
         check().that(subject).hasSize(1);
 
         SyncIssue issue = subject.iterator().next();
-        check().that(issue).isNotNull();
-        check().that(issue).hasSeverity(severity);
-        check().that(issue).hasType(type);
-        check().that(issue).hasData(data);
-        check().that(issue).hasMessage(message);
+        IssueSubject.assertThat(issue).isNotNull();
+        IssueSubject.assertThat(issue).hasSeverity(severity);
+        IssueSubject.assertThat(issue).hasType(type);
+        IssueSubject.assertThat(issue).hasData(data);
+        IssueSubject.assertThat(issue).hasMessage(message);
     }
 
     /**
@@ -173,7 +154,7 @@ public class ModelSubject extends Subject<ModelSubject, AndroidProject> {
      */
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
     public SyncIssue hasIssue(int severity, int type) {
-        Collection<SyncIssue> subject = getSubject().getSyncIssues();
+        Collection<SyncIssue> subject = actual().getSyncIssues();
 
         for (SyncIssue issue : subject) {
             if (severity == issue.getSeverity() &&
@@ -182,8 +163,7 @@ public class ModelSubject extends Subject<ModelSubject, AndroidProject> {
             }
         }
 
-        failWithRawMessage("'%s' does not contain <%s / %s>", getDisplaySubject(),
-                severity, type);
+        failWithRawMessage("'%s' does not contain <%s / %s>", actualAsString(), severity, type);
         // won't reach
         return null;
     }
@@ -199,7 +179,7 @@ public class ModelSubject extends Subject<ModelSubject, AndroidProject> {
      */
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
     public SyncIssue hasIssue(int severity, int type, String data) {
-        Collection<SyncIssue> subject = getSubject().getSyncIssues();
+        Collection<SyncIssue> subject = actual().getSyncIssues();
 
         for (SyncIssue issue : subject) {
             if (severity == issue.getSeverity() &&
@@ -209,14 +189,9 @@ public class ModelSubject extends Subject<ModelSubject, AndroidProject> {
             }
         }
 
-        failWithRawMessage("'%s' does not contain <%s / %s / %s>", getDisplaySubject(),
-                severity, type, data);
+        failWithRawMessage(
+                "'%s' does not contain <%s / %s / %s>", actualAsString(), severity, type, data);
         // won't reach
         return null;
-    }
-
-    @Override
-    public CustomTestVerb check() {
-        return new CustomTestVerb(failureStrategy);
     }
 }

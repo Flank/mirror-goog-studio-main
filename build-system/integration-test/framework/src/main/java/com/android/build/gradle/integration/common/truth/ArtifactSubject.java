@@ -18,31 +18,17 @@ package com.android.build.gradle.integration.common.truth;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.AndroidArtifact;
-import com.google.common.truth.FailureStrategy;
+import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
-import com.google.common.truth.SubjectFactory;
 
 public class ArtifactSubject extends Subject<ArtifactSubject, AndroidArtifact> {
 
-    static class Factory extends SubjectFactory<ArtifactSubject, AndroidArtifact> {
-        @NonNull
-        public static Factory get() {
-            return new Factory();
-        }
-
-        private Factory() {}
-
-        @Override
-        public ArtifactSubject getSubject(
-                @NonNull FailureStrategy failureStrategy,
-                @NonNull AndroidArtifact subject) {
-            return new ArtifactSubject(failureStrategy, subject);
-        }
+    public static Subject.Factory<ArtifactSubject, AndroidArtifact> artifacts() {
+        return ArtifactSubject::new;
     }
 
     public ArtifactSubject(
-            @NonNull FailureStrategy failureStrategy,
-            @NonNull AndroidArtifact subject) {
-        super(failureStrategy, subject);
+            @NonNull FailureMetadata failureMetadata, @NonNull AndroidArtifact subject) {
+        super(failureMetadata, subject);
     }
 }

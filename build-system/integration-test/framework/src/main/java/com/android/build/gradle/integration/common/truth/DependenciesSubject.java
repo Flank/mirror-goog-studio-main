@@ -19,35 +19,19 @@ package com.android.build.gradle.integration.common.truth;
 import com.android.annotations.NonNull;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.Dependencies;
-import com.google.common.truth.FailureStrategy;
+import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
-import com.google.common.truth.SubjectFactory;
 import java.util.Collection;
-
 
 public class DependenciesSubject extends Subject<DependenciesSubject, Dependencies> {
 
-    static class Factory extends
-            SubjectFactory<DependenciesSubject, Dependencies> {
-        @NonNull
-        public static Factory get() {
-            return new Factory();
-        }
-
-        private Factory() {}
-
-        @Override
-        public DependenciesSubject getSubject(
-                @NonNull FailureStrategy failureStrategy,
-                @NonNull Dependencies subject) {
-            return new DependenciesSubject(failureStrategy, subject);
-        }
+    public static Subject.Factory<DependenciesSubject, Dependencies> dependencies() {
+        return DependenciesSubject::new;
     }
 
     public DependenciesSubject(
-            @NonNull FailureStrategy failureStrategy,
-            @NonNull Dependencies subject) {
-        super(failureStrategy, subject);
+            @NonNull FailureMetadata failureMetadata, @NonNull Dependencies subject) {
+        super(failureMetadata, subject);
     }
 
     /**
@@ -57,7 +41,7 @@ public class DependenciesSubject extends Subject<DependenciesSubject, Dependenci
      */
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
     public AndroidLibrary hasOneLibrary() {
-        Collection<AndroidLibrary> libs = getSubject().getLibraries();
+        Collection<AndroidLibrary> libs = actual().getLibraries();
 
         check().that(libs).hasSize(1);
 

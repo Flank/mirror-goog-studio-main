@@ -32,6 +32,7 @@ import com.android.builder.model.VariantBuildOutput;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
+import com.google.common.truth.Truth8;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -164,7 +165,7 @@ public class JarJarLibTest {
             List<MethodNode> methods = mainTestClassNode.methods;
             Optional<MethodNode> onCreateMethod =
                     methods.stream().filter(p -> p.name.equals("onCreate")).findFirst();
-            assertThat(onCreateMethod).named("onCreate method").isPresent();
+            Truth8.assertThat(onCreateMethod).named("onCreate method").isPresent();
 
             // find the new instruction, and verify it's using the repackaged Gson.
             TypeInsnNode newInstruction = null;

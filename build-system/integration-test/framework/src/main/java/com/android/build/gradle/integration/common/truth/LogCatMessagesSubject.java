@@ -21,26 +21,20 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.Logcat;
 import com.android.ddmlib.logcat.LogCatMessage;
 import com.google.common.base.MoreObjects;
-import com.google.common.truth.FailureStrategy;
+import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
-import com.google.common.truth.SubjectFactory;
 import java.util.function.Predicate;
 
 @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
 public class LogCatMessagesSubject extends Subject<LogCatMessagesSubject, Logcat> {
 
-    public static final SubjectFactory<LogCatMessagesSubject, Logcat> FACTORY =
-            new SubjectFactory<LogCatMessagesSubject, Logcat>() {
-                @Override
-                public LogCatMessagesSubject getSubject(FailureStrategy fs, Logcat that) {
-                    return new LogCatMessagesSubject(fs, that);
-                }
-            };
+    public static Subject.Factory<LogCatMessagesSubject, Logcat> logCatMessages() {
+        return LogCatMessagesSubject::new;
+    }
 
     public LogCatMessagesSubject(
-            @NonNull FailureStrategy failureStrategy,
-            @Nullable Logcat subject) {
-        super(failureStrategy, subject);
+            @NonNull FailureMetadata failureMetadata, @Nullable Logcat subject) {
+        super(failureMetadata, subject);
     }
 
 
@@ -57,17 +51,17 @@ public class LogCatMessagesSubject extends Subject<LogCatMessagesSubject, Logcat
     }
 
     @Override
-    protected String getDisplaySubject() {
-        if (getSubject() == null) {
-            return super.getDisplaySubject();
+    protected String actualCustomStringRepresentation() {
+        if (actual() == null) {
+            return super.actualCustomStringRepresentation();
         }
-        return MoreObjects.toStringHelper(getSubject())
-                .addValue(getSubject().getFilteredLogCatMessages())
+        return MoreObjects.toStringHelper(actual())
+                .addValue(actual().getFilteredLogCatMessages())
                 .toString();
     }
 
     private boolean containsMessageThatMatches(@NonNull Predicate<LogCatMessage> predicate) {
-        for (LogCatMessage message : getSubject().getFilteredLogCatMessages()) {
+        for (LogCatMessage message : actual().getFilteredLogCatMessages()) {
             if (predicate.test(message)) {
                 return true;
             }

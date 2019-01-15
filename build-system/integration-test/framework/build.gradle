@@ -39,6 +39,7 @@ dependencies {
     compile libs.protobuf
     compile libs.protobuf_util
     compile libs.truth
+    compile libs.truth_java8_extension
 
     testCompile libs.mockito_core
 

@@ -16,67 +16,58 @@
 
 package com.android.build.gradle.integration.common.truth;
 
+import static com.google.common.truth.Truth.assertAbout;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.SyncIssue;
 import com.google.common.base.Objects;
-import com.google.common.truth.FailureStrategy;
+import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
-import com.google.common.truth.SubjectFactory;
 import java.util.List;
 
 public class IssueSubject extends Subject<IssueSubject, SyncIssue> {
 
-    static class Factory extends SubjectFactory<IssueSubject, SyncIssue> {
-        @NonNull
-        public static Factory get() {
-            return new Factory();
-        }
-
-        private Factory() {}
-
-        @Override
-        public IssueSubject getSubject(
-                @NonNull FailureStrategy failureStrategy,
-                @NonNull SyncIssue subject) {
-            return new IssueSubject(failureStrategy, subject);
-        }
+    public static Subject.Factory<IssueSubject, SyncIssue> issues() {
+        return IssueSubject::new;
     }
 
-    public IssueSubject(
-            @NonNull FailureStrategy failureStrategy,
-            @NonNull SyncIssue subject) {
-        super(failureStrategy, subject);
+    public static IssueSubject assertThat(SyncIssue issue) {
+        return assertAbout(issues()).that(issue);
+    }
+
+    public IssueSubject(@NonNull FailureMetadata failureMetadata, @NonNull SyncIssue subject) {
+        super(failureMetadata, subject);
     }
 
     public void hasSeverity(int severity) {
-        if (severity != getSubject().getSeverity()) {
-            failWithBadResults("has severity", severity, "is", getSubject().getSeverity());
+        if (severity != actual().getSeverity()) {
+            failWithBadResults("has severity", severity, "is", actual().getSeverity());
         }
     }
 
     public void hasType(int type) {
-        if (type != getSubject().getType()) {
-            failWithBadResults("has type", type, "is", getSubject().getType());
+        if (type != actual().getType()) {
+            failWithBadResults("has type", type, "is", actual().getType());
         }
     }
 
     public void hasData(@Nullable String data) {
-        if (!Objects.equal(data, getSubject().getData())) {
-            failWithBadResults("has data", data, "is", getSubject().getData());
+        if (!Objects.equal(data, actual().getData())) {
+            failWithBadResults("has data", data, "is", actual().getData());
         }
     }
 
     public void hasMessage(@Nullable String message) {
-        if (!Objects.equal(message, getSubject().getMessage())) {
-            failWithBadResults("has message", message, "is", getSubject().getMessage());
+        if (!Objects.equal(message, actual().getMessage())) {
+            failWithBadResults("has message", message, "is", actual().getMessage());
         }
     }
 
     public void hasMultiLineMessage(@NonNull List<String> lines) {
-        if (!Objects.equal(lines, getSubject().getMultiLineMessage())) {
+        if (!Objects.equal(lines, actual().getMultiLineMessage())) {
             failWithBadResults(
-                    "has multi-line message", lines, "is", getSubject().getMultiLineMessage());
+                    "has multi-line message", lines, "is", actual().getMultiLineMessage());
         }
     }
 
@@ -88,15 +79,16 @@ public class IssueSubject extends Subject<IssueSubject, SyncIssue> {
     }
 
     @Override
-    protected String getDisplaySubject() {
-        String name = (internalCustomName() == null) ? "" : "\"" + this.internalCustomName() + "\" ";
+    protected String actualCustomStringRepresentation() {
 
-        SyncIssue issue = getSubject();
+        SyncIssue issue = actual();
         String fullName =
                 String.format(
                         "%d|%d|%s|%s",
                         issue.getSeverity(), issue.getType(), issue.getData(), issue.getMessage());
 
-        return name + "<" + fullName + ">";
+        return (internalCustomName() == null)
+                ? fullName
+                : "\"" + this.internalCustomName() + "\" <" + fullName + ">";
     }
 }

@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.library;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 import static com.android.testutils.truth.DexSubject.assertThat;
-import static com.android.testutils.truth.Java8OptionalSubject.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
@@ -44,6 +43,7 @@ import com.android.testutils.apk.Dex;
 import com.android.testutils.apk.SplitApks;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import com.google.common.truth.Truth8;
 import java.io.IOException;
 import java.util.Optional;
 import org.jf.dexlib2.dexbacked.DexBackedClassDef;
@@ -86,7 +86,7 @@ public class JacocoDependenciesTest {
         assertThat(apk.getFile()).isFile();
 
         Optional<Dex> dexOptional = apk.getMainDexFile();
-        assertThat(dexOptional).isPresent();
+        Truth8.assertThat(dexOptional).isPresent();
 
         // noinspection ConstantConditions
         assertThat(dexOptional.get()).containsClasses("Lorg/jacoco/agent/rt/IAgent;");

@@ -25,11 +25,11 @@ import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
 import com.android.utils.FileUtils;
 import com.google.common.io.Files;
+import com.google.common.truth.Truth8;
 import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
 import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -57,13 +57,6 @@ public class AarWithLocalJarsTest {
     @ClassRule
     public static GradleTestProject util =
             GradleTestProject.builder().fromTestProject("repo/util").withName("util").create();
-
-    @BeforeClass
-    public static void setUp() throws IOException {
-        // Clean testRepo
-        File testRepo = new File(app.getTestDir(), "../testrepo");
-        //FileUtils.deleteIfExists(testRepo);
-    }
 
     @AfterClass
     public static void cleanUp() {
@@ -99,7 +92,7 @@ public class AarWithLocalJarsTest {
         assertThat(apk.getFile()).isFile();
         // check it contains classes from both the AAR's own code and from the local jar inside the AAR.
         final Optional<Dex> mainDexFile = apk.getMainDexFile();
-        assertThat(mainDexFile).isPresent();
+        Truth8.assertThat(mainDexFile).isPresent();
         //noinspection OptionalGetWithoutIsPresent
         assertThat(mainDexFile.get())
                 .containsClasses(

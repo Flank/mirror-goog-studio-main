@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.databinding;
 
 import static com.android.build.gradle.integration.common.truth.AarSubject.assertThat;
 import static com.android.build.gradle.integration.common.truth.ApkSubject.assertThat;
-import static com.android.testutils.truth.Java8OptionalSubject.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
@@ -30,6 +29,7 @@ import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
 import com.android.testutils.truth.MoreTruth;
 import com.google.common.base.Joiner;
+import com.google.common.truth.Truth8;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -114,7 +114,7 @@ public class DataBindingTest {
             Apk testApk = project.getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG);
             assertThat(testApk.getFile()).isFile();
             Optional<Dex> dexOptional = testApk.getMainDexFile();
-            assertThat(dexOptional).isPresent();
+            Truth8.assertThat(dexOptional).isPresent();
             MoreTruth.assertThat(dexOptional.get()).containsClass(bindingClass);
             if (myUseV2) {
                 MoreTruth.assertThat(dexOptional.get()).containsClass(implClass);

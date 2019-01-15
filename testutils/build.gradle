@@ -14,6 +14,7 @@ dependencies {
     compile libs.easymock
     compile libs.mockito_core
     compile libs.truth
+    compile libs.truth_java8_extension
     compile libs.jimfs
     compile(libs.smali_dexlib) {
         // commons-cli is not needed as we're not using dexlib from the command line.

@@ -24,7 +24,6 @@ import com.android.tools.device.internal.adb.AdbVersion;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
@@ -40,7 +39,7 @@ public class OsProcessRunnerTest {
 
     @Test
     public void getBaseName_windows() {
-        assume().withFailureMessage("Is Windows?").that(isWindows()).isTrue();
+        assume().withMessage("Is Windows?").that(isWindows()).isTrue();
         assertThat(OsProcessRunner.getBaseName(ImmutableList.of("C:\\path\\to\\adb.exe")))
                 .isEqualTo("adb.exe");
     }
@@ -51,7 +50,7 @@ public class OsProcessRunnerTest {
 
     @Test
     public void getBaseName_unix() {
-        assume().withFailureMessage("Is Unix?").that(isWindows()).isFalse();
+        assume().withMessage("Is Unix?").that(isWindows()).isFalse();
         assertThat(OsProcessRunner.getBaseName(ImmutableList.of("/path/to/adb"))).isEqualTo("adb");
     }
 
@@ -90,8 +89,7 @@ public class OsProcessRunnerTest {
     }
 
     @Test
-    public void waitFor_neverEndingProcess()
-            throws IOException, InterruptedException, URISyntaxException {
+    public void waitFor_neverEndingProcess() throws IOException, InterruptedException {
         File script = TestResources.getFile(OsProcessRunnerTest.class, "/process/yes.py");
 
         // first, lets make sure we can exec the script properly

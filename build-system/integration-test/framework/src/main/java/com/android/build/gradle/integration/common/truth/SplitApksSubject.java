@@ -16,15 +16,16 @@
 
 package com.android.build.gradle.integration.common.truth;
 
+import static com.google.common.truth.Truth.assertAbout;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.testutils.apk.SplitApks;
 import com.android.testutils.truth.DexClassSubject;
 import com.android.testutils.truth.IndirectSubject;
 import com.google.common.base.Preconditions;
-import com.google.common.truth.FailureStrategy;
+import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
-import com.google.common.truth.SubjectFactory;
 import java.io.IOException;
 import java.util.stream.Collectors;
 import org.jf.dexlib2.dexbacked.DexBackedClassDef;
@@ -33,36 +34,33 @@ import org.jf.dexlib2.dexbacked.DexBackedClassDef;
 @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
 public final class SplitApksSubject extends Subject<SplitApksSubject, SplitApks> {
 
-    public static final SubjectFactory<SplitApksSubject, SplitApks> FACTORY =
-            new SubjectFactory<SplitApksSubject, SplitApks>() {
-                @Override
-                public SplitApksSubject getSubject(
-                        @NonNull FailureStrategy failureStrategy, @NonNull SplitApks subject) {
-                    return new SplitApksSubject(failureStrategy, subject);
-                }
-            };
+    public static Subject.Factory<SplitApksSubject, SplitApks> splitApks() {
+        return SplitApksSubject::new;
+    }
 
-    private SplitApksSubject(FailureStrategy failureStrategy, SplitApks subject) {
-        super(failureStrategy, subject);
+    private SplitApksSubject(@NonNull FailureMetadata failureMetadata, SplitApks subject) {
+        super(failureMetadata, subject);
     }
 
     public IndirectSubject<DexClassSubject> hasClass(@NonNull String name) throws IOException {
-        Preconditions.checkNotNull(getSubject());
-        @Nullable DexBackedClassDef foundClass = getSubject().getAllClasses().get(name);
+        Preconditions.checkNotNull(actual());
+        @Nullable DexBackedClassDef foundClass = actual().getAllClasses().get(name);
         if (foundClass == null) {
             failWithRawMessage(
                     "%s does not contain class %s.\n Classes: \n    %s",
-                    getSubject(),
+                    actual(),
                     name,
-                    getSubject().getAllClasses().keySet().stream()
+                    actual().getAllClasses()
+                            .keySet()
+                            .stream()
                             .collect(Collectors.joining("\n    ")));
         }
-        return () -> DexClassSubject.FACTORY.getSubject(failureStrategy, foundClass);
+        return () -> assertAbout(DexClassSubject.dexClasses()).that(foundClass);
     }
 
     public void hasSize(int expectedSize) {
-        if (getSubject().size() != expectedSize) {
-            failWithBadResults("has a size of", expectedSize, "is", getSubject().size());
+        if (actual().size() != expectedSize) {
+            failWithBadResults("has a size of", expectedSize, "is", actual().size());
         }
     }
 }

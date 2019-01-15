@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.common.truth;
 
+import static com.google.common.truth.Truth.assertAbout;
 import static com.google.common.truth.Truth.assert_;
 
 import com.android.annotations.NonNull;
@@ -33,7 +34,6 @@ import com.android.builder.model.Variant;
 import com.android.testutils.apk.Aar;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.SplitApks;
-import com.android.testutils.truth.Java8OptionalSubject;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Optional;
 import com.google.common.collect.ListMultimap;
@@ -47,7 +47,6 @@ import com.google.common.truth.ClassSubject;
 import com.google.common.truth.ComparableSubject;
 import com.google.common.truth.DefaultSubject;
 import com.google.common.truth.DoubleSubject;
-import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.GuavaOptionalSubject;
 import com.google.common.truth.IntegerSubject;
 import com.google.common.truth.IterableSubject;
@@ -65,11 +64,10 @@ import com.google.common.truth.PrimitiveFloatArraySubject;
 import com.google.common.truth.PrimitiveIntArraySubject;
 import com.google.common.truth.PrimitiveLongArraySubject;
 import com.google.common.truth.SetMultimapSubject;
+import com.google.common.truth.StandardSubjectBuilder;
 import com.google.common.truth.StringSubject;
 import com.google.common.truth.Subject;
-import com.google.common.truth.SubjectFactory;
 import com.google.common.truth.TableSubject;
-import com.google.common.truth.TestVerb;
 import com.google.common.truth.ThrowableSubject;
 import java.io.File;
 import java.io.IOException;
@@ -86,7 +84,7 @@ public class TruthHelper {
 
     @NonNull
     public static NativeLibrarySubject assertThatNativeLib(@Nullable File file) {
-        return assert_().about(NativeLibrarySubject.FACTORY).that(file);
+        return assertAbout(NativeLibrarySubject.nativeLibraries()).that(file);
     }
 
     @NonNull
@@ -100,17 +98,17 @@ public class TruthHelper {
 
     @NonNull
     public static ApkSubject assertThatApk(@Nullable Apk apk) {
-        return assert_().about(ApkSubject.FACTORY).that(apk);
+        return assertAbout(ApkSubject.apks()).that(apk);
     }
 
     @NonNull
     public static ApkSubject assertThat(@Nullable Apk apk) {
-        return assert_().about(ApkSubject.FACTORY).that(apk);
+        return assertAbout(ApkSubject.apks()).that(apk);
     }
 
     @NonNull
     public static SplitApksSubject assertThat(@NonNull SplitApks apks) {
-        return assert_().about(SplitApksSubject.FACTORY).that(apks);
+        return assertAbout(SplitApksSubject.splitApks()).that(apks);
     }
 
     @NonNull
@@ -123,91 +121,77 @@ public class TruthHelper {
     }
 
     public static AarSubject assertThat(@NonNull Aar aar) {
-        return assert_().about(AarSubject.FACTORY).that(aar);
+        return assertAbout(AarSubject.aars()).that(aar);
     }
 
 
     public static AarSubject assertThatAar(@NonNull Aar aar) {
-        return assert_().about(AarSubject.FACTORY).that(aar);
+        return assertAbout(AarSubject.aars()).that(aar);
     }
 
     @NonNull
     public static ModelSubject assertThat(@Nullable AndroidProject androidProject) {
-        return assert_().about(ModelSubject.Factory.get()).that(androidProject);
+        return assertAbout(ModelSubject.models()).that(androidProject);
     }
 
     @NonNull
     public static IssueSubject assertThat(@Nullable SyncIssue issue) {
-        return assert_().about(IssueSubject.Factory.get()).that(issue);
+        return assertAbout(IssueSubject.issues()).that(issue);
     }
 
     @NonNull
     public static VariantSubject assertThat(@Nullable Variant variant) {
-        return assert_().about(VariantSubject.Factory.get()).that(variant);
+        return assertAbout(VariantSubject.variants()).that(variant);
     }
 
     @NonNull
     public static ArtifactSubject assertThat(@Nullable AndroidArtifact artifact) {
-        return assert_().about(ArtifactSubject.Factory.get()).that(artifact);
+        return assertAbout(ArtifactSubject.artifacts()).that(artifact);
     }
 
     @NonNull
     public static DependenciesSubject assertThat(@Nullable Dependencies dependencies) {
-        return assert_().about(DependenciesSubject.Factory.get()).that(
-                dependencies);
+        return assertAbout(DependenciesSubject.dependencies()).that(dependencies);
     }
 
     @NonNull
     public static GradleTaskSubject assertThat(@NonNull TaskStateList.TaskInfo taskInfo) {
-        return assert_().about(GradleTaskSubject.FACTORY).that(taskInfo);
-    }
-
-
-    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    @NonNull
-    public static <T> Java8OptionalSubject<T> assertThat(@NonNull java.util.Optional<T> optional) {
-        // need to create a new factory here so that it's generic
-        return assert_().about(new SubjectFactory<Java8OptionalSubject<T>, java.util.Optional<T>>() {
-            @Override
-            public Java8OptionalSubject<T> getSubject(FailureStrategy fs, java.util.Optional<T> that) {
-                return new Java8OptionalSubject<>(fs, that);
-            }
-        }).that(optional);
+        return GradleTaskSubject.assertThat(taskInfo);
     }
 
     public static LogCatMessagesSubject assertThat(Logcat logcat) {
-        return assert_().about(LogCatMessagesSubject.FACTORY).that(logcat);
+        return assertAbout(LogCatMessagesSubject.logCatMessages()).that(logcat);
     }
 
     @NonNull
     public static MavenCoordinatesSubject assertThat(@Nullable MavenCoordinates coordinates) {
-        return assert_().about(MavenCoordinatesSubject.Factory.get()).that(coordinates);
+        return assertAbout(MavenCoordinatesSubject.mavenCoordinates()).that(coordinates);
     }
 
     @NonNull
     public static NativeSettingsSubject assertThat(@Nullable NativeSettings settings) {
-        return assert_().about(NativeSettingsSubject.Factory.get()).that(settings);
+        return NativeSettingsSubject.assertThat(settings);
     }
 
     @NonNull
     public static NativeAndroidProjectSubject assertThat(@Nullable NativeAndroidProject project) {
-        return assert_().about(NativeAndroidProjectSubject.Factory.get()).that(project);
+        return NativeAndroidProjectSubject.assertThat(project);
     }
 
     @NonNull
     public static TransformOutputSubject assertThat(@Nullable TransformOutputContent content) {
-        return assert_().about(TransformOutputSubject.Factory.get()).that(content);
+        return assertAbout(TransformOutputSubject.transformOutputs()).that(content);
     }
 
     // ---- helper method from com.google.common.truth.Truth
     // this to allow a single static import of assertThat
 
     /**
-     * Returns a {@link TestVerb} that will prepend the given message to the failure message in
-     * the event of a test failure.
+     * Returns a {@link StandardSubjectBuilder} that will prepend the given message to the failure
+     * message in the event of a test failure.
      */
-    public static TestVerb assertWithMessage(String messageToPrepend) {
-        return assert_().withFailureMessage(messageToPrepend);
+    public static StandardSubjectBuilder assertWithMessage(String messageToPrepend) {
+        return assert_().withMessage(messageToPrepend);
     }
 
     public static <T extends Comparable<?>> ComparableSubject<?, T> assertThat(@Nullable T target) {

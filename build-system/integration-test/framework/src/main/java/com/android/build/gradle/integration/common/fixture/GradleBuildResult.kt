@@ -16,15 +16,12 @@
 
 package com.android.build.gradle.integration.common.fixture
 
-import com.android.build.gradle.integration.common.truth.GradleOutputFileSubject
-import com.android.build.gradle.integration.common.truth.GradleOutputFileSubjectFactory
 import com.android.build.gradle.integration.common.truth.TaskStateList
 import com.android.builder.model.ProjectBuildOutput
 import com.google.api.client.repackaged.com.google.common.base.Preconditions
 import com.google.api.client.repackaged.com.google.common.base.Throwables
 import com.google.common.base.Splitter
 import com.google.common.collect.ImmutableList
-import com.google.common.truth.Truth.assert_
 import org.gradle.api.ProjectConfigurationException
 import org.gradle.api.tasks.TaskExecutionException
 import org.gradle.internal.serialize.ContextualPlaceholderException
@@ -33,7 +30,6 @@ import org.gradle.tooling.BuildException
 import org.gradle.tooling.GradleConnectionException
 import org.gradle.tooling.events.ProgressEvent
 import java.io.ByteArrayOutputStream
-import java.io.File
 
 /**
  * The result from running a build.
@@ -133,13 +129,6 @@ class GradleBuildResult @JvmOverloads constructor(
 
     val failedTasks: Set<String>
         get() = taskStates.failedTasks
-
-    /**
-     * Truth style assert to check changes to a file.
-     */
-    fun assertThatFile(subject: File): GradleOutputFileSubject {
-        return assert_().about(GradleOutputFileSubjectFactory.factory(stdout)).that(subject)
-    }
 
     /**
      * Returns the task info given the task name, or null if the task is not found (if it is not in

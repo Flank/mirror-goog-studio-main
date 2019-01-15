@@ -16,17 +16,16 @@
 
 package com.android.testutils.truth;
 
-import static com.google.common.truth.Truth.assert_;
+import static com.google.common.truth.Truth.assertAbout;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import com.google.common.truth.FailureStrategy;
-import com.google.common.truth.StringSubject;
+import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
-import com.google.common.truth.SubjectFactory;
+import com.google.common.truth.Truth;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -37,47 +36,42 @@ import java.util.Arrays;
 @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")  // Functions do not return.
 public class FileSubject extends Subject<FileSubject, File> {
 
-    public static final SubjectFactory<FileSubject, File> FACTORY =
-            new SubjectFactory<FileSubject, File>() {
-                @Override
-                public FileSubject getSubject(FailureStrategy fs, File that) {
-                    return new FileSubject(fs, that);
-                }
-            };
-
-    public FileSubject(@NonNull FailureStrategy failureStrategy, @Nullable File subject) {
-        super(failureStrategy, subject);
+    public static Subject.Factory<FileSubject, File> files() {
+        return FileSubject::new;
     }
 
-    @NonNull
-    public static FileSubject assertThat(@Nullable File file) {
-        return assert_().about(FileSubject.FACTORY).that(file);
+    public static FileSubject assertThat(File subject) {
+        return assertAbout(files()).that(subject);
+    }
+
+    public FileSubject(@NonNull FailureMetadata failureMetadata, @Nullable File subject) {
+        super(failureMetadata, subject);
     }
 
     public void hasName(String name) {
-        check().that(getSubject().getName()).named(getDisplaySubject()).isEqualTo(name);
+        check().that(actual().getName()).named(actualAsString()).isEqualTo(name);
     }
 
     public void exists() {
-        if (!getSubject().exists()) {
+        if (!actual().exists()) {
             fail("exists");
         }
     }
 
     public void doesNotExist() {
-        if (getSubject().exists()) {
+        if (actual().exists()) {
             fail("does not exist");
         }
     }
 
     public void isFile() {
-        if (!getSubject().isFile()) {
+        if (!actual().isFile()) {
             fail("is a file");
         }
     }
 
     public void isDirectory() {
-        if (!getSubject().isDirectory()) {
+        if (!actual().isDirectory()) {
             fail("is a directory");
         }
     }
@@ -90,14 +84,14 @@ public class FileSubject extends Subject<FileSubject, File> {
         isFile();
 
         try {
-            String contents = Files.toString(getSubject(), Charsets.UTF_8);
+            String contents = Files.toString(actual(), Charsets.UTF_8);
             for (String expectedContent : expectedContents) {
                 if (!contents.contains(expectedContent)) {
                     failWithBadResults("contains", expectedContent, "is", contents);
                 }
             }
         } catch (IOException e) {
-            failWithRawMessage("Unable to read %s", getSubject());
+            failWithRawMessage("Unable to read %s", actual());
         }
     }
 
@@ -105,7 +99,7 @@ public class FileSubject extends Subject<FileSubject, File> {
         isFile();
 
         try {
-            byte[] contents = Files.toByteArray(getSubject());
+            byte[] contents = Files.toByteArray(actual());
             if (!Arrays.equals(contents, expectedContents)) {
                 failWithBadResults(
                         "contains",
@@ -114,7 +108,7 @@ public class FileSubject extends Subject<FileSubject, File> {
                         "byte[" + contents.length + "]");
             }
         } catch (IOException e) {
-            failWithRawMessage("Unable to read %s", getSubject());
+            failWithRawMessage("Unable to read %s", actual());
         }
     }
 
@@ -122,12 +116,12 @@ public class FileSubject extends Subject<FileSubject, File> {
         isFile();
 
         try {
-            String contents = Files.toString(getSubject(), Charsets.UTF_8);
+            String contents = Files.toString(actual(), Charsets.UTF_8);
             if (contents.contains(expectedContent)) {
                 failWithBadResults("does not contains", expectedContent, "is", contents);
             }
         } catch (IOException e) {
-            failWithRawMessage("Unable to read %s", getSubject());
+            failWithRawMessage("Unable to read %s", actual());
         }
     }
 
@@ -140,15 +134,15 @@ public class FileSubject extends Subject<FileSubject, File> {
     }
 
     public void wasModifiedAt(long timestamp) {
-        long lastModified = getSubject().lastModified();
-        if (getSubject().lastModified() != timestamp) {
+        long lastModified = actual().lastModified();
+        if (actual().lastModified() != timestamp) {
             failWithBadResults("was not modified at", timestamp, "was modified at", lastModified);
         }
     }
 
     public void isNewerThan(long timestamp) {
-        long lastModified = getSubject().lastModified();
-        if (getSubject().lastModified() <= timestamp) {
+        long lastModified = actual().lastModified();
+        if (actual().lastModified() <= timestamp) {
             failWithBadResults("is newer than", timestamp, "was modified at", lastModified);
         }
     }
@@ -158,8 +152,8 @@ public class FileSubject extends Subject<FileSubject, File> {
     }
 
     public void isNewerThanOrSameAs(long otherTimestamp) {
-        long thisTimestamp = getSubject().lastModified();
-        if (getSubject().lastModified() < otherTimestamp) {
+        long thisTimestamp = actual().lastModified();
+        if (actual().lastModified() < otherTimestamp) {
             failWithBadResults(
                     "is newer than or same as", otherTimestamp, "was modified at", thisTimestamp);
         }
@@ -170,21 +164,21 @@ public class FileSubject extends Subject<FileSubject, File> {
     }
 
     public void contentWithUnixLineSeparatorsIsExactly(String expected) throws IOException {
-        String actual = FileUtils.loadFileWithUnixLineSeparators(getSubject());
-        new StringSubject(failureStrategy, actual).isEqualTo(expected);
+        String actual = FileUtils.loadFileWithUnixLineSeparators(actual());
+        Truth.assertThat(actual).isEqualTo(expected);
     }
 
     public void containsFile(String fileName) {
         isDirectory();
-        if (!FileUtils.find(getSubject(), fileName).isPresent()) {
-            fail("Directory ", getSubject(), " does not contain ", fileName);
+        if (!FileUtils.find(actual(), fileName).isPresent()) {
+            fail("Directory ", actual(), " does not contain ", fileName);
         }
     }
 
     public void doesNotContainFile(String fileName) {
         isDirectory();
-        if (FileUtils.find(getSubject(), fileName).isPresent()) {
-            fail("Directory ", getSubject(), " contains ", fileName);
+        if (FileUtils.find(actual(), fileName).isPresent()) {
+            fail("Directory ", actual(), " contains ", fileName);
         }
     }
 }

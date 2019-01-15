@@ -19,9 +19,8 @@ package com.android.build.gradle.integration.common.truth;
 import com.android.SdkConstants;
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
-import com.google.common.truth.FailureStrategy;
+import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
-import com.google.common.truth.SubjectFactory;
 import java.io.File;
 import java.io.IOException;
 
@@ -31,16 +30,12 @@ import java.io.IOException;
 @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
 public class NativeLibrarySubject extends Subject<NativeLibrarySubject, File> {
 
-    public static final SubjectFactory<NativeLibrarySubject, File> FACTORY =
-            new SubjectFactory<NativeLibrarySubject, File>() {
-                @Override
-                public NativeLibrarySubject getSubject(FailureStrategy fs, File that) {
-                    return new NativeLibrarySubject(fs, that);
-                }
-            };
+    public static Subject.Factory<NativeLibrarySubject, File> nativeLibraries() {
+        return NativeLibrarySubject::new;
+    }
 
-    public NativeLibrarySubject(FailureStrategy failureStrategy, File subject) {
-        super(failureStrategy, subject);
+    public NativeLibrarySubject(FailureMetadata failureMetadata, File subject) {
+        super(failureMetadata, subject);
     }
 
     /**
@@ -61,8 +56,7 @@ public class NativeLibrarySubject extends Subject<NativeLibrarySubject, File> {
         if (output.contains("not stripped")) {
             failWithRawMessage(
                     "Not true that <%s> is stripped.  File information:\n%s\n",
-                    getDisplaySubject(),
-                    output);
+                    actualAsString(), output);
         }
     }
 
@@ -81,8 +75,7 @@ public class NativeLibrarySubject extends Subject<NativeLibrarySubject, File> {
         if (!output.contains("not stripped")) {
             failWithRawMessage(
                     "Not true that <%s> is not stripped.  File information:\n%s\n",
-                    getDisplaySubject(),
-                    output);
+                    actualAsString(), output);
         }
     }
 
@@ -91,7 +84,7 @@ public class NativeLibrarySubject extends Subject<NativeLibrarySubject, File> {
      */
     private Process getFileData() throws IOException, InterruptedException {
         Process p;
-        p = Runtime.getRuntime().exec(new String[]{"file", getSubject().getAbsolutePath()});
+        p = Runtime.getRuntime().exec(new String[] {"file", actual().getAbsolutePath()});
         p.waitFor();
         return p;
     }

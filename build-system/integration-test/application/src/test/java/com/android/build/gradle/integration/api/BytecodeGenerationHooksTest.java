@@ -28,6 +28,7 @@ import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
 import com.android.testutils.apk.Zip;
 import com.android.utils.FileUtils;
+import com.google.common.truth.Truth8;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -59,7 +60,7 @@ public class BytecodeGenerationHooksTest {
         Apk apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk.getFile()).isFile();
         Optional<Dex> dexOptional = apk.getMainDexFile();
-        assertThat(dexOptional).isPresent();
+        Truth8.assertThat(dexOptional).isPresent();
         //noinspection OptionalGetWithoutIsPresent
         final Dex dexFile = dexOptional.get();
         assertThat(dexFile).containsClasses("Lcom/example/bytecode/App;");
@@ -198,7 +199,7 @@ public class BytecodeGenerationHooksTest {
                 project.getSubproject("baseFeature").getFeatureApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk.getFile()).isFile();
         Optional<Dex> dexOptional = apk.getMainDexFile();
-        assertThat(dexOptional).isPresent();
+        Truth8.assertThat(dexOptional).isPresent();
         //noinspection OptionalGetWithoutIsPresent
         final Dex dexFile = dexOptional.get();
         assertThat(dexFile).containsClasses("Lcom/example/bytecode/App;");

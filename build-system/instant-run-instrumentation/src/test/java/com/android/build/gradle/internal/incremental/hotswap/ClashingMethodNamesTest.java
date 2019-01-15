@@ -35,19 +35,19 @@ public class ClashingMethodNamesTest {
     public void checkClashingStaticAndNonStaticMethods() throws Exception {
         harness.reset();
         ClashStaticMethod m = new ClashStaticMethod("A");
-        expect.withFailureMessage("base: new ClashStaticMethod('A').append('B')")
+        expect.withMessage("base: new ClashStaticMethod('A').append('B')")
                 .that(m.append("B"))
                 .isEqualTo("AB_instance");
 
-        expect.withFailureMessage("base: new ClashStaticMethod('A').append('B')")
+        expect.withMessage("base: new ClashStaticMethod('A').append('B')")
                 .that(ClashStaticMethod.append(m, "B"))
                 .isEqualTo("AB");
 
         harness.applyPatch("changeBaseClass");
-        expect.withFailureMessage("changeBaseClass: new ClashStaticMethod('A').append('B')")
+        expect.withMessage("changeBaseClass: new ClashStaticMethod('A').append('B')")
                 .that(m.append("B"))
                 .isEqualTo("BA_instance_override");
-        expect.withFailureMessage("changeBaseClass: new ClashStaticMethod('A').append('B')")
+        expect.withMessage("changeBaseClass: new ClashStaticMethod('A').append('B')")
                 .that(ClashStaticMethod.append(m, "B"))
                 .isEqualTo("BA");
 

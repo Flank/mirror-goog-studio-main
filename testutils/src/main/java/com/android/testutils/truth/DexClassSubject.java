@@ -16,11 +16,12 @@
 
 package com.android.testutils.truth;
 
+import static com.google.common.truth.Truth.assertAbout;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.google.common.truth.FailureStrategy;
+import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
-import com.google.common.truth.SubjectFactory;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -33,19 +34,16 @@ import org.jf.dexlib2.iface.debug.DebugItem;
 @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
 public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef> {
 
-    public static final SubjectFactory<DexClassSubject, DexBackedClassDef> FACTORY
-            = new SubjectFactory<DexClassSubject, DexBackedClassDef>() {
-        @Override
-        public DexClassSubject getSubject(
-                @NonNull FailureStrategy failureStrategy,
-                @Nullable DexBackedClassDef subject) {
-            return new DexClassSubject(failureStrategy, subject);
-        }
-    };
+    public static Subject.Factory<DexClassSubject, DexBackedClassDef> dexClasses() {
+        return DexClassSubject::new;
+    }
+
+    public static DexClassSubject assertThat(DexBackedClassDef subject) {
+        return assertAbout(dexClasses()).that(subject);
+    }
 
     private DexClassSubject(
-            @NonNull FailureStrategy failureStrategy,
-            @Nullable DexBackedClassDef subject) {
+            @NonNull FailureMetadata failureStrategy, @Nullable DexBackedClassDef subject) {
         super(failureStrategy, subject);
     }
 
@@ -71,7 +69,7 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
 
     public void hasMethodWithLineInfoCount(@NonNull String name, int lineInfoCount) {
         assertSubjectIsNonNull();
-        for (DexBackedMethod method : getSubject().getMethods()) {
+        for (DexBackedMethod method : actual().getMethods()) {
             if (method.getName().equals(name)) {
                 if (method.getImplementation() == null) {
                     fail("contain method implementation for method " + name);
@@ -151,7 +149,7 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
 
     /** Check if the class has method with the specified name. */
     private boolean checkHasMethod(@NonNull String name) {
-        for (DexBackedMethod method : getSubject().getMethods()) {
+        for (DexBackedMethod method : actual().getMethods()) {
             if (method.getName().equals(name)) {
                 return true;
             }
@@ -161,7 +159,7 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
 
     /** Check if the class has field with the specified name. */
     private boolean checkHasField(@NonNull String name) {
-        for (DexBackedField field : getSubject().getFields()) {
+        for (DexBackedField field : actual().getFields()) {
             if (field.getName().equals(name)) {
                 return true;
             }
@@ -171,7 +169,7 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
 
     /** Check if the class has field with the specified name and type. */
     private boolean checkHasField(@NonNull String name, @NonNull String type) {
-        for (DexBackedField field : getSubject().getFields()) {
+        for (DexBackedField field : actual().getFields()) {
             if (field.getName().equals(name) && field.getType().equals(type)) {
                 return true;
             }
@@ -186,13 +184,13 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
 
     /** Returns all of the field names */
     private Set<String> getAllFieldNames() {
-        return StreamSupport.stream(getSubject().getFields().spliterator(), false)
+        return StreamSupport.stream(actual().getFields().spliterator(), false)
                 .map(DexBackedField::getName)
                 .collect(Collectors.toSet());
     }
 
     private boolean assertSubjectIsNonNull() {
-        if (getSubject() == null) {
+        if (actual() == null) {
             fail("Cannot assert about the contents of a dex class that does not exist.");
             return false;
         }
@@ -200,10 +198,10 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
     }
 
     @Override
-    protected String getDisplaySubject() {
+    protected String actualCustomStringRepresentation() {
         String subjectName = null;
-        if (getSubject() != null) {
-            subjectName = getSubject().getType();
+        if (actual() != null) {
+            subjectName = actual().getType();
         }
         if (internalCustomName() != null) {
             return internalCustomName() + " (<" + subjectName + ">)";

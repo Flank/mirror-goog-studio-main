@@ -16,15 +16,16 @@
 
 package com.android.build.gradle.integration.common.truth;
 
-import static com.google.common.truth.Truth.assert_;
+import static com.google.common.truth.Truth.assertAbout;
 
 import com.android.annotations.NonNull;
 import com.android.testutils.apk.Aar;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.truth.FailureStrategy;
+import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.StringSubject;
-import com.google.common.truth.SubjectFactory;
+import com.google.common.truth.Subject;
+import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -32,41 +33,30 @@ import java.nio.file.Path;
 /** Truth support for aar files. */
 public class AarSubject extends AbstractAndroidSubject<AarSubject, Aar> {
 
-    static final Factory FACTORY = new Factory();
+    public static Subject.Factory<AarSubject, Aar> aars() {
+        return AarSubject::new;
+    }
 
-    public AarSubject(@NonNull FailureStrategy failureStrategy, @NonNull Aar subject) {
-        super(failureStrategy, subject);
+    public AarSubject(@NonNull FailureMetadata failureMetadata, @NonNull Aar subject) {
+        super(failureMetadata, subject);
         validateAar();
     }
 
     @NonNull
     public static AarSubject assertThat(@NonNull Aar aar) {
-        return assert_().about(AarSubject.FACTORY).that(aar);
+        return assertAbout(aars()).that(aar);
     }
 
     private void validateAar() {
-        if (getSubject().getEntry("AndroidManifest.xml") == null) {
+        if (actual().getEntry("AndroidManifest.xml") == null) {
             failWithRawMessage("Invalid aar, should contain " + "AndroidManifest.xml");
         }
     }
 
     @NonNull
     public StringSubject textSymbolFile() throws IOException {
-        Path entry = getSubject().getEntry("R.txt");
+        Path entry = actual().getEntry("R.txt");
         Preconditions.checkNotNull(entry);
-        return new StringSubject(
-                failureStrategy,
-                new String(Files.readAllBytes(entry), Charsets.UTF_8));
+        return Truth.assertThat(new String(Files.readAllBytes(entry), Charsets.UTF_8));
     }
-
-    static class Factory extends SubjectFactory<AarSubject, Aar> {
-        Factory() {}
-
-        @Override
-        public AarSubject getSubject(
-                @NonNull FailureStrategy failureStrategy, @NonNull Aar subject) {
-            return new AarSubject(failureStrategy, subject);
-        }
-    }
-
 }

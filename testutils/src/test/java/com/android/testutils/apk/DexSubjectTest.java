@@ -72,7 +72,7 @@ public class DexSubjectTest {
             String message = e.getMessage();
             Truth.assertThat(message)
                     .isEqualTo(
-                            "Not true that dex file contains classes "
+                            "Not true that <dex file> contains classes "
                                     + "<[Lcom/example/NotContained;]>. "
                                     + "It is missing <[Lcom/example/NotContained;]>");
         }
@@ -88,7 +88,7 @@ public class DexSubjectTest {
             String message = e.getMessage();
             Truth.assertThat(message)
                     .isEqualTo(
-                            "Not true that dex file contains exactly "
+                            "Not true that <dex file> contains exactly "
                                     + "<[Lcom/example/NotContained;]>. It is missing "
                                     + "<[Lcom/example/NotContained;]> and has unexpected items "
                                     + "<[Lcom/example/Foo;]>");

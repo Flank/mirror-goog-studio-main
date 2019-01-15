@@ -20,6 +20,7 @@ import static com.android.testutils.truth.MoreTruth.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertNotNull;
 
+import com.google.common.truth.Truth8;
 import java.io.IOException;
 import java.nio.file.Path;
 import org.junit.Rule;
@@ -47,7 +48,7 @@ public class ApkTest {
                 .named("Apk contains class (from secondary)")
                 .isFalse();
 
-        assertThat(apk.getMainDexFile()).isPresent();
+        Truth8.assertThat(apk.getMainDexFile()).isPresent();
         assertThat(apk.getSecondaryDexFiles()).isEmpty();
         assertThat(apk.getAllDexes()).hasSize(1);
 
@@ -78,7 +79,7 @@ public class ApkTest {
                 .named("Apk contains class (from secondary)")
                 .isTrue();
 
-        assertThat(apk.getMainDexFile()).isPresent();
+        Truth8.assertThat(apk.getMainDexFile()).isPresent();
         assertThat(apk.getSecondaryDexFiles()).hasSize(2);
         assertThat(apk.getAllDexes()).hasSize(3);
     }

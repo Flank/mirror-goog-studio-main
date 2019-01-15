@@ -16,14 +16,13 @@
 
 package com.android.build.gradle.integration.common.truth;
 
-import static com.google.common.truth.Truth.assert_;
+import static com.google.common.truth.Truth.assertAbout;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.NativeSettings;
-import com.google.common.truth.FailureStrategy;
+import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
-import com.google.common.truth.SubjectFactory;
 import java.util.List;
 
 /**
@@ -31,39 +30,24 @@ import java.util.List;
  */
 public class NativeSettingsSubject
         extends Subject<NativeSettingsSubject, NativeSettings> {
-    static class Factory
-            extends SubjectFactory<NativeSettingsSubject, NativeSettings> {
 
-        @NonNull
-        public static NativeSettingsSubject.Factory get() {
-            return new NativeSettingsSubject.Factory();
-        }
-
-        private Factory() {}
-
-        @NonNull
-        @Override
-        public NativeSettingsSubject getSubject(
-                @NonNull FailureStrategy failureStrategy,
-                @NonNull NativeSettings subject) {
-            return new NativeSettingsSubject(failureStrategy, subject);
-        }
+    static Subject.Factory<NativeSettingsSubject, NativeSettings> nativeSettings() {
+        return NativeSettingsSubject::new;
     }
 
     private NativeSettingsSubject(
-            @NonNull FailureStrategy failureStrategy,
-            @NonNull NativeSettings subject) {
-        super(failureStrategy, subject);
+            @NonNull FailureMetadata failureMetadata, @NonNull NativeSettings subject) {
+        super(failureMetadata, subject);
 
     }
 
     @NonNull
     public static NativeSettingsSubject assertThat(@Nullable NativeSettings settings) {
-        return assert_().about(NativeSettingsSubject.Factory.get()).that(settings);
+        return assertAbout(nativeSettings()).that(settings);
     }
 
     public void doesNotContainCompilerFlagStartingWith(@NonNull String prefix) {
-        List<String> compilerFlags = getSubject().getCompilerFlags();
+        List<String> compilerFlags = actual().getCompilerFlags();
         for (String flag : compilerFlags) {
             if (flag.startsWith(prefix)) {
                 fail("doesn't contain flag with prefix", prefix);
@@ -73,7 +57,7 @@ public class NativeSettingsSubject
 
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
     public void containsCompilerFlagStartingWith(@NonNull String prefix) {
-        List<String> compilerFlags = getSubject().getCompilerFlags();
+        List<String> compilerFlags = actual().getCompilerFlags();
         for (String flag : compilerFlags) {
             if (flag.startsWith(prefix)) {
                 return;
@@ -83,7 +67,7 @@ public class NativeSettingsSubject
     }
 
     public void doesNotContainCompilerFlag(String expected) {
-        List<String> compilerFlags = getSubject().getCompilerFlags();
+        List<String> compilerFlags = actual().getCompilerFlags();
         for (String flag : compilerFlags) {
             if (flag.equals(expected)) {
                 fail("doesn't contain flag", expected);
@@ -93,7 +77,7 @@ public class NativeSettingsSubject
 
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
     public void containsCompilerFlag(String expected) {
-        List<String> compilerFlags = getSubject().getCompilerFlags();
+        List<String> compilerFlags = actual().getCompilerFlags();
         for (String flag : compilerFlags) {
             if (flag.equals(expected)) {
                 return;

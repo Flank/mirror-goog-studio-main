@@ -22,6 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.SyncIssue;
 import com.google.common.collect.ImmutableList;
+import com.google.common.truth.ExpectFailure;
 import java.util.List;
 import org.junit.Test;
 
@@ -92,65 +93,70 @@ public class IssueSubjectTest {
     @Test
     public void badSeverity() {
 
-        FakeFailureStrategy failure = new FakeFailureStrategy();
         SyncIssue issue = new FakeIssue(1, 2);
 
-        IssueSubject subject = new IssueSubject(failure, issue);
-        subject.hasSeverity(0);
+        AssertionError failure =
+                expectFailure(whenTesting -> whenTesting.that(issue).hasSeverity(0));
 
-        assertThat(failure.message).isEqualTo("Not true that <1|2||> has severity <0>. It is <1>");
+        assertThat(failure.toString())
+                .isEqualTo("Not true that <1|2||> has severity <0>. It is <1>");
     }
 
     @Test
     public void badType() {
 
-        FakeFailureStrategy failure = new FakeFailureStrategy();
         SyncIssue issue = new FakeIssue(1, 2);
 
-        IssueSubject subject = new IssueSubject(failure, issue);
-        subject.hasType(0);
+        AssertionError failure = expectFailure(whenTesting -> whenTesting.that(issue).hasType(0));
 
-        assertThat(failure.message).isEqualTo("Not true that <1|2||> has type <0>. It is <2>");
+        assertThat(failure.toString()).isEqualTo("Not true that <1|2||> has type <0>. It is <2>");
     }
 
     @Test
     public void badData() {
 
-        FakeFailureStrategy failure = new FakeFailureStrategy();
         SyncIssue issue = new FakeIssue(1, 2, "foo");
 
-        IssueSubject subject = new IssueSubject(failure, issue);
-        subject.hasData("bar");
+        AssertionError failure =
+                expectFailure(whenTesting -> whenTesting.that(issue).hasData("bar"));
 
-        assertThat(failure.message)
+        assertThat(failure.toString())
                 .isEqualTo("Not true that <1|2|foo|> has data <bar>. It is <foo>");
     }
 
     @Test
     public void badMessage() {
 
-        FakeFailureStrategy failure = new FakeFailureStrategy();
         SyncIssue issue = new FakeIssue(1, 2, "foo", "bob");
 
-        IssueSubject subject = new IssueSubject(failure, issue);
-        subject.hasMessage("robert");
+        AssertionError failure =
+                expectFailure(whenTesting -> whenTesting.that(issue).hasMessage("robert"));
 
-        assertThat(failure.message)
+        assertThat(failure.toString())
                 .isEqualTo("Not true that <1|2|foo|bob> has message <robert>. It is <bob>");
     }
 
     @Test
     public void badAdditionalMessage() {
 
-        FakeFailureStrategy failure = new FakeFailureStrategy();
         SyncIssue issue = new FakeIssue(1, 2, "foo", "bob", ImmutableList.of("foo", "bar"));
 
-        IssueSubject subject = new IssueSubject(failure, issue);
-        subject.hasMultiLineMessage(ImmutableList.of("foo"));
+        AssertionError failure =
+                expectFailure(
+                        whenTesting ->
+                                whenTesting
+                                        .that(issue)
+                                        .hasMultiLineMessage(ImmutableList.of("foo")));
 
-        assertThat(failure.message)
+        assertThat(failure.toString())
                 .isEqualTo(
                         "Not true that <1|2|foo|bob> has multi-line message <[foo]>. It is <[foo, bar]>");
+    }
+
+    private static AssertionError expectFailure(
+            ExpectFailure.SimpleSubjectBuilderCallback<IssueSubject, SyncIssue> callback) {
+
+        return ExpectFailure.expectFailureAbout(IssueSubject.issues(), callback);
     }
 
 }

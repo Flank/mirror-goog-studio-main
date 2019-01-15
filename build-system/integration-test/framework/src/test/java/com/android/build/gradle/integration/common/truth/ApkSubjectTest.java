@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.Lists;
+import com.google.common.truth.ExpectFailure;
 import java.io.File;
 import java.util.List;
 import org.junit.Rule;
@@ -35,15 +36,14 @@ public class ApkSubjectTest {
     public void notInBadgingOutput() throws Exception {
         List<String> strings = Lists.newArrayList("");
 
-        FakeFailureStrategy failure = new FakeFailureStrategy();
         File file = new File(tmpFolder.getRoot(), "foo");
-        ApkSubject subject = new ApkSubject(failure, new Apk(file));
-        // apk file doesn't exist so the failure gets filled with error. Ignore and reset.
-        failure.reset();
+        Apk apkFile = new Apk(file);
+        AssertionError assertionError =
+                ExpectFailure.expectFailureAbout(
+                        ApkSubject.apks(),
+                        whenTesting -> whenTesting.that(apkFile).checkMaxSdkVersion(strings, 1));
 
-        subject.checkMaxSdkVersion(strings, 1);
-
-        assertThat(failure.message)
+        assertThat(assertionError.toString())
                 .isEqualTo(
                         "maxSdkVersion not found in badging output for <Apk<"
                                 + file.getAbsolutePath()
@@ -57,15 +57,8 @@ public class ApkSubjectTest {
                 "maxSdkVersion:'14'",
                 "bar");
 
-        FakeFailureStrategy failure = new FakeFailureStrategy();
         File file = new File(tmpFolder.getRoot(), "foo");
-        ApkSubject subject = new ApkSubject(failure, new Apk(file));
-        // apk file doesn't exist so the failure gets filled with error. Ignore and reset.
-        failure.reset();
-
-        subject.checkMaxSdkVersion(strings, 14);
-
-        assertThat(failure.message).isNull();
+        ApkSubject.assertThat(new Apk(file)).checkMaxSdkVersion(strings, 14);
     }
 
     @Test
@@ -75,15 +68,14 @@ public class ApkSubjectTest {
                 "maxSdkVersion:'20'",
                 "bar");
 
-        FakeFailureStrategy failure = new FakeFailureStrategy();
         File file = new File(tmpFolder.getRoot(), "foo");
-        ApkSubject subject = new ApkSubject(failure, new Apk(file));
-        // apk file doesn't exist so the failure gets filled with error. Ignore and reset.
-        failure.reset();
+        Apk apkFile = new Apk(file);
+        AssertionError assertionError =
+                ExpectFailure.expectFailureAbout(
+                        ApkSubject.apks(),
+                        whenTesting -> whenTesting.that(apkFile).checkMaxSdkVersion(strings, 14));
 
-        subject.checkMaxSdkVersion(strings, 14);
-
-        assertThat(failure.message)
+        assertThat(assertionError.toString())
                 .isEqualTo(
                         "Not true that <Apk<"
                                 + file.getAbsolutePath()
