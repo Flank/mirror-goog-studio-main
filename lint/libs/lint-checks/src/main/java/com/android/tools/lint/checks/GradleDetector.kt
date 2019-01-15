@@ -71,6 +71,7 @@ import java.util.Calendar
 import java.util.Collections
 import java.util.HashMap
 import java.util.HashSet
+import java.util.Locale
 import java.util.function.Predicate
 
 /** Checks Gradle files for potential errors */
@@ -653,6 +654,25 @@ open class GradleDetector : Detector(), GradleScanner {
                         // From http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22com.bugsnag%22%20AND
                         // %20a%3A%22bugsnag-android-gradle-plugin%22
                         newerVersion = getNewerVersion(version, 3, 2, 5)
+                    }
+                }
+            }
+
+            // https://issuetracker.google.com/120098460
+            "org.robolectric" -> {
+                if ("robolectric" == artifactId &&
+                    System.getProperty("os.name").toLowerCase(Locale.US).contains("windows")
+                ) {
+                    if (!version.isAtLeast(4, 1, 0)) {
+                        val fix = getUpdateDependencyFix(revision, "4.1")
+                        report(
+                            context,
+                            cookie,
+                            DEPENDENCY,
+                            "Use robolectric version 4.1 or later to " +
+                                    "fix issues with parsing of Windows paths",
+                            fix
+                        )
                     }
                 }
             }
