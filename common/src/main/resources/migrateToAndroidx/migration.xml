@@ -310,6 +310,8 @@
   <migrate old-name="android.support.wear.widget.drawer" new-name="androidx.wear.widget.drawer" type="PACKAGE"/>
   <migrate old-name="android.support.wear.widget" new-name="androidx.wear.widget" type="PACKAGE"/>
   <migrate old-name="android.support.wear" new-name="androidx.wear" type="PACKAGE"/>
+  <migrate old-name="android.support.test.runner.AndroidJUnit4" new-name="androidx.test.ext.junit.runners.AndroidJUnit4" type="CLASS"/>
+  <migrate old-name="android.support.test.InstrumentationRegistry" new-name="androidx.test.platform.app.InstrumentationRegistry" type="CLASS"/>
   <migrate old-name="android.support.test" new-name="androidx.test" type="PACKAGE"/>
   <migrate old-name="android.support.v13.app" new-name="androidx.core.app" type="PACKAGE"/>
   <migrate old-name="android.support.v13.view.inputmethod" new-name="androidx.core.view.inputmethod" type="PACKAGE"/>
@@ -450,7 +452,7 @@
   <migrate-dependency old-group-name="com.android.support.test" old-artifact-name="monitor" new-group-name="androidx.test" new-artifact-name="monitor" base-version="1.1.0"/>
   <migrate-dependency old-group-name="com.android.support.test" old-artifact-name="orchestrator" new-group-name="androidx.test" new-artifact-name="orchestrator" base-version="1.1.0"/>
   <migrate-dependency old-group-name="com.android.support.test" old-artifact-name="rules" new-group-name="androidx.test" new-artifact-name="rules" base-version="1.1.0"/>
-  <migrate-dependency old-group-name="com.android.support.test" old-artifact-name="runner" new-group-name="androidx.test" new-artifact-name="runner" base-version="1.1.0"/>
+  <migrate-dependency old-group-name="com.android.support.test" old-artifact-name="runner" new-group-name="androidx.test.ext" new-artifact-name="junit" base-version="1.1.0"/>
   <migrate-dependency old-group-name="com.android.support.test.espresso" old-artifact-name="espresso-accessibility" new-group-name="androidx.test.espresso" new-artifact-name="espresso-accessibility" base-version="3.1.0"/>
   <migrate-dependency old-group-name="com.android.support.test.espresso" old-artifact-name="espresso-contrib" new-group-name="androidx.test.espresso" new-artifact-name="espresso-contrib" base-version="3.1.0"/>
   <migrate-dependency old-group-name="com.android.support.test.espresso" old-artifact-name="espresso-core" new-group-name="androidx.test.espresso" new-artifact-name="espresso-core" base-version="3.1.0"/>
