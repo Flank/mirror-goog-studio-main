@@ -134,27 +134,6 @@ public class VariantConfigurationTest {
     }
 
     @Test
-    public void testGetNavigationFiles() throws IOException {
-        VariantConfiguration<DefaultBuildType, DefaultProductFlavor, DefaultProductFlavor> variant =
-                getVariantWithTempFolderSourceProviders();
-
-        File resDir = Iterables.getFirst(variant.getDefaultSourceSet().getResDirectories(), null);
-        assertThat(resDir).isNotNull();
-
-        File navigationDir = new File(resDir, "navigation");
-        assertThat(navigationDir.mkdirs()).isTrue();
-
-        File navigationFile = new File(navigationDir, "main_nav.xml");
-        assertThat(navigationFile.createNewFile()).isTrue();
-
-        List<File> retrievedNavigationFiles = variant.getNavigationFiles();
-        assertThat(retrievedNavigationFiles.size()).isEqualTo(1);
-        File retrievedNavigationFile = Iterables.getOnlyElement(retrievedNavigationFiles);
-
-        assertThat(retrievedNavigationFile).isEqualTo(navigationFile);
-    }
-
-    @Test
     public void testGetMinSdkVersion() {
 
         ApiVersion minSdkVersion = DefaultApiVersion.create(new Integer(5));

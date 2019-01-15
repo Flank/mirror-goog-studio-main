@@ -13,8 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package com.android.build.gradle
+package com.android.build.gradle.internal
 
 import com.android.annotations.VisibleForTesting
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
@@ -28,23 +27,25 @@ import com.android.build.gradle.tasks.ProcessApplicationManifest
 import com.android.builder.core.BuilderConstants
 import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.ide.common.resources.ResourceSet
+import com.android.resources.ResourceType
+import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.FileCollection
 import java.io.File
 
-class DependecyResourcesComputer {
+class DependencyResourcesComputer {
     @set:VisibleForTesting
-    lateinit var resources: Map<String, BuildableArtifact>
+    var resources: Map<String, BuildableArtifact>? = null
 
     @set:VisibleForTesting
     var libraries: ArtifactCollection? = null
 
     @set:VisibleForTesting
-    lateinit var renderscriptResOutputDir: FileCollection
+    var renderscriptResOutputDir: FileCollection? = null
 
     @set:VisibleForTesting
-    lateinit var generatedResOutputDir: FileCollection
+    var generatedResOutputDir: FileCollection? = null
 
     @set:VisibleForTesting
     var microApkResDirectory: FileCollection? = null
@@ -90,8 +91,13 @@ class DependecyResourcesComputer {
         // We add the generated folders to the main set
         val generatedResFolders = java.util.ArrayList<File>()
 
-        generatedResFolders.addAll(renderscriptResOutputDir.files)
-        generatedResFolders.addAll(generatedResOutputDir.files)
+        renderscriptResOutputDir?.let {
+            generatedResFolders.addAll(it.files)
+        }
+
+        generatedResOutputDir?.let {
+            generatedResFolders.addAll(it.files)
+        }
 
         extraGeneratedResFolders?.let {
             generatedResFolders.addAll(it.files)
@@ -101,21 +107,24 @@ class DependecyResourcesComputer {
         }
 
         // add the generated files to the main set.
-        val mainResourceSet = sourceFolderSets[0]
-        assert(mainResourceSet.configName == BuilderConstants.MAIN)
-        mainResourceSet.addSources(generatedResFolders)
+        if (sourceFolderSets.isNotEmpty()) {
+            val mainResourceSet = sourceFolderSets[0]
+            assert(mainResourceSet.configName == BuilderConstants.MAIN)
+            mainResourceSet.addSources(generatedResFolders)
+        }
 
         return resourceSetList
     }
 
     private fun getResSet(): List<ResourceSet> {
         val builder = ImmutableList.builder<ResourceSet>()
-        for ((key, value) in resources) {
-            val resourceSet = ResourceSet(
-                key, ResourceNamespace.RES_AUTO, null, validateEnabled
-            )
-            resourceSet.addSources(value.files)
-            builder.add(resourceSet)
+        resources?.let {
+            for ((key, value) in it) {
+                val resourceSet = ResourceSet(
+                    key, ResourceNamespace.RES_AUTO, null, validateEnabled)
+                resourceSet.addSources(value.files)
+                builder.add(resourceSet)
+            }
         }
         return builder.build()
     }
@@ -144,6 +153,24 @@ class DependecyResourcesComputer {
             microApkResDirectory = project.files(variantScope.microApkResDirectory)
         }
     }
-}
 
+    fun initForNavigation(variantScope: VariantScope) {
+        this.libraries = variantScope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, ANDROID_RES)
+        this.resources = variantScope.variantData.androidResources
+    }
+
+    fun getNavigationXmlsList(logger: ILogger): List<File> {
+        val resourceSetList = compute()
+        resourceSetList.forEach {
+            it.loadFromFiles(logger)
+        }
+        return resourceSetList.flatMap {
+            it.dataMap.asMap().values
+                .map { it.first() } // Take the first if there are duplicates?
+                .filter { it.type == ResourceType.NAVIGATION }
+                .mapNotNull { it.file }
+            // reversed in order to have the right precedence (first with the higher priority)
+        }.reversed()
+    }
+}
 

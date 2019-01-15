@@ -112,7 +112,7 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
                             isNamespaced,
                             getMainManifest(),
                             getManifestOverlays(),
-                            getNavigationFiles(),
+                            Collections.emptyList(),
                             getPackageOverride(),
                             getVersionCode(),
                             getVersionName(),
@@ -335,12 +335,6 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
     @PathSensitive(PathSensitivity.RELATIVE)
     public List<File> getManifestOverlays() {
         return variantConfiguration.getManifestOverlays();
-    }
-
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public List<File> getNavigationFiles() {
-        return variantConfiguration.getNavigationFiles();
     }
 
     /**

@@ -1026,41 +1026,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         return inputs;
     }
 
-    /**
-     * Returns a list of sorted navigation files, with files toward the start of the list taking
-     * precedence over those toward the end of the list.
-     *
-     * @return a list of navigation files
-     */
-    @NonNull
-    public List<File> getNavigationFiles() {
-
-        ImmutableList.Builder<File> builder = ImmutableList.builder();
-
-        List<SourceProvider> sourceProviders = getSortedSourceProviders();
-        // iterate over sourceProviders in reverse order to match order of getManifestOverlays()
-        for (int n = sourceProviders.size() - 1; n >= 0; n--) {
-            Collection<File> resDirs = sourceProviders.get(n).getResDirectories();
-            for (File resDir : resDirs) {
-                if (resDir == null) {
-                    continue;
-                }
-                File navigationDir = new File(resDir.getPath(), SdkConstants.FD_RES_NAVIGATION);
-                File[] navigationFiles = navigationDir.listFiles();
-                if (navigationFiles == null) {
-                    continue;
-                }
-                for (File navigationFile : navigationFiles) {
-                    if (navigationFile != null && navigationFile.isFile()) {
-                        builder.add(navigationFile);
-                    }
-                }
-            }
-        }
-
-        return builder.build();
-    }
-
     @NonNull
     public Set<File> getSourceFiles(@NonNull Function<SourceProvider, Collection<File>> f) {
         Collection<SourceProvider> providers = getSortedSourceProviders();

@@ -28,6 +28,7 @@
             <nav-graph android:value="@navigation/nav2" />
             <nav-graph android:value="@navigation/nav3" />
             <nav-graph android:value="@navigation/nav4" />
+            <nav-graph android:value="@navigation/nav5" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

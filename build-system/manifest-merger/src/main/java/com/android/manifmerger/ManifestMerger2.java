@@ -325,12 +325,19 @@ public class ManifestMerger2 {
                 throw new MergeFailureException(e);
             }
         }
-        xmlDocumentOptional =
-                Optional.of(
-                        NavGraphExpander.INSTANCE.expandNavGraphs(
-                                xmlDocumentOptional.get(),
-                                loadedNavigationMap,
-                                mergingReportBuilder));
+
+        if (mMergeType == MergeType.APPLICATION) {
+            xmlDocumentOptional =
+                    Optional.of(
+                            NavGraphExpander.INSTANCE.expandNavGraphs(
+                                    xmlDocumentOptional.get(),
+                                    loadedNavigationMap,
+                                    mergingReportBuilder));
+        } else {
+            NavGraphExpander.INSTANCE.ensureNoNavigationGraphsIncluded(
+                    xmlDocumentOptional.get(), mergingReportBuilder);
+        }
+
         if (mergingReportBuilder.hasErrors()) {
             return mergingReportBuilder.build();
         }

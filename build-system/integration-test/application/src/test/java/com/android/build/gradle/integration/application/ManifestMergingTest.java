@@ -20,10 +20,14 @@ import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static org.junit.Assert.assertEquals;
 
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
+import com.android.utils.FileUtils;
+import com.google.common.truth.Truth;
 import java.io.File;
 import org.junit.Assume;
 import org.junit.Rule;
@@ -82,7 +86,6 @@ public class ManifestMergingTest {
                                 + "/library_manifest/release/AndroidManifest.xml");
 
         assertThat(fileOutput).isFile();
-
     }
 
     @Test
@@ -196,16 +199,90 @@ public class ManifestMergingTest {
         File manifestFile =
                 navigation.file(
                         "app/build/intermediates/merged_manifests/f1Debug/AndroidManifest.xml");
-        assertThat(manifestFile).contains("/library/nav1");
         assertThat(manifestFile).contains("/main/nav1");
         assertThat(manifestFile).contains("/f1/nav2");
         assertThat(manifestFile).contains("/debug/nav3");
         assertThat(manifestFile).contains("/f1Debug/nav4");
+        assertThat(manifestFile).contains("/library/nav5");
+        assertThat(manifestFile).doesNotContain("/library/nav1");
         assertThat(manifestFile).doesNotContain("/main/nav2");
         assertThat(manifestFile).doesNotContain("/main/nav3");
         assertThat(manifestFile).doesNotContain("/main/nav4");
         assertThat(manifestFile).doesNotContain("/f1/nav3");
         assertThat(manifestFile).doesNotContain("/f1/nav4");
         assertThat(manifestFile).doesNotContain("/debug/nav4");
+    }
+
+    /**
+     * It does not make nay sense to include navigation graphs toa library manifest, because users
+     * of the library can include proper navigation graph into their application manifest themselves
+     * or can override library navigation graphs
+     */
+    @Test
+    public void checkManifestMergingFails_ifLibraryIncludesNavigarionGraphs() throws Exception {
+        TestFileUtils.searchAndReplace(
+                new File(
+                        navigation.getSubproject("library").getMainSrcDir().getParent(),
+                        "AndroidManifest.xml"),
+                "</activity>",
+                "        <nav-graph android:value=\"@navigation/nav1\"/>\n    </activity>");
+
+        GradleBuildResult result =
+                navigation.executor().expectFailure().run("clean", ":library:processDebugManifest");
+        ScannerSubject.assertThat(result.getStderr())
+                .contains("<nav-graph> element can only be included in application manifest.");
+    }
+
+    @Test
+    public void checkManifestFile_doesNotRebuildWhenNonNavigationResourceAreChanged()
+            throws Exception {
+        navigation.executor().run("clean", ":app:assembleDebug");
+        File manifestFile =
+                navigation.file(
+                        "app/build/intermediates/merged_manifests/f1Debug/AndroidManifest.xml");
+
+        long timestampAfterFirstBuild = manifestFile.lastModified();
+
+        // Change and add different resources but not navigation xmls
+        TestFileUtils.searchAndReplace(
+                navigation.getSubproject("library").file("src/main/res/values/strings.xml"),
+                "</resources>",
+                "    <string name=\"library_string1\">string1</string>\n</resources>");
+        TestFileUtils.searchAndReplace(
+                navigation.getSubproject("app").file("src/main/res/values/strings.xml"),
+                "</resources>",
+                "    <string name=\"added_string\">added string</string>\n</resources>");
+        FileUtils.createFile(
+                navigation.getSubproject("app").file("src/main/res/layout/additional.xml"),
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    android:layout_width=\"fill_parent\"\n"
+                        + "    android:layout_height=\"fill_parent\"\n"
+                        + "    android:orientation=\"vertical\" >\n"
+                        + "</LinearLayout>");
+
+        navigation.executor().run(":app:assembleDebug");
+
+        Truth.assertThat(timestampAfterFirstBuild).isEqualTo(manifestFile.lastModified());
+    }
+
+    @Test
+    public void checkManifestFile_rebuildsWhenNavigationResourceAreChanged() throws Exception {
+        navigation.executor().run("clean", ":app:assembleDebug");
+        File manifestFile =
+                navigation.file(
+                        "app/build/intermediates/merged_manifests/f1Debug/AndroidManifest.xml");
+
+        long timestampAfterFirstBuild = manifestFile.lastModified();
+
+        // Change and add different resources but not navigation xmls
+        TestFileUtils.searchAndReplace(
+                navigation.getSubproject("library").file("src/main/res/navigation/nav5.xml"),
+                "<deepLink app:uri=\"www.example.com/library/nav5\" />",
+                "<deepLink app:uri=\"www.example.com/library_updated/nav5\" />");
+
+        navigation.executor().run(":app:assembleDebug");
+
+        Truth.assertThat(timestampAfterFirstBuild).isLessThan(manifestFile.lastModified());
     }
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle;
+package com.android.build.gradle.internal;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.mock;
@@ -54,13 +54,13 @@ public class DependencyResourcesComputerTest {
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private DependecyResourcesComputer computer;
+    private DependencyResourcesComputer computer;
     private List<ResourceSet> folderSets;
     private Map<String, BuildableArtifact> artifactMap;
 
     @Before
     public void setUp() throws IOException {
-        computer = new DependecyResourcesComputer();
+        computer = new DependencyResourcesComputer();
 
         // set some default file collection on the required inputs
         FileCollection empty = mock(FileCollection.class);

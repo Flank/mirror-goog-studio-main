@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.gradle.DependecyResourcesComputer
+import com.android.build.gradle.internal.DependencyResourcesComputer
 import com.android.build.gradle.internal.tasks.IncrementalTask
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.PathSensitive
@@ -25,15 +25,15 @@ import org.gradle.api.tasks.Optional
 
 abstract class ResourceAwareTask : IncrementalTask() {
 
-    protected val resourcesComputer = DependecyResourcesComputer()
+    protected val resourcesComputer = DependencyResourcesComputer()
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
-    fun getRenderscriptResOutputDir() = resourcesComputer.renderscriptResOutputDir
+    fun getRenderscriptResOutputDir() = resourcesComputer.renderscriptResOutputDir!!
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
-    fun getGeneratedResOutputDir() = resourcesComputer.generatedResOutputDir
+    fun getGeneratedResOutputDir() = resourcesComputer.generatedResOutputDir!!
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
@@ -52,5 +52,5 @@ abstract class ResourceAwareTask : IncrementalTask() {
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
-    fun getResources() = resourcesComputer.resources.values
+    fun getResources() = resourcesComputer.resources!!.values
 }

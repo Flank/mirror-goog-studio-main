@@ -43,6 +43,29 @@ import org.w3c.dom.NamedNodeMap
 @VisibleForTesting
 object NavGraphExpander {
 
+    fun ensureNoNavigationGraphsIncluded(
+        xmlDocument: XmlDocument, mergingReportBuilder: MergingReport.Builder) {
+        ensureNoNavigationGraphsIncluded(xmlDocument.rootNode, mergingReportBuilder)
+    }
+
+    private fun ensureNoNavigationGraphsIncluded(
+        xmlElement: XmlElement, mergingReportBuilder: MergingReport.Builder) {
+        for (childElement in xmlElement.mergeableElements) {
+            ensureNoNavigationGraphsIncluded(childElement, mergingReportBuilder)
+        }
+        if (xmlElement.xml.tagName != SdkConstants.TAG_ACTIVITY) {
+            return
+        }
+        val navGraphs = xmlElement.getAllNodesByType(ManifestModel.NodeTypes.NAV_GRAPH)
+        if (navGraphs.isEmpty()) {
+            return
+        }
+        mergingReportBuilder.addMessage(
+            SourceFilePosition(xmlElement.document.sourceFile, xmlElement.position),
+            MergingReport.Record.Severity.ERROR,
+            "<nav-graph> element can only be included in application manifest.")
+    }
+
     /**
      *  Return an [XmlDocument] with the <nav-graph> elements converted into the corresponding
      *  <intent-filter> elements
