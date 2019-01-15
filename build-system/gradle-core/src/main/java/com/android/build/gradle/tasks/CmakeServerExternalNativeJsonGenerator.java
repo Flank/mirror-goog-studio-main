@@ -484,7 +484,11 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                     }
 
                     NativeLibraryValue nativeLibraryValue =
-                            getNativeLibraryValue(abiConfig.getAbiName(), target, strings);
+                            getNativeLibraryValue(
+                                    abiConfig.getAbiName(),
+                                    project.buildDirectory,
+                                    target,
+                                    strings);
                     nativeLibraryValue.toolchain = toolchainHashString;
                     String libraryName =
                             target.name + "-" + config.name + "-" + abiConfig.getAbiName();
@@ -498,7 +502,10 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
 
     @VisibleForTesting
     protected NativeLibraryValue getNativeLibraryValue(
-            @NonNull String abi, @NonNull Target target, StringTable strings)
+            @NonNull String abi,
+            @NonNull String workingDirectory,
+            @NonNull Target target,
+            StringTable strings)
             throws FileNotFoundException {
         return getNativeLibraryValue(
                 getCmakeExecutable(),
@@ -506,6 +513,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                 isDebuggable(),
                 new JsonReader(new FileReader(getCompileCommandsJson(abi))),
                 abi,
+                workingDirectory,
                 target,
                 strings);
     }
@@ -517,6 +525,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
             boolean isDebuggable,
             @NonNull JsonReader compileCommandsJson,
             @NonNull String abi,
+            @NonNull String workingDirectory,
             @NonNull Target target,
             @NonNull StringTable strings) {
         NativeLibraryValue nativeLibraryValue = new NativeLibraryValue();
@@ -534,8 +543,8 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         nativeLibraryValue.headers = new ArrayList<>();
         Map<String, Integer> compilationDatabaseFlags = Maps.newHashMap();
 
+        int workingDirectoryOrdinal = strings.intern(workingDirectory);
         for (FileGroup fileGroup : target.fileGroups) {
-            int workingDirectoryOrdinal = strings.intern(target.buildDirectory);
             for (String source : fileGroup.sources) {
                 File sourceFile = new File(target.sourceDirectory, source);
                 if (hasCmakeHeaderFileExtensions(sourceFile)) {
@@ -543,8 +552,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                             new NativeHeaderFileValue(sourceFile, workingDirectoryOrdinal));
                 } else {
                     NativeSourceFileValue nativeSourceFileValue = new NativeSourceFileValue();
-                    nativeSourceFileValue.workingDirectoryOrdinal =
-                            strings.intern(target.buildDirectory);
+                    nativeSourceFileValue.workingDirectoryOrdinal = workingDirectoryOrdinal;
                     nativeSourceFileValue.src = sourceFile;
 
                     // We use flags from compile_commands.json if present. Otherwise, fall back
