@@ -35,7 +35,6 @@ java_library(
 
 DARWIN_FILES = [
     "//prebuilts/tools/common/aapt:darwin/aapt2",
-    "//prebuilts/tools/common/aapt:darwin/lib64/libc++.dylib",
 ]
 
 java_library(
@@ -48,7 +47,6 @@ java_library(
 
 LINUX_FILES = [
     "//prebuilts/tools/common/aapt:linux/aapt2",
-    "//prebuilts/tools/common/aapt:linux/lib64/libc++.so",
 ]
 
 java_library(
