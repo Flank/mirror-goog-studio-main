@@ -56,6 +56,7 @@ public class BenchmarkTest {
         List<File> mutations = new ArrayList<>();
         List<String> buildProperties = new ArrayList<>();
         List<BenchmarkListener> listeners = new ArrayList<>();
+        boolean fromStudio = false;
 
         Iterator<String> it = Arrays.asList(args).iterator();
         while (it.hasNext()) {
@@ -100,6 +101,8 @@ public class BenchmarkTest {
                 buildProperties.add(it.next());
             } else if (arg.equals("--listener") && it.hasNext()) {
                 listeners.add(locateListener(it.next()).newInstance());
+            } else if (arg.equals("--from-studio") && it.hasNext()) {
+                fromStudio = Boolean.valueOf(it.next());
             } else {
                 throw new IllegalArgumentException("Unknown flag: " + arg);
             }
@@ -125,6 +128,7 @@ public class BenchmarkTest {
                         tasks,
                         listeners,
                         buildProperties,
+                        fromStudio,
                         Boolean.valueOf(System.getProperty(PRESUBMIT_PROP)));
     }
 
@@ -166,6 +170,7 @@ public class BenchmarkTest {
             List<String> tasks,
             List<BenchmarkListener> listeners,
             List<String> buildProperties,
+            boolean fromStudio,
             boolean presubmitRun)
             throws Exception {
 
@@ -187,6 +192,7 @@ public class BenchmarkTest {
         if (benchmarkType != null) {
             mapBuilder.put("benchmarkType", benchmarkType);
         }
+		mapBuilder.put("fromStudio", Boolean.toString(fromStudio));
         benchmarkBuilder.setMetadata(mapBuilder.build());
 
         Benchmark benchmark = benchmarkBuilder.build();
@@ -208,11 +214,20 @@ public class BenchmarkTest {
             diffs[i] = new UnifiedDiff(mutations.get(i));
         }
 
+
         try (Gradle gradle = new Gradle(src, out, distribution)) {
             gradle.addRepo(repo);
             gradle.addRepo(new File(data, "repo.zip"));
             gradle.addArgument("-Dcom.android.gradle.version=" + getLocalGradleVersion());
             gradle.addArgument("-Duser.home=" + home.getAbsolutePath());
+            if (fromStudio) {
+                gradle.addArgument("-Pandroid.injected.invoked.from.ide=true");
+                gradle.addArgument("-Pandroid.injected.testOnly=true");
+                gradle.addArgument(
+                        "-Pandroid.injected.build.api=10000"); // as high as possible so we never need to change it.
+                gradle.addArgument("-Pandroid.injected.build.abi=arm64-v8a");
+                gradle.addArgument("-Pandroid.injected.build.density=xhdpi");
+            }
             buildProperties.forEach(gradle::addArgument);
 
             if (!presubmitRun) {
