@@ -49,6 +49,7 @@ public class AdbClient {
         INSTALL_FAILED_OLDER_SDK,
         DEVICE_NOT_FOUND,
         SHELL_UNRESPONSIVE,
+        INSTALL_FAILED_INSUFFICIENT_STORAGE,
     }
 
     /**
@@ -81,13 +82,15 @@ public class AdbClient {
                 try {
                     result = InstallResult.valueOf(code);
                 } catch (IllegalArgumentException | NullPointerException ignored) {
+                    logger.warning(
+                            "Unrecognized Installation Failure: %s\n%s\n", code, e.getMessage());
                 }
             } else {
                 Throwable cause = e.getCause();
                 if (cause instanceof ShellCommandUnresponsiveException) {
                     result = InstallResult.SHELL_UNRESPONSIVE;
                 } else {
-                    logger.error(e, "Installation Failure");
+                    logger.warning("Installation Failure: %s\n", e.getMessage());
                 }
             }
             return result;
