@@ -162,16 +162,12 @@ public class JarContentsTest {
         expected.putAll(
                 "com/android/tools/build/aapt2:osx",
                 "aapt2",
-                "lib64/",
-                "lib64/libc++.dylib",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
         expected.putAll(
                 "com/android/tools/build/aapt2:linux",
                 "aapt2",
-                "lib64/",
-                "lib64/libc++.so",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "NOTICE");

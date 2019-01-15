@@ -79,17 +79,9 @@ class Aapt2DaemonImpl(
 
     @Throws(TimeoutException::class)
     override fun startProcess() {
-        val value: File = File(aaptCommand.get(0))
-
         val waitForReady = WaitForReadyOnStdOut(displayName, logger)
         processOutput.delegate = waitForReady
         val processBuilder = ProcessBuilder(aaptCommand)
-        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_LINUX) {
-            if (File(value.parentFile.absolutePath + "/lib64/libc++.so").exists()) {
-                processBuilder.environment()["LD_PRELOAD"] = value.parentFile.absolutePath +
-                        "/lib64/libc++.so"
-            }
-        }
         process = processBuilder.start()
         writer = try {
             GrabProcessOutput.grabProcessOutput(
