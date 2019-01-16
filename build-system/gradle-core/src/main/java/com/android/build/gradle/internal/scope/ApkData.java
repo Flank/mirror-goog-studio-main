@@ -59,6 +59,9 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
     // TODO : move it to a subclass, we cannot override versions for SPLIT
     private transient Supplier<String> versionName = () -> null;
     private transient IntSupplier versionCode = () -> 0;
+    private String serializedVersionName;
+    private int serializedVersionCode = 0;
+
     private AtomicBoolean enabled = new AtomicBoolean(true);
     private String outputFileName;
 
@@ -159,12 +162,20 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
 
     @Override
     public int getVersionCode() {
-        return versionCode.getAsInt();
+        if (versionCode == null) {
+            return serializedVersionCode;
+        }
+        serializedVersionCode = versionCode.getAsInt();
+        return serializedVersionCode;
     }
 
     @Nullable
     public String getVersionName() {
-        return versionName.get();
+        if (versionName == null) {
+            return serializedVersionName;
+        }
+        serializedVersionName = versionName.get();
+        return serializedVersionName;
     }
 
     @Nullable
