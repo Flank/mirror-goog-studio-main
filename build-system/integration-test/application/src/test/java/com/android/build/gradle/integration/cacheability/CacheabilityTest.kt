@@ -76,12 +76,12 @@ class CacheabilityTest {
                     ":mergeDebugJniLibFolders",
                     ":processDebugManifest",
                     ":processDebugResources",
-                    ":mainApkListPersistenceDebug"
+                    ":mainApkListPersistenceDebug",
+                    ":createDebugCompatibleScreenManifests"
                 ),
                 DID_WORK to setOf(
                     ":checkDebugManifest",
                     ":prepareLintJar",
-                    ":createDebugCompatibleScreenManifests",
                     ":compileDebugShaders",
                     ":transformClassesWithDexBuilderForDebug",
                     ":validateSigningDebug",
@@ -111,7 +111,6 @@ class CacheabilityTest {
         private val NOT_YET_CACHEABLE = setOf(
             ":checkDebugManifest" /* Bug 74595857 */,
             ":prepareLintJar" /* Bug 120413672 */,
-            ":createDebugCompatibleScreenManifests" /* Bug 120412436 */,
             ":compileDebugShaders" /* Bug 120413401 */,
             ":transformClassesWithDexBuilderForDebug" /* Bug 74595921 */,
             ":signingConfigWriterDebug" /* Bug 120411939 */,
