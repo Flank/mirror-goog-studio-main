@@ -127,7 +127,7 @@ fun getGlobalLibMap(): Map<String, Library> {
 
 private fun instantiateLibrary(artifact: ResolvedArtifact): Library {
     val library: Library
-    val id = artifact.id.componentIdentifier
+    val id = artifact.componentIdentifier
     val address = artifact.computeModelAddress()
 
     if (id !is ProjectComponentIdentifier || artifact.isWrappedModule) {
@@ -190,7 +190,7 @@ fun findResStaticLibrary(
             return File(
                 convertedDirectory,
                 getAutoNamespacedLibraryFileName(
-                    explodedAar.id.componentIdentifier
+                    explodedAar.componentIdentifier
                 )
             )
         }
