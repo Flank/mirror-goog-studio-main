@@ -30,6 +30,7 @@ import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 
 import com.google.common.collect.Sets
+import com.google.common.truth.Expect
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -142,6 +143,9 @@ class CacheabilityTest {
         .dontOutputLogOnFailure()
         .create()
 
+    @get:Rule
+    val expect: Expect = Expect.create()
+
     @Before
     fun setUp() {
         // Normally the APK name wouldn't include the project name. However, because the current
@@ -180,19 +184,28 @@ class CacheabilityTest {
         }
 
         // Check that the tasks' states are as expected
-        assertThat(result.upToDateTasks)
+
+        expect.that(result.upToDateTasks)
+            .named("UpToDateTasks")
             .containsExactlyElementsIn(EXPECTED_TASK_STATES[UP_TO_DATE]!!)
-        assertThat(result.fromCacheTasks)
+        expect.that(result.fromCacheTasks)
+            .named("FromCacheTasks")
             .containsExactlyElementsIn(EXPECTED_TASK_STATES[FROM_CACHE]!!)
-        assertThat(result.didWorkTasks).containsExactlyElementsIn(expectedDidWorkTasks)
-        assertThat(result.skippedTasks).containsExactlyElementsIn(EXPECTED_TASK_STATES[SKIPPED]!!)
-        assertThat(result.failedTasks).containsExactlyElementsIn(EXPECTED_TASK_STATES[FAILED]!!)
+        expect.that(result.didWorkTasks)
+            .named("DidWorkTasks")
+            .containsExactlyElementsIn(expectedDidWorkTasks)
+        expect.that(result.skippedTasks)
+            .named("SkippedTasks")
+            .containsExactlyElementsIn(EXPECTED_TASK_STATES[SKIPPED]!!)
+        expect.that(result.failedTasks)
+            .named("FailedTasks")
+            .containsExactlyElementsIn(EXPECTED_TASK_STATES[FAILED]!!)
 
         // Sanity-check that all the tasks that did work (were not cacheable) have been looked at
         // and categorized into either NOT_YET_CACHEABLE or NEVER_CACHEABLE.
-        assertThat(EXPECTED_TASK_STATES[DID_WORK]).containsExactlyElementsIn(
-            Sets.union(NOT_YET_CACHEABLE, NEVER_CACHEABLE)
-        )
+        expect.that(EXPECTED_TASK_STATES[DID_WORK])
+            .named("Sanity-DidWorkIsNotCacheable")
+            .containsExactlyElementsIn(Sets.union(NOT_YET_CACHEABLE, NEVER_CACHEABLE))
 
         // Clean up the cache
         FileUtils.deleteRecursivelyIfExists(buildCacheDir)
