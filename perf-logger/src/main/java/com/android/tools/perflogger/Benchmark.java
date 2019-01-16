@@ -16,7 +16,6 @@
 
 package com.android.tools.perflogger;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.collect.ImmutableMap;
@@ -37,29 +36,10 @@ public class Benchmark {
     @Nullable @Expose private final ImmutableMap<String, String> metadata;
 
     private Benchmark(@NonNull Builder builder) {
-        name = builder.benchmarkName + getHostSuffix();
+        name = builder.benchmarkName;
         projectName = builder.projectName;
         description = builder.description;
         metadata = builder.metadata;
-    }
-
-    /**
-     * If a Benchmark is run on a platform other than Linux, the Benchmark is automatically renamed
-     * so that results from different hosts don't appear on the same chart.
-     *
-     * @return an OS-specific string, to be appended to the name of a Benchmark
-     */
-    private static String getHostSuffix() {
-        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_LINUX) {
-            // Linux is the "default" platform, so tests run on Linux are not suffixed
-            return "";
-        } else if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN) {
-            return "_mac";
-        } else if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
-            return "_windows";
-        }
-
-        throw new RuntimeException("Unexpected platform.");
     }
 
     @NonNull

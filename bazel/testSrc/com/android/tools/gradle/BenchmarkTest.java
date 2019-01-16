@@ -16,7 +16,6 @@
 
 package com.android.tools.gradle;
 
-import com.android.SdkConstants;
 import com.android.testutils.diff.UnifiedDiff;
 import com.android.tools.perflogger.Benchmark;
 import com.android.tools.perflogger.PerfData;
@@ -188,7 +187,6 @@ public class BenchmarkTest {
         if (benchmarkType != null) {
             mapBuilder.put("benchmarkType", benchmarkType);
         }
-        mapBuilder.put("benchmarkHost", hostName());
         benchmarkBuilder.setMetadata(mapBuilder.build());
 
         Benchmark benchmark = benchmarkBuilder.build();
@@ -256,17 +254,5 @@ public class BenchmarkTest {
                 }
             }
         }
-    }
-
-    private static String hostName() {
-        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_LINUX) {
-            return "Linux";
-        } else if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN) {
-            return "Mac";
-        } else if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
-            return "Windows";
-        }
-
-        throw new RuntimeException("Unexpected platform.");
     }
 }

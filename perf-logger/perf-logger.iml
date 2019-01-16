@@ -14,6 +14,5 @@
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
     <orderEntry type="library" scope="TEST" name="truth" level="project" />
     <orderEntry type="module" module-name="android.sdktools.android-annotations" scope="TEST" />
-    <orderEntry type="module" module-name="android.sdktools.common" scope="TEST" />
   </component>
 </module>
