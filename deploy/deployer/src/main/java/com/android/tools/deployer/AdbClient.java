@@ -17,6 +17,7 @@
 package com.android.tools.deployer;
 
 import com.android.ddmlib.*;
+import com.android.sdklib.AndroidVersion;
 import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
 import java.io.ByteArrayOutputStream;
@@ -50,6 +51,7 @@ public class AdbClient {
         DEVICE_NOT_FOUND,
         SHELL_UNRESPONSIVE,
         INSTALL_FAILED_INSUFFICIENT_STORAGE,
+        MULTI_APKS_NO_SUPPORTED_BELOW21,
     }
 
     /**
@@ -73,7 +75,15 @@ public class AdbClient {
     public InstallResult install(List<String> apks, List<String> options) {
         List<File> files = apks.stream().map(File::new).collect(Collectors.toList());
         try {
-            device.installPackages(files, true, options, 5, TimeUnit.MINUTES);
+            if (device.getVersion().isGreaterOrEqualThan(AndroidVersion.VersionCodes.LOLLIPOP)) {
+                device.installPackages(files, true, options, 5, TimeUnit.MINUTES);
+            } else {
+                if (apks.size() != 1) {
+                    return InstallResult.MULTI_APKS_NO_SUPPORTED_BELOW21;
+                } else {
+                    device.installPackage(apks.get(0), true, options.toArray(new String[0]));
+                }
+            }
             return InstallResult.OK;
         } catch (InstallException e) {
             InstallResult result = InstallResult.UNKNOWN_ERROR;
