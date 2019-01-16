@@ -234,7 +234,7 @@ open class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecutor)
         override fun preConfigure(taskName: String) {
             super.preConfigure(taskName)
 
-            val bundleName = "${variantScope.globalScope.projectBaseName}.aab"
+            val bundleName = "${variantScope.globalScope.projectBaseName}-${variantScope.variantConfiguration.baseName}.aab"
 
             bundleFile = variantScope.artifacts.createArtifactFile(
                 InternalArtifactType.INTERMEDIARY_BUNDLE,

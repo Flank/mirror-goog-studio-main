@@ -297,7 +297,7 @@ class InstantAppBundleTest {
 
     private fun getBundleFile(variantName: String): File {
         return File(project.getSubproject(":base").buildDir,
-            FileUtils.join("outputs", "bundle", variantName + "Feature", "base.aab"))
+            FileUtils.join("outputs", "bundle", variantName + "Feature", "base-$variantName.aab"))
     }
 
     private fun getJsonFile(api: Int): Path {

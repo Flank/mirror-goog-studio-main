@@ -545,8 +545,9 @@ class DynamicAppTest {
             .with(StringOption.IDE_APK_LOCATION, "out/test/my-bundle")
             .run("app:bundle")
 
-        val bundleFile = getApkFolderOutput("redDebug").bundleFile
+
         for (flavor in listOf("red", "blue")) {
+            val bundleFile = getApkFolderOutput("${flavor}Debug").bundleFile
             FileSubject.assertThat(
                 FileUtils.join(
                     project.getSubproject(":app").testDir,
@@ -567,6 +568,7 @@ class DynamicAppTest {
             .run("app:bundle")
 
         for (flavor in listOf("red", "blue")) {
+            val bundleFile = getApkFolderOutput("${flavor}Debug").bundleFile
             FileSubject.assertThat(
                 FileUtils.join(File(absolutePath), flavor, "debug", bundleFile.name))
                 .exists()
