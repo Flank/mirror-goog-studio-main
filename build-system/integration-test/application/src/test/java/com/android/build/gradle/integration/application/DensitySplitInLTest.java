@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /** Assemble tests for class densitySplitInL . */
@@ -70,6 +71,7 @@ public class DensitySplitInLTest {
         assertThat(expected).isEmpty();
     }
 
+    @Ignore("b/113323972")
     @Test
     public void checkAddingDensityIncrementally() throws Exception {
         // get the last modified time of the initial APKs so we can make sure incremental build
@@ -107,6 +109,7 @@ public class DensitySplitInLTest {
                 });
     }
 
+    @Ignore("b/113323972")
     @Test
     public void checkDeletingDensityIncrementally() throws Exception {
         // get the last modified time of the initial APKs so we can make sure incremental build
