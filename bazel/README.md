@@ -100,8 +100,10 @@ support Android Studio we created a new kind of rule, that matches an IntelliJ
 module: the `iml_module` rule.
 
 > Note that we modify these BUILD files manually, so whenever you make a change
-> to an `.iml` file, its corresponding BUILD file will have to be changed. This should be
-> done using `bazel run //tools/base/bazel:iml_to_build`.
+> to an `.iml` file, its corresponding `BUILD` file will have to be changed. This should be
+> done using `bazel run //tools/base/bazel:iml_to_build`. If you create a new
+> `.iml` file, you must create the corresponding (empty) `BUILD` file before
+> running `iml_to_build`.
 
 ### iml_module
 
