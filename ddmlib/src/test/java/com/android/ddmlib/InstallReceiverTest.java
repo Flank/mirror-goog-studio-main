@@ -118,4 +118,11 @@ public class InstallReceiverTest {
         assertFalse(receiver.isSuccessfullyCompleted());
         assertEquals("INSTALL_ERROR_EMPTY_DESC", receiver.getErrorCode());
     }
+
+    @Test
+    public void testSuccessIfNoReply() {
+        InstallReceiver receiver = new InstallReceiver();
+        receiver.flush();
+        assertTrue(receiver.isSuccessfullyCompleted());
+    }
 }
