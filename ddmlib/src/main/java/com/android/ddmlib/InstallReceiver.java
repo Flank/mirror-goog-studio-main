@@ -111,4 +111,15 @@ public class InstallReceiver extends MultiLineReceiver {
     public boolean isSuccessfullyCompleted() {
         return mSuccessfullyCompleted;
     }
+
+    @Override
+    public void done() {
+        // On API 24, install-commit does not return anything, so we never receive either the
+        // Success or Failure line. If we get to this point and there was no error, we set it to be
+        // successful. Note that in the case of a time out, this method never gets called.
+        super.done();
+        if (mErrorMessage == null) {
+            mSuccessfullyCompleted = true;
+        }
+    }
 }
