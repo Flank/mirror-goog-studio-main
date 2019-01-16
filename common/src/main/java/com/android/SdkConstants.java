@@ -984,6 +984,8 @@ public final class SdkConstants {
 
     // ---- XML ----
 
+    /** URI of the reserved "xml" prefix. */
+    public static final String XML_NAMESPACE_URI = "http://www.w3.org/XML/1998/namespace";
     /** URI of the reserved "xmlns" prefix */
     public static final String XMLNS_URI = "http://www.w3.org/2000/xmlns/"; //$NON-NLS-1$
     /** The "xmlns" attribute name */
