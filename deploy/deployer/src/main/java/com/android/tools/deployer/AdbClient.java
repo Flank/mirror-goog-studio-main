@@ -50,8 +50,19 @@ public class AdbClient {
         INSTALL_FAILED_OLDER_SDK,
         DEVICE_NOT_FOUND,
         SHELL_UNRESPONSIVE,
-        INSTALL_FAILED_INSUFFICIENT_STORAGE,
         MULTI_APKS_NO_SUPPORTED_BELOW21,
+        INSTALL_FAILED_INSUFFICIENT_STORAGE,
+        ;
+
+        private String reason = null;
+
+        public void setReason(String reason) {
+            this.reason = reason;
+        }
+
+        public String getReason() {
+            return reason;
+        }
     }
 
     /**
@@ -100,6 +111,7 @@ public class AdbClient {
                 if (cause instanceof ShellCommandUnresponsiveException) {
                     result = InstallResult.SHELL_UNRESPONSIVE;
                 } else {
+                    result.setReason(e.getMessage());
                     logger.warning("Installation Failure: %s\n", e.getMessage());
                 }
             }

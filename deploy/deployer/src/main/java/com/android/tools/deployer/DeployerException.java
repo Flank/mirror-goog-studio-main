@@ -20,6 +20,7 @@ public class DeployerException extends Exception {
 
     private final Error error;
     private final String code;
+    private final String reason;
 
     public enum Error {
         DUMP_FAILED,
@@ -45,18 +46,21 @@ public class DeployerException extends Exception {
         super(message);
         this.error = error;
         this.code = "";
+        this.reason = null;
     }
 
-    public <E extends Enum> DeployerException(Error error, E code, String message) {
+    public <E extends Enum> DeployerException(Error error, E code, String message, String reason) {
         super(message);
         this.error = error;
         this.code = code.name();
+        this.reason = reason;
     }
 
     public DeployerException(Error error, Throwable t) {
         super(t);
         this.error = error;
         this.code = "";
+        this.reason = null;
     }
 
     public Error getError() {
@@ -65,5 +69,9 @@ public class DeployerException extends Exception {
 
     public String getId() {
         return error.name() + (code.isEmpty() ? "" : ".") + code;
+    }
+
+    public String getReason() {
+        return reason;
     }
 }
