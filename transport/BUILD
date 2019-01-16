@@ -6,12 +6,14 @@ cc_binary(
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",
         "-Itools/base/transport",
+        "-Itools/base/echo-sample",
         "-I$(GENDIR)/tools/base/transport",
     ],
     linkopts = ANDROID_LINKOPTS,
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
     deps = [
+        "//tools/base/echo-sample:echo",
         "//tools/base/profiler/native/perfd",
         "//tools/base/transport/daemon",
         "//tools/base/transport/proto:cc_proto",

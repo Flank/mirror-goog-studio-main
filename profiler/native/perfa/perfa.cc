@@ -33,6 +33,7 @@
 #include "slicer/reader.h"
 #include "slicer/writer.h"
 
+#include "commands/echo_agent_command.h"
 #include "transform/android_activitythread_transform.h"
 #include "transform/android_alarmmanager_listenerwrapper_transform.h"
 #include "transform/android_alarmmanager_transform.h"
@@ -324,6 +325,7 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
                             &ProfilerInitializationWorker, &agent_config,
                             JVMTI_THREAD_NORM_PRIORITY);
 
+  EchoAgentCommand::RegisterAgentEchoCommandHandler(vm);
   return JNI_OK;
 }
 

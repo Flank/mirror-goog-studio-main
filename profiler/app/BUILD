@@ -8,6 +8,8 @@ java_library(
         include = [
             "supportlib/src/main/**/*.java",
             "common/src/main/**/*.java",
+            # Need to include this here as platforms/latest_jar is not visible outside this package.
+            "echo-sample/src/main/**/*.java",
         ],
         # Since Energy profiler doesn't support compile-time instrumentation, don't include the src
         # to avoid adding its dependencies.
@@ -27,6 +29,8 @@ java_library(
     srcs = glob([
         "perfa/src/main/**/*.java",
         "common/src/main/**/*.java",
+        # Need to include this here as platforms/latest_jar is not visible outside this package.
+        "echo-sample/src/main/**/*.java",
     ]),
     deps = [
         "//prebuilts/studio/sdk:platforms/latest_jar",

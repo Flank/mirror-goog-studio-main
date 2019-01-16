@@ -17,6 +17,7 @@
 #include <cstring>
 #include "daemon/connector.h"
 #include "daemon/daemon.h"
+#include "echo.h"
 #include "gflags/gflags.h"
 #include "perfd/perfd.h"
 #include "proto/common.pb.h"
@@ -39,6 +40,11 @@ void RegisterTransports(profiler::Daemon* daemon) {
   if (profiler::Perfd::Initialize(daemon) != 0) {
     profiler::Log::E("Failed to initialize perfd");
   }
+
+  // Initializing the agent to handle daemon commands. This is only needed if
+  // we want the daemon to handle commands. If we only want the agent to handle
+  // commands then we do not need to do this step.
+  demo::Echo::Initialize(daemon);
 }
 int main(int argc, char** argv) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);

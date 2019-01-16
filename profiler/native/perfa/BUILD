@@ -16,6 +16,7 @@ cc_binary(
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",
         "-Itools/base/transport",
+        "-Itools/base/echo-sample",
         "-I$(GENDIR)/tools/base/transport",
     ],
     linkopts = ANDROID_LINKOPTS,
@@ -27,6 +28,8 @@ cc_binary(
     deps = [
         "//external:slicer",
         "//prebuilts/studio/jdk:jni_headers",
+        "//tools/base/echo-sample:agent_command",
+        "//tools/base/echo-sample:jni",
         "//tools/base/profiler/native/agent",
         "//tools/base/transport/proto:cc_proto",
         "//tools/base/transport/utils",
