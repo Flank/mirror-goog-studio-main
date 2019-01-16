@@ -67,6 +67,7 @@ public class MockAddonTarget implements IAndroidTarget {
     }
 
     @Override
+    @NonNull
     public String getLocation() {
         return "/sdk/add-ons/addon-" + mName;
     }

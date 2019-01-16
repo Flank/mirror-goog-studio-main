@@ -200,6 +200,7 @@ public class PlatformTarget implements IAndroidTarget {
 
 
     @Override
+    @NonNull
     public String getLocation() {
         return mPackage.getLocation().getPath() + File.separator;
     }

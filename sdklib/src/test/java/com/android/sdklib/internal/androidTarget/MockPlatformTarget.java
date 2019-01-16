@@ -67,6 +67,7 @@ public class MockPlatformTarget implements IAndroidTarget {
     }
 
     @Override
+    @NonNull
     public String getLocation() {
         return "/sdk/platforms/android-" + getVersion().getApiString();
     }

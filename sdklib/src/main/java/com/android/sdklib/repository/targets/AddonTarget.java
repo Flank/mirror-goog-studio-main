@@ -70,11 +70,12 @@ public class AddonTarget implements IAndroidTarget {
     private List<OptionalLibrary> mAdditionalLibraries;
 
     /**
-     * Construct a new {@link AddonTarget}.
-     *  @param p          The {@link LocalPackage} containing this target.
+     * Constructs a new {@link AddonTarget}.
+     *
+     * @param p          The {@link LocalPackage} containing this target.
      * @param baseTarget The {@link IAndroidTarget} on which this addon is based.
      * @param sysImgMgr  A {@link SystemImageManager}, used to find {@link ISystemImage}s associated
- *                   associated with this target.
+     *                   associated with this target.
      * @param progress
      * @param fop        {@link FileOp} to use for file operations. For normal use should be {@link
      *                   FileOpUtils#create()}.
@@ -141,6 +142,7 @@ public class AddonTarget implements IAndroidTarget {
     }
 
     @Override
+    @NonNull
     public String getLocation() {
         return mPackage.getLocation().getPath() + File.separator;
     }

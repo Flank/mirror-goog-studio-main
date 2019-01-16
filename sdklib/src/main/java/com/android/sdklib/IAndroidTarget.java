@@ -103,6 +103,7 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
     /**
      * Returns the target location.
      */
+    @NonNull
     String getLocation();
 
     /**
