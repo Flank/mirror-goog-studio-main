@@ -298,6 +298,9 @@ public class UnifiedDiff {
                 Path path = Paths.get(to);
                 File target =
                         new File(directory, path.subpath(prefix, path.getNameCount()).toString());
+                if (target.getParentFile() != null) {
+                    target.getParentFile().mkdirs();
+                }
                 List<String> strings =
                         NO_FILE.equals(from)
                                 ? new ArrayList<>()
