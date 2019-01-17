@@ -53,6 +53,9 @@ if [[ -d "${dist_dir}" ]]; then
   mkdir "${dist_dir}"/bazel-testlogs
   (cd "${testlogs_dir}" && zip -R "${dist_dir}"/bazel-testlogs/xml_files.zip "*.xml")
 
+  # Upload perfgate performance files
+  (cd "${testlogs_dir}" && zip -R "${dist_dir}"/perfgate_data.zip "*outputs.zip")
+
   # Create profile html in ${dist_dir} so it ends up in Artifacts.
 ${script_dir}/bazel analyze-profile --html ${dist_dir}/prof
 
