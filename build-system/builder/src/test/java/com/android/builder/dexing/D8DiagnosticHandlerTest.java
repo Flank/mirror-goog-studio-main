@@ -72,12 +72,12 @@ public class D8DiagnosticHandlerTest {
         SourceFilePosition position = getSourceFilePosition(message);
         assertThat(position.getFile().getSourceFile()).isNotNull();
         assertThat(position.getFile().getSourceFile()).isEqualTo(path.toFile());
-        assertThat(position.getPosition().getStartLine()).isEqualTo(2);
-        assertThat(position.getPosition().getEndLine()).isEqualTo(3);
+        assertThat(position.getPosition().getStartLine()).isEqualTo(1);
+        assertThat(position.getPosition().getEndLine()).isEqualTo(2);
         assertThat(position.getPosition().getStartOffset()).isEqualTo(12);
         assertThat(position.getPosition().getEndOffset()).isEqualTo(21);
-        assertThat(position.getPosition().getStartColumn()).isEqualTo(1);
-        assertThat(position.getPosition().getEndColumn()).isEqualTo(6);
+        assertThat(position.getPosition().getStartColumn()).isEqualTo(0);
+        assertThat(position.getPosition().getEndColumn()).isEqualTo(5);
     }
 
     @Test
@@ -91,12 +91,12 @@ public class D8DiagnosticHandlerTest {
         SourceFilePosition position = getSourceFilePosition(message);
         assertThat(position.getFile().getSourceFile()).isNotNull();
         assertThat(position.getFile().getSourceFile()).isEqualTo(path.toFile());
-        assertThat(position.getPosition().getStartLine()).isEqualTo(2);
-        assertThat(position.getPosition().getEndLine()).isEqualTo(2);
+        assertThat(position.getPosition().getStartLine()).isEqualTo(1);
+        assertThat(position.getPosition().getEndLine()).isEqualTo(1);
         assertThat(position.getPosition().getStartOffset()).isEqualTo(12);
         assertThat(position.getPosition().getEndOffset()).isEqualTo(12);
-        assertThat(position.getPosition().getStartColumn()).isEqualTo(1);
-        assertThat(position.getPosition().getEndColumn()).isEqualTo(1);
+        assertThat(position.getPosition().getStartColumn()).isEqualTo(0);
+        assertThat(position.getPosition().getEndColumn()).isEqualTo(0);
     }
 
     @Test

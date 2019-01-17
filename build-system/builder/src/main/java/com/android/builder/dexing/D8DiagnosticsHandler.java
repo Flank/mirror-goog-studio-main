@@ -107,15 +107,32 @@ public class D8DiagnosticsHandler implements DiagnosticsHandler {
                 endTextPosition = null;
             }
             if (startTextPosition != null) {
+                int startLine = startTextPosition.getLine();
+                if (startLine != -1) {
+                    startLine--;
+                }
+                int startColumn = startTextPosition.getColumn();
+                if (startColumn != -1) {
+                    startColumn--;
+                }
+                int endLine = endTextPosition.getLine();
+                if (endLine != -1) {
+                    endLine--;
+                }
+                int endColumn = endTextPosition.getColumn();
+                if (endColumn != -1) {
+                    endColumn--;
+                }
+
                 position =
                         new SourceFilePosition(
                                 originFile,
                                 new SourcePosition(
-                                        startTextPosition.getLine(),
-                                        startTextPosition.getColumn(),
+                                        startLine,
+                                        startColumn,
                                         toIntOffset(startTextPosition.getOffset()),
-                                        endTextPosition.getLine(),
-                                        endTextPosition.getColumn(),
+                                        endLine,
+                                        endColumn,
                                         toIntOffset(endTextPosition.getOffset())));
 
             } else {
