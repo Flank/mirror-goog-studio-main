@@ -103,7 +103,8 @@ TEST(CpuThreadSamplerTest, SampleCpuThreads) {
                                             CpuThreadData::RUNNING,
                                             CpuThreadData::SLEEPING};
 
-    auto groups = event_buffer.Get(Event::CPU_THREAD, 0, LONG_MAX);
+    auto groups = event_buffer.Get(session.info().session_id(),
+                                   Event::CPU_THREAD, 0, LONG_MAX);
     ASSERT_EQ(expected_thread_count, groups.size());
     // Sort groups by group ID.
     std::sort(groups.begin(), groups.end(), cmp);
@@ -132,7 +133,8 @@ TEST(CpuThreadSamplerTest, SampleCpuThreads) {
         CpuThreadData::RUNNING, CpuThreadData::SLEEPING, CpuThreadData::DEAD,
         CpuThreadData::RUNNING};
 
-    auto groups = event_buffer.Get(Event::CPU_THREAD, 0, LONG_MAX);
+    auto groups = event_buffer.Get(session.info().session_id(),
+                                   Event::CPU_THREAD, 0, LONG_MAX);
     ASSERT_EQ(expected_thread_count, groups.size());
     // Sort groups by group ID.
     std::sort(groups.begin(), groups.end(), cmp);
@@ -162,7 +164,8 @@ TEST(CpuThreadSamplerTest, SampleCpuThreads) {
                                             CpuThreadData::SLEEPING,
                                             CpuThreadData::RUNNING};
 
-    auto groups = event_buffer.Get(Event::CPU_THREAD, 2, LONG_MAX);
+    auto groups = event_buffer.Get(session.info().session_id(),
+                                   Event::CPU_THREAD, 2, LONG_MAX);
     ASSERT_EQ(expected_thread_count, groups.size());
     // Sort groups by group ID.
     std::sort(groups.begin(), groups.end(), cmp);

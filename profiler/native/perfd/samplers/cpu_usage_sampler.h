@@ -38,6 +38,7 @@ class CpuUsageDataSampler final : public Sampler {
   CpuUsageDataSampler(const profiler::Session& session, EventBuffer* buffer,
                       CpuUsageSampler* usage_sampler)
       : Sampler(session, buffer, kSampleRateMs),
+        pid_(session.info().pid()),
         usage_sampler_(usage_sampler) {}
 
   virtual void Sample() override;
@@ -48,6 +49,8 @@ class CpuUsageDataSampler final : public Sampler {
 
   virtual const char* name() override { return kSamplerName; }
 
+  // PID of the app to be sampled.
+  int32_t pid_;
   // Wrapped CpuUsageSampler that collects CPU usage data.
   std::unique_ptr<CpuUsageSampler> usage_sampler_;
 };

@@ -23,38 +23,33 @@
 #include <string>
 #include <vector>
 
-#include "perfd/daemon.h"
 #include "perfd/sessions/session.h"
 #include "proto/common.pb.h"
 #include "proto/profiler.grpc.pb.h"
 
 namespace profiler {
 
+class Daemon;
+
 class SessionsManager final {
  public:
-  // Single instance shared across all profilers.
-  static SessionsManager *GetInstance();
+  SessionsManager(Daemon *daemon) : daemon_(daemon) {}
 
   // Begins a new session. If a session was
   // already running it will be ended.
-  void BeginSession(Daemon *daemon, int64_t stream_id,
-                    const proto::BeginSession &data);
-
-  // Ends the given session if it was active.
-  void EndSession(Daemon *daemon, int64_t session_id);
+  void BeginSession(int64_t stream_id, const proto::BeginSession &data);
 
   // Returns the last session (which is the only one that can be active),
   // or nullptr if there are none.
   profiler::Session *GetLastSession();
 
-  // Clears all sessions.
-  // Visible for testing.
-  void ClearSessions();
+  // Ends the given session if it was active.
+  void EndSession(int64_t session_id);
 
  private:
-  SessionsManager() = default;
-  void DoEndSession(Daemon *daemon, profiler::Session *session,
-                    int64_t timestamp_ns);
+  void DoEndSession(profiler::Session *session, int64_t timestamp_ns);
+
+  Daemon *daemon_;
 
   std::vector<std::unique_ptr<profiler::Session>> sessions_;
 };

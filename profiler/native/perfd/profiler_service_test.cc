@@ -19,7 +19,6 @@
 
 #include <grpc++/grpc++.h>
 #include "perfd/profiler_service.h"
-#include "perfd/sessions/sessions_manager.h"
 #include "proto/profiler.grpc.pb.h"
 #include "utils/config.h"
 #include "utils/fake_clock.h"
@@ -52,7 +51,6 @@ class ProfilerServiceTest : public ::testing::Test {
     stub_ = proto::ProfilerService::NewStub(channel);
     // Create a new thread to read events on.
     events_thread_ = std::thread(&ProfilerServiceTest::GetEvents, this);
-    SessionsManager::GetInstance()->ClearSessions();
   }
 
   proto::Session BeginSession(int32_t device_id, int32_t pid) {
@@ -200,13 +198,13 @@ TEST_F(ProfilerServiceTest, TestBeginSessionCommand) {
 
   // Test id generation to ensure refactoring maintains same id's.
   EXPECT_EQ(96, sres.sessions(0).session_id());
-  EXPECT_EQ(100, sres.sessions(0).stream_id());
+  EXPECT_EQ(100, sres.sessions(0).device_id());
   EXPECT_EQ(1000, sres.sessions(0).pid());
   EXPECT_EQ(2, sres.sessions(0).start_timestamp());
   EXPECT_EQ(4, sres.sessions(0).end_timestamp());
 
   EXPECT_EQ(108, sres.sessions(1).session_id());
-  EXPECT_EQ(100, sres.sessions(1).stream_id());
+  EXPECT_EQ(100, sres.sessions(1).device_id());
   EXPECT_EQ(1001, sres.sessions(1).pid());
   EXPECT_EQ(4, sres.sessions(1).start_timestamp());
   EXPECT_EQ(20, sres.sessions(1).end_timestamp());
@@ -254,7 +252,7 @@ TEST_F(ProfilerServiceTest, CanBeginAndEndASession) {
 
   EXPECT_EQ(begin.start_timestamp(), 1234);
   EXPECT_EQ(begin.end_timestamp(), LONG_MAX);
-  EXPECT_EQ(begin.stream_id(), 2222);
+  EXPECT_EQ(begin.device_id(), 2222);
   EXPECT_EQ(begin.pid(), 1);
   EXPECT_TRUE(IsSessionActive(begin));
 

@@ -75,7 +75,8 @@ void EventBuffer::InterruptWriteEvents() {
   events_cv_.notify_all();
 }
 
-std::vector<proto::EventGroup> EventBuffer::Get(proto::Event::Kind kind,
+std::vector<proto::EventGroup> EventBuffer::Get(int64_t session_id,
+                                                proto::Event::Kind kind,
                                                 int64_t from, int64_t to) {
   std::lock_guard<std::mutex> lock(mutex_);
   std::set<int64_t> group_ids;

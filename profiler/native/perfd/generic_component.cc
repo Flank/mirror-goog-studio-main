@@ -22,7 +22,7 @@
 
 namespace profiler {
 
-GenericComponent::GenericComponent(Daemon* daemon)
+GenericComponent::GenericComponent(Daemon* daemon, SessionsManager* sessions)
     : daemon_(daemon), generic_public_service_(daemon), agent_service_(daemon) {
   status_thread_ = std::thread(&GenericComponent::RunAgentStatusThread, this);
 }

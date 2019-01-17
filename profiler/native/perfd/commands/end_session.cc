@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 #include "perfd/commands/end_session.h"
-#include "perfd/sessions/sessions_manager.h"
 
 namespace profiler {
 
 grpc::Status EndSession::ExecuteOn(Daemon* daemon) {
-  SessionsManager::GetInstance()->EndSession(
-      daemon, command().end_session().session_id());
+  daemon->sessions()->EndSession(command().end_session().session_id());
   return grpc::Status::OK;
 }
 

@@ -57,8 +57,8 @@ void CreateTestData(FakeClock& clock, EventBuffer& buffer) {
   Event event;
   clock.Elapse(1);
   // Add 2 events to the same event group.
-  event.set_pid(0);
   event.set_group_id(1);
+  event.set_session_id(1);
   event.set_kind(Event::SESSION);
   event.mutable_session();
   buffer.Add(event);
@@ -68,8 +68,8 @@ void CreateTestData(FakeClock& clock, EventBuffer& buffer) {
   buffer.Add(event);
   clock.Elapse(1);
   // Add 1 event to a new event group.
-  event.set_pid(0);
   event.set_group_id(2);
+  event.set_session_id(2);
   event.set_kind(Event::PROCESS);
   event.set_is_ended(false);
   event.mutable_process();
@@ -102,11 +102,11 @@ TEST(EventBuffer, GettingEventsFiltered) {
   CreateTestData(clock, buffer);
 
   // Validate we get a group back for events that fit in group.
-  EXPECT_EQ(1, buffer.Get(Event::SESSION, 0, 5).size());
+  EXPECT_EQ(1, buffer.Get(1, Event::SESSION, 0, 5).size());
 
   // Validate we get the group back if the start session is before the requested
   // time, and the end is greater than the event end.
-  EXPECT_EQ(1, buffer.Get(Event::SESSION, 3, 7).size());
+  EXPECT_EQ(1, buffer.Get(1, Event::SESSION, 3, 7).size());
 }
 
 TEST(EventBuffer, ReadWriteEvents) {

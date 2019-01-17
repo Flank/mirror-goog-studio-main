@@ -22,6 +22,11 @@ option java_outer_classname = "Common";
 import "cpu_data.proto";
 import "network_data.proto";
 
+// Note: stream_id should NOT be part of an |Event| message because a session
+// (which is a collection of events) could be serialized and imported later.
+// Since an event can appear in multiple streams, it is confusing to have a
+// stream_id. In addition, it is unnecessary because the caller of GetEvents or
+// GetEventGroups should know the stream_id.
 message Event {
   enum Kind {
     NONE = 0;
@@ -29,35 +34,32 @@ message Event {
     STREAM = 1;
     // group_id: process id
     PROCESS = 2;
-    // No specified group_id, the latest event in a session is used.
-    AGENT = 3;
-
-    // Profilers Prefix = 100
-    // Session is a profiler only concept.
     // group_id: session id
-    SESSION = 101;
+    SESSION = 3;
+    // No specified group_id, the latest event in a session is used.
+    AGENT = 4;
 
-    // Network Profiler Prefix = 200
+    // Network Profiler Prefix = 100
     // group_id: |NETWORK_TX| or |NETWORK_RX|
-    NETWORK_SPEED = 201;
+    NETWORK_SPEED = 101;
     // No specified group_id
-    NETWORK_CONNECTION_COUNT = 202;
+    NETWORK_CONNECTION_COUNT = 102;
     // group_id: connection id
-    NETWORK_HTTP_CONNECTION = 203;
+    NETWORK_HTTP_CONNECTION = 103;
     // group_id: connection id
-    NETWORK_HTTP_THREAD = 204;
+    NETWORK_HTTP_THREAD = 104;
 
-    // Cpu Profiler Prefix = 300
+    // Cpu Profiler Prefix = 200
     // group_id: process id
-    CPU_USAGE = 301;
+    CPU_USAGE = 201;
     // group_id: thread id
-    CPU_THREAD = 302;
+    CPU_THREAD = 202;
 
-    // Memory Profiler Prefix = 400
+    // Memory Profiler Prefix = 300
 
-    // Energy Profiler Prefix = 500
+    // Energy Profiler Prefix = 400
 
-    // Event Profiler Prefix = 600
+    // Event Profiler Prefix = 500
   }
 
   // Fixed ID for pre-determined EventGroup. Event.Type is reserved for data
@@ -79,8 +81,9 @@ message Event {
     // Event Profiler Prefix = 500
   }
 
-  // The process the event belongs to.
-  int32 pid = 1;
+  // The session the event belongs to. For session events this is the same as
+  // |group_id|
+  int64 session_id = 1;
 
   // The id of the group this event belongs to. This is not unique, for concepts
   // that span across a range of time (network requests, threads, etc), they
@@ -101,28 +104,26 @@ message Event {
   oneof union {
     StreamData stream = 6;
     ProcessData process = 7;
-    AgentData agent_data = 8;
+    SessionData session = 8;
+    AgentData agent_data = 9;
 
-    // Profiler Prefix = 100
-    SessionData session = 101;
-
-    // Network Profiler Prefix = 200
+    // Network Profiler Prefix = 100
     // Populated when |kind| is |NETWORK_SPEED|
-    NetworkSpeedData network_speed = 201;
+    NetworkSpeedData network_speed = 101;
     // Populated when |kind| is |NETWORK_CONNECTION_COUNT|
-    NetworkConnectionData network_connections = 202;
+    NetworkConnectionData network_connections = 102;
     // Populated when |kind| is |NETWORK_HTTP_CONNECTION|
-    NetworkHttpConnectionData network_http_connection = 203;
+    NetworkHttpConnectionData network_http_connection = 103;
     // Populated when |kind| is |NETWORK_HTTP_THREAD|
-    NetworkHttpThreadData network_http_thread = 204;
+    NetworkHttpThreadData network_http_thread = 104;
 
-    // Cpu Profiler Prefix = 300
-    CpuUsageData cpu_usage = 301;
-    CpuThreadData cpu_thread = 302;
+    // Cpu Profiler Prefix = 200
+    CpuUsageData cpu_usage = 201;
+    CpuThreadData cpu_thread = 202;
 
-    // Memory Profiler Prefix = 400
-    // Energy Profiler Prefix = 500
-    // Event Profiler Prefix = 600
+    // Memory Profiler Prefix = 300
+    // Energy Profiler Prefix = 400
+    // Event Profiler Prefix = 500
   }
 }
 
@@ -194,8 +195,8 @@ message Process {
 message Session {
   // ID uniquely identifying this session. This will be unique across devices.
   int64 session_id = 1;
-  // The stream from which the session is created.
-  int64 stream_id = 2;
+  // A device's unique identifier, references Device's |device_id| property.
+  int64 device_id = 2;
   // The PID of the app. Note that this is actually an int16, but gRPC only
   // provides int32.
   int32 pid = 3;
@@ -271,25 +272,21 @@ message SessionData {
       CPU_CAPTURE = 3;
     }
 
-    // References Session's |session_id| field
-    int64 session_id = 1;
-    // The stream from which the session is created.
-    int64 stream_id = 2;
     // The PID of the app. Note that this is actually an int16, but gRPC only
     // provides int32.
-    int32 pid = 3;
+    int32 pid = 1;
     // Session start time (unix epoch) as provided by the BeginSessionRequest.
     // For Studio-side display only.
-    int64 start_timestamp_epoch_ms = 4;
+    int64 start_timestamp_epoch_ms = 2;
     // Session name as provided by the BeginSessionRequest.
     // For Studio-side display only.
-    string session_name = 5;
+    string session_name = 3;
     // Whether JVMTI is used for the session
-    bool jvmti_enabled = 6;
+    bool jvmti_enabled = 4;
     // Whether JVMTI live allocation is enabled for the session.
-    bool live_allocation_enabled = 8;
+    bool live_allocation_enabled = 5;
     // Session's type which indicates what data it has.
-    SessionType type = 9;
+    SessionType type = 6;
   }
 
   oneof union {

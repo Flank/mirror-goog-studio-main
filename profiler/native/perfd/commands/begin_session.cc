@@ -16,7 +16,6 @@
 #include "perfd/commands/begin_session.h"
 
 #include <string>
-#include "perfd/sessions/sessions_manager.h"
 #include "proto/common.pb.h"
 #include "utils/process_manager.h"
 
@@ -34,17 +33,16 @@ Status BeginSession::ExecuteOn(Daemon* daemon) {
     return Status(StatusCode::NOT_FOUND,
                   "Process isn't running. Cannot create session.");
   }
-  SessionsManager::GetInstance()->BeginSession(daemon, command().stream_id(),
-                                               data_);
+  daemon->sessions()->BeginSession(command().stream_id(), data_);
 
-  auto session = SessionsManager::GetInstance()->GetLastSession();
+  auto session = daemon->sessions()->GetLastSession();
   session->StartSamplers();
   if (data_.jvmti_config().attach_agent()) {
     bool attachable = daemon->TryAttachAppAgent(
         data_.pid(), app_name, data_.jvmti_config().agent_lib_file_name());
     if (!attachable) {
       Event event;
-      event.set_pid(data_.pid());
+      event.set_session_id(session->info().session_id());
       event.set_group_id(session->info().session_id());
       event.set_kind(Event::AGENT);
       auto* status = event.mutable_agent_data();

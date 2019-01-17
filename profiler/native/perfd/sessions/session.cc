@@ -25,11 +25,11 @@
 
 namespace profiler {
 
-Session::Session(int64_t stream_id, int32_t pid, int64_t start_timestamp,
+Session::Session(int64_t device_id, int32_t pid, int64_t start_timestamp,
                  Daemon* daemon) {
   // TODO: Revisit uniqueness of this:
-  info_.set_session_id(stream_id ^ (start_timestamp << 1));
-  info_.set_stream_id(stream_id);
+  info_.set_session_id(device_id ^ (start_timestamp << 1));
+  info_.set_device_id(device_id);
   info_.set_pid(pid);
   info_.set_start_timestamp(start_timestamp);
   info_.set_end_timestamp(LLONG_MAX);

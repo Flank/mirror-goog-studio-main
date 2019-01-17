@@ -37,6 +37,7 @@ class CpuThreadSampler final : public Sampler {
   CpuThreadSampler(const profiler::Session& session, Clock* clock,
                    EventBuffer* buffer, ProcfsFiles* procfs)
       : Sampler(session, buffer, kSampleRateMs),
+        pid_(session.info().pid()),
         procfs_(procfs) {}
 
   virtual void Sample() override;
@@ -47,6 +48,8 @@ class CpuThreadSampler final : public Sampler {
 
   virtual const char* name() override { return kSamplerName; }
 
+  // PID of the app to be sampled.
+  int32_t pid_;
   // Map from thread ID to last known thread state.
   std::unordered_map<int32_t, proto::CpuThreadData::State> previous_states_{};
   // Map from thread ID to last known thread name.

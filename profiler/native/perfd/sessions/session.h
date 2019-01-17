@@ -26,10 +26,10 @@ namespace profiler {
 
 class Daemon;
 
-// A profiling session on a specific process from a specific stream.
+// A profiling session on a specific process on a specific device.
 class Session final {
  public:
-  Session(int64_t stream_id, int32_t pid, int64_t start_timestamp,
+  Session(int64_t device_id, int32_t pid, int64_t start_timestamp,
           Daemon* daemon);
 
   bool IsActive() const;
