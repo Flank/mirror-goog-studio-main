@@ -12,6 +12,7 @@
       <module fileurl="file://$PROJECT_DIR$/annotations/android.sdktools.android-annotations.iml" filepath="$PROJECT_DIR$/annotations/android.sdktools.android-annotations.iml" />
       <module fileurl="file://$PROJECT_DIR$/../apksig/android.sdktools.apksig.iml" filepath="$PROJECT_DIR$/../apksig/android.sdktools.apksig.iml" />
       <module fileurl="file://$PROJECT_DIR$/../apkzlib/android.sdktools.apkzlib.iml" filepath="$PROJECT_DIR$/../apkzlib/android.sdktools.apkzlib.iml" />
+      <module fileurl="file://$PROJECT_DIR$/aspects_agent/android.sdktools.aspects_agent.iml" filepath="$PROJECT_DIR$/aspects_agent/android.sdktools.aspects_agent.iml" />
       <module fileurl="file://$PROJECT_DIR$/apkparser/analyzer/android.sdktools.base.apkparser.analyzer-base.iml" filepath="$PROJECT_DIR$/apkparser/analyzer/android.sdktools.base.apkparser.analyzer-base.iml" />
       <module fileurl="file://$PROJECT_DIR$/apkparser/cli/android.sdktools.base.apkparser.cli.iml" filepath="$PROJECT_DIR$/apkparser/cli/android.sdktools.base.apkparser.cli.iml" />
       <module fileurl="file://$PROJECT_DIR$/bazel/android.sdktools.base.bazel.iml" filepath="$PROJECT_DIR$/bazel/android.sdktools.base.bazel.iml" />
