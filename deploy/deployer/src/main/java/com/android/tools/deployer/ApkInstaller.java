@@ -45,6 +45,7 @@ public class ApkInstaller {
                 if (service.prompt(sb.toString())) {
                     adb.uninstall(packageName);
                     result = adb.install(apks, options.getFlags());
+                    message = message(result);
                 }
                 break;
             default:
