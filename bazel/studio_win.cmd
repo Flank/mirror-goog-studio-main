@@ -44,7 +44,7 @@ set TARGETS=
 for /f %%i in (%SCRIPTDIR%targets.win) do set TARGETS=!TARGETS! %%i
 
 @rem Run Bazel
-CALL %SCRIPTDIR%bazel.cmd --max_idle_secs=60 test %CONFIGOPTIONS% %AUTHCREDS% --build_tag_filters=-no_windows --test_tag_filters=%TESTTAGFILTERS% -- %TARGETS%
+CALL %SCRIPTDIR%bazel.cmd --max_idle_secs=60 test %CONFIGOPTIONS% %AUTHCREDS% --config=remote --build_tag_filters=-no_rbe_windows,-no_windows --test_tag_filters=-no_rbe_windows,%TESTTAGFILTERS% -- %TARGETS%
 SET EXITCODE=%errorlevel%
 
 IF NOT EXIST %DISTDIR%\ GOTO ENDSCRIPT
@@ -56,8 +56,6 @@ SET UPSALITEID=%%F
 echo "<meta http-equiv="refresh" content="0; URL='https://source.cloud.google.com/results/invocations/%UPSALITEID%" />" > %DISTDIR%\upsalite_test_results.html
 
 :ENDSCRIPT
-@rem Lets run bazel clean to make sure any file handles of bazel are properly shut down
-CALL %SCRIPTDIR%bazel.cmd clean --expunge
 @rem On windows we must explicitly shut down bazel.  Otherwise file handles remain open.
 CALL %SCRIPTDIR%bazel.cmd shutdown
 @rem We also must call the kill-processes.py python script and kill all processes still open

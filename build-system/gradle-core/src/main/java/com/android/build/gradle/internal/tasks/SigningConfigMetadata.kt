@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.SdkConstants
 import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.google.gson.GsonBuilder
@@ -24,6 +25,14 @@ import java.io.FileReader
 import java.io.IOException
 import org.apache.commons.io.FileUtils
 import org.gradle.api.file.FileCollection
+import java.nio.file.Files
+import java.nio.file.attribute.AclEntry
+import java.nio.file.attribute.AclEntryPermission
+import java.nio.file.attribute.AclEntryType
+import java.nio.file.attribute.AclFileAttributeView
+import java.nio.file.attribute.PosixFilePermission
+
+
 
 /**
  * Information containing the signing config metadata that can be consumed by other modules as
@@ -41,6 +50,38 @@ class SigningConfigMetadata {
         @Throws(IOException::class)
         fun save(outputDirectory: File, signingConfig: SigningConfig?) {
             val outputFile = File(outputDirectory, PERSISTED_FILE_NAME)
+            // create the file, so we can set the permissions on it.
+            outputFile.createNewFile()
+            if (SdkConstants.CURRENT_PLATFORM != SdkConstants.PLATFORM_WINDOWS) {
+                // set read, write permissions for owner only.
+                val perms = HashSet<PosixFilePermission>()
+                perms.add(PosixFilePermission.OWNER_READ)
+                perms.add(PosixFilePermission.OWNER_WRITE)
+                Files.setPosixFilePermissions(outputFile.toPath(), perms)
+            } else {
+                // on windows, use AclEntry to set the owner read/write permission.
+                val view = Files.getFileAttributeView(
+                    outputFile.toPath(), AclFileAttributeView::class.java)
+                val entry = AclEntry.newBuilder()
+                    .setType(AclEntryType.ALLOW)
+                    .setPrincipal(view.owner)
+                    .setPermissions(
+                        AclEntryPermission.READ_ACL,
+                        AclEntryPermission.READ_NAMED_ATTRS,
+                        AclEntryPermission.READ_DATA,
+                        AclEntryPermission.READ_ATTRIBUTES,
+                        AclEntryPermission.WRITE_ACL,
+                        AclEntryPermission.WRITE_DATA,
+                        AclEntryPermission.APPEND_DATA,
+                        AclEntryPermission.WRITE_NAMED_ATTRS,
+                        AclEntryPermission.WRITE_ATTRIBUTES,
+                        AclEntryPermission.WRITE_OWNER,
+                        AclEntryPermission.SYNCHRONIZE,
+                        AclEntryPermission.DELETE)
+                    .build()
+                view.acl = listOf(entry)
+            }
+
             val gsonBuilder = GsonBuilder()
             gsonBuilder.registerTypeAdapter(File::class.java, PlainFileGsonTypeAdaptor())
             val gson = gsonBuilder.create()

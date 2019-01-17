@@ -1531,7 +1531,7 @@ public class VersionChecksTest extends AbstractCheckTest {
                                         + "package test.pkg;\n"
                                         + "\n"
                                         + "import android.support.annotation.RequiresApi;\n"
-                                        + "import android.support.v4.os.BuildCompat;\n"
+                                        + "import androidx.core.os.BuildCompat;\n"
                                         + "\n"
                                         + "import static android.os.Build.VERSION.SDK_INT;\n"
                                         + "import static android.os.Build.VERSION_CODES.M;\n"
@@ -1562,6 +1562,8 @@ public class VersionChecksTest extends AbstractCheckTest {
                                         + "        if (isAtLeastN()) { methodN(); } // OK\n"
                                         + "        if (BuildCompat.isAtLeastNMR1()) { methodN(); } // OK\n"
                                         + "        if (BuildCompat.isAtLeastP()) { methodP(); } // OK\n"
+                                        + "        if (BuildCompat.isAtLeastQ()) { methodQ(); } // OK\n"
+                                        + "        if (isAtLeastZ()) { methodZ(); } // OK\n"
                                         + "    }\n"
                                         + "\n"
                                         + "    // Data-binding adds this method\n"
@@ -1581,6 +1583,9 @@ public class VersionChecksTest extends AbstractCheckTest {
                                         + "        return BuildCompat.isAtLeastN();\n"
                                         + "    }\n"
                                         + "\n"
+                                        + "    public static boolean isAtLeastZ() {\n"
+                                        + "        return SDK_INT >= 36;\n" // some future API
+                                        + "    }\n"
                                         + "\n"
                                         + "    @RequiresApi(M)\n"
                                         + "    public boolean methodM() {\n"
@@ -1601,25 +1606,37 @@ public class VersionChecksTest extends AbstractCheckTest {
                                         + "    public boolean methodP() {\n"
                                         + "        return true;\n"
                                         + "    }\n"
+                                        + "\n"
+                                        + "    @RequiresApi(29)\n" // Q API level TBD
+                                        + "    public boolean methodQ() {\n"
+                                        + "        return true;\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        // Some future API, bump up to higher than SdkVersionInfo.HIGHEST_KNOWN_API
+                                        + "    @RequiresApi(29)\n"
+                                        + "    public boolean methodZ() {\n"
+                                        + "        return true;\n"
+                                        + "    }\n"
                                         + "}\n"),
                         jar(
                                 "libs/build-compat.jar",
                                 base64gzip(
-                                        "android/support/v4/os/BuildCompat.class",
+                                        "androidx/core/os/BuildCompat.class",
                                         ""
-                                                + "H4sIAAAAAAAAAIWUS28SURTH/xemDODQYrWVhy9sVVq1Y2N3GCMCJqQ8GmhY"
-                                                + "6MJc4KbeOszgzKXfx5UbN3ahiQs/gB/KeGagBUkJs7ivc87vf+45N/Pn76/f"
-                                                + "AF7geRw6sjHcxh1/uBvFvTjuI6fjgY4thshLaUv1iiGc3+kwaCWnLxjWatIW"
-                                                + "jdGgK9xj3rXoZL3m9LjV4a7095NDTX2UHsNWjdt915F90xsNh46rzLMD0/HM"
-                                                + "NyNp9UvOYMhVgSEuvaKqCe6pRqD2jiHRVrz3qc6HE168LIau6HEl+gzp1shW"
-                                                + "ciA60pNkLdq2o7iSjk2Km7VTfsZNi9sn5jSGRBJTkXprf1a0OWtszhmPaNN2"
-                                                + "Rm5PvJV+IsmZ1Pd8KQNRxHQ8NJDHjoFdPGFgRzqeGniGPYbc0goQdJpzs3sq"
-                                                + "ekqHyZC6iLxw3+5UWu1qk4qkX66Mqm0Lt2RxzxN0fb1dPvxQbRxTDlWGaKlZ"
-                                                + "rjSK9YrfpalGW7nSPin8pzs+o66LzyNuEWkjX5vPquB3JjmfFXKI0EvyvwhC"
-                                                + "fjVANQueGGVB88ruT7DvtAjhGo1xmoEMNGRh0MoYOyGBVZpjWEMS4QCwH3gC"
-                                                + "q+cIJVNfoGtfoYW/XZIiQeRjXA/iQ8ZrumYQcGNivBkAN64GphcBD5YBN68G"
-                                                + "ZhYBi8uAt64GZhcBG8uAKQKOm5CbAGPnCK9rP7Dis9gM6z05pAN+hkrpt4fR"
-                                                + "32AbjxD7B/l3JZMrBAAA")),
+                                                + "H4sIAAAAAAAAAIWUz08TQRTHv9MuXVoXqKBIKYIoYotKRbxhjLXFpLE/hJKa"
+                                                + "4MFMt5N2cNklu1PjnyPx4MWLHDTx4B/gH2V8uy1txZbuYebNzHuf75v3Jvv7"
+                                                + "z89fALaxHYOOpShuYtkfVmK4hVV/uK3jjo41hshTaUv1jCGcStcYtJzTEAwz"
+                                                + "RWmLcvu4LtwDXrdoZ7bomNyqcVf66+6mplrSY1gucrvhOrLxMWM6rsg4XuZF"
+                                                + "W1qNnHN8wtUOQ0x6WVUU3FPlQOiQYaqquPm+xE+6qFhenLjC5Eo0GBL7bVvJ"
+                                                + "Y1GTnqTTrG07iivp2CQ2XzziH3jG4nYz048hkam+SGl/a1C0MnhYuXD4enCx"
+                                                + "R4uq03ZN8VL6WcUH7rHp6xqYRFTHuoE0NgzcxwMdDw1sImPgEQi8dFkpCNhP"
+                                                + "vlI/EqbS8ZhhoRvUc1+r7e5XCxWqlt6zjIJtCzdncc8TVAe9mn/1rlA+YGAF"
+                                                + "hslcJb9bzpZ2/U71NarKlXZz5x/dzh513hJ2U7WChhAhYra4m6UUtVQhnaOI"
+                                                + "izlhFRF6Tf6nI+TXAVSt4JlRDjRPbPwA+0ZGCFdojNEMLEJDEgZZRscJU5im"
+                                                + "OYoZxBEOAFuBJzB9hlB84RS69gVa+GuPFAki7+FqEB8yntMlg4C57uG1AHh9"
+                                                + "ODAxCvhkHHB+OHBxFDA7DnhjODA5ClgeB1wYDlwaBXw7DpggYKerb7rA1BnC"
+                                                + "36Fpn7BCFpkT8b1TzJ3bh5//k5qllgMtarOk9h9R41rnsuskG6JN3zWJVPBK"
+                                                + "GP2Y7pJT9C+SvhI3tgQAAA==")),
                         mSupportJar)
                 .run()
                 .expect(

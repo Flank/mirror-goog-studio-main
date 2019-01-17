@@ -128,7 +128,7 @@ public class AndroidDependenciesRenderer extends TextReportRenderer {
 
             renderer.visit(
                     styledTextOutput -> {
-                        ComponentIdentifier id = artifact.getId().getComponentIdentifier();
+                        ComponentIdentifier id = artifact.getComponentIdentifier();
 
                         String text;
 

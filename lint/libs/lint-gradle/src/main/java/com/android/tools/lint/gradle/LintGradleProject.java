@@ -67,12 +67,10 @@ import org.gradle.api.artifacts.ExternalDependency;
 import org.gradle.api.artifacts.FileCollectionDependency;
 import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.file.SourceDirectorySet;
-import org.gradle.api.plugins.ExtraPropertiesExtension;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.plugins.PluginContainer;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
-import org.gradle.tooling.provider.model.ToolingModelBuilder;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 import org.w3c.dom.Document;
 
@@ -821,31 +819,7 @@ public class LintGradleProject extends Project {
                 if (p instanceof ToolingRegistryProvider) {
                     ToolingModelBuilderRegistry registry;
                     registry = ((ToolingRegistryProvider) p).getModelBuilderRegistry();
-                    String modelName = AndroidProject.class.getName();
-                    ToolingModelBuilder builder = registry.getBuilder(modelName);
-                    assert builder.canBuild(modelName) : modelName;
-
-                    // setup the level 3 sync.
-                    final ExtraPropertiesExtension ext =
-                            gradleProject.getExtensions().getExtraProperties();
-                    // Ensure that projects are constructed serially since otherwise
-                    // it's possible for a race condition on the below property
-                    // to trigger occasional NPE's like the one in b.android.com/38117575
-                    //noinspection SynchronizationOnLocalVariableOrMethodParameter
-                    synchronized (ext) {
-                        ext.set(
-                                AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED,
-                                Integer.toString(
-                                        AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD));
-                        ext.set(AndroidProject.PROPERTY_BUILD_MODEL_DISABLE_SRC_DOWNLOAD, true);
-
-                        try {
-                            return (AndroidProject) builder.buildAll(modelName, gradleProject);
-                        } finally {
-                            ext.set(AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED, null);
-                            ext.set(AndroidProject.PROPERTY_BUILD_MODEL_DISABLE_SRC_DOWNLOAD, null);
-                        }
-                    }
+                    return LintGradleExecution.createAndroidProject(gradleProject, registry);
                 }
             }
 
