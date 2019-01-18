@@ -26,12 +26,11 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.ide.FilterDataImpl;
 import com.android.utils.Pair;
 import com.android.utils.StringHelper;
-import com.google.common.base.Joiner;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
-import java.util.Collection;
 import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -115,23 +114,16 @@ public class OutputFactory {
     public ApkData addConfigurationSplit(OutputFile.FilterType filterType, String filterValue) {
         ImmutableList<FilterData> filtersList =
                 ImmutableList.of(new FilterDataImpl(filterType, filterValue));
-        String filterName = getFilterNameForSplits(filtersList);
-        String baseName = variantConfiguration.computeBaseNameWithSplits(filterName);
+        String baseName = variantConfiguration.computeBaseNameWithSplits(filterValue);
         return addConfigurationSplit(filtersList, getOutputFileName(baseName), filterValue);
     }
 
+    @VisibleForTesting
     public ApkData addConfigurationSplit(
             OutputFile.FilterType filterType, String filterValue, String fileName) {
         ImmutableList<FilterData> filtersList =
                 ImmutableList.of(new FilterDataImpl(filterType, filterValue));
-        String filterDisplayName = getFilterNameForSplits(filtersList);
-        return addConfigurationSplit(filtersList, fileName, filterDisplayName);
-    }
-
-    @NonNull
-    public static String getFilterNameForSplits(Collection<FilterData> filters) {
-        return Joiner.on("-")
-                .join(filters.stream().map(FilterData::getIdentifier).collect(Collectors.toList()));
+        return addConfigurationSplit(filtersList, fileName, filterValue);
     }
 
     private ApkData addConfigurationSplit(
