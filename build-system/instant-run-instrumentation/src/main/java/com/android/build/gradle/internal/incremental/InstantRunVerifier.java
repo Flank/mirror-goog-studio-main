@@ -35,8 +35,8 @@ import static com.android.build.gradle.internal.incremental.InstantRunVerifierSt
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
 import com.android.utils.ILogger;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;

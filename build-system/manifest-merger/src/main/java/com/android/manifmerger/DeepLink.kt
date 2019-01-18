@@ -16,7 +16,7 @@
 
 package com.android.manifmerger
 
-import com.android.annotations.VisibleForTesting
+import com.google.common.annotations.VisibleForTesting
 import com.android.ide.common.blame.SourceFilePosition
 import com.google.common.collect.ImmutableList
 import java.lang.Exception

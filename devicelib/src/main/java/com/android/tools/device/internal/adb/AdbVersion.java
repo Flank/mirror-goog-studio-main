@@ -17,7 +17,7 @@
 package com.android.tools.device.internal.adb;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ComparisonChain;
 import java.io.BufferedReader;
 import java.io.IOException;

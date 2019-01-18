@@ -23,7 +23,7 @@ import com.android.SdkConstants.PREFIX_RESOURCE_REF
 import com.android.SdkConstants.TAG_APPLICATION
 import com.android.SdkConstants.TAG_META_DATA
 import com.android.SdkConstants.VALUE_TRUE
-import com.android.annotations.VisibleForTesting
+import com.google.common.annotations.VisibleForTesting
 import com.android.ide.common.resources.configuration.LocaleQualifier
 import com.android.ide.common.resources.configuration.LocaleQualifier.BCP_47_PREFIX
 import com.android.resources.ResourceFolderType

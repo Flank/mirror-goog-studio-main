@@ -18,11 +18,9 @@ package com.android.ide.common.xml;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
-
-import org.w3c.dom.Attr;
-
+import com.google.common.annotations.VisibleForTesting;
 import java.util.Comparator;
+import org.w3c.dom.Attr;
 
 /**
  * Formatting preferences used by the Android XML formatter.

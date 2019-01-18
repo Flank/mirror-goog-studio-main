@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
-import com.android.annotations.VisibleForTesting
+import com.google.common.annotations.VisibleForTesting
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
 import com.android.utils.FileUtils
 import com.google.common.cache.CacheBuilder

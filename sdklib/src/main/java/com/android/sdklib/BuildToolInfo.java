@@ -68,11 +68,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
-import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.repository.Revision;
 import com.android.repository.api.LocalPackage;
 import com.android.utils.ILogger;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Maps;
 import java.io.File;
@@ -415,7 +414,7 @@ public class BuildToolInfo {
         return true;
     }
 
-    @VisibleForTesting(visibility = Visibility.PRIVATE)
+    @VisibleForTesting
     @Nullable
     static Revision getCurrentJvmVersion() throws NumberFormatException {
         String javav = System.getProperty("java.version");              //$NON-NLS-1$

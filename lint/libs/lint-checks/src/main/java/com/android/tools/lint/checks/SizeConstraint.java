@@ -25,7 +25,7 @@ import static com.intellij.psi.CommonClassNames.JAVA_LANG_STRING;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 import org.jetbrains.uast.UAnnotation;
 import org.jetbrains.uast.UExpression;
 

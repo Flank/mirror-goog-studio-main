@@ -31,7 +31,6 @@ package com.android.tools.apk.analyzer.internal;
  */
 
 import com.android.annotations.NonNull;
-import com.android.annotations.VisibleForTesting;
 import com.android.tools.apk.analyzer.ArchiveContext;
 import com.android.tools.apk.analyzer.ArchiveEntry;
 import com.android.tools.apk.analyzer.ArchiveNode;
@@ -40,6 +39,7 @@ import com.google.archivepatcher.explainer.EntryExplanation;
 import com.google.archivepatcher.explainer.PatchExplainer;
 import com.google.archivepatcher.generator.bsdiff.BsDiffDeltaGenerator;
 import com.google.archivepatcher.shared.DeflateCompressor;
+import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.HashMap;

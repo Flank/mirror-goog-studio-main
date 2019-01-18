@@ -25,7 +25,6 @@ import static com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils.getOut
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.external.cmake.CmakeUtils;
 import com.android.build.gradle.external.cmake.server.BuildFiles;
 import com.android.build.gradle.external.cmake.server.CmakeInputsResult;
@@ -61,6 +60,7 @@ import com.android.build.gradle.internal.cxx.json.StringTable;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.ILogger;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;

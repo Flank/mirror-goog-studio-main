@@ -29,7 +29,7 @@ import com.android.SdkConstants.ATTR_SCHEME
 import com.android.SdkConstants.TAG_ACTION
 import com.android.SdkConstants.TAG_CATEGORY
 import com.android.SdkConstants.TAG_DATA
-import com.android.annotations.VisibleForTesting
+import com.google.common.annotations.VisibleForTesting
 import com.android.ide.common.blame.SourceFilePosition
 import com.android.utils.XmlUtils
 import com.google.common.collect.ImmutableList

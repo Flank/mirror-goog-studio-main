@@ -17,9 +17,9 @@
 package com.android.manifmerger;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.VisibleForTesting;
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;

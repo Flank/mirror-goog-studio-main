@@ -17,9 +17,9 @@
 package com.android.build.gradle.tasks.factory;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.VisibleForTesting;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
+import com.google.common.annotations.VisibleForTesting;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.compile.AbstractCompile;

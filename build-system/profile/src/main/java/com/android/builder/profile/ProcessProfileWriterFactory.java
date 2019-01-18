@@ -20,7 +20,6 @@ import static com.google.common.base.Verify.verifyNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
 import com.android.annotations.concurrency.GuardedBy;
 import com.android.tools.analytics.AnalyticsSettings;
 import com.android.tools.analytics.AnalyticsSettingsData;
@@ -28,6 +27,7 @@ import com.android.tools.analytics.Anonymizer;
 import com.android.tools.analytics.UsageTracker;
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import java.io.File;
 import java.io.IOException;

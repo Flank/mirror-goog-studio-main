@@ -18,8 +18,8 @@ package com.android.builder.utils;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
 import com.android.utils.SdkUtils;
+import com.google.common.annotations.VisibleForTesting;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryType;

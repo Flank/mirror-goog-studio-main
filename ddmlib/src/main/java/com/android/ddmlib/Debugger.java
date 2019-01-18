@@ -21,9 +21,9 @@ import static com.android.ddmlib.Debugger.ConnectionState.ST_NOT_CONNECTED;
 import static com.android.ddmlib.Debugger.ConnectionState.ST_READY;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.VisibleForTesting;
 import com.android.ddmlib.ClientData.DebuggerStatus;
 import com.android.ddmlib.jdwp.JdwpAgent;
+import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;

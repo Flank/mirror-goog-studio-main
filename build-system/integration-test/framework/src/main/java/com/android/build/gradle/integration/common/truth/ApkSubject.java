@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assert_;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.integration.common.utils.ApkHelper;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.builder.core.ApkInfoParser;
@@ -29,6 +28,7 @@ import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.testutils.apk.Apk;
 import com.android.utils.StdLogger;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.IterableSubject;

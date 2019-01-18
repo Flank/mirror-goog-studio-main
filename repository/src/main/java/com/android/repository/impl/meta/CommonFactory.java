@@ -18,13 +18,12 @@ package com.android.repository.impl.meta;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
 import com.android.repository.Revision;
 import com.android.repository.api.Channel;
 import com.android.repository.api.Dependency;
 import com.android.repository.api.License;
 import com.android.repository.api.Repository;
-
+import com.google.common.annotations.VisibleForTesting;
 import javax.xml.bind.JAXBElement;
 
 /**
@@ -112,7 +111,7 @@ public abstract class CommonFactory {
     @NonNull
     public abstract License createLicenseType();
 
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PROTECTED)
+    @VisibleForTesting
     @NonNull
     public abstract Dependency createDependencyType();
 

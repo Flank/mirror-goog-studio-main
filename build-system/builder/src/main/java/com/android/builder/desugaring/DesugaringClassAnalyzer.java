@@ -20,9 +20,9 @@ import static com.android.utils.PathUtils.toSystemIndependentPath;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.annotations.VisibleForTesting;
 import com.android.builder.dexing.ClassFileInput;
 import com.android.builder.utils.ZipEntryUtils;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;

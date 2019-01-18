@@ -23,7 +23,7 @@ import static org.objectweb.asm.Opcodes.ASM5;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
 import java.io.File;

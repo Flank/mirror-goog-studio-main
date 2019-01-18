@@ -25,7 +25,7 @@ import static com.android.tools.lint.detector.api.UastLintUtils.getAnnotationDou
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 import org.jetbrains.uast.UAnnotation;
 import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.ULiteralExpression;

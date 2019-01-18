@@ -23,12 +23,12 @@ import static com.google.common.base.Verify.verifyNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.ProguardFiles;
 import com.android.build.gradle.internal.ProguardFileType;
 import com.android.build.gradle.internal.ProguardFilesProvider;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.utils.HelpfulEnumConverter;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.File;

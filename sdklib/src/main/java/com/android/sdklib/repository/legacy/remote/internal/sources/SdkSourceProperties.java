@@ -18,13 +18,11 @@ package com.android.sdklib.repository.legacy.remote.internal.sources;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
-import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.repository.api.RepoManager;
 import com.android.sdklib.repository.AndroidSdkHandler;
-
+import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -183,10 +181,10 @@ class SdkSourceProperties {
     /**
      * Load properties from default file. Extracted so that it can be mocked in tests.
      *
-     * @return True if actually loaded the file. False if there was an IO error or no
-     *   file and nothing was loaded.
+     * @return True if actually loaded the file. False if there was an IO error or no file and
+     *     nothing was loaded.
      */
-    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    @VisibleForTesting
     protected boolean loadProperties() {
         try {
             String folder = AndroidLocation.getFolder();
@@ -215,11 +213,10 @@ class SdkSourceProperties {
     }
 
     /**
-     * Save file to disk. Expects sSourcesProperties to be synchronized.
-     * Made accessible for testing purposes.
-     * For public usage, please use {@link #save()} instead.
+     * Save file to disk. Expects sSourcesProperties to be synchronized. Made accessible for testing
+     * purposes. For public usage, please use {@link #save()} instead.
      */
-    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    @VisibleForTesting
     protected void saveLocked() {
         // Persist it to the file
         FileOutputStream fos = null;
@@ -245,7 +242,7 @@ class SdkSourceProperties {
     }
 
     /** Empty current property list. Made accessible for testing purposes. */
-    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    @VisibleForTesting
     protected void clear() {
         synchronized (sSourcesProperties) {
             sSourcesProperties.clear();

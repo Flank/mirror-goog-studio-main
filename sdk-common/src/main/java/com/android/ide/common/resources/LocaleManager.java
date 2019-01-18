@@ -19,8 +19,8 @@ import static java.util.Locale.US;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
 import com.android.utils.SdkUtils;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import java.util.ArrayList;
 import java.util.Arrays;

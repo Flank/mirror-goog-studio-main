@@ -22,8 +22,6 @@ import static com.android.sdklib.repository.legacy.remote.internal.sources.RepoC
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
-import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.annotations.concurrency.GuardedBy;
 import com.android.repository.Revision;
 import com.android.repository.api.RepoManager;
@@ -42,6 +40,7 @@ import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.legacy.descriptors.IPkgDesc;
 import com.android.sdklib.repository.legacy.descriptors.PkgDescExtra;
 import com.android.sdklib.repository.legacy.descriptors.PkgType;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -207,12 +206,12 @@ public class LocalSdk {
     }
 
     /**
-     * Creates an initial LocalSdk instance with an unknown location.
-     * This is designed for unit tests to override the {@link FileOp} being used.
+     * Creates an initial LocalSdk instance with an unknown location. This is designed for unit
+     * tests to override the {@link FileOp} being used.
      *
      * @param fileOp The alternate {@link FileOp} to use for all file-based interactions.
      */
-    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    @VisibleForTesting
     public LocalSdk(@NonNull FileOp fileOp) {
         mFileOp = fileOp;
     }

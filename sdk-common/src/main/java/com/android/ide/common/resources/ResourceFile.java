@@ -17,8 +17,8 @@ package com.android.ide.common.resources;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import java.io.File;
 import java.util.List;

@@ -18,10 +18,10 @@ package com.android.instantapp.provision;
 import static com.android.instantapp.provision.ProvisionRunner.executeShellCommand;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.VisibleForTesting;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.InstallException;
 import com.android.instantapp.sdk.Metadata;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.LinkedList;
 import java.util.List;
 

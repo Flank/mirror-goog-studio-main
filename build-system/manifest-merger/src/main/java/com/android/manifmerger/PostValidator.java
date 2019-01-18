@@ -20,8 +20,8 @@ import static com.android.manifmerger.Actions.ActionType;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.annotations.VisibleForTesting;
 import com.android.utils.XmlUtils;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import java.util.Collection;

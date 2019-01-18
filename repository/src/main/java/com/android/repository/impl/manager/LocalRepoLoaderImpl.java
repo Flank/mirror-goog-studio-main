@@ -18,7 +18,6 @@ package com.android.repository.impl.manager;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
 import com.android.repository.api.FallbackLocalRepoLoader;
 import com.android.repository.api.License;
 import com.android.repository.api.LocalPackage;
@@ -32,6 +31,7 @@ import com.android.repository.impl.meta.LocalPackageImpl;
 import com.android.repository.impl.meta.SchemaModuleUtil;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.hash.Hasher;

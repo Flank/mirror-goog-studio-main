@@ -24,7 +24,7 @@ import static com.android.SdkConstants.QUOT_ENTITY;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * Helper class to help with XML values resource file.

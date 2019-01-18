@@ -31,7 +31,7 @@ import com.android.SdkConstants.SUPPRESS_ALL
 import com.android.SdkConstants.SUPPRESS_LINT
 import com.android.SdkConstants.TOOLS_URI
 import com.android.SdkConstants.VALUE_TRUE
-import com.android.annotations.VisibleForTesting
+import com.google.common.annotations.VisibleForTesting
 import com.android.ide.common.repository.GradleCoordinate
 import com.android.ide.common.repository.GradleVersion
 import com.android.ide.common.repository.ResourceVisibilityLookup

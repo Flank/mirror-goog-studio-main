@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
@@ -30,6 +29,7 @@ import com.android.builder.utils.SynchronizedFile;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.prefs.AndroidLocation;
 import com.android.utils.FileUtils;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Verify;
 import java.io.File;
 import java.io.IOException;

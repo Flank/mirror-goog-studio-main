@@ -18,10 +18,10 @@ package com.android.build.gradle.external.cmake.server;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.external.cmake.server.receiver.InteractiveMessage;
 import com.android.build.gradle.external.cmake.server.receiver.InteractiveProgress;
 import com.android.build.gradle.external.cmake.server.receiver.ServerReceiver;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.io.BufferedReader;

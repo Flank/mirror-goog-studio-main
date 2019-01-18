@@ -16,7 +16,7 @@
 package com.android.ddmlib;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;

@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.tasks.ir
 
-import com.android.annotations.VisibleForTesting
+import com.google.common.annotations.VisibleForTesting
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.res.getAapt2FromMaven

@@ -34,7 +34,6 @@ import static com.android.utils.CharSequences.indexOf;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.JavaCompileOptions;
@@ -81,6 +80,7 @@ import com.android.utils.CharSequences;
 import com.android.utils.NullLogger;
 import com.android.utils.StdLogger;
 import com.google.common.annotations.Beta;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;

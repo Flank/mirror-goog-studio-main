@@ -16,7 +16,7 @@
 package com.android.instantapp.sdk;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
 import java.io.IOException;
 import java.util.EnumMap;

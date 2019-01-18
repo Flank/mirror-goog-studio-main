@@ -24,12 +24,12 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import static com.android.build.gradle.internal.scope.BuildArtifactsHolder.OperationType.APPEND;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import java.io.File;
 import java.util.Collection;

@@ -18,9 +18,9 @@ package com.android.tools.apk.analyzer;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.utils.NullLogger;
+import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;

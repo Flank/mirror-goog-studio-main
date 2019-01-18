@@ -17,7 +17,7 @@
 package com.android.tools.lint.annotations;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;

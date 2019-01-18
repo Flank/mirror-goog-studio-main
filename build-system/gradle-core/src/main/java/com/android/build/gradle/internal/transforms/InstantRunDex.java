@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.transforms;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.VisibleForTesting;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.Status;
@@ -37,6 +36,7 @@ import com.android.builder.dexing.r8.ClassFileProviderFactory;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.ide.common.blame.MessageReceiver;
 import com.android.utils.FileUtils;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

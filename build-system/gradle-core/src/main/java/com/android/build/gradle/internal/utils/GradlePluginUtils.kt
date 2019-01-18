@@ -18,7 +18,7 @@
 
 package com.android.build.gradle.internal.utils
 
-import com.android.annotations.VisibleForTesting
+import com.google.common.annotations.VisibleForTesting
 import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter
 import com.android.ide.common.repository.GradleVersion

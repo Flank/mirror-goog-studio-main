@@ -22,7 +22,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.rendering.api.ArrayResourceValue;
 import com.android.ide.common.rendering.api.LayoutLog;
 import com.android.ide.common.rendering.api.RenderResources;
@@ -36,6 +35,7 @@ import com.android.ide.common.rendering.api.StyleResourceValue;
 import com.android.ide.common.resources.sampledata.SampleDataManager;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;

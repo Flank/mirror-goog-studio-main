@@ -17,10 +17,10 @@
 package com.android.tools.apk.analyzer.optimizer;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.VisibleForTesting;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintRequest;
 import com.google.common.annotations.Beta;
+import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;

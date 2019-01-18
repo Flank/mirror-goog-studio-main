@@ -17,12 +17,12 @@
 package com.android.ide.common.blame.parser;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
 import com.android.ide.common.blame.parser.util.OutputLineReader;
 import com.android.utils.ILogger;
+import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
 import java.util.List;
 import java.util.regex.Matcher;

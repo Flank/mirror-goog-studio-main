@@ -21,7 +21,7 @@ import com.android.SdkConstants.ATTR_TITLE
 import com.android.SdkConstants.PREFIX_RESOURCE_REF
 import com.android.SdkConstants.STRING_PREFIX
 import com.android.SdkConstants.XMLNS_PREFIX
-import com.android.annotations.VisibleForTesting
+import com.google.common.annotations.VisibleForTesting
 import com.android.resources.ResourceFolderType
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Implementation

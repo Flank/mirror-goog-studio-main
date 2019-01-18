@@ -19,8 +19,6 @@ package com.android.sdklib.repository.legacy.remote.internal;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
-import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
 import com.android.repository.api.RepoManager;
@@ -28,6 +26,7 @@ import com.android.repository.api.SettingsController;
 import com.android.repository.io.FileOp;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.utils.Pair;
+import com.google.common.annotations.VisibleForTesting;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -231,15 +230,14 @@ public class DownloadCache {
 
     /**
      * Calls {@link URL#openConnection()} to actually perform a download.
-     * <p>
-     * Isolated so that it can be overridden by unit tests.
+     *
+     * <p>Isolated so that it can be overridden by unit tests.
      */
-    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    @VisibleForTesting
     @NonNull
     protected Pair<InputStream, URLConnection> openUrl(
-            @NonNull String url,
-            boolean needsMarkResetSupport,
-            @Nullable Header[] headers) throws IOException {
+            @NonNull String url, boolean needsMarkResetSupport, @Nullable Header[] headers)
+            throws IOException {
         URLConnection connection = new URL(url).openConnection(mSettings.getProxy());
         if (headers != null) {
             for (Header header : headers) {

@@ -15,9 +15,9 @@
  */
 package com.android.tools.deployer;
 
-import com.android.annotations.VisibleForTesting;
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.DexClass;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.List;
 
 public interface ApkFileDatabase {

@@ -16,8 +16,8 @@
 package com.android.tools.perflogger;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.VisibleForTesting;
 import com.android.testutils.TestUtils;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.stream.JsonWriter;
 import java.io.File;

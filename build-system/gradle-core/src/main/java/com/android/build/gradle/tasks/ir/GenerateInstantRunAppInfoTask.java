@@ -29,7 +29,6 @@ import static org.objectweb.asm.Opcodes.RETURN;
 import static org.objectweb.asm.Opcodes.V1_6;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
@@ -41,6 +40,7 @@ import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import com.android.utils.XmlUtils;
+import com.google.common.annotations.VisibleForTesting;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;

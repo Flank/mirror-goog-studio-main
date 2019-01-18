@@ -22,7 +22,7 @@
 package com.android.build.gradle.internal.res
 
 import com.android.SdkConstants
-import com.android.annotations.VisibleForTesting
+import com.google.common.annotations.VisibleForTesting
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.options.StringOption
 import com.android.builder.model.Version

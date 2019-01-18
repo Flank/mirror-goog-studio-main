@@ -15,7 +15,7 @@
  */
 package com.android.layoutinspector.model
 
-import com.android.annotations.VisibleForTesting
+import com.google.common.annotations.VisibleForTesting
 import com.android.ddmlib.ChunkHandler
 import com.android.ddmlib.Client
 import com.android.ddmlib.ClientData

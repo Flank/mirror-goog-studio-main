@@ -16,9 +16,8 @@
 
 package com.android.testutils;
 
-import com.android.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.SettableFuture;
-
 import java.util.*;
 import java.util.concurrent.*;
 

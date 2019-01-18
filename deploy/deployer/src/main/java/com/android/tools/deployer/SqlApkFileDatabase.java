@@ -15,10 +15,10 @@
  */
 package com.android.tools.deployer;
 
-import com.android.annotations.VisibleForTesting;
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.DexClass;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import java.io.File;

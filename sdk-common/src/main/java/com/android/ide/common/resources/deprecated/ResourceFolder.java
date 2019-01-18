@@ -17,8 +17,6 @@
 package com.android.ide.common.resources.deprecated;
 
 import com.android.SdkConstants;
-import com.android.annotations.VisibleForTesting;
-import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.ide.common.resources.configuration.Configurable;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.io.IAbstractFile;
@@ -27,6 +25,7 @@ import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.utils.SdkUtils;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -120,9 +119,10 @@ public final class ResourceFolder implements Configurable {
 
     /**
      * Adds a {@link ResourceFile} to the folder.
+     *
      * @param file The {@link ResourceFile}.
      */
-    @VisibleForTesting(visibility=Visibility.PROTECTED)
+    @VisibleForTesting
     public void addFile(ResourceFile file) {
         if (mFiles == null) {
             int initialSize = 16;

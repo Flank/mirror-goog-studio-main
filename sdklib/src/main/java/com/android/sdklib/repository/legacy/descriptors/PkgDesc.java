@@ -18,8 +18,6 @@ package com.android.sdklib.repository.legacy.descriptors;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
-import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.repository.Revision;
 import com.android.repository.Revision.PreviewComparison;
 import com.android.repository.api.License;
@@ -30,7 +28,7 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.IdDisplay;
 import com.android.sdklib.repository.targets.SystemImage;
-
+import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
 import java.util.Locale;
 
@@ -576,7 +574,7 @@ public class PkgDesc implements IPkgDesc {
         return patternReplaceImpl(getType().getListDisplayPattern());
     }
 
-    @VisibleForTesting(visibility=Visibility.PRIVATE)
+    @VisibleForTesting
     protected String patternReplaceImpl(String result) {
         // Flags for list description pattern string, used in PkgType:
         //      $MAJ  $FULL  $API  $PATH  $TAG  $VEND  $NAME (for extras)

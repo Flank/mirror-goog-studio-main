@@ -18,10 +18,10 @@ package com.android.build.gradle.external.cmake.server;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.external.cmake.CmakeUtils;
 import com.android.build.gradle.external.cmake.server.receiver.ServerReceiver;
 import com.android.repository.Revision;
+import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
 import java.io.IOException;
 

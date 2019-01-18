@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import javax.inject.Inject;
 import org.gradle.api.Action;

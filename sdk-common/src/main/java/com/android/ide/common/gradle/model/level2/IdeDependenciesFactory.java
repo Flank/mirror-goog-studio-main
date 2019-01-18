@@ -20,7 +20,6 @@ import static com.android.ide.common.gradle.model.IdeLibraries.computeAddress;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.BaseArtifact;
 import com.android.builder.model.Dependencies;
@@ -31,6 +30,7 @@ import com.android.builder.model.level2.GraphItem;
 import com.android.builder.model.level2.Library;
 import com.android.ide.common.gradle.model.ModelCache;
 import com.android.ide.common.repository.GradleVersion;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.*;

@@ -18,8 +18,6 @@ package com.android.sdklib.repository.legacy.remote.internal.sources;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
-import com.android.annotations.VisibleForTesting.Visibility;
 import com.android.io.NonClosingInputStream;
 import com.android.io.NonClosingInputStream.CloseBehavior;
 import com.android.repository.api.Downloader;
@@ -40,6 +38,7 @@ import com.android.sdklib.repository.legacy.remote.internal.packages.RemoteSampl
 import com.android.sdklib.repository.legacy.remote.internal.packages.RemoteSourcePkgInfo;
 import com.android.sdklib.repository.legacy.remote.internal.packages.RemoteSystemImagePkgInfo;
 import com.android.sdklib.repository.legacy.remote.internal.packages.RemoteToolPkgInfo;
+import com.google.common.annotations.VisibleForTesting;
 import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -222,7 +221,7 @@ public abstract class SdkSource implements Comparable<SdkSource> {
         return mPackages;
     }
 
-    @VisibleForTesting(visibility = Visibility.PRIVATE)
+    @VisibleForTesting
     protected void setPackages(@Nullable RemotePkgInfo[] packages) {
         mPackages = packages;
 
@@ -629,9 +628,12 @@ public abstract class SdkSource implements Comparable<SdkSource> {
      * stores the error in outError[0]. If we can't find a validator, returns null and set
      * validatorFound[0] to false.
      */
-    @VisibleForTesting(visibility = Visibility.PRIVATE)
-    protected String validateXml(@Nullable InputStream xml, @Nullable String url, int version,
-      @NonNull String[] outError,
+    @VisibleForTesting
+    protected String validateXml(
+            @Nullable InputStream xml,
+            @Nullable String url,
+            int version,
+            @NonNull String[] outError,
             Boolean[] validatorFound) {
 
         if (xml == null) {
@@ -677,9 +679,9 @@ public abstract class SdkSource implements Comparable<SdkSource> {
      * xmlns:sdk="http://schemas.android.com/sdk/android/repository/$N" declaration.
      *
      * @return 1..{@link SdkRepoConstants#NS_LATEST_VERSION} for a valid schema version or 0 if no
-     * schema could be found.
+     *     schema could be found.
      */
-    @VisibleForTesting(visibility = Visibility.PRIVATE)
+    @VisibleForTesting
     protected int getXmlSchemaVersion(@Nullable InputStream xml) {
         if (xml == null) {
             return 0;
@@ -826,9 +828,9 @@ public abstract class SdkSource implements Comparable<SdkSource> {
      * Parse all packages defined in the SDK Repository XML and creates a new mPackages array with
      * them.
      */
-    @VisibleForTesting(visibility = Visibility.PRIVATE)
-    protected boolean parsePackages(@NonNull Document doc, @NonNull String nsUri,
-      @NonNull ProgressIndicator progress) {
+    @VisibleForTesting
+    protected boolean parsePackages(
+            @NonNull Document doc, @NonNull String nsUri, @NonNull ProgressIndicator progress) {
 
         Node root = getFirstChild(doc, nsUri, getRootElementName());
         if (root != null) {
@@ -931,10 +933,10 @@ public abstract class SdkSource implements Comparable<SdkSource> {
 
     /**
      * Takes an XML document as a string as parameter and returns a DOM for it.
-     * <p/>
-     * On error, returns null and prints a (hopefully) useful message on the monitor.
+     *
+     * <p>On error, returns null and prints a (hopefully) useful message on the monitor.
      */
-    @VisibleForTesting(visibility = Visibility.PRIVATE)
+    @VisibleForTesting
     protected Document getDocument(@NonNull InputStream xml, @NonNull ProgressIndicator progress) {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();

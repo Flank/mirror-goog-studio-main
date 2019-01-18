@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
-import com.android.annotations.VisibleForTesting
+import com.google.common.annotations.VisibleForTesting
 import com.android.builder.symbols.exportToCompiledJava
 import com.android.ide.common.symbols.Symbol
 import com.android.ide.common.symbols.SymbolIo

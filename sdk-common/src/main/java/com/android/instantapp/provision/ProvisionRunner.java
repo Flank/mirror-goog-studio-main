@@ -20,7 +20,6 @@ import static com.android.instantapp.utils.DeviceUtils.isPostO;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
 import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.CollectingOutputReceiver;
 import com.android.ddmlib.IDevice;
@@ -28,6 +27,7 @@ import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
 import com.android.instantapp.sdk.InstantAppSdkException;
 import com.android.instantapp.sdk.Metadata;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import java.io.File;
 import java.io.IOException;

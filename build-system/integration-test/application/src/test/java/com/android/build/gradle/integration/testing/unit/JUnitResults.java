@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.integration.testing.unit;
 
-import com.android.annotations.VisibleForTesting;
 import com.android.annotations.concurrency.Immutable;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import java.io.BufferedInputStream;
 import java.io.File;
