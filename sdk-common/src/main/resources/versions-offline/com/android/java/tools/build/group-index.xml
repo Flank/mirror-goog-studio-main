@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <com.android.java.tools.build>
-  <java-lib-model versions="3.4.0-alpha06"/>
-  <java-lib-model-builder versions="3.4.0-alpha06"/>
+  <java-lib-model versions="3.3.0,3.5.0-alpha01"/>
+  <java-lib-model-builder versions="3.3.0,3.5.0-alpha01"/>
 </com.android.java.tools.build>
 
