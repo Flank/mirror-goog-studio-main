@@ -108,8 +108,7 @@ public class IntegrationTest {
             // Test that we obtain 1 device via the ddmlib APIs
             AndroidDebugBridge.enableFakeAdbServerMode(server.getPort());
             AndroidDebugBridge.initIfNeeded(false);
-            AndroidDebugBridge bridge =
-                    AndroidDebugBridge.createBridge(getPathToAdb().toString(), false);
+            AndroidDebugBridge bridge = AndroidDebugBridge.createBridge();
             assertNotNull("Debug bridge", bridge);
 
             long startTime = System.currentTimeMillis();
@@ -153,8 +152,7 @@ public class IntegrationTest {
             // Test that we obtain 1 device via the ddmlib APIs
             AndroidDebugBridge.enableFakeAdbServerMode(server.getPort());
             AndroidDebugBridge.initIfNeeded(false);
-            AndroidDebugBridge bridge =
-                    AndroidDebugBridge.createBridge(getPathToAdb().toString(), false);
+            AndroidDebugBridge bridge = AndroidDebugBridge.createBridge();
             assertNotNull("Debug bridge", bridge);
 
             long startTime = System.currentTimeMillis();
@@ -257,8 +255,7 @@ public class IntegrationTest {
             // Start up ADB.
             AndroidDebugBridge.enableFakeAdbServerMode(server.getPort());
             AndroidDebugBridge.initIfNeeded(false);
-            AndroidDebugBridge bridge =
-                    AndroidDebugBridge.createBridge(getPathToAdb().toString(), false);
+            AndroidDebugBridge bridge = AndroidDebugBridge.createBridge();
             assertNotNull("Debug bridge", bridge);
 
             // Wait for the device to get recognized by ddmlib.
@@ -328,8 +325,7 @@ public class IntegrationTest {
             // Start up ADB.
             AndroidDebugBridge.enableFakeAdbServerMode(server.getPort());
             AndroidDebugBridge.initIfNeeded(false);
-            AndroidDebugBridge bridge =
-                    AndroidDebugBridge.createBridge(getPathToAdb().toString(), false);
+            AndroidDebugBridge bridge = AndroidDebugBridge.createBridge();
             assertNotNull("Debug bridge", bridge);
 
             // Wait for the device to get recognized by ddmlib.

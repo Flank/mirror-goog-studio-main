@@ -294,6 +294,7 @@ public class AndroidDebugBridge {
         }
 
         sInitialized = false;
+        sThis = null;
     }
 
     /**
