@@ -21,13 +21,13 @@ import static com.android.SdkConstants.XML_NAMESPACE_URI;
 
 import com.android.aapt.Resources;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import gnu.trove.TIntArrayList;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
-import org.jetbrains.annotations.Nullable;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
