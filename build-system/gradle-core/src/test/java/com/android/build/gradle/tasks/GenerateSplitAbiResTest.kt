@@ -22,7 +22,6 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.dsl.CoreBuildType
 import com.android.build.gradle.internal.dsl.Splits
-import com.android.build.gradle.internal.ide.FilterDataImpl
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -36,7 +35,6 @@ import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.VariantTypeImpl
 import com.android.testutils.truth.FileSubject.assertThat
-import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
 import com.google.common.io.Files
 import com.google.common.truth.Truth.assertThat
@@ -75,12 +73,12 @@ class GenerateSplitAbiResTest {
     @Mock private lateinit var projectOptionsMock: ProjectOptions
 
     private val apkData = OutputFactory.ConfigurationSplitApkData(
+            VariantOutput.FilterType.ABI,
             "x86",
             "app",
             "app",
             "dirName",
-            "app.apk",
-            ImmutableList.of(FilterDataImpl(VariantOutput.FilterType.ABI, "x86")))
+            "app.apk")
     private lateinit var project: Project
 
     @Before

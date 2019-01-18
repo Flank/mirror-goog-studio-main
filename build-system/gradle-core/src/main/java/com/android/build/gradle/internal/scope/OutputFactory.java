@@ -112,30 +112,21 @@ public class OutputFactory {
     }
 
     public ApkData addConfigurationSplit(OutputFile.FilterType filterType, String filterValue) {
-        ImmutableList<FilterData> filtersList =
-                ImmutableList.of(new FilterDataImpl(filterType, filterValue));
         String baseName = variantConfiguration.computeBaseNameWithSplits(filterValue);
-        return addConfigurationSplit(filtersList, getOutputFileName(baseName), filterValue);
+        return addConfigurationSplit(filterType, filterValue, getOutputFileName(baseName));
     }
 
     @VisibleForTesting
     public ApkData addConfigurationSplit(
             OutputFile.FilterType filterType, String filterValue, String fileName) {
-        ImmutableList<FilterData> filtersList =
-                ImmutableList.of(new FilterDataImpl(filterType, filterValue));
-        return addConfigurationSplit(filtersList, fileName, filterValue);
-    }
-
-    private ApkData addConfigurationSplit(
-            ImmutableList<FilterData> filtersList, String fileName, String filterDisplayName) {
         ApkData apkData =
                 new ConfigurationSplitApkData(
-                        filterDisplayName,
-                        variantConfiguration.computeBaseNameWithSplits(filterDisplayName),
+                        filterType,
+                        filterValue,
+                        variantConfiguration.computeBaseNameWithSplits(filterValue),
                         variantConfiguration.getFullName(),
                         variantConfiguration.getDirName(),
-                        fileName,
-                        filtersList);
+                        fileName);
         outputScopeBuilder.addSplit(apkData);
         return apkData;
     }
@@ -358,13 +349,13 @@ public class OutputFactory {
         private final ImmutableList<FilterData> filters;
 
         public ConfigurationSplitApkData(
+                @NonNull OutputFile.FilterType filterType,
                 @NonNull String filterName,
                 @NonNull String baseName,
                 @NonNull String fullName,
                 @NonNull String dirName,
-                String fileName,
-                ImmutableList<FilterData> filters) {
-            this.filters = filters;
+                @NonNull String fileName) {
+            this.filters = ImmutableList.of(new FilterDataImpl(filterType, filterName));
             this.filterName = filterName;
             this.baseName = baseName;
             this.fullName = fullName;
