@@ -78,7 +78,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     @NonNull private final List<String> arguments = Lists.newArrayList();
     @NonNull private final ProjectOptionsBuilder options = new ProjectOptionsBuilder();
     @NonNull final Path projectDirectory;
-    @NonNull private final GradleTestProjectBuilder.HeapSizeRequirement heapSize;
+    @NonNull private final GradleTestProjectBuilder.MemoryRequirement memoryRequirement;
     @NonNull private LoggingLevel loggingLevel = LoggingLevel.INFO;
     private boolean offline = true;
     private boolean sdkInLocalProperties = false;
@@ -90,7 +90,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             @NonNull Path projectDirectory,
             @Nullable Path buildDotGradleFile,
             @Nullable Path profileDirectory,
-            @NonNull GradleTestProjectBuilder.HeapSizeRequirement heapSize) {
+            @NonNull GradleTestProjectBuilder.MemoryRequirement memoryRequirement) {
         this.lastBuildResultConsumer = lastBuildResultConsumer;
         this.projectDirectory = projectDirectory;
         this.projectConnection = projectConnection;
@@ -98,7 +98,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
                 && !buildDotGradleFile.getFileName().toString().equals("build.gradle")) {
             arguments.add("--build-file=" + buildDotGradleFile.toString());
         }
-        this.heapSize = heapSize;
+        this.memoryRequirement = memoryRequirement;
         with(StringOption.BUILD_CACHE_DIR, getBuildCacheDir().getAbsolutePath());
 
         if (profileDirectory != null) {
@@ -227,15 +227,12 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
                 .collect(ImmutableSet.toImmutableSet());
     }
 
-    protected final void setJvmArguments(@NonNull LongRunningOperation launcher) {
-        List<String> jvmArguments = new ArrayList<>();
+    protected final void setJvmArguments(@NonNull LongRunningOperation launcher)
+            throws IOException {
 
-        String heapSize = this.heapSize.getHeapSize();
-        if (heapSize != null) {
-            jvmArguments.add(heapSize);
-        }
+        List<String> jvmArguments = new ArrayList<>(this.memoryRequirement.getJvmArgs());
 
-        jvmArguments.add("-XX:MaxPermSize=1024m");
+        jvmArguments.add("-XX:+HeapDumpOnOutOfMemoryError");
 
         String debugIntegrationTest = System.getenv("DEBUG_INNER_TEST");
         if (!Strings.isNullOrEmpty(debugIntegrationTest)) {

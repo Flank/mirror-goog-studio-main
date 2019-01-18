@@ -44,7 +44,7 @@ fun main(args : Array<String>) {
                 { _ -> },
                 projectLocation.toPath(),
                 null,
-                GradleTestProjectBuilder.HeapSizeRequirement.useDefault())
+                GradleTestProjectBuilder.MemoryRequirement.useDefault())
 
         val models: ModelContainer<AndroidProject> = modelBuilder
                 .withSdkInLocalProperties()
