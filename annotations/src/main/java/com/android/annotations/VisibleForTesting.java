@@ -20,13 +20,16 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * Denotes that the class, method or field has its visibility relaxed so
- * that unit tests can access it.
- * <p>
- * The <code>visibility</code> argument can be used to specific what the original
- * visibility should have been if it had not been made public or package-private for testing.
- * The default is to consider the element private.
+ * Denotes that the class, method or field has its visibility relaxed so that unit tests can access
+ * it.
+ *
+ * <p>The <code>visibility</code> argument can be used to specific what the original visibility
+ * should have been if it had not been made public or package-private for testing. The default is to
+ * consider the element private.
+ *
+ * @deprecated Use com.google.common.annotations.VisibleForTesting instead.
  */
+@Deprecated
 @Retention(RetentionPolicy.SOURCE)
 public @interface VisibleForTesting {
     /**
