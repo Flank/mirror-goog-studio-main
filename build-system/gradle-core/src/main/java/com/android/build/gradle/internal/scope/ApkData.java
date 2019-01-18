@@ -23,6 +23,7 @@ import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Comparator;
@@ -59,9 +60,6 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
     // TODO : move it to a subclass, we cannot override versions for SPLIT
     private transient Supplier<String> versionName = () -> null;
     private transient IntSupplier versionCode = () -> 0;
-    private String serializedVersionName;
-    private int serializedVersionCode = 0;
-
     private AtomicBoolean enabled = new AtomicBoolean(true);
     private String outputFileName;
 
@@ -162,20 +160,12 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
 
     @Override
     public int getVersionCode() {
-        if (versionCode == null) {
-            return serializedVersionCode;
-        }
-        serializedVersionCode = versionCode.getAsInt();
-        return serializedVersionCode;
+        return versionCode.getAsInt();
     }
 
     @Nullable
     public String getVersionName() {
-        if (versionName == null) {
-            return serializedVersionName;
-        }
-        serializedVersionName = versionName.get();
-        return serializedVersionName;
+        return versionName.get();
     }
 
     @Nullable
@@ -265,4 +255,27 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
 
     @Nullable
     public abstract String getFilterName();
+
+
+    // We use this since we cannot serialize the suppliers for the respective fields, so we serialize
+    // a "snapshot" of those value sand when the object is deserialized we use these fields to create
+    // new suppliers.
+    // Although now the suppliers will be static, it's expected that by the time the class was
+    // serialized those values shouldn't change anymore.
+    private String serializedVersionName = null;
+    private int serializedVersionCode = 0;
+
+    private void writeObject(java.io.ObjectOutputStream out) throws IOException {
+        serializedVersionName = versionName.get();
+        serializedVersionCode = versionCode.getAsInt();
+        out.defaultWriteObject();
+    }
+
+    private void readObject(java.io.ObjectInputStream in)
+            throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        versionName = () -> serializedVersionName;
+        versionCode = () -> serializedVersionCode;
+    }
+
 }
