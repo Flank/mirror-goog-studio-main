@@ -28,6 +28,16 @@ public abstract class CommandHandler {
         stream.write("OKAY".getBytes(UTF_8));
     }
 
+    protected static void writeOkayResponse(@NonNull OutputStream stream, @NonNull String response)
+            throws IOException {
+        try {
+            writeOkay(stream);
+            write4ByteHexIntString(stream, response.length());
+            writeString(stream, response);
+        } catch (IOException ignored) {
+        }
+    }
+
     protected static void writeFail(@NonNull OutputStream stream) throws IOException {
         stream.write("FAIL".getBytes(UTF_8));
     }

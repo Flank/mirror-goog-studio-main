@@ -431,10 +431,11 @@ final class AdbHelper {
          */
         SHELL,
 
-        /**
-         * The exec service.
-         */
-        EXEC
+        /** The exec service. */
+        EXEC,
+
+        /** The abb service. */
+        ABB,
     }
 
     /**
@@ -476,7 +477,6 @@ final class AdbHelper {
             @Nullable InputStream is)
             throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
                     IOException {
-
         if (SwingUtilities.isEventDispatchThread()) {
             Log.e("ddms", "execute: called '" + command + "' from the Event Dispatch Thread!");
         }
@@ -759,6 +759,45 @@ final class AdbHelper {
                 Log.w("create-forward", "Error creating forward: " + resp.message);
                 throw new AdbCommandRejectedException(resp.message);
             }
+        } finally {
+            if (adbChan != null) {
+                adbChan.close();
+            }
+        }
+    }
+
+    /**
+     * Queries a set of supported features from the device.
+     *
+     * @param adbSockAddr the socket address to connect to adb
+     * @param device the device on which to do the port forwarding
+     * @throws TimeoutException in case of timeout on the connection.
+     * @throws AdbCommandRejectedException if adb rejects the command
+     * @throws IOException in case of I/O error on the connection.
+     */
+    public static String getFeatures(InetSocketAddress adbSockAddr, Device device)
+            throws TimeoutException, AdbCommandRejectedException, IOException {
+
+        SocketChannel adbChan = null;
+        try {
+            adbChan = SocketChannel.open(adbSockAddr);
+            adbChan.configureBlocking(false);
+
+            byte[] request =
+                    formAdbRequest(
+                            String.format(
+                                    "host-serial:%1$s:features", //$NON-NLS-1$
+                                    device.getSerialNumber()));
+
+            write(adbChan, request);
+
+            AdbResponse resp = readAdbResponse(adbChan, true /* readDiagString */);
+            if (!resp.okay) {
+                Log.w("features", "Error querying features: " + resp.message);
+                throw new AdbCommandRejectedException(resp.message);
+            }
+
+            return resp.message;
         } finally {
             if (adbChan != null) {
                 adbChan.close();

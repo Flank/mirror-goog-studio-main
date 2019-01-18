@@ -65,6 +65,7 @@ public interface IDevice extends IShellEnabledDevice {
     enum Feature {
         SCREEN_RECORD,      // screen recorder available?
         PROCSTATS,          // procstats service (dumpsys procstats) available
+        ABB, // Android Binder Bridge available
     }
 
     /** Device level hardware features. */
