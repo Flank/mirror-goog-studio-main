@@ -89,5 +89,5 @@ test {
         exceptionFormat = 'full'
         showCauses = true
     }
-    dependsOn ':publishLocal' , createTestTempDirectory
+    dependsOn ':publishAndroidGradleLocal' , createTestTempDirectory
 }
