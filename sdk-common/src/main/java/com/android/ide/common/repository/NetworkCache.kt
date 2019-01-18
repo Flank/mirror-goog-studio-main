@@ -43,7 +43,10 @@ abstract class NetworkCache constructor(
     private val networkTimeoutMs: Int = 3000,
 
     /** Maximum allowed age of cached data; default is 7 days */
-    private val cacheExpiryHours: Int = TimeUnit.DAYS.toHours(7).toInt()
+    private val cacheExpiryHours: Int = TimeUnit.DAYS.toHours(7).toInt(),
+
+    /** If false, this repository won't make any network requests */
+    private val networkEnabled: Boolean = true
 ) {
 
     /** Reads the given query URL in, with the given time out, and returns the bytes found */
@@ -58,7 +61,7 @@ abstract class NetworkCache constructor(
     /** Reads the given data relative to the base URL. */
     protected open fun findData(relative: String): InputStream? {
         if (cacheDir != null) {
-            synchronized(this) {
+            synchronized(cacheDir) {
                 val file = File(cacheDir, if (relative.isNotEmpty()) relative else cacheKey)
                 if (file.exists()) {
                     val lastModified = file.lastModified()
@@ -73,19 +76,26 @@ abstract class NetworkCache constructor(
                     }
                 }
 
-                try {
-                    val data = readUrlData(
-                        "$baseUrl$relative",
-                        networkTimeoutMs
-                    )
-                    if (data != null) {
-                        val parent = file.parentFile
-                        parent?.mkdirs()
-                        Files.write(data, file)
-                        return ByteArrayInputStream(data)
+                if (networkEnabled) {
+                    try {
+                        val data = readUrlData(
+                          "$baseUrl$relative",
+                          networkTimeoutMs
+                        )
+                        if (data != null) {
+                            val parent = file.parentFile
+                            parent?.mkdirs()
+                            Files.write(data, file)
+                            return ByteArrayInputStream(data)
+                        }
                     }
-                } catch (e: Throwable) {
-                    // timeouts etc: fall through to use built-in data
+                    catch (e: AssertionError) {
+                        // Make sure that we propagate assertions
+                        throw e
+                    }
+                    catch (e: Throwable) {
+                        // timeouts etc: fall through to use built-in data
+                    }
                 }
             }
         }

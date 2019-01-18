@@ -46,8 +46,11 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
     networkTimeoutMs: Int = 3000,
 
     /** Maximum allowed age of cached data; default is 7 days */
-    cacheExpiryHours: Int = TimeUnit.DAYS.toHours(7).toInt()
-) : NetworkCache(GMAVEN_BASE_URL, MAVEN_GOOGLE_CACHE_DIR_KEY, cacheDir, networkTimeoutMs, cacheExpiryHours) {
+    cacheExpiryHours: Int = TimeUnit.DAYS.toHours(7).toInt(),
+
+    /** If false, this repository won't make network requests */
+    useNetwork: Boolean = true
+) : NetworkCache(GMAVEN_BASE_URL, MAVEN_GOOGLE_CACHE_DIR_KEY, cacheDir, networkTimeoutMs, cacheExpiryHours, useNetwork) {
 
     companion object {
         /** Key used in cache directories to locate the maven.google.com network cache */
