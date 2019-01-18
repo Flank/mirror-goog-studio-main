@@ -26,11 +26,23 @@ fi
   //tools/... \
   -//tools/adt/idea/android-uitests/... \
   -//tools/adt/idea/uitest-framework:intellij.android.guiTestFramework_tests \
-  -//tools/base/perf-logger:studio.perf-logger_tests \
-  || exit $?
+  -//tools/base/perf-logger:studio.perf-logger_tests
+
+# We want to still attach the upsalite link if tests fail so we can't abort now
+readonly bazel_test_status=$?
 
 # Grab the upsalite_id from the stdout of the bazel command.  This is captured in command.log
 readonly upsalite_id="$(sed -n 's/\r$//;s/^.* invocation_id: //p' "${command_log}")"
+
+if [[ -d "${dist_dir}" ]]; then
+  # Link to test results
+  echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${upsalite_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
+fi
+
+# Abort if necessary now that the upsalite link is handled
+if [[ ! ${bazel_test_status} ]]; then
+  exit ${bazel_test_status}
+fi
 
 # Create a temp file to pass production targets to report generator
 readonly production_targets_file=$(mktemp)
@@ -82,9 +94,6 @@ if [[ -d "${dist_dir}" ]]; then
   if [[ "$build_number" ]]; then
     gsutil cp "./out/lcov" "gs://android-devtools-archives/ab-studio-coverage/${build_number}/" || exit $?
   fi
-
-  # Link to test results
-  echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${upsalite_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
 fi
 
 exit 0
