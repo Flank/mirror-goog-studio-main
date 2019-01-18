@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -84,7 +85,8 @@ class SvgTree {
 
     // Key is SvgNode that references a clipPath. Value is SvgGroupNode that is the parent of that
     // SvgNode.
-    private final Map<SvgNode, Pair<SvgGroupNode, String>> mClipPathAffectedNodes = new HashMap<>();
+    private final Map<SvgNode, Pair<SvgGroupNode, String>> mClipPathAffectedNodes =
+            new LinkedHashMap<>();
 
     // Key is String that is the id of a style class.
     // Value is set of SvgNodes referencing that class.

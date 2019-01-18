@@ -880,6 +880,10 @@ public class VectorDrawableGeneratorTest extends TestCase {
         }
     }
 
+    public void testClipPathOrder() throws Exception {
+        checkSvgConversion("ic_clip_path_ordering");
+    }
+
     // XML files start here.
     public void testXmlIconSizeOpacity() throws Exception {
         checkXmlConversion("ic_size_opacity");
