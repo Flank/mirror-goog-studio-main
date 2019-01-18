@@ -35,12 +35,29 @@ class SamDetectorTest : AbstractCheckTest() {
                     handler.handle(MyInterface { println("hello") }) // OK
                     handler.handle({ println("hello") }) // OK
                     handler.stash(MyInterface { println("hello") }, list) // OK
-                    handler.stash({ println("hello") }, list) // WARN
-                    handler.store({ println("hello") }) // WARN
-                    handler.compareIdentity1({ println("hello") }) // WARN
-                    handler.compareIdentity2({ println("hello") }) // WARN
+                    handler.stash({ println("hello") }, list) // OK
+                    handler.store({ println("hello") }) // OK
+                    handler.compareIdentity1({ println("hello") }) // OK
+                    handler.compareIdentity2({ println("hello") }) // OK
                     handler.compareEquals1({ println("hello") }) // OK
                     handler.compareEquals2({ println("hello") }) // OK
+
+                    val lambda = { println("hello") }
+                    handler.stash(lambda, list) // WARN
+                    handler.store(lambda) // WARN
+                    handler.compareIdentity1(lambda) // WARN
+                    handler.compareIdentity2(lambda) // WARN
+                    handler.compareEquals1(lambda) // OK
+                    handler.compareEquals2(lambda) // OK
+
+                    @Suppress("CanBeVal", "JoinDeclarationAndAssignment")
+                    var lambda2: () -> Unit
+                    lambda2 = { println("hello") }
+                    handler.stash(lambda2, list) // WARN
+                }
+
+                fun viewpost(view: android.view.View) {
+                    view.postDelayed({ println ("Hello") }, 50)
                 }
                 """
             ),
@@ -119,19 +136,45 @@ class SamDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expect(
             """
-            src/test/pkg/test.kt:10: Warning: Implicit new instance being passed to method which ends up checking instance equality; this can lead to subtle bugs [ImplicitSamInstance]
-                                handler.stash({ println("hello") }, list) // WARN
-                                              ~~~~~~~~~~~~~~~~~~~~
-            src/test/pkg/test.kt:11: Warning: Implicit new instance being passed to method which ends up checking instance equality; this can lead to subtle bugs [ImplicitSamInstance]
-                                handler.store({ println("hello") }) // WARN
-                                              ~~~~~~~~~~~~~~~~~~~~
-            src/test/pkg/test.kt:12: Warning: Implicit new instance being passed to method which ends up checking instance equality; this can lead to subtle bugs [ImplicitSamInstance]
-                                handler.compareIdentity1({ println("hello") }) // WARN
-                                                         ~~~~~~~~~~~~~~~~~~~~
-            src/test/pkg/test.kt:13: Warning: Implicit new instance being passed to method which ends up checking instance equality; this can lead to subtle bugs [ImplicitSamInstance]
-                                handler.compareIdentity2({ println("hello") }) // WARN
-                                                         ~~~~~~~~~~~~~~~~~~~~
-            0 errors, 4 warnings
+            src/test/pkg/test.kt:18: Warning: Implicit new MyInterface instance being passed to method which ends up checking instance equality; this can lead to subtle bugs [ImplicitSamInstance]
+                                handler.stash(lambda, list) // WARN
+                                              ~~~~~~
+            src/test/pkg/test.kt:19: Warning: Implicit new MyInterface instance being passed to method which ends up checking instance equality; this can lead to subtle bugs [ImplicitSamInstance]
+                                handler.store(lambda) // WARN
+                                              ~~~~~~
+            src/test/pkg/test.kt:20: Warning: Implicit new MyInterface instance being passed to method which ends up checking instance equality; this can lead to subtle bugs [ImplicitSamInstance]
+                                handler.compareIdentity1(lambda) // WARN
+                                                         ~~~~~~
+            src/test/pkg/test.kt:21: Warning: Implicit new MyInterface instance being passed to method which ends up checking instance equality; this can lead to subtle bugs [ImplicitSamInstance]
+                                handler.compareIdentity2(lambda) // WARN
+                                                         ~~~~~~
+            src/test/pkg/test.kt:28: Warning: Implicit new MyInterface instance being passed to method which ends up checking instance equality; this can lead to subtle bugs [ImplicitSamInstance]
+                                handler.stash(lambda2, list) // WARN
+                                              ~~~~~~~
+            0 errors, 5 warnings
+            """
+        ).expectFixDiffs(
+            """
+            Fix for src/test/pkg/test.kt line 18: Explicitly create MyInterface instance:
+            @@ -17 +17
+            -                     val lambda = { println("hello") }
+            +                     val lambda = MyInterface { println("hello") }
+            Fix for src/test/pkg/test.kt line 19: Explicitly create MyInterface instance:
+            @@ -17 +17
+            -                     val lambda = { println("hello") }
+            +                     val lambda = MyInterface { println("hello") }
+            Fix for src/test/pkg/test.kt line 20: Explicitly create MyInterface instance:
+            @@ -17 +17
+            -                     val lambda = { println("hello") }
+            +                     val lambda = MyInterface { println("hello") }
+            Fix for src/test/pkg/test.kt line 21: Explicitly create MyInterface instance:
+            @@ -17 +17
+            -                     val lambda = { println("hello") }
+            +                     val lambda = MyInterface { println("hello") }
+            Fix for src/test/pkg/test.kt line 28: Explicitly create MyInterface instance:
+            @@ -27 +27
+            -                     lambda2 = { println("hello") }
+            +                     lambda2 = MyInterface { println("hello") }
             """
         )
     }
@@ -151,26 +194,23 @@ class SamDetectorTest : AbstractCheckTest() {
                     handler.post(::callback)
                     handler.removeCallbacks(::callback)
                     view.post(::callback)
-                    view.removeCallbacks { callback() }
+                    view.removeCallbacks { callback() } // OK
                 }
                 """
             ).indented()
         ).run().expect(
             """
-            src/test/pkg/test.kt:9: Warning: Implicit new instance being passed to method which ends up checking instance equality; this can lead to subtle bugs [ImplicitSamInstance]
+            src/test/pkg/test.kt:9: Warning: Implicit new Runnable instance being passed to method which ends up checking instance equality; this can lead to subtle bugs [ImplicitSamInstance]
                 handler.post(::callback)
                              ~~~~~~~~~~
-            src/test/pkg/test.kt:10: Warning: Implicit new instance being passed to method which ends up checking instance equality; this can lead to subtle bugs [ImplicitSamInstance]
+            src/test/pkg/test.kt:10: Warning: Implicit new Runnable instance being passed to method which ends up checking instance equality; this can lead to subtle bugs [ImplicitSamInstance]
                 handler.removeCallbacks(::callback)
                                         ~~~~~~~~~~
-            src/test/pkg/test.kt:11: Warning: Implicit new instance being passed to method which ends up checking instance equality; this can lead to subtle bugs [ImplicitSamInstance]
+            src/test/pkg/test.kt:11: Warning: Implicit new Runnable instance being passed to method which ends up checking instance equality; this can lead to subtle bugs [ImplicitSamInstance]
                 view.post(::callback)
                           ~~~~~~~~~~
-            src/test/pkg/test.kt:12: Warning: Implicit new instance being passed to method which ends up checking instance equality; this can lead to subtle bugs [ImplicitSamInstance]
-                view.removeCallbacks { callback() }
-                                     ~~~~~~~~~~~~~~
-            0 errors, 4 warnings
+            0 errors, 3 warnings
             """
-        )
+        ).expectFixDiffs("")
     }
 }

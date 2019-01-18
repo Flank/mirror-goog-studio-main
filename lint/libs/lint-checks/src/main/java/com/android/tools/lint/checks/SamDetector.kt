@@ -29,6 +29,7 @@ import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.isJava
 import com.intellij.psi.PsiCompiledElement
 import com.intellij.psi.PsiField
+import com.intellij.psi.PsiLocalVariable
 import com.intellij.psi.PsiParameter
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UCallExpression
@@ -36,11 +37,15 @@ import org.jetbrains.uast.UCallableReferenceExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.ULambdaExpression
+import org.jetbrains.uast.ULocalVariable
 import org.jetbrains.uast.UMethod
+import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.USimpleNameReferenceExpression
 import org.jetbrains.uast.UastBinaryOperator
+import org.jetbrains.uast.getContainingUMethod
 import org.jetbrains.uast.toUElement
 import org.jetbrains.uast.tryResolve
+import org.jetbrains.uast.util.isAssignment
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 
 /**
@@ -86,20 +91,48 @@ class SamDetector : Detector(), SourceCodeScanner {
         }
         return object : UElementHandler() {
             override fun visitLambdaExpression(node: ULambdaExpression) {
-                checkLambda(node, context)
+                val parent = node.uastParent ?: return
+                if (parent is ULocalVariable) {
+                    val psiVar = parent.sourcePsi as? PsiLocalVariable ?: parent.psi ?: return
+                    checkCalls(context, node, psiVar)
+                } else if (parent.isAssignment()) {
+                    val v = (parent as UBinaryExpression).leftOperand.tryResolve() ?: return
+                    val psiVar = v as? PsiLocalVariable ?: return
+                    checkCalls(context, node, psiVar)
+                }
             }
 
             override fun visitCallableReferenceExpression(node: UCallableReferenceExpression) {
-                checkLambda(node, context)
+                val call = node.uastParent as? UCallExpression ?: return
+                checkLambda(context, node, call, node)
             }
         }
     }
 
-    private fun checkLambda(
-        node: UExpression,
-        context: JavaContext
+    private fun checkCalls(
+        context: JavaContext,
+        lambda: ULambdaExpression,
+        variable: PsiLocalVariable
     ) {
-        val call = node.uastParent as? UCallExpression ?: return
+        val method = lambda.getContainingUMethod() ?: return
+        method.accept(object : AbstractUastVisitor() {
+            override fun visitCallExpression(node: UCallExpression): Boolean {
+                for (argument in node.valueArguments) {
+                    if (argument is UReferenceExpression && argument.resolve() == variable) {
+                        checkLambda(context, lambda, node, argument)
+                    }
+                }
+                return super.visitCallExpression(node)
+            }
+        })
+    }
+
+    private fun checkLambda(
+        context: JavaContext,
+        lambda: UExpression,
+        call: UCallExpression,
+        argument: UReferenceExpression
+    ) {
         val psiMethod = call.resolve() ?: return
         val evaluator = context.evaluator
         if (psiMethod is PsiCompiledElement) {
@@ -108,12 +141,15 @@ class SamDetector : Detector(), SourceCodeScanner {
             val containingClass = psiMethod.containingClass
             if (evaluator.isMemberInClass(psiMethod, HANDLER_CLASS) ||
                 evaluator.inheritsFrom(containingClass, CLASS_VIEW, false) ||
+                evaluator.inheritsFrom(containingClass, "android.view.ViewTreeObserver", false) ||
                 evaluator.inheritsFrom(containingClass, DRAWABLE_CALLBACK_CLASS, false)
             ) {
+                // idea: only store if temporarily in a variable
                 val map = evaluator.computeArgumentMapping(call, psiMethod)
-                val psiParameter = map[node] ?: return
-                if (psiParameter.type.canonicalText == RUNNABLE_CLASS) {
-                    reportError(context, node)
+                val psiParameter = map[lambda] ?: return
+                val typeString = psiParameter.type.canonicalText
+                if (typeString == RUNNABLE_CLASS) {
+                    reportError(context, lambda, typeString, argument)
                 }
             }
             return
@@ -123,21 +159,40 @@ class SamDetector : Detector(), SourceCodeScanner {
         }
 
         val map = evaluator.computeArgumentMapping(call, psiMethod)
-        val psiParameter = map[node] ?: return
+        val psiParameter = map[argument] ?: return
         val method = psiMethod.toUElement(UMethod::class.java) ?: return
         if (storesLambda(method, psiParameter)) {
-            reportError(context, node)
+            val typeString = psiParameter.type.canonicalText
+            reportError(context, lambda, typeString, argument)
         }
     }
 
     private fun reportError(
         context: JavaContext,
-        node: UExpression
+        lambda: UExpression,
+        type: String,
+        argument: UReferenceExpression
     ) {
+        val location = context.getLocation(argument)
+        val simpleType = type.substring(type.lastIndexOf('.') + 1)
+        val range = context.getLocation(lambda)
+        val fix =
+            if (lambda is ULambdaExpression) {
+                fix()
+                    .name("Explicitly create $simpleType instance")
+                    .replace()
+                    .beginning()
+                    .with("$simpleType ")
+                    .range(range)
+                    .build()
+            } else {
+                null
+            }
         context.report(
-            ISSUE, node, context.getLocation(node),
-            "Implicit new instance being passed to method which ends up " +
-                    "checking instance equality; this can lead to subtle bugs"
+            ISSUE, argument, location,
+            "Implicit new `$simpleType` instance being passed to method which ends up " +
+                    "checking instance equality; this can lead to subtle bugs",
+            fix
         )
     }
 
