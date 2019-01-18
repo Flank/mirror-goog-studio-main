@@ -20,6 +20,7 @@ package com.android.build.gradle.integration.common.fixture.app
 class BuildFileBuilder {
 
     var plugin: String? = null
+    var useKotlin: Boolean = false
     var compileSdkVersion: String? = null
     var minSdkVersion: String? = null
 
@@ -33,6 +34,10 @@ class BuildFileBuilder {
         val contents = StringBuilder()
         if (plugin != null) {
             contents.append("apply plugin: '$plugin'")
+        }
+        if (useKotlin) {
+            contents.append("\n\napply plugin: 'kotlin-android'")
+            contents.append("\napply plugin: 'kotlin-android-extensions'")
         }
         if (compileSdkVersion != null) {
             contents.append("\n\nandroid.compileSdkVersion = $compileSdkVersion")

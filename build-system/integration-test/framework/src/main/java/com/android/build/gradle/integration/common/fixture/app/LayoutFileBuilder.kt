@@ -19,39 +19,60 @@ package com.android.build.gradle.integration.common.fixture.app
 /** Builder for the contents of an XML layout file. */
 class LayoutFileBuilder {
 
+    var useAndroidX: Boolean = false
+
     private val widgets = StringBuilder()
 
-    fun addTextView(id: String, text: String? = "") {
-        widgets.append(
-            """
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/$id"
-                android:text="$text"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-            """.trimIndent()
-        )
+    fun addTextView(id: String, text: String = "", customProperties: List<String> = listOf()) {
+        widgets.append("\n")
+        widgets.append("<TextView")
+
+        val properties = StringBuilder()
+        properties.append("\n")
+        properties.append("""
+            android:id="@+id/$id"
+            android:text="$text"
+            """.trimIndent())
+        for (customerProperty in customProperties) {
+            properties.append("\n$customerProperty")
+        }
+        properties.append("\n")
+        properties.append("""
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+            """.trimIndent())
+
+        widgets.append(properties.toString().prependIndent("\t"))
     }
 
     fun build(): String {
         val contents = StringBuilder()
+
+        val constraintLayoutClass = if (useAndroidX)
+            "androidx.constraintlayout.widget.ConstraintLayout"
+        else "android.support.constraint.ConstraintLayout"
+
         contents.append(
             """
             <?xml version="1.0" encoding="utf-8"?>
-            <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            <$constraintLayoutClass xmlns:android="http://schemas.android.com/apk/res/android"
                 xmlns:app="http://schemas.android.com/apk/res-auto"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
             """.trimIndent()
         )
-        if (!widgets.isEmpty()) {
-            contents.append("\n\n$widgets\n\n")
+
+        if (widgets.isNotEmpty()) {
+            contents.append("\n")
+            contents.append(widgets.toString().prependIndent("\t"))
         }
-        contents.append("</android.support.constraint.ConstraintLayout>")
+
+        contents.append("\n\n</$constraintLayoutClass>")
+
         return contents.toString()
     }
 }

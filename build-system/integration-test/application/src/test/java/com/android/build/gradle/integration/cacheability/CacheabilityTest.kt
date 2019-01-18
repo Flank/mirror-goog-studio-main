@@ -16,22 +16,16 @@
 
 package com.android.build.gradle.integration.cacheability
 
-import com.google.common.truth.Truth.assertThat
-
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
-import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.UP_TO_DATE
-import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.FROM_CACHE
+import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.DID_WORK
-import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.SKIPPED
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.FAILED
-import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.FROM_CACHE
+import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.SKIPPED
+import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.UP_TO_DATE
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
-
-import com.google.common.collect.Sets
 import com.google.common.truth.Expect
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -57,109 +51,75 @@ class CacheabilityTest {
         private val EXPECTED_TASK_STATES =
             mapOf(
                 UP_TO_DATE to setOf(
-                    ":clean",
-                    ":preBuild",
-                    ":generateDebugResources",
-                    ":compileDebugSources"
+                    ":app:clean",
+                    ":app:preBuild",
+                    ":app:generateDebugResources",
+                    ":app:compileDebugSources"
                 ),
                 FROM_CACHE to setOf(
-                    ":preDebugBuild",
-                    ":generateDebugBuildConfig",
-                    ":javaPreCompileDebug",
-                    ":generateDebugResValues",
-                    ":mergeDebugResources",
-                    ":compileDebugJavaWithJavac",
-                    ":checkDebugDuplicateClasses",
-                    ":mergeDebugShaders",
-                    ":mergeDebugAssets",
-                    ":mergeExtDexDebug",
-                    ":mergeDebugJniLibFolders",
-                    ":processDebugManifest",
-                    ":processDebugResources",
-                    ":mainApkListPersistenceDebug",
-                    ":validateSigningDebug",
-                    ":signingConfigWriterDebug",
-                    ":createDebugCompatibleScreenManifests"
+                    ":app:preDebugBuild",
+                    ":app:generateDebugBuildConfig",
+                    ":app:javaPreCompileDebug",
+                    ":app:generateDebugResValues",
+                    ":app:mergeDebugResources",
+                    ":app:compileDebugJavaWithJavac",
+                    ":app:checkDebugDuplicateClasses",
+                    ":app:mergeDebugShaders",
+                    ":app:mergeDebugAssets",
+                    ":app:mergeExtDexDebug",
+                    ":app:mergeDebugJniLibFolders",
+                    ":app:processDebugManifest",
+                    ":app:processDebugResources",
+                    ":app:mainApkListPersistenceDebug",
+                    ":app:validateSigningDebug",
+                    ":app:signingConfigWriterDebug",
+                    ":app:createDebugCompatibleScreenManifests"
                 ),
+                /*
+                 * Tasks that should be cacheable but are not yet cacheable.
+                 *
+                 * If you add a task to this list, remember to file a bug for it.
+                 */
                 DID_WORK to setOf(
-                    ":checkDebugManifest",
-                    ":prepareLintJar",
-                    ":compileDebugShaders",
-                    ":transformClassesWithDexBuilderForDebug",
-                    ":mergeDexDebug",
-                    ":transformNativeLibsWithMergeJniLibsForDebug",
-                    ":transformNativeLibsWithStripDebugSymbolForDebug",
-                    ":transformResourcesWithMergeJavaResForDebug",
-                    ":packageDebug"
+                    ":app:checkDebugManifest" /* Bug 74595857 */,
+                    ":app:prepareLintJar" /* Bug 120413672 */,
+                    ":app:compileDebugShaders" /* Bug 120413401 */,
+                    ":app:transformClassesWithDexBuilderForDebug" /* Bug 74595921 */,
+                    ":app:mergeDexDebug" /* Bug 120413559 */,
+                    ":app:transformNativeLibsWithMergeJniLibsForDebug" /* Bug 74595223 */,
+                    ":app:transformNativeLibsWithStripDebugSymbolForDebug" /* Bug 120414535 */,
+                    ":app:transformResourcesWithMergeJavaResForDebug" /* Bug 74595224 */,
+                    ":app:packageDebug" /* Bug 74595859 */
                 ),
                 SKIPPED to setOf(
-                    ":compileDebugAidl",
-                    ":compileDebugRenderscript",
-                    ":generateDebugSources",
-                    ":generateDebugAssets",
-                    ":processDebugJavaRes",
-                    ":assembleDebug"
+                    ":app:compileDebugAidl",
+                    ":app:compileDebugRenderscript",
+                    ":app:generateDebugSources",
+                    ":app:generateDebugAssets",
+                    ":app:processDebugJavaRes",
+                    ":app:assembleDebug"
                 ),
                 FAILED to setOf()
             )
-
-        /**
-         * Tasks that should be cacheable but are not yet cacheable.
-         *
-         * If you add a task to this list, remember to file a bug for it. The master bug for this
-         * list is Bug 69668176.
-         */
-        private val NOT_YET_CACHEABLE = setOf(
-            ":checkDebugManifest" /* Bug 74595857 */,
-            ":prepareLintJar" /* Bug 120413672 */,
-            ":compileDebugShaders" /* Bug 120413401 */,
-            ":transformClassesWithDexBuilderForDebug" /* Bug 74595921 */,
-            ":mergeDexDebug" /* Bug 120413559 */,
-            ":transformNativeLibsWithMergeJniLibsForDebug" /* Bug 74595223 */,
-            ":transformNativeLibsWithStripDebugSymbolForDebug" /* Bug 120414535 */,
-            ":transformResourcesWithMergeJavaResForDebug" /* Bug 74595224 */,
-            ":packageDebug" /* Bug 74595859 */
-        )
-
-        /**
-         * Tasks that are never cacheable.
-         */
-        private val NEVER_CACHEABLE = setOf<String>()
     }
 
     @get:Rule
-    var projectCopy1 = GradleTestProject.builder()
-        .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
-        .withGradleBuildCacheDirectory(File("../$GRADLE_BUILD_CACHE_DIR"))
-        .withName("projectCopy1")
-        .dontOutputLogOnFailure()
-        .create()
+    var projectCopy1 = setUpTestProject("projectCopy1")
 
     @get:Rule
-    var projectCopy2 = GradleTestProject.builder()
-        .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
-        .withGradleBuildCacheDirectory(File("../$GRADLE_BUILD_CACHE_DIR"))
-        .withName("projectCopy2")
-        .dontOutputLogOnFailure()
-        .create()
+    var projectCopy2 = setUpTestProject("projectCopy2")
+
+    private fun setUpTestProject(projectName: String): GradleTestProject {
+        return with(EmptyActivityProjectBuilder()) {
+            this.projectName = projectName
+            useGradleBuildCache = true
+            gradleBuildCacheDir = File("../$GRADLE_BUILD_CACHE_DIR")
+            build()
+        }
+    }
 
     @get:Rule
     val expect: Expect = Expect.create()
-
-    @Before
-    fun setUp() {
-        // Normally the APK name wouldn't include the project name. However, because the current
-        // test project has only one module located at the root project (as opposed to residing in a
-        // subdirectory under the root project), the APK name in this test does include the project
-        // name, which would break relocatability. To fix that, we need to apply the following
-        // workaround to use a generic name for the APK that is independent of the project name.
-        //
-        // NOTE: This project setup is not configured by default in Android Studio, so we assume
-        // that not many users have this setup. However, if we later find that users do run into
-        // cacheability issues because of this, we will need to think of a proper fix.
-        TestFileUtils.appendToFile(projectCopy1.buildFile, "archivesBaseName = 'project'")
-        TestFileUtils.appendToFile(projectCopy2.buildFile, "archivesBaseName = 'project'")
-    }
 
     @Test
     fun testRelocatability() {
@@ -178,34 +138,27 @@ class CacheabilityTest {
         // When running this test with bazel, StripDebugSymbolTransform does not run as the NDK
         // directory is not available. We need to remove that task from the expected tasks' states.
         var expectedDidWorkTasks = EXPECTED_TASK_STATES[DID_WORK]!!
-        if (result.findTask(":transformNativeLibsWithStripDebugSymbolForDebug") == null) {
+        if (result.findTask(":app:transformNativeLibsWithStripDebugSymbolForDebug") == null) {
             expectedDidWorkTasks =
-                    expectedDidWorkTasks.minus(":transformNativeLibsWithStripDebugSymbolForDebug")
+                    expectedDidWorkTasks.minus(":app:transformNativeLibsWithStripDebugSymbolForDebug")
         }
 
         // Check that the tasks' states are as expected
-
         expect.that(result.upToDateTasks)
-            .named("UpToDateTasks")
+            .named("UpToDate Tasks")
             .containsExactlyElementsIn(EXPECTED_TASK_STATES[UP_TO_DATE]!!)
         expect.that(result.fromCacheTasks)
-            .named("FromCacheTasks")
+            .named("FromCache Tasks")
             .containsExactlyElementsIn(EXPECTED_TASK_STATES[FROM_CACHE]!!)
         expect.that(result.didWorkTasks)
-            .named("DidWorkTasks")
+            .named("DidWork Tasks")
             .containsExactlyElementsIn(expectedDidWorkTasks)
         expect.that(result.skippedTasks)
-            .named("SkippedTasks")
+            .named("Skipped Tasks")
             .containsExactlyElementsIn(EXPECTED_TASK_STATES[SKIPPED]!!)
         expect.that(result.failedTasks)
-            .named("FailedTasks")
+            .named("Failed Tasks")
             .containsExactlyElementsIn(EXPECTED_TASK_STATES[FAILED]!!)
-
-        // Sanity-check that all the tasks that did work (were not cacheable) have been looked at
-        // and categorized into either NOT_YET_CACHEABLE or NEVER_CACHEABLE.
-        expect.that(EXPECTED_TASK_STATES[DID_WORK])
-            .named("Sanity-DidWorkIsNotCacheable")
-            .containsExactlyElementsIn(Sets.union(NOT_YET_CACHEABLE, NEVER_CACHEABLE))
 
         // Clean up the cache
         FileUtils.deleteRecursivelyIfExists(buildCacheDir)
