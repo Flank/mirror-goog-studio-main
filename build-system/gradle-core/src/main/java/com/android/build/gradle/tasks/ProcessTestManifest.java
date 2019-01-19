@@ -287,7 +287,6 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         private final VariantScope scope;
 
         @NonNull private final Provider<Directory> testTargetMetadata;
-        private Provider<Directory> manifestOutputDirectory;
 
         public CreationAction(
                 @NonNull VariantScope scope, @NonNull Provider<Directory> testTargetMetadata) {
@@ -303,14 +302,6 @@ public class ProcessTestManifest extends ManifestProcessorTask {
                     .republish(
                             InternalArtifactType.MERGED_MANIFESTS,
                             InternalArtifactType.MANIFEST_METADATA);
-
-            manifestOutputDirectory =
-                    scope.getArtifacts()
-                            .createDirectory(
-                                    InternalArtifactType.MERGED_MANIFESTS,
-                                    BuildArtifactsHolder.OperationType.INITIAL,
-                                    taskName,
-                                    "");
         }
 
         @Override
@@ -320,7 +311,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
             scope.getTaskContainer().setProcessManifestTask(taskProvider);
 
             scope.getArtifacts()
-                    .registerProducer(
+                    .producesDir(
                             InternalArtifactType.MERGED_MANIFESTS,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,

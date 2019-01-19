@@ -45,10 +45,8 @@ import java.util.List;
 import java.util.function.Supplier;
 import javax.inject.Inject;
 import org.apache.tools.ant.BuildException;
-import org.gradle.api.file.Directory;
-import org.gradle.api.file.RegularFile;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.model.ObjectFactory;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
@@ -72,7 +70,7 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
             variantConfiguration;
     private OutputScope outputScope;
 
-    private final Provider<RegularFile> manifestOutputFile;
+    private final RegularFileProperty manifestOutputFile;
 
     private boolean isNamespaced;
 
@@ -84,7 +82,7 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
 
     @OutputFile
     @NonNull
-    public Provider<RegularFile> getManifestOutputFile() {
+    public RegularFileProperty getManifestOutputFile() {
         return manifestOutputFile;
     }
 
@@ -255,9 +253,6 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
     public static class CreationAction
             extends AnnotationProcessingTaskCreationAction<ProcessLibraryManifest> {
 
-        Provider<RegularFile> manifestOutputFile;
-        Provider<Directory> manifestOutputDirectory;
-        File aaptFriendlyManifestOutputDirectory;
         VariantScope scope;
         private File reportFile;
 
@@ -298,7 +293,7 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
             scope.getTaskContainer().setProcessManifestTask(taskProvider);
 
             scope.getArtifacts()
-                    .registerProducer(
+                    .producesDir(
                             InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
@@ -307,7 +302,7 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
                             "aapt");
 
             scope.getArtifacts()
-                    .registerProducer(
+                    .producesDir(
                             InternalArtifactType.MERGED_MANIFESTS,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
@@ -315,7 +310,7 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
                             "");
 
             scope.getArtifacts()
-                    .registerProducer(
+                    .producesFile(
                             InternalArtifactType.LIBRARY_MANIFEST,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,

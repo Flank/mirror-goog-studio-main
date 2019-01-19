@@ -18,9 +18,14 @@ package com.android.build.gradle.internal.scope
 
 import com.android.build.api.artifact.ArtifactType
 import com.android.utils.FileUtils
+import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileSystemLocation
+import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
@@ -31,11 +36,12 @@ import java.util.concurrent.ConcurrentHashMap
  * @param buildDirectory the project buildDirectory [DirectoryProperty]
  * @param identifier a function to uniquely indentify this context when creating files and folders.
  */
-class ProducersMap(
+class ProducersMap<T: FileSystemLocation>(
+    val objectFactory: ObjectFactory,
     val buildDirectory: DirectoryProperty,
     val identifier: ()->String) {
 
-    private val producersMap = ConcurrentHashMap<ArtifactType, Producers>()
+    private val producersMap = ConcurrentHashMap<ArtifactType, Producers<T>>()
 
     /**
      * Returns true if there is at least one [Producer] registered for the passed [ArtifactType]
@@ -53,10 +59,14 @@ class ProducersMap(
      */
     fun getProducers(artifactType: ArtifactType)=
         producersMap.getOrPut(artifactType) {
-            Producers(
+            Producers<T>(
                 artifactType,
                 identifier,
-                buildDirectory
+                buildDirectory,
+                objectFactory.listProperty(when(artifactType.kind()) {
+                    ArtifactType.Kind.DIRECTORY -> Directory::class.java
+                    ArtifactType.Kind.FILE -> RegularFile::class.java
+                } as Class<T>)
             )
         }!!
 
@@ -75,10 +85,11 @@ class ProducersMap(
     /**
      * possibly empty list of all the [Task]s (and decoraction) producing this artifact type.
      */
-    class Producers(
+    class Producers<T : FileSystemLocation>(
         val artifactType: ArtifactType,
         val identifier: () -> String,
-        buildDirectory: DirectoryProperty) : ArrayList<Producer>() {
+        buildDirectory: DirectoryProperty,
+        val listProperty: ListProperty<T>) : ArrayList<Producer<T>>() {
 
         val buildDir:File = buildDirectory.get().asFile
 
@@ -86,7 +97,7 @@ class ProducersMap(
         // used for consuming the artifact. When the provider is resolved, which mean that the
         // built artifact will be used, we must resolve all file locations which will in turn
         // configure all the tasks producing this artifact type.
-        val injectable: Provider<out FileSystemLocation> =
+        val injectable: Provider<T> =
             buildDirectory.flatMap {
                 resolveAllAndReturnLast()
             }
@@ -94,7 +105,7 @@ class ProducersMap(
         val lastProducerTaskName: Provider<String> =
             injectable.map { _ -> get(size - 1).taskName }
 
-        private fun resolveAll(): List<Provider<out FileSystemLocation>> {
+        private fun resolveAll(): List<Provider<T>> {
             return synchronized(this) {
                 val multipleProducers = hasMultipleProducers()
                 map {
@@ -103,22 +114,31 @@ class ProducersMap(
             }
         }
 
-        fun resolveAllAndReturnLast(): Provider<out FileSystemLocation>? = resolveAll().lastOrNull()
+        fun resolveAllAndReturnLast(): Provider<T>? = resolveAll().lastOrNull()
 
-        fun add(product: Provider<Provider<out FileSystemLocation>>,
+        fun add(settableProperty: Property<T>,
+            originalProperty: Provider<Property<T>>,
             taskName: String,
             fileName: String) {
-            add(Producer(product, taskName, fileName))
+            listProperty.add(originalProperty.map { it -> it.get() })
+            add(Producer(settableProperty, originalProperty, taskName, fileName))
         }
 
-        fun getCurrent(): Provider<out Provider<out FileSystemLocation>>? {
+        override fun clear() {
+            super.clear()
+            listProperty.empty()
+        }
+
+        fun getCurrent(): Provider<T>? {
             val currentProduct = lastOrNull() ?: return null
-            return currentProduct.outputProvider.map { _ ->
-                currentProduct.resolve(buildDir, identifier, artifactType, hasMultipleProducers())
-            }
+            return currentProduct.resolve(buildDir, identifier, artifactType, hasMultipleProducers())
         }
 
-        fun resolve(producer: Producer) =
+        fun getAllProducers(): ListProperty<T> {
+            return listProperty;
+        }
+
+        fun resolve(producer: Producer<T>) =
             producer.resolve(buildDir, identifier, artifactType, hasMultipleProducers())
 
         fun hasMultipleProducers() = size > 1
@@ -128,30 +148,30 @@ class ProducersMap(
      * A registered producer of an artifact. The artifact is produced by a Task identified by its
      * name and a requested file name.
      */
-    class Producer(
-        val outputProvider: Provider<out Provider<out FileSystemLocation>>,
+    class Producer<T>(
+        private val settableLocation: Property<T>,
+        private val originalProperty: Provider<Property<T>>,
         val taskName: String,
         val fileName: String) {
         fun resolve(buildDir: File,
             identifier: () -> String,
             artifactType: ArtifactType,
-            multipleProducers: Boolean): Provider<out FileSystemLocation> {
+            multipleProducers: Boolean): Provider<T> {
 
-            val resolved = outputProvider.get()
             val fileLocation = FileUtils.join(
                 artifactType.getOutputDir(buildDir),
                 identifier(),
                 if (multipleProducers) taskName else "",
                 fileName)
-            when(resolved) {
+            when(settableLocation) {
                 is DirectoryProperty->
-                    resolved.set(fileLocation)
+                    settableLocation.set(fileLocation)
                 is RegularFileProperty ->
-                    resolved.set(fileLocation)
+                    settableLocation.set(fileLocation)
                 else -> throw RuntimeException(
-                    "Property.get() is not a correct instance type : ${resolved.javaClass.name}")
+                    "Property.get() is not a correct instance type : ${settableLocation.javaClass.name}")
             }
-            return resolved
+            return originalProperty.get()
         }
     }
 }

@@ -25,9 +25,8 @@ import com.google.common.collect.Ordering;
 import java.io.File;
 import java.util.Map;
 import javax.annotation.Nonnull;
-import org.gradle.api.file.Directory;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.model.ObjectFactory;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
@@ -50,17 +49,17 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
 
     @SuppressWarnings("unused")
     @Nonnull
-    private final Provider<Directory> manifestOutputDirectory;
+    private final DirectoryProperty manifestOutputDirectory;
 
-    @Nonnull private final Provider<Directory> aaptFriendlyManifestOutputDirectory;
+    @Nonnull private final DirectoryProperty aaptFriendlyManifestOutputDirectory;
 
-    @Nonnull private final Provider<Directory> instantRunManifestOutputDirectory;
+    @Nonnull private final DirectoryProperty instantRunManifestOutputDirectory;
 
     private File metadataFeatureManifestOutputDirectory;
 
     private File bundleManifestOutputDirectory;
 
-    @Nonnull private final Provider<Directory> instantAppManifestOutputDirectory;
+    @Nonnull private final DirectoryProperty instantAppManifestOutputDirectory;
 
     private File reportFile;
 
@@ -87,14 +86,14 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
     /** The processed Manifests files folder. */
     @NonNull
     @OutputDirectory
-    public Provider<Directory> getManifestOutputDirectory() {
+    public DirectoryProperty getManifestOutputDirectory() {
         return manifestOutputDirectory;
     }
 
     @OutputDirectory
     @Optional
     @NonNull
-    public Provider<Directory> getInstantRunManifestOutputDirectory() {
+    public DirectoryProperty getInstantRunManifestOutputDirectory() {
         return instantRunManifestOutputDirectory;
     }
 
@@ -107,7 +106,7 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
     @OutputDirectory
     @Optional
     @NonNull
-    public Provider<Directory> getAaptFriendlyManifestOutputDirectory() {
+    public DirectoryProperty getAaptFriendlyManifestOutputDirectory() {
         return aaptFriendlyManifestOutputDirectory;
     }
 
@@ -145,7 +144,7 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
     @OutputDirectory
     @Optional
     @NonNull
-    public Provider<Directory> getInstantAppManifestOutputDirectory() {
+    public DirectoryProperty getInstantAppManifestOutputDirectory() {
         return instantAppManifestOutputDirectory;
     }
 

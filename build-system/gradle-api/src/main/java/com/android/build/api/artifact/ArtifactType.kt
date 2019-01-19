@@ -29,7 +29,7 @@ interface ArtifactType {
 
     /**
      * Denotes the expected type of artifact type, this represent a binding contract between
-     * producers and consummers.
+     * producers and consumers.
      */
     @Incubating
     enum class Kind {

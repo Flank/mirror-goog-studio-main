@@ -643,7 +643,7 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
 
             variantScope
                     .getArtifacts()
-                    .registerProducer(
+                    .producesDir(
                             InternalArtifactType.MERGED_MANIFESTS,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
@@ -652,7 +652,7 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
 
             variantScope
                     .getArtifacts()
-                    .registerProducer(
+                    .producesDir(
                             InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
@@ -662,7 +662,7 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
 
             variantScope
                     .getArtifacts()
-                    .registerProducer(
+                    .producesDir(
                             InternalArtifactType.INSTANT_APP_MANIFEST,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
