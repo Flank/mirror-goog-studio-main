@@ -21,17 +21,13 @@ import com.android.fakeadbserver.FakeAdbServer
 import java.io.IOException
 import java.net.Socket
 
-class SetPropCommandHandler : ShellCommandHandler() {
-  companion object {
-    const val COMMAND = "setprop"
-  }
+class SetPropCommandHandler : SimpleShellHandler("setprop") {
 
-  override fun invoke(fakeAdbServer: FakeAdbServer, responseSocket: Socket, device: DeviceState, args: String?): Boolean {
+  override fun invoke(fakeAdbServer: FakeAdbServer, responseSocket: Socket, device: DeviceState, args: String?) {
     try {
       val output = responseSocket.getOutputStream()
       CommandHandler.writeOkay(output)
     } catch(ignored: IOException) {
     }
-    return false
   }
 }

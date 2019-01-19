@@ -21,17 +21,13 @@ import com.android.fakeadbserver.FakeAdbServer
 import java.io.IOException
 import java.net.Socket
 
-class WindowManagerCommandHandler : ShellCommandHandler() {
-  companion object {
-    const val COMMAND = "wm"
-  }
+class WindowManagerCommandHandler : SimpleShellHandler("wm") {
 
-  override fun invoke(fakeAdbServer: FakeAdbServer, responseSocket: Socket, device: DeviceState, args: String?): Boolean {
+  override fun invoke(fakeAdbServer: FakeAdbServer, responseSocket: Socket, device: DeviceState, args: String?) {
     try {
       val output = responseSocket.getOutputStream()
       CommandHandler.writeOkay(output)
     } catch(ignored: IOException) {
     }
-    return false
   }
 }

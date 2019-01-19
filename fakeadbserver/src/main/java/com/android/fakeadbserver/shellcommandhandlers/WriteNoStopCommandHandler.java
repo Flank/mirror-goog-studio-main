@@ -26,12 +26,14 @@ import java.io.OutputStream;
 import java.net.Socket;
 
 /** shell:write-no-stop continuously write to the output stream without stopping. */
-public class WriteNoStopCommandHandler extends ShellCommandHandler {
+public class WriteNoStopCommandHandler extends SimpleShellHandler {
 
-    @NonNull public static final String COMMAND = "write-no-stop";
+    public WriteNoStopCommandHandler() {
+        super("write-no-stop");
+    }
 
     @Override
-    public boolean invoke(
+    public void invoke(
             @NonNull FakeAdbServer fakeAdbServer,
             @NonNull Socket responseSocket,
             @NonNull DeviceState device,
@@ -54,6 +56,5 @@ public class WriteNoStopCommandHandler extends ShellCommandHandler {
             }
         } catch (IOException | InterruptedException ignored) {
         }
-        return false;
     }
 }

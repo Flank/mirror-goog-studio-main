@@ -23,19 +23,15 @@ import java.net.Socket
 
 class ActivityManagerCommandHandler(
   private val processStarter: ProcessStarter
-) : ShellCommandHandler() {
+) : SimpleShellHandler("am") {
 
-  companion object {
-    const val COMMAND = "am"
-  }
-
-  override fun invoke(fakeAdbServer: FakeAdbServer, responseSocket: Socket, device: DeviceState, args: String?): Boolean {
+  override fun invoke(fakeAdbServer: FakeAdbServer, responseSocket: Socket, device: DeviceState, args: String?) {
     try {
       val output = responseSocket.getOutputStream()
 
       if (args == null) {
         CommandHandler.writeFail(output)
-        return false
+        return
       }
 
       CommandHandler.writeOkay(output)
@@ -52,7 +48,7 @@ class ActivityManagerCommandHandler(
       // the exception and move on
     }
 
-    return false
+    return
   }
 
   interface ProcessStarter {

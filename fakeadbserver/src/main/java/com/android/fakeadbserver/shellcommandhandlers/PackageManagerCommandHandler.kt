@@ -22,18 +22,15 @@ import java.io.IOException
 import java.net.Socket
 import java.util.regex.Pattern
 
-class PackageManagerCommandHandler : ShellCommandHandler() {
-  companion object {
-    const val COMMAND = "pm"
-  }
+class PackageManagerCommandHandler : SimpleShellHandler("pm") {
 
-  override fun invoke(fakeAdbServer: FakeAdbServer, respSocket: Socket, state: DeviceState, args: String?): Boolean {
+  override fun invoke(fakeAdbServer: FakeAdbServer, respSocket: Socket, state: DeviceState, args: String?) {
     try {
       val output = respSocket.getOutputStream()
 
       if (args == null) {
         CommandHandler.writeFail(output)
-        return false
+        return
       }
 
       CommandHandler.writeOkay(output)
@@ -48,7 +45,6 @@ class PackageManagerCommandHandler : ShellCommandHandler() {
       CommandHandler.writeString(output, response)
     } catch(ignored: IOException) {
     }
-    return false
   }
 
   /**

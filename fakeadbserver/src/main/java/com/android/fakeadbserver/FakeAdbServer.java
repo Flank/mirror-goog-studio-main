@@ -34,7 +34,6 @@ import com.android.fakeadbserver.shellcommandhandlers.GetPropCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.LogcatCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.PackageManagerCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.SetPropCommandHandler;
-import com.android.fakeadbserver.shellcommandhandlers.ShellCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.ShellHandler;
 import com.android.fakeadbserver.shellcommandhandlers.WindowManagerCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.WriteNoStopCommandHandler;
@@ -55,7 +54,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-import java.util.regex.Pattern;
 
 /**
  * See {@link FakeAdbServerTest#testInteractiveServer()} for example usage.
@@ -74,10 +72,7 @@ public final class FakeAdbServer implements AutoCloseable {
     private final Map<String, Supplier<DeviceCommandHandler>> mDeviceCommandHandlers =
             new HashMap<>();
 
-    private final Map<String, Supplier<ShellCommandHandler>> mShellCommandHandlers =
-            new HashMap<>();
-
-    private final Map<Pattern, Supplier<ShellHandler>> mShellHandlers = new HashMap<>();
+    private final List<ShellHandler> mShellHandlers = new ArrayList<>();
 
     private final Map<String, DeviceState> mDevices = new HashMap<>();
 
@@ -126,7 +121,6 @@ public final class FakeAdbServer implements AutoCloseable {
                                                     socket,
                                                     mHostCommandHandlers,
                                                     mDeviceCommandHandlers,
-                                                    mShellCommandHandlers,
                                                     mShellHandlers));
                                 } catch (IOException ignored) {
                                     // close() is called in a separate thread, and will cause accept() to throw an
@@ -305,34 +299,9 @@ public final class FakeAdbServer implements AutoCloseable {
             return this;
         }
 
-        /**
-         * Sets the handler for a specific device ADB shell command. This only needs to be called if
-         * the test author requires additional functionality that is not provided by the default
-         * {@link CommandHandler}s.
-         *
-         * @param command            The shell command string.
-         * @param handlerConstructor The constructor for the handler.
-         */
         @NonNull
-        public Builder setShellCommandHandler(
-                @NonNull String command,
-                @NonNull Supplier<ShellCommandHandler> handlerConstructor) {
-            mServer.mShellCommandHandlers.put(command, handlerConstructor);
-            return this;
-        }
-
-        /**
-         * Adds a handler for generalized ADB shell command. This only needs to be called if the
-         * test author requires handling of complex shell commands that existing {@link
-         * ShellCommandHandler} format does not provide sufficient functionality.
-         *
-         * @param matcher The {@link Pattern} that is used to match against the command.
-         * @param handlerConstructor The constructor for the handler.
-         */
-        @NonNull
-        public Builder setShellHandler(
-                @NonNull Pattern pattern, @NonNull Supplier<ShellHandler> handlerConstructor) {
-            mServer.mShellHandlers.put(pattern, handlerConstructor);
+        public Builder addShellHandler(@NonNull ShellHandler handler) {
+            mServer.mShellHandlers.add(0, handler);
             return this;
         }
 
@@ -357,17 +326,14 @@ public final class FakeAdbServer implements AutoCloseable {
             setDeviceCommandHandler(ExecCommandHandler.COMMAND, ExecCommandHandler::new);
             setDeviceCommandHandler(SyncCommandHandler.COMMAND, SyncCommandHandler::new);
 
-            setShellCommandHandler(LogcatCommandHandler.COMMAND, LogcatCommandHandler::new);
-            setShellCommandHandler(GetPropCommandHandler.COMMAND, GetPropCommandHandler::new);
-            setShellCommandHandler(SetPropCommandHandler.COMMAND, SetPropCommandHandler::new);
-            setShellCommandHandler(
-                    WriteNoStopCommandHandler.COMMAND, WriteNoStopCommandHandler::new);
-            setShellCommandHandler(
-                    PackageManagerCommandHandler.COMMAND, PackageManagerCommandHandler::new);
-            setShellCommandHandler(
-                    WindowManagerCommandHandler.COMMAND, WindowManagerCommandHandler::new);
-            setShellCommandHandler(CmdCommandHandler.COMMAND, CmdCommandHandler::new);
-            setShellCommandHandler(DumpsysCommandHandler.COMMAND, DumpsysCommandHandler::new);
+            addShellHandler(new LogcatCommandHandler());
+            addShellHandler(new GetPropCommandHandler());
+            addShellHandler(new SetPropCommandHandler());
+            addShellHandler(new WriteNoStopCommandHandler());
+            addShellHandler(new PackageManagerCommandHandler());
+            addShellHandler(new WindowManagerCommandHandler());
+            addShellHandler(new CmdCommandHandler());
+            addShellHandler(new DumpsysCommandHandler());
 
             return this;
         }

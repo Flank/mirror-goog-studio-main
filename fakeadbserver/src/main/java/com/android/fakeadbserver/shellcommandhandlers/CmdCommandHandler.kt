@@ -21,18 +21,15 @@ import com.android.fakeadbserver.FakeAdbServer
 import java.io.IOException
 import java.net.Socket
 
-class CmdCommandHandler : ShellCommandHandler() {
-  companion object {
-    const val COMMAND = "cmd"
-  }
+class CmdCommandHandler : SimpleShellHandler("cmd") {
 
-  override fun invoke(fakeAdbServer: FakeAdbServer, respSocket: Socket, state: DeviceState, args: String?): Boolean {
+  override fun invoke(fakeAdbServer: FakeAdbServer, respSocket: Socket, state: DeviceState, args: String?) {
     try {
       val output = respSocket.getOutputStream()
 
       if (args == null) {
         CommandHandler.writeFail(output)
-        return false
+        return
       }
 
       CommandHandler.writeOkay(output)
@@ -47,7 +44,7 @@ class CmdCommandHandler : ShellCommandHandler() {
     } catch(ignored: IOException) {
     }
 
-    return false
+    return
   }
 
   /**

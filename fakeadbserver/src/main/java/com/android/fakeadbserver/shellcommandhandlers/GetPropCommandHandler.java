@@ -27,12 +27,14 @@ import java.io.OutputStream;
 import java.net.Socket;
 
 /** shell:getprop gets the device properties of the specified device. */
-public class GetPropCommandHandler extends ShellCommandHandler {
+public class GetPropCommandHandler extends SimpleShellHandler {
 
-    @NonNull public static final String COMMAND = "getprop";
+    public GetPropCommandHandler() {
+        super("getprop");
+    }
 
     @Override
-    public boolean invoke(
+    public void invoke(
             @NonNull FakeAdbServer fakeAdbServer,
             @NonNull Socket responseSocket,
             @NonNull DeviceState device,
@@ -58,6 +60,5 @@ public class GetPropCommandHandler extends ShellCommandHandler {
             stream.write(builder.getBytes(Charsets.UTF_8));
         } catch (IOException ignored) {
         }
-        return false;
     }
 }

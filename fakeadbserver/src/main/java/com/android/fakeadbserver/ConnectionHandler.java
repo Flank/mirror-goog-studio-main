@@ -23,7 +23,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.fakeadbserver.devicecommandhandlers.DeviceCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.HostCommandHandler;
-import com.android.fakeadbserver.shellcommandhandlers.ShellCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.ShellHandler;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -37,7 +36,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
-import java.util.regex.Pattern;
 
 final class ConnectionHandler implements Runnable {
 
@@ -61,23 +59,18 @@ final class ConnectionHandler implements Runnable {
     @NonNull
     private final Map<String, Supplier<DeviceCommandHandler>> mDeviceCommandHandlers;
 
-    @NonNull
-    private final Map<String, Supplier<ShellCommandHandler>> mShellCommandHandlers;
-
-    @NonNull private final Map<Pattern, Supplier<ShellHandler>> mShellHandlers;
+    @NonNull private final List<ShellHandler> mShellHandlers;
 
     ConnectionHandler(
             @NonNull FakeAdbServer server,
             @NonNull Socket socket,
             @NonNull Map<String, Supplier<HostCommandHandler>> hostCommandHandlers,
             @NonNull Map<String, Supplier<DeviceCommandHandler>> deviceCommandHandlers,
-            @NonNull Map<String, Supplier<ShellCommandHandler>> shellCommandHandlers,
-            @NonNull Map<Pattern, Supplier<ShellHandler>> shellHandlers) {
+            @NonNull List<ShellHandler> shellHandlers) {
         mServer = server;
         mSocket = socket;
         mHostCommandHandlers = hostCommandHandlers;
         mDeviceCommandHandlers = deviceCommandHandlers;
-        mShellCommandHandlers = shellCommandHandlers;
         mShellHandlers = shellHandlers;
     }
 
@@ -114,39 +107,14 @@ final class ConnectionHandler implements Runnable {
                         return;
                     }
                     if (request.mCommand.equals("shell")) {
-                        String[] splitShellString = request.mArguments.split(" ", 2);
-                        if (mShellCommandHandlers.containsKey(splitShellString[0])) {
-                            if (!mShellCommandHandlers.get(splitShellString[0]).get()
-                                    .invoke(mServer, mSocket, targetDevice,
-                                            splitShellString.length > 1 ? splitShellString[1]
-                                                    : null)) {
+                        for (ShellHandler handler : mShellHandlers) {
+                            if (handler.accept(
+                                    mServer, mSocket, targetDevice, request.mArguments)) {
                                 return;
                             }
-                        } else {
-                            // We can't find a ShellCommandHandler to process the shell command,
-                            // so we fall back to generalized handlers that are installed.
-                            boolean matched = false;
-                            for (Pattern pattern : mShellHandlers.keySet()) {
-                                if (pattern.matcher(request.mArguments).matches()) {
-                                    matched = true;
-                                    if (!mShellHandlers
-                                            .get(pattern)
-                                            .get()
-                                            .invoke(
-                                                    mServer,
-                                                    mSocket,
-                                                    targetDevice,
-                                                    request.mArguments)) {
-                                        return;
-                                    }
-                                }
-                            }
-                            if (!matched) {
-                                sendFailWithReason(
-                                        "Unimplemented shell command received: "
-                                                + request.mArguments);
-                            }
                         }
+                        sendFailWithReason(
+                                "Unimplemented shell command received: " + request.mArguments);
                     } else if (mDeviceCommandHandlers.containsKey(request.mCommand)) {
                         if (!mDeviceCommandHandlers.get(request.mCommand).get()
                                 .invoke(mServer, mSocket, targetDevice, request.mArguments)) {

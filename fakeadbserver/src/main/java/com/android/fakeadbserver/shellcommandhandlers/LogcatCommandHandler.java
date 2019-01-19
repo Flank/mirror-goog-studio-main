@@ -32,16 +32,17 @@ import java.util.concurrent.Callable;
 
 /**
  * shell:logcat command is a persistent command issued to grab the output of logcat. In this
- * implementation, the command handler can be driven to send messages to the client of the fake
- * ADB Server.
+ * implementation, the command handler can be driven to send messages to the client of the fake ADB
+ * Server.
  */
-public class LogcatCommandHandler extends ShellCommandHandler {
+public class LogcatCommandHandler extends SimpleShellHandler {
 
-    @NonNull
-    public static final String COMMAND = "logcat";
+    public LogcatCommandHandler() {
+        super("logcat");
+    }
 
     @Override
-    public boolean invoke(
+    public void invoke(
             @NonNull FakeAdbServer fakeAdbServer,
             @NonNull Socket responseSocket,
             @NonNull DeviceState device,
@@ -50,7 +51,7 @@ public class LogcatCommandHandler extends ShellCommandHandler {
 
         int formatIndex = parsedArgs.indexOf("-v");
         if (formatIndex + 1 > parsedArgs.size()) {
-            return false;
+            return;
         }
 
         String format = parsedArgs.get(formatIndex + 1);
@@ -61,7 +62,7 @@ public class LogcatCommandHandler extends ShellCommandHandler {
             stream = responseSocket.getOutputStream();
             writeOkay(stream); // Send ok first.
         } catch (IOException ignored) {
-            return false;
+            return;
         }
 
         LogcatChangeHandlerSubscriptionResult subscriptionResult =
@@ -89,7 +90,7 @@ public class LogcatCommandHandler extends ShellCommandHandler {
                         });
 
         if (subscriptionResult == null) {
-            return false;
+            return;
         }
 
         try {
@@ -110,7 +111,5 @@ public class LogcatCommandHandler extends ShellCommandHandler {
         } finally {
             device.getClientChangeHub().unsubscribe(subscriptionResult.mQueue);
         }
-
-        return false;
     }
 }
