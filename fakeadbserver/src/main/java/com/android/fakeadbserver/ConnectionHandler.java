@@ -144,7 +144,7 @@ final class ConnectionHandler implements Runnable {
                             if (!matched) {
                                 sendFailWithReason(
                                         "Unimplemented shell command received: "
-                                                + request.mCommand);
+                                                + request.mArguments);
                             }
                         }
                     } else if (mDeviceCommandHandlers.containsKey(request.mCommand)) {
@@ -356,7 +356,7 @@ final class ConnectionHandler implements Runnable {
             stream.write("FAIL".getBytes(US_ASCII));
             byte[] reasonBytes = reason.getBytes(UTF_8);
             assert reasonBytes.length < 65536;
-            stream.write(String.format("%x4d", reason.length()).getBytes(US_ASCII));
+            stream.write(String.format("%04x", reason.length()).getBytes(US_ASCII));
             stream.write(reasonBytes);
             stream.flush();
         } catch (IOException ignored) {
