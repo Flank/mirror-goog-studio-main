@@ -76,8 +76,8 @@ public class ListDevicesCommandHandler extends HostCommandHandler {
         } catch (InterruptedException ignored) {
             Thread.currentThread().interrupt();
         } catch (ExecutionException e) {
-            return writeFailResponse(
-                    stream, "Failed to retrieve the list of devices from the server.");
+            writeFailResponse(stream, "Failed to retrieve the list of devices from the server.");
+            return false;
         }
 
         return true;

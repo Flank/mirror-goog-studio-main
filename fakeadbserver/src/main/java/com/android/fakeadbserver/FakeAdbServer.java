@@ -36,7 +36,6 @@ import com.android.fakeadbserver.shellcommandhandlers.GetPropCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.LogcatCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.PackageManagerCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.SetPropCommandHandler;
-import com.android.fakeadbserver.shellcommandhandlers.ShellHandler;
 import com.android.fakeadbserver.shellcommandhandlers.WindowManagerCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.WriteNoStopCommandHandler;
 import com.android.fakeadbserver.statechangehubs.DeviceStateChangeHub;
@@ -74,7 +73,7 @@ public final class FakeAdbServer implements AutoCloseable {
     private final Map<String, Supplier<DeviceCommandHandler>> mDeviceCommandHandlers =
             new HashMap<>();
 
-    private final List<ShellHandler> mShellHandlers = new ArrayList<>();
+    private final List<DeviceCommandHandler> mHandlers = new ArrayList<>();
 
     private final Map<String, DeviceState> mDevices = new HashMap<>();
 
@@ -117,13 +116,7 @@ public final class FakeAdbServer implements AutoCloseable {
                                     // read from the socket. Closing the socket leads to a race condition.
                                     //noinspection SocketOpenedButNotSafelyClosed
                                     Socket socket = mServerSocket.accept();
-                                    mThreadPoolExecutor.submit(
-                                            new ConnectionHandler(
-                                                    this,
-                                                    socket,
-                                                    mHostCommandHandlers,
-                                                    mDeviceCommandHandlers,
-                                                    mShellHandlers));
+                                    mThreadPoolExecutor.submit(new ConnectionHandler(this, socket));
                                 } catch (IOException ignored) {
                                     // close() is called in a separate thread, and will cause accept() to throw an
                                     // exception if closed here.
@@ -262,6 +255,18 @@ public final class FakeAdbServer implements AutoCloseable {
         return mMainServerThreadExecutor.submit(() -> new ArrayList<>(mDevices.values()));
     }
 
+    public HostCommandHandler getHostCommandHandler(String command) {
+        Supplier<HostCommandHandler> supplier = mHostCommandHandlers.get(command);
+        if (supplier != null) {
+            return supplier.get();
+        }
+        return null;
+    }
+
+    public List<DeviceCommandHandler> getHandlers() {
+        return mHandlers;
+    }
+
     public static final class Builder {
 
         @NonNull private final FakeAdbServer mServer;
@@ -286,24 +291,12 @@ public final class FakeAdbServer implements AutoCloseable {
         }
 
         /**
-         * Sets the handler for a specific device ADB command. This only needs to be called if the
-         * test author requires additional functionality that is not provided by the default {@link
-         * CommandHandler}s.
-         *
-         * @param command            The ADB device protocol string of the command.
-         * @param handlerConstructor The constructor for the handler.
+         * Adds the handler for a device command. Handlers added last take priority over existing
+         * handlers.
          */
         @NonNull
-        public Builder setDeviceCommandHandler(
-                @NonNull String command,
-                @NonNull Supplier<DeviceCommandHandler> handlerConstructor) {
-            mServer.mDeviceCommandHandlers.put(command, handlerConstructor);
-            return this;
-        }
-
-        @NonNull
-        public Builder addShellHandler(@NonNull ShellHandler handler) {
-            mServer.mShellHandlers.add(0, handler);
+        public Builder addDeviceHandler(@NonNull DeviceCommandHandler handler) {
+            mServer.mHandlers.add(0, handler);
             return this;
         }
 
@@ -326,18 +319,18 @@ public final class FakeAdbServer implements AutoCloseable {
             setHostCommandHandler(FeaturesCommandHandler.COMMAND, FeaturesCommandHandler::new);
             setHostCommandHandler(AbbCommandHandler.COMMAND, AbbCommandHandler::new);
 
-            setDeviceCommandHandler(TrackJdwpCommandHandler.COMMAND, TrackJdwpCommandHandler::new);
-            setDeviceCommandHandler(ExecCommandHandler.COMMAND, ExecCommandHandler::new);
-            setDeviceCommandHandler(SyncCommandHandler.COMMAND, SyncCommandHandler::new);
+            addDeviceHandler(new TrackJdwpCommandHandler());
+            addDeviceHandler(new ExecCommandHandler());
+            addDeviceHandler(new SyncCommandHandler());
 
-            addShellHandler(new LogcatCommandHandler());
-            addShellHandler(new GetPropCommandHandler());
-            addShellHandler(new SetPropCommandHandler());
-            addShellHandler(new WriteNoStopCommandHandler());
-            addShellHandler(new PackageManagerCommandHandler());
-            addShellHandler(new WindowManagerCommandHandler());
-            addShellHandler(new CmdCommandHandler());
-            addShellHandler(new DumpsysCommandHandler());
+            addDeviceHandler(new LogcatCommandHandler());
+            addDeviceHandler(new GetPropCommandHandler());
+            addDeviceHandler(new SetPropCommandHandler());
+            addDeviceHandler(new WriteNoStopCommandHandler());
+            addDeviceHandler(new PackageManagerCommandHandler());
+            addDeviceHandler(new WindowManagerCommandHandler());
+            addDeviceHandler(new CmdCommandHandler());
+            addDeviceHandler(new DumpsysCommandHandler());
 
             return this;
         }

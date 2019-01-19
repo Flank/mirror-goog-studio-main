@@ -23,7 +23,7 @@ import java.net.Socket
 
 class CmdCommandHandler : SimpleShellHandler("cmd") {
 
-  override fun invoke(fakeAdbServer: FakeAdbServer, respSocket: Socket, state: DeviceState, args: String?) {
+  override fun execute(fakeAdbServer: FakeAdbServer, respSocket: Socket, state: DeviceState, args: String?) {
     try {
       val output = respSocket.getOutputStream()
 

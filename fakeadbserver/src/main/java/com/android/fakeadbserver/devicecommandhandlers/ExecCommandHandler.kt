@@ -23,19 +23,15 @@ import java.io.InputStream
 import java.net.Socket
 import java.util.regex.Pattern
 
-class ExecCommandHandler : DeviceCommandHandler() {
-  companion object {
-    const val COMMAND = "exec"
-  }
-
-  override fun invoke(fakeAdbServer: FakeAdbServer, responseSocket: Socket, device: DeviceState, args: String): Boolean {
+class ExecCommandHandler : DeviceCommandHandler("exec") {
+  override fun invoke(server: FakeAdbServer, socket: Socket, device: DeviceState, args: String) {
     try {
-      val output = responseSocket.getOutputStream()
+      val output = socket.getOutputStream()
 
       CommandHandler.writeOkay(output)
 
       val response: String = when {
-        args.startsWith("cmd package install-write") -> installWrite(args, responseSocket.getInputStream())
+        args.startsWith("cmd package install-write") -> installWrite(args, socket.getInputStream())
         else -> ""
       }
 
@@ -43,7 +39,6 @@ class ExecCommandHandler : DeviceCommandHandler() {
     }
     catch (ignored: IOException) {
     }
-    return false
   }
 
   /**

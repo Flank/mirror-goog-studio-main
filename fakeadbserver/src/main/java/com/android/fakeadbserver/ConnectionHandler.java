@@ -23,7 +23,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.fakeadbserver.devicecommandhandlers.DeviceCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.HostCommandHandler;
-import com.android.fakeadbserver.shellcommandhandlers.ShellHandler;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -31,11 +30,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Supplier;
 
 final class ConnectionHandler implements Runnable {
 
@@ -53,25 +50,9 @@ final class ConnectionHandler implements Runnable {
     @NonNull
     private final Socket mSocket;
 
-    @NonNull
-    private final Map<String, Supplier<HostCommandHandler>> mHostCommandHandlers;
-
-    @NonNull
-    private final Map<String, Supplier<DeviceCommandHandler>> mDeviceCommandHandlers;
-
-    @NonNull private final List<ShellHandler> mShellHandlers;
-
-    ConnectionHandler(
-            @NonNull FakeAdbServer server,
-            @NonNull Socket socket,
-            @NonNull Map<String, Supplier<HostCommandHandler>> hostCommandHandlers,
-            @NonNull Map<String, Supplier<DeviceCommandHandler>> deviceCommandHandlers,
-            @NonNull List<ShellHandler> shellHandlers) {
+    ConnectionHandler(@NonNull FakeAdbServer server, @NonNull Socket socket) {
         mServer = server;
         mSocket = socket;
-        mHostCommandHandlers = hostCommandHandlers;
-        mDeviceCommandHandlers = deviceCommandHandlers;
-        mShellHandlers = shellHandlers;
     }
 
     @Override
@@ -91,13 +72,20 @@ final class ConnectionHandler implements Runnable {
                     if (request.mCommand.startsWith("transport")) {
                         targetDevice = request.mTargetDevice;
                         sendOkay();
-                    } else if (mHostCommandHandlers.containsKey(request.mCommand)) {
-                        keepRunning = mHostCommandHandlers.get(request.mCommand).get()
-                                .invoke(mServer, mSocket, request.mTargetDevice,
-                                        request.mArguments);
                     } else {
-                        sendFailWithReason(
-                                "Unimplemented host command received: " + request.mCommand);
+                        HostCommandHandler handler =
+                                mServer.getHostCommandHandler(request.mCommand);
+                        if (handler != null) {
+                            keepRunning =
+                                    handler.invoke(
+                                            mServer,
+                                            mSocket,
+                                            request.mTargetDevice,
+                                            request.mArguments);
+                        } else {
+                            sendFailWithReason(
+                                    "Unimplemented host command received: " + request.mCommand);
+                        }
                     }
                 } else {
                     Request request = parseDeviceRequest();
@@ -106,24 +94,18 @@ final class ConnectionHandler implements Runnable {
                         // sent a failure message with the context.
                         return;
                     }
-                    if (request.mCommand.equals("shell")) {
-                        for (ShellHandler handler : mShellHandlers) {
-                            if (handler.accept(
-                                    mServer, mSocket, targetDevice, request.mArguments)) {
-                                return;
-                            }
-                        }
-                        sendFailWithReason(
-                                "Unimplemented shell command received: " + request.mArguments);
-                    } else if (mDeviceCommandHandlers.containsKey(request.mCommand)) {
-                        if (!mDeviceCommandHandlers.get(request.mCommand).get()
-                                .invoke(mServer, mSocket, targetDevice, request.mArguments)) {
+                    for (DeviceCommandHandler handler : mServer.getHandlers()) {
+                        if (handler.accept(
+                                mServer,
+                                mSocket,
+                                targetDevice,
+                                request.mCommand,
+                                request.mArguments)) {
                             return;
                         }
-                    } else {
-                        sendFailWithReason(
-                                "Unimplemented device command received: " + request.mCommand);
                     }
+                    sendFailWithReason(
+                            "Command not handled [" + request.mCommand + "] " + request.mArguments);
                 }
             }
         } catch (RuntimeException e) {

@@ -36,13 +36,14 @@ public abstract class SimpleShellHandler extends ShellHandler {
 
     @Override
     public boolean accept(
-            @NonNull FakeAdbServer fakeAdbServer,
-            @NonNull Socket responseSocket,
+            @NonNull FakeAdbServer server,
+            @NonNull Socket socket,
             @NonNull DeviceState device,
-            @Nullable String cmd) {
-        String[] split = cmd.split(" ", 2);
-        if (executable.equals(split[0])) {
-            invoke(fakeAdbServer, responseSocket, device, split.length > 1 ? split[1] : "");
+            @NonNull String command,
+            @NonNull String args) {
+        String[] split = args.split(" ", 2);
+        if (this.command.equals(command) && executable.equals(split[0])) {
+            execute(server, socket, device, split.length > 1 ? split[1] : "");
             return true;
         }
         return false;
@@ -54,9 +55,9 @@ public abstract class SimpleShellHandler extends ShellHandler {
      * @param fakeAdbServer Fake ADB Server itself.
      * @param responseSocket Socket for this connection.
      * @param device Target device for the command, if any.
-     * @param args Arguments for the command, if any.
+     * @param args Arguments for the executable, if any.
      */
-    public abstract void invoke(
+    public abstract void execute(
             @NonNull FakeAdbServer fakeAdbServer,
             @NonNull Socket responseSocket,
             @NonNull DeviceState device,

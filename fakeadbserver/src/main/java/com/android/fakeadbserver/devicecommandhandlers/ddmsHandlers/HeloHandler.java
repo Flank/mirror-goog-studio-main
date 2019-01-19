@@ -61,7 +61,8 @@ public class HeloHandler extends CommandHandler implements JdwpDdmsPacketHandler
         try {
             responsePacket.write(oStream);
         } catch (IOException e) {
-            return writeFailResponse(oStream, "Could not write HELO response packet");
+            writeFailResponse(oStream, "Could not write HELO response packet");
+            return false;
         }
 
         if (client.getIsWaiting()) {
@@ -71,7 +72,8 @@ public class HeloHandler extends CommandHandler implements JdwpDdmsPacketHandler
             try {
                 waitPacket.write(oStream);
             } catch (IOException e) {
-                return writeFailResponse(oStream, "Could not write WAIT packet");
+                writeFailResponse(oStream, "Could not write WAIT packet");
+                return false;
             }
         }
         return true;

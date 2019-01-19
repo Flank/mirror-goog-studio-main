@@ -39,61 +39,67 @@ import java.util.Map;
  */
 public class JdwpCommandHandler extends DeviceCommandHandler {
 
-    public static final String COMMAND = "jdwp";
-
     private static final String HANDSHAKE_STRING = "JDWP-Handshake";
 
+    public JdwpCommandHandler() {
+        super("jdwp");
+    }
+
     @Override
-    public boolean invoke(
-            @NonNull FakeAdbServer fakeAdbServer,
-            @NonNull Socket responseSocket,
+    public void invoke(
+            @NonNull FakeAdbServer server,
+            @NonNull Socket socket,
             @NonNull DeviceState device,
             @NonNull String args) {
         OutputStream oStream;
         InputStream iStream;
         try {
-            oStream = responseSocket.getOutputStream();
-            iStream = responseSocket.getInputStream();
+            oStream = socket.getOutputStream();
+            iStream = socket.getInputStream();
         } catch (IOException ignored) {
-            return false;
+            return;
         }
 
         int pid;
         try {
             pid = Integer.parseInt(args);
         } catch (NumberFormatException ignored) {
-            return writeFailResponse(oStream, "Invalid pid specified: " + args);
+            writeFailResponse(oStream, "Invalid pid specified: " + args);
+            return;
         }
 
         ClientState client = device.getClient(pid);
         if (client == null) {
-            return writeFailResponse(oStream, "No client exists for pid: " + pid);
+            writeFailResponse(oStream, "No client exists for pid: " + pid);
+            return;
         }
 
         try {
             writeOkay(oStream);
         } catch (IOException ignored) {
-            return false;
+            return;
         }
 
         byte[] handshake = new byte[14];
         try {
             int readCount = iStream.read(handshake);
             if (handshake.length != readCount) {
-                return writeFailResponse(oStream, "Could not read full handshake.");
+                writeFailResponse(oStream, "Could not read full handshake.");
+                return;
             }
         } catch (IOException ignored) {
-            return writeFailResponse(oStream, "Could not read handshake.");
+            writeFailResponse(oStream, "Could not read handshake.");
+            return;
         }
 
         if (!HANDSHAKE_STRING.equals(new String(handshake, US_ASCII))) {
-            return false;
+            return;
         }
 
         try {
             writeString(oStream, HANDSHAKE_STRING);
         } catch (IOException ignored) {
-            return false;
+            return;
         }
 
         Map<Integer, JdwpDdmsPacketHandler> packetHandlers =
@@ -114,10 +120,9 @@ public class JdwpCommandHandler extends DeviceCommandHandler {
                                 .getOrDefault(packet.getChunkType(), defaultHandler)
                                 .handlePacket(packet, client, oStream);
             } catch (IOException e) {
-                return writeFailResponse(oStream, "Could not read packet.");
+                writeFailResponse(oStream, "Could not read packet.");
+                return;
             }
         }
-
-        return false;
     }
 }

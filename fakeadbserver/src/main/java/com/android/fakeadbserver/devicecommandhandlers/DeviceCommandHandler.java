@@ -26,17 +26,38 @@ import java.net.Socket;
  * DeviceComamndHandlers handle commands directed at a device. This includes host-prefix: commands
  * as per the protocol doc, as well as device commands after calling host:transport[-*].
  */
-public abstract class DeviceCommandHandler extends CommandHandler {
+public class DeviceCommandHandler extends CommandHandler {
+
+    protected final String command;
+
+    public DeviceCommandHandler(String command) {
+        this.command = command;
+    }
 
     /**
-     * This is the main execution method of the command.
-     *
-     * @param fakeAdbServer  Fake ADB Server itself.
-     * @param responseSocket Socket for this connection.
-     * @param device         Target device for the command, if any.
-     * @param args           Arguments for the command.
-     * @return a boolean, with true meaning keep the connection alive, false to close the connection
+     * Processes the command and arguments. If this handler accepts it, it will execute it and
+     * return true.
      */
-    public abstract boolean invoke(@NonNull FakeAdbServer fakeAdbServer,
-            @NonNull Socket responseSocket, @NonNull DeviceState device, @NonNull String args);
+    public boolean accept(
+            @NonNull FakeAdbServer server,
+            @NonNull Socket socket,
+            @NonNull DeviceState device,
+            @NonNull String command,
+            @NonNull String args) {
+        if (this.command.equals(command)) {
+            invoke(server, socket, device, args);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Invokes this command. This method is only called if the handler accepts the command with its
+     * arguments.
+     */
+    public void invoke(
+            @NonNull FakeAdbServer server,
+            @NonNull Socket socket,
+            @NonNull DeviceState device,
+            @NonNull String args) {}
 }

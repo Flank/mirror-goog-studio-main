@@ -22,21 +22,17 @@ import java.io.IOException
 import java.net.Socket
 import java.nio.charset.StandardCharsets
 
-class SyncCommandHandler : DeviceCommandHandler() {
-  companion object {
-    const val COMMAND = "sync"
-  }
-
-  override fun invoke(fakeAdbServer: FakeAdbServer, responseSocket: Socket, device: DeviceState, args: String): Boolean {
+class SyncCommandHandler : DeviceCommandHandler("sync") {
+  override fun invoke(server: FakeAdbServer, socket: Socket, device: DeviceState, args: String) {
     try {
-      val output = responseSocket.getOutputStream()
+      val output = socket.getOutputStream()
       // Sync used for transferring files. Newly created emulator devices should not fail to handle this command.
       CommandHandler.writeOkay(output)
 
       // TODO the following is a hack. See http://b/79271028
       output.write("OKAY".toByteArray(StandardCharsets.UTF_8).copyOf(8))
       // Drain input stream. This data comes from files
-      val input = responseSocket.getInputStream()
+      val input = socket.getInputStream()
       val buffer= ByteArray(1024)
       var bytesRead = 0
       while (bytesRead >= 0) {
@@ -46,6 +42,5 @@ class SyncCommandHandler : DeviceCommandHandler() {
     catch (ignored: IOException) {
       // Unable to respond to the client, and we can't do anything about it. Swallow the exception and continue on
     }
-    return false
   }
 }

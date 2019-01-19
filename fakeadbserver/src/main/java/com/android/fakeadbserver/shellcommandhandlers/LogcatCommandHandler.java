@@ -42,7 +42,7 @@ public class LogcatCommandHandler extends SimpleShellHandler {
     }
 
     @Override
-    public void invoke(
+    public void execute(
             @NonNull FakeAdbServer fakeAdbServer,
             @NonNull Socket responseSocket,
             @NonNull DeviceState device,

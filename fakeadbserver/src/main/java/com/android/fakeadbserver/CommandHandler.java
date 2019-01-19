@@ -42,15 +42,13 @@ public abstract class CommandHandler {
         stream.write("FAIL".getBytes(UTF_8));
     }
 
-    protected static boolean writeFailResponse(@NonNull OutputStream stream,
-            @NonNull String reason) {
+    protected static void writeFailResponse(@NonNull OutputStream stream, @NonNull String reason) {
         try {
             writeFail(stream);
             write4ByteHexIntString(stream, reason.length());
             writeString(stream, reason);
         } catch (IOException ignored) {
         }
-        return false;
     }
 
     protected static void write4ByteHexIntString(@NonNull OutputStream stream, int value)

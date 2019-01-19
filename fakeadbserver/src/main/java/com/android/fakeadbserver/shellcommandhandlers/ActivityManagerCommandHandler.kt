@@ -25,7 +25,7 @@ class ActivityManagerCommandHandler(
   private val processStarter: ProcessStarter
 ) : SimpleShellHandler("am") {
 
-  override fun invoke(fakeAdbServer: FakeAdbServer, responseSocket: Socket, device: DeviceState, args: String?) {
+  override fun execute(fakeAdbServer: FakeAdbServer, responseSocket: Socket, device: DeviceState, args: String?) {
     try {
       val output = responseSocket.getOutputStream()
 

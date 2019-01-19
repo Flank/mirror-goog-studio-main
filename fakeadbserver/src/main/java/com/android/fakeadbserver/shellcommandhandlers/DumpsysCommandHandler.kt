@@ -23,7 +23,7 @@ import java.net.Socket
 
 class DumpsysCommandHandler : SimpleShellHandler("dumpsys") {
 
-  override fun invoke(fakeAdbServer: FakeAdbServer, responseSocket: Socket, device: DeviceState, args: String?) {
+  override fun execute(fakeAdbServer: FakeAdbServer, responseSocket: Socket, device: DeviceState, args: String?) {
     try {
       val output = responseSocket.getOutputStream()
 

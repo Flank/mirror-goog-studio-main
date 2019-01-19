@@ -15,33 +15,14 @@
  */
 package com.android.fakeadbserver.shellcommandhandlers;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.fakeadbserver.CommandHandler;
-import com.android.fakeadbserver.DeviceState;
-import com.android.fakeadbserver.FakeAdbServer;
-import java.net.Socket;
+import com.android.fakeadbserver.devicecommandhandlers.DeviceCommandHandler;
 
 /**
  * ShellHandler is a pre-supplied convenience construct to plug in and handle general shell
- * commands. This reflects the "shell:command" local service as stated in the ADB protocol. Note:
- * this handler runs *after* {@link SimpleShellHandler}s, and only if {@link SimpleShellHandler}s
- * don't already handle the given command.
+ * commands. This reflects the "shell:command" local service as stated in the ADB protocol.
  */
-public abstract class ShellHandler extends CommandHandler {
-
-    /**
-     * This is the main execution method of the command.
-     *
-     * @param fakeAdbServer Fake ADB Server itself.
-     * @param responseSocket Socket for this connection.
-     * @param device Target device for the command, if any.
-     * @param cmd The whole command line.
-     * @return true if the command was accepted
-     */
-    public abstract boolean accept(
-            @NonNull FakeAdbServer fakeAdbServer,
-            @NonNull Socket responseSocket,
-            @NonNull DeviceState device,
-            @Nullable String cmd);
+public abstract class ShellHandler extends DeviceCommandHandler {
+    protected ShellHandler() {
+        super("shell");
+    }
 }

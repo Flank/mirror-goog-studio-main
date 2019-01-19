@@ -33,20 +33,21 @@ import java.util.concurrent.Callable;
  */
 public class TrackJdwpCommandHandler extends DeviceCommandHandler {
 
-    @NonNull
-    public static final String COMMAND = "track-jdwp";
+    public TrackJdwpCommandHandler() {
+        super("track-jdwp");
+    }
 
     @Override
-    public boolean invoke(
-            @NonNull FakeAdbServer fakeAdbServer,
-            @NonNull Socket responseSocket,
+    public void invoke(
+            @NonNull FakeAdbServer server,
+            @NonNull Socket socket,
             @NonNull DeviceState device,
             @NonNull String args) {
         OutputStream stream;
         try {
-            stream = responseSocket.getOutputStream();
+            stream = socket.getOutputStream();
         } catch (IOException e) {
-            return false;
+            return;
         }
 
         StateChangeQueue queue =
@@ -79,7 +80,7 @@ public class TrackJdwpCommandHandler extends DeviceCommandHandler {
                                 });
 
         if (queue == null) {
-            return false; // Server has shutdown before we are able to start listening to the queue.
+            return; // Server has shutdown before we are able to start listening to the queue.
         }
 
         try {
@@ -97,7 +98,7 @@ public class TrackJdwpCommandHandler extends DeviceCommandHandler {
             device.getClientChangeHub().unsubscribe(queue);
         }
 
-        return false;
+        return;
     }
 
     private static void sendDeviceList(@NonNull DeviceState device, @NonNull OutputStream stream)
