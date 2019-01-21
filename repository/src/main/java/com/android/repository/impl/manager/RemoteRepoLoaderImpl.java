@@ -37,7 +37,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import javax.xml.bind.JAXBException;
-import org.w3c.dom.ls.LSResourceResolver;
 
 /**
  * Utility class that loads {@link Repository}s from {@link RepositorySource}s.
@@ -64,11 +63,6 @@ public class RemoteRepoLoaderImpl implements RemoteRepoLoader {
     private static final String NDK_BUNDLE_PACKAGE_NAME = "ndk-bundle";
 
     /**
-     * Resource resolver to use for finding imported XSDs.
-     */
-    private final LSResourceResolver mResourceResolver;
-
-    /**
      * {@link FallbackRemoteRepoLoader} to use if we get an XML file we can't parse.
      */
     private FallbackRemoteRepoLoader mFallback;
@@ -86,23 +80,18 @@ public class RemoteRepoLoaderImpl implements RemoteRepoLoader {
      *
      * @param sources          The {@link RepositorySourceProvider}s to get the {@link
      *                         RepositorySource}s to load from.
-     * @param resourceResolver The resolver to use to find imported XSDs, if necessary for the
-     *                         {@link SchemaModule}s used by the {@link RepositorySource}s.
      * @param fallback         The {@link FallbackRemoteRepoLoader} to use if we can't parse an XML
      *                         file.
      */
     public RemoteRepoLoaderImpl(@NonNull Collection<RepositorySourceProvider> sources,
-            @Nullable LSResourceResolver resourceResolver,
             @Nullable FallbackRemoteRepoLoader fallback) {
-        this(sources, resourceResolver, fallback, ENABLE_SIDE_BY_SIDE_NDK);
+        this(sources, fallback, ENABLE_SIDE_BY_SIDE_NDK);
     }
 
     public RemoteRepoLoaderImpl(
             @NonNull Collection<RepositorySourceProvider> sources,
-            @Nullable LSResourceResolver resourceResolver,
             @Nullable FallbackRemoteRepoLoader fallback,
             boolean enableSideBySideNdk) {
-        mResourceResolver = resourceResolver;
         mSourceProviders = sources;
         mFallback = fallback;
         mEnableSideBySideNdk = enableSideBySideNdk;
@@ -264,7 +253,6 @@ public class RemoteRepoLoaderImpl implements RemoteRepoLoader {
                             SchemaModuleUtil.unmarshal(
                                     repoStream,
                                     source.getPermittedModules(),
-                                    mResourceResolver,
                                     true,
                                     unmarshalProgress);
         } catch (JAXBException e) {

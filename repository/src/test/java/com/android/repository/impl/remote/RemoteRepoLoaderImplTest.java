@@ -61,8 +61,11 @@ public class RemoteRepoLoaderImplTest extends TestCase {
         downloader.registerUrl(new URL("http://www.example.com"),
                 getClass().getResourceAsStream("/testRepo.xml"));
         FakeProgressIndicator progress = new FakeProgressIndicator(true);
-        RemoteRepoLoader loader = new RemoteRepoLoaderImpl(ImmutableList.of(
-                new FakeRepositorySourceProvider(ImmutableList.of(source))), null, null);
+        RemoteRepoLoader loader =
+                new RemoteRepoLoaderImpl(
+                        ImmutableList.of(
+                                new FakeRepositorySourceProvider(ImmutableList.of(source))),
+                        null);
         Map<String, RemotePackage> pkgs = loader
                 .fetchPackages(progress, downloader, new FakeSettingsController(false));
         progress.assertNoErrorsOrWarnings();
@@ -95,8 +98,11 @@ public class RemoteRepoLoaderImplTest extends TestCase {
         downloader.registerUrl(new URL("http://www.example.com"),
                 getClass().getResourceAsStream("/testRepoWithChannels.xml"));
         FakeProgressIndicator progress = new FakeProgressIndicator();
-        RemoteRepoLoader loader = new RemoteRepoLoaderImpl(ImmutableList.of(
-          new FakeRepositorySourceProvider(ImmutableList.of(source))), null, null);
+        RemoteRepoLoader loader =
+                new RemoteRepoLoaderImpl(
+                        ImmutableList.of(
+                                new FakeRepositorySourceProvider(ImmutableList.of(source))),
+                        null);
         FakeSettingsController settings = new FakeSettingsController(false);
         Map<String, RemotePackage> pkgs = loader
           .fetchPackages(progress, downloader, settings);
@@ -140,15 +146,18 @@ public class RemoteRepoLoaderImplTest extends TestCase {
         downloader.registerUrl(new URL(legacyUrl),
                 "foo".getBytes());
         FakeProgressIndicator progress = new FakeProgressIndicator(true);
-        RemoteRepoLoader loader = new RemoteRepoLoaderImpl(ImmutableList.of(
-                new FakeRepositorySourceProvider(ImmutableList.of(source, legacySource))), null,
-                (source1, downloader1, settings, progress1) -> {
-                    assertEquals(legacyUrl, source1.getUrl());
-                    FakeRemotePackage legacy = new FakeRemotePackage("legacy");
-                    legacy.setRevision(new Revision(1, 2, 9));
-                    legacy.setCompleteUrl("http://www.example.com/legacy.zip");
-                    return ImmutableSet.of(legacy);
-                });
+        RemoteRepoLoader loader =
+                new RemoteRepoLoaderImpl(
+                        ImmutableList.of(
+                                new FakeRepositorySourceProvider(
+                                        ImmutableList.of(source, legacySource))),
+                        (source1, downloader1, settings, progress1) -> {
+                            assertEquals(legacyUrl, source1.getUrl());
+                            FakeRemotePackage legacy = new FakeRemotePackage("legacy");
+                            legacy.setRevision(new Revision(1, 2, 9));
+                            legacy.setCompleteUrl("http://www.example.com/legacy.zip");
+                            return ImmutableSet.of(legacy);
+                        });
         Map<String, RemotePackage> pkgs = loader
                 .fetchPackages(progress, downloader, new FakeSettingsController(false));
         progress.assertNoErrorsOrWarnings();
@@ -171,15 +180,18 @@ public class RemoteRepoLoaderImplTest extends TestCase {
         downloader.registerUrl(new URL(legacyUrl),
                 "foo".getBytes());
         FakeProgressIndicator progress = new FakeProgressIndicator();
-        RemoteRepoLoader loader = new RemoteRepoLoaderImpl(ImmutableList.of(
-                new FakeRepositorySourceProvider(ImmutableList.of(source, legacySource))), null,
-                (source1, downloader1, settings, progress1) -> {
-                    assertEquals(legacyUrl, source1.getUrl());
-                    FakeRemotePackage legacy = new FakeRemotePackage("dummy;foo");
-                    legacy.setRevision(new Revision(1, 2, 3));
-                    legacy.setCompleteUrl("http://www.example.com/legacy.zip");
-                    return ImmutableSet.of(legacy);
-                });
+        RemoteRepoLoader loader =
+                new RemoteRepoLoaderImpl(
+                        ImmutableList.of(
+                                new FakeRepositorySourceProvider(
+                                        ImmutableList.of(source, legacySource))),
+                        (source1, downloader1, settings, progress1) -> {
+                            assertEquals(legacyUrl, source1.getUrl());
+                            FakeRemotePackage legacy = new FakeRemotePackage("dummy;foo");
+                            legacy.setRevision(new Revision(1, 2, 3));
+                            legacy.setCompleteUrl("http://www.example.com/legacy.zip");
+                            return ImmutableSet.of(legacy);
+                        });
         Map<String, RemotePackage> pkgs = loader
                 .fetchPackages(progress, downloader, new FakeSettingsController(false));
         progress.assertNoErrorsOrWarnings();
@@ -223,10 +235,12 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                 null);
         FakeDownloader downloader = new FakeDownloader(new MockFileOp());
         FakeProgressIndicator progress = new FakeProgressIndicator();
-        RemoteRepoLoader loader = new RemoteRepoLoaderImpl(ImmutableList
-                .of(new FakeRepositorySourceProvider(
-                        ImmutableList.of(httpSource, fileSource, fileSource2))), null,
-                null);
+        RemoteRepoLoader loader =
+                new RemoteRepoLoaderImpl(
+                        ImmutableList.of(
+                                new FakeRepositorySourceProvider(
+                                        ImmutableList.of(httpSource, fileSource, fileSource2))),
+                        null);
 
         // file preferred over url: relative paths
         downloader.registerUrl(new URL("http://www.example.com"),
@@ -271,15 +285,18 @@ public class RemoteRepoLoaderImplTest extends TestCase {
         downloader.registerUrl(new URL(legacyUrl),
                 "foo".getBytes());
         FakeProgressIndicator progress = new FakeProgressIndicator(true);
-        RemoteRepoLoader loader = new RemoteRepoLoaderImpl(ImmutableList.of(
-                new FakeRepositorySourceProvider(ImmutableList.of(source, legacySource))), null,
-                (source1, downloader1, settings, progress1) -> {
-                    assertEquals(legacyUrl, source1.getUrl());
-                    FakeRemotePackage legacy = new FakeRemotePackage("dummy;foo");
-                    legacy.setRevision(new Revision(1, 2, 4));
-                    legacy.setCompleteUrl("http://www.example.com/legacy.zip");
-                    return ImmutableSet.of(legacy);
-                });
+        RemoteRepoLoader loader =
+                new RemoteRepoLoaderImpl(
+                        ImmutableList.of(
+                                new FakeRepositorySourceProvider(
+                                        ImmutableList.of(source, legacySource))),
+                        (source1, downloader1, settings, progress1) -> {
+                            assertEquals(legacyUrl, source1.getUrl());
+                            FakeRemotePackage legacy = new FakeRemotePackage("dummy;foo");
+                            legacy.setRevision(new Revision(1, 2, 4));
+                            legacy.setCompleteUrl("http://www.example.com/legacy.zip");
+                            return ImmutableSet.of(legacy);
+                        });
         Map<String, RemotePackage> pkgs = loader
                 .fetchPackages(progress, downloader, new FakeSettingsController(false));
         progress.assertNoErrorsOrWarnings();
@@ -314,7 +331,7 @@ public class RemoteRepoLoaderImplTest extends TestCase {
         FakeProgressIndicator progress = new FakeProgressIndicator(true);
         RemoteRepoLoader loader =
                 new RemoteRepoLoaderImpl(
-                        ImmutableList.of(new FakeRepositorySourceProvider(sourceList)), null, null);
+                        ImmutableList.of(new FakeRepositorySourceProvider(sourceList)), null);
         CyclicBarrier barrier = new CyclicBarrier(sourceList.size());
         FakeDownloader downloader =
                 new FakeDownloader(new MockFileOp()) {
@@ -414,7 +431,6 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                 new RemoteRepoLoaderImpl(
                         ImmutableList.of(
                                 new FakeRepositorySourceProvider(ImmutableList.of(source))),
-                        null,
                         null,
                         true);
         Map<String, RemotePackage> pkgs =

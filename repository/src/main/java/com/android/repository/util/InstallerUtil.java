@@ -234,10 +234,13 @@ public class InstallerUtil {
             if (!fop.exists(xmlFile)) {
                 return null;
             }
-            repo = (Repository) SchemaModuleUtil.unmarshal(
-                    fop.newFileInputStream(xmlFile),
-                    manager.getSchemaModules(), manager.getResourceResolver(progress), false,
-                    progress);
+            repo =
+                    (Repository)
+                            SchemaModuleUtil.unmarshal(
+                                    fop.newFileInputStream(xmlFile),
+                                    manager.getSchemaModules(),
+                                    false,
+                                    progress);
         } catch (JAXBException e) {
             throw new IOException("Failed to parse pending package xml", e);
         }

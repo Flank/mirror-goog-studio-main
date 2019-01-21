@@ -244,9 +244,13 @@ public class LegacyLocalRepoTest extends TestCase {
           .of(RepoManager.getCommonModule(), RepoManager.getGenericModule(), AndroidSdkHandler.getAddonModule());
 
         // Now read the new package
-        Repository repo = (Repository) SchemaModuleUtil.unmarshal(
-          mockFop.newFileInputStream(new File(rootPath, packagePath)),
-          extensions, mgr.getResourceResolver(progress), true, progress);
+        Repository repo =
+                (Repository)
+                        SchemaModuleUtil.unmarshal(
+                                mockFop.newFileInputStream(new File(rootPath, packagePath)),
+                                extensions,
+                                true,
+                                progress);
         progress.assertNoErrorsOrWarnings();
         LocalPackage local = repo.getLocalPackage();
         local.setInstalledPath(mgr.getLocalPath());

@@ -226,7 +226,6 @@ public class LocalSourceProviderTest {
                         ImmutableList.of(
                                 new FakeRepositorySourceProvider(
                                         ImmutableList.of(source, source2))),
-                        null,
                         null);
 
         SettingsController settings = new FakeSettingsController(false);

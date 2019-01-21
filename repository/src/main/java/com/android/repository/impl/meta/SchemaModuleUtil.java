@@ -173,22 +173,21 @@ public class SchemaModuleUtil {
     /**
      * Use JAXB to create POJOs from the given XML.
      *
-     * @param xml              The XML to read. The stream will be closed after being read.
-     * @param possibleModules  The {@link SchemaModule}s that are available to parse the XML.
-     * @param resourceResolver Resolver for any imported XSDs.
-     * @param progress         For logging.
+     * @param xml The XML to read. The stream will be closed after being read.
+     * @param possibleModules The {@link SchemaModule}s that are available to parse the XML.
+     * @param progress For logging.
      * @return The unmarshalled object.
      * @throws JAXBException if there is an error during unmarshalling.
-     *
-     * TODO: maybe templatize and return a nicer type.
+     *     <p>TODO: maybe templatize and return a nicer type.
      */
     @Nullable
-    public static Object unmarshal(@NonNull InputStream xml,
-      @NonNull Collection<SchemaModule<?>> possibleModules,
-      @Nullable LSResourceResolver resourceResolver, boolean strict,
-      @NonNull ProgressIndicator progress)
-      throws JAXBException {
-        Unmarshaller u = setupUnmarshaller(possibleModules, resourceResolver, strict, progress);
+    public static Object unmarshal(
+            @NonNull InputStream xml,
+            @NonNull Collection<SchemaModule<?>> possibleModules,
+            boolean strict,
+            @NonNull ProgressIndicator progress)
+            throws JAXBException {
+        Unmarshaller u = setupUnmarshaller(possibleModules, strict, progress);
         SAXSource source = setupSource(xml, possibleModules, strict, progress);
         return ((JAXBElement) u.unmarshal(source)).getValue();
     }
@@ -196,15 +195,16 @@ public class SchemaModuleUtil {
     /**
      * Creates an {@link Unmarshaller} for the given {@link SchemaModule}s.
      *
-     * @param possibleModules  The schemas we should use to unmarshal.
-     * @param resourceResolver Resolver for schema import references.
-     * @param strict           Whether we should do strict validation.
-     * @param progress         For logging.
+     * @param possibleModules The schemas we should use to unmarshal.
+     * @param strict Whether we should do strict validation.
+     * @param progress For logging.
      */
     @NonNull
-    private static Unmarshaller setupUnmarshaller(@NonNull Collection<SchemaModule<?>> possibleModules,
-            @Nullable LSResourceResolver resourceResolver, boolean strict,
-            @NonNull ProgressIndicator progress) throws JAXBException {
+    private static Unmarshaller setupUnmarshaller(
+            @NonNull Collection<SchemaModule<?>> possibleModules,
+            boolean strict,
+            @NonNull ProgressIndicator progress)
+            throws JAXBException {
         JAXBContext context = getContext(possibleModules);
         Unmarshaller u = context.createUnmarshaller();
         u.setEventHandler(createValidationEventHandler(progress, strict));

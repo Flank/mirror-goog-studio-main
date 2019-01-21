@@ -43,7 +43,6 @@ import java.util.Map;
 import java.util.Set;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.annotation.XmlTransient;
-import org.w3c.dom.ls.LSResourceResolver;
 
 /**
  * A {@link RepositorySourceProvider} that downloads a list of sources.
@@ -169,12 +168,9 @@ public class RemoteListSourceProviderImpl extends RemoteListSourceProvider {
         if (mSourceListModule != null) {
             schemas.add(mSourceListModule);
         }
-        LSResourceResolver resourceResolver = SchemaModuleUtil
-                .createResourceResolver(schemas, progress);
         SiteList sl = null;
         try {
-            sl = (SiteList) SchemaModuleUtil
-                    .unmarshal(xml, schemas, resourceResolver, true, progress);
+            sl = (SiteList) SchemaModuleUtil.unmarshal(xml, schemas, true, progress);
         } catch (JAXBException e) {
             progress.logWarning("Failed to parse source list at " + url);
         }

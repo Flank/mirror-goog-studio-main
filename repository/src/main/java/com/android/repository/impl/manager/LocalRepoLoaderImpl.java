@@ -302,9 +302,13 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
         Repository repo;
         try {
             progress.logVerbose("Parsing " + packageXml);
-            repo = (Repository) SchemaModuleUtil.unmarshal(mFop.newFileInputStream(packageXml),
-                    mRepoManager.getSchemaModules(), mRepoManager.getResourceResolver(progress),
-                    false, progress);
+            repo =
+                    (Repository)
+                            SchemaModuleUtil.unmarshal(
+                                    mFop.newFileInputStream(packageXml),
+                                    mRepoManager.getSchemaModules(),
+                                    false,
+                                    progress);
         } catch (IOException e) {
             // This shouldn't ever happen
             progress.logError(String.format("XML file %s doesn't exist", packageXml), e);

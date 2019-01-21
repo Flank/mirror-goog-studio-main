@@ -643,8 +643,7 @@ public class RepoManagerImpl extends RepoManager {
         @Override
         @NonNull
         public RemoteRepoLoader createRemoteRepoLoader(@NonNull ProgressIndicator progress) {
-            return new RemoteRepoLoaderImpl(mSourceProviders,
-                    getResourceResolver(progress), mFallbackRemoteRepoLoader);
+            return new RemoteRepoLoaderImpl(mSourceProviders, mFallbackRemoteRepoLoader);
         }
     }
 
