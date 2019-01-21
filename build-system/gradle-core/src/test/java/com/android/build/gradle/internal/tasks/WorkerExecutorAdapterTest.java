@@ -31,6 +31,7 @@ import org.gradle.api.Action;
 import org.gradle.workers.IsolationMode;
 import org.gradle.workers.WorkerConfiguration;
 import org.gradle.workers.WorkerExecutor;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -54,6 +55,16 @@ public class WorkerExecutorAdapterTest {
                         ImmutableMap.of(
                                 BooleanOption.ENABLE_GRADLE_WORKERS.getPropertyName(),
                                 Boolean.TRUE)),
+                ForkJoinPool.commonPool());
+    }
+
+    @After
+    public void tearDown() {
+        Workers.INSTANCE.initFromProject(
+                new ProjectOptions(
+                        ImmutableMap.of(
+                                BooleanOption.ENABLE_GRADLE_WORKERS.getPropertyName(),
+                                Boolean.FALSE)),
                 ForkJoinPool.commonPool());
     }
 
