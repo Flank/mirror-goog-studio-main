@@ -206,9 +206,7 @@ public class SchemaModuleUtil {
             @Nullable LSResourceResolver resourceResolver, boolean strict,
             @NonNull ProgressIndicator progress) throws JAXBException {
         JAXBContext context = getContext(possibleModules);
-        Schema schema = getSchema(possibleModules, resourceResolver, progress);
         Unmarshaller u = context.createUnmarshaller();
-        u.setSchema(schema);
         u.setEventHandler(createValidationEventHandler(progress, strict));
         return u;
     }
