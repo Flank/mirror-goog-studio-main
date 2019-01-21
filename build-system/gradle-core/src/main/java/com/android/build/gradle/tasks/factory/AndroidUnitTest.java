@@ -40,17 +40,21 @@ import org.gradle.api.file.Directory;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.reporting.ConfigurableReport;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.api.tasks.testing.TestTaskReports;
 
 /** Patched version of {@link Test} that we need to use for local unit tests support. */
+@CacheableTask
 public class AndroidUnitTest extends Test implements VariantAwareTask {
 
-    private String sdkPlatformDirPath;
+    private Integer sdkApiLevel;
     private Provider<Directory> mergedManifest;
     private BuildableArtifact resCollection;
     private BuildableArtifact assetsCollection;
@@ -70,22 +74,25 @@ public class AndroidUnitTest extends Test implements VariantAwareTask {
 
     @InputFiles
     @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
     public BuildableArtifact getResCollection() {
         return resCollection;
     }
 
     @InputFiles
     @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
     public BuildableArtifact getAssetsCollection() {
         return assetsCollection;
     }
 
     @Input
-    public String getSdkPlatformDirPath() {
-        return sdkPlatformDirPath;
+    public Integer getSdkApiLevel() {
+        return sdkApiLevel;
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public Provider<Directory> getMergedManifest() {
         return mergedManifest;
     }
@@ -137,8 +144,12 @@ public class AndroidUnitTest extends Test implements VariantAwareTask {
                             .isIncludeAndroidResources();
 
             task.setClasspath(computeClasspath(includeAndroidResources));
-            task.sdkPlatformDirPath =
-                    scope.getGlobalScope().getAndroidBuilder().getTarget().getLocation();
+            task.sdkApiLevel =
+                    scope.getGlobalScope()
+                            .getAndroidBuilder()
+                            .getTarget()
+                            .getVersion()
+                            .getFeatureLevel();
 
             // if android resources are meant to be accessible, then we need to make sure
             // changes to them trigger a new run of the tasks
@@ -185,6 +196,13 @@ public class AndroidUnitTest extends Test implements VariantAwareTask {
                     .getTestOptions()
                     .getUnitTests()
                     .applyConfiguration(task);
+
+            // The task is not yet cacheable when includeAndroidResources=true (bug 115923881)
+            task.getOutputs()
+                    .doNotCacheIf(
+                            "AndroidUnitTest task is not yet cacheable"
+                                    + " when includeAndroidResources=true",
+                            (thisTask) -> includeAndroidResources);
         }
 
         @NonNull

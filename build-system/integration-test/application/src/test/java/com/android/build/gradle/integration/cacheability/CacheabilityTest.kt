@@ -54,7 +54,8 @@ class CacheabilityTest {
                     ":app:clean",
                     ":app:preBuild",
                     ":app:generateDebugResources",
-                    ":app:compileDebugSources"
+                    ":app:compileDebugSources",
+                    ":app:preDebugUnitTestBuild"
                 ),
                 FROM_CACHE to setOf(
                     ":app:preDebugBuild",
@@ -73,7 +74,10 @@ class CacheabilityTest {
                     ":app:mainApkListPersistenceDebug",
                     ":app:validateSigningDebug",
                     ":app:signingConfigWriterDebug",
-                    ":app:createDebugCompatibleScreenManifests"
+                    ":app:createDebugCompatibleScreenManifests",
+                    ":app:javaPreCompileDebugUnitTest",
+                    ":app:compileDebugUnitTestJavaWithJavac",
+                    ":app:testDebugUnitTest"
                 ),
                 /*
                  * Tasks that should be cacheable but are not yet cacheable.
@@ -97,7 +101,9 @@ class CacheabilityTest {
                     ":app:generateDebugSources",
                     ":app:generateDebugAssets",
                     ":app:processDebugJavaRes",
-                    ":app:assembleDebug"
+                    ":app:assembleDebug",
+                    ":app:generateDebugUnitTestSources",
+                    ":app:processDebugUnitTestJavaRes"
                 ),
                 FAILED to setOf()
             )
@@ -112,6 +118,7 @@ class CacheabilityTest {
     private fun setUpTestProject(projectName: String): GradleTestProject {
         return with(EmptyActivityProjectBuilder()) {
             this.projectName = projectName
+            withUnitTest = true
             useGradleBuildCache = true
             gradleBuildCacheDir = File("../$GRADLE_BUILD_CACHE_DIR")
             build()
@@ -126,14 +133,16 @@ class CacheabilityTest {
         // Build the first project
         val buildCacheDir = File(projectCopy1.testDir.parent, GRADLE_BUILD_CACHE_DIR)
         FileUtils.deleteRecursivelyIfExists(buildCacheDir)
-        projectCopy1.executor().withArgument("--build-cache").run("clean", "assembleDebug")
+        projectCopy1.executor().withArgument("--build-cache")
+            .run("clean", "assembleDebug", "testDebugUnitTest")
 
         // Check that the build cache has been populated
         assertThat(buildCacheDir).exists()
 
         // Build the second project
         val result =
-            projectCopy2.executor().withArgument("--build-cache").run("clean", "assembleDebug")
+            projectCopy2.executor().withArgument("--build-cache")
+                .run("clean", "assembleDebug", "testDebugUnitTest")
 
         // When running this test with bazel, StripDebugSymbolTransform does not run as the NDK
         // directory is not available. We need to remove that task from the expected tasks' states.
