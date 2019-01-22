@@ -38,5 +38,6 @@
     <orderEntry type="library" name="javax-inject" level="project" />
     <orderEntry type="library" name="Trove4j" level="project" />
     <orderEntry type="library" name="aapt2-proto" level="project" />
+    <orderEntry type="library" name="intellij-annotations" level="project" />
   </component>
 </module>
