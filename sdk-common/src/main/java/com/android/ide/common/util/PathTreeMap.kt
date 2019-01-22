@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.ide.common.util
 
-import com.android.ide.common.util.MutablePathMap
-import com.android.ide.common.util.PathString
 import java.net.URI
 import java.util.ArrayDeque
 

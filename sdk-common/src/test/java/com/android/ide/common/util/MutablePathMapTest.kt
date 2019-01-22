@@ -18,8 +18,6 @@ package com.android.ide.common.util
 
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
-import pathTreeMapOf
-import toPathTreeMap
 
 /**
  * Tests that apply to all implementations of [MutablePathMap]

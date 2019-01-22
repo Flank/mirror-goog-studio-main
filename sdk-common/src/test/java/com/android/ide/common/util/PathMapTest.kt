@@ -22,7 +22,6 @@ import com.google.common.truth.Truth
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-import toPathTreeMap
 
 @RunWith(Parameterized::class)
 class PathMapTest(val mapType: PathMapType) {
