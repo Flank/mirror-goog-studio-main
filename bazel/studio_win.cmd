@@ -55,6 +55,12 @@ SET UPSALITEID=%%F
 )
 echo "<meta http-equiv="refresh" content="0; URL='https://source.cloud.google.com/results/invocations/%UPSALITEID%" />" > %DISTDIR%\upsalite_test_results.html
 
+cd %BASEDIR%\bazel-testlogs
+
+FOR /F "tokens=*" %%F IN ('C:\cygwin64\bin\find.exe . -type f -name "*outputs.zip"') DO (
+  C:\cygwin64\bin\zip.exe -ur %DISTDIR%\perfgate_data.zip %%F
+)
+
 @rem Create profile html in %DISTDIR% so it ends up in Artifacts.
 CALL %SCRIPTDIR%bazel.cmd analyze-profile --html %DISTDIR%\prof
 
