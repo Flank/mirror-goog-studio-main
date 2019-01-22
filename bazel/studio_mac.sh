@@ -9,10 +9,10 @@ readonly build_number="$3"
 readonly script_dir="$(dirname "$0")"
 
 # Grab the location of the command_log file for bazel daemon so we can search it later.
-readonly command_log="$(${script_dir}/bazel --bazelrc=${script_dir}/toplevel.bazel.rc info command_log --config=postsubmit --config=mac-experimental --auth_credentials=/buildbot/android-studio-alphasource.json)"
+readonly command_log="$(${script_dir}/bazel info command_log --config=postsubmit --config=mac-experimental --auth_credentials=/buildbot/android-studio-alphasource.json)"
 
 # Run Bazel
-"${script_dir}/bazel" --max_idle_secs=60 --bazelrc=${script_dir}/toplevel.bazel.rc test --config=postsubmit --config=mac-experimental --build_tag_filters=-no_mac --test_tag_filters=-no_mac,-no_test_mac,-qa_sanity,-qa_fast,-qa_unreliable --auth_credentials=/buildbot/android-studio-alphasource.json --profile=${dist_dir}/prof -- $(< "${script_dir}/targets")
+"${script_dir}/bazel" --max_idle_secs=60 test --config=postsubmit --config=local --config=mac-experimental --build_tag_filters=-no_mac --test_tag_filters=-no_mac,-no_test_mac,-qa_sanity,-qa_fast,-qa_unreliable --auth_credentials=/buildbot/android-studio-alphasource.json --profile=${dist_dir}/prof -- $(< "${script_dir}/targets")
 
 readonly bazel_status=$?
 
