@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PERFD_EVENT_BUFFER_H_
-#define PERFD_EVENT_BUFFER_H_
+#ifndef TRANSPORT_EVENT_BUFFER_H_
+#define TRANSPORT_EVENT_BUFFER_H_
 
 #include <condition_variable>
 #include <mutex>
@@ -84,4 +84,4 @@ class EventBuffer {
 
 }  // namespace profiler
 
-#endif  // PERFD_EVENT_BUFFER_H_
+#endif  // TRANSPORT_EVENT_BUFFER_H_

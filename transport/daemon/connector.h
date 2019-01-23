@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PERFD_CONNECTOR_H_
-#define PERFD_CONNECTOR_H_
+#ifndef TRANSPORT_CONNECTOR_H_
+#define TRANSPORT_CONNECTOR_H_
 
 #include <string>
 
@@ -42,4 +42,4 @@ bool ConnectAndSendDataToPerfa(const std::string& connect_arg);
 
 }  // namespace profiler
 
-#endif  // PERFD_CONNECTOR_H_
+#endif  // TRANSPORT_CONNECTOR_H_

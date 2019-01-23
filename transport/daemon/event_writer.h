@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PERFD_EVENT_WRITER_H_
-#define PERFD_EVENT_WRITER_H_
+#ifndef TRANSPORT_EVENT_WRITER_H_
+#define TRANSPORT_EVENT_WRITER_H_
 
 #include "proto/profiler.grpc.pb.h"
 
@@ -30,4 +30,4 @@ class EventWriter {
 
 }  // namespace profiler
 
-#endif  // PERFD_EVENT_WRITER_H_
+#endif  // TRANSPORT_EVENT_WRITER_H_

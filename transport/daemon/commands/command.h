@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PERFD_COMMANDS_COMMAND_H_
-#define PERFD_COMMANDS_COMMAND_H_
+#ifndef TRANSPORT_COMMANDS_COMMAND_H_
+#define TRANSPORT_COMMANDS_COMMAND_H_
 
 #include <grpc++/grpc++.h>
 #include "proto/profiler.grpc.pb.h"
@@ -45,4 +45,4 @@ class CommandT : public Command {
 };
 }  // namespace profiler
 
-#endif  // PERFD_COMMANDS_COMMAND_H_
+#endif  // TRANSPORT_COMMANDS_COMMAND_H_

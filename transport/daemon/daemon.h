@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PERFD_DAEMON_H_
-#define PERFD_DAEMON_H_
+#ifndef TRANSPORT_DAEMON_H_
+#define TRANSPORT_DAEMON_H_
 
 #include <grpc++/grpc++.h>
 #include <string>
@@ -174,4 +174,4 @@ class Daemon {
 
 }  // namespace profiler
 
-#endif  // PERFD_DAEMON_H_
+#endif  // TRANSPORT_DAEMON_H_
