@@ -796,6 +796,54 @@ public class SdkManagerCliTest {
                 out.toString().replaceAll("\\r\\n", "\n"));
     }
 
+    /** Verify that new versions of the same license show as unaccepted */
+    @Test
+    public void checkNewLicenseVersion() throws Exception {
+        SdkManagerCliSettings settings =
+                SdkManagerCliSettings.createSettings(
+                        ImmutableList.of("--sdk_root=/sdk", "--licenses"), mFileOp.getFileSystem());
+        assertNotNull("Arguments should be valid", settings);
+
+        // Accept the existing licenses
+        new SdkManagerCli(
+                        settings,
+                        new PrintStream(new ByteArrayOutputStream()),
+                        new ByteArrayInputStream("y\ny\ny\n".getBytes()),
+                        mDownloader,
+                        mSdkHandler)
+                .run(new FakeProgressIndicator());
+
+        // Create a new version of an existing license
+        CommonFactory factory = RepoManager.getCommonModule().createLatestFactory();
+        RemotePackage obsoletePackage =
+                mSdkHandler
+                        .getSdkManager(new FakeProgressIndicator())
+                        .getPackages()
+                        .getRemotePackages()
+                        .get("obsolete");
+        License license =
+                factory.createLicenseType("my new license", obsoletePackage.getLicense().getId());
+        ((FakeRemotePackage) obsoletePackage).setLicense(license);
+
+        // Verify that we're prompted for the new version
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        new SdkManagerCli(
+                        settings,
+                        new PrintStream(out),
+                        new ByteArrayInputStream("y\ny\n".getBytes()),
+                        mDownloader,
+                        mSdkHandler)
+                .run(new FakeProgressIndicator());
+        assertEquals(
+                "1 of 3 SDK package license not accepted.\n"
+                        + "Review license that has not been accepted (y/N)? \n"
+                        + "1/1: License lic2:\n"
+                        + "---------------------------------------\n"
+                        + "my new license\n"
+                        + "---------------------------------------\n"
+                        + "Accept? (y/N): All SDK package licenses accepted\n",
+                out.toString().replaceAll("\\r\\n", "\n"));
+    }
 
     /**
      * Not accepting the license of a package that's depended on results in the depending package

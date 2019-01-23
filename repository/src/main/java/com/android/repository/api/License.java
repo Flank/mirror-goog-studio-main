@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.util.Comparator;
 import javax.xml.bind.annotation.XmlTransient;
 
 /**
@@ -191,7 +192,9 @@ public abstract class License implements Comparable<License> {
 
     @Override
     public int compareTo(License otherLicense) {
-        return getId().compareTo(otherLicense.getId());
+        return Comparator.comparing(License::getId)
+                .thenComparing(License::getValue)
+                .compare(this, otherLicense);
     }
 }
 
