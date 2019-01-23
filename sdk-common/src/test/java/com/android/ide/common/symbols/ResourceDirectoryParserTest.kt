@@ -167,4 +167,32 @@ class ResourceDirectoryParserTest {
             assertThat(e.message).contains(FileUtils.join("values", "col.xml"))
         }
     }
+
+    @Test
+    fun reportPathForFailedNonValuesXmlFile() {
+        val directory = temporaryFolder.newFolder()
+
+        // Format not allowed.
+        val xml = """
+<LinearLayout>
+    <TextView android:id="@+id/android:name"/>
+</LinearLayout>
+        """.trimIndent()
+
+        make(xml.toByteArray(), directory, "layout/mylayout.xml")
+
+        try {
+            val platformTable = SymbolTable.builder().tablePackage("android").build()
+
+            parseResourceSourceSetDirectory(
+                directory, IdProvider.sequential(), platformTable)
+            fail()
+        } catch (e: ResourceDirectoryParseException) {
+            assertThat(e.message).contains(FileUtils.join("layout", "mylayout.xml"))
+            assertThat(e.cause!!.message)
+                .contains("Validation of a resource with name 'android:name' and type 'id' failed.")
+            assertThat(e.cause!!.cause!!.message)
+                .contains("Error: ':' is not a valid resource name character")
+        }
+    }
 }

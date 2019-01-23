@@ -177,15 +177,14 @@ private fun parseResourceDirectory(
                     && SdkUtils.endsWithIgnoreCase(fileName, DOT_XML)) {
                 // If we are parsing an XML file (but not in values directories), parse the file in
                 // search of lazy constructions like `@+id/name` that also declare resources.
-                val domTree = try {
-                    documentBuilder.parse(maybeResourceFile)
+                try {
+                    val domTree = documentBuilder.parse(maybeResourceFile)
+                    val extraSymbols = parseResourceForInlineResources(domTree, idProvider)
+                    extraSymbols.symbols.values().forEach { s -> addIfNotExisting(builder, s) }
                 } catch (e: Exception) {
                     throw ResourceDirectoryParseException(
                             "Failed to parse XML file '${maybeResourceFile.absolutePath}'", e)
                 }
-
-                val extraSymbols = parseResourceForInlineResources(domTree, idProvider)
-                extraSymbols.symbols.values().forEach { s -> addIfNotExisting(builder, s) }
             }
         }
     }

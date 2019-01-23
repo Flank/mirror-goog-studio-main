@@ -165,7 +165,10 @@ sealed class Symbol {
             try {
                 ValueResourceNameValidator.validate(name, resourceType, null)
             } catch (e: MergingException) {
-                throw IllegalArgumentException(e)
+                throw IllegalArgumentException(
+                    "Validation of a resource with name '$name' and type " +
+                            "'${resourceType.getName()}' failed.'",
+                    e)
             }
 
         }

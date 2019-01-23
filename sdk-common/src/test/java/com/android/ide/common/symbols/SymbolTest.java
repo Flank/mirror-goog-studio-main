@@ -47,8 +47,10 @@ public class SymbolTest {
             SymbolTestUtils.createSymbol("attr", "a a", "int", "c");
             fail();
         } catch (IllegalArgumentException e) {
-            assertThat("Error: ' ' is not a valid resource name character")
-                    .isEqualTo(e.getMessage());
+            assertThat(e.getMessage())
+                    .contains("Validation of a resource with name 'a a' and type 'attr' failed.'");
+            assertThat(e.getCause().getMessage())
+                    .contains("Error: ' ' is not a valid resource name character");
         }
     }
 
@@ -63,7 +65,10 @@ public class SymbolTest {
             SymbolTestUtils.createSymbol("attr", "", "int", "c");
             fail();
         } catch (IllegalArgumentException e) {
-            assertThat("Error: The resource name shouldn't be empty").isEqualTo(e.getMessage());
+            assertThat(e.getMessage())
+                    .contains("Validation of a resource with name '' and type 'attr' failed.'");
+            assertThat(e.getCause().getMessage())
+                    .contains("Error: The resource name shouldn't be empty");
         }
     }
 
@@ -91,8 +96,10 @@ public class SymbolTest {
             SymbolTestUtils.createSymbol("attr", "b:c", "int", "e");
             fail();
         } catch (IllegalArgumentException e) {
-            assertThat("Error: ':' is not a valid resource name character")
-                    .isEqualTo(e.getMessage());
+            assertThat(e.getMessage())
+                    .contains("Validation of a resource with name 'b:c' and type 'attr' failed.'");
+            assertThat(e.getCause().getMessage())
+                    .contains("':' is not a valid resource name character");
         }
     }
 }
