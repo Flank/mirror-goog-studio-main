@@ -252,7 +252,7 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTrac
     ss << juid << kResponsePayloadSuffix;
     std::string payload_name = ss.str();
     Agent::Instance().SubmitAgentTasks(
-        {[juid, payload_name](AgentService::Stub &stub, ClientContext &ctx) {
+        {[payload_name](AgentService::Stub &stub, ClientContext &ctx) {
            // Sends an empty paylod with |is_partial| set to false to indicate
            // that the payload is complete.
            SendPayloadRequest request;
@@ -314,7 +314,7 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024OutputStreamTra
     ss << juid << kRequestPayloadSuffix;
     std::string payload_name = ss.str();
     Agent::Instance().SubmitAgentTasks(
-        {[juid, payload_name](AgentService::Stub &stub, ClientContext &ctx) {
+        {[payload_name](AgentService::Stub &stub, ClientContext &ctx) {
            // Sends an empty paylod with |is_partial| set to false to indicate
            // that the payload is complete.
            SendPayloadRequest request;

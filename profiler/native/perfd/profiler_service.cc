@@ -121,7 +121,7 @@ Status ProfilerServiceImpl::BeginSession(
   begin->set_request_time_epoch_ms(request->request_time_epoch_ms());
   begin->set_session_name(request->session_name());
 
-  return daemon_->Execute(command, [this, response]() {
+  return daemon_->Execute(command, [response]() {
     profiler::Session* session =
         SessionsManager::GetInstance()->GetLastSession();
     if (session) {
@@ -139,7 +139,7 @@ Status ProfilerServiceImpl::EndSession(
   command.set_stream_id(request->device_id());
   command.mutable_end_session()->set_session_id(request->session_id());
 
-  return daemon_->Execute(command, [this, response]() {
+  return daemon_->Execute(command, [response]() {
     profiler::Session* session =
         SessionsManager::GetInstance()->GetLastSession();
     if (session) {
