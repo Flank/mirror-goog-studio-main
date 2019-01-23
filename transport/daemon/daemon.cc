@@ -50,9 +50,9 @@ namespace {
 // security restriction. Therefore, we frame the functionality into "perfd
 // -connect". However, in the point of view of process relationship, we use
 // connector as the process name (not binary name) for the ease of description.
-const char* const kConnectorFileName = "perfd";
+const char* const kConnectorFileName = "transport";
 // On-device path of the connector program relative to an app's data folder.
-const char* const kConnectorRelativePath = "./perfd";
+const char* const kConnectorRelativePath = "./transport";
 // Name of the jar file containining the java classes (dex'd) which our
 // instrumentation code needs to reference. This jar file will be added to the
 // app via the jvmti agent.
