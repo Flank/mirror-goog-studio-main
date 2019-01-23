@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,19 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PERFD_PROFILER_COMPONENT_H_
-#define PERFD_PROFILER_COMPONENT_H_
+#ifndef DAEMON_SERVICE_COMPONENT_H_
+#define DAEMON_SERVICE_COMPONENT_H_
 
 #include <grpc++/grpc++.h>
 #include <climits>
 
 namespace profiler {
 
-// The interface of a profiler component in perfd.
-class ProfilerComponent {
+// The interface of a service component that connects the server daemon with
+// both desktop and device clients.
+class ServiceComponent {
  public:
   // Ensures a subclass's destructor is called when deleted from a base pointer.
-  virtual ~ProfilerComponent() {}
+  virtual ~ServiceComponent() {}
 
   // Returns the service that talks to desktop clients (e.g., Studio).
   virtual grpc::Service* GetPublicService() = 0;
@@ -34,12 +35,10 @@ class ProfilerComponent {
   virtual grpc::Service* GetInternalService() = 0;
 
   // Returns the earliest time when data was available for the given |pid|. If
-  // no data is available yet, it should return LLONG_MAX. Overriding this
-  // method is useful when the |ProfilerComponent| receives data before a
-  // session begins (i.e startup CPU profiling).
+  // no data is available yet, it should return LLONG_MAX.
   virtual int64_t GetEarliestDataTime(int32_t pid) { return LLONG_MAX; }
 };
 
 }  // namespace profiler
 
-#endif  // PERFD_PROFILER_COMPONENT_H_
+#endif  // DAEMON_SERVICE_COMPONENT_H_

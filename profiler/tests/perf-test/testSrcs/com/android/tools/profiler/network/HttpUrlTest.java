@@ -25,7 +25,7 @@ import com.android.tools.profiler.proto.Common.*;
 import com.android.tools.profiler.proto.NetworkProfiler;
 import com.android.tools.profiler.proto.NetworkProfiler.HttpDetailsRequest.Type;
 import com.android.tools.profiler.proto.NetworkProfiler.HttpDetailsResponse;
-import com.android.tools.profiler.proto.Profiler.*;
+import com.android.tools.profiler.proto.Transport.*;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -83,7 +83,8 @@ public class HttpUrlTest {
         String payloadId = stubWrapper.getPayloadId(connectionId, Type.RESPONSE_BODY);
         assertThat(payloadId.isEmpty()).isFalse();
         BytesResponse bytesResponse =
-                myGrpc.getProfilerStub().getBytes(BytesRequest.newBuilder().setId(payloadId).build());
+                myGrpc.getTransportStub()
+                        .getBytes(BytesRequest.newBuilder().setId(payloadId).build());
         assertThat(bytesResponse.getContents().toStringUtf8()).isEqualTo(getSuccess);
     }
 
@@ -105,8 +106,8 @@ public class HttpUrlTest {
         String payloadId = stubWrapper.getPayloadId(connectionId, Type.REQUEST_BODY);
         assertThat(payloadId.isEmpty()).isFalse();
         BytesResponse bytesResponse =
-                myGrpc.getProfilerStub().getBytes(BytesRequest.newBuilder().setId(payloadId).build
-                        ());
+                myGrpc.getTransportStub()
+                        .getBytes(BytesRequest.newBuilder().setId(payloadId).build());
         assertThat(bytesResponse.getContents().toStringUtf8()).isEqualTo("TestRequestBody");
     }
 

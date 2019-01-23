@@ -19,10 +19,10 @@
 #include "daemon/daemon.h"
 #include "perfd/commands/begin_session.h"
 #include "perfd/commands/end_session.h"
+#include "perfd/common_profiler_component.h"
 #include "perfd/cpu/cpu_profiler_component.h"
 #include "perfd/energy/energy_profiler_component.h"
 #include "perfd/event/event_profiler_component.h"
-#include "perfd/generic_component.h"
 #include "perfd/graphics/graphics_profiler_component.h"
 #include "perfd/memory/memory_profiler_component.h"
 #include "perfd/network/network_profiler_component.h"
@@ -40,8 +40,8 @@ int Perfd::Initialize(Daemon* daemon) {
   auto* termination_service = TerminationService::Instance();
 
   // Register Components
-  std::unique_ptr<GenericComponent> generic_component(
-      new GenericComponent(daemon));
+  daemon->RegisterProfilerComponent(std::unique_ptr<CommonProfilerComponent>(
+      new CommonProfilerComponent(daemon)));
 
   daemon->RegisterProfilerComponent(
       std::unique_ptr<CpuProfilerComponent>(new CpuProfilerComponent(
@@ -54,7 +54,7 @@ int Perfd::Initialize(Daemon* daemon) {
   std::unique_ptr<EventProfilerComponent> event_component(
       new EventProfilerComponent(daemon->clock()));
 
-  generic_component->AddAgentStatusChangedCallback(
+  daemon->transport_component()->AddAgentStatusChangedCallback(
       std::bind(&EventProfilerComponent::AgentStatusChangedCallback,
                 event_component.get(), std::placeholders::_1));
   daemon->RegisterProfilerComponent(std::move(event_component));
@@ -70,8 +70,6 @@ int Perfd::Initialize(Daemon* daemon) {
 
   daemon->RegisterProfilerComponent(std::unique_ptr<GraphicsProfilerComponent>(
       new GraphicsProfilerComponent(daemon->clock())));
-
-  daemon->RegisterProfilerComponent(std::move(generic_component));
 
   // Register Commands.
   daemon->RegisterCommandHandler(proto::Command::BEGIN_SESSION,

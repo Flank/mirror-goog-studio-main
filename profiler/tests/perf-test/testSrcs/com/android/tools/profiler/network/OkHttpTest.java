@@ -22,12 +22,12 @@ import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.profiler.GrpcUtils;
 import com.android.tools.profiler.PerfDriver;
 import com.android.tools.profiler.TestUtils;
-import com.android.tools.profiler.proto.Common.Session;
+import com.android.tools.profiler.proto.Common.*;
 import com.android.tools.profiler.proto.NetworkProfiler;
 import com.android.tools.profiler.proto.NetworkProfiler.HttpConnectionData;
 import com.android.tools.profiler.proto.NetworkProfiler.HttpDetailsRequest.Type;
 import com.android.tools.profiler.proto.NetworkProfiler.HttpDetailsResponse;
-import com.android.tools.profiler.proto.Profiler.*;
+import com.android.tools.profiler.proto.Transport.*;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -87,7 +87,7 @@ public class OkHttpTest {
         String payloadId = stubWrapper.getPayloadId(connectionId, Type.RESPONSE_BODY);
         assertThat(payloadId.isEmpty()).isFalse();
         BytesResponse bytesResponse =
-                myGrpc.getProfilerStub()
+                myGrpc.getTransportStub()
                         .getBytes(BytesRequest.newBuilder().setId(payloadId).build());
         assertThat(bytesResponse.getContents().toStringUtf8().contains(okHttp3Get)).isTrue();
     }
@@ -111,7 +111,7 @@ public class OkHttpTest {
         String payloadId = stubWrapper.getPayloadId(connectionId, Type.REQUEST_BODY);
         assertThat(payloadId.isEmpty()).isFalse();
         BytesResponse bytesResponse =
-                myGrpc.getProfilerStub()
+                myGrpc.getTransportStub()
                         .getBytes(BytesRequest.newBuilder().setId(payloadId).build());
         assertThat(bytesResponse.getContents().toStringUtf8()).isEqualTo("OkHttp3 request body");
     }
@@ -139,7 +139,7 @@ public class OkHttpTest {
         String payloadId = stubWrapper.getPayloadId(connectionId, Type.RESPONSE_BODY);
         assertThat(payloadId.isEmpty()).isFalse();
         BytesResponse bytesResponse =
-                myGrpc.getProfilerStub()
+                myGrpc.getTransportStub()
                         .getBytes(BytesRequest.newBuilder().setId(payloadId).build());
         assertThat(bytesResponse.getContents().toStringUtf8().contains(okHttp2Get)).isTrue();
     }
@@ -163,7 +163,7 @@ public class OkHttpTest {
         String payloadId = stubWrapper.getPayloadId(connectionId, Type.REQUEST_BODY);
         assertThat(payloadId.isEmpty()).isFalse();
         BytesResponse bytesResponse =
-                myGrpc.getProfilerStub()
+                myGrpc.getTransportStub()
                         .getBytes(BytesRequest.newBuilder().setId(payloadId).build());
         assertThat(bytesResponse.getContents().toStringUtf8()).isEqualTo("OkHttp2 request body");
     }

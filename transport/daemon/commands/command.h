@@ -17,7 +17,7 @@
 #define TRANSPORT_COMMANDS_COMMAND_H_
 
 #include <grpc++/grpc++.h>
-#include "proto/profiler.grpc.pb.h"
+#include "proto/transport.grpc.pb.h"
 
 namespace profiler {
 

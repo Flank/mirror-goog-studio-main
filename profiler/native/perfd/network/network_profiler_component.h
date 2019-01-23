@@ -16,7 +16,7 @@
 #ifndef PERFD_NETWORK_NETWORK_PROFILER_COMPONENT_H_
 #define PERFD_NETWORK_NETWORK_PROFILER_COMPONENT_H_
 
-#include "daemon/profiler_component.h"
+#include "daemon/service_component.h"
 #include "perfd/network/internal_network_service.h"
 #include "perfd/network/network_collector.h"
 #include "perfd/network/network_service.h"
@@ -25,7 +25,7 @@
 
 namespace profiler {
 
-class NetworkProfilerComponent final : public ProfilerComponent {
+class NetworkProfilerComponent final : public ServiceComponent {
  public:
   explicit NetworkProfilerComponent(const Config& config, Clock* clock,
                                     FileCache* file_cache)

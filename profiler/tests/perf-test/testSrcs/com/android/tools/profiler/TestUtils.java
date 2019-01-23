@@ -16,7 +16,7 @@
 
 package com.android.tools.profiler;
 
-import com.android.tools.profiler.proto.Profiler;
+import com.android.tools.profiler.proto.Transport.BytesRequest;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -76,16 +76,15 @@ public final class TestUtils {
     }
 
     /**
-     * Helper to get {@link getProfilerStub().getBytes()} response, it is shared across all
-     * profilers.
+     * Helper to get {@link GrpcUtils#getTransportStub()#getBytes()} response, it is shared across
+     * all profilers.
      */
     public static String getBytes(GrpcUtils grpcUtils, String traceId) {
         if (traceId == null || traceId.isEmpty()) {
             return "";
         }
-        Profiler.BytesRequest stackRequest =
-                Profiler.BytesRequest.newBuilder().setId(traceId).build();
-        return grpcUtils.getProfilerStub().getBytes(stackRequest).getContents().toStringUtf8();
+        BytesRequest stackRequest = BytesRequest.newBuilder().setId(traceId).build();
+        return grpcUtils.getTransportStub().getBytes(stackRequest).getContents().toStringUtf8();
     }
 
     /** @return True if the given SDK level is newer than Android O. */

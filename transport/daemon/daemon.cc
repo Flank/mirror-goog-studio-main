@@ -157,10 +157,14 @@ Daemon::Daemon(Clock* clock, Config* config, FileCache* file_cache,
     : clock_(clock),
       config_(config),
       file_cache_(file_cache),
-      buffer_(buffer) {}
+      buffer_(buffer),
+      transport_component_(new TransportComponent(this)) {
+  builder_.RegisterService(transport_component_->GetPublicService());
+  builder_.RegisterService(transport_component_->GetInternalService());
+}
 
 void Daemon::RegisterProfilerComponent(
-    std::unique_ptr<ProfilerComponent> component) {
+    std::unique_ptr<ServiceComponent> component) {
   if (component == nullptr) return;
   Service* public_service = component->GetPublicService();
   if (public_service != nullptr) {

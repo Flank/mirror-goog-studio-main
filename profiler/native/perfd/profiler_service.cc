@@ -14,92 +14,15 @@
  * limitations under the License.
  */
 #include "perfd/profiler_service.h"
-#include "daemon/event_writer.h"
 
-#include <sys/time.h>
 #include "perfd/sessions/sessions_manager.h"
-#include "utils/android_studio_version.h"
-#include "utils/file_reader.h"
-#include "utils/process_manager.h"
-#include "utils/trace.h"
 
 using grpc::ServerContext;
-using grpc::ServerWriter;
 using grpc::Status;
 using grpc::StatusCode;
 using std::string;
 
 namespace profiler {
-/**
- * Helper class to wrap the EventWriter interface. This class is passed to the
- * EventBuffer and forwards any events to the attached ServerWriter.
- */
-class ServerEventWriter final : public EventWriter {
- public:
-  ServerEventWriter(ServerWriter<proto::Event>& writer) : writer_(writer) {}
-  bool Write(const proto::Event& event) override {
-    return writer_.Write(event);
-  }
-
- private:
-  ServerWriter<proto::Event>& writer_;
-};
-
-Status ProfilerServiceImpl::GetCurrentTime(
-    ServerContext* context, const profiler::proto::TimeRequest* request,
-    profiler::proto::TimeResponse* response) {
-  Trace trace("PRO:GetTimes");
-
-  response->set_timestamp_ns(daemon_->clock()->GetCurrentTime());
-  // TODO: Move this to utils.
-  timeval time;
-  gettimeofday(&time, nullptr);
-  // Not specifying LL may cause overflow depending on the underlying type of
-  // time.tv_sec.
-  int64_t t = time.tv_sec * 1000000LL + time.tv_usec;
-  response->set_epoch_timestamp_us(t);
-  return Status::OK;
-}
-
-Status ProfilerServiceImpl::GetVersion(
-    ServerContext* context, const profiler::proto::VersionRequest* request,
-    profiler::proto::VersionResponse* response) {
-  response->set_version(profiler::kAndroidStudioVersion);
-  return Status::OK;
-}
-
-Status ProfilerServiceImpl::GetBytes(
-    ServerContext* context, const profiler::proto::BytesRequest* request,
-    profiler::proto::BytesResponse* response) {
-  auto* file_cache = daemon_->file_cache();
-  response->set_contents(file_cache->GetFile(request->id())->Contents());
-  return Status::OK;
-}
-
-Status ProfilerServiceImpl::GetAgentStatus(
-    ServerContext* context, const profiler::proto::AgentStatusRequest* request,
-    profiler::proto::AgentData* response) {
-  response->set_status(daemon_->GetAgentStatus(request->pid()));
-  return Status::OK;
-}
-
-Status ProfilerServiceImpl::GetDevices(
-    ServerContext* context, const profiler::proto::GetDevicesRequest* request,
-    profiler::proto::GetDevicesResponse* response) {
-  Trace trace("PRO:GetDevices");
-  profiler::proto::Device* device = response->add_device();
-  string device_id;
-  FileReader::Read("/proc/sys/kernel/random/boot_id", &device_id);
-  device->set_boot_id(device_id);
-  return Status::OK;
-}
-
-Status ProfilerServiceImpl::ConfigureStartupAgent(
-    ServerContext* context,
-    const profiler::proto::ConfigureStartupAgentRequest* request,
-    profiler::proto::ConfigureStartupAgentResponse* response) {
-  return daemon_->ConfigureStartupAgent(request, response);
-}
 
 Status ProfilerServiceImpl::BeginSession(
     ServerContext* context, const profiler::proto::BeginSessionRequest* request,
@@ -177,32 +100,6 @@ Status ProfilerServiceImpl::GetSessions(
     response->add_sessions()->CopyFrom(session);
   }
 
-  return Status::OK;
-}
-
-Status ProfilerServiceImpl::Execute(
-    ServerContext* context, const profiler::proto::ExecuteRequest* request,
-    profiler::proto::ExecuteResponse* response) {
-  return daemon_->Execute(request->command());
-}
-
-Status ProfilerServiceImpl::GetEvents(
-    ServerContext* context, const profiler::proto::GetEventsRequest* request,
-    ServerWriter<proto::Event>* response) {
-  ServerEventWriter writer(*response);
-  daemon_->WriteEventsTo(&writer);
-  // Only return when a connection between the client and server is terminated.
-  return Status::OK;
-}
-
-Status ProfilerServiceImpl::GetEventGroups(
-    ServerContext* context,
-    const profiler::proto::GetEventGroupsRequest* request,
-    profiler::proto::GetEventGroupsResponse* response) {
-  for (auto& group : daemon_->GetEventGroups(request)) {
-    proto::EventGroup* event_group = response->add_groups();
-    event_group->CopyFrom(group);
-  }
   return Status::OK;
 }
 

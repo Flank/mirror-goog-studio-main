@@ -23,9 +23,10 @@
 #include "commands/command.h"
 #include "event_buffer.h"
 #include "event_writer.h"
-#include "profiler_component.h"
 #include "proto/common.grpc.pb.h"
 #include "proto/profiler.grpc.pb.h"
+#include "service_component.h"
+#include "transport_component.h"
 #include "utils/clock.h"
 #include "utils/config.h"
 #include "utils/file_cache.h"
@@ -46,7 +47,7 @@ class Daemon {
   Daemon(Clock* clock, Config* config, FileCache* file_cache,
          EventBuffer* buffer);
 
-  // Registers profiler |component| to the daemon, in particular, the
+  // Registers |component| to the daemon, in particular, the
   // component's public and internal services to daemon's server |builder|.
   // Assumes callers are from the same thread. |component| may not be null.
   // |component| cannot be 'const &' because we need to call its non-const
@@ -54,11 +55,15 @@ class Daemon {
   // Daemon takes responsibily for the lifetime of the component.
   // Note: This API is part of the legacy pipeline, new clients do not need to
   // call this API.
-  void RegisterProfilerComponent(std::unique_ptr<ProfilerComponent> component);
+  void RegisterProfilerComponent(std::unique_ptr<ServiceComponent> component);
 
-  const std::vector<std::unique_ptr<ProfilerComponent>>& GetProfilerComponents()
+  const std::vector<std::unique_ptr<ServiceComponent>>& GetProfilerComponents()
       const {
     return profiler_components_;
+  }
+
+  std::unique_ptr<TransportComponent>& transport_component() {
+    return transport_component_;
   }
 
   // Starts running server at |server_address| with the services that have been
@@ -148,7 +153,7 @@ class Daemon {
   // Builder of the gRPC server.
   grpc::ServerBuilder builder_;
   // Profiler components that have been registered.
-  std::vector<std::unique_ptr<ProfilerComponent>> profiler_components_;
+  std::vector<std::unique_ptr<ServiceComponent>> profiler_components_;
   // Clock that timestamps profiling data
   Clock* clock_;
   // Config object for profiling settings
@@ -157,6 +162,8 @@ class Daemon {
   FileCache* file_cache_;
   // The buffer with all the events
   EventBuffer* buffer_;
+  // The unified pipeline service component.
+  std::unique_ptr<TransportComponent> transport_component_;
   // Maps types to factory functions that create commands from proto objects.
   std::map<proto::Command::CommandType, std::function<Command*(proto::Command)>>
       commands_;

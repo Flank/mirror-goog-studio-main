@@ -44,14 +44,11 @@ cc_library(
 cc_library(
     name = "perfd",
     srcs = [
-        "agent_service.cc",
-        "agent_service.h",
         "commands/begin_session.cc",
         "commands/begin_session.h",
         "commands/end_session.cc",
         "commands/end_session.h",
-        "generic_component.cc",
-        "generic_component.h",
+        "common_profiler_component.h",
         "perfd.cc",
         "perfd.h",
         "profiler_service.cc",

@@ -22,7 +22,8 @@ import com.android.tools.profiler.GrpcUtils;
 import com.android.tools.profiler.PerfDriver;
 import com.android.tools.profiler.proto.Common.Event;
 import com.android.tools.profiler.proto.Network;
-import com.android.tools.profiler.proto.Profiler;
+import com.android.tools.profiler.proto.Transport.BytesRequest;
+import com.android.tools.profiler.proto.Transport.BytesResponse;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -63,8 +64,14 @@ public class UnifiedPipelineOkHttpTest {
     @Test
     public void testOkHttp3Get() throws Exception {
         final String okHttp3Get = "OKHTTP3GET";
-        Map<Long, List<Event>> httpEventsMap = NetworkStubWrapper.getHttpEvents(myGrpc.getProfilerStub(),
-                myPerfDriver, ACTIVITY_CLASS, "runOkHttp3Get", okHttp3Get, 1);
+        Map<Long, List<Event>> httpEventsMap =
+                NetworkStubWrapper.getHttpEvents(
+                        myGrpc.getTransportStub(),
+                        myPerfDriver,
+                        ACTIVITY_CLASS,
+                        "runOkHttp3Get",
+                        okHttp3Get,
+                        1);
         assertThat(httpEventsMap.size()).isEqualTo(1);
         for (List<Event> httpEvents : httpEventsMap.values()) {
             List<Event> httpConnectionEvents = httpEvents.stream()
@@ -91,10 +98,10 @@ public class UnifiedPipelineOkHttpTest {
                     responseCompletedEvent.getNetworkHttpConnection().getHttpResponseCompleted();
             assertThat(responseCompleteData.getPayloadId())
                     .isEqualTo(responseCompletedEvent.getGroupId() + "_response");
-            Profiler.BytesResponse bytesResponse =
-                    myGrpc.getProfilerStub()
+            BytesResponse bytesResponse =
+                    myGrpc.getTransportStub()
                             .getBytes(
-                                    Profiler.BytesRequest.newBuilder()
+                                    BytesRequest.newBuilder()
                                             .setId(responseCompleteData.getPayloadId())
                                             .build());
             assertThat(bytesResponse.getContents().toStringUtf8()).contains(okHttp3Get);
@@ -102,10 +109,16 @@ public class UnifiedPipelineOkHttpTest {
     }
 
     @Test
-    public void testOkHttp3Post() throws Exception{
+    public void testOkHttp3Post() throws Exception {
         final String okHttp3Post = "OKHTTP3POST";
-        Map<Long, List<Event>> httpEventsMap = NetworkStubWrapper.getHttpEvents(myGrpc.getProfilerStub(),
-                myPerfDriver, ACTIVITY_CLASS, "runOkHttp3Post", okHttp3Post, 1);
+        Map<Long, List<Event>> httpEventsMap =
+                NetworkStubWrapper.getHttpEvents(
+                        myGrpc.getTransportStub(),
+                        myPerfDriver,
+                        ACTIVITY_CLASS,
+                        "runOkHttp3Post",
+                        okHttp3Post,
+                        1);
         assertThat(httpEventsMap.size()).isEqualTo(1);
         for (List<Event> httpEvents : httpEventsMap.values()) {
             List<Event> httpConnectionEvents = httpEvents.stream()
@@ -123,10 +136,10 @@ public class UnifiedPipelineOkHttpTest {
                     requestCompleteEvent.getNetworkHttpConnection().getHttpRequestCompleted();
             assertThat(requestData.getPayloadId())
                     .isEqualTo(requestCompleteEvent.getGroupId() + "_request");
-            Profiler.BytesResponse bytesResponse =
-                    myGrpc.getProfilerStub()
+            BytesResponse bytesResponse =
+                    myGrpc.getTransportStub()
                             .getBytes(
-                                    Profiler.BytesRequest.newBuilder()
+                                    BytesRequest.newBuilder()
                                             .setId(requestData.getPayloadId())
                                             .build());
             assertThat(bytesResponse.getContents().toStringUtf8())
@@ -137,8 +150,14 @@ public class UnifiedPipelineOkHttpTest {
     @Test
     public void testOkHttp2Get() throws Exception {
         final String okHttp2Get = "OKHTTP2GET";
-        Map<Long, List<Event>> httpEventsMap = NetworkStubWrapper.getHttpEvents(myGrpc.getProfilerStub(),
-                myPerfDriver, ACTIVITY_CLASS, "runOkHttp2Get", okHttp2Get, 1);
+        Map<Long, List<Event>> httpEventsMap =
+                NetworkStubWrapper.getHttpEvents(
+                        myGrpc.getTransportStub(),
+                        myPerfDriver,
+                        ACTIVITY_CLASS,
+                        "runOkHttp2Get",
+                        okHttp2Get,
+                        1);
         assertThat(httpEventsMap.size()).isEqualTo(1);
         for (List<Event> httpEvents : httpEventsMap.values()) {
             List<Event> httpConnectionEvents = httpEvents.stream()
@@ -165,10 +184,10 @@ public class UnifiedPipelineOkHttpTest {
                     responseCompletedEvent.getNetworkHttpConnection().getHttpResponseCompleted();
             assertThat(responseCompleteData.getPayloadId())
                     .isEqualTo(responseCompletedEvent.getGroupId() + "_response");
-            Profiler.BytesResponse bytesResponse =
-                    myGrpc.getProfilerStub()
+            BytesResponse bytesResponse =
+                    myGrpc.getTransportStub()
                             .getBytes(
-                                    Profiler.BytesRequest.newBuilder()
+                                    BytesRequest.newBuilder()
                                             .setId(responseCompleteData.getPayloadId())
                                             .build());
             assertThat(bytesResponse.getContents().toStringUtf8()).contains(okHttp2Get);
@@ -178,8 +197,14 @@ public class UnifiedPipelineOkHttpTest {
     @Test
     public void testOkHttp2Post() throws Exception {
         final String okHttp2Post = "OKHTTP2POST";
-        Map<Long, List<Event>> httpEventsMap = NetworkStubWrapper.getHttpEvents(myGrpc.getProfilerStub(),
-                myPerfDriver, ACTIVITY_CLASS, "runOkHttp2Post", okHttp2Post, 1);
+        Map<Long, List<Event>> httpEventsMap =
+                NetworkStubWrapper.getHttpEvents(
+                        myGrpc.getTransportStub(),
+                        myPerfDriver,
+                        ACTIVITY_CLASS,
+                        "runOkHttp2Post",
+                        okHttp2Post,
+                        1);
         assertThat(httpEventsMap.size()).isEqualTo(1);
         for (List<Event> httpEvents : httpEventsMap.values()) {
             List<Event> httpConnectionEvents = httpEvents.stream()
@@ -197,10 +222,10 @@ public class UnifiedPipelineOkHttpTest {
                     requestCompleteEvent.getNetworkHttpConnection().getHttpRequestCompleted();
             assertThat(requestData.getPayloadId())
                     .isEqualTo(requestCompleteEvent.getGroupId() + "_request");
-            Profiler.BytesResponse bytesResponse =
-                    myGrpc.getProfilerStub()
+            BytesResponse bytesResponse =
+                    myGrpc.getTransportStub()
                             .getBytes(
-                                    Profiler.BytesRequest.newBuilder()
+                                    BytesRequest.newBuilder()
                                             .setId(requestData.getPayloadId())
                                             .build());
             assertThat(bytesResponse.getContents().toStringUtf8())
@@ -211,8 +236,14 @@ public class UnifiedPipelineOkHttpTest {
     @Test
     public void testOkHttp2AndOkHttp3Get() throws Exception {
         String okhttp2AndOkHttp3Get = "OKHTTP2ANDOKHTTP3GET";
-        Map<Long, List<Event>> httpEventsMap = NetworkStubWrapper.getHttpEvents(myGrpc.getProfilerStub(),
-                myPerfDriver, ACTIVITY_CLASS, "runOkHttp2AndOkHttp3Get", okhttp2AndOkHttp3Get, 2);
+        Map<Long, List<Event>> httpEventsMap =
+                NetworkStubWrapper.getHttpEvents(
+                        myGrpc.getTransportStub(),
+                        myPerfDriver,
+                        ACTIVITY_CLASS,
+                        "runOkHttp2AndOkHttp3Get",
+                        okhttp2AndOkHttp3Get,
+                        2);
         assertThat(httpEventsMap.size()).isEqualTo(2);
         String urlQuery = "?method=" + okhttp2AndOkHttp3Get;
         for (List<Event> httpEvents : httpEventsMap.values()) {
@@ -231,8 +262,14 @@ public class UnifiedPipelineOkHttpTest {
     @Test
     public void testOkHttp2GetAbortedByError() throws Exception {
         String okHttp2Error = "OKHTTP2ERROR";
-        Map<Long, List<Event>> httpEventsMap = NetworkStubWrapper.getHttpEvents(myGrpc.getProfilerStub(),
-                myPerfDriver, ACTIVITY_CLASS, "runOkHttp2GetAbortedByError", okHttp2Error, 2);
+        Map<Long, List<Event>> httpEventsMap =
+                NetworkStubWrapper.getHttpEvents(
+                        myGrpc.getTransportStub(),
+                        myPerfDriver,
+                        ACTIVITY_CLASS,
+                        "runOkHttp2GetAbortedByError",
+                        okHttp2Error,
+                        2);
         assertThat(httpEventsMap.size()).isEqualTo(2);
 
         Long[] connectionIds = new Long[2];
@@ -267,8 +304,14 @@ public class UnifiedPipelineOkHttpTest {
     @Test
     public void testOkHttp3GetAbortedByError() throws Exception {
         String okHttp3Error = "OKHTTP3ERROR";
-        Map<Long, List<Event>> httpEventsMap = NetworkStubWrapper.getHttpEvents(myGrpc.getProfilerStub(),
-                myPerfDriver, ACTIVITY_CLASS, "runOkHttp3GetAbortedByError", okHttp3Error, 2);
+        Map<Long, List<Event>> httpEventsMap =
+                NetworkStubWrapper.getHttpEvents(
+                        myGrpc.getTransportStub(),
+                        myPerfDriver,
+                        ACTIVITY_CLASS,
+                        "runOkHttp3GetAbortedByError",
+                        okHttp3Error,
+                        2);
         assertThat(httpEventsMap.size()).isEqualTo(2);
 
         Long[] connectionIds = new Long[2];

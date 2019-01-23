@@ -19,7 +19,7 @@
 #include <condition_variable>
 #include <mutex>
 #include <queue>
-#include "proto/profiler.grpc.pb.h"
+#include "proto/transport.grpc.pb.h"
 #include "utils/circular_buffer.h"
 #include "utils/clock.h"
 

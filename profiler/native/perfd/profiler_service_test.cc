@@ -142,42 +142,6 @@ class ProfilerServiceTest : public ::testing::Test {
 };
 
 TEST_F(ProfilerServiceTest, TestBeginSessionCommand) {
-  proto::ExecuteRequest req;
-  proto::Command* command = req.mutable_command();
-  command->set_stream_id(100);
-  command->set_type(proto::Command::BEGIN_SESSION);
-  proto::BeginSession* begin = command->mutable_begin_session();
-  begin->set_pid(1000);
-
-  proto::ExecuteResponse res;
-  clock_.SetCurrentTime(2);
-  grpc::ClientContext context;
-  stub_->Execute(&context, req, &res);
-  // Validate command created session started event.
-  std::unique_ptr<proto::Event> event = PopEvent();
-  EXPECT_EQ(2, event->timestamp());
-  EXPECT_EQ(proto::Event::SESSION, event->kind());
-  EXPECT_FALSE(event->is_ended());
-  EXPECT_TRUE(event->has_session());
-  EXPECT_TRUE(event->session().has_session_started());
-
-  clock_.SetCurrentTime(4);
-  grpc::ClientContext context2;
-  command->set_stream_id(100);
-  begin->set_pid(1001);
-  stub_->Execute(&context2, req, &res);
-  // Validate when a new session is started a previous session is ended.
-  event = PopEvent();
-  EXPECT_EQ(4, event->timestamp());
-  EXPECT_EQ(proto::Event::SESSION, event->kind());
-  EXPECT_TRUE(event->is_ended());
-  event = PopEvent();
-  EXPECT_EQ(4, event->timestamp());
-  EXPECT_EQ(proto::Event::SESSION, event->kind());
-  EXPECT_FALSE(event->is_ended());
-  EXPECT_TRUE(event->has_session());
-  EXPECT_TRUE(event->session().has_session_started());
-
   // Test legacy api:
   // Because lagacy APIs use device ID but new APIs don't, we have to call
   // legacy BeginSession API at least once so profiler service knows about the

@@ -17,14 +17,14 @@
 #define PERFD_ENERGY_PROFILER_COMPONENT_H_
 
 #include <grpc++/grpc++.h>
-#include "daemon/profiler_component.h"
+#include "daemon/service_component.h"
 #include "perfd/energy/energy_service.h"
 #include "perfd/energy/internal_energy_service.h"
 #include "proto/internal_energy.grpc.pb.h"
 
 namespace profiler {
 
-class EnergyProfilerComponent final : public ProfilerComponent {
+class EnergyProfilerComponent final : public ServiceComponent {
  public:
   explicit EnergyProfilerComponent(FileCache* file_cache)
       : public_service_(&energy_cache_),

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,23 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "generic_component.h"
+#include "daemon/transport_component.h"
 
 #include <unistd.h>
 
+#include "daemon/daemon.h"
 #include "utils/clock.h"
 #include "utils/thread_name.h"
 
 namespace profiler {
 
-GenericComponent::GenericComponent(Daemon* daemon)
-    : daemon_(daemon), generic_public_service_(daemon), agent_service_(daemon) {
-  status_thread_ = std::thread(&GenericComponent::RunAgentStatusThread, this);
+TransportComponent::TransportComponent(Daemon* daemon)
+    : daemon_(daemon), public_service_(daemon), agent_service_(daemon) {
+  status_thread_ = std::thread(&TransportComponent::RunAgentStatusThread, this);
 }
 
-void GenericComponent::RunAgentStatusThread() {
+TransportComponent::~TransportComponent() {
+  is_running_.exchange(false);
+  if (status_thread_.joinable()) {
+    status_thread_.join();
+  }
+}
+
+void TransportComponent::RunAgentStatusThread() {
   SetThreadName("AgentStatus");
-  while (true) {
+  while (is_running_.load()) {
     int64_t current_time = daemon_->clock()->GetCurrentTime();
     for (auto map : daemon_->heartbeat_timestamp_map()) {
       // If we have a heartbeat then we attached the agent once as such we

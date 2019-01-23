@@ -22,8 +22,12 @@ import com.android.tools.profiler.GrpcUtils;
 import com.android.tools.profiler.PerfDriver;
 import com.android.tools.profiler.proto.Common.Event;
 import com.android.tools.profiler.proto.Network;
-import com.android.tools.profiler.proto.Profiler;
-import java.util.*;
+import com.android.tools.profiler.proto.Transport.BytesRequest;
+import com.android.tools.profiler.proto.Transport.BytesResponse;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Rule;
@@ -59,8 +63,14 @@ public class UnifiedPipelineHttpUrlTest {
     @Test
     public void testHttpGet() throws Exception {
         final String getSuccess = "HttpUrlGet SUCCESS";
-        Map<Long, List<Event>> httpEventsMap = NetworkStubWrapper.getHttpEvents(myGrpc.getProfilerStub(),
-                myPerfDriver, ACTIVITY_CLASS, "runGet", getSuccess, 1);
+        Map<Long, List<Event>> httpEventsMap =
+                NetworkStubWrapper.getHttpEvents(
+                        myGrpc.getTransportStub(),
+                        myPerfDriver,
+                        ACTIVITY_CLASS,
+                        "runGet",
+                        getSuccess,
+                        1);
         assertThat(httpEventsMap.size()).isEqualTo(1);
         for (List<Event> httpEvents : httpEventsMap.values()) {
             httpEvents = httpEvents.stream()
@@ -79,10 +89,10 @@ public class UnifiedPipelineHttpUrlTest {
                     responseCompletedEvent.getNetworkHttpConnection().getHttpResponseCompleted();
             assertThat(responseData.getPayloadId())
                     .isEqualTo(responseCompletedEvent.getGroupId() + "_response");
-            Profiler.BytesResponse bytesResponse =
-                    myGrpc.getProfilerStub()
+            BytesResponse bytesResponse =
+                    myGrpc.getTransportStub()
                             .getBytes(
-                                    Profiler.BytesRequest.newBuilder()
+                                    BytesRequest.newBuilder()
                                             .setId(responseData.getPayloadId())
                                             .build());
             assertThat(bytesResponse.getContents().toStringUtf8()).isEqualTo(getSuccess);
@@ -92,8 +102,14 @@ public class UnifiedPipelineHttpUrlTest {
     @Test
     public void testHttpPost() throws Exception {
         final String getSuccess = "HttpUrlPost SUCCESS";
-        Map<Long, List<Event>> httpEventsMap = NetworkStubWrapper.getHttpEvents(myGrpc.getProfilerStub(),
-                myPerfDriver, ACTIVITY_CLASS, "runPost", getSuccess, 1);
+        Map<Long, List<Event>> httpEventsMap =
+                NetworkStubWrapper.getHttpEvents(
+                        myGrpc.getTransportStub(),
+                        myPerfDriver,
+                        ACTIVITY_CLASS,
+                        "runPost",
+                        getSuccess,
+                        1);
         assertThat(httpEventsMap.size()).isEqualTo(1);
         for (List<Event> httpEvents : httpEventsMap.values()) {
             httpEvents = httpEvents.stream()
@@ -111,10 +127,10 @@ public class UnifiedPipelineHttpUrlTest {
                     requestCompleteEvent.getNetworkHttpConnection().getHttpRequestCompleted();
             assertThat(requestData.getPayloadId())
                     .isEqualTo(requestCompleteEvent.getGroupId() + "_request");
-            Profiler.BytesResponse bytesResponse =
-                    myGrpc.getProfilerStub()
+            BytesResponse bytesResponse =
+                    myGrpc.getTransportStub()
                             .getBytes(
-                                    Profiler.BytesRequest.newBuilder()
+                                    BytesRequest.newBuilder()
                                             .setId(requestData.getPayloadId())
                                             .build());
             assertThat(bytesResponse.getContents().toStringUtf8()).isEqualTo("TestRequestBody");
@@ -125,9 +141,9 @@ public class UnifiedPipelineHttpUrlTest {
             assertThat(responseData.getPayloadId())
                     .isEqualTo(responseCompletedEvent.getGroupId() + "_response");
             bytesResponse =
-                    myGrpc.getProfilerStub()
+                    myGrpc.getTransportStub()
                             .getBytes(
-                                    Profiler.BytesRequest.newBuilder()
+                                    BytesRequest.newBuilder()
                                             .setId(responseData.getPayloadId())
                                             .build());
             assertThat(bytesResponse.getContents().toStringUtf8()).isEqualTo(getSuccess);
@@ -137,8 +153,14 @@ public class UnifiedPipelineHttpUrlTest {
     @Test
     public void testHttpGet_CallResposeMethodBeforeConnect() throws Exception {
         final String getSuccess = "HttpUrlGet SUCCESS";
-        Map<Long, List<Event>> httpEventsMap = NetworkStubWrapper.getHttpEvents(myGrpc.getProfilerStub(),
-                myPerfDriver, ACTIVITY_CLASS, "runGet_CallResponseMethodBeforeConnect", getSuccess, 1);
+        Map<Long, List<Event>> httpEventsMap =
+                NetworkStubWrapper.getHttpEvents(
+                        myGrpc.getTransportStub(),
+                        myPerfDriver,
+                        ACTIVITY_CLASS,
+                        "runGet_CallResponseMethodBeforeConnect",
+                        getSuccess,
+                        1);
         assertThat(httpEventsMap.size()).isEqualTo(1);
         for (List<Event> httpEvents : httpEventsMap.values()) {
             httpEvents = httpEvents.stream()

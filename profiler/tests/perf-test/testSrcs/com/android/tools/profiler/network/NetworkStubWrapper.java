@@ -16,22 +16,18 @@
 
 package com.android.tools.profiler.network;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.tools.profiler.PerfDriver;
 import com.android.tools.profiler.TestUtils;
-import com.android.tools.profiler.proto.Common;
+import com.android.tools.profiler.proto.*;
 import com.android.tools.profiler.proto.Common.Session;
-import com.android.tools.profiler.proto.NetworkProfiler;
 import com.android.tools.profiler.proto.NetworkProfiler.HttpDetailsRequest.Type;
 import com.android.tools.profiler.proto.NetworkServiceGrpc.NetworkServiceBlockingStub;
-import com.android.tools.profiler.proto.Profiler;
-import com.android.tools.profiler.proto.ProfilerServiceGrpc;
-
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-
-import static com.google.common.truth.Truth.assertThat;
 
 /** Wrapper of stub calls that is shared among tests. */
 final class NetworkStubWrapper {
@@ -85,41 +81,48 @@ final class NetworkStubWrapper {
         return getPayloadId.get();
     }
 
-    static Map<Long, List<Common.Event>> getHttpEvents(ProfilerServiceGrpc.ProfilerServiceBlockingStub profilerStub,
-                                                       PerfDriver perfDriver,
-                                                       String activityName,
-                                                       String methodName,
-                                                       String expectedResponse,
-                                                       int expectedConnections) throws Exception {
+    static Map<Long, List<Common.Event>> getHttpEvents(
+            TransportServiceGrpc.TransportServiceBlockingStub stub,
+            PerfDriver perfDriver,
+            String activityName,
+            String methodName,
+            String expectedResponse,
+            int expectedConnections)
+            throws Exception {
         Map<Long, List<Common.Event>> httpEvents = new LinkedHashMap<>();
         CountDownLatch startLatch = new CountDownLatch(1);
         CountDownLatch stopLatch = new CountDownLatch(1);
-        new Thread(() -> {
-            Iterator<Common.Event> events = profilerStub.getEvents(Profiler.GetEventsRequest.getDefaultInstance());
-            startLatch.countDown();
-            long connectionCount = 0;
-            while (events.hasNext()) {
-                Common.Event event = events.next();
-                // capture the first event.
-                if (event.getKind() == Common.Event.Kind.NETWORK_HTTP_CONNECTION ||
-                        event.getKind() == Common.Event.Kind.NETWORK_HTTP_THREAD) {
-                    List<Common.Event> connectionEvents = httpEvents.get(event.getGroupId());
-                    if (connectionEvents == null) {
-                        connectionEvents = new ArrayList<>();
-                        httpEvents.put(event.getGroupId(), connectionEvents);
-                    }
-                    connectionEvents.add(event);
+        new Thread(
+                        () -> {
+                            Iterator<Common.Event> events =
+                                    stub.getEvents(Transport.GetEventsRequest.getDefaultInstance());
+                            startLatch.countDown();
+                            long connectionCount = 0;
+                            while (events.hasNext()) {
+                                Common.Event event = events.next();
+                                // capture the first event.
+                                if (event.getKind() == Common.Event.Kind.NETWORK_HTTP_CONNECTION
+                                        || event.getKind()
+                                                == Common.Event.Kind.NETWORK_HTTP_THREAD) {
+                                    List<Common.Event> connectionEvents =
+                                            httpEvents.get(event.getGroupId());
+                                    if (connectionEvents == null) {
+                                        connectionEvents = new ArrayList<>();
+                                        httpEvents.put(event.getGroupId(), connectionEvents);
+                                    }
+                                    connectionEvents.add(event);
 
-                    if (event.getIsEnded()) {
-                        connectionCount++;
-                        if (connectionCount >= expectedConnections) {
-                            break;
-                        }
-                    }
-                }
-            }
-            stopLatch.countDown();
-        }).start();
+                                    if (event.getIsEnded()) {
+                                        connectionCount++;
+                                        if (connectionCount >= expectedConnections) {
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            stopLatch.countDown();
+                        })
+                .start();
         // Wait for the thread to start to make sure we catch the event in the streaming rpc.
         startLatch.await(30, TimeUnit.SECONDS);
 

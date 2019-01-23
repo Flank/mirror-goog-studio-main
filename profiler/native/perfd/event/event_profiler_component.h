@@ -18,7 +18,7 @@
 
 #include <string>
 
-#include "daemon/profiler_component.h"
+#include "daemon/service_component.h"
 #include "perfd/event/event_service.h"
 #include "perfd/event/internal_event_service.h"
 #include "proto/common.grpc.pb.h"
@@ -27,7 +27,7 @@
 
 namespace profiler {
 
-class EventProfilerComponent final : public ProfilerComponent {
+class EventProfilerComponent final : public ServiceComponent {
  public:
   explicit EventProfilerComponent(Clock* clock)
       : cache_(clock), public_service_(&cache_), internal_service_(&cache_) {}

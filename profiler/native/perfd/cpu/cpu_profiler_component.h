@@ -17,7 +17,7 @@
 #define PERFD_CPU_CPU_PROFILER_COMPONENT_H_
 
 #include "daemon/daemon.h"
-#include "daemon/profiler_component.h"
+#include "daemon/service_component.h"
 #include "perfd/cpu/cpu_cache.h"
 #include "perfd/cpu/cpu_collector.h"
 #include "perfd/cpu/cpu_service.h"
@@ -28,7 +28,7 @@
 
 namespace profiler {
 
-class CpuProfilerComponent final : public ProfilerComponent {
+class CpuProfilerComponent final : public ServiceComponent {
  private:
   // Default collection interval is 200 milliseconds, i.e., 0.2 second.
   static const int64_t kDefaultCollectionIntervalUs = Clock::ms_to_us(200);

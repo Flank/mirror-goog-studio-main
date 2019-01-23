@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PERFD_AGENT_SERVICE_H_
-#define PERFD_AGENT_SERVICE_H_
+#ifndef DAEMON_AGENT_SERVICE_H_
+#define DAEMON_AGENT_SERVICE_H_
 
 #include <grpc++/grpc++.h>
 
-#include "daemon/daemon.h"
 #include "proto/agent_service.grpc.pb.h"
 #include "utils/clock.h"
 
 #include <unordered_map>
 
 namespace profiler {
+
+class Daemon;
 
 class AgentServiceImpl : public proto::AgentService::Service {
  public:
@@ -48,4 +49,4 @@ class AgentServiceImpl : public proto::AgentService::Service {
 
 }  // namespace profiler
 
-#endif  // PERFD_AGENT_SERVICE_H_
+#endif  // DAEMON_AGENT_SERVICE_H_

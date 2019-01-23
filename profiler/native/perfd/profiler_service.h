@@ -29,33 +29,6 @@ class ProfilerServiceImpl final
  public:
   explicit ProfilerServiceImpl(Daemon* daemon) : daemon_(daemon) {}
 
-  grpc::Status GetCurrentTime(grpc::ServerContext* context,
-                              const profiler::proto::TimeRequest* request,
-                              profiler::proto::TimeResponse* response) override;
-
-  grpc::Status GetVersion(grpc::ServerContext* context,
-                          const profiler::proto::VersionRequest* request,
-                          profiler::proto::VersionResponse* response) override;
-
-  grpc::Status GetBytes(grpc::ServerContext* context,
-                        const profiler::proto::BytesRequest* request,
-                        profiler::proto::BytesResponse* response) override;
-
-  grpc::Status GetAgentStatus(
-      grpc::ServerContext* context,
-      const profiler::proto::AgentStatusRequest* request,
-      profiler::proto::AgentData* response) override;
-
-  grpc::Status GetDevices(
-      grpc::ServerContext* context,
-      const profiler::proto::GetDevicesRequest* request,
-      profiler::proto::GetDevicesResponse* response) override;
-
-  grpc::Status ConfigureStartupAgent(
-      grpc::ServerContext* context,
-      const profiler::proto::ConfigureStartupAgentRequest* request,
-      profiler::proto::ConfigureStartupAgentResponse* response) override;
-
   grpc::Status BeginSession(
       grpc::ServerContext* context,
       const profiler::proto::BeginSessionRequest* request,
@@ -70,19 +43,6 @@ class ProfilerServiceImpl final
       grpc::ServerContext* context,
       const profiler::proto::GetSessionsRequest* request,
       profiler::proto::GetSessionsResponse* response) override;
-
-  grpc::Status Execute(grpc::ServerContext* context,
-                       const profiler::proto::ExecuteRequest* request,
-                       profiler::proto::ExecuteResponse* response) override;
-
-  grpc::Status GetEvents(grpc::ServerContext* context,
-                         const profiler::proto::GetEventsRequest* request,
-                         grpc::ServerWriter<proto::Event>* response) override;
-
-  grpc::Status GetEventGroups(
-      grpc::ServerContext* context,
-      const profiler::proto::GetEventGroupsRequest* request,
-      profiler::proto::GetEventGroupsResponse* response) override;
 
  private:
   // The daemon this service talks to.

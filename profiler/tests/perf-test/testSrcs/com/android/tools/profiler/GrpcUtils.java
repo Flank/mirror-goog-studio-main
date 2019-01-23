@@ -12,6 +12,7 @@ import com.android.tools.profiler.proto.MemoryServiceGrpc;
 import com.android.tools.profiler.proto.NetworkServiceGrpc;
 import com.android.tools.profiler.proto.Profiler.*;
 import com.android.tools.profiler.proto.ProfilerServiceGrpc;
+import com.android.tools.profiler.proto.TransportServiceGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
@@ -19,8 +20,8 @@ import io.grpc.ManagedChannelBuilder;
  * Test class for managing a connection to perfd.
  */
 public class GrpcUtils {
-
     private final ManagedChannel myChannel;
+    private final TransportServiceGrpc.TransportServiceBlockingStub myTransportServiceStub;
     private final ProfilerServiceGrpc.ProfilerServiceBlockingStub myProfilerServiceStub;
     private final EventServiceGrpc.EventServiceBlockingStub myEventServiceStub;
     private final NetworkServiceGrpc.NetworkServiceBlockingStub myNetworkServiceStub;
@@ -31,12 +32,17 @@ public class GrpcUtils {
     /** Connect to perfd using a socket and port, currently abstract sockets are not supported. */
     public GrpcUtils(String socket, int port, FakeAndroidDriver mockApp) {
         myChannel = connectGrpc(socket, port);
+        myTransportServiceStub = TransportServiceGrpc.newBlockingStub(myChannel);
         myProfilerServiceStub = ProfilerServiceGrpc.newBlockingStub(myChannel);
         myEventServiceStub = EventServiceGrpc.newBlockingStub(myChannel);
         myNetworkServiceStub = NetworkServiceGrpc.newBlockingStub(myChannel);
         myMemoryServiceStub = MemoryServiceGrpc.newBlockingStub(myChannel);
         myEnergyServiceStub = EnergyServiceGrpc.newBlockingStub(myChannel);
         myMockApp = mockApp;
+    }
+
+    public TransportServiceGrpc.TransportServiceBlockingStub getTransportStub() {
+        return myTransportServiceStub;
     }
 
     public ProfilerServiceGrpc.ProfilerServiceBlockingStub getProfilerStub() {
@@ -63,7 +69,7 @@ public class GrpcUtils {
         ClassLoader stashedContextClassLoader = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(ManagedChannelBuilder.class.getClassLoader());
         ManagedChannel channel =
-            ManagedChannelBuilder.forAddress(socket, port).usePlaintext(true).build();
+                ManagedChannelBuilder.forAddress(socket, port).usePlaintext(true).build();
         Thread.currentThread().setContextClassLoader(stashedContextClassLoader);
         return channel;
     }
@@ -74,8 +80,8 @@ public class GrpcUtils {
      */
     public ActivityDataResponse getActivity(Session session) {
         ActivityDataResponse response =
-            myEventServiceStub.getActivityData(
-                EventDataRequest.newBuilder().setSession(session).build());
+                myEventServiceStub.getActivityData(
+                        EventDataRequest.newBuilder().setSession(session).build());
         return response;
     }
 
@@ -93,8 +99,8 @@ public class GrpcUtils {
      */
     public Session beginSessionWithAgent(int pid, int agentAttachPort) {
         // The test infra calls attach-agent via the communication port instead of the app's pid.
-        // So here we are making an extra beginSession call with the attachPid (aka communication port) to allow the
-        // agent to attach.
+        // So here we are making an extra beginSession call with the attachPid (aka communication
+        // port) to allow the agent to attach.
         BeginSessionRequest.Builder requestBuilder =
                 BeginSessionRequest.newBuilder()
                         .setDeviceId(1234)
@@ -106,8 +112,9 @@ public class GrpcUtils {
                                         .build());
         myProfilerServiceStub.beginSession(requestBuilder.build());
 
-        // Actually begin the session with the pid. Note that a beginSession call would end the previous active
-        // session, so we put this after the beginSession call that was used specifically to attach the agent.
+        // Actually begin the session with the pid. Note that a beginSession call would end the previous
+        // active session, so we put this after the beginSession call that was used specifically to attach the
+        // agent.
         Session session = beginSession(pid);
         // Block until we can verify the agent was fully attached, which takes a while.
         assertThat(myMockApp.waitForInput("Perfa connected to Perfd.")).isTrue();
