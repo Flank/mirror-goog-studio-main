@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.nativebuild;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.testutils.truth.PathSubject.assertThat;
@@ -49,6 +50,7 @@ public class CmakeBasicProjectTest {
                     .fromTestApp(
                             HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build())
                     .setCmakeVersion("3.10.4819442")
+                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .setWithCmakeDirInLocalProp(true)
                     .create();
 
@@ -66,10 +68,13 @@ public class CmakeBasicProjectTest {
                         + "        buildToolsVersion \""
                         + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
                         + "\"\n"
+                        + "        ndkVersion \""
+                        + DEFAULT_NDK_SIDE_BY_SIDE_VERSION
+                        + "\"\n"
                         + "        defaultConfig {\n"
                         + "          externalNativeBuild {\n"
                         + "              cmake {\n"
-                        + "                abiFilters.addAll(\"armeabi-v7a\", \"armeabi\", \"x86\");\n"
+                        + "                abiFilters.addAll(\"armeabi-v7a\", \"x86\");\n"
                         + "                cFlags.addAll(\"-DTEST_C_FLAG\", \"-DTEST_C_FLAG_2\")\n"
                         + "                cppFlags.addAll(\"-DTEST_CPP_FLAG\")\n"
                         + "                targets.addAll(\"hello-jni\")\n"
@@ -102,13 +107,9 @@ public class CmakeBasicProjectTest {
         Apk apk = project.getApk("debug");
         assertThatApk(apk).hasVersionCode(1);
         assertThatApk(apk).contains("lib/armeabi-v7a/libhello-jni.so");
-        assertThatApk(apk).contains("lib/armeabi/libhello-jni.so");
         assertThatApk(apk).contains("lib/x86/libhello-jni.so");
 
         File lib = ZipHelper.extractFile(apk, "lib/armeabi-v7a/libhello-jni.so");
-        TruthHelper.assertThatNativeLib(lib).isStripped();
-
-        lib = ZipHelper.extractFile(apk, "lib/armeabi/libhello-jni.so");
         TruthHelper.assertThatNativeLib(lib).isStripped();
 
         lib = ZipHelper.extractFile(apk, "lib/x86/libhello-jni.so");
@@ -122,7 +123,6 @@ public class CmakeBasicProjectTest {
                 .run("clean", "assembleDebug");
         Apk apk = project.getApk("debug");
         assertThatApk(apk).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
-        assertThatApk(apk).doesNotContain("lib/armeabi/libhello-jni.so");
         assertThatApk(apk).contains("lib/x86/libhello-jni.so");
 
         File lib = ZipHelper.extractFile(apk, "lib/x86/libhello-jni.so");
@@ -134,9 +134,11 @@ public class CmakeBasicProjectTest {
         project.model().fetchAndroidProjects(); // Make sure we can successfully get AndroidProject
         NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
         assertThat(model.getBuildSystems()).containsExactly(NativeBuildSystem.CMAKE.getName());
-        assertThat(model.getBuildFiles()).hasSize(2);
+        assertThat(model)
+                .hasExactBuildFilesShortNames(
+                        "platforms.cmake", "CMakeLists.txt", "android.toolchain.cmake");
         assertThat(model.getName()).isEqualTo("project");
-        int abiCount = 3;
+        int abiCount = 2;
         assertThat(model.getArtifacts()).hasSize(abiCount * 2);
         assertThat(model.getFileExtensions()).hasSize(1);
 
@@ -161,7 +163,7 @@ public class CmakeBasicProjectTest {
     public void checkClean() throws IOException, InterruptedException {
         project.execute("clean", "assembleDebug", "assembleRelease");
         NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
-        assertThat(model).hasBuildOutputCountEqualTo(6);
+        assertThat(model).hasBuildOutputCountEqualTo(4);
         assertThat(model).allBuildOutputsExist();
         // CMake .o files are kept in -B folder which is under .externalNativeBuild/
         assertThat(model).hasExactObjectFilesInCxxFolder("hello-jni.c.o");
@@ -177,7 +179,7 @@ public class CmakeBasicProjectTest {
     public void checkCleanAfterAbiSubset() throws IOException, InterruptedException {
         project.execute("clean", "assembleDebug", "assembleRelease");
         NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
-        assertThat(model).hasBuildOutputCountEqualTo(6);
+        assertThat(model).hasBuildOutputCountEqualTo(4);
 
         List<File> allBuildOutputs = Lists.newArrayList();
         for (NativeArtifact artifact : model.getArtifacts()) {

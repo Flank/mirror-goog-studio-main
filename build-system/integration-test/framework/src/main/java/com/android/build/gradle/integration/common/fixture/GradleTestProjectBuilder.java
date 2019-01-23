@@ -61,6 +61,7 @@ public final class GradleTestProjectBuilder {
     @Nullable private List<Path> repoDirectories;
     @Nullable private File androidHome;
     @Nullable private File androidNdkHome;
+    @Nullable private String sideBySideNdkVersion = null;
     @Nullable private File gradleDistributionDirectory;
     @Nullable private File gradleBuildCacheDirectory;
     @Nullable private String kotlinVersion;
@@ -97,10 +98,22 @@ public final class GradleTestProjectBuilder {
                                 + androidNdkHome.getAbsolutePath()
                                 + " is not a directory");
             } else {
-                androidNdkHome =
-                        TestUtils.runningFromBazel()
-                                ? BazelIntegrationTestsSuite.NDK_IN_TMP.toFile()
-                                : new File(androidHome, SdkConstants.FD_NDK);
+                if (sideBySideNdkVersion != null) {
+                    androidNdkHome =
+                            TestUtils.runningFromBazel()
+                                    ? new File(
+                                            BazelIntegrationTestsSuite.NDK_SIDE_BY_SIDE_ROOT
+                                                    .toFile(),
+                                            sideBySideNdkVersion)
+                                    : new File(
+                                            new File(androidHome, SdkConstants.FD_NDK_SIDE_BY_SIDE),
+                                            sideBySideNdkVersion);
+                } else {
+                    androidNdkHome =
+                            TestUtils.runningFromBazel()
+                                    ? BazelIntegrationTestsSuite.NDK_IN_TMP.toFile()
+                                    : new File(androidHome, SdkConstants.FD_NDK);
+                }
             }
         }
 
@@ -389,6 +402,11 @@ public final class GradleTestProjectBuilder {
 
     public GradleTestProjectBuilder dontOutputLogOnFailure() {
         this.outputLogOnFailure = false;
+        return this;
+    }
+
+    public GradleTestProjectBuilder setSideBySideNdkVersion(String sideBySideNdkVersion) {
+        this.sideBySideNdkVersion = sideBySideNdkVersion;
         return this;
     }
 

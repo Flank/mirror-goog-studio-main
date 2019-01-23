@@ -222,6 +222,24 @@ public class NativeAndroidProjectSubject
         }
     }
 
+    /**
+     * Asseerts that the this project has build files of names shortNames and no others. This checks
+     * just the file name and not the path.
+     */
+    @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
+    public void hasExactBuildFilesShortNames(String... shortNames) {
+        Set<String> expected = Sets.newHashSet();
+        for (File buildFile : actual().getBuildFiles()) {
+            expected.add(buildFile.getName());
+        }
+        Set<String> actual = Sets.newHashSet(shortNames);
+        if (!actual.equals(expected)) {
+            failWithRawMessage(
+                    "Not true that %s build files are <%s>. They are <%s>",
+                    actualAsString(), expected, actual);
+        }
+    }
+
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
     public void hasArtifactGroupsNamed(String ...artifacts) {
         Set<String> expected = Sets.newHashSet(artifacts);

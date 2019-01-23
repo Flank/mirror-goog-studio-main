@@ -246,6 +246,14 @@ filegroup(
 )
 
 filegroup(
+    name = "ndk",
+    srcs = sdk_glob(
+        include = ["ndk/**"],
+    ),
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
     name = "cmake",
     srcs = sdk_glob(
         include = ["cmake/**"],

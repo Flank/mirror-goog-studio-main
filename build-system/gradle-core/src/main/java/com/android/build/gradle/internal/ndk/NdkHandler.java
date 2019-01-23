@@ -117,7 +117,9 @@ public class NdkHandler {
     @Nullable
     public String getPlatformVersion() {
         assert compileSdkVersion != null;
-        assert ndkInfo != null;
+        if (ndkInfo == null) {
+            throw new RuntimeException(String.format("Could not locate NDK %s", revision));
+        }
         return ndkInfo.findLatestPlatformVersion(compileSdkVersion);
     }
 

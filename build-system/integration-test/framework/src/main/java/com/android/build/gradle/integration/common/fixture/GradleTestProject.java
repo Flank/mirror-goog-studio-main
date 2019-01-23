@@ -104,6 +104,7 @@ public final class GradleTestProject implements TestRule {
     public static final String DEFAULT_COMPILE_SDK_VERSION;
 
     public static final String DEFAULT_BUILD_TOOL_VERSION;
+    public static final String DEFAULT_NDK_SIDE_BY_SIDE_VERSION = "19.0.5232133";
     public static final boolean APPLY_DEVICEPOOL_PLUGIN =
             Boolean.parseBoolean(System.getenv().getOrDefault("APPLY_DEVICEPOOL_PLUGIN", "false"));
 
