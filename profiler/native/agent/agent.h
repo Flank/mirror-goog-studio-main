@@ -42,6 +42,9 @@ namespace profiler {
 // with the new (current) state of the connection.
 using PerfdStatusChanged = std::function<void(bool)>;
 
+// Function that handles a Command forwarded from daemon.
+using CommandHandler = std::function<void(const proto::Command*)>;
+
 // Function for submitting a network grpc request via |stub| using the given
 // |context|. Returns the status from the grpc call.
 using NetworkServiceTask = std::function<grpc::Status(
@@ -110,6 +113,13 @@ class Agent {
   // (e.g. Studio restarts within the duration of the same app instance)
   void AddPerfdConnectedCallback(std::function<void()> callback);
 
+  // Registers a handler for the given command type.
+  // Newer registration overwrites prior registrations of the same type.
+  void RegisterCommandHandler(proto::Command::CommandType type,
+                              const CommandHandler& handler) {
+    command_handlers_[type] = handler;
+  }
+
  private:
   static constexpr int64_t kHeartBeatIntervalNs = Clock::ms_to_ns(250);
 
@@ -152,6 +162,16 @@ class Agent {
    */
   void RunSocketThread();
 
+  /**
+   * A thread that handles Commands forwarded from daemon.
+   */
+  void RunCommandHandlerThread();
+
+  /**
+   * Opens the grpc call to stream commands from the daemon.
+   */
+  void OpenCommandStream();
+
   proto::AgentConfig agent_config_;
 
   // Used for |connect_cv_| and protects |agent_stub_|, |event_stub_|,
@@ -173,6 +193,8 @@ class Agent {
   std::unique_ptr<proto::InternalEnergyService::Stub> energy_stub_;
   std::unique_ptr<proto::InternalEventService::Stub> event_stub_;
   std::unique_ptr<proto::InternalNetworkService::Stub> network_stub_;
+  std::unique_ptr<grpc::ClientReader<proto::Command>> command_stream_reader_;
+  std::unique_ptr<grpc::ClientContext> command_stream_context_;
   MemoryComponent* memory_component_;
 
   // Protects |perfd_status_changed_callbacks_|
@@ -181,10 +203,17 @@ class Agent {
 
   std::mutex perfd_connected_mutex_;
   std::vector<std::function<void()>> perfd_connected_callbacks_;
+
+  // Maps command types to functions that handle command proto data.
+  std::map<proto::Command::CommandType, CommandHandler> command_handlers_;
+
   // Used for |RunHeartbeatThread|
   std::thread heartbeat_thread_;
   // O+ only - Used for |RunSocketThread|
   std::thread socket_thread_;
+  // Used for |RunCommandHandlerThread|
+  std::thread command_handler_thread_;
+
   BackgroundQueue background_queue_;
 
   // Whether the agent and its children service stub should anticipate

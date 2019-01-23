@@ -21,6 +21,7 @@ option java_outer_classname = "Agent";
 
 import "memory.proto";
 import "common.proto";
+import "transport.proto"; // For Command.
 
 service AgentService {
   // A simple ping mechanism to notify perfd of the agent's existence, vice
@@ -30,6 +31,10 @@ service AgentService {
   rpc SendEvent(SendEventRequest) returns (EmptyResponse) {}
 
   rpc SendPayload(SendPayloadRequest) returns (EmptyResponse) {}
+
+  // Register an agent in the transport daemon and open a stream where daemon
+  // can forward Commands to the agent.
+  rpc RegisterAgent(RegisterAgentRequest) returns (stream Command) {}
 }
 
 message HeartBeatRequest {
@@ -111,4 +116,9 @@ message AgentConfig {
   CpuConfig cpu_config = 9;
   // equivalent to StudioFlags.PROFILER_UNIFIED_PIPELINE
   bool unified_pipeline = 10;
+}
+
+message RegisterAgentRequest {
+  // pid of the process where the agent lives in.
+  int32 pid = 1;
 }

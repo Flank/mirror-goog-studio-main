@@ -23,6 +23,8 @@
 #include <memory>
 #include <sstream>
 #include <string>
+
+#include "commands/attach_agent.h"
 #include "connector.h"
 #include "utils/android_studio_version.h"
 #include "utils/config.h"
@@ -158,10 +160,7 @@ Daemon::Daemon(Clock* clock, Config* config, FileCache* file_cache,
       config_(config),
       file_cache_(file_cache),
       buffer_(buffer),
-      transport_component_(new TransportComponent(this)) {
-  builder_.RegisterService(transport_component_->GetPublicService());
-  builder_.RegisterService(transport_component_->GetInternalService());
-}
+      transport_component_(new TransportComponent(this)) {}
 
 void Daemon::RegisterProfilerComponent(
     std::unique_ptr<ServiceComponent> component) {
@@ -178,6 +177,11 @@ void Daemon::RegisterProfilerComponent(
 }
 
 void Daemon::RunServer(const string& server_address) {
+  // Register comman services and command handlers.
+  builder_.RegisterService(transport_component_->GetPublicService());
+  builder_.RegisterService(transport_component_->GetInternalService());
+  RegisterCommandHandler(proto::Command::ATTACH_AGENT, &AttachAgent::Create);
+
   int port = 0;
   builder_.AddListeningPort(server_address, grpc::InsecureServerCredentials(),
                             &port);
@@ -246,6 +250,11 @@ grpc::Status Daemon::Execute(const proto::Command& command_data,
       commands_[command_data.type()](command_data));
   grpc::Status status = command->ExecuteOn(this);
   post();
+
+  // Forward every command to agent. It's up to the agent to decide whether to
+  // handle it or not.
+  transport_component_->ForwardCommandToAgent(command_data);
+
   return status;
 }
 

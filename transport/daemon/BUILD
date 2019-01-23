@@ -12,6 +12,8 @@ cc_library(
     srcs = [
         "agent_service.cc",
         "agent_service.h",
+        "commands/attach_agent.cc",
+        "commands/attach_agent.h",
         "commands/command.h",
         "connector.cc",
         "connector.h",

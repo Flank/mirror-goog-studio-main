@@ -17,6 +17,8 @@
 #define DAEMON_AGENT_SERVICE_H_
 
 #include <grpc++/grpc++.h>
+#include <condition_variable>
+#include <mutex>
 
 #include "proto/agent_service.grpc.pb.h"
 #include "utils/clock.h"
@@ -43,8 +45,27 @@ class AgentServiceImpl : public proto::AgentService::Service {
                            const proto::SendPayloadRequest* request,
                            proto::EmptyResponse* response) override;
 
+  grpc::Status RegisterAgent(
+      grpc::ServerContext* context, const proto::RegisterAgentRequest* request,
+      grpc::ServerWriter<proto::Command>* writer) override;
+
+  // Sends a command to the agent. Returns true if the signal is sent, false
+  // otherwise (if the agent is not alive).
+  bool SendCommandToAgent(const proto::Command& command);
+
  private:
   Daemon* daemon_;
+
+  std::mutex status_mutex_;
+  std::mutex command_mutex_;
+  std::condition_variable command_cv_;
+
+  // Per-app flag which indicates whether a daemon->agent grpc streaming call
+  // (RegisterAgent) has been established. Value is true if a stream is alive,
+  // false otherwise.
+  std::map<int32_t, bool> app_command_stream_statuses_;
+  // A pid-to-Command mapping for pending commands.
+  std::map<int32_t, proto::Command> pending_commands_;
 };
 
 }  // namespace profiler

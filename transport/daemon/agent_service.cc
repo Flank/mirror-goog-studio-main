@@ -15,6 +15,9 @@
  */
 #include "agent_service.h"
 
+#include <unistd.h>
+#include <cassert>
+
 #include "daemon/daemon.h"
 #include "proto/common.grpc.pb.h"
 
@@ -51,6 +54,71 @@ grpc::Status AgentServiceImpl::SendPayload(
     cache->Complete(request->name());
   }
   return grpc::Status::OK;
+}
+
+grpc::Status AgentServiceImpl::RegisterAgent(
+    grpc::ServerContext* context, const proto::RegisterAgentRequest* request,
+    grpc::ServerWriter<proto::Command>* writer) {
+  int32_t pid = request->pid();
+  {
+    std::lock_guard<std::mutex> request_guard(status_mutex_);
+    // TODO: set to false when agent dies (e.g. no more heartbeat)
+    app_command_stream_statuses_[pid] = true;
+  }
+
+  // TODO: this grpc does not return which essentially consumes
+  // a thread permenantly within the server's thread pool. If we
+  // happen to be profiling many apps simultaneously this would be
+  // a problem. Investigate proper solution for this (other grpc
+  // configurations?)
+  std::unique_lock<std::mutex> lock(command_mutex_);
+  while (true) {
+    // Blocks and proceeds only when there is a command request
+    // directed at the particular app that started this stream.
+    auto it = pending_commands_.find(pid);
+    while (it == pending_commands_.end()) {
+      command_cv_.wait(lock);
+      it = pending_commands_.find(pid);
+    }
+
+    writer->Write(it->second);
+    pending_commands_.erase(pid);
+    command_cv_.notify_all();
+  }
+  assert(!"Unreachable");
+
+  return grpc::Status::OK;
+}
+
+bool AgentServiceImpl::SendCommandToAgent(const proto::Command& command) {
+  // Protect this method from being called from multiple threads,
+  // as we need to avoid overwriting a pending signal before the
+  // the control stream has a chance to consume it.
+  // Revisit if we need to send a lot of high frequency signal
+  // in which case we can switch to a queue.
+  std::lock_guard<std::mutex> command_guard(status_mutex_);
+
+  int32_t pid = command.pid();
+  if (!app_command_stream_statuses_[pid]) {
+    return false;
+  }
+
+  {
+    std::unique_lock<std::mutex> lock(command_mutex_);
+    assert(pending_commands_.find(pid) == pending_commands_.end());
+    pending_commands_[pid] = command;
+    command_cv_.notify_all();
+
+    // Blocks until the corresponding control stream has sent
+    // the signal off to an app (by waiting on the command in
+    // the map to be erased.)
+    // TODO: possible deadlock. Protect |pending_commands_|.
+    while (pending_commands_.find(pid) != pending_commands_.end()) {
+      command_cv_.wait(lock);
+    }
+  }
+
+  return true;
 }
 
 }  // namespace profiler

@@ -15,6 +15,8 @@
  */
 #include "agent.h"
 
+#include <grpc++/support/channel_arguments.h>
+#include <grpc/support/log.h>
 #include <limits.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -23,8 +25,7 @@
 #include <sstream>
 #include <string>
 
-#include <grpc++/support/channel_arguments.h>
-#include <grpc/support/log.h>
+#include "proto/transport.grpc.pb.h"
 #include "utils/device_info.h"
 #include "utils/log.h"
 #include "utils/socket_utils.h"
@@ -326,6 +327,19 @@ void Agent::RunSocketThread() {
   }
 }
 
+void Agent::RunCommandHandlerThread() {
+  SetThreadName("Studio:CmdHdler");
+  proto::Command command;
+  while (command_stream_reader_->Read(&command)) {
+    auto search = command_handlers_.find(command.type());
+    if (search != command_handlers_.end()) {
+      Log::V("Handling agent command %d for pid: %d.", command.type(),
+             command.pid());
+      (search->second)(&command);
+    }
+  }
+}
+
 void Agent::ConnectToPerfd(const std::string& target) {
   // Synchronization is needed around the (re)initialization of all
   // services to prevent a task to acquire a service stub but gets freed
@@ -360,6 +374,10 @@ void Agent::ConnectToPerfd(const std::string& target) {
   network_stub_ = InternalNetworkService::NewStub(channel_);
   memory_component_->Connect(channel_);
 
+  if (agent_config().unified_pipeline()) {
+    OpenCommandStream();
+  }
+
   if (!grpc_target_initialized_) {
     grpc_target_initialized_ = true;
     // Service stubs are null before the first time this method is called.
@@ -375,6 +393,23 @@ void Agent::ConnectToPerfd(const std::string& target) {
       }
     });
   }
+}
+
+void Agent::OpenCommandStream() {
+  if (command_stream_context_.get() != nullptr) {
+    command_stream_context_->TryCancel();
+  }
+  command_stream_context_.reset(new grpc::ClientContext());
+  proto::RegisterAgentRequest request;
+  request.set_pid(getpid());
+  command_stream_reader_ =
+      agent_stub_->RegisterAgent(command_stream_context_.get(), request);
+
+  if (command_handler_thread_.joinable()) {
+    command_handler_thread_.join();
+  }
+  command_handler_thread_ = std::thread(&Agent::RunCommandHandlerThread, this);
+  Log::V("Agent command stream started.");
 }
 
 }  // namespace profiler

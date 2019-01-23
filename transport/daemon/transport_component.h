@@ -46,6 +46,11 @@ class TransportComponent final : public ServiceComponent {
     agent_status_changed_callbacks_.push_back(callback);
   }
 
+  // Forwards a command from the daemon to the agent.
+  bool ForwardCommandToAgent(const proto::Command& command) {
+    return agent_service_.SendCommandToAgent(command);
+  }
+
  private:
   void RunAgentStatusThread();
 
