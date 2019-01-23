@@ -30,11 +30,14 @@ import com.android.ide.common.xml.XmlPrettyPrinter;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
 import com.android.utils.XmlUtils;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -44,10 +47,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -174,6 +179,11 @@ public class ManifestMerger2 {
                         mainPackageAttribute.isPresent()
                                 ? mainPackageAttribute.get().getValue()
                                 : null);
+
+        if (mOptionalFeatures.contains(Invoker.Feature.ENFORCE_UNIQUE_PACKAGE_NAME)) {
+            checkUniquePackageName(
+                    loadedMainManifestInfo, loadedLibraryDocuments, mergingReportBuilder);
+        }
 
         // perform system property injection
         performSystemPropertiesInjection(mergingReportBuilder,
@@ -1128,6 +1138,7 @@ public class ManifestMerger2 {
             throws MergeFailureException {
 
         ImmutableList.Builder<LoadedManifestInfo> loadedLibraryDocuments = ImmutableList.builder();
+
         for (Pair<String, File> libraryFile : Sets.newLinkedHashSet(mLibraryFiles)) {
             mLogger.verbose("Loading library manifest " + libraryFile.getSecond().getPath());
             ManifestInfo manifestInfo =
@@ -1175,11 +1186,63 @@ public class ManifestMerger2 {
                 builder.build().log(mLogger);
             }
 
-            loadedLibraryDocuments.add(new LoadedManifestInfo(manifestInfo,
-                    Optional.fromNullable(libraryDocument.getPackageName()),
-                    libraryDocument));
+            LoadedManifestInfo info =
+                    new LoadedManifestInfo(
+                            manifestInfo,
+                            Optional.fromNullable(libraryDocument.getPackageName()),
+                            libraryDocument);
+
+            loadedLibraryDocuments.add(info);
         }
+
         return loadedLibraryDocuments.build();
+    }
+
+    private void checkUniquePackageName(
+            @NonNull LoadedManifestInfo mainPackage,
+            @NonNull List<LoadedManifestInfo> libraries,
+            @NonNull MergingReport.Builder mergingReportBuilder) {
+        Multimap<String, LoadedManifestInfo> uniquePackageNameMap = ArrayListMultimap.create();
+
+        // Is main manifest is a Overlay we need to fallback.
+        if (mainPackage.getOriginalPackageName().isPresent()) {
+            uniquePackageNameMap.put(mainPackage.getOriginalPackageName().get(), mainPackage);
+        } else if (mainPackage.getMainManifestPackageName().isPresent()) {
+            uniquePackageNameMap.put(mainPackage.getMainManifestPackageName().get(), mainPackage);
+        }
+
+        libraries
+                .stream()
+                .filter(l -> l.getOriginalPackageName().isPresent())
+                .forEach(l -> uniquePackageNameMap.put(l.getOriginalPackageName().get(), l));
+
+        uniquePackageNameMap
+                .asMap()
+                .entrySet()
+                .stream()
+                .filter(e -> e.getValue().size() > 1)
+                .forEach(
+                        e -> {
+                            Collection<String> offendingTargets =
+                                    e.getValue()
+                                            .stream()
+                                            .map(i -> i.getName())
+                                            .collect(Collectors.toList());
+                            String repeatedPackageErrors =
+                                    "Package name '"
+                                            + e.getKey()
+                                            + "' used in: "
+                                            + Joiner.on(", ").join(offendingTargets)
+                                            + ".";
+                            // We know that there is at least one because of the filter check.
+                            LoadedManifestInfo info = e.getValue().stream().findFirst().get();
+                            // Report only once per error, since the error message contain the path
+                            // to all manifests with the repeated package name.
+                            mergingReportBuilder.addMessage(
+                                    info.getXmlDocument().getSourceFile(),
+                                    MergingReport.Record.Severity.ERROR,
+                                    repeatedPackageErrors);
+                        });
     }
 
     /**
@@ -1483,6 +1546,9 @@ public class ManifestMerger2 {
 
             /** Rewrite local resource references with fully qualified namespace */
             FULLY_NAMESPACE_LOCAL_RESOURCES,
+
+            /** Enforce that dependencies manifests don't have duplicated package names. */
+            ENFORCE_UNIQUE_PACKAGE_NAME,
         }
 
         /**

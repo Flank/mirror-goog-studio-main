@@ -75,6 +75,7 @@ enum class BooleanOption(
     ENABLE_SEPARATE_ANNOTATION_PROCESSING("android.enableSeparateAnnotationProcessing", false),
     FULL_R8("android.enableR8.fullMode", false),
     CONDITIONAL_KEEP_RULES("android.useConditionalKeepRules", false),
+    ENFORCE_UNIQUE_PACKAGE_NAMES("android.uniquePackageNames", false, status = Option.Status.STABLE),
 
     // ---------------
     // Lifecycle flags: Stable stage, Enabled by default, can be disabled
