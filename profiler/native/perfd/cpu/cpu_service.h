@@ -152,7 +152,7 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
   // The monitor that detects thread activities (i.e., state changes).
   ThreadMonitor& thread_monitor_;
 
-  const proto::AgentConfig::CpuConfig& cpu_config_;
+  const proto::AgentConfig::CpuConfig cpu_config_;
   ActivityManager* activity_manager_;
   std::unique_ptr<SimpleperfManager> simpleperf_manager_;
   std::unique_ptr<AtraceManager> atrace_manager_;
