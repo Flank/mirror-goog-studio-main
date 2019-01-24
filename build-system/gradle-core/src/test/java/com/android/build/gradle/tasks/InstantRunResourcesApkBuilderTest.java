@@ -42,6 +42,8 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.Workers;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.utils.FileUtils;
@@ -89,6 +91,7 @@ public class InstantRunResourcesApkBuilderTest {
     @Mock FileCollection signingConfig;
     @Mock InstantRunBuildContext buildContext;
     @Mock FileTree signingConfigFileTree;
+    @Mock ProjectOptions projectOptions;
 
     @Rule public TemporaryFolder signingConfigDirectory = new TemporaryFolder();
 
@@ -137,6 +140,9 @@ public class InstantRunResourcesApkBuilderTest {
         when(variantScope.getGlobalScope()).thenReturn(globalScope);
         when(variantScope.getVariantConfiguration()).thenReturn(variantConfiguration);
         when(globalScope.getAndroidBuilder()).thenReturn(androidBuilder);
+        when(globalScope.getProjectOptions()).thenReturn(projectOptions);
+        when(projectOptions.get(BooleanOption.KEEP_TIMESTAMPS_IN_APK))
+                .thenReturn(BooleanOption.KEEP_TIMESTAMPS_IN_APK.getDefaultValue());
         when(variantScope.getInstantRunBuildContext()).thenReturn(buildContext);
         when(buildContext.getPatchingPolicy()).thenReturn(MULTI_APK_SEPARATE_RESOURCES);
         when(signingConfig.getAsFileTree()).thenReturn(signingConfigFileTree);

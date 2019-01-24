@@ -83,7 +83,8 @@ public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
             @NonNull BuildableArtifact resourcesWithMainManifest,
             @NonNull BuildableArtifact apkList,
             @NonNull BuildableArtifact splitApkResourceFiles,
-            @NonNull ApkData mainApk) {
+            @NonNull ApkData mainApk,
+            boolean keepTimestampsInApk) {
         super(
                 logger,
                 project,
@@ -98,7 +99,8 @@ public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
                 resources,
                 resourcesWithMainManifest,
                 apkList,
-                mainApk);
+                mainApk,
+                keepTimestampsInApk);
         this.splitApkResources = splitApkResourceFiles;
     }
 
@@ -264,6 +266,6 @@ public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
                 SigningConfigMetadata.Companion.load(signingConf),
                 outputFile,
                 tempDir,
-                ApkCreatorFactories.fromProjectProperties(project, true));
+                ApkCreatorFactories.fromProjectProperties(keepTimestampsInApk, true));
     }
 }

@@ -96,6 +96,8 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
     @NonNull private final BuildableArtifact apkList;
     @NonNull protected final ApkData mainApk;
 
+    protected final boolean keepTimestampsInApk;
+
     public InstantRunSplitApkBuilder(
             @NonNull Logger logger,
             @NonNull Project project,
@@ -110,7 +112,8 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
             @NonNull BuildableArtifact resources,
             @NonNull BuildableArtifact resourcesWithMainManifest,
             @NonNull BuildableArtifact apkList,
-            @NonNull ApkData mainApk) {
+            @NonNull ApkData mainApk,
+            boolean keepTimestampsInApk) {
         this.logger = logger;
         this.project = project;
         this.buildContext = buildContext;
@@ -125,6 +128,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
         this.resourcesWithMainManifest = resourcesWithMainManifest;
         this.apkList = apkList;
         this.mainApk = mainApk;
+        this.keepTimestampsInApk = keepTimestampsInApk;
     }
 
     @NonNull
@@ -247,7 +251,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
                     SigningConfigMetadata.Companion.load(signingConf),
                     alignedOutput,
                     tempDir,
-                    ApkCreatorFactories.fromProjectProperties(project, true));
+                    ApkCreatorFactories.fromProjectProperties(keepTimestampsInApk, true));
 
             buildContext.addChangedFile(FileType.SPLIT, alignedOutput);
             deleteIfExists(resPackageFile.toPath());

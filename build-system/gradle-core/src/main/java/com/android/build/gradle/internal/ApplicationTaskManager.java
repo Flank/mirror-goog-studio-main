@@ -301,7 +301,11 @@ public class ApplicationTaskManager extends TaskManager {
                         artifacts.getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES),
                         artifacts.getFinalArtifactFiles(resourcesWithMainManifest),
                         artifacts.getFinalArtifactFiles(InternalArtifactType.APK_LIST),
-                        variantScope.getOutputScope().getMainSplit());
+                        variantScope.getOutputScope().getMainSplit(),
+                        variantScope
+                                .getGlobalScope()
+                                .getProjectOptions()
+                                .get(BooleanOption.KEEP_TIMESTAMPS_IN_APK));
 
         variantScope
                 .getTransformManager()
@@ -328,7 +332,11 @@ public class ApplicationTaskManager extends TaskManager {
                         artifacts.getFinalArtifactFiles(InternalArtifactType.APK_LIST),
                         artifacts.getFinalArtifactFiles(
                                 InternalArtifactType.INSTANT_RUN_SPLIT_APK_RESOURCES),
-                        variantScope.getOutputScope().getMainSplit());
+                        variantScope.getOutputScope().getMainSplit(),
+                        variantScope
+                                .getGlobalScope()
+                                .getProjectOptions()
+                                .get(BooleanOption.KEEP_TIMESTAMPS_IN_APK));
 
         variantScope
                 .getTransformManager()

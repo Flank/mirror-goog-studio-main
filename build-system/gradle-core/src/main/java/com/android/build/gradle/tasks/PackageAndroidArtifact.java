@@ -27,7 +27,6 @@ import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.api.artifact.BuildableArtifact;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
@@ -245,6 +244,13 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     protected FileCache fileCache;
 
     protected BuildableArtifact apkList;
+
+    protected boolean keepTimestampsInApk;
+
+    @Input
+    public boolean getKeepTimestampsInApk() {
+        return keepTimestampsInApk;
+    }
 
     /** Desired output format. */
     protected IncrementalPackagerBuilder.ApkFormat apkFormat;
@@ -645,7 +651,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             isInInstantRunMode = task.isInInstantRunMode();
             isDebuggableBuild = task.getDebugBuild();
             isJniDebuggableBuild = task.getJniDebugBuild();
-            keepTimestampsInApk = AndroidGradleOptions.keepTimestampsInApk(task.getProject());
+            keepTimestampsInApk = task.getKeepTimestampsInApk();
         }
 
         @NonNull
@@ -1145,6 +1151,13 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                             : projectOptions.get(BooleanOption.DEPLOYMENT_PROVIDES_LIST_OF_CHANGES)
                                     ? IncrementalPackagerBuilder.ApkFormat.FILE_WITH_LIST_OF_CHANGES
                                     : IncrementalPackagerBuilder.ApkFormat.FILE;
+
+            packageAndroidArtifact.keepTimestampsInApk =
+                    variantScope
+                            .getGlobalScope()
+                            .getProjectOptions()
+                            .get(BooleanOption.KEEP_TIMESTAMPS_IN_APK);
+
             finalConfigure(packageAndroidArtifact);
         }
 
@@ -1152,8 +1165,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             VariantScope variantScope = getVariantScope();
 
             GlobalScope globalScope = variantScope.getGlobalScope();
-            GradleVariantConfiguration variantConfiguration =
-                    variantScope.getVariantConfiguration();
             task.instantRunFileType = FileType.MAIN;
 
             task.dexFolders = getDexFolders();

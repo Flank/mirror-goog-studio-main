@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.packaging;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.incremental.CapturingChangesApkCreator;
 import com.android.build.gradle.internal.incremental.FolderBasedApkCreator;
 import com.android.builder.errors.EvalIssueReporter;
@@ -124,12 +123,6 @@ public class IncrementalPackagerBuilder {
      * can be inferred.
      */
     @Nullable private Predicate<String> noCompressPredicate;
-
-    /**
-     * The project.
-     */
-    @Nullable
-    private Project project;
 
     /** Whether the timestamps should be kept in the apk. */
     @Nullable private Boolean keepTimestampsInApk;
@@ -319,18 +312,6 @@ public class IncrementalPackagerBuilder {
     }
 
     /**
-     * Sets the project.
-     *
-     * @param project the project
-     * @return {@code this} for use with fluent-style notation
-     */
-    @NonNull
-    public IncrementalPackagerBuilder withProject(@NonNull Project project) {
-        this.project = project;
-        return this;
-    }
-
-    /**
      * Sets whether the timestamps should be kept in the apk.
      *
      * @param keepTimestampsInApk whether the timestamps should be kept in the apk
@@ -418,7 +399,6 @@ public class IncrementalPackagerBuilder {
      *
      * <ul>
      *    <li>{@link #withOutputFile(File)}
-     *    <li>{@link #withProject(Project)}
      *    <li>{@link #withIntermediateDir(File)}
      * </ul>
      *
@@ -426,10 +406,6 @@ public class IncrementalPackagerBuilder {
      */
     @NonNull
     public IncrementalPackager build() {
-        if (project != null) {
-            keepTimestampsInApk = AndroidGradleOptions.keepTimestampsInApk(project);
-        }
-
         Preconditions.checkState(keepTimestampsInApk != null, "keepTimestampsInApk == null");
         Preconditions.checkState(intermediateDir != null, "intermediateDir == null");
 

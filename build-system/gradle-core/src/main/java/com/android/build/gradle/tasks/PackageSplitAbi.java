@@ -20,7 +20,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
 import com.android.build.api.artifact.BuildableArtifact;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
@@ -35,6 +34,7 @@ import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.internal.tasks.SigningConfigMetadata;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.internal.packaging.IncrementalPackager;
@@ -79,6 +79,8 @@ public class PackageSplitAbi extends AndroidBuilderTask {
     private Collection<String> aaptOptionsNoCompress;
 
     private Set<String> splits;
+
+    private boolean keepTimestampsInApk;
 
     private final WorkerExecutorFacade workers;
 
@@ -125,6 +127,11 @@ public class PackageSplitAbi extends AndroidBuilderTask {
     @Input
     public Collection<String> getNoCompressExtensions() {
         return aaptOptionsNoCompress != null ? aaptOptionsNoCompress : Collections.emptyList();
+    }
+
+    @Input
+    public boolean getKeepTimestampsInApk() {
+        return keepTimestampsInApk;
     }
 
     @TaskAction
@@ -212,7 +219,7 @@ public class PackageSplitAbi extends AndroidBuilderTask {
             createdBy = task.getBuilder().getCreatedBy();
             aaptOptionsNoCompress = task.aaptOptionsNoCompress;
             jniFolders = task.getJniFolders().getFiles();
-            keepTimestampsInApk = AndroidGradleOptions.keepTimestampsInApk(task.getProject());
+            keepTimestampsInApk = task.getKeepTimestampsInApk();
             isJniDebuggable = task.jniDebuggable;
             minSdkVersion = task.getMinSdkVersion();
         }
@@ -291,6 +298,11 @@ public class PackageSplitAbi extends AndroidBuilderTask {
                             .getPipelineOutputAsFileCollection(StreamFilter.NATIVE_LIBS);
             task.jniDebuggable = config.getBuildType().isJniDebuggable();
             task.splits = scope.getVariantData().getFilters(OutputFile.FilterType.ABI);
+
+            task.keepTimestampsInApk =
+                    scope.getGlobalScope()
+                            .getProjectOptions()
+                            .get(BooleanOption.KEEP_TIMESTAMPS_IN_APK);
 
             MutableTaskContainer taskContainer = scope.getTaskContainer();
 

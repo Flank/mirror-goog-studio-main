@@ -20,7 +20,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
@@ -36,6 +35,7 @@ import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.internal.tasks.SigningConfigMetadata;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.packaging.PackagerException;
 import com.android.ide.common.signing.KeytoolException;
@@ -74,6 +74,7 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
     private File outputDirectory;
     private FileCollection signingConf;
     private File supportDirectory;
+    private boolean keepTimestampsInApk;
 
     private BuildableArtifact resources;
 
@@ -99,6 +100,11 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
     @Input
     public String getPatchingPolicy() {
         return instantRunBuildContext.getPatchingPolicy().name();
+    }
+
+    @Input
+    public boolean getKeepTimestampsInApk() {
+        return keepTimestampsInApk;
     }
 
     @InputFiles
@@ -204,7 +210,7 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
             tempDir = new File(task.supportDirectory, "package_" + mangleApkName(apkInfo));
             signingConfigFile = SigningConfigMetadata.Companion.getOutputFile(task.signingConf);
             createdBy = task.androidBuilder.getCreatedBy();
-            keepTimestampsInApk = AndroidGradleOptions.keepTimestampsInApk(task.getProject());
+            keepTimestampsInApk = task.getKeepTimestampsInApk();
         }
 
         @NonNull
@@ -257,6 +263,11 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
             resourcesApkBuilder.resources =
                     variantScope.getArtifacts().getFinalArtifactFiles(resInputType);
             resourcesApkBuilder.outputDirectory = variantScope.getInstantRunResourceApkFolder();
+            resourcesApkBuilder.keepTimestampsInApk =
+                    variantScope
+                            .getGlobalScope()
+                            .getProjectOptions()
+                            .get(BooleanOption.KEEP_TIMESTAMPS_IN_APK);
         }
     }
 }

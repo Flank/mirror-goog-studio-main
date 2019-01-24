@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.internal.aapt.Aapt;
@@ -132,7 +133,8 @@ public class InstantRunSplitApkBuilderTest {
                         mainResources,
                         apkList,
                         splitApkResources,
-                        apkInfo) {
+                        apkInfo,
+                        BooleanOption.KEEP_TIMESTAMPS_IN_APK.getDefaultValue()) {
                     @Override
                     protected Aapt getLinker() {
                         return aapt;
@@ -264,7 +266,8 @@ public class InstantRunSplitApkBuilderTest {
                         mainResources,
                         apkList,
                         splitApkResources,
-                        apkInfo) {
+                        apkInfo,
+                        BooleanOption.KEEP_TIMESTAMPS_IN_APK.getDefaultValue()) {
                     @Override
                     protected Aapt getLinker() {
                         return aapt;

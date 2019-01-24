@@ -20,8 +20,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
-import com.android.build.gradle.AndroidGradleOptions;
-import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildElementsTransformParams;
@@ -34,6 +32,7 @@ import com.android.build.gradle.internal.tasks.SigningConfigMetadata;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.ide.common.workers.WorkerExecutorFacade;
@@ -43,6 +42,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import javax.inject.Inject;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
@@ -56,6 +56,7 @@ public class PackageSplitRes extends AndroidBuilderTask {
     private File incrementalDir;
     public BuildableArtifact processedResources;
     public File splitResApkOutputDirectory;
+    private boolean keepTimestampsInApk;
 
     @InputFiles
     public BuildableArtifact getProcessedResources() {
@@ -70,6 +71,11 @@ public class PackageSplitRes extends AndroidBuilderTask {
     @InputFiles
     public FileCollection getSigningConfig() {
         return signingConfig;
+    }
+
+    @Input
+    public boolean getKeepTimestampsInApk() {
+        return keepTimestampsInApk;
     }
 
     private final WorkerExecutorFacade workers;
@@ -156,7 +162,7 @@ public class PackageSplitRes extends AndroidBuilderTask {
             incrementalDir = task.incrementalDir;
             signingConfigFile =
                     SigningConfigMetadata.Companion.getOutputFile(task.getSigningConfig());
-            keepTimestampsInApk = AndroidGradleOptions.keepTimestampsInApk(task.getProject());
+            keepTimestampsInApk = task.getKeepTimestampsInApk();
         }
 
         @Nullable
@@ -218,13 +224,16 @@ public class PackageSplitRes extends AndroidBuilderTask {
             VariantScope scope = getVariantScope();
 
             BaseVariantData variantData = scope.getVariantData();
-            final VariantConfiguration config = variantData.getVariantConfiguration();
 
             task.processedResources =
                     scope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES);
             task.signingConfig = scope.getSigningConfigFileCollection();
             task.splitResApkOutputDirectory = splitResApkOutputDirectory;
             task.incrementalDir = scope.getIncrementalDir(getName());
+            task.keepTimestampsInApk =
+                    scope.getGlobalScope()
+                            .getProjectOptions()
+                            .get(BooleanOption.KEEP_TIMESTAMPS_IN_APK);
         }
     }
 }

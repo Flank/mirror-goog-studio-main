@@ -65,7 +65,8 @@ public class InstantRunDependenciesApkBuilder extends InstantRunSplitApkBuilder 
             @NonNull BuildableArtifact resources,
             @NonNull BuildableArtifact resourcesWithMainManifest,
             @NonNull BuildableArtifact apkList,
-            @NonNull ApkData mainApk) {
+            @NonNull ApkData mainApk,
+            boolean keepTimestampsInApk) {
         super(
                 logger,
                 project,
@@ -80,7 +81,8 @@ public class InstantRunDependenciesApkBuilder extends InstantRunSplitApkBuilder 
                 resources,
                 resourcesWithMainManifest,
                 apkList,
-                mainApk);
+                mainApk,
+                keepTimestampsInApk);
     }
 
     @NonNull

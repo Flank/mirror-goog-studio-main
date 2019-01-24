@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.internal.aapt.AaptOptions;
 import com.android.builder.sdk.TargetInfo;
@@ -128,7 +129,8 @@ public class InstantRunSlicesSplitApkBuilderTest {
                         mainResources,
                         apkList,
                         splitApkResources,
-                        apkInfo) {
+                        apkInfo,
+                        BooleanOption.KEEP_TIMESTAMPS_IN_APK.getDefaultValue()) {
 
                     @Override
                     void generateSplitApk(
