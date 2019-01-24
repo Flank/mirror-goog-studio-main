@@ -1,5 +1,5 @@
 <component name="libraryTable">
-  <library name="truth_java8_extension">
+  <library name="truth-java8-extension">
     <ANNOTATIONS>
       <root url="file://$PROJECT_DIR$/.idea/codeContracts" />
     </ANNOTATIONS>

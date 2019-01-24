@@ -38,6 +38,6 @@
     <orderEntry type="library" name="gson" level="project" />
     <orderEntry type="library" scope="TEST" name="commons-io" level="project" />
     <orderEntry type="library" name="kotlin-stdlib-jdk8" level="project" />
-    <orderEntry type="library" name="truth_java8_extension" level="project" />
+    <orderEntry type="library" name="truth-java8-extension" level="project" />
   </component>
 </module>
