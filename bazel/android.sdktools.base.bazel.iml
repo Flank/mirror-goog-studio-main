@@ -41,15 +41,6 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../prebuilts/tools/common/m2/repository/org/codehaus/groovy/groovy-all/2.3.6/groovy-all-2.3.6.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
           <root url="jar://$MODULE_DIR$/../../../prebuilts/tools/common/kotlin-plugin-ij/Kotlin/kotlinc/lib/kotlin-compiler.jar!/" />
         </CLASSES>
         <JAVADOC />
@@ -128,14 +119,7 @@
     <orderEntry type="module" module-name="perf-logger" scope="TEST" />
     <orderEntry type="library" name="protobuf" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="jacoco-core" level="project" />
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/5.1-milestone-1/gradle-tooling-api-5.1-milestone-1.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
+    <orderEntry type="library" name="groovy" level="project" />
+    <orderEntry type="library" name="gradle-api" level="project" />
   </component>
 </module>
