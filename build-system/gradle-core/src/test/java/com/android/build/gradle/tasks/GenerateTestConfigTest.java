@@ -17,15 +17,10 @@
 package com.android.build.gradle.tasks;
 
 import static com.android.testutils.truth.PathSubject.assertThat;
-import static org.mockito.Mockito.when;
 
-import com.android.build.api.artifact.BuildableArtifact;
-import com.android.utils.FileUtils;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.truth.Truth;
-import java.io.File;
 import java.io.Reader;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
@@ -34,7 +29,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 /** Test for {@link GenerateTestConfig}. */
 public class GenerateTestConfigTest {
@@ -42,15 +36,14 @@ public class GenerateTestConfigTest {
     @Test
     public void smokeTest() throws Exception {
         FileSystem fileSystem = Jimfs.newFileSystem(Configuration.unix());
-        Path buildDirectory = fileSystem.getPath("/project", "build");
         Path outputDir = fileSystem.getPath("outputDir");
-        GenerateTestConfig.generateTestConfigForOutput(
-                buildDirectory.resolve("mergedAssets"),
-                buildDirectory.resolve("mergedResources"),
-                fileSystem.getPath("/sdk"),
-                "com.example.app",
-                buildDirectory.resolve("mergedManifest.xml"),
-                null,
+        GenerateTestConfig.generateTestConfigFile(
+                new GenerateTestConfig.TestConfigProperties(
+                        null,
+                        "/project/build/resources",
+                        "/project/build/assets",
+                        "/project/build/mergedManifest.xml",
+                        "com.example.app"),
                 outputDir);
 
         Path expectedOutputPath = outputDir.resolve("com/android/tools/test_config.properties");
@@ -59,11 +52,10 @@ public class GenerateTestConfigTest {
             Properties result = new Properties();
             result.load(reader);
             Map<String, String> expected = new HashMap<>();
-            expected.put("android_sdk_home", "/sdk");
-            expected.put("android_merged_resources", "/project/build/mergedResources");
-            expected.put("android_custom_package", "com.example.app");
-            expected.put("android_merged_assets", "/project/build/mergedAssets");
+            expected.put("android_merged_resources", "/project/build/resources");
+            expected.put("android_merged_assets", "/project/build/assets");
             expected.put("android_merged_manifest", "/project/build/mergedManifest.xml");
+            expected.put("android_custom_package", "com.example.app");
             Truth.assertThat(result).containsExactlyEntriesIn(expected);
         }
     }
@@ -71,15 +63,14 @@ public class GenerateTestConfigTest {
     @Test
     public void smokeTest_binaryMode() throws Exception {
         FileSystem fileSystem = Jimfs.newFileSystem(Configuration.unix());
-        Path buildDirectory = fileSystem.getPath("/project", "build");
         Path outputDir = fileSystem.getPath("outputDir");
-        GenerateTestConfig.generateTestConfigForOutput(
-                buildDirectory.resolve("mergedAssets"),
-                buildDirectory.resolve("mergedResources"),
-                fileSystem.getPath("/sdk"),
-                "com.example.app",
-                buildDirectory.resolve("mergedManifest.xml"),
-                createBuildableArtifact(new File(buildDirectory.resolve("/app.ap_").toString())),
+        GenerateTestConfig.generateTestConfigFile(
+                new GenerateTestConfig.TestConfigProperties(
+                        "/project/build/app.ap_",
+                        null,
+                        "/project/build/assets",
+                        "/project/build/mergedManifest.xml",
+                        "com.example.app"),
                 outputDir);
 
         Path expectedOutputPath = outputDir.resolve("com/android/tools/test_config.properties");
@@ -88,19 +79,11 @@ public class GenerateTestConfigTest {
             Properties result = new Properties();
             result.load(reader);
             Map<String, String> expected = new HashMap<>();
-            expected.put("android_sdk_home", "/sdk");
-            expected.put("android_merged_resources", "/project/build/mergedResources");
-            expected.put("android_custom_package", "com.example.app");
-            expected.put("android_merged_assets", "/project/build/mergedAssets");
+            expected.put("android_resource_apk", "/project/build/app.ap_");
+            expected.put("android_merged_assets", "/project/build/assets");
             expected.put("android_merged_manifest", "/project/build/mergedManifest.xml");
-            expected.put("android_resource_apk", File.separator + "app.ap_");
+            expected.put("android_custom_package", "com.example.app");
             Truth.assertThat(result).containsExactlyEntriesIn(expected);
         }
-    }
-
-    private BuildableArtifact createBuildableArtifact(File dir) {
-        BuildableArtifact buildableArtifact = Mockito.mock(BuildableArtifact.class);
-        when(buildableArtifact.getFiles()).thenReturn(ImmutableSet.of(dir));
-        return buildableArtifact;
     }
 }

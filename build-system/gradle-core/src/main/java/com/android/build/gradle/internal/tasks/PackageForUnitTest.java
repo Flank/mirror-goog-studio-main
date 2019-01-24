@@ -40,10 +40,14 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 
+@CacheableTask
 public class PackageForUnitTest extends AndroidVariantTask {
     BuildableArtifact resApk;
     BuildableArtifact mergedAssets;
@@ -78,11 +82,13 @@ public class PackageForUnitTest extends AndroidVariantTask {
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.NONE)
     public BuildableArtifact getResApk() {
         return resApk;
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.NONE)
     public BuildableArtifact getMergedAssets() {
         return mergedAssets;
     }

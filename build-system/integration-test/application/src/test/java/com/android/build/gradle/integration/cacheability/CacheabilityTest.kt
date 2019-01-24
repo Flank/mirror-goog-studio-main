@@ -23,9 +23,12 @@ import com.android.build.gradle.integration.common.truth.TaskStateList.Execution
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.FROM_CACHE
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.SKIPPED
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.UP_TO_DATE
+import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Expect
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -76,7 +79,9 @@ class CacheabilityTest {
                     ":app:signingConfigWriterDebug",
                     ":app:createDebugCompatibleScreenManifests",
                     ":app:javaPreCompileDebugUnitTest",
+                    ":app:generateDebugUnitTestConfig",
                     ":app:compileDebugUnitTestJavaWithJavac",
+                    ":app:packageDebugUnitTestForUnitTest",
                     ":app:testDebugUnitTest"
                 ),
                 /*
@@ -119,6 +124,21 @@ class CacheabilityTest {
             useGradleBuildCache = true
             gradleBuildCacheDir = File("../$GRADLE_BUILD_CACHE_DIR")
             build()
+        }
+    }
+
+    @Before
+    fun setUp() {
+        for (project in listOf(projectCopy1, projectCopy2)) {
+            // Set up the project such that we can check the cacheability of AndroidUnitTest task
+            TestFileUtils.appendToFile(
+                project.getSubproject(":app").buildFile,
+                "android { testOptions { unitTests { includeAndroidResources = true } } }"
+            )
+            TestFileUtils.appendToFile(
+                project.gradlePropertiesFile,
+                "${BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG.propertyName}=true"
+            )
         }
     }
 

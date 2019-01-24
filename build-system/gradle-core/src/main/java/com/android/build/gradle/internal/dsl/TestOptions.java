@@ -189,21 +189,31 @@ public class TestOptions {
          * properties file with the following keys:
          *
          * <ul>
-         *   <li><code>android_sdk_home</code>: the absolute path to the Android SDK.
-         *   <li><code>android_merged_resources</code>: the absolute path to the merged resources
-         *       directory, which contains all the resources from this subproject and all its
-         *       dependencies.
-         *   <li><code>android_merged_assets</code>: the absolute path to the merged assets
-         *       directory. For app subprojects, the merged assets directory contains assets from
-         *       this subproject and its dependencies. For library subprojects, the merged assets
-         *       directory contains only the assets from this subproject.
-         *   <li><code>android_merged_manifest</code>: the absolute path to the merged manifest
-         *       file. Only app subprojects merge manifests of its dependencies. So, library
-         *       subprojects won't include manifest components from their dependencies.
+         *   <li><code>android_resource_apk</code>: the path to the APK-like zip file containing
+         *       merged resources, which includes all the resources from the current subproject and
+         *       all its dependencies. This property is available by default, or if the Gradle
+         *       property <code>android.enableUnitTestBinaryResources</code> is set to <code>true
+         *       </code>.
+         *   <li><code>android_merged_resources</code>: the path to the directory containing merged
+         *       resources, which includes all the resources from the current subproject and all its
+         *       dependencies. This property is available only if the Gradle property <code>
+         *       android.enableUnitTestBinaryResources</code> is set to <code>false</code>.
+         *   <li><code>android_merged_assets</code>: the path to the directory containing merged
+         *       assets. For app subprojects, the merged assets directory contains assets from the
+         *       current subproject and its dependencies. For library subprojects, the merged assets
+         *       directory contains only assets from the current subproject.
+         *   <li><code>android_merged_manifest</code>: the path to the merged manifest file. Only
+         *       app subprojects have the manifest merged from their dependencies. Library
+         *       subprojects do not include manifest components from their dependencies.
          *   <li><code>android_custom_package</code>: the package name of the final R class. If you
          *       modify the application ID in your build scripts, this package name may not match
          *       the <code>package</code> attribute in the final app manifest.
          * </ul>
+         *
+         * <p>Note that starting with version 3.5.0, if you set the Gradle property <code>
+         * android.testConfig.useRelativePath</code> to <code>true</code>, the paths above will be
+         * relative paths; otherwise, they will be absolute paths. Prior to version 3.5.0, the paths
+         * are all absolute paths.
          *
          * @since 3.0.0
          */

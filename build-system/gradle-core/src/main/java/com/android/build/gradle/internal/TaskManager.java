@@ -273,8 +273,10 @@ import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.TaskInputs;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
@@ -1675,6 +1677,48 @@ public abstract class TaskManager {
                     taskFactory.register(new GenerateTestConfig.CreationAction(variantScope));
             TaskFactoryUtils.dependsOn(
                     variantScope.getTaskContainer().getCompileTask(), generateTestConfig);
+            // The GenerateTestConfig task has 2 types of inputs: direct inputs and indirect inputs.
+            // Only the direct inputs are registered with Gradle, whereas the indirect inputs are
+            // not (see that class for details).
+            // Since the compile task also depends on the indirect inputs to the GenerateTestConfig
+            // task, making the compile task depend on the GenerateTestConfig task is not enough, we
+            // also need to register those inputs with Gradle explicitly here.
+            variantScope
+                    .getTaskContainer()
+                    .getCompileTask()
+                    .configure(
+                            task -> {
+                                GenerateTestConfig.TestConfigInputs testConfigInputs =
+                                        new GenerateTestConfig.TestConfigInputs(variantScope);
+                                TaskInputs taskInputs = task.getInputs();
+                                taskInputs.property(
+                                        "isUseRelativePathEnabled",
+                                        testConfigInputs.isUseRelativePathEnabled());
+                                taskInputs
+                                        .files(testConfigInputs.getResourceApk())
+                                        .withPropertyName("resourceApk")
+                                        .optional()
+                                        .withPathSensitivity(PathSensitivity.RELATIVE);
+                                taskInputs
+                                        .files(testConfigInputs.getMergedResources())
+                                        .withPropertyName("mergedResources")
+                                        .optional()
+                                        .withPathSensitivity(PathSensitivity.RELATIVE);
+                                taskInputs
+                                        .files(testConfigInputs.getMergedAssets())
+                                        .withPropertyName("mergedAssets")
+                                        .withPathSensitivity(PathSensitivity.RELATIVE);
+                                taskInputs
+                                        .files(testConfigInputs.getMergedManifest())
+                                        .withPropertyName("mergedManifest")
+                                        .withPathSensitivity(PathSensitivity.RELATIVE);
+                                taskInputs.property(
+                                        "mainApkInfo", testConfigInputs.getMainApkInfo());
+                                taskInputs.property(
+                                        "packageNameOfFinalRClassProvider",
+                                        (Supplier<String>)
+                                                testConfigInputs::getPackageNameOfFinalRClass);
+                            });
         }
 
         // :app:compileDebugUnitTestSources should be enough for running tests from AS, so add

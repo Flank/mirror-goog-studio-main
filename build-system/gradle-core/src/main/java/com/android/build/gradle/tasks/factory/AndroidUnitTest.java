@@ -23,7 +23,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import static com.android.build.gradle.internal.scope.AnchorOutputType.ALL_CLASSES;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.artifact.BuildableArtifact;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -32,21 +32,17 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.tasks.GenerateTestConfig;
 import com.android.builder.core.VariantType;
 import java.io.File;
 import java.util.Objects;
 import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.Directory;
 import org.gradle.api.plugins.JavaBasePlugin;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.reporting.ConfigurableReport;
 import org.gradle.api.tasks.CacheableTask;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.PathSensitive;
-import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.api.tasks.testing.TestTaskReports;
 
@@ -54,11 +50,9 @@ import org.gradle.api.tasks.testing.TestTaskReports;
 @CacheableTask
 public class AndroidUnitTest extends Test implements VariantAwareTask {
 
-    private Integer sdkApiLevel;
-    private Provider<Directory> mergedManifest;
-    private BuildableArtifact resCollection;
-    private BuildableArtifact assetsCollection;
     private String variantName;
+
+    @Nullable private GenerateTestConfig.TestConfigInputs testConfigInputs;
 
     @Internal
     @NonNull
@@ -72,32 +66,12 @@ public class AndroidUnitTest extends Test implements VariantAwareTask {
         variantName = name;
     }
 
-    @InputFiles
+    @Nested
     @Optional
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public BuildableArtifact getResCollection() {
-        return resCollection;
+    public GenerateTestConfig.TestConfigInputs getTestConfigInputs() {
+        return testConfigInputs;
     }
 
-    @InputFiles
-    @Optional
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public BuildableArtifact getAssetsCollection() {
-        return assetsCollection;
-    }
-
-    @Input
-    public Integer getSdkApiLevel() {
-        return sdkApiLevel;
-    }
-
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public Provider<Directory> getMergedManifest() {
-        return mergedManifest;
-    }
-
-    /** Configuration Action for a JavaCompile task. */
     public static class CreationAction extends VariantTaskCreationAction<AndroidUnitTest> {
 
         public CreationAction(@NonNull VariantScope scope) {
@@ -119,11 +93,21 @@ public class AndroidUnitTest extends Test implements VariantAwareTask {
         @Override
         public void configure(@NonNull AndroidUnitTest task) {
             super.configure(task);
-            VariantScope scope = getVariantScope();
 
+            final VariantScope scope = getVariantScope();
             final TestVariantData variantData = (TestVariantData) scope.getVariantData();
             final BaseVariantData testedVariantData =
                     (BaseVariantData) variantData.getTestedVariantData();
+            boolean includeAndroidResources =
+                    scope.getGlobalScope()
+                            .getExtension()
+                            .getTestOptions()
+                            .getUnitTests()
+                            .isIncludeAndroidResources();
+            boolean useRelativePathInTestConfig =
+                    scope.getGlobalScope()
+                            .getProjectOptions()
+                            .get(BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG);
 
             // we run by default in headless mode, so the forked JVM doesn't steal focus.
             task.systemProperty("java.awt.headless", "true");
@@ -135,48 +119,18 @@ public class AndroidUnitTest extends Test implements VariantAwareTask {
                             + " build.");
 
             task.setTestClassesDirs(scope.getArtifacts().getFinalArtifactFiles(ALL_CLASSES).get());
-
-            boolean includeAndroidResources =
-                    scope.getGlobalScope()
-                            .getExtension()
-                            .getTestOptions()
-                            .getUnitTests()
-                            .isIncludeAndroidResources();
-
             task.setClasspath(computeClasspath(includeAndroidResources));
-            task.sdkApiLevel =
-                    scope.getGlobalScope()
-                            .getAndroidBuilder()
-                            .getTarget()
-                            .getVersion()
-                            .getFeatureLevel();
 
-            // if android resources are meant to be accessible, then we need to make sure
-            // changes to them trigger a new run of the tasks
-            VariantScope testedScope = testedVariantData.getScope();
             if (includeAndroidResources) {
-                task.assetsCollection =
-                        testedScope
-                                .getArtifacts()
-                                .getFinalArtifactFiles(InternalArtifactType.MERGED_ASSETS);
-                boolean enableBinaryResources =
-                        scope.getGlobalScope()
-                                .getProjectOptions()
-                                .get(BooleanOption.ENABLE_UNIT_TEST_BINARY_RESOURCES);
-                if (enableBinaryResources) {
-                    task.resCollection =
-                            scope.getArtifacts()
-                                    .getFinalArtifactFiles(InternalArtifactType.APK_FOR_LOCAL_TEST);
-                } else {
-                    task.resCollection =
-                            scope.getArtifacts()
-                                    .getFinalArtifactFiles(InternalArtifactType.MERGED_RES);
-                }
+                // When computing the classpath above, we made sure this task depends on the output
+                // of the GenerateTestConfig task. However, it is not enough. The GenerateTestConfig
+                // task has 2 types of inputs: direct inputs and indirect inputs. Only the direct
+                // inputs are registered with Gradle, whereas the indirect inputs are not (see that
+                // class for details).
+                // Since this task also depends on the indirect inputs to the GenerateTestConfig
+                // task, we also need to register those inputs with Gradle.
+                task.testConfigInputs = new GenerateTestConfig.TestConfigInputs(scope);
             }
-            task.mergedManifest =
-                    testedScope
-                            .getArtifacts()
-                            .getFinalProduct(InternalArtifactType.MERGED_MANIFESTS);
 
             // Put the variant name in the report path, so that different testing tasks don't
             // overwrite each other's reports. For component model plugin, the report tasks are not
@@ -197,43 +151,46 @@ public class AndroidUnitTest extends Test implements VariantAwareTask {
                     .getUnitTests()
                     .applyConfiguration(task);
 
-            // The task is not yet cacheable when includeAndroidResources=true (bug 115923881)
+            // The task is not yet cacheable when includeAndroidResources=true and
+            // android.testConfig.useRelativePath=false (bug 115873047). We set it explicitly here
+            // so Gradle doesn't have to store cache entries that won't be reused.
             task.getOutputs()
                     .doNotCacheIf(
                             "AndroidUnitTest task is not yet cacheable"
-                                    + " when includeAndroidResources=true",
-                            (thisTask) -> includeAndroidResources);
+                                    + " when includeAndroidResources=true"
+                                    + " and android.testConfig.useRelativePath=false",
+                            (thisTask) -> includeAndroidResources && !useRelativePathInTestConfig);
         }
 
         @NonNull
         private ConfigurableFileCollection computeClasspath(boolean includeAndroidResources) {
             VariantScope scope = getVariantScope();
+            BuildArtifactsHolder artifacts = scope.getArtifacts();
 
             ConfigurableFileCollection collection = scope.getGlobalScope().getProject().files();
 
-            BuildArtifactsHolder artifacts = scope.getArtifacts();
             // the test classpath is made up of:
-            // - the config file
+            // 1. the config file
             if (includeAndroidResources) {
                 collection.from(
                         artifacts.getFinalArtifactFiles(
                                 InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY));
             }
-            // - the test component classes and java_res
+
+            // 2. the test component classes and java_res
             collection.from(artifacts.getFinalArtifactFiles(ALL_CLASSES).get());
             // TODO is this the right thing? this doesn't include the res merging via transform AFAIK
             collection.from(artifacts.getFinalArtifactFiles(InternalArtifactType.JAVA_RES));
 
-            // - the runtime dependencies for both CLASSES and JAVA_RES type
-            collection.from(
-                    scope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, CLASSES));
+            // 3. the runtime dependencies for both CLASSES and JAVA_RES type
+            collection.from(scope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, CLASSES));
             collection.from(
                     scope.getArtifactFileCollection(
                             RUNTIME_CLASSPATH,
                             ALL,
                             ArtifactType.JAVA_RES));
 
-            // The separately compile R class, if applicable.
+            // 4. The separately compile R class, if applicable.
             VariantScope testedScope =
                     Objects.requireNonNull(scope.getTestedVariantData()).getScope();
             if (testedScope
@@ -247,7 +204,7 @@ public class AndroidUnitTest extends Test implements VariantAwareTask {
                                                 .COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR));
             }
 
-            // Any additional or requested optional libraries
+            // 5. Any additional or requested optional libraries
             collection.from(
                     scope.getGlobalScope()
                             .getProject()
@@ -256,10 +213,10 @@ public class AndroidUnitTest extends Test implements VariantAwareTask {
                                             .getAndroidBuilder()
                                             .computeAdditionalAndRequestedOptionalLibraries()));
 
-
-            // Mockable JAR is last, to make sure you can shadow the classes with
+            // 6. Mockable JAR is last, to make sure you can shadow the classes with
             // dependencies.
             collection.from(scope.getGlobalScope().getMockableJarArtifact());
+
             return collection;
         }
     }
