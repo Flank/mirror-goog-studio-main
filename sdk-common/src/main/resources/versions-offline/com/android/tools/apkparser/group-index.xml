@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <com.android.tools.apkparser>
-  <apkanalyzer versions="26.4.0-alpha06"/>
-  <binary-resources versions="26.4.0-alpha06"/>
+  <apkanalyzer versions="26.3.0,26.5.0-alpha01"/>
+  <binary-resources versions="26.3.0,26.5.0-alpha01"/>
 </com.android.tools.apkparser>
 

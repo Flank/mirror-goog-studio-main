@@ -5,11 +5,11 @@
   <firebase-ads versions="16.0.1,17.1.2"/>
   <firebase-analytics versions="15.0.2,16.0.6"/>
   <firebase-common versions="15.0.1,16.0.4"/>
-  <firebase-auth versions="15.1.0,16.0.5"/>
+  <firebase-auth versions="15.1.0,16.1.0"/>
   <firebase-appindexing versions="16.0.2,17.1.0"/>
   <firebase-auth-common versions="9.8.0"/>
   <firebase-invites versions="15.0.1,16.0.6"/>
-  <firebase-config versions="15.0.2,16.1.2"/>
+  <firebase-config versions="15.0.2,16.1.3"/>
   <firebase-analytics-impl versions="15.0.2,16.2.4"/>
   <firebase-storage versions="15.0.2,16.0.5"/>
   <firebase-messaging versions="15.0.2,17.3.4"/>
@@ -19,10 +19,10 @@
   <firebase-storage-common versions="15.0.2,16.0.2"/>
   <firebase-core versions="15.0.2,16.0.6"/>
   <firebase-database versions="15.0.1,16.0.5"/>
-  <firebase-perf versions="15.2.0,16.2.2"/>
+  <firebase-perf versions="15.2.0,16.2.3"/>
   <firebase-iid versions="16.2.0,17.0.4"/>
   <firebase-iid-license versions="11.8.0,12.0.1"/>
-  <firebase-firestore versions="16.0.0,17.1.3"/>
+  <firebase-firestore versions="16.0.0,17.1.5"/>
   <firebase-database-license versions="11.8.0,12.0.1"/>
   <firebase-appindexing-license versions="11.8.0,12.0.1"/>
   <firebase-analytics-impl-license versions="11.8.0,12.0.1"/>
@@ -56,5 +56,8 @@
   <firebase-inappmessaging-display versions="17.0.4"/>
   <firebase-messaging-directboot versions="17.0.3"/>
   <firebase-ml-vision-face-model versions="17.0.2"/>
+  <perf-plugin versions="1.1.5"/>
+  <crash-plugin versions="1.1.5"/>
+  <firebase-plugins versions="1.1.5"/>
 </com.google.firebase>
 
