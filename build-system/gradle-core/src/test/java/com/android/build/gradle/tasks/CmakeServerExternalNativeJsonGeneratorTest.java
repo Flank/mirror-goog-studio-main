@@ -17,7 +17,6 @@
 package com.android.build.gradle.tasks;
 
 import static com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfigurationKt.createJsonGenerationAbiConfiguration;
-import static com.google.common.truth.Truth.*;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
 
@@ -417,8 +416,9 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
                         + "     \"type\":\"SHARED_LIBRARY\"\n"
                         + "}";
         Map<Integer, String> table = Maps.newHashMap();
-        String workingDirectory =
-                "/usr/local/google/home/AndroidStudioProjects/BugTest/app/.externalNativeBuild/cmake/debug/x86_64";
+        File workingDirectory =
+                new File(
+                        "/usr/local/google/home/AndroidStudioProjects/BugTest/app/.externalNativeBuild/cmake/debug/x86_64");
         NativeLibraryValue nativeLibraryValue =
                 cmakeServerStrategy.getNativeLibraryValue(
                         "x86", workingDirectory, getTestTarget(targetStr), new StringTable(table));
@@ -428,7 +428,7 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
         assertThat(nativeSourceFileValue.src.getAbsolutePath())
                 .isEqualTo(
                         "/usr/local/google/home/AndroidStudioProjects/BugTest/app/src/main/test/Test1.cpp");
-        assertThat(table.get(0)).isEqualTo(workingDirectory);
+        assertThat(table.get(0)).isEqualTo(workingDirectory.toString());
         assertThat(table.get(1))
                 .isEqualTo(
                         "--target=x86_64-none-linux-android --gcc-toolchain=/usr/local/google/home/Android/Sdk/ndk-bundle/toolchains/x86_64-4.9/prebuilt/linux-x86_64 --sysroot=/usr/local/google/home/Android/Sdk/ndk-bundle/platforms/android-21/arch-x86_64 -DTest_EXPORTS -isystem /usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/include -isystem /usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/libs/x86_64/include -isystem /usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/include/backward -g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -Wa,--noexecstack -Wformat -Werror=format-security -g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -Wa,--noexecstack -Wformat -Werror=format-security -O0 -fno-limit-debug-info -O0 -fno-limit-debug-info -fPIC");
@@ -463,14 +463,15 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
                         + "   \"type\":\"STATIC_LIBRARY\"\n"
                         + "}";
         Map<Integer, String> table = Maps.newHashMap();
-        String workingDirectory =
-                "/usr/local/google/home/jomof/projects/nre-json/Teapots2/choreographer-30fps/.externalNativeBuild/cmake/debug/armeabi-v7a";
+        File workingDirectory =
+                new File(
+                        "/usr/local/google/home/jomof/projects/nre-json/Teapots2/choreographer-30fps/.externalNativeBuild/cmake/debug/armeabi-v7a");
         NativeLibraryValue nativeLibraryValue =
                 cmakeServerStrategy.getNativeLibraryValue(
                         "x86", workingDirectory, getTestTarget(targetStr), new StringTable(table));
 
         assertThat(nativeLibraryValue.files).hasSize(1);
-        assertThat(table.get(0)).isEqualTo(workingDirectory);
+        assertThat(table.get(0)).isEqualTo(workingDirectory.toString());
         assertThat(table.get(1))
                 .isEqualTo(
                         "--target=x86_64-none-linux-android --gcc-toolchain=/usr/local/google/home/Android/Sdk/ndk-bundle/toolchains/x86_64-4.9/prebuilt/linux-x86_64 --sysroot=/usr/local/google/home/Android/Sdk/ndk-bundle/platforms/android-21/arch-x86_64 -DTest_EXPORTS -isystem /usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/include -isystem /usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/libs/x86_64/include -isystem /usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/include/backward -g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -Wa,--noexecstack -Wformat -Werror=format-security -g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -Wa,--noexecstack -Wformat -Werror=format-security -O0 -fno-limit-debug-info -O0 -fno-limit-debug-info -fPIC");

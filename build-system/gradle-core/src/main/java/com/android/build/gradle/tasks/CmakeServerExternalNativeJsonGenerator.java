@@ -486,7 +486,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                     NativeLibraryValue nativeLibraryValue =
                             getNativeLibraryValue(
                                     abiConfig.getAbiName(),
-                                    project.buildDirectory,
+                                    abiConfig.getExternalNativeBuildFolder(),
                                     target,
                                     strings);
                     nativeLibraryValue.toolchain = toolchainHashString;
@@ -503,7 +503,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
     @VisibleForTesting
     protected NativeLibraryValue getNativeLibraryValue(
             @NonNull String abi,
-            @NonNull String workingDirectory,
+            @NonNull File workingDirectory,
             @NonNull Target target,
             StringTable strings)
             throws FileNotFoundException {
@@ -525,7 +525,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
             boolean isDebuggable,
             @NonNull JsonReader compileCommandsJson,
             @NonNull String abi,
-            @NonNull String workingDirectory,
+            @NonNull File workingDirectory,
             @NonNull Target target,
             @NonNull StringTable strings) {
         NativeLibraryValue nativeLibraryValue = new NativeLibraryValue();
@@ -543,7 +543,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         nativeLibraryValue.headers = new ArrayList<>();
         Map<String, Integer> compilationDatabaseFlags = Maps.newHashMap();
 
-        int workingDirectoryOrdinal = strings.intern(workingDirectory);
+        int workingDirectoryOrdinal = strings.intern(normalizeFilePath(workingDirectory));
         for (FileGroup fileGroup : target.fileGroups) {
             for (String source : fileGroup.sources) {
                 File sourceFile = new File(target.sourceDirectory, source);
