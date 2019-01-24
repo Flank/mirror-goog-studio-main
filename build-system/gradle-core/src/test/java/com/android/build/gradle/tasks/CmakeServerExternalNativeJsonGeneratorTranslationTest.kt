@@ -84,6 +84,7 @@ class CmakeServerExternalNativeJsonGeneratorTranslationTest {
             true,
             JsonReader(StringReader(compilationDatabase)),
             "x86",
+            File("C:/Users/jomof/AndroidStudioProjects/MyApplication10/app/.externalNativeBuild/cmake/debug/x86"),
             getTestTarget(target),
             StringTable(table)
         )
