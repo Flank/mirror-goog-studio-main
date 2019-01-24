@@ -47,7 +47,6 @@ import java.io.IOException
  */
 open class ApplicationIdWriterTask : AndroidVariantTask() {
 
-    @get:Internal
     private var applicationIdSupplier: () -> String? = { null }
 
     @get:Input

@@ -98,7 +98,7 @@ open class InstantRunSplitApkResourcesBuilder
         get() = builder.buildToolInfo.revision.toString()
 
     @get:Input
-    private val maxSlices = DexArchiveBuilderTransform.NUMBER_OF_SLICES_FOR_PROJECT_CLASSES - 1
+    val maxSlices = DexArchiveBuilderTransform.NUMBER_OF_SLICES_FOR_PROJECT_CLASSES - 1
 
     @get:OutputDirectory
     lateinit var outputDir: File
