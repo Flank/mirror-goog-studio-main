@@ -18,6 +18,7 @@ package com.android.tools.perflogger;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.SdkConstants;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
@@ -89,7 +90,14 @@ public class PerfDataTest {
 
         public FakeBenchmark(
                 String name, String projectName, String description, Map<String, String> metadata) {
-            this.name = name;
+            String suffix = "";
+            if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+                suffix = "_windows";
+            } else if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN) {
+                suffix = "_mac";
+            }
+
+            this.name = name + suffix;
             this.projectName = projectName;
             this.description = description;
             this.metadata = metadata;

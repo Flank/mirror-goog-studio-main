@@ -143,9 +143,8 @@ public class Metric {
             return;
         }
 
-        try {
-            File outputFile = new File(myOutputDirectory, myMetricName + ".json");
-            JsonWriter writer = new JsonWriter(new FileWriter(outputFile));
+        File outputFile = new File(myOutputDirectory, myMetricName + ".json");
+        try (JsonWriter writer = new JsonWriter(new FileWriter(outputFile))) {
             writer.setIndent("  ");
             writer.beginObject().name("metric").value(myMetricName).name("benchmarks").beginArray();
             {

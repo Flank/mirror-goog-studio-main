@@ -16,6 +16,7 @@
 
 package com.android.tools.gradle;
 
+import com.android.SdkConstants;
 import com.android.testutils.BazelRunfilesManifestProcessor;
 import com.android.testutils.diff.UnifiedDiff;
 import com.android.tools.perflogger.Benchmark;
@@ -195,7 +196,8 @@ public class BenchmarkTest {
         if (benchmarkType != null) {
             mapBuilder.put("benchmarkType", benchmarkType);
         }
-		mapBuilder.put("fromStudio", Boolean.toString(fromStudio));
+        mapBuilder.put("fromStudio", Boolean.toString(fromStudio));
+        mapBuilder.put("benchmarkHost", hostName());
         benchmarkBuilder.setMetadata(mapBuilder.build());
 
         Benchmark benchmark = benchmarkBuilder.build();
@@ -216,7 +218,6 @@ public class BenchmarkTest {
         for (int i = 0; i < mutations.size(); i++) {
             diffs[i] = new UnifiedDiff(mutations.get(i));
         }
-
 
         try (Gradle gradle = new Gradle(src, out, distribution)) {
             gradle.addRepo(repo);
@@ -259,7 +260,7 @@ public class BenchmarkTest {
                         listeners.forEach(BenchmarkListener::iterationDone);
                     }
                 }
- 
+
                 listeners.forEach(BenchmarkListener::benchmarkDone);
 
                 PerfData perfData = new PerfData();
@@ -272,5 +273,17 @@ public class BenchmarkTest {
                 }
             }
         }
+    }
+
+    private static String hostName() {
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_LINUX) {
+            return "Linux";
+        } else if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN) {
+            return "Mac";
+        } else if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+            return "Windows";
+        }
+
+        throw new RuntimeException("Unexpected platform.");
     }
 }

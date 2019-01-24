@@ -17,6 +17,7 @@ package com.android.tools.perflogger;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.SdkConstants;
 import com.android.tools.perflogger.Metric.MetricSample;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -79,7 +80,9 @@ public class MetricTest {
                         + "\",\n"
                         + "  \"benchmarks\": [\n"
                         + "    {\n"
-                        + "      \"benchmark\": \"AS Metric Test\",\n"
+                        + "      \"benchmark\": \"AS Metric Test"
+                        + hostSuffix()
+                        + "\",\n"
                         + "      \"project\": \"Perfgate for Android Studio\",\n"
                         + "      \"data\": {\n"
                         + "        \"1\": 10,\n"
@@ -89,12 +92,16 @@ public class MetricTest {
                         + "    }\n"
                         + "  ]\n"
                         + "}";
-        InputStream outputStream = new FileInputStream(outputFile);
-        String output = CharStreams.toString(new InputStreamReader(outputStream, Charsets.UTF_8));
+        String output;
+        try (InputStream outputStream = new FileInputStream(outputFile)) {
+            output = CharStreams.toString(new InputStreamReader(outputStream, Charsets.UTF_8));
+        }
         assertThat(output).isEqualTo(expected);
 
         // Delete file to prevent it from being uploaded.
-        outputFile.delete();
+        assertThat(outputFile.delete())
+                .named("Boolean indicating success of output file removal")
+                .isTrue();
     }
 
     @Test
@@ -137,7 +144,9 @@ public class MetricTest {
                         + "\",\n"
                         + "  \"benchmarks\": [\n"
                         + "    {\n"
-                        + "      \"benchmark\": \"AS Metric Test\",\n"
+                        + "      \"benchmark\": \"AS Metric Test"
+                        + hostSuffix()
+                        + "\",\n"
                         + "      \"project\": \"Perfgate for Android Studio\",\n"
                         + "      \"data\": {\n"
                         + "        \"1\": 10,\n"
@@ -183,12 +192,16 @@ public class MetricTest {
                         + "    }\n"
                         + "  ]\n"
                         + "}";
-        InputStream outputStream = new FileInputStream(outputFile);
-        String output = CharStreams.toString(new InputStreamReader(outputStream, Charsets.UTF_8));
+        String output;
+        try (InputStream outputStream = new FileInputStream(outputFile)) {
+            output = CharStreams.toString(new InputStreamReader(outputStream, Charsets.UTF_8));
+        }
         assertThat(output).isEqualTo(expected);
 
         // Delete file to prevent it from being uploaded.
-        outputFile.delete();
+        assertThat(outputFile.delete())
+                .named("Boolean indicating success of output file removal")
+                .isTrue();
     }
 
     @Test
@@ -226,7 +239,9 @@ public class MetricTest {
                         + "\",\n"
                         + "  \"benchmarks\": [\n"
                         + "    {\n"
-                        + "      \"benchmark\": \"AS Metric Test1\",\n"
+                        + "      \"benchmark\": \"AS Metric Test1"
+                        + hostSuffix()
+                        + "\",\n"
                         + "      \"project\": \"Perfgate for Android Studio\",\n"
                         + "      \"data\": {\n"
                         + "        \"1\": 10,\n"
@@ -235,7 +250,9 @@ public class MetricTest {
                         + "      }\n"
                         + "    },\n"
                         + "    {\n"
-                        + "      \"benchmark\": \"AS Metric Test2\",\n"
+                        + "      \"benchmark\": \"AS Metric Test2"
+                        + hostSuffix()
+                        + "\",\n"
                         + "      \"project\": \"Perfgate for Android Studio\",\n"
                         + "      \"data\": {\n"
                         + "        \"4\": 40,\n"
@@ -244,7 +261,9 @@ public class MetricTest {
                         + "      }\n"
                         + "    },\n"
                         + "    {\n"
-                        + "      \"benchmark\": \"AS Metric Test2\",\n"
+                        + "      \"benchmark\": \"AS Metric Test2"
+                        + hostSuffix()
+                        + "\",\n"
                         + "      \"project\": \"Custom Project\",\n"
                         + "      \"data\": {\n"
                         + "        \"7\": 70,\n"
@@ -260,5 +279,16 @@ public class MetricTest {
 
         // Delete file to prevent it from being uploaded.
         outputFile.delete();
+    }
+
+    private static String hostSuffix() {
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+            return "_windows";
+        }
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN) {
+            return "_mac";
+        }
+
+        return "";
     }
 }
