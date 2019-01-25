@@ -238,7 +238,7 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             id = "CheckResult",
             briefDescription = "Ignoring results",
             explanation = """
-                Some methods have no side effects, an calling them without doing something \
+                Some methods have no side effects, and calling them without doing something \
                 without the result is suspicious.""",
             category = Category.CORRECTNESS,
             priority = 6,
