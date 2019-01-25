@@ -99,7 +99,7 @@ public class AdbInstaller implements Installer {
     @Override
     public Deploy.SwapResponse swap(Deploy.SwapRequest request) throws IOException {
         String[] cmd = buildCmd(new String[] {"swap"});
-        InputStream inputStream = wrap(request);
+        ByteArrayInputStream inputStream = wrap(request);
         Deploy.InstallerResponse installerResponse = invokeRemoteCommand(cmd, inputStream);
         Deploy.SwapResponse response = installerResponse.getSwapResponse();
         logger.info("Swap response:" + response.getStatus().toString());
@@ -110,15 +110,15 @@ public class AdbInstaller implements Installer {
     public Deploy.DeltaPreinstallResponse deltaPreinstall(Deploy.DeltaPreinstallRequest request)
             throws IOException {
         String[] cmd = buildCmd(new String[] {"deltapreinstall"});
-        InputStream inputStream = wrap(request);
+        ByteArrayInputStream inputStream = wrap(request);
         Deploy.InstallerResponse installerResponse = invokeRemoteCommand(cmd, inputStream);
         Deploy.DeltaPreinstallResponse response = installerResponse.getDeltapreinstallResponse();
         logger.info("DeltaPush response:" + response.getStatus().toString());
         return response;
     }
 
-    private Deploy.InstallerResponse invokeRemoteCommand(String[] cmd, InputStream inputStream)
-            throws IOException {
+    private Deploy.InstallerResponse invokeRemoteCommand(
+            String[] cmd, ByteArrayInputStream inputStream) throws IOException {
         Trace.begin("./installer " + cmd[2]);
         long start = System.nanoTime();
         Deploy.InstallerResponse response = invokeRemoteCommand(cmd, inputStream, OnFail.RETRY);
@@ -156,7 +156,7 @@ public class AdbInstaller implements Installer {
     // Send content of data into the executable standard input and return a proto buffer
     // object specific to the command.
     private Deploy.InstallerResponse invokeRemoteCommand(
-            String[] cmd, InputStream inputStream, OnFail onFail) throws IOException {
+            String[] cmd, ByteArrayInputStream inputStream, OnFail onFail) throws IOException {
         byte[] output = adb.shell(cmd, inputStream);
         Deploy.InstallerResponse response = unwrap(output, Deploy.InstallerResponse.parser());
 
@@ -170,6 +170,7 @@ public class AdbInstaller implements Installer {
                 throw new IOException("Invalid installer response");
             }
             prepare();
+            inputStream.reset();
             return invokeRemoteCommand(cmd, inputStream, OnFail.DO_NO_RETRY);
         }
 
