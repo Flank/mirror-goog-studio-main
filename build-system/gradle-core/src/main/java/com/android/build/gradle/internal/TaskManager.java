@@ -315,7 +315,7 @@ public abstract class TaskManager {
     @NonNull protected final TaskFactory taskFactory;
 
     // Tasks. TODO: remove the mutable state from here.
-    public Task createMockableJar;
+    public TaskProvider<Task> createMockableJar;
 
     public TaskManager(
             @NonNull GlobalScope globalScope,
@@ -561,8 +561,8 @@ public abstract class TaskManager {
                                         .getPath(IAndroidTarget.ANDROID_JAR)));
 
         // Adding this task to help the IDE find the mockable JAR.
-        createMockableJar = project.getTasks().create("createMockableJar");
-        createMockableJar.dependsOn(globalScope.getMockableJarArtifact());
+        createMockableJar = project.getTasks().register("createMockableJar");
+        createMockableJar.configure(task -> task.dependsOn(globalScope.getMockableJarArtifact()));
     }
 
     @NonNull

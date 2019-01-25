@@ -128,9 +128,6 @@ public class LibraryPlugin extends BasePlugin<LibraryExtensionImpl> {
 
     @Override
     protected void pluginSpecificApply(@NonNull Project project) {
-        // Default assemble task for the default-published artifact.
-        // This is needed for the prepare task on the consuming project.
-        project.getTasks().create("assembleDefault");
     }
 
     @Override
