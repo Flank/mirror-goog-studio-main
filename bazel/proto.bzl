@@ -28,7 +28,7 @@ def _gen_proto_impl(ctx):
         args += [
             "--cpp_out=" + out_path,
         ]
-        if ctx.executable.grpc_plugin.path != None:
+        if ctx.executable.grpc_plugin != None and ctx.executable.grpc_plugin.path != None:
             args += [
                 "--grpc_out=" + out_path,
                 "--plugin=protoc-gen-grpc=" + ctx.executable.grpc_plugin.path,
@@ -165,7 +165,9 @@ def cc_grpc_proto_library(name, srcs = [], deps = [], includes = [], visibility 
     for src in srcs:
         # .proto suffix should not be present in the output files
         p_name = src[:-len(".proto")]
-        outs += [p_name + ".pb.h", p_name + ".pb.cc", p_name + ".grpc.pb.h", p_name + ".grpc.pb.cc"]
+        outs += [p_name + ".pb.h", p_name + ".pb.cc"]
+        if grpc_support:
+            outs += [p_name + ".grpc.pb.h", p_name + ".grpc.pb.cc"]
 
     _gen_proto_rule(
         name = name + "_srcs",

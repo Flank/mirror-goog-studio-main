@@ -39,7 +39,7 @@ iml_module(
 java_library(
     name = "java_version",
     srcs = select({
-        "//tools/base/bazel:host_windows": ["src/windows/java/Version.java"],
+        "//tools/base/bazel:remote_windows": ["src/windows/java/Version.java"],
         "//conditions:default": [":Version.java"],
     }),
     visibility = ["//visibility:public"],
@@ -47,15 +47,19 @@ java_library(
 
 genrule(
     name = "version",
+    srcs = [
+        "//tools/base/deploy/agent/native:android/arm64-v8a/libswap.so",
+        "//tools/base/deploy/installer:android-no-matryoshka/arm64-v8a/installer",
+    ],
     outs = [
         "Version.java",
     ],
-    cmd = "$(location //tools/base/bazel:bin2c) -lang=java -embed=false -variable=com.android.tools.deployer.Version -output=$(location Version.java) " + "$(locations //tools/base/deploy/installer:unversioned_installer) " + "$(location //tools/base/deploy/agent/native:libswap.so) ",
+    cmd = "$(location //tools/base/bazel:bin2c) -lang=java -embed=false -variable=com.android.tools.deployer.Version -output=$(location Version.java) " +
+          "$(location //tools/base/deploy/agent/native:android/arm64-v8a/libswap.so) " +
+          "$(location //tools/base/deploy/installer:android-no-matryoshka/arm64-v8a/installer) ",
     tags = ["no_windows"],
     tools = [
         "//tools/base/bazel:bin2c",
-        "//tools/base/deploy/agent/native:libswap.so",
-        "//tools/base/deploy/installer:unversioned_installer",
     ],
     visibility = ["//visibility:private"],
 )

@@ -38,7 +38,8 @@ class Bin2C {
 
     enum Language {
         JAVA,
-        CXX
+        CXX,
+        RAW
     }
 
     private Language language = Language.CXX;
@@ -121,10 +122,9 @@ class Bin2C {
     private void printUsage() {
         System.err.println("Usage bin2c [parameters] input_files");
         System.err.println("List of parameters:");
-        System.err.println("    -lang=X        : language [java, cxx]. Default is 'cxx'.");
+        System.err.println("    -lang=X        : language [java, cxx, raw]. Default is 'cxx'.");
         System.err.println("    -output=X      : The generated cc file");
         System.err.println("    -header=X      : An optional header file, only used in CC");
-        System.err.println("    -hash_only=true: Only hash the input, do not embed content");
         System.err.println("    -variable=X    : Details how to generate source code");
         System.err.println("                     Formats: | my::name::space::variable_name");
         System.err.println("                              | my.package.name.VariableName");
@@ -138,7 +138,10 @@ class Bin2C {
         }
 
         File outputFile = new File(output);
-        outputFile.getParentFile().mkdirs();
+        File parentFile = outputFile.getParentFile();
+        if (parentFile != null) {
+            outputFile.getParentFile().mkdirs();
+        }
 
         File headerFile = null;
         if (header != null) {
@@ -156,10 +159,16 @@ class Bin2C {
         }
         bos.close();
 
-        if (language == Language.CXX) {
-            generateCXX(outputFile, headerFile, bos.toByteArray());
-        } else {
-            generateJava(outputFile, bos.toByteArray());
+        switch (language) {
+            case CXX:
+                generateCXX(outputFile, headerFile, bos.toByteArray());
+                break;
+            case JAVA:
+                generateJava(outputFile, bos.toByteArray());
+                break;
+            case RAW:
+                generateRaw(outputFile, bos.toByteArray());
+                break;
         }
     }
 
@@ -205,6 +214,12 @@ class Bin2C {
             writer.println(
                     String.format("    public static String hash() { return \"%s\"; }", hash));
             writer.println("}");
+        }
+    }
+
+    void generateRaw(File outputfile, byte[] buffer) throws IOException {
+        try (PrintWriter writer = new PrintWriter(outputfile)) {
+            writer.print(toHexHash(buffer));
         }
     }
 

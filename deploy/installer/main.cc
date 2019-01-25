@@ -22,11 +22,13 @@
 
 #include <getopt.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
 #endif
 
+#include "tools/base/bazel/native/matryoshka/doll.h"
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/command_cmd.h"
@@ -37,8 +39,6 @@
 #include "tools/base/deploy/proto/deploy.pb.h"
 
 using namespace deploy;
-
-extern const char* kVersion_hash;
 
 const std::string kRunAsExecutable = "/system/bin/run-as";
 
@@ -123,6 +123,21 @@ int Fail(proto::InstallerResponse_Status status, Workspace& workspace,
   return EXIT_FAILURE;
 }
 
+std::string GetVersion() {
+  std::vector<std::unique_ptr<matryoshka::Doll>> dolls;
+  if (!matryoshka::Open(dolls)) {
+    return "UNMATRYOSHKAED";
+  }
+
+  for (auto& doll : dolls) {
+    if (doll->name == "version") {
+      return std::string((char*)doll->content, doll->content_len);
+    }
+  }
+
+  return "UNVERSIONED";
+}
+
 int main(int argc, char** argv) {
   InitEventSystem();
   BeginPhase("installer");
@@ -150,9 +165,9 @@ int main(int argc, char** argv) {
 
   // Verify that this program is the version the called expected.
   if (parameters.version != nullptr &&
-      strcmp(parameters.version, kVersion_hash)) {
+      strcmp(parameters.version, GetVersion().c_str())) {
     std::string message = "Version mismatch. Requested:"_s +
-                          parameters.version + "but have " + kVersion_hash;
+                          parameters.version + "but have " + GetVersion();
     return Fail(proto::InstallerResponse::ERROR_WRONG_VERSION, workspace,
                 message);
   }

@@ -57,58 +57,11 @@ cc_library(
     ],
 )
 
-# Provide a default version for installer_lib to link properly.
-cc_library(
-    name = "version_placeholder_lib",
-    srcs = [
-        "placeholder_version.cc",
-    ],
-)
-
-# Provide a version for installer_lib based on the unversioned installer.
-genrule(
-    name = "version_generator",
-    outs = [
-        "version.cc",
-    ],
-    cmd = "$(location //tools/base/bazel:bin2c) -lang=cxx -embed=false -variable=kVersion " +
-          " -output=$(location version.cc)" +
-          " $(locations //tools/base/deploy/installer:unversioned_installer)" +
-          " $(location //tools/base/deploy/agent/native:libswap.so)",
-    tags = ["no_windows"],
-    tools = [
-        ":unversioned_installer",  # Used as hash function input. This is built for HOST arch.
-        "//tools/base/bazel:bin2c",
-        "//tools/base/deploy/agent/native:libswap.so",
-    ],
-    visibility = ["//visibility:private"],
-)
-
-# Installer linked with a placeholder. The sole purpose of this target is to be used as a tool in
-# a genrule so it is hashed into a SHA-256 value in order to feed the versioned_installer.
 cc_binary(
-    name = "unversioned_installer",
+    name = "installer",
     srcs = [
         "main.cc",
     ],
-    copts = ANDROID_COPTS,
-    linkopts = ANDROID_LINKOPTS,
-    tags = ["no_windows"],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":installer_lib",
-        ":version_placeholder_lib",
-    ],
-)
-
-cc_binary(
-    name = "versioned_installer",
-    srcs = [
-        "main.cc",
-    ] + select({
-        "//tools/base/bazel:host_windows": [":version_placeholder_lib"],
-        "//conditions:default": [":version.cc"],
-    }),
     copts = ANDROID_COPTS,
     linkopts = ANDROID_LINKOPTS,
     tags = ["no_windows"],
@@ -126,9 +79,10 @@ android_cc_binary(
         "armeabi-v7a",
         "arm64-v8a",
     ],
-    binary = ":versioned_installer",
+    binary = ":installer",
     filename = "installer",
     tags = ["no_windows"],
+    visibility = ["//tools/base/deploy:__subpackages__"],
 )
 
 genrule(
@@ -150,30 +104,41 @@ genrule(
         "android/arm64-v8a/installer",
     ],
     cmd = """
+        $(location //tools/base/bazel:bin2c) -lang=raw -output=version.raw \
+            $(location //tools/base/deploy/agent/native:android/arm64-v8a/libswap.so) \
+            $(location //tools/base/deploy/installer:android-no-matryoshka/arm64-v8a/installer);
+
        $(location //tools/base/bazel:matryoshka) \
            -i $(location //tools/base/deploy/installer:android-no-matryoshka/x86/installer) \
            -o $(location android/x86/installer) \
-           -p agent.so=$(location //tools/base/deploy/agent/native:android/x86/libswap.so);
+           -p agent.so=$(location //tools/base/deploy/agent/native:android/x86/libswap.so) \
+           -p version=version.raw;
 
        $(location //tools/base/bazel:matryoshka) \
            -i $(location //tools/base/deploy/installer:android-no-matryoshka/x86_64/installer) \
            -o $(location android/x86_64/installer) \
            -p agent.so=$(location //tools/base/deploy/agent/native:android/x86_64/libswap.so) \
-           -p agent-alt.so=$(location //tools/base/deploy/agent/native:android/x86/libswap.so);
+           -p agent-alt.so=$(location //tools/base/deploy/agent/native:android/x86/libswap.so) \
+           -p version=version.raw;
 
        $(location //tools/base/bazel:matryoshka) \
            -i $(location //tools/base/deploy/installer:android-no-matryoshka/armeabi-v7a/installer) \
            -o $(location android/armeabi-v7a/installer) \
-           -p agent.so=$(location //tools/base/deploy/agent/native:android/armeabi-v7a/libswap.so);
+           -p agent.so=$(location //tools/base/deploy/agent/native:android/armeabi-v7a/libswap.so) \
+           -p version=version.raw;
 
        $(location //tools/base/bazel:matryoshka) \
            -i $(location //tools/base/deploy/installer:android-no-matryoshka/arm64-v8a/installer) \
            -o $(location android/arm64-v8a/installer) \
            -p agent.so=$(location //tools/base/deploy/agent/native:android/arm64-v8a/libswap.so) \
-           -p agent-alt.so=$(location //tools/base/deploy/agent/native:android/armeabi-v7a/libswap.so);
+           -p agent-alt.so=$(location //tools/base/deploy/agent/native:android/armeabi-v7a/libswap.so) \
+           -p version=version.raw;
     """,
     tags = ["no_rbe_windows"],
-    tools = ["//tools/base/bazel:matryoshka"],
+    tools = [
+        "//tools/base/bazel:bin2c",
+        "//tools/base/bazel:matryoshka",
+    ],
     visibility = ["//visibility:public"],
 )
 
@@ -243,7 +208,6 @@ cc_test(
     visibility = ["//visibility:public"],
     deps = [
         ":installer_lib",
-        ":version_placeholder_lib",
         "//external:gmock_main",
         "//tools/base/profiler/native/test:testutils",
     ],

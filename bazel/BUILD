@@ -360,6 +360,12 @@ config_setting(
 )
 
 config_setting(
+    name = "remote_windows",
+    values = {"define": "REMOTE_WINDOWS=true"},
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
     name = "darwin",
     values = {"cpu": "darwin"},
     visibility = ["//visibility:public"],

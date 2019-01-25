@@ -10,3 +10,4 @@ build:remote --extra_toolchains=@bazel_toolchains//configs/experimental/windows/
 build:remote --extra_execution_platforms=@bazel_toolchains//configs/experimental/windows/0.1.0:rbe_default
 build:remote --host_platform=@bazel_toolchains//configs/experimental/windows/0.1.0:rbe_default
 build:remote --platforms=@bazel_toolchains//configs/experimental/windows/0.1.0:rbe_default
+build:remote --define=REMOTE_WINDOWS=true
