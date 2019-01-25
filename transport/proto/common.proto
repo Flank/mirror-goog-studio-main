@@ -29,7 +29,8 @@ message Event {
     STREAM = 1;
     // group_id: process id
     PROCESS = 2;
-    // No specified group_id, the latest event in a session is used.
+    // No specified group_id. All agent events belonging to the same stream and
+    // process are inherently in one group.
     AGENT = 3;
 
     // Profilers Prefix = 100

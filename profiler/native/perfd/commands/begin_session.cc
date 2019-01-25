@@ -45,7 +45,6 @@ Status BeginSession::ExecuteOn(Daemon* daemon) {
     if (!attachable) {
       Event event;
       event.set_pid(data_.pid());
-      event.set_group_id(session->info().session_id());
       event.set_kind(Event::AGENT);
       auto* status = event.mutable_agent_data();
       status->set_status(proto::AgentData::UNATTACHABLE);
