@@ -32,7 +32,7 @@ public class UberSkeletonSmokeTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
-                    .withHeap("10G")
+                    .withHeap("15G")
                     .fromExternalProject("android-studio-gradle-test")
                     .create();
 

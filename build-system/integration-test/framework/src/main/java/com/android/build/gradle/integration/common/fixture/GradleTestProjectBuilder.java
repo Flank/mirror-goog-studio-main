@@ -163,7 +163,7 @@ public final class GradleTestProjectBuilder {
     public static class MemoryRequirement {
 
         private static final String DEFAULT_HEAP = "1G";
-        private static final String DEFAULT_METASPACE = "512M";
+        private static final String DEFAULT_METASPACE = "1G";
 
         /** use default heap size for gradle. */
         public static MemoryRequirement useDefault() {
