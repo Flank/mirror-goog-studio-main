@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.nativebuild;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.testutils.truth.PathSubject.assertThat;
@@ -48,6 +49,7 @@ public class CmakeTargetsTest {
                     .addFile(HelloWorldJniApp.libraryCpp("src/main/cpp/library1", "library1.cpp"))
                     .addFile(HelloWorldJniApp.libraryCpp("src/main/cpp/library2", "library2.cpp"))
                     .setCmakeVersion("3.10.4819442")
+                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .setWithCmakeDirInLocalProp(true)
                     .create();
 
@@ -120,10 +122,11 @@ public class CmakeTargetsTest {
         assertModel(project, project.model().fetch(NativeAndroidProject.class));
     }
 
-    private static void assertModel(GradleTestProject project, NativeAndroidProject model)
-            throws IOException {
+    private static void assertModel(GradleTestProject project, NativeAndroidProject model) {
         assertThat(model.getBuildSystems()).containsExactly(NativeBuildSystem.CMAKE.getName());
-        assertThat(model.getBuildFiles()).hasSize(2);
+        assertThat(model)
+                .hasExactBuildFilesShortNames(
+                        "CMakeLists.txt", "platforms.cmake", "android.toolchain.cmake");
         assertThat(model.getName()).isEqualTo("project");
         assertThat(model.getArtifacts())
                 .hasSize(NdkHelper.getNdkInfo(project).getDefaultAbis().size() * 4);

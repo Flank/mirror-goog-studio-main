@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.nativebuild;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.truth.NativeAndroidProjectSubject.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.testutils.truth.FileSubject.assertThat;
@@ -49,6 +50,7 @@ public class NdkBuildBasicProjectTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldJniApp.builder().build())
+                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .addFile(HelloWorldJniApp.androidMkC("src/main/jni"))
                     .create();
 
@@ -69,7 +71,7 @@ public class NdkBuildBasicProjectTest {
                         + "        defaultConfig {\n"
                         + "          externalNativeBuild {\n"
                         + "              ndkBuild {\n"
-                        + "                abiFilters.addAll(\"armeabi-v7a\", \"armeabi\", \"x86\")\n"
+                        + "                abiFilters.addAll(\"armeabi-v7a\", \"x86\")\n"
                         + "              }\n"
                         + "          }\n"
                         + "        }\n"
@@ -104,14 +106,10 @@ public class NdkBuildBasicProjectTest {
         Apk apk = project.getApk("debug");
         assertThatApk(apk).hasVersionCode(1);
         assertThatApk(apk).contains("lib/armeabi-v7a/libhello-jni.so");
-        assertThatApk(apk).contains("lib/armeabi/libhello-jni.so");
         assertThatApk(apk).contains("lib/x86/libhello-jni.so");
 
         File lib = ZipHelper.extractFile(apk, "lib/armeabi-v7a/libhello-jni.so");
         TruthHelper.assertThatNativeLib(lib).isNotStripped();
-
-        lib = ZipHelper.extractFile(apk, "lib/armeabi/libhello-jni.so");
-        TruthHelper.assertThatNativeLib(lib).isStripped();
 
         lib = ZipHelper.extractFile(apk, "lib/x86/libhello-jni.so");
         TruthHelper.assertThatNativeLib(lib).isStripped();
@@ -146,7 +144,7 @@ public class NdkBuildBasicProjectTest {
         assertThat(model.getBuildSystems()).containsExactly(NativeBuildSystem.NDK_BUILD.getName());
         assertThat(model.getBuildFiles()).hasSize(1);
         assertThat(model.getName()).isEqualTo("project");
-        int abiCount = 3;
+        int abiCount = 2;
         assertThat(model.getArtifacts()).hasSize(abiCount * 2);
         assertThat(model.getFileExtensions()).hasSize(1);
 
@@ -172,7 +170,7 @@ public class NdkBuildBasicProjectTest {
         AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         project.execute("clean", "assembleDebug", "assembleRelease");
         NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
-        assertThat(model).hasBuildOutputCountEqualTo(6);
+        assertThat(model).hasBuildOutputCountEqualTo(4);
         assertThat(model).allBuildOutputsExist();
         assertThat(model).hasExactObjectFilesInBuildFolder("hello-jni.o");
         assertThat(model).hasExactSharedObjectFilesInBuildFolder("libhello-jni.so");
@@ -187,7 +185,7 @@ public class NdkBuildBasicProjectTest {
         AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         project.execute("clean", "assembleDebug", "assembleRelease");
         NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
-        assertThat(model).hasBuildOutputCountEqualTo(6);
+        assertThat(model).hasBuildOutputCountEqualTo(4);
 
         List<File> allBuildOutputs = Lists.newArrayList();
         for (NativeArtifact artifact : model.getArtifacts()) {

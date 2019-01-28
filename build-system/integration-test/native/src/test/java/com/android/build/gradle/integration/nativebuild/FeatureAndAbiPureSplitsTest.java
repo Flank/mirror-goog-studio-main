@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.nativebuild;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -45,7 +46,10 @@ import org.junit.Test;
 public class FeatureAndAbiPureSplitsTest {
     @ClassRule
     public static GradleTestProject sProject =
-            GradleTestProject.builder().fromTestProject("projectWithFeaturesAndSplitABIs").create();
+            GradleTestProject.builder()
+                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
+                    .fromTestProject("projectWithFeaturesAndSplitABIs")
+                    .create();
 
     @AfterClass
     public static void cleanUp() {

@@ -16,10 +16,13 @@
 
 package com.android.build.gradle.integration.ndk;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
+
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -29,13 +32,25 @@ import org.junit.Test;
  */
 public class NdkJniLibTest {
     @ClassRule
-    public static GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("ndkJniLib")
-            .create();
+    public static GradleTestProject project =
+            GradleTestProject.builder()
+                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
+                    .fromTestProject("ndkJniLib")
+                    .create();
 
     @BeforeClass
     public static void setUp() throws Exception {
         AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
+        GradleTestProject lib = project.getSubproject("lib");
+        TestFileUtils.appendToFile(
+                lib.getBuildFile(),
+                "\n"
+                        + "apply plugin: 'com.android.library'\n"
+                        + "android {\n"
+                        + "    defaultConfig {\n"
+                        + "        minSdkVersion 21\n"
+                        + "    }\n"
+                        + "}\n");
         project.execute("clean", "assembleDebug");
     }
 

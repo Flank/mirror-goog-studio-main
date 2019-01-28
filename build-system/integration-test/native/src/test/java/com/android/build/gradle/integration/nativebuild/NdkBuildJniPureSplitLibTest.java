@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.nativebuild;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -35,6 +36,7 @@ public class NdkBuildJniPureSplitLibTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("ndkJniPureSplitLib")
+                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .addFile(HelloWorldJniApp.androidMkC("lib/src/main/jni"))
                     .create();
 

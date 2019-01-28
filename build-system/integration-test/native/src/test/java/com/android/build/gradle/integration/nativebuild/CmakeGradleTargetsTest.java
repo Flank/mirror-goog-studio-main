@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.nativebuild;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.testutils.truth.FileSubject.assertThat;
 
@@ -51,6 +52,7 @@ public class CmakeGradleTargetsTest {
                     .addFile(HelloWorldJniApp.cmakeListsWithExecutables("."))
                     .addFile(HelloWorldJniApp.executableCpp("src/main/cxx/executable", "main.cpp"))
                     .setCmakeVersion("3.10.4819442")
+                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .setWithCmakeDirInLocalProp(true)
                     .create();
 
@@ -82,7 +84,7 @@ public class CmakeGradleTargetsTest {
                                 + "        defaultConfig {\n"
                                 + "          externalNativeBuild {\n"
                                 + "              cmake {\n"
-                                + "                abiFilters.addAll(\"armeabi-v7a\", \"armeabi\", \"x86\");\n"
+                                + "                abiFilters.addAll(\"armeabi-v7a\", \"x86\");\n"
                                 + "                cFlags.addAll(\"-DTEST_C_FLAG\", \"-DTEST_C_FLAG_2\")\n"
                                 + "                cppFlags.addAll(\"-DTEST_CPP_FLAG\")\n");
 

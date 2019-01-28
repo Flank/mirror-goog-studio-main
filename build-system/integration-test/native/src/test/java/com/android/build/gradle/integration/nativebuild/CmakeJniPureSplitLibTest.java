@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.nativebuild;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -38,6 +39,7 @@ public class CmakeJniPureSplitLibTest {
                     .fromTestProject("ndkJniPureSplitLib")
                     .addFile(HelloWorldJniApp.cmakeLists("lib"))
                     .setCmakeVersion("3.10.4819442")
+                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .setWithCmakeDirInLocalProp(true)
                     .create();
 

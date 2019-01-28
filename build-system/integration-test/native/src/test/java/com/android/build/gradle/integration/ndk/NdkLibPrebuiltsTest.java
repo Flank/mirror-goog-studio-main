@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.integration.ndk;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
+
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -27,10 +29,12 @@ import org.junit.Test;
  */
 public class NdkLibPrebuiltsTest {
     @ClassRule
-    public static GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("ndkLibPrebuilts")
-            .addGradleProperties("android.useDeprecatedNdk=true")
-            .create();
+    public static GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestProject("ndkLibPrebuilts")
+                    .addGradleProperties("android.useDeprecatedNdk=true")
+                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
+                    .create();
 
     @BeforeClass
     public static void setUp() throws Exception {

@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.nativebuild
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.truth.NativeAndroidProjectSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
@@ -44,6 +45,7 @@ class VanillaCmakeSysrootAndTargetFlagsTest {
                 .build()
         )
         .setCmakeVersion("3.10.4819442")
+        .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .setWithCmakeDirInLocalProp(true)
         .create()
 
@@ -78,7 +80,7 @@ target_link_libraries(native-lib ${'$'}{log-lib})
         nativeProject.settings.onEach { settings ->
             assert(settings != null)
             val hasTarget = settings.compilerFlags.any { flag -> flag.startsWith("--target=") }
-            val hasSysroot = settings.compilerFlags.any { flag -> flag.startsWith("--sysroot=") }
+            val hasSysroot = settings.compilerFlags.any { flag -> flag.startsWith("--sysroot") }
             // --sysroot can be removed from this check once Android Studio only requires --target
             assertThat(hasTarget).named("--target in flags: " +
                     "${settings.compilerFlags}").isTrue()

@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.nativebuild
 
 import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.AssumeUtil
 import org.junit.Assume
@@ -28,6 +29,7 @@ class VulkanTest {
     @get:Rule
     val project = GradleTestProject.builder()
         .setCmakeVersion("3.10.4819442")
+        .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .setWithCmakeDirInLocalProp(true)
         .fromTestProject("vulkan").create()
 

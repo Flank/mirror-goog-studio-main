@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.ndk;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -39,9 +40,12 @@ import org.junit.Test;
  * Assemble tests for ndkSanAngeles.
  */
 public class NdkSanAngelesTest {
-    @ClassRule public static GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("ndkSanAngeles")
-            .create();
+    @ClassRule
+    public static GradleTestProject project =
+            GradleTestProject.builder()
+                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
+                    .fromTestProject("ndkSanAngeles")
+                    .create();
 
     public static ProjectBuildOutput outputModel;
 

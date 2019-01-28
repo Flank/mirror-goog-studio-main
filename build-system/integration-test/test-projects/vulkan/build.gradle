@@ -11,9 +11,9 @@ android {
 
     defaultConfig {
         applicationId  "com.google.vulkan.tutorials.five"
-        minSdkVersion    rootProject.latestCompileSdk
+        minSdkVersion    rootProject.ndk19SupportLibMinSdk
         //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
-        targetSdkVersion rootProject.latestCompileSdk
+        targetSdkVersion rootProject.ndk19SupportLibMinSdk
         versionCode 1
         versionName "0.0.1"
 
@@ -28,7 +28,7 @@ android {
             cmake {
                 // armeabi is not supported, not building for mips in samples
                 abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
-                arguments '-DANDROID_TOOLCHAIN=clang', '-DANDROID_STL=gnustl_static'
+                arguments '-DANDROID_TOOLCHAIN=clang', '-DANDROID_STL=c++_static'
             }
         }
     }

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.nativebuild;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.testutils.truth.PathSubject.assertThat;
@@ -50,6 +51,7 @@ public class CmakeVanillaBasicProjectTest {
                     // Set the cmake version and set the local properties with the path to the cmake
                     // binary.
                     .setCmakeVersion("3.10.2")
+                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .setWithCmakeDirInLocalProp(false)
                     .create();
 
@@ -73,7 +75,7 @@ public class CmakeVanillaBasicProjectTest {
                         + "        defaultConfig {\n"
                         + "          externalNativeBuild {\n"
                         + "              cmake {\n"
-                        + "                abiFilters.addAll(\"armeabi-v7a\", \"armeabi\", \"x86\");\n"
+                        + "                abiFilters.addAll(\"armeabi-v7a\", \"x86\");\n"
                         + "                cFlags.addAll(\"-DTEST_C_FLAG\", \"-DTEST_C_FLAG_2\")\n"
                         + "                cppFlags.addAll(\"-DTEST_CPP_FLAG\")\n"
                         + "                targets.addAll(\"hello-jni\")\n"
@@ -110,13 +112,9 @@ public class CmakeVanillaBasicProjectTest {
         Apk apk = project.getApk("debug");
         assertThatApk(apk).hasVersionCode(1);
         assertThatApk(apk).contains("lib/armeabi-v7a/libhello-jni.so");
-        assertThatApk(apk).contains("lib/armeabi/libhello-jni.so");
         assertThatApk(apk).contains("lib/x86/libhello-jni.so");
 
         File lib = ZipHelper.extractFile(apk, "lib/armeabi-v7a/libhello-jni.so");
-        TruthHelper.assertThatNativeLib(lib).isStripped();
-
-        lib = ZipHelper.extractFile(apk, "lib/armeabi/libhello-jni.so");
         TruthHelper.assertThatNativeLib(lib).isStripped();
 
         lib = ZipHelper.extractFile(apk, "lib/x86/libhello-jni.so");
@@ -130,7 +128,6 @@ public class CmakeVanillaBasicProjectTest {
                 .run("clean", "assembleDebug");
         Apk apk = project.getApk("debug");
         assertThatApk(apk).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
-        assertThatApk(apk).doesNotContain("lib/armeabi/libhello-jni.so");
         assertThatApk(apk).contains("lib/x86/libhello-jni.so");
 
         File lib = ZipHelper.extractFile(apk, "lib/x86/libhello-jni.so");
@@ -144,7 +141,7 @@ public class CmakeVanillaBasicProjectTest {
         assertThat(model.getBuildSystems()).containsExactly(NativeBuildSystem.CMAKE.getName());
         assertThat(model.getBuildFiles()).isNotEmpty();
         assertThat(model.getName()).isEqualTo("project");
-        int abiCount = 3;
+        int abiCount = 2;
         assertThat(model.getArtifacts()).hasSize(abiCount * 2);
         assertThat(model.getFileExtensions()).hasSize(1);
 
@@ -169,7 +166,7 @@ public class CmakeVanillaBasicProjectTest {
     public void checkClean() throws IOException, InterruptedException {
         project.execute("clean", "assembleDebug", "assembleRelease");
         NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
-        assertThat(model).hasBuildOutputCountEqualTo(6);
+        assertThat(model).hasBuildOutputCountEqualTo(4);
         assertThat(model).allBuildOutputsExist();
         // CMake .o files are kept in -B folder which is under .externalNativeBuild/
         assertThat(model).hasExactObjectFilesInCxxFolder("hello-jni.c.o");
@@ -185,7 +182,7 @@ public class CmakeVanillaBasicProjectTest {
     public void checkCleanAfterAbiSubset() throws IOException, InterruptedException {
         project.execute("clean", "assembleDebug", "assembleRelease");
         NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
-        assertThat(model).hasBuildOutputCountEqualTo(6);
+        assertThat(model).hasBuildOutputCountEqualTo(4);
 
         List<File> allBuildOutputs = Lists.newArrayList();
         for (NativeArtifact artifact : model.getArtifacts()) {

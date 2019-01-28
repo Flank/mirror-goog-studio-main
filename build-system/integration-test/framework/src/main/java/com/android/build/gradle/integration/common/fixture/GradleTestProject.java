@@ -682,6 +682,7 @@ public final class GradleTestProject implements TestRule {
                         + "testSupportLibVersion = '%s'%n"
                         + "playServicesVersion = '%s'%n"
                         + "supportLibMinSdk = %d%n"
+                        + "ndk19SupportLibMinSdk = %d%n"
                         + "constraintLayoutVersion = '%s'%n",
                 Version.ANDROID_GRADLE_PLUGIN_VERSION,
                 Version.ANDROID_TOOLS_BASE_VERSION,
@@ -689,6 +690,7 @@ public final class GradleTestProject implements TestRule {
                 TestVersions.TEST_SUPPORT_LIB_VERSION,
                 TestVersions.PLAY_SERVICES_VERSION,
                 TestVersions.SUPPORT_LIB_MIN_SDK,
+                TestVersions.NDK_19_SUPPORT_LIB_MIN_SDK,
                 SdkConstants.LATEST_CONSTRAINT_LAYOUT_VERSION);
     }
 

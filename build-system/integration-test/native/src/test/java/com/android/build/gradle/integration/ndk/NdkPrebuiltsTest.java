@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.ndk;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -37,9 +38,12 @@ import org.junit.Test;
  * Assemble tests for ndkPrebuilts.
  */
 public class NdkPrebuiltsTest {
-    @ClassRule public static GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("ndkPrebuilts")
-            .create();
+    @ClassRule
+    public static GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestProject("ndkPrebuilts")
+                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
+                    .create();
 
     public static AndroidProject model;
 

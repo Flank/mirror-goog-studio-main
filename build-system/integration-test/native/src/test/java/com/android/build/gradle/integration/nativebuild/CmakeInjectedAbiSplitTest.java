@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.nativebuild;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.testutils.truth.MoreTruth.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
@@ -42,6 +43,7 @@ public class CmakeInjectedAbiSplitTest {
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldJniApp.builder().withCmake().build())
                     .setCmakeVersion("3.10.4819442")
+                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .setWithCmakeDirInLocalProp(true)
                     .create();
 

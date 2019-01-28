@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.nativebuild;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -54,7 +55,10 @@ public class AbiPureSplits {
 
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("abiPureSplits").create();
+            GradleTestProject.builder()
+                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
+                    .fromTestProject("abiPureSplits")
+                    .create();
 
     @BeforeClass
     public static void setup() {
@@ -68,12 +72,11 @@ public class AbiPureSplits {
 
         // build a set of expected outputs
         Set<String> expected = Sets.newHashSetWithExpectedSize(5);
-        expected.add("mips");
         expected.add("x86");
         expected.add("armeabi-v7a");
 
         List<? extends OutputFile> outputs = getOutputs(outputModel);
-        assertEquals(4, outputs.size());
+        assertEquals(3, outputs.size());
         for (OutputFile outputFile : outputs) {
             String filter = VariantOutputUtils.getFilter(outputFile, OutputFile.ABI);
             assertEquals(
@@ -125,8 +128,8 @@ public class AbiPureSplits {
                 modifiedProject -> {
                     modifiedProject.replaceInFile(
                             "build.gradle",
-                            "include 'x86', 'armeabi-v7a', 'mips'",
-                            "include 'x86', 'armeabi-v7a', 'mips', 'armeabi'");
+                            "include 'x86', 'armeabi-v7a'",
+                            "include 'x86', 'armeabi-v7a', 'x86_64'");
                     ProjectBuildOutput incrementalModel =
                             project.executeAndReturnOutputModel("assembleDebug");
 
@@ -135,13 +138,13 @@ public class AbiPureSplits {
                         System.out.println("found " + output.getOutputFile().getAbsolutePath());
                     }
 
-                    assertThat(outputs).hasSize(5);
+                    assertThat(outputs).hasSize(4);
                     boolean foundAddedAPK = false;
                     for (OutputFile output : outputs) {
 
                         String filter = VariantOutputUtils.getFilter(output, OutputFile.ABI);
 
-                        if (Objects.equals(filter, "armeabi")) {
+                        if (Objects.equals(filter, "x86_64")) {
                             // found our added abi, done.
                             foundAddedAPK = true;
                         } else {
@@ -155,7 +158,7 @@ public class AbiPureSplits {
                     }
 
                     if (!foundAddedAPK) {
-                        Assert.fail("Could not find added ABI split : armeabi");
+                        Assert.fail("Could not find added ABI split : x86_64");
                     }
                 });
     }
@@ -175,19 +178,17 @@ public class AbiPureSplits {
                 project,
                 modifiedProject -> {
                     modifiedProject.replaceInFile(
-                            "build.gradle",
-                            "include 'x86', 'armeabi-v7a', 'mips'",
-                            "include 'x86', 'armeabi-v7a'");
+                            "build.gradle", "include 'x86', 'armeabi-v7a'", "include 'x86'");
                     ProjectBuildOutput incrementalModel =
                             project.executeAndReturnOutputModel("assembleDebug");
 
                     List<? extends OutputFile> outputs = getOutputs(incrementalModel);
-                    assertThat(outputs).hasSize(3);
+                    assertThat(outputs).hasSize(2);
                     for (OutputFile output : outputs) {
 
                         String filter = VariantOutputUtils.getFilter(output, OutputFile.ABI);
-                        if (Objects.equals(filter, "mips")) {
-                            Assert.fail("Found deleted ABI split : mips");
+                        if (Objects.equals(filter, "armeabi-v7a")) {
+                            Assert.fail("Found deleted ABI split : armeabi-v7a");
                         } else {
                             // check that the APK was not rebuilt.
                             //                    assertNotNull("Cannot find initial APK for ABI : " + filter);

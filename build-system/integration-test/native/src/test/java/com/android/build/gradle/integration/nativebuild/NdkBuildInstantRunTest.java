@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.nativebuild;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -47,6 +48,7 @@ public class NdkBuildInstantRunTest {
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldJniApp.builder().build())
                     .addFile(HelloWorldJniApp.androidMkC("src/main/jni"))
+                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .create();
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();

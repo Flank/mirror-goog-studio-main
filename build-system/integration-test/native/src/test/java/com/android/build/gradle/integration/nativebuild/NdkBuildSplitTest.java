@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.nativebuild;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.testutils.truth.PathSubject.assertThat;
@@ -45,6 +46,7 @@ public class NdkBuildSplitTest {
     public static GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldJniApp.builder().withNativeDir("cxx").build())
+                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .addFile(HelloWorldJniApp.androidMkC("src/main/cxx"))
                     .create();
 
@@ -58,8 +60,12 @@ public class NdkBuildSplitTest {
                         + "import com.android.build.OutputFile;\n"
                         + "ext.versionCodes = [\"armeabi-v7a\":1, \"mips\":2, \"x86\":3, \"mips64\":4, \"all\":0]\n"
                         + "android {\n"
-                        + "    compileSdkVersion rootProject.latestCompileSdk\n"
-                        + "    buildToolsVersion = rootProject.buildToolsVersion\n"
+                        + "        compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "        buildToolsVersion \""
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "\"\n"
                         + "    generatePureSplits true\n"
                         + "\n"
                         + "    // This actual the app version code. Giving ourselves 100,000 values [0, 99999]\n"
@@ -73,16 +79,16 @@ public class NdkBuildSplitTest {
                         + "\n"
                         + "    flavorDimensions \"androidVersion\"\n"
                         + "    productFlavors {\n"
-                        + "        gingerbread {\n"
-                        + "            minSdkVersion 10\n"
+                        + "        platform21 {\n"
+                        + "            minSdkVersion 21\n"
                         + "            versionCode = 1\n"
                         + "        }\n"
-                        + "        icecreamSandwich {\n"
-                        + "            minSdkVersion 14\n"
+                        + "        platform22 {\n"
+                        + "            minSdkVersion 22\n"
                         + "            versionCode = 2\n"
                         + "        }\n"
-                        + "        current {\n"
-                        + "            minSdkVersion rootProject.latestCompileSdk\n"
+                        + "        platform28 {\n"
+                        + "            minSdkVersion 28\n"
                         + "            versionCode = 3\n"
                         + "        }\n"
                         + "    }\n"
@@ -91,7 +97,7 @@ public class NdkBuildSplitTest {
                         + "        abi {\n"
                         + "            enable = true\n"
                         + "            universalApk = true\n"
-                        + "            exclude \"x86_64\", \"arm64-v8a\", \"armeabi\"\n"
+                        + "            exclude \"x86_64\", \"arm64-v8a\"\n"
                         + "        }\n"
                         + "    }\n"
                         + "\n"
@@ -113,19 +119,19 @@ public class NdkBuildSplitTest {
         project.execute(
                 "clean",
                 "assembleDebug",
-                "generateJsonModelcurrentDebug",
-                "generateJsonModelicecreamSandwichDebug",
-                "generateJsonModelcurrentRelease",
-                "generateJsonModelgingerbreadRelease",
-                "generateJsonModelicecreamSandwichRelease",
-                "generateJsonModelgingerbreadDebug");
+                "generateJsonModelPlatform28Debug",
+                "generateJsonModelPlatform22Debug",
+                "generateJsonModelPlatform21Debug",
+                "generateJsonModelPlatform28Release",
+                "generateJsonModelPlatform22Release",
+                "generateJsonModelPlatform21Release");
     }
 
     @Test
     public void checkApkContent() throws IOException {
-        assertThatApk(project.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG, "current"))
+        assertThatApk(project.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG, "platform28"))
                 .hasVersionCode(3100123);
-        assertThatApk(project.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG, "current"))
+        assertThatApk(project.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG, "platform28"))
                 .contains("lib/armeabi-v7a/libhello-jni.so");
     }
 
@@ -164,12 +170,12 @@ public class NdkBuildSplitTest {
 
         assertThat(groupToArtifacts.keySet())
                 .containsExactly(
-                        "currentDebug",
-                        "icecreamSandwichDebug",
-                        "currentRelease",
-                        "gingerbreadRelease",
-                        "icecreamSandwichRelease",
-                        "gingerbreadDebug");
+                        "platform28Debug",
+                        "platform22Debug",
+                        "platform28Release",
+                        "platform22Release",
+                        "platform21Release",
+                        "platform21Debug");
         assertThat(groupToArtifacts.get("currentDebug"))
                 .hasSize(groupToArtifacts.get("currentRelease").size());
     }

@@ -1,11 +1,11 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion rootProject.latestCompileSdk
+    compileSdkVersion rootProject.ndk19SupportLibMinSdk
     buildToolsVersion = rootProject.buildToolsVersion
 
     defaultConfig {
-        minSdkVersion rootProject.supportLibMinSdk
+        minSdkVersion rootProject.ndk19SupportLibMinSdk
         ndk {
             moduleName "hello-jni"
         }

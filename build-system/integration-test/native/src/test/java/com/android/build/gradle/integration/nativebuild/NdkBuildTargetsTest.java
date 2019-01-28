@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.nativebuild;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.testutils.truth.PathSubject.assertThat;
@@ -47,6 +48,7 @@ public class NdkBuildTargetsTest {
                     .addFile(HelloWorldJniApp.androidMkMultiModule("src/main/cpp"))
                     .addFile(HelloWorldJniApp.libraryCpp("src/main/cpp/library1", "library1.cpp"))
                     .addFile(HelloWorldJniApp.libraryCpp("src/main/cpp/library2", "library2.cpp"))
+                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .create();
 
     @Before
@@ -68,7 +70,7 @@ public class NdkBuildTargetsTest {
                         + "          arguments.addAll(\"NDK_TOOLCHAIN_VERSION:=clang\")\n"
                         + "          cFlags.addAll(\"-DTEST_C_FLAG\", \"-DTEST_C_FLAG_2\")\n"
                         + "          cppFlags.addAll(\"-DTEST_CPP_FLAG\")\n"
-                        + "          abiFilters.addAll(\"armeabi-v7a\", \"armeabi\", \"x86\", \"x86_64\")\n"
+                        + "          abiFilters.addAll(\"armeabi-v7a\", \"x86\", \"x86_64\")\n"
                         + "        }\n"
                         + "      }\n"
                         + "    }\n"
@@ -102,12 +104,10 @@ public class NdkBuildTargetsTest {
         assertThatApk(apk).hasVersionCode(1);
         // These were filtered out because they weren't in ndkBuild.targets
         assertThatApk(apk).doesNotContain("lib/armeabi-v7a/libmylibrary1.so");
-        assertThatApk(apk).doesNotContain("lib/armeabi/libmylibrary1.so");
         assertThatApk(apk).doesNotContain("lib/x86/libmylibrary1.so");
         assertThatApk(apk).doesNotContain("lib/x86_64/libmylibrary1.so");
         // These weren't filtered out because they were in ndkBuild.targets
         assertThatApk(apk).contains("lib/armeabi-v7a/libmylibrary2.so");
-        assertThatApk(apk).contains("lib/armeabi/libmylibrary2.so");
         assertThatApk(apk).contains("lib/x86/libmylibrary2.so");
         assertThatApk(apk).contains("lib/x86_64/libmylibrary2.so");
 
@@ -123,11 +123,9 @@ public class NdkBuildTargetsTest {
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThatApk(apk).hasVersionCode(1);
         assertThatApk(apk).contains("lib/armeabi-v7a/libmylibrary1.so");
-        assertThatApk(apk).contains("lib/armeabi/libmylibrary1.so");
         assertThatApk(apk).contains("lib/x86/libmylibrary1.so");
         assertThatApk(apk).contains("lib/x86_64/libmylibrary1.so");
         assertThatApk(apk).contains("lib/armeabi-v7a/libmylibrary2.so");
-        assertThatApk(apk).contains("lib/armeabi/libmylibrary2.so");
         assertThatApk(apk).contains("lib/x86/libmylibrary2.so");
         assertThatApk(apk).contains("lib/x86_64/libmylibrary2.so");
 
@@ -141,7 +139,7 @@ public class NdkBuildTargetsTest {
         assertThat(model.getBuildSystems()).containsExactly(NativeBuildSystem.NDK_BUILD.getName());
         assertThat(model.getBuildFiles()).hasSize(1);
         assertThat(model.getName()).isEqualTo("project");
-        assertThat(model.getArtifacts()).hasSize(16);
+        assertThat(model.getArtifacts()).hasSize(12);
         assertThat(model.getFileExtensions()).hasSize(1);
 
         for (File file : model.getBuildFiles()) {
@@ -158,6 +156,6 @@ public class NdkBuildTargetsTest {
         }
 
         assertThat(model).hasArtifactGroupsNamed("debug", "release");
-        assertThat(model).hasArtifactGroupsOfSize(8);
+        assertThat(model).hasArtifactGroupsOfSize(6);
     }
 }

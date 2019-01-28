@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.nativebuild;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.internal.cxx.configure.ConstantsKt.CXX_DEFAULT_CONFIGURATION_SUBFOLDER;
 import static com.android.testutils.truth.PathSubject.assertThat;
@@ -71,6 +72,7 @@ public class NativeBuildOutputTest {
                                     .useCppSource(true)
                                     .build())
                     .setCmakeVersion("3.10.4819442")
+                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .setWithCmakeDirInLocalProp(true)
                     .create();
 
@@ -238,12 +240,12 @@ public class NativeBuildOutputTest {
                         + "    externalNativeBuild.ndkBuild.path 'src/main/cpp/Android.mk'\n"
                         + "    defaultConfig {\n"
                         + "      ndk.abiFilters 'armeabi-v7a', 'x86'\n"
-                        + "      externalNativeBuild.ndkBuild.abiFilters 'armeabi', 'x86'\n"
+                        + "      externalNativeBuild.ndkBuild.abiFilters 'x86_64', 'x86'\n"
                         + "    }\n"
                         + "}\n");
 
         TestFileUtils.appendToFile(project.file("src/main/cpp/Android.mk"), androidMk);
-        checkSucceeded(ImmutableList.of("Build hello-jni x86"), ImmutableList.of("armeabi"));
+        checkSucceeded(ImmutableList.of("Build hello-jni x86"), ImmutableList.of("x86_64"));
     }
 
     // In this test, ndk.abiFilters and ndkBuild.abiFilters have nothing in common.
@@ -256,12 +258,12 @@ public class NativeBuildOutputTest {
                         + "    externalNativeBuild.ndkBuild.path 'src/main/cpp/Android.mk'\n"
                         + "    defaultConfig {\n"
                         + "        ndk.abiFilters 'armeabi-v7a', 'x86_64'\n"
-                        + "        externalNativeBuild.ndkBuild.abiFilters 'armeabi', 'x86'\n"
+                        + "        externalNativeBuild.ndkBuild.abiFilters 'x86'\n"
                         + "    }\n"
                         + "}\n");
 
         TestFileUtils.appendToFile(project.file("src/main/cpp/Android.mk"), androidMk);
-        checkSucceeded(ImmutableList.of(), ImmutableList.of("x86", "armeabi"));
+        checkSucceeded(ImmutableList.of(), ImmutableList.of("x86"));
     }
 
     @Test

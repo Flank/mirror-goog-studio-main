@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.ndk;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -37,9 +38,11 @@ import org.junit.Test;
 public class NoSplitNdkVariantsTest {
 
     @ClassRule
-    public static GradleTestProject project = GradleTestProject.builder()
-            .fromTestApp(new HelloWorldJniApp())
-            .create();
+    public static GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestApp(new HelloWorldJniApp())
+                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
+                    .create();
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -75,12 +78,7 @@ public class NoSplitNdkVariantsTest {
                         + "        }\n"
                         + "        arm {\n"
                         + "            ndk {\n"
-                        + "                abiFilters 'armeabi-v7a', 'armeabi'\n"
-                        + "            }\n"
-                        + "        }\n"
-                        + "        mips {\n"
-                        + "            ndk {\n"
-                        + "                abiFilter 'mips'\n"
+                        + "                abiFilters 'armeabi-v7a'\n"
                         + "            }\n"
                         + "        }\n"
                         + "    }\n"
@@ -109,7 +107,6 @@ public class NoSplitNdkVariantsTest {
         // Verify .so are built for all platform.
         Apk apk = project.getApk(null, ApkType.RELEASE, "x86");
         assertNotNull(apk.getEntry("lib/x86/libhello-jni.so"));
-        assertNull(apk.getEntry("lib/mips/libhello-jni.so"));
         assertNull(apk.getEntry("lib/armeabi/libhello-jni.so"));
         assertNull(apk.getEntry("lib/armeabi-v7a/libhello-jni.so"));
     }
@@ -122,22 +119,6 @@ public class NoSplitNdkVariantsTest {
         // Verify .so are built for all platform.
         Apk apk = project.getApk(null, ApkType.RELEASE, "arm");
         assertNull(apk.getEntry("lib/x86/libhello-jni.so"));
-        assertNull(apk.getEntry("lib/mips/libhello-jni.so"));
-        assertNotNull(apk.getEntry("lib/armeabi/libhello-jni.so"));
         assertNotNull(apk.getEntry("lib/armeabi-v7a/libhello-jni.so"));
-
-    }
-
-    @Test
-    public void assembleMipsRelease() throws Exception {
-        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
-        project.execute("assembleMipsRelease");
-
-        // Verify .so are built for all platform.
-        Apk apk = project.getApk(null, ApkType.RELEASE, "mips");
-        assertNull(apk.getEntry("lib/x86/libhello-jni.so"));
-        assertNotNull(apk.getEntry("lib/mips/libhello-jni.so"));
-        assertNull(apk.getEntry("lib/armeabi/libhello-jni.so"));
-        assertNull(apk.getEntry("lib/armeabi-v7a/libhello-jni.so"));
     }
 }

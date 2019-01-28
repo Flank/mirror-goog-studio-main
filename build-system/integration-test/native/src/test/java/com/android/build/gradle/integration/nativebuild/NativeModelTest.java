@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.nativebuild;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp.androidMkC;
 import static com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp.androidMkCpp;
 import static com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp.androidMkGoogleTest;
@@ -525,6 +526,7 @@ public class NativeModelTest {
                             .addFiles(extraFiles)
                             .setCmakeVersion(cmakeVersionInLocalProperties)
                             .setWithCmakeDirInLocalProp(!cmakeVersionInLocalProperties.isEmpty())
+                            .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                             .create();
 
             return project;

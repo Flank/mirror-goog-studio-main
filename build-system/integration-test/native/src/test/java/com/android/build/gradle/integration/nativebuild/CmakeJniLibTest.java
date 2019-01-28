@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.nativebuild;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
@@ -46,6 +47,7 @@ public class CmakeJniLibTest {
                     .fromTestProject("ndkJniLib")
                     .addFile(HelloWorldJniApp.cmakeLists("lib"))
                     .setCmakeVersion("3.10.4819442")
+                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .setWithCmakeDirInLocalProp(true)
                     .create();
 
@@ -106,7 +108,9 @@ public class CmakeJniLibTest {
         NativeAndroidProject model =
                 project.model().fetchMulti(NativeAndroidProject.class).get(":lib");
         assertThat(model).isNotNull();
-        assertThat(model.getBuildFiles()).hasSize(2);
+        assertThat(model)
+                .hasExactBuildFilesShortNames(
+                        "CMakeLists.txt", "platforms.cmake", "android.toolchain.cmake");
         assertThat(model.getName()).isEqualTo("lib");
         assertThat(model.getArtifacts())
                 .hasSize(NdkHelper.getNdkInfo(project).getDefaultAbis().size() * 2);

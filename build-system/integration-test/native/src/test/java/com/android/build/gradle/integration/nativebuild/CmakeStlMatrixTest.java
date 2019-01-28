@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.nativebuild;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.truth.NativeAndroidProjectSubject.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatNativeLib;
@@ -57,6 +58,7 @@ public class CmakeStlMatrixTest {
                     .fromTestApp(
                             HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build())
                     .setCmakeVersion("3.10.4819442")
+                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .setWithCmakeDirInLocalProp(true)
                     .create();
 
@@ -149,7 +151,9 @@ public class CmakeStlMatrixTest {
         project.model().fetchAndroidProjects(); // Make sure we can successfully get AndroidProject
         NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
         assertThat(model.getBuildSystems()).containsExactly(NativeBuildSystem.CMAKE.getName());
-        assertThat(model.getBuildFiles()).hasSize(2);
+        assertThat(model)
+                .hasExactBuildFilesShortNames(
+                        "CMakeLists.txt", "platforms.cmake", "android.toolchain.cmake");
         assertThat(model.getName()).isEqualTo("project");
         int abiCount = 2;
         assertThat(model.getArtifacts()).hasSize(abiCount * 2);

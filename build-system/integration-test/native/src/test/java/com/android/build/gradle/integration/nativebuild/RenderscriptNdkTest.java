@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.nativebuild;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.google.common.truth.TruthJUnit.assume;
 
@@ -35,6 +36,7 @@ public class RenderscriptNdkTest {
             GradleTestProject.builder()
                     .fromTestProject("renderscriptNdk")
                     .addGradleProperties("android.useDeprecatedNdk=true")
+                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .create();
 
     @Before

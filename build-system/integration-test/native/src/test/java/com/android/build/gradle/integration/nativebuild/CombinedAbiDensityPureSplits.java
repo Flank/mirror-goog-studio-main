@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.nativebuild;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.testutils.truth.MoreTruth.assertThatZip;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -30,7 +31,6 @@ import com.android.build.gradle.integration.common.utils.VariantOutputUtils;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.VariantBuildOutput;
 import com.google.common.collect.Sets;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;
 import org.junit.Before;
@@ -42,10 +42,13 @@ public class CombinedAbiDensityPureSplits {
 
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("combinedAbiDensityPureSplits").create();
+            GradleTestProject.builder()
+                    .fromTestProject("combinedAbiDensityPureSplits")
+                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
+                    .create();
 
     @Before
-    public void setup() throws IOException, InterruptedException {
+    public void setup() {
         // This test uses the deprecated NDK integration, which does not work properly on Windows.
         AssumeUtil.assumeNotWindows();
         AssumeUtil.assumeBuildToolsAtLeast(21);
@@ -68,11 +71,10 @@ public class CombinedAbiDensityPureSplits {
         expected.add("hdpi");
         expected.add("xhdpi");
         expected.add("xxhdpi");
-        expected.add("mips");
         expected.add("x86");
         expected.add("armeabi-v7a");
 
-        assertEquals(8, debugOutputs.size());
+        assertEquals(7, debugOutputs.size());
         for (OutputFile outputFile : debugOutputs) {
             String filter = VariantOutputUtils.getFilter(outputFile, VariantOutput.DENSITY);
             if (filter == null) {

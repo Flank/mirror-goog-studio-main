@@ -86,7 +86,7 @@ TAGS = [
 single_gradle_integration_test(
     name = "AbiPureSplits",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + NDK_LEGACY,
+    data = DATA + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -95,7 +95,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "CmakeAndroidGradleBuildExtensionsTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + CMAKE + NDK_LEGACY,
+    data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -113,7 +113,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "CmakeGradleTargetsTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + CMAKE + NDK_LEGACY,
+    data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -122,7 +122,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "CmakeInjectedAbiSplitTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + CMAKE + NDK_LEGACY,
+    data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -131,7 +131,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "CmakeInstantRunTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + CMAKE + ANDROID_23 + NDK_LEGACY,
+    data = DATA + CMAKE + ANDROID_23 + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -140,7 +140,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "CmakeJniLibTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + CMAKE + NDK_LEGACY,
+    data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -149,7 +149,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "CmakeJniPureSplitLibTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + CMAKE + NDK_LEGACY,
+    data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -158,7 +158,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "CmakeMultiModuleTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + CMAKE + NDK_LEGACY,
+    data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -167,7 +167,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "CmakeStlMatrixTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + CMAKE + NDK_LEGACY,
+    data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -176,7 +176,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "CmakeTargetsTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + CMAKE + NDK_LEGACY,
+    data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -185,7 +185,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "CmakeVanillaBasicProjectTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + CMAKE + NDK_LEGACY,
+    data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -194,7 +194,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "CombinedAbiDensityPureSplits",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + NDK_LEGACY,
+    data = DATA + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -203,7 +203,16 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "FeatureAndAbiPureSplitsTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + NDK_LEGACY,
+    data = DATA + NDK,
+    maven_repos = MAVEN_REPOS,
+    tags = TAGS,
+    deps = DEPS,
+)
+
+single_gradle_integration_test(
+    name = "HeaderInCmakeListsTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
+    data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -212,7 +221,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "InjectedAbiNativeLibraryTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + CMAKE + NDK_LEGACY,
+    data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -221,7 +230,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "NativeBuildOutputTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + CMAKE + NDK_LEGACY,
+    data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -230,7 +239,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "NativeModelTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + CMAKE + NDK_LEGACY,
+    data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -239,7 +248,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "NdkBuildAndroidMkLibraryTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + NDK_LEGACY,
+    data = DATA + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -248,7 +257,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "NdkBuildBasicProjectTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + NDK_LEGACY,
+    data = DATA + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -257,7 +266,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "NdkBuildInstantRunTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + ANDROID_23 + NDK_LEGACY,
+    data = DATA + ANDROID_23 + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -266,7 +275,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "NdkBuildJniLibTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + NDK_LEGACY,
+    data = DATA + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -275,7 +284,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "NdkBuildJniPureSplitLibTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + NDK_LEGACY,
+    data = DATA + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -284,7 +293,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "NdkBuildSplitTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + NDK_LEGACY,
+    data = DATA + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -293,7 +302,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "NdkBuildTargetsTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + NDK_LEGACY,
+    data = DATA + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -302,7 +311,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "Pre21SplitTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + NDK_LEGACY,
+    data = DATA + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -311,7 +320,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "RenderscriptNdkTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + NDK_LEGACY,
+    data = DATA + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -320,7 +329,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "RsEnabledAnnotationTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + CMAKE + NDK_LEGACY,
+    data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -338,7 +347,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "VulkanTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + CMAKE + NDK_LEGACY,
+    data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS + [
         "no_test_mac",  # b/110846203
@@ -349,7 +358,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "NdkJniLibTest",
     srcs = "src/test/java/com/android/build/gradle/integration/ndk/",
-    data = DATA + CMAKE + NDK_LEGACY,
+    data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -358,7 +367,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "NdkLibPrebuiltsTest",
     srcs = "src/test/java/com/android/build/gradle/integration/ndk/",
-    data = DATA + CMAKE + NDK_LEGACY,
+    data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -367,7 +376,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "NdkPrebuiltsTest",
     srcs = "src/test/java/com/android/build/gradle/integration/ndk/",
-    data = DATA + CMAKE + NDK_LEGACY,
+    data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -376,7 +385,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "NdkSanAngelesTest",
     srcs = "src/test/java/com/android/build/gradle/integration/ndk/",
-    data = DATA + CMAKE + NDK_LEGACY,
+    data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,
@@ -385,7 +394,16 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "NoSplitNdkVariantsTest",
     srcs = "src/test/java/com/android/build/gradle/integration/ndk/",
-    data = DATA + CMAKE + NDK_LEGACY,
+    data = DATA + CMAKE + NDK,
+    maven_repos = MAVEN_REPOS,
+    tags = TAGS,
+    deps = DEPS,
+)
+
+single_gradle_integration_test(
+    name = "VanillaCmakeSysrootAndTargetFlagsTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
+    data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
     tags = TAGS,
     deps = DEPS,

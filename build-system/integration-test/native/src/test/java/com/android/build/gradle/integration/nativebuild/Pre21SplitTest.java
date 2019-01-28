@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.integration.nativebuild;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
+
 import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
@@ -36,9 +38,12 @@ import org.junit.experimental.categories.Category;
  */
 @Category(SmokeTests.class)
 public class Pre21SplitTest {
-    @ClassRule public static GradleTestProject project = GradleTestProject.builder()
-            .fromTestApp(new HelloWorldJniApp())
-            .create();
+    @ClassRule
+    public static GradleTestProject project =
+            GradleTestProject.builder()
+                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
+                    .fromTestApp(new HelloWorldJniApp())
+                    .create();
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -57,7 +62,7 @@ public class Pre21SplitTest {
                         + "    generatePureSplits false\n"
                         + "\n"
                         + "    defaultConfig {\n"
-                        + "        minSdkVersion 15\n"
+                        + "        minSdkVersion 21\n"
                         + "        ndk {\n"
                         + "            moduleName \"hello-jni\"\n"
                         + "        }\n"
@@ -71,7 +76,7 @@ public class Pre21SplitTest {
                         + "        abi {\n"
                         + "            enable true\n"
                         + "            reset()\n"
-                        + "            include 'x86', 'armeabi-v7a', 'mips'\n"
+                        + "            include 'x86', 'armeabi-v7a'\n"
                         + "        }\n"
                         + "    }\n"
                         + "}\n");

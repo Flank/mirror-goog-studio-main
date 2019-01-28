@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.nativebuild;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.testutils.truth.PathSubject.assertThat;
@@ -55,7 +56,11 @@ public class NdkBuildJniLibTest {
 
     @ClassRule
     public static GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("ndkJniLib").addFile(androidMk).create();
+            GradleTestProject.builder()
+                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
+                    .fromTestProject("ndkJniLib")
+                    .addFile(androidMk)
+                    .create();
 
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
@@ -70,7 +75,9 @@ public class NdkBuildJniLibTest {
                         + "android {\n"
                         + "    compileSdkVersion rootProject.latestCompileSdk\n"
                         + "    buildToolsVersion = rootProject.buildToolsVersion\n"
-                        + "\n"
+                        + "    defaultConfig {\n"
+                        + "        minSdkVersion 21\n"
+                        + "    }\n"
                         + "    externalNativeBuild {\n"
                         + "      ndkBuild {\n"
                         + "        path \"src/main/cxx/Android.mk\"\n"

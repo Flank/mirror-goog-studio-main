@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.nativebuild;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatNativeLib;
 
@@ -77,13 +78,14 @@ public class NdkBuildAndroidMkLibraryTest {
                     "APP_MODULES\t:= foo bar\n"
                             + "APP_SHORT_COMMANDS := true\n"
                             + "APP_PLATFORM := android-14\n"
-                            + "APP_STL := gnustl_static\n"
+                            + "APP_STL := c++_static\n"
                             + "NDK_TOOLCHAIN_VERSION := clang");
 
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldJniApp.builder().build())
+                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .addFile(includedAndroidMkFoo)
                     .addFile(includedAndroidMkBar)
                     .addFile(includingAndroidMk)
@@ -106,7 +108,7 @@ public class NdkBuildAndroidMkLibraryTest {
                         + "            defaultConfig {\n"
                         + "                externalNativeBuild {\n"
                         + "                    ndkBuild {\n"
-                        + "                        abiFilters.addAll(\"armeabi-v7a\", \"armeabi\", \"x86\")\n"
+                        + "                        abiFilters.addAll(\"armeabi-v7a\", \"x86\")\n"
                         + "                    }\n"
                         + "                }\n"
                         + "            }\n"
@@ -125,13 +127,9 @@ public class NdkBuildAndroidMkLibraryTest {
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThatApk(apk).hasVersionCode(1);
         assertThatApk(apk).contains("lib/armeabi-v7a/libfoo.so");
-        assertThatApk(apk).contains("lib/armeabi/libfoo.so");
         assertThatApk(apk).contains("lib/x86/libfoo.so");
 
         File lib = ZipHelper.extractFile(apk, "lib/armeabi-v7a/libfoo.so");
-        assertThatNativeLib(lib).isStripped();
-
-        lib = ZipHelper.extractFile(apk, "lib/armeabi/libfoo.so");
         assertThatNativeLib(lib).isStripped();
 
         lib = ZipHelper.extractFile(apk, "lib/x86/libfoo.so");
