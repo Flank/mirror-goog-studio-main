@@ -824,7 +824,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
 
         // Include the original android toolchain
         tempAndroidToolchain
-                .append(String.format("include(%s)", normalizeFilePath(getToolChainFile())))
+                .append(String.format("include(\"%s\")", normalizeFilePath(getToolChainFile())))
                 .append(System.lineSeparator());
         // Overwrite the CMAKE_SYSTEM_VERSION to 1 so we skip CMake's Android toolchain.
         tempAndroidToolchain.append("set(CMAKE_SYSTEM_VERSION 1)").append(System.lineSeparator());

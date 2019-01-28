@@ -16,6 +16,7 @@
 
 package com.android.testutils;
 
+import static com.android.testutils.WindowsPathUtilsKt.getWindowsShortNameFile;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeFalse;
 
@@ -223,7 +224,6 @@ public class TestUtils {
 
         if (!f.exists() && OsType.getHostOs() == OsType.WINDOWS) {
             // This file may be a binary with a .exe extension
-            // TODO: Confirm this works on Windows
             f = new File(f.getPath() + ".exe");
         }
 
@@ -231,7 +231,7 @@ public class TestUtils {
             throw new IllegalArgumentException("File \"" + path + "\" not found at \"" + getWorkspaceRoot() + "\"");
         }
 
-        return f;
+        return getWindowsShortNameFile(f);
     }
 
     /**
@@ -580,7 +580,8 @@ public class TestUtils {
 
     // disable tests when running on Windows in Bazel.
     public static void disableIfOnWindowsWithBazel() {
-        assumeFalse((SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS)
-            && System.getenv("TEST_TMPDIR")!=null);
+        assumeFalse(
+                (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS)
+                        && System.getenv("TEST_TMPDIR") != null);
     }
 }
