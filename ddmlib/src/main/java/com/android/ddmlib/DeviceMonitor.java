@@ -18,6 +18,7 @@ package com.android.ddmlib;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.GuardedBy;
 import com.android.ddmlib.AdbHelper.AdbResponse;
 import com.android.ddmlib.ClientData.DebuggerStatus;
 import com.android.ddmlib.DebugPortManager.IDebugPortProvider;
@@ -25,9 +26,11 @@ import com.android.ddmlib.IDevice.DeviceState;
 import com.android.ddmlib.utils.DebuggerPorts;
 import com.android.utils.Pair;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Uninterruptibles;
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -66,7 +69,11 @@ final class DeviceMonitor implements ClientTracker {
 
     private Selector mSelector;
 
-    private final List<Device> mDevices = Lists.newCopyOnWriteArrayList();
+    private final Object mDevicesGuard = new Object();
+
+    @GuardedBy("mDevicesGuard")
+    private ImmutableList<Device> mDevices = ImmutableList.of();
+
     private final DebuggerPorts mDebuggerPorts =
             new DebuggerPorts(DdmPreferences.getDebugPortBase());
     private final Map<Client, Integer> mClientsToReopen = new HashMap<Client, Integer>();
@@ -126,15 +133,15 @@ final class DeviceMonitor implements ClientTracker {
         return mDeviceListMonitorTask != null && mDeviceListMonitorTask.hasInitialDeviceList();
     }
 
-    /**
-     * Returns the devices.
-     */
-    @NonNull Device[] getDevices() {
-        // Since this is a copy of write array list, we don't want to do a compound operation
-        // (toArray with an appropriate size) without locking, so we just let the container provide
-        // an appropriately sized array
+    /** Returns the devices. */
+    @NonNull
+    Device[] getDevices() {
+        ImmutableList<Device> devices;
+        synchronized (mDevicesGuard) {
+            devices = mDevices;
+        }
         //noinspection ToArrayCallWithZeroLengthArrayArgument
-        return mDevices.toArray(new Device[0]);
+        return devices.toArray(new Device[0]);
     }
 
     @NonNull
@@ -176,16 +183,46 @@ final class DeviceMonitor implements ClientTracker {
     }
 
     /**
+     * Returns an {@link ImmutableList} containing elements from the original collection and
+     * elements from the toAdd collection without elements from the toRemove collection.
+     */
+    private static ImmutableList<Device> addRemove(
+            Collection<Device> original, Collection<IDevice> toAdd, Collection<IDevice> toRemove) {
+        Set<IDevice> removed = Sets.newHashSet(toRemove);
+        ImmutableList.Builder<Device> resultBuilder = ImmutableList.builder();
+        for (Device next : original) {
+            if (!removed.contains(next)) {
+                resultBuilder.add(next);
+            }
+        }
+        for (IDevice next : toAdd) {
+            if (next instanceof Device) {
+                resultBuilder.add((Device) next);
+            }
+        }
+        return resultBuilder.build();
+    }
+
+    /**
      * Updates the device list with the new items received from the monitoring service.
      */
     private void updateDevices(@NonNull List<Device> newList) {
-        DeviceListComparisonResult result = DeviceListComparisonResult.compare(mDevices, newList);
+        ImmutableList<Device> oldDevices;
+        synchronized (mDevicesGuard) {
+            oldDevices = mDevices;
+        }
+        DeviceListComparisonResult result = DeviceListComparisonResult.compare(oldDevices, newList);
+        ImmutableList<Device> newDevices = addRemove(oldDevices, result.added, result.removed);
+        synchronized (mDevicesGuard) {
+            mDevices = newDevices;
+        }
+
         for (IDevice device : result.removed) {
             removeDevice((Device) device);
             AndroidDebugBridge.deviceDisconnected(device);
         }
 
-        List<Device> newlyOnline = Lists.newArrayListWithExpectedSize(mDevices.size());
+        List<Device> newlyOnline = Lists.newArrayListWithExpectedSize(newDevices.size());
 
         for (Map.Entry<IDevice, DeviceState> entry : result.updated.entrySet()) {
             Device device = (Device) entry.getKey();
@@ -198,7 +235,6 @@ final class DeviceMonitor implements ClientTracker {
         }
 
         for (IDevice device : result.added) {
-            mDevices.add((Device) device);
             AndroidDebugBridge.deviceConnected(device);
             if (device.isOnline()) {
                 newlyOnline.add((Device) device);
@@ -226,7 +262,6 @@ final class DeviceMonitor implements ClientTracker {
     private void removeDevice(@NonNull Device device) {
         device.setState(DeviceState.DISCONNECTED);
         device.clearClientList();
-        mDevices.remove(device);
 
         SocketChannel channel = device.getClientMonitoringSocket();
         if (channel != null) {
@@ -404,8 +439,12 @@ final class DeviceMonitor implements ClientTracker {
                                             "Error reading jdwp list: " + ioe.getMessage());
                                     socket.close();
 
+                                    boolean hasDevice;
+                                    synchronized (mDevicesGuard) {
+                                        hasDevice = mDevices.contains(device);
+                                    }
                                     // restart the monitoring of that device
-                                    if (mDevices.contains(device)) {
+                                    if (hasDevice) {
                                         Log.d("DeviceMonitor",
                                                 "Restarting monitoring service for " + device);
                                         startMonitoringDevice(device);
@@ -642,7 +681,13 @@ final class DeviceMonitor implements ClientTracker {
     private class DeviceListUpdateListener implements DeviceListMonitorTask.UpdateListener {
         @Override
         public void connectionError(@NonNull Exception e) {
-            for (Device device : mDevices) {
+            // TODO(b/37104675): Clearing the device list in response to an exception is probably the wrong thing to do.
+            ImmutableList<Device> devices;
+            synchronized (mDevicesGuard) {
+                devices = mDevices;
+                mDevices = ImmutableList.of();
+            }
+            for (Device device : devices) {
                 removeDevice(device);
                 AndroidDebugBridge.deviceDisconnected(device);
             }
