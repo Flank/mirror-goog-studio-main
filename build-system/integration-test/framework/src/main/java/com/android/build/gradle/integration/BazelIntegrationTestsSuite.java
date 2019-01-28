@@ -65,7 +65,18 @@ public class BazelIntegrationTestsSuite {
             MAVEN_REPO_SOURCES = mavenRepos(DATA_DIR);
             MAVEN_REPOS = MAVEN_REPO_SOURCES.values().asList();
             NDK_IN_TMP = DATA_DIR.resolve("ndk-bundle").toAbsolutePath();
-            NDK_SIDE_BY_SIDE_ROOT = DATA_DIR.resolve("ndk").toAbsolutePath();
+            Path ndkSideBySideRoot;
+            try {
+                ndkSideBySideRoot =
+                        new File(TestUtils.getSdk(), SdkConstants.FD_NDK_SIDE_BY_SIDE).toPath();
+            } catch (IllegalArgumentException e) {
+                // this is thrown when getSdk() calls getWorkspaceFile() with a string that cannot be
+                // found in the workspace directory. In this specific instance, we don't care, so don't
+                // do anything about it. Some integration tests don't actually depend on the NDK but
+                // do depend on this code.
+                ndkSideBySideRoot = DATA_DIR.resolve("ndk").toAbsolutePath();
+            }
+            NDK_SIDE_BY_SIDE_ROOT = ndkSideBySideRoot;
             GRADLE_USER_HOME = Files.createTempDirectory("gradleUserHome");
 
             System.setProperty("gradle.user.home", GRADLE_USER_HOME.toAbsolutePath().toString());
@@ -103,7 +114,7 @@ public class BazelIntegrationTestsSuite {
     }
 
     /**
-     * Copies the NDK to a temporary directory.
+     * Symlinks the NDK to a temporary directory.
      *
      * <p>This is a workaround for the fact that Ninja (used by some native code projects) doesn't
      * support paths longer than 32 segments. When running under Bazel, the temporary directory is a
@@ -112,24 +123,11 @@ public class BazelIntegrationTestsSuite {
     @BeforeClass
     public static void symlinkNdkToTmp() throws Exception {
         assertThat(NDK_IN_TMP).doesNotExist();
-        assertThat(NDK_SIDE_BY_SIDE_ROOT).doesNotExist();
 
         try {
             Path ndk = new File(TestUtils.getSdk(), SdkConstants.FD_NDK).toPath();
             if (Files.exists(ndk)) {
                 Files.createSymbolicLink(NDK_IN_TMP, ndk);
-            }
-        } catch (IllegalArgumentException e) {
-            // this is thrown when getSdk() calls getWorkspaceFile() with a string that cannot be
-            // found in the workspace directory. In this specific instance, we don't care, so don't
-            // do anything about it. Some integration tests don't actually depend on the NDK but
-            // do depend on this code.
-        }
-
-        try {
-            Path ndk = new File(TestUtils.getSdk(), SdkConstants.FD_NDK_SIDE_BY_SIDE).toPath();
-            if (Files.exists(ndk)) {
-                Files.createSymbolicLink(NDK_SIDE_BY_SIDE_ROOT, ndk);
             }
         } catch (IllegalArgumentException e) {
             // this is thrown when getSdk() calls getWorkspaceFile() with a string that cannot be
