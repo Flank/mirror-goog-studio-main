@@ -312,7 +312,11 @@ public class SdkHandler {
 
         sdkDirProp = properties.getProperty("android.dir");
         if (sdkDirProp != null) {
-            return Pair.of(new File(rootDir, sdkDirProp), false);
+            File sdk = new File(sdkDirProp);
+            if (!sdk.isAbsolute()) {
+                sdk = new File(rootDir, sdkDirProp);
+            }
+            return Pair.of(sdk, false);
         }
 
         String envVar = System.getenv(SdkConstants.ANDROID_SDK_ROOT_ENV);
