@@ -21,6 +21,10 @@ message SwapRequest {
 
   // The processes to code swap.
   repeated int32 process_ids = 5;
+
+  // The number of extra agents that the server should wait for.
+  // Those are agents that the server is not responsible to start.
+  int32 extra_agents = 6;
 }
 
 message ResumeRequest {

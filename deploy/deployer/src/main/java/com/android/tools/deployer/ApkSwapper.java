@@ -65,19 +65,56 @@ public class ApkSwapper {
             throw DeployerException.swapFailed("Cannot swap multiple packages");
         }
 
-        Deploy.SwapRequest request = buildSwapRequest(dump, sessionId, toSwap);
+        // TODO: Add a new installer command? Add a new flag?
+        Deploy.SwapRequest swapRequest = buildSwapRequest(dump, sessionId, toSwap);
+        boolean needAgents = isSwapRequestInstallOnly(swapRequest);
+        Thread t = null;
 
-        // TODO: If multiple processes have a debugger attached, we'll do extra swaps. Fix?
-        sendSwapRequest(request, new InstallerBasedClassRedefiner(installer));
-        for (Map.Entry<Integer, ClassRedefiner> entry : redefiners.entrySet()) {
-            sendSwapRequest(request, entry.getValue());
+        // A hack to get around lambda capture having to be effectively final. This single item array is captured by the lambda but we
+        // can still set its content should and exception occurs.
+        DeployerException[] exceptions = new DeployerException[1];
+
+        if (needAgents) {
+            t =
+                    new Thread(
+                            () -> {
+                                try {
+                                    sendSwapRequest(
+                                            swapRequest,
+                                            new InstallerBasedClassRedefiner(installer));
+                                } catch (DeployerException e) {
+                                    exceptions[0] = e;
+                                }
+                            });
+            t.start();
         }
 
+        // Do the debugger swap.
+        for (Map.Entry<Integer, ClassRedefiner> entry : redefiners.entrySet()) {
+            sendSwapRequest(swapRequest, entry.getValue());
+        }
+
+        // Wait for installer to come back.
+        if (t != null) {
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                throw DeployerException.interrupted(e.getMessage());
+            }
+            if (exceptions[0] != null) {
+                throw exceptions[0];
+            }
+        } else {
+            // We didn't start the installer request before since it will always succeed. Now that debugger swap is done,
+            // we can commit the install.
+            sendSwapRequest(swapRequest, new InstallerBasedClassRedefiner(installer));
+        }
         return true;
     }
 
     private Deploy.SwapRequest buildSwapRequest(
-            ApplicationDumper.Dump dump, String sessionId, List<DexClass> toSwap) {
+            ApplicationDumper.Dump dump, String sessionId, List<DexClass> toSwap)
+            throws DeployerException {
         Map.Entry<String, List<Integer>> onlyPackage =
                 Iterables.getOnlyElement(dump.packagePids.entrySet());
 
@@ -94,14 +131,40 @@ public class ApkSwapper {
                             .setDex(ByteString.copyFrom(clazz.code)));
         }
 
+        int extraAgents = 0;
         for (Integer pid : onlyPackage.getValue()) {
             if (redefiners.containsKey(pid)) {
-                continue;
+                ClassRedefiner redefiner = redefiners.get(pid);
+                switch (redefiner.canRedefineClass().support) {
+                    case FULL:
+                        continue;
+                    case NEEDS_AGENT_SERVER:
+                        extraAgents++;
+                        continue;
+                    case MAIN_THREAD_RUNNING:
+                        request.addProcessIds(pid);
+                        continue;
+                    case NONE:
+                        throw DeployerException.operationNotSupported(
+                                "The redefiner is not able to swap the current state of the debug application. "
+                                        + "All available threads are suspended but not on a breakpoint.");
+                }
+            } else {
+                request.addProcessIds(pid);
             }
-            request.addProcessIds(pid);
         }
 
+        request.setExtraAgents(extraAgents);
         return request.build();
+    }
+
+    /**
+     * Check if the swap request expects zero agents to talk to the agent server.
+     *
+     * <p>Such swap request will always succeed and, therefore, always install the APK.
+     */
+    private boolean isSwapRequestInstallOnly(Deploy.SwapRequest request) {
+        return request.getProcessIdsCount() > 0 || request.getExtraAgents() > 0;
     }
 
     private static void sendSwapRequest(Deploy.SwapRequest request, ClassRedefiner redefiner)

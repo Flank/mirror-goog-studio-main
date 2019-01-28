@@ -34,4 +34,9 @@ public class InstallerBasedClassRedefiner implements ClassRedefiner {
             throw DeployerException.swapFailed(e.getMessage());
         }
     }
+
+    @Override
+    public RedefineClassSupportState canRedefineClass() {
+        return new RedefineClassSupportState(RedefineClassSupport.FULL, null);
+    }
 }

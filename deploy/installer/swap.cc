@@ -259,7 +259,7 @@ bool SwapCommand::WriteArrayToDisk(const unsigned char* array,
 
 bool SwapCommand::Swap() {
   // Don't bother with the server if we have no work to do.
-  if (request_.process_ids().empty()) {
+  if (request_.process_ids().empty() && request_.extra_agents() <= 0) {
     response_->set_status(proto::SwapResponse::OK);
     LogEvent("No PIDs needs to be swapped");
     return true;
@@ -267,8 +267,8 @@ bool SwapCommand::Swap() {
 
   // Start the server and wait for it to begin listening for connections.
   int read_fd, write_fd, agent_server_pid, status;
-  if (!WaitForServer(request_.process_ids().size(), &agent_server_pid, &read_fd,
-                     &write_fd)) {
+  if (!WaitForServer(request_.process_ids().size() + request_.extra_agents(),
+                     &agent_server_pid, &read_fd, &write_fd)) {
     ErrEvent("Unable to start server");
     response_->set_status(proto::SwapResponse::ERROR);
     return false;
@@ -294,7 +294,8 @@ bool SwapCommand::Swap() {
   std::string response_bytes;
   std::unordered_map<int, proto::AgentSwapResponse> agent_responses;
   auto overall_status = proto::AgentSwapResponse::UNKNOWN;
-  while (agent_responses.size() < request_.process_ids().size() &&
+  while (agent_responses.size() <
+             request_.process_ids().size() + request_.extra_agents() &&
          server_output.Read(&response_bytes)) {
     proto::AgentSwapResponse agent_response;
     if (!agent_response.ParseFromString(response_bytes)) {
@@ -328,7 +329,8 @@ bool SwapCommand::Swap() {
   }
 
   // Ensure all of the agents have responded.
-  if (agent_responses.size() < request_.process_ids().size()) {
+  if (agent_responses.size() <
+      request_.process_ids().size() + request_.extra_agents()) {
     overall_status = proto::AgentSwapResponse::ERROR;
   }
 

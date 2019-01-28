@@ -166,7 +166,9 @@ int main(int argc, char** argv) {
   // Accept socket connections from the agents.
   for (int i = 0; i < socket_count; ++i) {
     Socket* socket = new Socket();
-    if (!server.Accept(socket, Socket::kAcceptTimeoutMs)) {
+    // 15 seconds since there is a chance we need to wait for the
+    // host to attach an agent from the debugger.
+    if (!server.Accept(socket, 15000)) {
       Cleanup();
       return EXIT_FAILURE;
     }
