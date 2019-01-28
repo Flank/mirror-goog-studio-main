@@ -40,7 +40,7 @@ if [[ -d "${dist_dir}" ]]; then
 fi
 
 # Abort if necessary now that the upsalite link is handled
-if [[ ! ${bazel_test_status} ]]; then
+if [[ ${bazel_test_status} -ne 0 ]]; then
   exit ${bazel_test_status}
 fi
 
