@@ -215,10 +215,9 @@ message BeginSession {
     bool live_allocation_enabled = 3;
   }
 
-  int32 pid = 1;
-  JvmtiConfig jvmti_config = 2;
-  int64 request_time_epoch_ms = 3;
-  string session_name = 4;
+  JvmtiConfig jvmti_config = 1;
+  int64 request_time_epoch_ms = 2;
+  string session_name = 3;
 }
 
 message EndSession {

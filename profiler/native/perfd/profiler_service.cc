@@ -31,6 +31,7 @@ Status ProfilerServiceImpl::BeginSession(
   // In the legacy pipeline we don't have streams so use device ID instead.
   command.set_stream_id(request->device_id());
   command.set_type(proto::Command::BEGIN_SESSION);
+  command.set_pid(request->pid());
   proto::BeginSession* begin = command.mutable_begin_session();
   auto* jvmti_config = begin->mutable_jvmti_config();
 
@@ -40,13 +41,11 @@ Status ProfilerServiceImpl::BeginSession(
   jvmti_config->set_live_allocation_enabled(
       request->jvmti_config().live_allocation_enabled());
 
-  begin->set_pid(request->pid());
   begin->set_request_time_epoch_ms(request->request_time_epoch_ms());
   begin->set_session_name(request->session_name());
 
   return daemon_->Execute(command, [response]() {
-    profiler::Session* session =
-        SessionsManager::GetInstance()->GetLastSession();
+    profiler::Session* session = SessionsManager::Instance()->GetLastSession();
     if (session) {
       response->mutable_session()->CopyFrom(session->info());
     }
@@ -63,8 +62,7 @@ Status ProfilerServiceImpl::EndSession(
   command.mutable_end_session()->set_session_id(request->session_id());
 
   return daemon_->Execute(command, [response]() {
-    profiler::Session* session =
-        SessionsManager::GetInstance()->GetLastSession();
+    profiler::Session* session = SessionsManager::Instance()->GetLastSession();
     if (session) {
       response->mutable_session()->CopyFrom(session->info());
     }

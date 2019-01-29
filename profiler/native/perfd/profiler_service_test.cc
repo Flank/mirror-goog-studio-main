@@ -52,7 +52,7 @@ class ProfilerServiceTest : public ::testing::Test {
     stub_ = proto::ProfilerService::NewStub(channel);
     // Create a new thread to read events on.
     events_thread_ = std::thread(&ProfilerServiceTest::GetEvents, this);
-    SessionsManager::GetInstance()->ClearSessions();
+    SessionsManager::Instance()->ClearSessions();
   }
 
   proto::Session BeginSession(int32_t device_id, int32_t pid) {

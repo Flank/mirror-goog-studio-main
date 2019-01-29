@@ -26,15 +26,15 @@ using std::lock_guard;
 using std::mutex;
 using std::vector;
 
-SessionsManager* SessionsManager::GetInstance() {
+SessionsManager* SessionsManager::Instance() {
   static SessionsManager* instance = new SessionsManager();
   return instance;
 }
 
 void SessionsManager::BeginSession(Daemon* daemon, int64_t stream_id,
+                                   int32_t pid,
                                    const proto::BeginSession& data) {
   int64_t now = daemon->clock()->GetCurrentTime();
-  int32_t pid = data.pid();
   for (const auto& component : daemon->GetProfilerComponents()) {
     now = std::min(now, component->GetEarliestDataTime(pid));
   }

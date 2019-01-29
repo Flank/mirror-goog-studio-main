@@ -114,8 +114,8 @@ TEST_F(TransportServiceTest, TestBeginSessionCommand) {
   proto::Command* command = req.mutable_command();
   command->set_stream_id(100);
   command->set_type(proto::Command::BEGIN_SESSION);
-  proto::BeginSession* begin = command->mutable_begin_session();
-  begin->set_pid(1000);
+  command->set_pid(1000);
+  command->mutable_begin_session();
 
   proto::ExecuteResponse res;
   clock_.SetCurrentTime(2);
@@ -132,7 +132,7 @@ TEST_F(TransportServiceTest, TestBeginSessionCommand) {
   clock_.SetCurrentTime(4);
   grpc::ClientContext context2;
   command->set_stream_id(100);
-  begin->set_pid(1001);
+  command->set_pid(1001);
   stub_->Execute(&context2, req, &res);
   // Validate when a new session is started a previous session is ended.
   event = PopEvent();

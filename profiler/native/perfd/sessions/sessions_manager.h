@@ -33,11 +33,11 @@ namespace profiler {
 class SessionsManager final {
  public:
   // Single instance shared across all profilers.
-  static SessionsManager *GetInstance();
+  static SessionsManager *Instance();
 
   // Begins a new session. If a session was
   // already running it will be ended.
-  void BeginSession(Daemon *daemon, int64_t stream_id,
+  void BeginSession(Daemon *daemon, int64_t stream_id, int32_t pid,
                     const proto::BeginSession &data);
 
   // Ends the given session if it was active.
