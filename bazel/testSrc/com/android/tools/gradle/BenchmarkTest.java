@@ -16,6 +16,7 @@
 
 package com.android.tools.gradle;
 
+import com.android.testutils.BazelRunfilesManifestProcessor;
 import com.android.testutils.diff.UnifiedDiff;
 import com.android.tools.perflogger.Benchmark;
 import com.android.tools.perflogger.PerfData;
@@ -173,6 +174,8 @@ public class BenchmarkTest {
             boolean fromStudio,
             boolean presubmitRun)
             throws Exception {
+
+        BazelRunfilesManifestProcessor.setUpRunfiles();
 
         Benchmark.Builder benchmarkBuilder =
                 new Benchmark.Builder(benchmarkName).setProject("Android Studio Gradle");

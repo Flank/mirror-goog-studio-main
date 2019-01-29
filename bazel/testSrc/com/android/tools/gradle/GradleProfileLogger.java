@@ -68,10 +68,10 @@ public class GradleProfileLogger implements BenchmarkListener {
         }
 
         GradleBuildProfile gradleBuildProfile;
-        try {
-            gradleBuildProfile =
-                    GradleBuildProfile.parseFrom(
-                            new BufferedInputStream(new FileInputStream(rawProtoFiles[0])));
+
+        try (BufferedInputStream input =
+                new BufferedInputStream(new FileInputStream(rawProtoFiles[0]))) {
+            gradleBuildProfile = GradleBuildProfile.parseFrom(input);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
