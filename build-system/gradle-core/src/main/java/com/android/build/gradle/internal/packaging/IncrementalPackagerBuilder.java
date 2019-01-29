@@ -41,7 +41,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
-import org.gradle.api.Project;
 
 /**
  * Factory class to create instances of {@link IncrementalPackager}. Since there are many options
@@ -52,6 +51,7 @@ import org.gradle.api.Project;
  * {@link #build()} method for information on which parameters are mandatory.
  */
 public class IncrementalPackagerBuilder {
+    private static int NO_V1_SDK = 24;
 
     /** Enums for all the supported output format. */
     public enum ApkFormat {
@@ -196,6 +196,20 @@ public class IncrementalPackagerBuilder {
     @NonNull
     public IncrementalPackagerBuilder withSigning(
             @Nullable SigningConfig signingConfig, int minSdk) {
+        return withSigning(signingConfig, minSdk, null);
+    }
+
+    /**
+     * Sets the signing configuration information for the incremental packager.
+     *
+     * @param signingConfig the signing config; if {@code null} then the APK will not be signed
+     * @param minSdk the minimum SDK
+     * @param targetApi optional injected target Api
+     * @return {@code this} for use with fluent-style notation
+     */
+    @NonNull
+    public IncrementalPackagerBuilder withSigning(
+            @Nullable SigningConfig signingConfig, int minSdk, @Nullable Integer targetApi) {
         if (signingConfig == null) {
             return this;
         }
@@ -216,7 +230,10 @@ public class IncrementalPackagerBuilder {
                             Preconditions.checkNotNull(
                                     signingConfig.getKeyAlias(), error, "keyAlias"));
             // V1 signature is useless if minSdk is 24+
-            boolean enableV1Signing = minSdk < 24 && signingConfig.isV1SigningEnabled();
+            boolean enableV1Signing =
+                    (targetApi == null || targetApi < NO_V1_SDK)
+                            && minSdk < NO_V1_SDK
+                            && signingConfig.isV1SigningEnabled();
             creationDataBuilder.setSigningOptions(
                     SigningOptions.builder()
                             .setKey(certificateInfo.getKey())

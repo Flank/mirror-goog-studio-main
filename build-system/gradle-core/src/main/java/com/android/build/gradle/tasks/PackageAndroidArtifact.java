@@ -53,6 +53,7 @@ import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.files.FileCacheByPath;
@@ -246,6 +247,14 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     protected BuildableArtifact apkList;
 
     protected boolean keepTimestampsInApk;
+
+    @Nullable protected Integer targetApi;
+
+    @Input
+    @Optional
+    public Integer getTargetApi() {
+        return targetApi;
+    }
 
     @Input
     public boolean getKeepTimestampsInApk() {
@@ -608,6 +617,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         protected final boolean isDebuggableBuild;
         protected final boolean isJniDebuggableBuild;
         protected final boolean keepTimestampsInApk;
+        @Nullable protected final Integer targetApi;
 
         /**
          * This should only be used in instant run mode in incremental task action where parameters
@@ -652,6 +662,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             isDebuggableBuild = task.getDebugBuild();
             isJniDebuggableBuild = task.getJniDebugBuild();
             keepTimestampsInApk = task.getKeepTimestampsInApk();
+            targetApi = task.getTargetApi();
         }
 
         @NonNull
@@ -793,7 +804,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                         .withOutputFile(outputFile)
                         .withSigning(
                                 SigningConfigMetadata.Companion.load(params.signingConfig),
-                                params.minSdkVersion)
+                                params.minSdkVersion,
+                                params.targetApi)
                         .withCreatedBy(params.createdBy)
                         // TODO: allow extra metadata to be saved in the split scope to avoid
                         // reparsing
@@ -1157,6 +1169,9 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                             .getGlobalScope()
                             .getProjectOptions()
                             .get(BooleanOption.KEEP_TIMESTAMPS_IN_APK);
+
+            packageAndroidArtifact.targetApi =
+                    projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API);
 
             finalConfigure(packageAndroidArtifact);
         }
