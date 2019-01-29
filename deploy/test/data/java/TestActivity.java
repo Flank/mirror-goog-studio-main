@@ -18,6 +18,7 @@ package app;
 import android.app.Activity;
 import android.app.ActivityThread;
 import pkg.KotlinCompanionTarget;
+import pkg.KotlinCoroutineTarget;
 import pkg.KotlinFailedTarget;
 import pkg.KotlinSimpleTarget;
 
@@ -58,6 +59,10 @@ public class TestActivity extends Activity {
 
     public void getFailedTargetStatus() {
         System.out.println(FailedTarget.getStatus());
+    }
+
+    public void getKotlinCoroutineTargetStatus() {
+        System.out.println(new KotlinCoroutineTarget().getStatus());
     }
 
     public void getKotlinSimpleTargetStatus() {
