@@ -8,6 +8,7 @@ java_binary(
         "Agent-Class: com.android.tools.checker.agent.Agent",
         "Premain-Class: com.android.tools.checker.agent.Agent",
         "Boot-Class-Path: aspects_agent.jar",
+        "Can-Retransform-Classes: true",
         "Can-Redefine-Classes: true",
     ],
     main_class = "com.android.tools.checker.agent.Agent",
