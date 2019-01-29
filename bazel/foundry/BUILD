@@ -20,10 +20,6 @@ platform(
         value: "true"
       }
       properties: {
-        name: "dockerAddCapabilities"
-        value: "SYS_PTRACE"
-      }
-      properties: {
         name: "dockerNetwork"
         value: "standard"
       }
