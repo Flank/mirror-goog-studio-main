@@ -27,6 +27,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.desugar.resources.TestClass;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -47,6 +48,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.jf.dexlib2.dexbacked.DexBackedClassDef;
@@ -175,9 +177,11 @@ public class DesugarAppTest {
                         + "}");
         createLibToDesugarAndGetClasses();
         GradleBuildResult result = getProjectExecutor().expectFailure().run("assembleDebug");
-        assertThat(result.getStderr())
-                .contains(
-                        "The dependency contains Java 8 bytecode. Please enable desugaring by adding the following to build.gradle\n");
+        try (Scanner scanner = result.getStderr()) {
+            ScannerSubject.assertThat(scanner)
+                    .contains(
+                            "The dependency contains Java 8 bytecode. Please enable desugaring by adding the following to build.gradle\n");
+        }
     }
 
     @Test

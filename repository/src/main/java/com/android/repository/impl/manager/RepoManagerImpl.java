@@ -367,15 +367,16 @@ public class RepoManagerImpl extends RepoManager {
                 runner.runAsyncWithProgress(mTask);
             }
         } else if (sync) {
-            // Otherwise wait for the semaphore to be released by the callback if we're
+            // Otherwise wait for artifactsthe semaphore to be released by the callback if we're
             // running synchronously.
-            runner.runSyncWithProgress((indicator, runner2) -> {
-                try {
-                    completed.acquire();
-                } catch (InterruptedException e) {
-                    /* shouldn't happen*/
-                }
-            });
+            runner.runSyncWithProgress(
+                    (indicator, runner2) -> {
+                        try {
+                            completed.acquire();
+                        } catch (InterruptedException e) {
+                            /* shouldn't happen*/
+                        }
+                    });
         }
 
     }

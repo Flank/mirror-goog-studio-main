@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
+import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.options.BooleanOption
 import com.google.common.base.Throwables
 import com.google.common.truth.Truth.assertThat
@@ -51,10 +52,14 @@ class DependencyCheckerTest {
                 true
             )
             .run("tasks")
-        assertThat(warning.stdout)
-            .contains("Configuration 'debugRuntimeClasspath' was resolved")
-        assertThat(warning.stdout)
-            .contains(app.buildFile.absolutePath.toString() + ":")
+        warning.stdout.use {
+            ScannerSubject.assertThat(it)
+                .contains("Configuration 'debugRuntimeClasspath' was resolved")
+        }
+        warning.stdout.use {
+            ScannerSubject.assertThat(it)
+                .contains(app.buildFile.absolutePath.toString() + ":")
+        }
 
         // Assert no exceptions while fetching the models
         val models = app.model().fetchAndroidProjects()

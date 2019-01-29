@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application;
 
+import static com.android.build.gradle.integration.common.truth.ScannerSubject.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
@@ -32,6 +33,7 @@ import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
+import java.util.Scanner;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -183,6 +185,8 @@ public class D8DesugaringConnectedTest {
                         .with(BooleanOption.ENABLE_D8, true)
                         .with(BooleanOption.ENABLE_D8_DESUGARING, true)
                         .run("app:connectedBaseDebugAndroidTest");
-        assertThat(result.getStdout().contains("Starting 2 tests on"));
+        try (Scanner stdout = result.getStdout()) {
+            assertThat(stdout).contains("Starting 2 tests on");
+        }
     }
 }

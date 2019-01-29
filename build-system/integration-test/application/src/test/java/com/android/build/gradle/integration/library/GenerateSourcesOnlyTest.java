@@ -16,14 +16,14 @@
 
 package com.android.build.gradle.integration.library;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp;
+import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.utils.ModelContainerUtils;
 import java.util.List;
+import java.util.Scanner;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -40,7 +40,11 @@ public class GenerateSourcesOnlyTest {
 
         GradleBuildResult result = project.executor().run(generateSources);
 
-        assertThat(result.getStdout()).doesNotContain("compileDebugJava");
-        assertThat(result.getStdout()).doesNotContain("compileReleaseJava");
+        try (Scanner stdout = result.getStdout()) {
+            ScannerSubject.assertThat(stdout).doesNotContain("compileDebugJava");
+        }
+        try (Scanner stdout = result.getStdout()) {
+            ScannerSubject.assertThat(stdout).doesNotContain("compileReleaseJava");
+        }
     }
 }

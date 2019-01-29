@@ -16,12 +16,13 @@
 
 package com.android.build.gradle.integration.databinding;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
+import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.utils.FileUtils;
+import java.util.Scanner;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -55,10 +56,16 @@ public class DataBindingMessageRewriteTest {
 
                     GradleBuildResult result =
                             project.executor().expectFailure().run("processDebugResources");
-                    assertThat(result.getStdout())
-                            .contains(
-                                    FileUtils.join(
-                                            "src", "main", "res", "layout", "activity_main.xml"));
+                    try (Scanner stdout = result.getStdout()) {
+                        ScannerSubject.assertThat(stdout)
+                                .contains(
+                                        FileUtils.join(
+                                                "src",
+                                                "main",
+                                                "res",
+                                                "layout",
+                                                "activity_main.xml"));
+                    }
                 });
 
         project.execute("processDebugResources");
@@ -76,10 +83,16 @@ public class DataBindingMessageRewriteTest {
 
                     GradleBuildResult result =
                             project.executor().expectFailure().run("processDebugResources");
-                    assertThat(result.getStdout())
-                            .contains(
-                                    FileUtils.join(
-                                            "src", "main", "res", "layout", "activity_main.xml"));
+                    try (Scanner stdout = result.getStdout()) {
+                        ScannerSubject.assertThat(stdout)
+                                .contains(
+                                        FileUtils.join(
+                                                "src",
+                                                "main",
+                                                "res",
+                                                "layout",
+                                                "activity_main.xml"));
+                    }
                 });
 
         project.execute("processDebugResources");

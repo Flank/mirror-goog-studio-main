@@ -24,6 +24,7 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
+import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
@@ -37,6 +38,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Scanner;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -413,12 +415,15 @@ public class NativeBuildOutputTest {
         // Check the build
         GradleBuildResult result =
                 project.executor().withEnableInfoLogging(enableInfoLogging).run("assembleDebug");
-        String stdout = result.getStdout();
-        for (String expect : expectInStdout) {
-            assertThat(stdout).contains(expect);
-        }
-        for (String dontExpect : dontExpectInStdout) {
-            assertThat(stdout).doesNotContain(dontExpect);
+
+        try (Scanner stdout = result.getStdout()) {
+            ScannerSubject scannerSubject = ScannerSubject.assertThat(stdout);
+            for (String expect : expectInStdout) {
+                scannerSubject.contains(expect);
+            }
+            for (String dontExpect : dontExpectInStdout) {
+                scannerSubject.doesNotContain(dontExpect);
+            }
         }
     }
 
@@ -474,9 +479,10 @@ public class NativeBuildOutputTest {
                         .expectFailure()
                         .withEnableInfoLogging(false)
                         .run("assembleDebug");
-        String stderr = result.getStderr();
         for (String expect : expectInStderr) {
-            assertThat(stderr).contains(expect);
+            try (Scanner stderr = result.getStderr()) {
+                ScannerSubject.assertThat(stderr).contains(expect);
+            }
         }
     }
 }

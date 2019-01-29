@@ -29,8 +29,11 @@ import com.android.utils.Pair;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
-import java.io.ByteArrayOutputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashSet;
@@ -295,25 +298,31 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
 
         setJvmArguments(executor);
 
-        ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-        setStandardOut(executor, stdout);
-        ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-        setStandardError(executor, stderr);
+        File stdErrFile = File.createTempFile("stdOut", "log");
+        File stdOutFile = File.createTempFile("stdErr", "log");
 
         CollectingProgressListener progressListener = new CollectingProgressListener();
         executor.addProgressListener(progressListener, OperationType.TASK);
 
         try {
-            T model = executor.withArguments(getArguments()).run();
+            T model;
+            try (OutputStream stdout = new BufferedOutputStream(new FileOutputStream(stdOutFile));
+                    OutputStream stderr =
+                            new BufferedOutputStream(new FileOutputStream(stdErrFile))) {
+                setStandardOut(executor, stdout);
+                setStandardError(executor, stderr);
+                model = executor.withArguments(getArguments()).run();
+            }
             GradleBuildResult buildResult =
-                    new GradleBuildResult(stdout, stderr, progressListener.getEvents(), null);
+                    new GradleBuildResult(
+                            stdOutFile, stdErrFile, progressListener.getEvents(), null);
 
             lastBuildResultConsumer.accept(buildResult);
 
             return Pair.of(model, buildResult);
         } catch (GradleConnectionException e) {
             lastBuildResultConsumer.accept(
-                    new GradleBuildResult(stdout, stderr, progressListener.getEvents(), e));
+                    new GradleBuildResult(stdOutFile, stdErrFile, progressListener.getEvents(), e));
             maybePrintJvmLogs(e);
             throw e;
         }

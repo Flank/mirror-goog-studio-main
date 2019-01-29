@@ -24,9 +24,11 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestModule;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
+import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import java.util.Scanner;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -50,8 +52,11 @@ public class ResourceValidationTest {
         //noinspection ThrowableResultOfMethodCallIgnored
         assertThat(result.getFailureMessage()).contains("file name must end with");
 
-        assertThat(result.getStdout()).contains(FileUtils.join("src", "main", "res",
-                "drawable", "not_a_drawable.ext"));
+        try (Scanner scanner = result.getStdout()) {
+            ScannerSubject.assertThat(scanner)
+                    .contains(
+                            FileUtils.join("src", "main", "res", "drawable", "not_a_drawable.ext"));
+        }
 
         Files.asCharSink(project.file("gradle.properties"), Charsets.UTF_8)
                 .write("android.disableResourceValidation=true\n");

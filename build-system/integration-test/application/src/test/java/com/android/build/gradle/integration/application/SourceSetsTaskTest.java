@@ -16,12 +16,12 @@
 
 package com.android.build.gradle.integration.application;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.utils.FileUtils;
+import java.util.Scanner;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -85,6 +85,8 @@ public class SourceSetsTaskTest {
                         + ""
                         + System.lineSeparator();
 
-        assertThat(project.getBuildResult().getStdout()).contains(expected);
+        try (Scanner scanner = project.getBuildResult().getStdout()) {
+            ScannerSubject.assertThat(scanner).contains(expected);
+        }
     }
 }

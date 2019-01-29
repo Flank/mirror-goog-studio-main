@@ -1,15 +1,16 @@
 package com.android.build.gradle.integration.dependencies;
 
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
-import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.util.Scanner;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Ignore;
@@ -66,8 +67,10 @@ public class LibWithAppDependencyTest {
                 project.executor().expectFailure().run("clean", ":library:assembleDebug");
 
         // Gradle detects this for us. Unfortunately there's no mention of ":lib" in the error message.
-        assertThat(result.getStdout())
-                .contains(
-                        "library/src/main/java/com/example/library/Lib.java:3: error: package com.example.app does not exist");
+        try (Scanner stdout = result.getStdout()) {
+            ScannerSubject.assertThat(stdout)
+                    .contains(
+                            "library/src/main/java/com/example/library/Lib.java:3: error: package com.example.app does not exist");
+        }
     }
 }

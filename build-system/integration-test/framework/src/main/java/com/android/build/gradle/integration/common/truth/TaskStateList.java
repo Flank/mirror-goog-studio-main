@@ -28,6 +28,7 @@ import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -112,7 +113,7 @@ public class TaskStateList {
     @NonNull private final ImmutableMap<ExecutionState, ImmutableSet<String>> taskStateMap;
 
     public TaskStateList(
-            @NonNull List<ProgressEvent> progressEvents, @NonNull String gradleOutput) {
+            @NonNull List<ProgressEvent> progressEvents, @NonNull Scanner gradleOutput) {
         ImmutableList.Builder<String> taskListBuilder = ImmutableList.builder();
         Map<ExecutionState, Set<String>> taskMap = new EnumMap<>(ExecutionState.class);
         for (ExecutionState state : ExecutionState.values()) {
@@ -179,11 +180,17 @@ public class TaskStateList {
 
     @NonNull
     private static ImmutableSet<String> getTasksByPatternFromGradleOutput(
-            @NonNull String gradleOutput, @NonNull Pattern pattern) {
+            @NonNull Scanner gradleOutput, @NonNull Pattern pattern) {
         ImmutableSet.Builder<String> result = ImmutableSet.builder();
-        Matcher matcher = pattern.matcher(gradleOutput);
-        while (matcher.find()) {
-            result.add(matcher.group(1));
+        try {
+            while (gradleOutput.hasNextLine()) {
+                Matcher matcher = pattern.matcher(gradleOutput.nextLine());
+                if (matcher.find()) {
+                    result.add(matcher.group(1));
+                }
+            }
+        } finally {
+            gradleOutput.close();
         }
         return result.build();
     }

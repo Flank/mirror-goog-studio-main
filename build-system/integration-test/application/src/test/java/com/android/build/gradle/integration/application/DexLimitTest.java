@@ -24,11 +24,13 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestModule;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
+import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.utils.DexInProcessHelper;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Scanner;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -81,8 +83,10 @@ public class DexLimitTest {
     @Test
     public void checkDexErrorMessage() throws Exception {
         GradleBuildResult result = mProject.executor().expectFailure().run("assembleDebug");
-        assertThat(result.getStderr())
-                .contains("https://developer.android.com/tools/building/multidex.html");
+        try (Scanner scanner = result.getStderr()) {
+            ScannerSubject.assertThat(scanner)
+                    .contains("https://developer.android.com/tools/building/multidex.html");
+        }
 
         // Check that when dexing in-process, we don't keep bad state after a failure
         if (mDexInProcess) {

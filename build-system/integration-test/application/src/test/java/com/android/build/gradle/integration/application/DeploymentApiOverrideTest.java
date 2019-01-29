@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.testutils.apk.Apk;
@@ -27,6 +28,7 @@ import com.android.testutils.apk.Dex;
 import com.google.common.collect.ImmutableSet;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -52,7 +54,9 @@ public class DeploymentApiOverrideTest {
 
         GradleBuildResult lastBuild = project.executor().run("clean", "assembleIcsDebug");
         assertThat(lastBuild).isNotNull();
-        assertThat(lastBuild.getStdout()).contains("Multidexlist");
+        try (Scanner stdout = lastBuild.getStdout()) {
+            ScannerSubject.assertThat(stdout).contains("Multidexlist");
+        }
     }
 
     @Test
@@ -62,8 +66,9 @@ public class DeploymentApiOverrideTest {
                         .with(IntegerOption.IDE_TARGET_DEVICE_API, 21)
                         .run("clean", "assembleIcsDebug");
         assertThat(lastBuild).isNotNull();
-        assertThat(lastBuild.getStdout()).doesNotContain("Multidexlist");
-
+        try (Scanner stdout = lastBuild.getStdout()) {
+            ScannerSubject.assertThat(stdout).doesNotContain("Multidexlist");
+        }
     }
 
     @Test
@@ -73,7 +78,9 @@ public class DeploymentApiOverrideTest {
                         .with(IntegerOption.IDE_TARGET_DEVICE_API, 21)
                         .run("clean", "assembleIcsRelease");
         assertThat(lastBuild).isNotNull();
-        assertThat(lastBuild.getStdout()).contains("Multidexlist");
+        try (Scanner stdout = lastBuild.getStdout()) {
+            ScannerSubject.assertThat(stdout).contains("Multidexlist");
+        }
     }
 
     /** Regression test for https://issuetracker.google.com/72085541. */

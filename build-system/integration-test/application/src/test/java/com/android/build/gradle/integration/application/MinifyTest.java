@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.options.BooleanOption;
@@ -35,6 +36,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Rule;
@@ -63,8 +65,12 @@ public class MinifyTest {
                 project.executor()
                         .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
                         .run("assembleMinified");
-        assertThat(result.getStdout()).doesNotContain("Note");
-        assertThat(result.getStdout()).doesNotContain("duplicate");
+        try (Scanner stdout = result.getStdout()) {
+            ScannerSubject.assertThat(stdout).doesNotContain("Note");
+        }
+        try (Scanner stdout = result.getStdout()) {
+            ScannerSubject.assertThat(stdout).doesNotContain("duplicate");
+        }
 
         Apk apk = project.getApk("minified");
         Set<String> allClasses = Sets.newHashSet();

@@ -20,10 +20,12 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.truth.ScannerSubjectUtils;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
+import kotlin.Unit;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -41,7 +43,14 @@ public class BuilderTestingApiTest {
     @Test
     public void deviceCheck() throws IOException, InterruptedException {
         GradleBuildResult result = project.executor().run("deviceCheck");
-        List<String> lines = result.getStdoutAsLines();
+        ImmutableList.Builder<String> listBuilder = new ImmutableList.Builder<>();
+        ScannerSubjectUtils.forEachLine(
+                result.getStdout(),
+                it -> {
+                    listBuilder.add(it);
+                    return Unit.INSTANCE;
+                });
+        List<String> lines = listBuilder.build();
 
         List<String> expectedActionsDevice1 =
                 ImmutableList.of(

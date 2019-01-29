@@ -16,12 +16,13 @@
 
 package com.android.build.gradle.integration.application;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
+import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.utils.FileUtils;
+import java.util.Scanner;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -53,9 +54,12 @@ public class MessageRewrite2Test {
 
                     GradleBuildResult result =
                             project.executor().expectFailure().run("assembleDebug");
-                    assertThat(result.getStdout())
-                            .contains(
-                                    FileUtils.join("src", "main", "res", "values", "strings.xml"));
+                    try (Scanner scanner = result.getStdout()) {
+                        ScannerSubject.assertThat(scanner)
+                                .contains(
+                                        FileUtils.join(
+                                                "src", "main", "res", "values", "strings.xml"));
+                    }
                 });
 
         project.execute("assembleDebug");
@@ -72,9 +76,12 @@ public class MessageRewrite2Test {
 
                     GradleBuildResult result =
                             project.executor().expectFailure().run("assembleDebug");
-                    assertThat(result.getStdout())
-                            .contains(
-                                    FileUtils.join("src", "main", "res", "values", "strings.xml"));
+                    try (Scanner stdout = result.getStdout()) {
+                        ScannerSubject.assertThat(stdout)
+                                .contains(
+                                        FileUtils.join(
+                                                "src", "main", "res", "values", "strings.xml"));
+                    }
                 });
 
         // AAPT1 and AAPT2 (with the legacy flag) should allow multiple substitutions specified in a

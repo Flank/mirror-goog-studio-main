@@ -16,18 +16,19 @@
 
 package com.android.build.gradle.integration.testing;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
+import static com.android.build.gradle.integration.common.truth.ScannerSubject.assertThat;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.StringOption;
 import com.android.ddmlib.IDevice;
+import java.util.Scanner;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -54,7 +55,9 @@ public class ConnectedCheckTest {
         project.execute("assembleDebug", "assembleDebugAndroidTest");
         adb.exclusiveAccess();
         GradleBuildResult result = project.executor().run("connectedCheck");
-        assertThat(result.getStdout().contains("Starting 3 tests on"));
+        try (Scanner stdout = result.getStdout()) {
+            assertThat(stdout).contains("Starting 3 tests on");
+        }
     }
 
     @Category(DeviceTests.class)
@@ -68,12 +71,14 @@ public class ConnectedCheckTest {
                 .with(StringOption.DEVICE_POOL_SERIAL, device.getSerialNumber())
                 .executeConnectedCheck();
         GradleBuildResult result = project.getBuildResult();
-        String stdout = result.getStdout();
-        assertThat(stdout).contains("will shard tests into 1 shards");
-        assertThat(stdout).contains("Starting 3 tests on");
-        assertThat(stdout).contains("finished 1 of estimated 3 tests");
-        assertThat(stdout).contains("finished 2 of estimated 3 tests");
-        assertThat(stdout).contains("finished 3 of estimated 3 tests");
+        try (Scanner stdoutScanner = result.getStdout()) {
+            ScannerSubject stdout = assertThat(stdoutScanner);
+            stdout.contains("will shard tests into 1 shards");
+            stdout.contains("Starting 3 tests on");
+            stdout.contains("finished 1 of estimated 3 tests");
+            stdout.contains("finished 2 of estimated 3 tests");
+            stdout.contains("finished 3 of estimated 3 tests");
+        }
     }
 
     @Category(DeviceTests.class)
@@ -86,6 +91,8 @@ public class ConnectedCheckTest {
                         .with(BooleanOption.ENABLE_TEST_SHARDING, true)
                         .with(IntegerOption.ANDROID_TEST_SHARD_COUNT, 7)
                         .run("connectedCheck");
-        assertThat(result.getStdout()).contains("will shard tests into 7 shards");
+        try (Scanner stdout = result.getStdout()) {
+            assertThat(stdout).contains("will shard tests into 7 shards");
+        }
     }
 }

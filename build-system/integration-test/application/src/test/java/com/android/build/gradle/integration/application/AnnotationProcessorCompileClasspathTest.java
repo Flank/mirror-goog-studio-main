@@ -20,8 +20,10 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import java.io.IOException;
+import java.util.Scanner;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -66,16 +68,22 @@ public class AnnotationProcessorCompileClasspathTest {
                         + "android.defaultConfig.javaCompileOptions.annotationProcessorOptions.includeCompileClasspath null");
 
         GradleBuildResult result = project.executor().run("assembleDebugAndroidTest");
-        String message = result.getStdout();
-        assertThat(message).contains("Annotation processors must be explicitly declared now");
-        assertThat(message).contains("androidTestAnnotationProcessor");
-        assertThat(message).contains("- butterknife-7.0.1.jar (com.jakewharton:butterknife:7.0.1)");
-
+        try (Scanner stdout = result.getStdout()) {
+            ScannerSubject.assertThat(stdout)
+                    .contains(
+                            "Annotation processors must be explicitly declared now\n"
+                                    + "androidTestAnnotationProcessor\n"
+                                    + "- butterknife-7.0.1.jar (com.jakewharton:butterknife:7.0.1)\n");
+        }
         result = project.executor().run("assembleDebugUnitTest");
-        message = result.getStdout();
-        assertThat(message).contains("Annotation processors must be explicitly declared");
-        assertThat(message).contains("testAnnotationProcessor");
-        assertThat(message).contains("- butterknife-7.0.1.jar (com.jakewharton:butterknife:7.0.1)");
+        try (Scanner stdout = result.getStdout()) {
+            ScannerSubject.assertThat(stdout)
+                    .contains(
+                            "Annotation processors must be explicitly declared\n"
+                                    + "testAnnotationProcessor\n"
+                                    + "- butterknife-7.0.1.jar (com.jakewharton:butterknife:7.0.1)");
+        }
+
     }
 
     @Test

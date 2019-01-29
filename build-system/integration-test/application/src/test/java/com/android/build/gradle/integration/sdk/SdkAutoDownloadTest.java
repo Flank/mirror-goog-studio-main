@@ -28,6 +28,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelBuilder;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
+import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.builder.core.AndroidBuilder;
@@ -52,6 +53,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.List;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Assume;
@@ -344,7 +346,9 @@ public class SdkAutoDownloadTest {
         assertThat(result.getFailureMessage())
                 .contains(
                         "Failed to install the following Android SDK packages as some licences have not been accepted");
-        assertThat(result.getStdout()).contains("CMake");
+        try (Scanner scanner = result.getStdout()) {
+            ScannerSubject.assertThat(scanner).contains("CMake");
+        }
     }
 
     @Test

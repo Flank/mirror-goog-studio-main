@@ -22,12 +22,14 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.truth.ScannerSubjectUtils;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.testutils.apk.Aar;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
 import com.android.testutils.apk.Zip;
 import com.android.utils.FileUtils;
+import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth8;
 import java.io.File;
 import java.io.IOException;
@@ -35,6 +37,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import kotlin.Unit;
 import org.junit.AfterClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -225,16 +228,21 @@ public class BytecodeGenerationHooksTest {
 
     private void checkDependencies(
             GradleBuildResult result, String prefix, boolean exactly, String... dependencies) {
-        List<String> lines = result.getStdoutAsLines();
         String projectDir = project.getTestDir().getAbsolutePath();
 
-        lines =
-                lines.stream()
-                        .filter(s -> s.startsWith(prefix))
-                        .map(s -> s.substring(prefix.length()))
-                        // Internal deps only. Ignore com.android.support.test:rules/runner/monitor
-                        .filter(s -> s.contains(projectDir))
-                        .collect(Collectors.toList());
+        ImmutableList.Builder<String> listBuilder = new ImmutableList.Builder<>();
+        ScannerSubjectUtils.forEachLine(
+                result.getStdout(),
+                line -> {
+                    if (line.startsWith(prefix)) {
+                        String s = line.substring(prefix.length());
+                        if (s.contains(projectDir)) {
+                            listBuilder.add(s);
+                        }
+                    }
+                    return Unit.INSTANCE;
+                });
+        List<String> lines = listBuilder.build();
 
         List<String> deps =
                 Arrays.stream(dependencies)
@@ -253,13 +261,16 @@ public class BytecodeGenerationHooksTest {
 
     private void checkSourceFolders(
             GradleBuildResult result, String prefix, String... dependencies) {
-        List<String> lines = result.getStdoutAsLines();
-
-        lines =
-                lines.stream()
-                        .filter(s -> s.startsWith(prefix))
-                        .map(s -> s.substring(prefix.length()))
-                        .collect(Collectors.toList());
+        ImmutableList.Builder<String> listBuilder = new ImmutableList.Builder<String>();
+        ScannerSubjectUtils.forEachLine(
+                result.getStdout(),
+                it -> {
+                    if (it.startsWith(prefix)) {
+                        listBuilder.add(it.substring(prefix.length()));
+                    }
+                    return Unit.INSTANCE;
+                });
+        List<String> lines = listBuilder.build();
 
         File projectDir = project.getTestDir();
 

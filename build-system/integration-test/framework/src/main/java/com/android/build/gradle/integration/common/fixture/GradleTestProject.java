@@ -25,6 +25,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.integration.BazelIntegrationTestsSuite;
+import com.android.build.gradle.integration.common.truth.ScannerSubjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.AndroidBuilder;
@@ -74,6 +75,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import kotlin.Unit;
 import org.gradle.tooling.GradleConnectionException;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
@@ -435,9 +437,19 @@ public final class GradleTestProject implements TestRule {
                         System.err.println("=================== Stderr ===================");
                         // All output produced during build execution is written to the standard
                         // output file handle since Gradle 4.7. This should be empty.
-                        System.err.print(lastBuildResult.getStderr());
+                        ScannerSubjectUtils.forEachLine(
+                                lastBuildResult.getStderr(),
+                                it -> {
+                                    System.err.println(it);
+                                    return Unit.INSTANCE;
+                                });
                         System.err.println("=================== Stdout ===================");
-                        System.err.print(lastBuildResult.getStdout());
+                        ScannerSubjectUtils.forEachLine(
+                                lastBuildResult.getStdout(),
+                                it -> {
+                                    System.err.println(it);
+                                    return Unit.INSTANCE;
+                                });
                         System.err.println("==============================================");
                         System.err.println("=============== End last build ===============");
                         System.err.println("==============================================");

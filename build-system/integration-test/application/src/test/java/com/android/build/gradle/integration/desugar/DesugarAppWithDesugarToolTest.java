@@ -25,6 +25,7 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.instant.InstantRunTestUtils;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
@@ -46,6 +47,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Scanner;
 import java.util.stream.Collectors;
 import org.jf.dexlib2.dexbacked.DexBackedClassDef;
 import org.junit.Assume;
@@ -212,12 +214,11 @@ public class DesugarAppWithDesugarToolTest {
         Assume.assumeFalse(enableGradleWorkers);
         enableJava8();
 
-        assertThat(
-                        getProjectExecutor()
-                                .withEnableInfoLogging(true)
-                                .run("assembleDebug")
-                                .getStdout())
-                .doesNotContain("--legacy_jacoco_fix");
+        try (Scanner stdout =
+                getProjectExecutor().withEnableInfoLogging(true).run("assembleDebug").getStdout()) {
+
+            ScannerSubject.assertThat(stdout).doesNotContain("--legacy_jacoco_fix");
+        }
 
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
@@ -228,12 +229,10 @@ public class DesugarAppWithDesugarToolTest {
                         + "'");
 
         // now it should contain it as Jacoco version is lower
-        assertThat(
-                        getProjectExecutor()
-                                .withEnableInfoLogging(true)
-                                .run("assembleDebug")
-                                .getStdout())
-                .contains("--legacy_jacoco_fix");
+        try (Scanner stdout =
+                getProjectExecutor().withEnableInfoLogging(true).run("assembleDebug").getStdout()) {
+            ScannerSubject.assertThat(stdout).contains("--legacy_jacoco_fix");
+        }
     }
 
     @Test

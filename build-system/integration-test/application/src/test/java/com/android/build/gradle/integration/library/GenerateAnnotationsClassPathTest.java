@@ -18,12 +18,13 @@ package com.android.build.gradle.integration.library;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
-import static org.junit.Assert.assertFalse;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import java.io.File;
 import java.io.IOException;
+import java.util.Scanner;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -128,11 +129,11 @@ public class GenerateAnnotationsClassPathTest {
     public void checkJavaGeneratingTaskAddsOutputDirToGenerateAnnotationsClasspath()
             throws IOException, InterruptedException {
         project.execute("clean", "assembleDebug");
-        assertFalse(
-                "Extract annotation should get generated class on path.",
-                project.getBuildResult()
-                        .getStdout()
-                        .contains("Not extracting annotations (compilation problems encountered)"));
+        try (Scanner stdout = project.getBuildResult().getStdout()) {
+            ScannerSubject.assertThat(stdout)
+                    .doesNotContain(
+                            "Not extracting annotations (compilation problems encountered)");
+        }
         assertThat(
                         project.file(
                                 "build/generated/source/testplugin/debug/com/example/helloworld/GeneratedClass.java"))

@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.common.fixture.TestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
+import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.model.SyncIssue
 import com.google.common.truth.Truth
@@ -93,19 +94,21 @@ class ObsoleteApiTest(private val provider: TestProjectProvider) {
     fun `Test from command line`() {
         val result = project.executor().with(BooleanOption.DEBUG_OBSOLETE_API, true).run("help")
 
-        when(provider.name) {
-            "Kotlin" -> {
-                Truth.assertThat(result.stdout).doesNotContain("API 'variant.getJavaCompile()' is obsolete")
+        result.stdout.use {
+            when(provider.name) {
+                "Kotlin" -> {
+                    ScannerSubject.assertThat(it).doesNotContain("API 'variant.getJavaCompile()' is obsolete")
+                }
+                "Java" -> {
+                    ScannerSubject.assertThat(it).contains(
+                        "API 'variant.getJavaCompile()' is obsolete and has been replaced with 'variant.getJavaCompileProvider()'.\n" +
+                                "It will be removed at the end of 2019.\n" +
+                                "For more information, see https://d.android.com/r/tools/task-configuration-avoidance.\n" +
+                                "REASON: Called from: ${project.testDir}${File.separatorChar}build.gradle:23\n" +
+                                "WARNING: Debugging obsolete API calls can take time during configuration. It's recommended to not keep it on at all times.")
+                }
+                else -> throw RuntimeException("Unsupported type")
             }
-            "Java" -> {
-                Truth.assertThat(result.stdout).contains(
-                    "API 'variant.getJavaCompile()' is obsolete and has been replaced with 'variant.getJavaCompileProvider()'.\n" +
-                            "It will be removed at the end of 2019.\n" +
-                            "For more information, see https://d.android.com/r/tools/task-configuration-avoidance.\n" +
-                            "REASON: Called from: ${project.testDir}${File.separatorChar}build.gradle:23\n" +
-                            "WARNING: Debugging obsolete API calls can take time during configuration. It's recommended to not keep it on at all times.")
-            }
-            else -> throw RuntimeException("Unsupported type")
         }
     }
 

@@ -32,8 +32,11 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import java.io.ByteArrayOutputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
@@ -140,17 +143,9 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
             args.add("--stacktrace");
         }
 
-        ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-        ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-        String message =
-                "[GradleTestProject "
-                        + projectDirectory
-                        + "] Executing tasks: \ngradle "
-                        + Joiner.on(' ').join(args)
-                        + " "
-                        + Joiner.on(' ').join(tasksList)
-                        + "\n\n";
-        stdout.write(message.getBytes());
+        File tmpStdOut = File.createTempFile("stdout", "log");
+        File tmpStdErr = File.createTempFile("stderr", "log");
+
 
         ConfigurableLauncher launcher;
         Supplier<ModelContainer<ProjectBuildOutput>> runBuild;
@@ -175,8 +170,6 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
         }
 
         setJvmArguments(launcher);
-        setStandardOut(launcher, stdout);
-        setStandardError(launcher, stderr);
 
         CollectingProgressListener progressListener = new CollectingProgressListener();
 
@@ -186,7 +179,22 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
 
         GradleConnectionException failure = null;
         ModelContainer<ProjectBuildOutput> outputModelContainer = null;
-        try {
+        try (OutputStream stdout = new BufferedOutputStream(new FileOutputStream(tmpStdOut));
+                OutputStream stderr = new BufferedOutputStream(new FileOutputStream(tmpStdErr))) {
+
+            String message =
+                    "[GradleTestProject "
+                            + projectDirectory
+                            + "] Executing tasks: \ngradle "
+                            + Joiner.on(' ').join(args)
+                            + " "
+                            + Joiner.on(' ').join(tasksList)
+                            + "\n\n";
+            stdout.write(message.getBytes());
+
+            setStandardOut(launcher, stdout);
+            setStandardError(launcher, stderr);
+
             outputModelContainer = runBuild.get();
         } catch (GradleConnectionException e) {
             failure = e;
@@ -194,8 +202,8 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
 
         GradleBuildResult result =
                 new GradleBuildResult(
-                        stdout,
-                        stderr,
+                        tmpStdOut,
+                        tmpStdErr,
                         progressListener.getEvents(),
                         failure,
                         outputModelContainer);

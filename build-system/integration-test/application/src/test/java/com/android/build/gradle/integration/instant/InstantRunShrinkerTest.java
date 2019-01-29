@@ -16,17 +16,18 @@
 
 package com.android.build.gradle.integration.instant;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestModule;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
+import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.sdklib.AndroidVersion;
 import com.google.common.truth.Expect;
+import java.util.Scanner;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -97,7 +98,9 @@ public class InstantRunShrinkerTest {
                                 new AndroidVersion(23, null), OptionalCompilationStep.FULL_APK)
                         .run("assembleDebug");
 
-        assertThat(result.getStdout()).contains("R8 is disabled for variant");
+        try (Scanner stdout = result.getStdout()) {
+            ScannerSubject.assertThat(stdout).contains("R8 is disabled for variant");
+        }
     }
 
 }

@@ -29,7 +29,13 @@ import org.gradle.internal.serialize.PlaceholderException
 import org.gradle.tooling.BuildException
 import org.gradle.tooling.GradleConnectionException
 import org.gradle.tooling.events.ProgressEvent
-import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.OutputStream
+import java.util.Scanner
+import java.util.Spliterators
+import java.util.regex.Pattern
+import java.util.stream.Stream
+import java.util.stream.StreamSupport
 
 /**
  * The result from running a build.
@@ -38,15 +44,23 @@ import java.io.ByteArrayOutputStream
  * @property exception The exception from the build, null if the build succeeded.
  */
 class GradleBuildResult @JvmOverloads constructor(
-    stdout: ByteArrayOutputStream,
-    stderr: ByteArrayOutputStream,
+    private val stdoutFile: File,
+    private val stderrFile: File,
     private val taskEvents: ImmutableList<ProgressEvent>,
     val exception: GradleConnectionException?,
     buildOutputContainer: ModelContainer<ProjectBuildOutput>? = null
 ) {
+    /**
+     * Returns a new [Scanner] for the stderr messages. This instance MUST be closed when done.
+     */
+    val stderr
+        get() = Scanner(stderrFile)
 
-    val stdout: String = stdout.toString()
-    val stderr: String = stderr.toString()
+    /**
+     * Returns a new [Scanner] for the stdout messages. This instance MUST be closed when done.
+     */
+    val stdout
+        get() = Scanner(stdoutFile)
 
     private val _buildOutputContainer = buildOutputContainer
     val buildOutputContainer: ModelContainer<ProjectBuildOutput>
@@ -105,12 +119,6 @@ class GradleBuildResult @JvmOverloads constructor(
 
             throw AssertionError("Failed to determine the failure message.", exception)
         }
-
-    val stdoutAsLines: List<String>
-        get() = Splitter.on(System.lineSeparator()).omitEmptyStrings().split(stdout).toList()
-
-    val stderrAsLines: List<String>
-        get() = Splitter.on(System.lineSeparator()).omitEmptyStrings().split(stderr).toList()
 
     val tasks: List<String>
         get() = taskStates.tasks

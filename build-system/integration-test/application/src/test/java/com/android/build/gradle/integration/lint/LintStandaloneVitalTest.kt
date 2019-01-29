@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.lint
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.testutils.truth.FileSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -39,15 +40,19 @@ class LintStandaloneVitalTest {
     fun checkStandaloneLintVital() {
         project.executeExpectingFailure("clean", "lintVital")
 
-        assertThat(project.buildResult.stderr).contains("" +
-                "Lint found errors in the project; aborting build.\n" +
-                "  \n" +
-                "  Fix the issues identified by lint, or add the following to your build script to proceed with errors:\n" +
-                "  ...\n" +
-                "  lintOptions {\n" +
-                "      abortOnError false\n" +
-                "  }\n" +
-                "  ...")
+        project.buildResult.stderr.use {
+            ScannerSubject.assertThat(it).contains(
+                "" +
+                        "Lint found errors in the project; aborting build.\n" +
+                        "  \n" +
+                        "  Fix the issues identified by lint, or add the following to your build script to proceed with errors:\n" +
+                        "  ...\n" +
+                        "  lintOptions {\n" +
+                        "      abortOnError false\n" +
+                        "  }\n" +
+                        "  ..."
+            )
+        }
 
         val file = project.file("lint-results.txt")
         assertThat(file).exists()

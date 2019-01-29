@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.api
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.ModelContainer
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
+import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.SyncIssue
@@ -68,7 +69,9 @@ class PluginVersionCheckTest {
         assertThat(syncIssue.message).isEqualTo(expected)
 
         val failure = project.executor().expectFailure().run("generateDebugR2")
-        assertThat(failure.stderr).contains(expected)
+        failure.stderr.use {
+            ScannerSubject.assertThat(it).contains(expected)
+        }
     }
 
     @Test

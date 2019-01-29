@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.resources
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
+import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.getDebugGenerateSourcesCommands
@@ -113,8 +114,12 @@ class AutoNamespaceTest {
             .expectFailure()
             .run("assembleDebug")
 
-        Truth.assertThat(result.stderr).contains("error: cannot find symbol")
-        Truth.assertThat(result.stderr)
+        result.stderr.use {
+            ScannerSubject.assertThat(it).contains("error: cannot find symbol")
+        }
+        result.stderr.use {
+            ScannerSubject.assertThat(it)
                 .contains("int resRef = android.support.constraint.R.attr.invalid_reference;")
+        }
     }
 }

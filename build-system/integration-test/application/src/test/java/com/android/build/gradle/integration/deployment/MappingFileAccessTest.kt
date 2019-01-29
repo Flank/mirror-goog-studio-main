@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.deployment
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
@@ -80,7 +81,10 @@ class MappingFileAccessTest {
         assertThat(buildResult.tasks).contains(":helloRelease")
         assertThat(buildResult.tasks).doesNotContain(":helloDebug")
 
-        assertThat(buildResult.stdout).contains("helloRelease task mapping file exists is true")
+        buildResult.stdout.use {
+            ScannerSubject.assertThat(it)
+                .contains("helloRelease task mapping file exists is true")
+        }
     }
 
     @Test
@@ -90,6 +94,9 @@ class MappingFileAccessTest {
         assertThat(buildResult.tasks).contains(":helloRelease")
         assertThat(buildResult.tasks).doesNotContain(":helloDebug")
 
-        assertThat(buildResult.stdout).contains("helloRelease task mapping file exists is true")
+        buildResult.stdout.use {
+            ScannerSubject.assertThat(it)
+                .contains("helloRelease task mapping file exists is true")
+        }
     }
 }

@@ -23,6 +23,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.annotations.NonNull;
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.ExpectFailure;
+import java.util.Scanner;
 import java.util.Set;
 import javax.annotation.Nullable;
 import org.gradle.tooling.events.OperationDescriptor;
@@ -67,7 +68,8 @@ public class GradleTaskSubjectTest {
         events.add(skipped(":skippedTask"));
         events.add(failed(":failedTask"));
 
-        taskStateList = new TaskStateList(events.build(), fakeGradleOutput);
+
+        taskStateList = new TaskStateList(events.build(), new Scanner(fakeGradleOutput));
     }
 
     @Test

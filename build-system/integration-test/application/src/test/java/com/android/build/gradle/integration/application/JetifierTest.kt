@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.application
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
+import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
 import com.google.common.truth.Truth.assertThat
@@ -186,7 +187,11 @@ class JetifierTest(private val withKotlin: Boolean) {
             .with(BooleanOption.ENABLE_JETIFIER, true)
             .expectFailure()
             .run("assembleDebug")
-        assertThat(result.stderr).contains("Failed to transform artifact 'doNotJetifyLib.jar (com.example.javalib:doNotJetifyLib:1.0)")
+        result.stderr.use {
+            ScannerSubject.assertThat(it).contains(
+                "Failed to transform artifact 'doNotJetifyLib.jar (com.example.javalib:doNotJetifyLib:1.0)"
+            )
+        }
 
         // Add doNotJetifyLib to a blacklist, the build should succeed
         TestFileUtils.appendToFile(
