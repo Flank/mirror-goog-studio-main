@@ -204,6 +204,17 @@ public final class Log {
     }
 
     /**
+     * Outputs a {@link LogLevel#WARN} level message.
+     *
+     * @param tag The tag associated with the message.
+     * @param message The message to output.
+     * @param throwable The {@link Throwable} to output.
+     */
+    public static void w(String tag, String message, Throwable throwable) {
+        log(LogLevel.WARN, tag, message, throwable);
+    }
+
+    /**
      * Outputs a {@link LogLevel#ERROR} level message.
      * @param tag The tag associated with the message.
      * @param message The message to output.
@@ -231,19 +242,36 @@ public final class Log {
         }
     }
 
+    private static void log(LogLevel logLevel, String tag, String message, Throwable throwable) {
+        boolean empty = true;
+        StringWriter sw = new StringWriter();
+        if (!message.isEmpty()) {
+            sw.write(message);
+            empty = false;
+        }
+        if (throwable != null) {
+            if (!empty) {
+                sw.write("\n");
+            }
+            sw.write(throwable.getMessage());
+            sw.write("\n");
+            PrintWriter pw = new PrintWriter(sw);
+
+            throwable.printStackTrace(pw);
+            empty = false;
+        }
+        if (!empty) {
+            println(logLevel, tag, sw.toString());
+        }
+    }
+
     /**
      * Outputs a {@link LogLevel#ERROR} level {@link Throwable} information.
      * @param tag The tag associated with the message.
      * @param throwable The {@link Throwable} to output.
      */
     public static void e(String tag, Throwable throwable) {
-        if (throwable != null) {
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-
-            throwable.printStackTrace(pw);
-            println(LogLevel.ERROR, tag, throwable.getMessage() + '\n' + sw.toString());
-        }
+        log(LogLevel.ERROR, tag, "", throwable);
     }
 
     static void setLevel(LogLevel logLevel) {
