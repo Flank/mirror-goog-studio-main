@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.android.testutils.MockLog;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.util.Properties;
@@ -33,28 +34,29 @@ public class BasePluginTest {
     public void createProxy() throws Exception {
         MockLog log = new MockLog();
         Properties properties = new Properties();
-        properties.setProperty("https.proxyHost", "example.com");
+        InetAddress loopback = InetAddress.getByName(null);
+        properties.setProperty("https.proxyHost", "localhost");
         Proxy proxy = BasePlugin.createProxy(properties, log);
-        assertEquals(new InetSocketAddress("example.com", 443), proxy.address());
+        assertEquals(new InetSocketAddress(loopback, 443), proxy.address());
         assertTrue(log.getMessages().isEmpty());
 
         properties.setProperty("https.proxyPort", "123");
         proxy = BasePlugin.createProxy(properties, log);
-        assertEquals(new InetSocketAddress("example.com", 123), proxy.address());
+        assertEquals(new InetSocketAddress(loopback, 123), proxy.address());
         assertTrue(log.getMessages().isEmpty());
 
         properties.setProperty("https.proxyPort", "bad");
         proxy = BasePlugin.createProxy(properties, log);
-        assertEquals(new InetSocketAddress("example.com", 443), proxy.address());
+        assertEquals(new InetSocketAddress(loopback, 443), proxy.address());
         assertTrue(log.getMessages().get(0).contains("bad"));
         assertTrue(log.getMessages().get(0).contains("443"));
         log.clear();
 
         properties.clear();
-        properties.setProperty("https.proxyHost", "example.com");
+        properties.setProperty("https.proxyHost", "localhost");
         properties.setProperty("http.proxyHost", "8.8.8.8");
         proxy = BasePlugin.createProxy(properties, log);
-        assertEquals(new InetSocketAddress("example.com", 443), proxy.address());
+        assertEquals(new InetSocketAddress(loopback, 443), proxy.address());
 
         properties.clear();
         properties.setProperty("http.proxyHost", "8.8.8.8");
