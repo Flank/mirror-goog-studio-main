@@ -15,7 +15,6 @@ iml_module(
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/idea/.idea/libraries:mockito[test]",
         "//tools/idea/.idea/libraries:truth[test]",
-        "//tools/idea/.idea/libraries:truth-java8-extension[test]",
         "//tools/idea/.idea/libraries:dexlib2[test]",
         "//tools/idea/.idea/libraries:jimfs[test]",
         "//tools/idea/.idea/libraries:asm-tools[test]",
@@ -39,11 +38,11 @@ iml_module(
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/idea/.idea/libraries:Guava[test]",
         "//tools/idea/.idea/libraries:truth[test]",
-        "//tools/idea/.idea/libraries:truth-java8-extension[test]",
         "//tools/idea/.idea/libraries:dexlib2[test]",
         "//tools/idea/.idea/libraries:jimfs[test]",
         "//tools/idea/.idea/libraries:KotlinJavaRuntime[test]",
         "//tools/idea/.idea/libraries:KotlinTest[test]",
+        "//tools/idea/.idea/libraries:truth-java8-extension",
     ],
 )
 
