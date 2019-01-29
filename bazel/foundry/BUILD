@@ -16,10 +16,6 @@ platform(
             value:"docker://gcr.io/google.com/android-studio-alphasource/nosla-debian8-clang-as@sha256:71c886770d70dd28c1e8a8f58eab8f8ed8bc7322550ec0dcca3cf28ae6eeac19"
          }
       properties: {
-        name: "dockerSiblingContainers"
-        value: "true"
-      }
-      properties: {
         name: "dockerNetwork"
         value: "standard"
       }
