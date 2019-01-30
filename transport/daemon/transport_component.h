@@ -16,10 +16,6 @@
 #ifndef DAEMON_TRANSPORT_COMPONENT_H_
 #define DAEMON_TRANSPORT_COMPONENT_H_
 
-#include <atomic>
-#include <thread>
-#include <unordered_map>
-
 #include "daemon/agent_service.h"
 #include "daemon/service_component.h"
 #include "daemon/transport_service.h"
@@ -27,14 +23,12 @@
 namespace profiler {
 
 class Daemon;
-using AgentStatusChanged = std::function<void(int processId)>;
 
 class TransportComponent final : public ServiceComponent {
  public:
-  static constexpr int64_t kHeartbeatThresholdNs = Clock::ms_to_ns(500);
-
-  explicit TransportComponent(Daemon* daemon);
-  ~TransportComponent() override;
+  explicit TransportComponent(Daemon* daemon)
+      : public_service_(daemon), agent_service_(daemon) {}
+  ~TransportComponent() override = default;
 
   // Returns the service that talks to desktop clients (e.g., Studio).
   grpc::Service* GetPublicService() override { return &public_service_; }
@@ -42,26 +36,14 @@ class TransportComponent final : public ServiceComponent {
   // Returns the service that talks to device clients (e.g., the agent).
   grpc::Service* GetInternalService() override { return &agent_service_; }
 
-  void AddAgentStatusChangedCallback(AgentStatusChanged callback) {
-    agent_status_changed_callbacks_.push_back(callback);
-  }
-
   // Forwards a command from the daemon to the agent.
   bool ForwardCommandToAgent(const proto::Command& command) {
     return agent_service_.SendCommandToAgent(command);
   }
 
  private:
-  void RunAgentStatusThread();
-
-  Daemon* daemon_;
   TransportServiceImpl public_service_;
   AgentServiceImpl agent_service_;
-
-  std::list<AgentStatusChanged> agent_status_changed_callbacks_;
-
-  std::atomic_bool is_running_{true};
-  std::thread status_thread_;
 };
 
 }  // namespace profiler

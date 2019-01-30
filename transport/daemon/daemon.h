@@ -17,14 +17,15 @@
 #define TRANSPORT_DAEMON_H_
 
 #include <grpc++/grpc++.h>
+#include <atomic>
 #include <string>
+#include <thread>
 #include <unordered_map>
 #include <vector>
 #include "commands/command.h"
 #include "event_buffer.h"
 #include "event_writer.h"
 #include "proto/common.grpc.pb.h"
-#include "proto/profiler.grpc.pb.h"
 #include "service_component.h"
 #include "transport_component.h"
 #include "utils/clock.h"
@@ -33,6 +34,7 @@
 
 namespace profiler {
 
+using AgentStatusChanged = std::function<void(int pid)>;
 class Command;
 
 // A daemon running on the device, collecting, caching, and transporting
@@ -46,6 +48,8 @@ class Daemon {
   // files, and |buffer| as the central storage for all generated events.
   Daemon(Clock* clock, Config* config, FileCache* file_cache,
          EventBuffer* buffer);
+
+  ~Daemon();
 
   // Registers |component| to the daemon, in particular, the
   // component's public and internal services to daemon's server |builder|.
@@ -126,11 +130,6 @@ class Daemon {
     return heartbeat_timestamp_map_;
   }
 
-  std::unordered_map<int32_t, profiler::proto::AgentData::Status>&
-  agent_status_map() {
-    return agent_status_map_;
-  }
-
   // Registers a function callback for a specific command.
   // Each command may only be registered once.
   void RegisterCommandHandler(
@@ -139,14 +138,20 @@ class Daemon {
     commands_[type] = command;
   }
 
+  void AddAgentStatusChangedCallback(AgentStatusChanged callback) {
+    agent_status_changed_callbacks_.push_back(callback);
+  }
+
  private:
+  static constexpr int64_t kHeartbeatThresholdNs = Clock::ms_to_ns(500);
+
   // True if there is an JVMTI agent attached to an app. False otherwise.
   bool IsAppAgentAlive(int32_t app_pid, const std::string& app_name);
 
-  // True if perfd has received a heartbeat from an app within the last
-  // time interval (as specified by |GenericComponent::kHeartbeatThresholdNs|.
-  // False otherwise.
+  // True if the daemon has received a heartbeat from an app. False otherwise.
   bool CheckAppHeartBeat(int32_t app_pid);
+
+  void RunAgentStatusThread();
 
   // All command executions are guarded by this.
   std::mutex mutex_;
@@ -168,15 +173,18 @@ class Daemon {
   std::map<proto::Command::CommandType, std::function<Command*(proto::Command)>>
       commands_;
 
+  std::mutex heartbeat_mutex_;
+  // Mapping pid -> last heartbeat timestamp received from an app.
   // TODO (b/110830616): remove dead entries
   std::unordered_map<int32_t, int64_t> heartbeat_timestamp_map_;
-  // Mapping pid -> latest status of agent (Attached / Detached).
-  // TODO (b/110830616): remove dead entries
-  std::unordered_map<int32_t, profiler::proto::AgentData::Status>
-      agent_status_map_;
   // Mapping pid -> whether an agent is attachable.
   // TODO (b/110830616): remove dead entries
   std::unordered_map<int32_t, bool> agent_attachable_map_;
+
+  std::atomic_bool agent_status_is_running_{true};
+  std::thread agent_status_thread_;
+  // Lists of callbacks for handling agent status changes.
+  std::list<AgentStatusChanged> agent_status_changed_callbacks_;
 };
 
 }  // namespace profiler

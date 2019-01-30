@@ -35,12 +35,14 @@
 #include "utils/package_manager.h"
 #include "utils/process_manager.h"
 #include "utils/socket_utils.h"
+#include "utils/thread_name.h"
 #include "utils/trace.h"
 
 using grpc::Service;
 using grpc::Status;
 using grpc::StatusCode;
 using profiler::proto::AgentData;
+using profiler::proto::Event;
 using std::string;
 
 namespace profiler {
@@ -162,6 +164,13 @@ Daemon::Daemon(Clock* clock, Config* config, FileCache* file_cache,
       buffer_(buffer),
       transport_component_(new TransportComponent(this)) {}
 
+Daemon::~Daemon() {
+  agent_status_is_running_.exchange(false);
+  if (agent_status_thread_.joinable()) {
+    agent_status_thread_.join();
+  }
+}
+
 void Daemon::RegisterProfilerComponent(
     std::unique_ptr<ServiceComponent> component) {
   if (component == nullptr) return;
@@ -181,6 +190,8 @@ void Daemon::RunServer(const string& server_address) {
   builder_.RegisterService(transport_component_->GetPublicService());
   builder_.RegisterService(transport_component_->GetInternalService());
   RegisterCommandHandler(proto::Command::ATTACH_AGENT, &AttachAgent::Create);
+
+  agent_status_thread_ = std::thread(&Daemon::RunAgentStatusThread, this);
 
   int port = 0;
   builder_.AddListeningPort(server_address, grpc::InsecureServerCredentials(),
@@ -281,9 +292,8 @@ bool Daemon::IsAppAgentAlive(int app_pid, const string& app_name) {
 }
 
 AgentData::Status Daemon::GetAgentStatus(int32_t pid) {
-  auto got = agent_status_map_.find(pid);
-  if (got != agent_status_map_.end()) {
-    return got->second;
+  if (CheckAppHeartBeat(pid)) {
+    return AgentData::ATTACHED;
   }
 
   // Only query the app's debuggable state if we haven't already, to
@@ -303,8 +313,8 @@ AgentData::Status Daemon::GetAgentStatus(int32_t pid) {
     // pre-O, since the agent is deployed with the app, we should receive a
     // heartbeat right away. We can simply use that as a signal to determine
     // whether an agent can be attached.
-    // Note: This will only be called if we have not had a heartbeat yet, so we
-    // will return unspecified by default.
+    // Note: This will only be called if we have not had a heartbeat yet, so
+    // we will return unspecified by default.
     return AgentData::UNSPECIFIED;
   }
   // In O+, we can attach an jvmti agent as long as the app is debuggable
@@ -320,14 +330,30 @@ AgentData::Status Daemon::GetAgentStatus(int32_t pid) {
 }
 
 bool Daemon::CheckAppHeartBeat(int app_pid) {
-  auto got = agent_status_map_.find(app_pid);
-  if (got != agent_status_map_.end()) {
-    return got->second == proto::AgentData::ATTACHED;
-  }
-  return false;
+  std::lock_guard<std::mutex> lock(heartbeat_mutex_);
+  return heartbeat_timestamp_map_.find(app_pid) !=
+         heartbeat_timestamp_map_.end();
 }
 
 void Daemon::SetHeartBeatTimestamp(int32_t app_pid, int64_t timestamp) {
+  std::lock_guard<std::mutex> lock(heartbeat_mutex_);
+  if (heartbeat_timestamp_map_.find(app_pid) ==
+      heartbeat_timestamp_map_.end()) {
+    // Call the callback if it is the first time we see the process.
+    for (auto callback : agent_status_changed_callbacks_) {
+      callback(app_pid);
+    }
+
+    // Generate and send an Event for the new pipeline
+    if (config()->GetAgentConfig().unified_pipeline()) {
+      Event event;
+      event.set_pid(app_pid);
+      event.set_kind(Event::AGENT);
+      auto status = event.mutable_agent_data();
+      status->set_status(AgentData::ATTACHED);
+      buffer()->Add(event);
+    }
+  }
   heartbeat_timestamp_map_[app_pid] = timestamp;
 }
 
@@ -359,6 +385,27 @@ Status Daemon::ConfigureStartupAgent(
   }
   response->set_agent_args(agent_args);
   return Status::OK;
+}
+
+void Daemon::RunAgentStatusThread() {
+  SetThreadName("Studio::AgentStatus");
+  while (agent_status_is_running_.load()) {
+    {
+      std::lock_guard<std::mutex> lock(heartbeat_mutex_);
+      int64_t current_time = clock_->GetCurrentTime();
+      for (auto map : heartbeat_timestamp_map_) {
+        // If we have a heartbeat then we attached the agent once as such we
+        // update the status.
+        // Call the callback if our heartbeat timeouts.
+        if (kHeartbeatThresholdNs > (current_time - map.second)) {
+          for (auto callback : agent_status_changed_callbacks_) {
+            callback(map.first);
+          }
+        }
+      }
+    }
+    usleep(Clock::ns_to_us(kHeartbeatThresholdNs));
+  }
 }
 
 }  // namespace profiler

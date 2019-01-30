@@ -54,7 +54,7 @@ int Perfd::Initialize(Daemon* daemon) {
   std::unique_ptr<EventProfilerComponent> event_component(
       new EventProfilerComponent(daemon->clock()));
 
-  daemon->transport_component()->AddAgentStatusChangedCallback(
+  daemon->AddAgentStatusChangedCallback(
       std::bind(&EventProfilerComponent::AgentStatusChangedCallback,
                 event_component.get(), std::placeholders::_1));
   daemon->RegisterProfilerComponent(std::move(event_component));

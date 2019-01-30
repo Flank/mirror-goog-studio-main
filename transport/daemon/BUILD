@@ -23,7 +23,6 @@ cc_library(
         "event_buffer.h",
         "event_writer.h",
         "service_component.h",
-        "transport_component.cc",
         "transport_component.h",
         "transport_service.cc",
         "transport_service.h",
