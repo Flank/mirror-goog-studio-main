@@ -124,6 +124,12 @@ int Fail(proto::InstallerResponse_Status status, Workspace& workspace,
 }
 
 std::string GetVersion() {
+  static std::string version = "";
+
+  if (!version.empty()) {
+    return version;
+  }
+
   std::vector<std::unique_ptr<matryoshka::Doll>> dolls;
   if (!matryoshka::Open(dolls)) {
     return "UNMATRYOSHKAED";

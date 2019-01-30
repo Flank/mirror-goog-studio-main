@@ -41,7 +41,8 @@ public class AdbInstaller implements Installer {
     public static final String INSTALLER_BINARY_NAME = "installer";
     public static final String INSTALLER_PATH =
             Deployer.INSTALLER_DIRECTORY + "/" + INSTALLER_BINARY_NAME;
-    public static final String ANDROID_EXECUTABLE_PATH = "/tools/base/deploy/installer/android";
+    public static final String ANDROID_EXECUTABLE_PATH =
+            "/tools/base/deploy/installer/android-installer";
     private final AdbClient adb;
     private final String installersFolder;
     private final ILogger logger;

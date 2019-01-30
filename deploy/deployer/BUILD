@@ -6,7 +6,7 @@ iml_module(
     name = "studio.android.sdktools.deployer",
     srcs = ["src/main/java"],
     bundle_data = [
-        "//tools/base/deploy/installer:android",
+        "//tools/base/deploy/installer:android-installer",
     ],
     iml_files = ["android.sdktools.deployer.iml"],
     test_data = glob(["src/test/resource/**"]),
@@ -40,28 +40,9 @@ java_library(
     name = "java_version",
     srcs = select({
         "//tools/base/bazel:remote_windows": ["src/windows/java/Version.java"],
-        "//conditions:default": [":Version.java"],
+        "//conditions:default": ["//tools/base/deploy/installer:Version.java"],
     }),
     visibility = ["//visibility:public"],
-)
-
-genrule(
-    name = "version",
-    srcs = [
-        "//tools/base/deploy/agent/native:android/arm64-v8a/libswap.so",
-        "//tools/base/deploy/installer:android-no-matryoshka/arm64-v8a/installer",
-    ],
-    outs = [
-        "Version.java",
-    ],
-    cmd = "$(location //tools/base/bazel:bin2c) -lang=java -embed=false -variable=com.android.tools.deployer.Version -output=$(location Version.java) " +
-          "$(location //tools/base/deploy/agent/native:android/arm64-v8a/libswap.so) " +
-          "$(location //tools/base/deploy/installer:android-no-matryoshka/arm64-v8a/installer) ",
-    tags = ["no_windows"],
-    tools = [
-        "//tools/base/bazel:bin2c",
-    ],
-    visibility = ["//visibility:private"],
 )
 
 java_library(
@@ -69,8 +50,8 @@ java_library(
     srcs = glob([
         "src/main/**/*.java",
     ]),
-    # Embed android installer in the jar (x86_64, arm7, arm64)
-    resources = ["//tools/base/deploy/installer:android"],
+    # Embed android installer in the jar (x86, x86_64, arm7, arm64)
+    resources = ["//tools/base/deploy/installer:android-installer"],
     tags = ["no_rbe_windows"],
     visibility = ["//visibility:public"],
     deps = [

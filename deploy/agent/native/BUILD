@@ -68,7 +68,7 @@ genrule(
 )
 
 android_cc_binary(
-    name = "android",
+    name = "raw-libswap",
     abis = [
         "x86",
         "x86_64",
@@ -115,9 +115,10 @@ cc_test(
 )
 
 android_cc_binary(
-    name = "agent_server_android",
+    name = "raw-agent_server",
     abis = [
         "x86",
+        "x86_64",
         "armeabi-v7a",
         "arm64-v8a",
     ],

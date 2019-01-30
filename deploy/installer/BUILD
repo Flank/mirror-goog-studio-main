@@ -1,16 +1,100 @@
 load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS", "android_cc_binary", "select_android")
 
-# A few lines of explanation because what is happening in this BUILD file is not trivial.
-# In order to keep the Deployer and the Installer in sync (a.k.a: Installer and Deployer were built
-# at the same time and are compatible), we embed a "version" in both the Deployer jar and the
-# installer android binaries. This version is the SHA-256 of the installer with a placeholder
-# version number which we call "unversioned". The Installer linked with with a version is called
-# "versioned".
+# This is the one-and-only "version" rule (to rule them all).
+# Everything within the installer uses the hash value output here to
+# identify the current version on the device regardless of what layer
+# it resides within the matryoshka chain. This will be the *ONLY*
+# central place where we do any sort of hashing using Bin2C.
+genrule(
+    name = "version",
+    srcs = [
+        "//tools/base/deploy/agent/native:raw-agent_server/arm64-v8a/agent_server",
+        "//tools/base/deploy/agent/native:raw-libswap/arm64-v8a/libswap.so",
+        "//tools/base/deploy/installer:raw-installer/arm64-v8a/installer",
+    ],
+    outs = [
+        "Version.java",
+        "version.raw",
+    ],
+    cmd = "DEP=\"" +
+          # This should be a list of all binaries that determine our current version.
+          "$(location //tools/base/deploy/agent/native:raw-agent_server/arm64-v8a/agent_server) " +
+          "$(location //tools/base/deploy/agent/native:raw-libswap/arm64-v8a/libswap.so) " +
+          "$(location //tools/base/deploy/installer:raw-installer/arm64-v8a/installer) " +
+          "\";" +
+          # Java
+          "$(location //tools/base/bazel:bin2c) -lang=java -embed=false -variable=com.android.tools.deployer.Version -output=$(location Version.java) $$DEP && " +
+          # Raw
+          "$(location //tools/base/bazel:bin2c) -lang=raw -output=$(location version.raw) $$DEP",
+    tags = ["no_windows"],
+    tools = [
+        "//tools/base/bazel:bin2c",
+    ],
+    visibility = ["//visibility:public"],
+)
 
-# Installer lib is incomplete. It needs a version lib to link properly. Either provide:
-# - :version_placeholder_lib
-# - :version
-# to have a fully resolved lib.
+genrule(
+    name = "android-installer",
+    srcs = [
+        ":raw-installer/x86/installer",
+        ":raw-installer/x86_64/installer",
+        ":raw-installer/armeabi-v7a/installer",
+        ":raw-installer/arm64-v8a/installer",
+        "//tools/base/deploy/agent/native:raw-libswap/x86/libswap.so",
+        "//tools/base/deploy/agent/native:raw-libswap/x86_64/libswap.so",
+        "//tools/base/deploy/agent/native:raw-libswap/armeabi-v7a/libswap.so",
+        "//tools/base/deploy/agent/native:raw-libswap/arm64-v8a/libswap.so",
+        "//tools/base/deploy/agent/native:raw-agent_server/x86/agent_server",
+        "//tools/base/deploy/agent/native:raw-agent_server/x86_64/agent_server",
+        "//tools/base/deploy/agent/native:raw-agent_server/armeabi-v7a/agent_server",
+        "//tools/base/deploy/agent/native:raw-agent_server/arm64-v8a/agent_server",
+        ":version.raw",
+    ],
+    outs = [
+        "android-installer/x86/installer",
+        "android-installer/x86_64/installer",
+        "android-installer/armeabi-v7a/installer",
+        "android-installer/arm64-v8a/installer",
+    ],
+    cmd = """
+       $(location //tools/base/bazel:matryoshka) \
+           -i $(location :raw-installer/x86/installer) \
+           -o $(location android-installer/x86/installer) \
+           -p agent.so=$(location //tools/base/deploy/agent/native:raw-libswap/x86/libswap.so) \
+           -p agent_server=$(location //tools/base/deploy/agent/native:raw-agent_server/x86/agent_server) \
+           -p version=$(location :version.raw);
+
+       $(location //tools/base/bazel:matryoshka) \
+           -i $(location :raw-installer/x86_64/installer) \
+           -o $(location android-installer/x86_64/installer) \
+           -p agent.so=$(location //tools/base/deploy/agent/native:raw-libswap/x86_64/libswap.so) \
+           -p agent-alt.so=$(location //tools/base/deploy/agent/native:raw-libswap/x86/libswap.so) \
+           -p agent_server=$(location //tools/base/deploy/agent/native:raw-agent_server/x86_64/agent_server) \
+           -p version=$(location :version.raw);
+
+       $(location //tools/base/bazel:matryoshka) \
+           -i $(location :raw-installer/armeabi-v7a/installer) \
+           -o $(location android-installer/armeabi-v7a/installer) \
+           -p agent.so=$(location //tools/base/deploy/agent/native:raw-libswap/armeabi-v7a/libswap.so) \
+           -p agent_server=$(location //tools/base/deploy/agent/native:raw-agent_server/armeabi-v7a/agent_server) \
+           -p version=$(location :version.raw);
+
+       $(location //tools/base/bazel:matryoshka) \
+           -i $(location :raw-installer/arm64-v8a/installer) \
+           -o $(location android-installer/arm64-v8a/installer) \
+           -p agent.so=$(location //tools/base/deploy/agent/native:raw-libswap/arm64-v8a/libswap.so) \
+           -p agent-alt.so=$(location //tools/base/deploy/agent/native:raw-libswap/armeabi-v7a/libswap.so) \
+           -p agent_server=$(location //tools/base/deploy/agent/native:raw-agent_server/arm64-v8a/agent_server) \
+           -p version=$(location :version.raw);
+    """,
+    tags = ["no_rbe_windows"],
+    tools = [
+        "//tools/base/bazel:bin2c",
+        "//tools/base/bazel:matryoshka",
+    ],
+    visibility = ["//visibility:public"],
+)
+
 cc_library(
     name = "installer_lib",
     srcs = [
@@ -53,7 +137,6 @@ cc_library(
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
     deps = [
-        ":agent_header",
         "//tools/base/bazel/native/matryoshka:libmatryoshka",
         "//tools/base/deploy/common:common_lib",
         "//tools/base/deploy/common:log",
@@ -76,7 +159,7 @@ cc_binary(
 )
 
 android_cc_binary(
-    name = "android-no-matryoshka",
+    name = "raw-installer",
     abis = [
         "x86",
         "x86_64",
@@ -87,115 +170,6 @@ android_cc_binary(
     filename = "installer",
     tags = ["no_windows"],
     visibility = ["//tools/base/deploy:__subpackages__"],
-)
-
-genrule(
-    name = "android",
-    srcs = [
-        ":android-no-matryoshka/x86/installer",
-        ":android-no-matryoshka/x86_64/installer",
-        ":android-no-matryoshka/armeabi-v7a/installer",
-        ":android-no-matryoshka/arm64-v8a/installer",
-        "//tools/base/deploy/agent/native:android/x86/libswap.so",
-        "//tools/base/deploy/agent/native:android/x86_64/libswap.so",
-        "//tools/base/deploy/agent/native:android/armeabi-v7a/libswap.so",
-        "//tools/base/deploy/agent/native:android/arm64-v8a/libswap.so",
-    ],
-    outs = [
-        "android/x86/installer",
-        "android/x86_64/installer",
-        "android/armeabi-v7a/installer",
-        "android/arm64-v8a/installer",
-    ],
-    cmd = """
-        $(location //tools/base/bazel:bin2c) -lang=raw -output=version.raw \
-            $(location //tools/base/deploy/agent/native:android/arm64-v8a/libswap.so) \
-            $(location //tools/base/deploy/installer:android-no-matryoshka/arm64-v8a/installer);
-
-       $(location //tools/base/bazel:matryoshka) \
-           -i $(location //tools/base/deploy/installer:android-no-matryoshka/x86/installer) \
-           -o $(location android/x86/installer) \
-           -p agent.so=$(location //tools/base/deploy/agent/native:android/x86/libswap.so) \
-           -p version=version.raw;
-
-       $(location //tools/base/bazel:matryoshka) \
-           -i $(location //tools/base/deploy/installer:android-no-matryoshka/x86_64/installer) \
-           -o $(location android/x86_64/installer) \
-           -p agent.so=$(location //tools/base/deploy/agent/native:android/x86_64/libswap.so) \
-           -p agent-alt.so=$(location //tools/base/deploy/agent/native:android/x86/libswap.so) \
-           -p version=version.raw;
-
-       $(location //tools/base/bazel:matryoshka) \
-           -i $(location //tools/base/deploy/installer:android-no-matryoshka/armeabi-v7a/installer) \
-           -o $(location android/armeabi-v7a/installer) \
-           -p agent.so=$(location //tools/base/deploy/agent/native:android/armeabi-v7a/libswap.so) \
-           -p version=version.raw;
-
-       $(location //tools/base/bazel:matryoshka) \
-           -i $(location //tools/base/deploy/installer:android-no-matryoshka/arm64-v8a/installer) \
-           -o $(location android/arm64-v8a/installer) \
-           -p agent.so=$(location //tools/base/deploy/agent/native:android/arm64-v8a/libswap.so) \
-           -p agent-alt.so=$(location //tools/base/deploy/agent/native:android/armeabi-v7a/libswap.so) \
-           -p version=version.raw;
-    """,
-    tags = ["no_rbe_windows"],
-    tools = [
-        "//tools/base/bazel:bin2c",
-        "//tools/base/bazel:matryoshka",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-cc_library(
-    name = "agent_header",
-    srcs = [
-        ":agent_server.cc",
-    ],
-    hdrs = [
-        ":agent.so.h",
-        ":agent_server.h",
-    ],
-    tags = ["no_windows"],
-)
-
-# Converts the binary output of the agent.so cc_library to an array in a CC source file.
-genrule(
-    name = "agent_header_generator",
-    srcs = [
-        "//tools/base/deploy/agent/native:libswap.so",
-    ],
-    outs = [
-        "agent.so.h",
-    ],
-    cmd = "$(location //tools/base/bazel:bin2c) -lang=cxx -embed=false -variable=agent_so" +
-          " -output=$(location agent.so.h)" +
-          " $(location //tools/base/deploy/agent/native:libswap.so)",
-    tags = ["no_windows"],
-    tools = [
-        "//tools/base/bazel:bin2c",
-    ],
-    visibility = ["//visibility:private"],
-)
-
-# Converts the binary output of the agent_server cc binary to an array in a CC source file.
-genrule(
-    name = "agent_server_header_generator",
-    srcs = [
-        "//tools/base/deploy/agent/native:agent_server",
-    ],
-    outs = [
-        "agent_server.cc",
-        "agent_server.h",
-    ],
-    cmd = "$(location //tools/base/bazel:bin2c) -lang=cxx -variable=agent_server" +
-          " -output=$(location agent_server.cc)" +
-          " -header=$(location agent_server.h)" +
-          " $(location //tools/base/deploy/agent/native:agent_server)",
-    tags = ["no_windows"],
-    tools = [
-        "//tools/base/bazel:bin2c",
-    ],
-    visibility = ["//visibility:private"],
 )
 
 cc_test(

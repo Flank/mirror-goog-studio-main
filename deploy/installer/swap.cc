@@ -37,15 +37,15 @@
 #include "tools/base/deploy/installer/command_cmd.h"
 #include "tools/base/deploy/installer/executor.h"
 
-#include "tools/base/deploy/installer/agent.so.h"
-#include "tools/base/deploy/installer/agent_server.h"
+// Defined in main.cc
+std::string GetVersion();
 
 namespace deploy {
 
 namespace {
-const std::string kAgentFilename = "agent-"_s + agent_so_hash + ".so";
-const std::string kAgentAltFilename = "agent-alt-"_s + agent_so_hash + ".so";
-const std::string kServerFilename = "server-"_s + agent_server_hash + ".so";
+const std::string kAgentFilename = "agent-"_s + GetVersion() + ".so";
+const std::string kAgentAltFilename = "agent-alt-"_s + GetVersion() + ".so";
+const std::string kServerFilename = "server-"_s + GetVersion() + ".so";
 const int kRwFileMode =
     S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR | S_IWGRP | S_IWOTH;
 const int kRxFileMode =
@@ -191,7 +191,14 @@ bool SwapCommand::CopyBinaries(const std::string& src_path,
   if (!RunCmd("stat", User::APP_PACKAGE, {server_dst_path}, nullptr)) {
     // If the server binary is not already on disk, write it there now.
     if (access(server_src_path.c_str(), F_OK) == -1) {
-      WriteArrayToDisk(agent_server, agent_server_len, server_src_path);
+      matryoshka::Doll* agent_server =
+          matryoshka::FindByName(dolls, "agent_server");
+      if (!agent_server) {
+        ErrEvent("Installer binary does not contain agent_server");
+        return false;
+      }
+      WriteArrayToDisk(agent_server->content, agent_server->content_len,
+                       server_src_path);
     }
 
     // Done using server_src_path, so its safe to use emplace().
