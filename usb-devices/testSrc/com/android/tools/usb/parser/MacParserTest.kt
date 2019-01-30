@@ -40,4 +40,14 @@ class MacParserTest {
         assertEquals("0x05ac", devices[0].vendorId)
         assertEquals("0x8406", devices[0].productId)
     }
+
+    @Test
+    fun parseOutputWithLeadingErrors() {
+        val file = TestUtils.getWorkspaceFile("tools/base/usb-devices/testData/mac2.txt");
+        val devices = parser.parse(file.inputStream())
+        assertEquals(7, devices.size)
+        assertEquals("iBridge DFR brightness", devices[0].name)
+        assertEquals("0x05ac", devices[0].vendorId)
+        assertEquals("0x8102", devices[0].productId)
+    }
 }

@@ -1,0 +1,106 @@
+2019-01-30 13:57:25.411 system_profiler[8638:7842495] SPUSBDevice: IOCreatePlugInInterfaceForService failed 0xe00002be
+2019-01-30 13:57:25.411 system_profiler[8638:7842495] SPUSBDevice: IOCreatePlugInInterfaceForService failed 0xe00002be
+2019-01-30 13:57:25.412 system_profiler[8638:7842495] SPUSBDevice: IOCreatePlugInInterfaceForService failed 0xe00002be
+2019-01-30 13:57:25.413 system_profiler[8638:7842495] SPUSBDevice: IOCreatePlugInInterfaceForService failed 0xe00002be
+2019-01-30 13:57:25.414 system_profiler[8638:7842495] SPUSBDevice: IOCreatePlugInInterfaceForService failed 0xe00002be
+USB:
+
+    USB 3.1 Bus:
+
+      Host Controller Driver: AppleIntelCNLUSBXHCI
+      PCI Device ID: 0xa36d
+      PCI Revision ID: 0x0010
+      PCI Vendor ID: 0x8086
+
+    USB 3.1 Bus:
+
+      Host Controller Driver: AppleUSBXHCITR
+      PCI Device ID: 0x15ec
+      PCI Revision ID: 0x0006
+      PCI Vendor ID: 0x8086
+      Bus Number: 0x01
+
+    USB 3.1 Bus:
+
+      Host Controller Driver: AppleUSBXHCITR
+      PCI Device ID: 0x15ec
+      PCI Revision ID: 0x0006
+      PCI Vendor ID: 0x8086
+      Bus Number: 0x00
+
+    iBridge Bus:
+
+      Host Controller Driver: AppleUSBVHCIBCE
+
+        iBridge DFR brightness:
+
+          Product ID: 0x8102
+          Vendor ID: 0x05ac (Apple Inc.)
+          Version: 2.01
+          Serial Number: 000000000000
+          Manufacturer: Apple Inc.
+          Location ID: 0x80700000
+
+        iBridge Display:
+
+          Product ID: 0x8302
+          Vendor ID: 0x05ac (Apple Inc.)
+          Version: 2.01
+          Serial Number: 0000000000000000
+          Manufacturer: Apple Inc.
+          Location ID: 0x80600000
+
+        Apple Internal Keyboard / Trackpad:
+
+          Product ID: 0x027c
+          Vendor ID: 0x05ac (Apple Inc.)
+          Version: 9.27
+          Serial Number: FM7839507B4HYYMAQ+RRZ
+          Speed: Up to 480 Mb/sec
+          Manufacturer: Apple Inc.
+          Location ID: 0x80500000 / 4
+          Current Available (mA): 500
+          Current Required (mA): 500
+          Extra Operating Current (mA): 0
+          Built-In: Yes
+
+        Headset:
+
+          Product ID: 0x5043
+          Vendor ID: 0x05ac (Apple Inc.)
+          Version: 0.01
+          Serial Number: 000000000000
+          Speed: Up to 480 Mb/sec
+          Manufacturer: Apple
+          Location ID: 0x80400000 / 3
+          Current Available (mA): 500
+          Current Required (mA): 500
+          Extra Operating Current (mA): 0
+          Built-In: Yes
+
+        iBridge ALS:
+
+          Product ID: 0x8262
+          Vendor ID: 0x05ac (Apple Inc.)
+          Version: 2.01
+          Serial Number: 000000000000
+          Manufacturer: Apple Inc.
+          Location ID: 0x80300000
+
+        iBridge FaceTime HD Camera (Built-in):
+
+          Product ID: 0x8514
+          Vendor ID: 0x05ac (Apple Inc.)
+          Version: 2.01
+          Serial Number: CC28362ZAMKJ3Y32S
+          Manufacturer: Apple Inc.
+          Location ID: 0x80200000
+
+        iBridge:
+
+          Product ID: 0x8233
+          Vendor ID: 0x05ac (Apple Inc.)
+          Version: 2.01
+          Serial Number: 0000000000000000
+          Manufacturer: Apple Inc.
+          Location ID: 0x80100000

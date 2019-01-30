@@ -75,7 +75,12 @@ class MacParser : OutputParser {
         stringGroups.add(ArrayList())
       }
 
-      stringGroups.last().add(line)
+      // system_profiler may include error messages at the start of its output. stringGroups will be empty in this case since we haven't
+      // yet encountered a line that matches NAME_REGEX. We can safely ignore such lines since they won't contain any information about a
+      // USB device, and trying to call stringGroups.last() will generate an exception since the list is empty.
+      if (!stringGroups.isEmpty()) {
+        stringGroups.last().add(line)
+      }
     }
 
     override fun combiner() = BinaryOperator<MutableList<MutableList<String>>> { t, u ->
