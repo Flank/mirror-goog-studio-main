@@ -59,18 +59,3 @@ java_library(
         "//tools/base/third_party:com.google.guava_guava",
     ],
 )
-
-coverage_java_test(
-    name = "instant-run-client_tests",
-    srcs = glob(["instant-run-client/src/test/java/**/*.java"]),
-    jvm_flags = ["-Dtest.suite.jar=tests.jar"],
-    resources = glob(["instant-run-client/src/test/resources/**"]),
-    test_class = "com.android.testutils.JarTestSuite",
-    deps = [
-        ":instant-run-client",
-        "//tools/base/annotations",
-        "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:junit_junit",
-    ],
-)

@@ -162,14 +162,6 @@ public class BasicTest {
     }
 
     @Test
-    public void checkDensityAndResourceConfigs() throws Exception {
-        project.executor()
-                .withInstantRun(new AndroidVersion(23, null), OptionalCompilationStep.RESTART_ONLY)
-                .with(StringOption.IDE_BUILD_TARGET_DENSITY, "xxhdpi")
-                .run("assembleDebug");
-    }
-
-    @Test
     public void testBuildOutputModel() throws Exception {
         // Execute build and get the initial minimalistic model.
         Map<String, ProjectBuildOutput> multi =

@@ -18,7 +18,6 @@ package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -31,7 +30,6 @@ import java.io.File;
 import java.io.IOException;
 import javax.inject.Inject;
 import org.gradle.api.file.Directory;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.TaskProvider;
@@ -98,11 +96,12 @@ public class PackageApplication extends PackageAndroidArtifact {
      * Configures the task to perform the "standard" packaging, including all files that should end
      * up in the APK.
      */
-    public static class StandardCreationAction extends CreationAction<PackageApplication> {
+    public static class CreationAction
+            extends PackageAndroidArtifact.CreationAction<PackageApplication> {
 
         private final InternalArtifactType expectedOutputType;
 
-        public StandardCreationAction(
+        public CreationAction(
                 @NonNull VariantScope packagingScope,
                 @NonNull File outputDirectory,
                 @NonNull InternalArtifactType inputResourceFilesType,
@@ -154,68 +153,6 @@ public class PackageApplication extends PackageAndroidArtifact {
         protected void finalConfigure(PackageApplication task) {
             super.finalConfigure(task);
             task.expectedOutputType = expectedOutputType;
-        }
-    }
-
-    /** Configures the task to only package resources and assets. */
-    public static class InstantRunResourcesCreationAction
-            extends CreationAction<PackageApplication> {
-
-        @NonNull
-        private final File mOutputFile;
-
-        public InstantRunResourcesCreationAction(
-                @NonNull File outputFile,
-                @NonNull VariantScope scope,
-                @NonNull InternalArtifactType inputResourceFilesType,
-                @NonNull Provider<Directory> manifests,
-                @NonNull InternalArtifactType manifestType,
-                @Nullable FileCache fileCache,
-                @NonNull OutputScope outputScope) {
-            super(
-                    scope,
-                    outputFile.getParentFile(),
-                    inputResourceFilesType,
-                    manifests,
-                    manifestType,
-                    fileCache,
-                    outputScope);
-            mOutputFile = outputFile;
-        }
-
-        @NonNull
-        @Override
-        public String getName() {
-            return getVariantScope().getTaskName("packageInstantRunResources");
-        }
-
-        @NonNull
-        @Override
-        public Class<PackageApplication> getType() {
-            return PackageApplication.class;
-        }
-
-        @Override
-        protected void finalConfigure(@NonNull PackageApplication packageApplication) {
-            packageApplication.expectedOutputType =
-                    InternalArtifactType.INSTANT_RUN_PACKAGED_RESOURCES;
-            packageApplication.instantRunFileType = FileType.RESOURCES;
-
-            // Skip files which are not needed for hot/cold swap.
-            FileCollection emptyCollection =
-                    getVariantScope().getGlobalScope().getProject().files();
-
-            packageApplication.dexFolders = emptyCollection;
-            packageApplication.jniFolders = emptyCollection;
-            packageApplication.javaResourceFiles = emptyCollection;
-            packageApplication.apkList =
-                    getVariantScope()
-                            .getArtifacts()
-                            .getFinalArtifactFiles(InternalArtifactType.APK_LIST);
-
-            // Don't sign.
-            packageApplication.setSigningConfig(null);
-            packageApplication.outputFileProvider = (split) -> mOutputFile;
         }
     }
 }

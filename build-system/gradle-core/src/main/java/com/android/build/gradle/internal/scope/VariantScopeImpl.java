@@ -45,7 +45,6 @@ import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.FeaturePlugin;
 import com.android.build.gradle.internal.BaseConfigAdapter;
-import com.android.build.gradle.internal.InstantRunTaskManager;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.ProguardFileType;
@@ -66,7 +65,6 @@ import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope;
@@ -81,13 +79,10 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.options.DeploymentDevice;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
-import com.android.builder.core.AndroidBuilder;
-import com.android.builder.core.BootClasspathBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexMergerTool;
@@ -95,8 +90,8 @@ import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
 import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter.Type;
+import com.android.builder.model.OptionalCompilationStep;
 import com.android.repository.api.ProgressIndicator;
-import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.AndroidSdkHandler;
@@ -140,10 +135,8 @@ import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.specs.Spec;
 
-/**
- * A scope containing data for a specific variant.
- */
-public class VariantScopeImpl extends GenericVariantScopeImpl implements VariantScope {
+/** A scope containing data for a specific variant. */
+public class VariantScopeImpl implements VariantScope {
 
     private static final ILogger LOGGER = LoggerWrapper.getLogger(VariantScopeImpl.class);
     private static final String PUBLISH_ERROR_MSG =
@@ -160,11 +153,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     private final MutableTaskContainer taskContainer = new MutableTaskContainer();
 
-    private InstantRunTaskManager instantRunTaskManager;
-
     private final Supplier<ConfigurableFileCollection> desugarTryWithResourcesRuntimeJar;
-
-    private FileCollection bootClasspath;
 
     @NonNull private final PostProcessingOptions postProcessingOptions;
 
@@ -176,14 +165,10 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         this.transformManager = transformManager;
         this.variantData = variantData;
         this.variantPublishingSpec = PublishingSpecs.getVariantSpec(getType());
-        ProjectOptions projectOptions = globalScope.getProjectOptions();
-        this.instantRunBuildContext =
-                new InstantRunBuildContext(
-                        variantData.getVariantConfiguration().isInstantRunBuild(globalScope),
-                        DeploymentDevice.getDeploymentDeviceAndroidVersion(projectOptions),
-                        projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI),
-                        projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY),
-                        projectOptions.get(BooleanOption.ENABLE_SEPARATE_APK_RESOURCES));
+
+        if (globalScope.isActive(OptionalCompilationStep.INSTANT_DEV)) {
+            throw new RuntimeException("InstantRun mode is not supported");
+        }
         this.buildArtifactsHolder =
                 new VariantBuildArtifactsHolder(
                         getProject(),
@@ -316,7 +301,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     public boolean useResourceShrinker() {
         if (getType().isForTesting()
-                || instantRunBuildContext.isInInstantRunMode()
                 || !postProcessingOptions.resourcesShrinkingEnabled()) {
             return false;
         }
@@ -398,8 +382,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         // or if we're in an app/feature module which uses the transform pipeline.
         return getType().isAar()
                 || !getGlobalScope().getExtension().getTransforms().isEmpty()
-                || getCodeShrinker() != null
-                || getInstantRunBuildContext().isInInstantRunMode();
+                || getCodeShrinker() != null;
     }
 
     @Override
@@ -541,11 +524,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public DexingType getDexingType() {
-        if (instantRunBuildContext.isInInstantRunMode()) {
-            return DexingType.NATIVE_MULTIDEX;
-        } else {
-            return variantData.getVariantConfiguration().getDexingType();
-        }
+        return variantData.getVariantConfiguration().getDexingType();
     }
 
     @Override
@@ -613,24 +592,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     @Override
-    public File getBuildInfoOutputFolder() {
-        return new File(globalScope.getIntermediatesDir(), "/build-info/" + getDirName());
-    }
-
-    @Override
-    @NonNull
-    public File getReloadDexOutputFolder() {
-        return new File(globalScope.getIntermediatesDir(), "/reload-dex/" + getDirName());
-    }
-
-    @Override
-    @NonNull
-    public File getRestartDexOutputFolder() {
-        return new File(globalScope.getIntermediatesDir(), "/restart-dex/" + getDirName());
-    }
-
-    @NonNull
-    @Override
     public File getInstantRunSplitApkOutputFolder() {
         return new File(globalScope.getIntermediatesDir(), "/split-apk/" + getDirName());
     }
@@ -639,12 +600,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     public File getDefaultInstantRunApkLocation() {
         return FileUtils.join(globalScope.getIntermediatesDir(), "instant-run-apk");
-    }
-
-    @NonNull
-    @Override
-    public File getInstantRunPastIterationsFolder() {
-        return new File(globalScope.getIntermediatesDir(), "/builds/" + getDirName());
     }
 
     // Precomputed file paths.
@@ -750,35 +705,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 mainCollection,
                 variantData.getGeneratedBytecode(generatedBytecodeKey),
                 getProject().getPath());
-    }
-
-    @NonNull
-    @Override
-    public File getManifestCheckerDir() {
-        return new File(globalScope.getIntermediatesDir(), "/manifest-checker/" + getDirName());
-    }
-
-    @NonNull
-    @Override
-    public File getIncrementalRuntimeSupportJar() {
-        return new File(
-                globalScope.getIntermediatesDir(),
-                "/incremental-runtime-classes/" + getDirName() + "/instant-run.jar");
-    }
-
-    @NonNull
-    @Override
-    public File getInstantRunResourcesFile() {
-        return FileUtils.join(
-                globalScope.getIntermediatesDir(),
-                "instant-run-resources",
-                "resources-" + getDirName() + ".ir.ap_");
-    }
-
-    @Override
-    @NonNull
-    public File getIncrementalVerifierDir() {
-        return new File(globalScope.getIntermediatesDir(), "/incremental-verifier/" + getDirName());
     }
 
     @NonNull
@@ -1202,13 +1128,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     @Override
-    public File getInstantRunResourceApkFolder() {
-        return FileUtils.join(
-                globalScope.getIntermediatesDir(), "resources", "instant-run", getDirName());
-    }
-
-    @NonNull
-    @Override
     public File getIntermediateDir(@NonNull InternalArtifactType taskOutputType) {
         return intermediate(taskOutputType.name().toLowerCase(Locale.US));
     }
@@ -1256,15 +1175,10 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     public File getApkLocation() {
         String override = globalScope.getProjectOptions().get(StringOption.IDE_APK_LOCATION);
-        File defaultLocation =
-                instantRunBuildContext.isInInstantRunMode()
-                        ? getDefaultInstantRunApkLocation()
-                        : getDefaultApkLocation();
-
         File baseDirectory =
                 override != null && !getType().isHybrid()
                         ? getProject().file(override)
-                        : defaultLocation;
+                        : getDefaultApkLocation();
 
         return new File(baseDirectory, getDirName());
     }
@@ -1307,50 +1221,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return FileUtils.join(globalScope.getGeneratedDir(), "source", "apt", getDirName());
     }
 
-    @NonNull private final InstantRunBuildContext instantRunBuildContext;
-
-    @Override
-    @NonNull
-    public InstantRunBuildContext getInstantRunBuildContext() {
-        return instantRunBuildContext;
-    }
-
-    @NonNull
-    @Override
-    public ImmutableList<File> getInstantRunBootClasspath() {
-        SdkHandler sdkHandler = globalScope.getSdkHandler();
-        AndroidBuilder androidBuilder = globalScope.getAndroidBuilder();
-        IAndroidTarget androidBuilderTarget = androidBuilder.getTarget();
-
-        File annotationsJar = sdkHandler.getSdkLoader().getSdkInfo(LOGGER).getAnnotationsJar();
-
-        AndroidVersion targetDeviceVersion =
-                DeploymentDevice.getDeploymentDeviceAndroidVersion(globalScope.getProjectOptions());
-
-        if (targetDeviceVersion.equals(androidBuilderTarget.getVersion())) {
-            // Compile SDK and the target device match, re-use the target that we have already
-            // found earlier.
-            return BootClasspathBuilder.computeFullBootClasspath(
-                    androidBuilderTarget, annotationsJar);
-        }
-
-        IAndroidTarget targetToUse =
-                getAndroidTarget(
-                        sdkHandler, AndroidTargetHash.getPlatformHashString(targetDeviceVersion));
-
-        if (targetToUse == null) {
-            // The device platform is not installed, Studio should have done this already, so fail.
-            throw new RuntimeException(
-                    String.format(
-                            ""
-                                    + "In order to use Instant Run with this device running %1$S, "
-                                    + "you must install platform %1$S in your SDK",
-                            targetDeviceVersion.toString()));
-        }
-
-        return BootClasspathBuilder.computeFullBootClasspath(targetToUse, annotationsJar);
-    }
-
     /**
      * Calls the sdklib machinery to construct the {@link IAndroidTarget} for the given hash string.
      *
@@ -1379,24 +1249,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return AndroidSdkHandler.getInstance(sdkLocation)
                 .getAndroidTargetManager(progressIndicator)
                 .getTargetFromHashString(targetHash, progressIndicator);
-    }
-
-
-    @Nullable
-    @Override
-    public InstantRunTaskManager getInstantRunTaskManager() {
-        return instantRunTaskManager;
-    }
-
-    @Override
-    public void setInstantRunTaskManager(InstantRunTaskManager instantRunTaskManager) {
-        this.instantRunTaskManager = instantRunTaskManager;
-    }
-
-    @NonNull
-    @Override
-    public TransformVariantScope getTransformVariantScope() {
-        return this;
     }
 
     @FunctionalInterface
@@ -1650,9 +1502,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     public InternalArtifactType getManifestArtifactType() {
         return globalScope.getProjectOptions().get(BooleanOption.IDE_DEPLOY_AS_INSTANT_APP)
                 ? InternalArtifactType.INSTANT_APP_MANIFEST
-                : instantRunBuildContext.isInInstantRunMode()
-                        ? InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS
-                        : InternalArtifactType.MERGED_MANIFESTS;
+                : InternalArtifactType.MERGED_MANIFESTS;
     }
 
     @NonNull

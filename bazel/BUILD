@@ -7,7 +7,6 @@ java_library(
     srcs = glob(["src/com/android/tools/utils/*.java"]),
     visibility = [
         "//tools/base/bazel/sdk:__pkg__",
-        "//tools/base/build-system/instant-run-instrumentation:__pkg__",
     ],
 )
 

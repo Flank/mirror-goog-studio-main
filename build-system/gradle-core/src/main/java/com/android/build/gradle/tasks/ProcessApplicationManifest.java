@@ -845,9 +845,6 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
                 features.add(Feature.ADVANCED_PROFILING);
             }
         }
-        if (variantScope.getInstantRunBuildContext().isInInstantRunMode()) {
-            features.add(Feature.INSTANT_RUN_REPLACEMENT);
-        }
         if (variantScope.getVariantConfiguration().getDexingType() == DexingType.LEGACY_MULTIDEX) {
             if (variantScope
                     .getGlobalScope()

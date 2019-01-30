@@ -37,8 +37,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Publ
 import static com.android.build.gradle.internal.scope.ArtifactPublishingUtil.publishArtifactToConfiguration;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_RESOURCE_PKG;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_PUBLISH_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
@@ -81,9 +79,6 @@ import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.DataBindingOptions;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
-import com.android.build.gradle.internal.incremental.BuildInfoLoaderTask;
-import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
-import com.android.build.gradle.internal.incremental.InstantRunAnchorTaskCreationAction;
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
@@ -158,7 +153,6 @@ import com.android.build.gradle.internal.transforms.DexMergerTransform;
 import com.android.build.gradle.internal.transforms.DexMergerTransformCallable;
 import com.android.build.gradle.internal.transforms.DexSplitterTransform;
 import com.android.build.gradle.internal.transforms.ExternalLibsMergerTransform;
-import com.android.build.gradle.internal.transforms.ExtractJarsTransform;
 import com.android.build.gradle.internal.transforms.MergeClassesTransform;
 import com.android.build.gradle.internal.transforms.MergeJavaResourcesTransform;
 import com.android.build.gradle.internal.transforms.ProGuardTransform;
@@ -192,7 +186,6 @@ import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.GenerateResValues;
 import com.android.build.gradle.tasks.GenerateSplitAbiRes;
 import com.android.build.gradle.tasks.GenerateTestConfig;
-import com.android.build.gradle.tasks.InstantRunResourcesApkBuilder;
 import com.android.build.gradle.tasks.JavaPreCompileTask;
 import com.android.build.gradle.tasks.LintFixTask;
 import com.android.build.gradle.tasks.LintGlobalTask;
@@ -204,7 +197,6 @@ import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.PackageApplication;
 import com.android.build.gradle.tasks.PackageSplitAbi;
 import com.android.build.gradle.tasks.PackageSplitRes;
-import com.android.build.gradle.tasks.PreColdSwapTask;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.ProcessAnnotationsTask;
 import com.android.build.gradle.tasks.ProcessApplicationManifest;
@@ -1794,7 +1786,7 @@ public abstract class TaskManager {
         createValidateSigningTask(variantScope);
         taskFactory.register(new SigningConfigWriterTask.CreationAction(variantScope));
 
-        createPackagingTask(variantScope, null /* buildInfoGeneratorTask */);
+        createPackagingTask(variantScope);
 
         taskFactory.configure(
                 ASSEMBLE_ANDROID_TEST,
@@ -1836,7 +1828,6 @@ public abstract class TaskManager {
         GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
 
         if (!isLintVariant(variantScope)
-                || variantScope.getInstantRunBuildContext().isInInstantRunMode()
                 || variantConfig.getBuildType().isDebuggable()
                 || !extension.getLintOptions().isCheckReleaseBuilds()) {
             return;
@@ -2094,9 +2085,7 @@ public abstract class TaskManager {
 
         // ---- Code Coverage first -----
         boolean isTestCoverageEnabled =
-                config.getBuildType().isTestCoverageEnabled()
-                        && !config.getType().isForTesting()
-                        && !variantScope.getInstantRunBuildContext().isInInstantRunMode();
+                config.getBuildType().isTestCoverageEnabled() && !config.getType().isForTesting();
         if (isTestCoverageEnabled) {
             createJacocoTask(variantScope);
         }
@@ -2170,18 +2159,6 @@ public abstract class TaskManager {
             return;
         }
 
-        // ----- 10x support
-        TaskProvider<PreColdSwapTask> preColdSwapTask = null;
-        if (variantScope.getInstantRunBuildContext().isInInstantRunMode()) {
-
-            TaskProvider<? extends Task> allActionsAnchorTask =
-                    createInstantRunAllActionsTasks(variantScope);
-            assert variantScope.getInstantRunTaskManager() != null;
-            preColdSwapTask =
-                    variantScope.getInstantRunTaskManager().createPreColdswapTask(projectOptions);
-            TaskFactoryUtils.dependsOn(preColdSwapTask, allActionsAnchorTask);
-        }
-
         // ----- Multi-Dex support
         DexingType dexingType = variantScope.getDexingType();
 
@@ -2219,7 +2196,7 @@ public abstract class TaskManager {
                         multiDexTransform.setMainDexListOutputFile(mainDexListFile);
                     },
                     null,
-                    variantScope::addColdSwapBuildTask);
+                    null);
         }
 
         if (variantScope.getNeedsMainDexListForBundle()) {
@@ -2248,11 +2225,6 @@ public abstract class TaskManager {
 
         createDexTasks(variantScope, dexingType);
 
-        if (preColdSwapTask != null) {
-            for (TaskProvider<? extends Task> task : variantScope.getColdSwapBuildTasks()) {
-                TaskFactoryUtils.dependsOn(task, preColdSwapTask);
-            }
-        }
         maybeCreateResourcesShrinkerTransform(variantScope);
 
         // TODO: support DexSplitterTransform when IR enabled (http://b/77585545)
@@ -2363,7 +2335,6 @@ public abstract class TaskManager {
                 globalScope.getProjectOptions().get(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM)
                         && extension.getTransforms().isEmpty()
                         && !minified
-                        && !variantScope.getInstantRunBuildContext().isInInstantRunMode()
                         && variantScope.getJava8LangSupportType() == Java8LangSupport.UNUSED
                         && getAdvancedProfilingTransforms(projectOptions).isEmpty();
         FileCache userLevelCache = getUserDexCache(minified, dexOptions.getPreDexLibraries());
@@ -2396,13 +2367,9 @@ public abstract class TaskManager {
                         .setNumberOfBuckets(
                                 projectOptions.get(IntegerOption.DEXING_NUMBER_OF_BUCKETS))
                         .setIncludeFeaturesInScope(variantScope.consumesFeatureJars())
-                        .setIsInstantRun(
-                                variantScope.getInstantRunBuildContext().isInInstantRunMode())
                         .setEnableDexingArtifactTransform(enableDexingArtifactTransform)
                         .createDexArchiveBuilderTransform();
-        transformManager
-                .addTransform(taskFactory, variantScope, preDexTransform)
-                .ifPresent(variantScope::addColdSwapBuildTask);
+        transformManager.addTransform(taskFactory, variantScope, preDexTransform);
 
         if (projectOptions.get(BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK)) {
             taskFactory.register(new CheckDuplicateClassesTask.CreationAction(variantScope));
@@ -2452,17 +2419,10 @@ public abstract class TaskManager {
                         variantScope.getDexMerger(),
                         variantScope.getMinSdkVersion().getFeatureLevel(),
                         isDebuggable,
-                        variantScope.consumesFeatureJars(),
-                        variantScope.getInstantRunBuildContext().isInInstantRunMode());
+                        variantScope.consumesFeatureJars());
         variantScope
                 .getTransformManager()
-                .addTransform(
-                        taskFactory,
-                        variantScope,
-                        dexTransform,
-                        null,
-                        null,
-                        variantScope::addColdSwapBuildTask);
+                .addTransform(taskFactory, variantScope, dexTransform, null, null, null);
     }
 
     /**
@@ -2566,59 +2526,6 @@ public abstract class TaskManager {
         }
     }
 
-    /** Create InstantRun related tasks that should be ran right after the java compilation task. */
-    @NonNull
-    private TaskProvider<? extends Task> createInstantRunAllActionsTasks(
-            @NonNull VariantScope variantScope) {
-
-        TaskProvider<? extends Task> allActionAnchorTask =
-                taskFactory.register(new InstantRunAnchorTaskCreationAction(variantScope));
-
-        TransformManager transformManager = variantScope.getTransformManager();
-
-        ExtractJarsTransform extractJarsTransform =
-                new ExtractJarsTransform(
-                        ImmutableSet.of(DefaultContentType.CLASSES),
-                        ImmutableSet.of(Scope.SUB_PROJECTS));
-        Optional<TaskProvider<TransformTask>> extractJarsTask =
-                transformManager.addTransform(taskFactory, variantScope, extractJarsTransform);
-
-        InstantRunTaskManager instantRunTaskManager =
-                new InstantRunTaskManager(
-                        getLogger(),
-                        variantScope,
-                        variantScope.getTransformManager(),
-                        taskFactory,
-                        recorder);
-
-        // setting up a fake dependency on the merged manifest to force initialization
-        Provider<Directory> mergedManifests =
-                variantScope.getArtifacts().getFinalProduct(MERGED_MANIFESTS);
-
-        Provider<Directory> instantRunMergedManifests =
-                variantScope.getArtifacts().getFinalProduct(INSTANT_RUN_MERGED_MANIFESTS);
-
-        variantScope.setInstantRunTaskManager(instantRunTaskManager);
-        AndroidVersion minSdkForDx = variantScope.getMinSdkVersion();
-        TaskProvider<BuildInfoLoaderTask> buildInfoLoaderTask =
-                instantRunTaskManager.createInstantRunAllTasks(
-                        extractJarsTask.orElse(null),
-                        allActionAnchorTask,
-                        getResMergingScopes(variantScope),
-                        mergedManifests,
-                        instantRunMergedManifests,
-                        true /* addResourceVerifier */,
-                        minSdkForDx.getFeatureLevel(),
-                        variantScope.getJava8LangSupportType() == Java8LangSupport.D8,
-                        variantScope.getBootClasspath(),
-                        globalScope.getAndroidBuilder().getMessageReceiver());
-
-        TaskFactoryUtils.dependsOn(
-                variantScope.getTaskContainer().getSourceGenTask(), buildInfoLoaderTask);
-
-        return allActionAnchorTask;
-    }
-
     protected void handleJacocoDependencies(@NonNull VariantScope variantScope) {
         GradleVariantConfiguration config = variantScope.getVariantConfiguration();
         // we add the jacoco jar if coverage is enabled, but we don't add it
@@ -2627,7 +2534,6 @@ public abstract class TaskManager {
         // we add it as well.
         boolean isTestCoverageEnabled =
                 config.getBuildType().isTestCoverageEnabled()
-                        && !variantScope.getInstantRunBuildContext().isInInstantRunMode()
                         && (!config.getType().isTestComponent()
                                 || (config.getTestedConfig() != null
                                         && config.getTestedConfig().getType().isAar()));
@@ -2792,11 +2698,9 @@ public abstract class TaskManager {
     /**
      * Creates the final packaging task, and optionally the zipalign task (if the variant is signed)
      *
-     * @param fullBuildInfoGeneratorTask task that generates the build-info.xml for full build.
+     * @param variantScope VariantScope object.
      */
-    public void createPackagingTask(
-            @NonNull VariantScope variantScope,
-            @Nullable TaskProvider<BuildInfoWriterTask> fullBuildInfoGeneratorTask) {
+    public void createPackagingTask(@NonNull VariantScope variantScope) {
         ApkVariantData variantData = (ApkVariantData) variantScope.getVariantData();
         final MutableTaskContainer taskContainer = variantData.getScope().getTaskContainer();
 
@@ -2830,9 +2734,6 @@ public abstract class TaskManager {
         InternalArtifactType taskOutputType =
                 splitsArePossible ? InternalArtifactType.FULL_APK : InternalArtifactType.APK;
 
-        boolean useSeparateApkForResources =
-                variantScope.getInstantRunBuildContext().useSeparateApkForResources();
-
         InternalArtifactType resourceFilesInputType =
                 variantScope.useResourceShrinker()
                         ? InternalArtifactType.SHRUNK_PROCESSED_RES
@@ -2849,12 +2750,10 @@ public abstract class TaskManager {
 
         TaskProvider<PackageApplication> packageApp =
                 taskFactory.register(
-                        new PackageApplication.StandardCreationAction(
+                        new PackageApplication.CreationAction(
                                 variantScope,
                                 outputDirectory,
-                                useSeparateApkForResources
-                                        ? INSTANT_RUN_MAIN_APK_RESOURCES
-                                        : resourceFilesInputType,
+                                resourceFilesInputType,
                                 manifests,
                                 manifestType,
                                 variantScope.getOutputScope(),
@@ -2882,54 +2781,7 @@ public abstract class TaskManager {
                         },
                         null);
 
-        TaskProvider<? extends Task> packageInstantRunResources = null;
-
-        if (variantScope.getInstantRunBuildContext().isInInstantRunMode()) {
-            packageInstantRunResources =
-                    taskFactory.register(
-                            new InstantRunResourcesApkBuilder.CreationAction(
-                                    resourceFilesInputType, variantScope));
-
-            // make sure the task run even if none of the files we consume are available,
-            // this is necessary so we can clean up output.
-            TaskFactoryUtils.dependsOn(packageApp, packageInstantRunResources);
-
-            if (!useSeparateApkForResources) {
-                // in instantRunMode, there is no user configured splits, only one apk.
-                packageInstantRunResources =
-                        taskFactory.register(
-                                new PackageApplication.InstantRunResourcesCreationAction(
-                                        variantScope.getInstantRunResourcesFile(),
-                                        variantScope,
-                                        resourceFilesInputType,
-                                        manifests,
-                                        INSTANT_RUN_MERGED_MANIFESTS,
-                                        globalScope.getBuildCache(),
-                                        variantScope.getOutputScope()));
-            }
-
-            // Make sure the MAIN artifact is registered after the RESOURCES one.
-            TaskFactoryUtils.dependsOn(packageApp, packageInstantRunResources);
-        }
-
-        if (packageInstantRunResources != null) {
-            packageInstantRunResources.configure(configureResourcesAndAssetsDependencies);
-        }
-
         TaskFactoryUtils.dependsOn(taskContainer.getAssembleTask(), packageApp.getName());
-
-        if (fullBuildInfoGeneratorTask != null) {
-            final TaskProvider<? extends Task> fPackageInstantRunResources =
-                    packageInstantRunResources;
-            fullBuildInfoGeneratorTask.configure(
-                    t -> {
-                        t.mustRunAfter(packageApp);
-                        if (fPackageInstantRunResources != null) {
-                            t.mustRunAfter(fPackageInstantRunResources);
-                        }
-                    });
-            TaskFactoryUtils.dependsOn(taskContainer.getAssembleTask(), fullBuildInfoGeneratorTask);
-        }
 
         if (splitsArePossible) {
 
@@ -3268,17 +3120,6 @@ public abstract class TaskManager {
             @NonNull CodeShrinker codeShrinker,
             @Nullable FileCollection mappingFileCollection) {
         Optional<TaskProvider<TransformTask>> transformTask;
-        if (variantScope.getInstantRunBuildContext().isInInstantRunMode()) {
-            logger.warn(
-                    "{} is disabled for variant {} because it is not compatible with Instant Run. "
-                            + "See http://d.android.com/r/studio-ui/shrink-code-with-ir.html "
-                            + "for details on how to enable a code shrinker that's compatible with "
-                            + "Instant Run.",
-                    codeShrinker.name(),
-                    variantScope.getVariantConfiguration().getFullName());
-            return null;
-        }
-
         CodeShrinker createdShrinker = codeShrinker;
         switch (codeShrinker) {
             case PROGUARD:

@@ -29,7 +29,6 @@ import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.options.DeploymentDevice;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
@@ -37,7 +36,6 @@ import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.VariantType;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.InstantRun;
-import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.model.SourceProvider;
 import com.android.sdklib.AndroidVersion;
 import com.google.common.annotations.VisibleForTesting;
@@ -264,10 +262,6 @@ public class GradleVariantConfiguration
                     throw new UnsupportedOperationException("Test modules have no test variants.");
                 }
 
-                @Override
-                public boolean isInstantRunBuild(@NonNull GlobalScope globalScope) {
-                    return false;
-                }
             };
         }
     }
@@ -320,44 +314,6 @@ public class GradleVariantConfiguration
         super.addProductFlavor(productFlavor, sourceProvider, dimensionName);
         mergeOptions();
         return this;
-    }
-
-    protected enum IncrementalMode {
-        /* Not an instantRun mode */
-        NONE,
-        /* instantRun mode */
-        FULL,
-    }
-
-    public boolean isInstantRunBuild(@NonNull GlobalScope globalScope) {
-        return getIncrementalMode(globalScope) == IncrementalMode.FULL;
-    }
-
-    /**
-     * Returns the incremental mode for this variant.
-     *
-     * @param globalScope the project's global scope.
-     * @return the {@link IncrementalMode} for this variant.
-     */
-    protected IncrementalMode getIncrementalMode(@NonNull GlobalScope globalScope) {
-        if (isInstantRunSupported(globalScope)
-                && targetDeviceSupportsInstantRun(this, globalScope.getProjectOptions())
-                && globalScope.isActive(OptionalCompilationStep.INSTANT_DEV)) {
-            return IncrementalMode.FULL;
-        }
-        return IncrementalMode.NONE;
-    }
-
-    private static boolean targetDeviceSupportsInstantRun(
-            @NonNull GradleVariantConfiguration config, @NonNull ProjectOptions projectOptions) {
-        if (config.isLegacyMultiDexMode()) {
-            // We don't support legacy multi-dex on Dalvik.
-            return DeploymentDevice.getDeploymentDeviceAndroidVersion(projectOptions)
-                            .getFeatureLevel()
-                    >= AndroidVersion.ART_RUNTIME.getFeatureLevel();
-        }
-
-        return true;
     }
 
     @NonNull
@@ -437,22 +393,9 @@ public class GradleVariantConfiguration
         return mergedJavaCompileOptions;
     }
 
-    public boolean isInstantRunSupported(@NonNull GlobalScope globalScope) {
-        return getInstantRunSupportStatus(globalScope) == InstantRun.STATUS_SUPPORTED;
-    }
-
     /** Returns a status code indicating whether Instant Run is supported and why. */
     public int getInstantRunSupportStatus(@NonNull GlobalScope globalScope) {
-        if (!getBuildType().isDebuggable()) {
-            return InstantRun.STATUS_NOT_SUPPORTED_FOR_NON_DEBUG_VARIANT;
-        }
-        if (getType().isForTesting()) {
-            return InstantRun.STATUS_NOT_SUPPORTED_VARIANT_USED_FOR_TESTING;
-        }
-        if (getType().isFeatureSplit() || globalScope.hasDynamicFeatures()) {
-            return InstantRun.STATUS_NOT_SUPPORTED_FOR_MULTI_APK;
-        }
-        return InstantRun.STATUS_SUPPORTED;
+        return InstantRun.STATUS_REMOVED;
     }
 
     @NonNull

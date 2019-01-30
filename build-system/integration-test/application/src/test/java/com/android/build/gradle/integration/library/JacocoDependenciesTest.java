@@ -29,7 +29,6 @@ import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.integration.instant.InstantRunTestUtils;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.coverage.JacocoOptions;
 import com.android.build.gradle.options.BooleanOption;
@@ -37,16 +36,13 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
-import com.android.sdklib.AndroidVersion;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
-import com.android.testutils.apk.SplitApks;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.truth.Truth8;
 import java.io.IOException;
 import java.util.Optional;
-import org.jf.dexlib2.dexbacked.DexBackedClassDef;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -119,21 +115,6 @@ public class JacocoDependenciesTest {
                 project.getSubproject("library").getBuildFile(),
                 "\n" + "android.jacoco.version '0.7.4.201502262128'\n");
         assertAgentMavenCoordinates("org.jacoco:org.jacoco.agent:0.7.4.201502262128:runtime@jar");
-    }
-
-    @Test
-    public void checkJacocoDisabledForInstantRun() throws Exception {
-        project.executor().withInstantRun(new AndroidVersion(21)).run("app:assembleDebug");
-        AndroidProject model = project.model().fetchAndroidProjects().getOnlyModelMap().get(":app");
-
-        SplitApks apks =
-                InstantRunTestUtils.getCompiledColdSwapChange(
-                        InstantRunTestUtils.getInstantRunModel(model));
-
-        DexBackedClassDef libClass =
-                apks.getAllClasses().get("Lcom/example/android/multiproject/library/PersonView;");
-        libClass.getFields()
-                .forEach(f -> assertThat(f.getName().toLowerCase()).doesNotContain("jacocodata"));
     }
 
     @Test

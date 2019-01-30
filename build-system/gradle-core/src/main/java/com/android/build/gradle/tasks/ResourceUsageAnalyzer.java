@@ -34,7 +34,6 @@ import static org.objectweb.asm.ClassReader.SKIP_FRAMES;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.incremental.ByteCodeUtils;
 import com.android.builder.dexing.AnalysisCallback;
 import com.android.builder.dexing.R8ResourceShrinker;
 import com.android.builder.utils.ZipEntryUtils;
@@ -1375,7 +1374,7 @@ public class ResourceUsageAnalyzer {
                 end = line.length();
             }
             String target = line.substring(arrow + ARROW.length(), end).trim();
-            String ownerName = ByteCodeUtils.toInternalName(target);
+            String ownerName = target.replace('.', '/');
 
             nameMap = Maps.newHashMap();
             Pair<ResourceType, Map<String, String>> pair = Pair.of(type, nameMap);

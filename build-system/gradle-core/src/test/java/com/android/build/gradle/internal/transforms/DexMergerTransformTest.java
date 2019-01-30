@@ -330,7 +330,6 @@ public class DexMergerTransformTest {
                         DexMergerTool.DX,
                         21,
                         true,
-                        false,
                         false);
         androidLDexMerger.transform(
                 invocationBuilder.setTransformOutputProvider(outputProvider).build());
@@ -349,7 +348,6 @@ public class DexMergerTransformTest {
                         DexMergerTool.DX,
                         23,
                         true,
-                        false,
                         false);
         postLDexMerger.transform(
                 invocationBuilder.setTransformOutputProvider(outputProvider).build());
@@ -500,7 +498,6 @@ public class DexMergerTransformTest {
                 DexMergerTool.DX,
                 1,
                 isDebuggable,
-                false,
                 false);
     }
 

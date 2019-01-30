@@ -33,7 +33,6 @@ import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.LintOptions;
 import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
-import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.InstantAppOutputScope;
@@ -49,6 +48,7 @@ import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.InstantAppProjectBuildOutput;
 import com.android.builder.model.InstantAppVariantBuildOutput;
+import com.android.builder.model.InstantRun;
 import com.android.builder.model.ModelBuilderParameter;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
@@ -335,9 +335,11 @@ public class InstantAppModelBuilder
                         variantConfiguration.getMergedBuildConfigFields(),
                         variantConfiguration.getMergedResValues(),
                         new InstantRunImpl(
-                                BuildInfoWriterTask.CreationAction.getBuildInfoFile(variantScope),
-                                variantConfiguration.getInstantRunSupportStatus(
-                                        variantScope.getGlobalScope())),
+                                variantScope
+                                        .getGlobalScope()
+                                        .getProject()
+                                        .file("removed_build_info"),
+                                InstantRun.STATUS_REMOVED),
                         (BuildOutputSupplier<Collection<EarlySyncBuildOutput>>)
                                 () ->
                                         ImmutableList.of(

@@ -39,22 +39,6 @@ TEST_DATA = [
 ]
 
 gradle_integration_test(
-    name = "AntennaPodInstantRunTest",
-    srcs = ["AntennaPodInstantRunTest.java"],
-    data = TEST_DATA + [
-        "@AntennaPod//:all_files",
-        "//prebuilts/studio/sdk:platforms/android-23",
-    ],
-    maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
-        "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/external:antennapod_prebuilts",
-        "//tools/base/build-system/integration-test:support_library_latest",
-    ],
-    tags = ["no_test_windows"],  # b/73306170
-    deps = TEST_DEPS,
-)
-
-gradle_integration_test(
     name = "AntennaPodSmokeTest",
     srcs = ["AntennaPodSmokeTest.java"],
     data = TEST_DATA + [

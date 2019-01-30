@@ -21,7 +21,6 @@ import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
 import com.android.build.gradle.options.BooleanOption
-import com.android.sdklib.AndroidVersion
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -146,12 +145,6 @@ class DexingArtifactTransformTest {
         val run = executor().run("assembleDebug")
         assertThat(run.didWorkTasks).contains(":mergeExtDexDebug")
         assertThat(run.upToDateTasks).containsAllOf(":mergeLibDexDebug", ":mergeProjectDexDebug")
-    }
-
-    @Test
-    fun testInstantRunDoesNotUseNewPipeline() {
-        val result = executor().withInstantRun(AndroidVersion(21)).run("assembleDebug")
-        assertThat(result.tasks).doesNotContain(":mergeExtDexDebug")
     }
 
     @Test

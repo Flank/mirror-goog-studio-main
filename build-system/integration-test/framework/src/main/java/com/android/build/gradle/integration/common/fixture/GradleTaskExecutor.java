@@ -20,13 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.options.IntegerOption;
-import com.android.build.gradle.options.StringOption;
-import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.model.ProjectBuildOutput;
-import com.android.ddmlib.IDevice;
-import com.android.resources.Density;
-import com.android.sdklib.AndroidVersion;
 import com.android.testutils.TestUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -37,12 +31,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import org.gradle.tooling.BuildActionExecuter;
 import org.gradle.tooling.BuildLauncher;
 import org.gradle.tooling.ConfigurableLauncher;
@@ -84,31 +74,6 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
     /** Retrieve the ProjectBuildOutput models along with the build */
     public GradleTaskExecutor withOutputModelQuery() {
         queryOutputModel = true;
-        return this;
-    }
-
-    /**
-     * Inject the instant run arguments.
-     *
-     * @param androidVersion The target device version
-     * @param flags additional instant run flags, see {@link OptionalCompilationStep}.
-     */
-    public GradleTaskExecutor withInstantRun(
-            AndroidVersion androidVersion, @NonNull OptionalCompilationStep... flags) {
-        setInstantRunArgs(androidVersion, null /* density */, flags);
-        return this;
-    }
-
-    /**
-     * Inject the instant run arguments.
-     *
-     * @param device The connected device.
-     * @param flags additional instant run flags, see {@link OptionalCompilationStep}.
-     */
-    public GradleTaskExecutor withInstantRun(
-            @NonNull IDevice device, @NonNull OptionalCompilationStep... flags) {
-        setInstantRunArgs(
-                device.getVersion(), Density.getEnum(device.getDensity()), flags);
         return this;
     }
 
@@ -216,28 +181,5 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
             throw failure;
         }
         return result;
-    }
-
-    private void setInstantRunArgs(
-            @Nullable AndroidVersion androidVersion,
-            @Nullable Density density,
-            @NonNull OptionalCompilationStep[] flags) {
-        if (androidVersion != null) {
-            with(IntegerOption.IDE_TARGET_DEVICE_API, androidVersion.getApiLevel());
-            if (androidVersion.getCodename() != null) {
-                with(StringOption.IDE_TARGET_DEVICE_CODENAME, androidVersion.getCodename());
-            }
-        }
-
-        if (density != null) {
-            with(StringOption.IDE_BUILD_TARGET_DENSITY, density.getResourceValue());
-        }
-
-        Set<OptionalCompilationStep> steps = EnumSet.of(OptionalCompilationStep.INSTANT_DEV);
-        steps.addAll(Arrays.asList(flags));
-
-        with(
-                StringOption.IDE_OPTIONAL_COMPILATION_STEPS,
-                steps.stream().map(OptionalCompilationStep::name).collect(Collectors.joining(",")));
     }
 }

@@ -30,8 +30,6 @@ import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
-import com.android.build.gradle.internal.incremental.FileType;
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -71,11 +69,9 @@ import com.android.tools.build.apkzlib.zip.compress.Zip64NotSupportedException;
 import com.android.utils.FileUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -213,13 +209,9 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     protected Supplier<AndroidVersion> minSdkVersion;
 
-    protected Supplier<InstantRunBuildContext> instantRunContext;
-
     protected Provider<Directory> manifests;
 
     @Nullable protected Collection<String> aaptOptionsNoCompress;
-
-    protected FileType instantRunFileType;
 
     protected OutputScope outputScope;
 
@@ -312,11 +304,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     @Input
     public int getMinSdkVersion() {
         return this.minSdkVersion.get().getApiLevel();
-    }
-
-    @Input
-    public Boolean isInInstantRunMode() {
-        return instantRunContext.get().isInInstantRunMode();
     }
 
     /*
@@ -444,7 +431,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                 .into(getInternalArtifactType(), outputDirectory);
 
         for (int i = 0; i < inputList.size(); i++) {
-            instantRunContext.get().addChangedFile(instantRunFileType, outputList.get(i));
             recordMetrics(outputList.get(i), inputList.get(i));
         }
     }
@@ -610,22 +596,14 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         @NonNull protected final IncrementalPackagerBuilder.ApkFormat apkFormat;
         @Nullable protected final File signingConfig;
         @NonNull protected final Set<String> abiFilters;
-        @NonNull protected final FileType instantRunFileType;
         @NonNull protected final File manifestDirectory;
         @Nullable protected final Collection<String> aaptOptionsNoCompress;
         @Nullable protected final String createdBy;
         protected final int minSdkVersion;
-        protected final boolean isInInstantRunMode;
         protected final boolean isDebuggableBuild;
         protected final boolean isJniDebuggableBuild;
         protected final boolean keepTimestampsInApk;
         @Nullable protected final Integer targetApi;
-
-        /**
-         * This should only be used in instant run mode in incremental task action where parameters
-         * will not be serialized
-         */
-        @Nullable protected transient InstantRunBuildContext instantRunBuildContext;
 
         SplitterParams(
                 @NonNull ApkData apkInfo,
@@ -660,12 +638,10 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             apkFormat = task.apkFormat;
             signingConfig = SigningConfigMetadata.Companion.getOutputFile(task.signingConfig);
             abiFilters = task.abiFilters;
-            instantRunFileType = task.instantRunFileType;
             manifestDirectory = task.getManifests().get().getAsFile();
             aaptOptionsNoCompress = task.aaptOptionsNoCompress;
             createdBy = task.getBuilder().getCreatedBy();
             minSdkVersion = task.getMinSdkVersion();
-            isInInstantRunMode = task.isInInstantRunMode();
             isDebuggableBuild = task.getDebugBuild();
             isJniDebuggableBuild = task.getJniDebugBuild();
             keepTimestampsInApk = task.getKeepTimestampsInApk();
@@ -770,15 +746,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                 ImmutableMap.builder();
         javaResourcesForApk.putAll(changedJavaResources);
 
-        if (params.isInInstantRunMode) {
-            changedDex =
-                    ImmutableMap.copyOf(
-                            Maps.filterKeys(
-                                    changedDex,
-                                    Predicates.compose(
-                                            Predicates.in(params.dexFiles),
-                                            RelativeFile::getBase)));
-        }
         final ImmutableMap<RelativeFile, FileStatus> dexFilesToPackage = changedDex;
 
         String filter = null;
@@ -838,16 +805,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             packager.updateAssets(changedAssets);
             packager.updateAndroidResources(changedAndroidResources);
             packager.updateNativeLibraries(changedNLibs);
-            // Only report APK as built if it has actually changed.
-            if (packager.hasPendingChangesWithWait()) {
-                // FIX-ME : below would not work in multi apk situations. There is code somewhere
-                // to ensure we only build ONE multi APK for the target device, make sure it is still
-                // active.
-                if (params.instantRunBuildContext != null) {
-                    params.instantRunBuildContext.addChangedFile(
-                            params.instantRunFileType, outputFile);
-                }
-            }
         }
 
         /*
@@ -882,30 +839,15 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     protected void doIncrementalTaskAction(Map<File, FileStatus> changedInputs) {
         checkNotNull(changedInputs, "changedInputs == null");
 
-        // in instant run mode we don't use worker API because we need to report which files changed
-        // in the incremental build to the instantRunBuildContext and that can't be done from the
-        // isolated worker items.
-        if (isInInstantRunMode()) {
-            ExistingBuildElements.from(getTaskInputType(), resourceFiles)
-                    .transform(
-                            (apkInfo, inputFile) -> {
-                                IncrementalSplitterParams params =
-                                        new IncrementalSplitterParams(
-                                                apkInfo, inputFile, changedInputs, this);
-                                new IncrementalSplitterRunnable(params).run();
-                                return params.getOutput();
-                            })
-                    .into(getInternalArtifactType(), outputDirectory);
-        } else {
-            ExistingBuildElements.from(getTaskInputType(), resourceFiles)
-                    .transform(
-                            workers,
-                            IncrementalSplitterRunnable.class,
-                            (apkInfo, inputFile) ->
-                                    new IncrementalSplitterParams(
-                                            apkInfo, inputFile, changedInputs, this))
-                    .into(getInternalArtifactType(), outputDirectory);
-        }
+
+        ExistingBuildElements.from(getTaskInputType(), resourceFiles)
+                .transform(
+                        workers,
+                        IncrementalSplitterRunnable.class,
+                        (apkInfo, inputFile) ->
+                                new IncrementalSplitterParams(
+                                        apkInfo, inputFile, changedInputs, this))
+                .into(getInternalArtifactType(), outputDirectory);
     }
 
     private static class IncrementalSplitterRunnable extends BuildElementsTransformRunnable {
@@ -1073,7 +1015,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                 PackageAndroidArtifact task) {
             super(apkInfo, processedResources, task);
             this.changedInputs = changedInputs;
-            this.instantRunBuildContext = task.instantRunContext.get();
         }
     }
 
@@ -1117,12 +1058,9 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             GradleVariantConfiguration variantConfiguration =
                     variantScope.getVariantConfiguration();
 
-            packageAndroidArtifact.instantRunFileType = FileType.MAIN;
             packageAndroidArtifact.taskInputType = inputResourceFilesType;
             packageAndroidArtifact.minSdkVersion =
                     TaskInputHelper.memoize(variantScope::getMinSdkVersion);
-            packageAndroidArtifact.instantRunContext =
-                    TaskInputHelper.memoize(variantScope::getInstantRunBuildContext);
 
             packageAndroidArtifact.resourceFiles =
                     variantScope.getArtifacts().getFinalArtifactFiles(inputResourceFilesType);
@@ -1187,8 +1125,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             VariantScope variantScope = getVariantScope();
 
             GlobalScope globalScope = variantScope.getGlobalScope();
-            task.instantRunFileType = FileType.MAIN;
-
             task.dexFolders = getDexFolders();
             task.featureDexFolder = getFeatureDexFolder();
             task.javaResourceFiles = getJavaResources();

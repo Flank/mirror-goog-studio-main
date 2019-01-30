@@ -18,7 +18,6 @@ package com.android.build.gradle.tasks
 
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.api.artifact.singleFile
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder.OperationType.APPEND
 import com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_GENERATED_SOURCES_PRIVATE_USE
 import com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_GENERATED_SOURCES_PUBLIC_USE
@@ -106,10 +105,6 @@ open class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
 
     @get:Input
     lateinit var compileSdkVersion: String
-        private set
-
-    @get:Internal
-    lateinit var instantRunBuildContext: InstantRunBuildContext
         private set
 
     override fun compile(inputs: IncrementalTaskInputs) {
@@ -210,9 +205,7 @@ open class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
                     " and target level $targetCompatibility."
         )
 
-        instantRunBuildContext.startRecording(InstantRunBuildContext.TaskType.JAVAC)
         super.compile(inputs)
-        instantRunBuildContext.stopRecording(InstantRunBuildContext.TaskType.JAVAC)
     }
 
     private fun isPostN(compileSdkVersion: String): Boolean {
@@ -292,7 +285,6 @@ open class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
             task.processorListFile =
                     variantScope.artifacts.getFinalArtifactFiles(ANNOTATION_PROCESSOR_LIST)
             task.compileSdkVersion = globalScope.extension.compileSdkVersion
-            task.instantRunBuildContext = variantScope.instantRunBuildContext
 
             // Configure properties for annotation processing, but only if it is not done by
             // ProcessAnnotationsTask

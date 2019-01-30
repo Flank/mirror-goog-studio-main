@@ -43,7 +43,6 @@ public class DexArchiveBuilderTransformBuilder {
     private String projectVariant;
     private Integer numberOfBuckets;
     private boolean includeFeaturesInScopes;
-    private boolean isInstantRun;
     private boolean enableDexingArtifactTransform;
 
     @NonNull
@@ -135,12 +134,6 @@ public class DexArchiveBuilderTransformBuilder {
     }
 
     @NonNull
-    public DexArchiveBuilderTransformBuilder setIsInstantRun(boolean isInstantRun) {
-        this.isInstantRun = isInstantRun;
-        return this;
-    }
-
-    @NonNull
     public DexArchiveBuilderTransformBuilder setEnableDexingArtifactTransform(
             boolean enableDexingArtifactTransform) {
         this.enableDexingArtifactTransform = enableDexingArtifactTransform;
@@ -170,7 +163,6 @@ public class DexArchiveBuilderTransformBuilder {
                 projectVariant,
                 numberOfBuckets,
                 includeFeaturesInScopes,
-                isInstantRun,
                 enableDexingArtifactTransform);
     }
 }

@@ -26,8 +26,6 @@ import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.dsl.convert
-import com.android.build.gradle.internal.incremental.InstantRunBuildContext
-import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE
@@ -47,7 +45,6 @@ import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
-import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.MultiOutputPolicy
 import com.android.build.gradle.options.BooleanOption
@@ -98,7 +95,6 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
     ProcessAndroidResources() {
 
     companion object {
-        private const val IR_APK_FILE_NAME = "resources"
         private val LOG = Logging.getLogger(LinkApplicationAndroidResourcesTask::class.java)
 
         private fun getOutputBaseNameFile(apkData: ApkData, resPackageOutputFolder: File): File {
@@ -135,8 +131,6 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
     private lateinit var aaptOptions: AaptOptions
 
     private lateinit var mergeBlameLogFolder: File
-
-    private lateinit var buildContext: InstantRunBuildContext
 
     private var featureResourcePackages: FileCollection? = null
 
@@ -180,11 +174,6 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
     @Input
     fun getUseConditionalKeepRules(): Boolean {
         return useConditionalKeepRules
-    }
-
-    @Input
-    fun getPatchingPolicy(): InstantRunPatchingPolicy {
-        return buildContext.patchingPolicy
     }
 
     @Input
@@ -502,8 +491,6 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
 
             task.setMergeBlameLogFolder(variantScope.resourceBlameLogDir)
 
-            task.buildContext = variantScope.instantRunBuildContext
-
             val variantType = variantScope.type
 
             // Tests should not have feature dependencies, however because they include the
@@ -731,20 +718,6 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
 
             try {
 
-                // If we are in instant run mode and we use a split APK for these resources.
-                if (params.isInInstantRunMode && params.patchingPolicy == InstantRunPatchingPolicy.MULTI_APK_SEPARATE_RESOURCES) {
-                    params.supportDirectory.mkdirs()
-                    // create a split identification manifest.
-                    manifestFile = InstantRunSliceSplitApkBuilder.generateSplitApkManifest(
-                        params.supportDirectory,
-                        IR_APK_FILE_NAME,
-                        { params.applicationId },
-                        params.apkData.versionName,
-                        params.apkData.versionCode,
-                        params.manifestOutput.properties[SdkConstants.ATTR_MIN_SDK_VERSION]
-                    )
-                }
-
                 // If the new resources flag is enabled and if we are dealing with a library process
                 // resources through the new parsers
                 run {
@@ -869,10 +842,6 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
         val proguardOutputFile: File? = task.getProguardOutputFile()
         val mainDexListProguardOutputFile: File? = task.getMainDexListProguardOutputFile()
         val buildTargetDensity: String? = task.buildTargetDensity
-        val isInInstantRunMode: Boolean = task.buildContext.isInInstantRunMode
-        val patchingPolicy: InstantRunPatchingPolicy = task.buildContext.patchingPolicy
-        val supportDirectory: File = task.supportDirectory
-        val applicationId: String? = task.applicationId.get()
         val aaptOptions: com.android.builder.internal.aapt.AaptOptions = task.aaptOptions.convert()
         val variantType: VariantType = task.getType()
         val debuggable: Boolean = task.getDebuggable()
@@ -897,17 +866,6 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
     @Input
     fun getResOffset(): Int? {
         return if (resOffsetSupplier != null) resOffsetSupplier!!.get() else null
-    }
-
-    /**
-     * To force the task to execute when the manifest file to use changes.
-     *
-     *
-     * Fix for [b.android.com/209985](http://b.android.com/209985).
-     */
-    @Input
-    fun isInstantRunMode(): Boolean {
-        return buildContext.isInInstantRunMode
     }
 
     @InputFiles

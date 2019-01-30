@@ -45,6 +45,9 @@ public interface InstantRun {
     /** Instant Run is currently disabled for multi-apk applications (http://b/77685496) */
     int STATUS_NOT_SUPPORTED_FOR_MULTI_APK = 6;
 
+    /** Instant Run was removed */
+    int STATUS_REMOVED = 7;
+
     /**
      * Returns the last incremental build information, including success or failure, verifier
      * reason for requesting a restart, etc...

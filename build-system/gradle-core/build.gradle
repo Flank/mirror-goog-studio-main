@@ -164,39 +164,12 @@ if (project.hasProperty("release")) {
     }
 }
 
-
-// Package instant run instrumentation inside of gradle-core.
-configurations {
-    subsumedProvided
-    sourcesSubsumedProvided
-}
-dependencies {
-    subsumedProvided(project(':base:instant-run-instrumentation')) {
-        transitive = false
-    }
-    sourcesSubsumedProvided(project(path:':base:instant-run-instrumentation', configuration:'sourcesOnly')) {
-        transitive = false
-    }
-}
-sourceSets.main.compileClasspath += configurations.subsumedProvided
-sourceSets.test.compileClasspath += configurations.subsumedProvided
-sourceSets.test.runtimeClasspath += configurations.subsumedProvided
-tasks.compileJava.dependsOn(configurations.subsumedProvided)
-tasks.sourcesJar.dependsOn(configurations.sourcesSubsumedProvided)
-tasks.jar {
-    from({ zipTree(configurations.subsumedProvided.singleFile)})
-}
-tasks.sourcesJar {
-    from({zipTree(configurations.sourcesSubsumedProvided.singleFile)})
-}
 tasks.processResources {
     from(rootProject.file("../prebuilts/tools/common/aapt/aapt2_version.properties")) {
         into "com/android/build/gradle/internal/res/"
     }
 }
-javadoc {
-    classpath += configurations.subsumedProvided
-}
+
 // End Package instant run instrumentation inside of gradle-core.
 
 // Incremental update test support

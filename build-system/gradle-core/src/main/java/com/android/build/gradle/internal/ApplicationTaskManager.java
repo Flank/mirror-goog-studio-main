@@ -22,21 +22,15 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
-import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.feature.BundleAllClasses;
-import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.android.build.gradle.internal.res.Aapt2MavenUtils;
 import com.android.build.gradle.internal.scope.AnchorOutputType;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AppClasspathCheckTask;
 import com.android.build.gradle.internal.tasks.AppPreBuildTask;
@@ -48,7 +42,6 @@ import com.android.build.gradle.internal.tasks.CheckMultiApkLibrariesTask;
 import com.android.build.gradle.internal.tasks.ExtractApksTask;
 import com.android.build.gradle.internal.tasks.FinalizeBundleTask;
 import com.android.build.gradle.internal.tasks.InstallVariantViaBundleTask;
-import com.android.build.gradle.internal.tasks.InstantRunSplitApkResourcesBuilder;
 import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesTask;
 import com.android.build.gradle.internal.tasks.ModuleMetadataWriterTask;
 import com.android.build.gradle.internal.tasks.PackageBundleTask;
@@ -62,8 +55,6 @@ import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadataWriterTask;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarationWriterTask;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitTransitiveDepsWriterTask;
-import com.android.build.gradle.internal.transforms.InstantRunDependenciesApkBuilder;
-import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.internal.variant.VariantFactory;
@@ -221,10 +212,7 @@ public class ApplicationTaskManager extends TaskManager {
             createSplitTasks(variantScope);
         }
 
-
-        TaskProvider<BuildInfoWriterTask> buildInfoWriterTask =
-                createInstantRunPackagingTasks(variantScope);
-        createPackagingTask(variantScope, buildInfoWriterTask);
+        createPackagingTask(variantScope);
 
         // Create the lint tasks, if enabled
         createLintTasks(variantScope);
@@ -257,107 +245,6 @@ public class ApplicationTaskManager extends TaskManager {
             // use the install task that uses the App Bundle
             taskFactory.register(new InstallVariantViaBundleTask.CreationAction(variantScope));
         }
-    }
-
-    /** Create tasks related to creating pure split APKs containing sharded dex files. */
-    @Nullable
-    private TaskProvider<BuildInfoWriterTask> createInstantRunPackagingTasks(
-            @NonNull VariantScope variantScope) {
-
-        if (!variantScope.getInstantRunBuildContext().isInInstantRunMode()
-                || variantScope.getInstantRunTaskManager() == null) {
-            return null;
-        }
-
-        TaskProvider<BuildInfoWriterTask> buildInfoGeneratorTask =
-                taskFactory.register(
-                        new BuildInfoWriterTask.CreationAction(variantScope, getLogger()));
-
-        variantScope.getInstantRunTaskManager()
-                        .configureBuildInfoWriterTask(buildInfoGeneratorTask);
-
-        InternalArtifactType resourcesWithMainManifest =
-                variantScope.getInstantRunBuildContext().useSeparateApkForResources()
-                        ? InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES
-                        : InternalArtifactType.PROCESSED_RES;
-
-        BuildArtifactsHolder artifacts = variantScope.getArtifacts();
-
-        // create the transforms that will create the dependencies apk.
-        InstantRunDependenciesApkBuilder dependenciesApkBuilder =
-                new InstantRunDependenciesApkBuilder(
-                        getLogger(),
-                        project,
-                        variantScope.getInstantRunBuildContext(),
-                        variantScope.getGlobalScope().getAndroidBuilder(),
-                        Aapt2MavenUtils.getAapt2FromMaven(globalScope),
-                        variantScope.getVariantConfiguration()::getApplicationId,
-                        variantScope.getSigningConfigFileCollection(),
-                        DslAdaptersKt.convert(globalScope.getExtension().getAaptOptions()),
-                        new File(variantScope.getInstantRunSplitApkOutputFolder(), "dep"),
-                        new File(
-                                variantScope.getIncrementalDir("ir_dep"),
-                                variantScope.getDirName()),
-                        artifacts.getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES),
-                        artifacts.getFinalArtifactFiles(resourcesWithMainManifest),
-                        artifacts.getFinalArtifactFiles(InternalArtifactType.APK_LIST),
-                        variantScope.getOutputScope().getMainSplit(),
-                        variantScope
-                                .getGlobalScope()
-                                .getProjectOptions()
-                                .get(BooleanOption.KEEP_TIMESTAMPS_IN_APK));
-
-        variantScope
-                .getTransformManager()
-                .addTransform(taskFactory, variantScope, dependenciesApkBuilder, null, null, null);
-
-
-        taskFactory.register(new InstantRunSplitApkResourcesBuilder.CreationAction(variantScope));
-
-        // and now the transform that will create a split FULL_APK for each slice.
-        InstantRunSliceSplitApkBuilder slicesApkBuilder =
-                new InstantRunSliceSplitApkBuilder(
-                        getLogger(),
-                        project,
-                        variantScope.getInstantRunBuildContext(),
-                        variantScope.getGlobalScope().getAndroidBuilder(),
-                        Aapt2MavenUtils.getAapt2FromMaven(globalScope),
-                        variantScope.getVariantConfiguration()::getApplicationId,
-                        variantScope.getSigningConfigFileCollection(),
-                        DslAdaptersKt.convert(globalScope.getExtension().getAaptOptions()),
-                        new File(variantScope.getInstantRunSplitApkOutputFolder(), "slices"),
-                        getIncrementalFolder(variantScope, "ir_slices"),
-                        artifacts.getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES),
-                        artifacts.getFinalArtifactFiles(resourcesWithMainManifest),
-                        artifacts.getFinalArtifactFiles(InternalArtifactType.APK_LIST),
-                        artifacts.getFinalArtifactFiles(
-                                InternalArtifactType.INSTANT_RUN_SPLIT_APK_RESOURCES),
-                        variantScope.getOutputScope().getMainSplit(),
-                        variantScope
-                                .getGlobalScope()
-                                .getProjectOptions()
-                                .get(BooleanOption.KEEP_TIMESTAMPS_IN_APK));
-
-        variantScope
-                .getTransformManager()
-                .addTransform(
-                        taskFactory,
-                        variantScope,
-                        slicesApkBuilder,
-                        null,
-                        null,
-                        taskProvider -> {
-                            TaskFactoryUtils.dependsOn(
-                                    variantScope.getTaskContainer().getAssembleTask(),
-                                    taskProvider);
-                            buildInfoGeneratorTask.configure(t -> t.mustRunAfter(taskProvider));
-                        });
-
-        // if the assembleVariant task run, make sure it also runs the task to generate
-        // the build-info.xml.
-        TaskFactoryUtils.dependsOn(
-                variantScope.getTaskContainer().getAssembleTask(), buildInfoGeneratorTask);
-        return buildInfoGeneratorTask;
     }
 
     @Override

@@ -35,7 +35,6 @@ kotlin_library(
         "src/main/java",
     ],
     bundled_deps = [
-        "//tools/base/build-system/instant-run-instrumentation",
         ":proto",
     ],
     pom = ":pom",

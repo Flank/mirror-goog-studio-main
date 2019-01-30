@@ -873,8 +873,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                     extension.getCompileSdkVersion(),
                     extension.getBuildToolsRevision(),
                     globalScope.getErrorHandler(),
-                    globalScope.getAndroidBuilder(),
-                    SdkHandler.useCachedSdk(projectOptions));
+                    globalScope.getAndroidBuilder());
 
         } catch (SdkHandler.MissingSdkException e) {
             String filePath =

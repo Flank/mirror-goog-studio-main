@@ -1041,8 +1041,7 @@ public abstract class BaseExtension implements AndroidConfig {
                     getCompileSdkVersion(),
                     buildToolsRevision,
                     globalScope.getErrorHandler(),
-                    globalScope.getAndroidBuilder(),
-                    SdkHandler.useCachedSdk(projectOptions));
+                    globalScope.getAndroidBuilder());
         }
         return true;
     }

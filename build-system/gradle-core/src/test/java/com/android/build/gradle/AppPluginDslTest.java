@@ -288,48 +288,6 @@ public class AppPluginDslTest {
     }
 
     @Test
-    public void testShrinkerChoice_oldDsl_instantRun() throws Exception {
-        project =
-                TestProjects.builder(projectDirectory.newFolder("oldDsl_instantRun").toPath())
-                        .withPlugin(pluginType)
-                        .withProperty(IntegerOption.IDE_TARGET_DEVICE_API, 21)
-                        .withProperty(
-                                AndroidProject.PROPERTY_OPTIONAL_COMPILATION_STEPS,
-                                OptionalCompilationStep.INSTANT_DEV.name())
-                        .build();
-        initFieldsFromProject();
-
-        android.getBuildTypes().getByName("debug").setMinifyEnabled(true);
-
-        plugin.createAndroidTasks();
-
-        assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG);
-        assertThat(project.getTasks().getNames()).doesNotContain(R8_DEBUG);
-    }
-
-    @Test
-    public void testShrinkerChoice_oldDsl_instantRun_override() throws Exception {
-        project =
-                TestProjects.builder(projectDirectory.newFolder("oldDsl_instantRun").toPath())
-                        .withPlugin(pluginType)
-                        .withProperty(IntegerOption.IDE_TARGET_DEVICE_API, 21)
-                        .withProperty(
-                                AndroidProject.PROPERTY_OPTIONAL_COMPILATION_STEPS,
-                                OptionalCompilationStep.INSTANT_DEV.name())
-                        .build();
-        initFieldsFromProject();
-
-        BuildType debug = android.getBuildTypes().getByName("debug");
-        debug.setMinifyEnabled(true);
-        debug.setUseProguard(true);
-
-        plugin.createAndroidTasks();
-
-        assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG);
-        assertThat(project.getTasks().getNames()).doesNotContain(R8_DEBUG);
-    }
-
-    @Test
     public void testShrinkerChoice_oldDsl_noInstantRun() throws Exception {
         project =
                 TestProjects.builder(projectDirectory.newFolder("oldDsl_instantRun").toPath())
@@ -377,73 +335,6 @@ public class AppPluginDslTest {
 
         plugin.createAndroidTasks();
 
-        assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG);
-        assertThat(project.getTasks().getNames()).doesNotContain(R8_DEBUG);
-    }
-
-    @Test
-    public void testShrinkerChoice_newDsl_instantRun() throws Exception {
-        project =
-                TestProjects.builder(projectDirectory.newFolder("newDsl_instantRun").toPath())
-                        .withPlugin(pluginType)
-                        .withProperty(IntegerOption.IDE_TARGET_DEVICE_API, 21)
-                        .withProperty(
-                                AndroidProject.PROPERTY_OPTIONAL_COMPILATION_STEPS,
-                                OptionalCompilationStep.INSTANT_DEV.name())
-                        .build();
-        initFieldsFromProject();
-
-        android.getBuildTypes().getByName("debug").getPostprocessing().setRemoveUnusedCode(true);
-
-        plugin.createAndroidTasks();
-
-        assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG);
-        assertThat(project.getTasks().getNames()).doesNotContain(R8_DEBUG);
-    }
-
-    @Test
-    public void testShrinkerChoice_newDsl_instantRun_override() throws Exception {
-        project =
-                TestProjects.builder(projectDirectory.newFolder("newDsl_instantRun").toPath())
-                        .withPlugin(pluginType)
-                        .withProperty(IntegerOption.IDE_TARGET_DEVICE_API, 21)
-                        .withProperty(
-                                AndroidProject.PROPERTY_OPTIONAL_COMPILATION_STEPS,
-                                OptionalCompilationStep.INSTANT_DEV.name())
-                        .build();
-        initFieldsFromProject();
-
-        PostProcessingBlock postprocessing =
-                android.getBuildTypes().getByName("debug").getPostprocessing();
-        postprocessing.setRemoveUnusedCode(true);
-        postprocessing.setCodeShrinker("proguard");
-
-        plugin.createAndroidTasks();
-
-        assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG);
-        assertThat(project.getTasks().getNames()).doesNotContain(R8_DEBUG);
-    }
-
-    @Test
-    public void testShrinkerChoice_newDsl_override() throws Exception {
-        project =
-                TestProjects.builder(projectDirectory.newFolder("newDsl_override").toPath())
-                        .withPlugin(pluginType)
-                        .withProperty(IntegerOption.IDE_TARGET_DEVICE_API, 21)
-                        .withProperty(
-                                AndroidProject.PROPERTY_OPTIONAL_COMPILATION_STEPS,
-                                OptionalCompilationStep.INSTANT_DEV.name())
-                        .build();
-        initFieldsFromProject();
-
-        PostProcessingBlock postprocessing =
-                android.getBuildTypes().getByName("debug").getPostprocessing();
-        postprocessing.setRemoveUnusedCode(true);
-        postprocessing.setCodeShrinker("proguard");
-
-        plugin.createAndroidTasks();
-
-        // If the user insists on ProGuard, they get a warning a no shrinking at all.
         assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG);
         assertThat(project.getTasks().getNames()).doesNotContain(R8_DEBUG);
     }

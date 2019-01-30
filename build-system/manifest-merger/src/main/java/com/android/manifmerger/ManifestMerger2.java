@@ -442,13 +442,6 @@ public class ManifestMerger2 {
                     MergingReport.MergedManifestKind.AAPT_SAFE, prettyPrint(document));
         }
 
-        // Always save the pre InstantRun state in case some APT plugins require it.
-        if (mOptionalFeatures.contains(Invoker.Feature.INSTANT_RUN_REPLACEMENT)) {
-            instantRunReplacement(document);
-            mergingReport.setMergedDocument(
-                    MergingReport.MergedManifestKind.INSTANT_RUN, prettyPrint(document));
-        }
-
         if (mOptionalFeatures.contains(Invoker.Feature.ADD_FEATURE_SPLIT_ATTRIBUTE)) {
             addFeatureSplitAttribute(document, mFeatureName);
             mergingReport.setMergedDocument(
@@ -737,25 +730,6 @@ public class ManifestMerger2 {
             return;
         }
         removeAndroidAttribute(manifest, SdkConstants.ATTR_TARGET_SANDBOX_VERSION);
-    }
-
-    /**
-     * Adds attributes and provider element to document's application element for instant run.
-     *
-     * @param document the document which gets edited.
-     */
-    private static void instantRunReplacement(@NonNull Document document) {
-        Element manifest = document.getDocumentElement();
-        ImmutableList<Element> applicationElements =
-                getChildElementsByName(manifest, SdkConstants.TAG_APPLICATION);
-        if (applicationElements.isEmpty()) {
-            throw new RuntimeException("Application not defined in AndroidManifest.xml");
-        }
-        // assumes just 1 application element among manifest's immediate children.
-        Element application = applicationElements.get(0);
-        setAttributeToTrue(application, SdkConstants.ATTR_ENABLED);
-        setAttributeToTrue(application, SdkConstants.ATTR_HAS_CODE);
-        addIrContentProvider(document, application);
     }
 
     /**
@@ -1464,11 +1438,6 @@ public class ManifestMerger2 {
              * Encode unresolved placeholders to be AAPT friendly.
              */
             MAKE_AAPT_SAFE,
-
-            /**
-             * Perform InstantRun related swapping in the merged manifest file.
-             */
-            INSTANT_RUN_REPLACEMENT,
 
             /**
              * Clients will not request the blame history

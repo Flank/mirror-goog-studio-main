@@ -203,8 +203,7 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.tasks.RenderscriptCompile::setSupportMode",
                 "com.android.build.gradle.tasks.ShaderCompile::setDefaultArgs",
                 "com.android.build.gradle.tasks.ShaderCompile::setOutputDir",
-                "com.android.build.gradle.tasks.ShaderCompile::setScopedArgs",
-                "com.android.build.gradle.tasks.ir.FastDeployRuntimeExtractorTask::setOutputFile"
+                "com.android.build.gradle.tasks.ShaderCompile::setScopedArgs"
             )
 
         val classPath = ClassPath.from(this.javaClass.classLoader)

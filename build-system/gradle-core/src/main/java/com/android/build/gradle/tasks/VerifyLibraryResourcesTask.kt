@@ -182,8 +182,6 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
             task.taskInputType = when {
                 aaptFriendlyManifestsFilePresent ->
                     InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS
-                variantScope.instantRunBuildContext.isInInstantRunMode ->
-                    InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS
                 else ->
                     InternalArtifactType.MERGED_MANIFESTS
             }

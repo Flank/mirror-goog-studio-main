@@ -48,7 +48,6 @@ import com.android.build.gradle.internal.ide.dependencies.LibraryUtils;
 import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesUtils;
 import com.android.build.gradle.internal.ide.level2.EmptyDependencyGraphs;
 import com.android.build.gradle.internal.ide.level2.GlobalLibraryMapImpl;
-import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.ApkData;
@@ -80,6 +79,7 @@ import com.android.builder.model.ArtifactMetaData;
 import com.android.builder.model.BaseArtifact;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.Dependencies;
+import com.android.builder.model.InstantRun;
 import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.LintOptions;
 import com.android.builder.model.ModelBuilderParameter;
@@ -844,8 +844,8 @@ public class ModelBuilder<Extension extends AndroidConfig>
 
         InstantRunImpl instantRun =
                 new InstantRunImpl(
-                        BuildInfoWriterTask.CreationAction.getBuildInfoFile(scope),
-                        variantConfiguration.getInstantRunSupportStatus(globalScope));
+                        scope.getGlobalScope().getProject().file("build_info_removed"),
+                        InstantRun.STATUS_REMOVED);
 
         Pair<Dependencies, DependencyGraphs> dependencies =
                 getDependencies(

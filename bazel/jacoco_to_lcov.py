@@ -80,7 +80,6 @@ def main():
       './tools/base/build-system/gradle-api/src/test',
       './tools/base/build-system/gradle-core/src/test',
       './tools/base/build-system/gradle-experimental/src/test',
-      './tools/base/build-system/instant-run-instrumentation/src/test',
       './tools/base/build-system/integration-test/application/src/test',
       './tools/base/build-system/integration-test/databinding/src/test',
       './tools/base/build-system/integration-test/framework/src/test',

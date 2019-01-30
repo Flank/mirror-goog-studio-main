@@ -193,9 +193,7 @@ public class LibraryTaskManager extends TaskManager {
             taskFactory.register(new ExtractAnnotations.CreationAction(extension, variantScope));
         }
 
-        final boolean instrumented =
-                variantConfig.getBuildType().isTestCoverageEnabled()
-                        && !variantScope.getInstantRunBuildContext().isInInstantRunMode();
+        final boolean instrumented = variantConfig.getBuildType().isTestCoverageEnabled();
 
         TransformManager transformManager = variantScope.getTransformManager();
 
