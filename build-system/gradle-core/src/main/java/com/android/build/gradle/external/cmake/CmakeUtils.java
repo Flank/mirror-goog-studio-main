@@ -65,7 +65,9 @@ public class CmakeUtils {
             @NonNull File cmakeExecutable, @NonNull File outputFolder, @NonNull String targetName) {
         return cmakeExecutable.getAbsolutePath()
                 + " --build "
+                + "\""
                 + outputFolder.getAbsolutePath()
+                + "\""
                 + " --target "
                 + targetName;
     }
@@ -79,7 +81,9 @@ public class CmakeUtils {
             @NonNull File cmakeExecutable, @NonNull File outputFolder) {
         return cmakeExecutable.getAbsolutePath()
                 + " --build "
+                + "\""
                 + outputFolder.getAbsolutePath()
+                + "\""
                 + " --target clean";
     }
 
