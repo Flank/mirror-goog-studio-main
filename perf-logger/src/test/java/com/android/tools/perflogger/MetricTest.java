@@ -68,11 +68,11 @@ public class MetricTest {
                 new MetricSample(3, 30));
         metric.commit();
 
-        File outputFile =
+        File jsonFile =
                 new File(
                         metric.getOutputDirectory(),
                         String.format("%s.json", metric.getMetricName()));
-        assertThat(outputFile.exists()).isTrue();
+        assertThat(jsonFile.exists()).isTrue();
         String expected =
                 "{\n"
                         + "  \"metric\": \""
@@ -92,14 +92,15 @@ public class MetricTest {
                         + "    }\n"
                         + "  ]\n"
                         + "}";
-        String output;
-        try (InputStream outputStream = new FileInputStream(outputFile)) {
-            output = CharStreams.toString(new InputStreamReader(outputStream, Charsets.UTF_8));
+        String jsonFileContents;
+        try (InputStream jsonFileStream = new FileInputStream(jsonFile)) {
+            jsonFileContents =
+                    CharStreams.toString(new InputStreamReader(jsonFileStream, Charsets.UTF_8));
         }
-        assertThat(output).isEqualTo(expected);
+        assertThat(jsonFileContents).isEqualTo(expected);
 
         // Delete file to prevent it from being uploaded.
-        assertThat(outputFile.delete())
+        assertThat(jsonFile.delete())
                 .named("Boolean indicating success of output file removal")
                 .isTrue();
     }
@@ -110,19 +111,24 @@ public class MetricTest {
         Benchmark benchmark = new Benchmark.Builder("AS Metric Test").build();
         List<Analyzer> analyzers =
                 ImmutableList.of(
-                  new WindowDeviationAnalyzer.Builder()
-                                .addMeanTolerance(new WindowDeviationAnalyzer.MeanToleranceParams.Builder()
-                                        .setConstTerm(20.0)
-                                        .setMeanCoeff(0.1)
-                                        .setStddevCoeff(1.0)
-                                        .build()).
-                                build(),
-                  new WindowDeviationAnalyzer.Builder()
+                        new WindowDeviationAnalyzer.Builder()
+                                .addMeanTolerance(
+                                        new WindowDeviationAnalyzer.MeanToleranceParams.Builder()
+                                                .setConstTerm(20.0)
+                                                .setMeanCoeff(0.1)
+                                                .setStddevCoeff(1.0)
+                                                .build())
+                                .build(),
+                        new WindowDeviationAnalyzer.Builder()
                                 .setMetricAggregate(Analyzer.MetricAggregate.MEDIAN)
                                 .setRunInfoQueryLimit(24)
                                 .setRecentWindowSize(5)
-                                .addMeanTolerance(new WindowDeviationAnalyzer.MeanToleranceParams.Builder().build())
-                                .addMedianTolerance(new WindowDeviationAnalyzer.MedianToleranceParams.Builder().build())
+                                .addMeanTolerance(
+                                        new WindowDeviationAnalyzer.MeanToleranceParams.Builder()
+                                                .build())
+                                .addMedianTolerance(
+                                        new WindowDeviationAnalyzer.MedianToleranceParams.Builder()
+                                                .build())
                                 .build());
         metric.setAnalyzers(benchmark, analyzers);
         metric.addSamples(
@@ -132,11 +138,11 @@ public class MetricTest {
                 new MetricSample(3, 30));
         metric.commit();
 
-        File outputFile =
+        File jsonFile =
                 new File(
                         metric.getOutputDirectory(),
                         String.format("%s.json", metric.getMetricName()));
-        assertThat(outputFile.exists()).isTrue();
+        assertThat(jsonFile.exists()).isTrue();
         String expected =
                 "{\n"
                         + "  \"metric\": \""
@@ -192,14 +198,15 @@ public class MetricTest {
                         + "    }\n"
                         + "  ]\n"
                         + "}";
-        String output;
-        try (InputStream outputStream = new FileInputStream(outputFile)) {
-            output = CharStreams.toString(new InputStreamReader(outputStream, Charsets.UTF_8));
+        String jsonFileContents;
+        try (InputStream jsonFileStream = new FileInputStream(jsonFile)) {
+            jsonFileContents =
+                    CharStreams.toString(new InputStreamReader(jsonFileStream, Charsets.UTF_8));
         }
-        assertThat(output).isEqualTo(expected);
+        assertThat(jsonFileContents).isEqualTo(expected);
 
         // Delete file to prevent it from being uploaded.
-        assertThat(outputFile.delete())
+        assertThat(jsonFile.delete())
                 .named("Boolean indicating success of output file removal")
                 .isTrue();
     }
@@ -228,7 +235,7 @@ public class MetricTest {
                 new MetricSample(9, 90));
         metric.commit();
 
-        File outputFile =
+        File jsonFile =
                 new File(
                         metric.getOutputDirectory(),
                         String.format("%s.json", metric.getMetricName()));
@@ -273,12 +280,18 @@ public class MetricTest {
                         + "    }\n"
                         + "  ]\n"
                         + "}";
-        InputStream outputStream = new FileInputStream(outputFile);
-        String output = CharStreams.toString(new InputStreamReader(outputStream, Charsets.UTF_8));
-        assertThat(output).isEqualTo(expected);
+
+        String jsonFileContents;
+        try (InputStream jsonFileStream = new FileInputStream(jsonFile)) {
+            jsonFileContents =
+                    CharStreams.toString(new InputStreamReader(jsonFileStream, Charsets.UTF_8));
+        }
+        assertThat(jsonFileContents).isEqualTo(expected);
 
         // Delete file to prevent it from being uploaded.
-        outputFile.delete();
+        assertThat(jsonFile.delete())
+                .named("Boolean indicating success of output file removal")
+                .isTrue();
     }
 
     private static String hostSuffix() {
