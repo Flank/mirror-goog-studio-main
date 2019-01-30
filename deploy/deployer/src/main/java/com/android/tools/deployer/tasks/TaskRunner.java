@@ -27,16 +27,19 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Semaphore;
 import java.util.stream.Collectors;
 
 public class TaskRunner {
 
     private final ExecutorService executor;
     private final ArrayList<Task<?>> tasks;
+    private final Semaphore running;
 
     public TaskRunner(ExecutorService executor) {
         this.executor = executor;
         this.tasks = new ArrayList<>();
+        this.running = new Semaphore(1);
     }
 
     public <T> Task<T> create(T value) {
@@ -87,8 +90,7 @@ public class TaskRunner {
         return task;
     }
 
-    /** Synchronized to force one batch of tasks to run at a time. */
-    private synchronized void runInternal(ArrayList<Task<?>> batch) throws DeployerException {
+    private void runInternal(ArrayList<Task<?>> batch) throws DeployerException {
         for (Task<?> task : batch) {
             task.run(executor);
         }
@@ -100,15 +102,21 @@ public class TaskRunner {
     /**
      * Runs and waits for all the pending tasks to be executed.
      *
-     * <p>If no tasks are pending this is a no-op.
+     * <p>If no tasks are pending this is a no-op, except that it will wait for the existing running
+     * tasks to end.
      *
      * @throws DeployerException if a task throws it while executing
      */
     public List<Task<?>> run() throws DeployerException {
-        ArrayList<Task<?>> batch = new ArrayList<>(tasks);
-        tasks.clear();
-        runInternal(batch);
-        return batch;
+        try {
+            running.acquireUninterruptibly();
+            ArrayList<Task<?>> batch = new ArrayList<>(tasks);
+            tasks.clear();
+            runInternal(batch);
+            return batch;
+        } finally {
+            running.release();
+        }
     }
 
     /**
@@ -118,12 +126,15 @@ public class TaskRunner {
     public void runAsync(Executor executor) {
         ArrayList<Task<?>> batch = new ArrayList<>(tasks);
         tasks.clear();
+        running.acquireUninterruptibly();
         executor.execute(
                 () -> {
                     try {
                         runInternal(batch);
                     } catch (DeployerException e) {
                         throw new RuntimeException(e);
+                    } finally {
+                        running.release();
                     }
                 });
     }
