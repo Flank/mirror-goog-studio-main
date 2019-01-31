@@ -58,7 +58,6 @@ kotlin_test(
     name = "tools.tests",
     srcs = ["src/test/java"],
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
-    tags = ["no_windows"],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":tools.common",
@@ -73,7 +72,6 @@ kotlin_test(
 iml_module(
     name = "studio.android.sdktools.common.tests",
     iml_files = ["android.sdktools.common.tests.iml"],
-    tags = ["no_windows"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
