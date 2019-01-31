@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.fixtures.DirectWorkerExecutor;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
+import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildElementActionScheduler;
 import com.android.build.gradle.internal.scope.BuildElements;
@@ -42,8 +43,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.builder.core.AndroidBuilder;
-import com.android.ide.common.build.ApkData;
-import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
@@ -112,7 +111,7 @@ public class InstantRunResourcesApkBuilderTest {
                                         transformRunnableClass,
                         @NotNull
                                 Function2<
-                                                ? super ApkInfo, ? super File,
+                                                ? super ApkData, ? super File,
                                                 ? extends BuildElementsTransformParams>
                                         paramsFactory) {
                     return super.transform(

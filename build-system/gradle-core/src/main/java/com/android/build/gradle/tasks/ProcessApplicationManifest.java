@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact.ExtraComponentIdentifier;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
+import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
@@ -51,7 +52,6 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexingType;
 import com.android.builder.model.ApiVersion;
-import com.android.ide.common.build.ApkData;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.manifmerger.ManifestMerger2.Invoker.Feature;
 import com.android.manifmerger.ManifestProvider;
@@ -858,6 +858,14 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
                 features.add(Feature.ADD_SUPPORT_MULTIDEX_APPLICATION_IF_NO_NAME);
             }
         }
+
+        if (variantScope
+                .getGlobalScope()
+                .getProjectOptions()
+                .get(BooleanOption.ENFORCE_UNIQUE_PACKAGE_NAMES)) {
+            features.add(Feature.ENFORCE_UNIQUE_PACKAGE_NAME);
+        }
+
         return features.isEmpty() ? EnumSet.noneOf(Feature.class) : EnumSet.copyOf(features);
     }
 }

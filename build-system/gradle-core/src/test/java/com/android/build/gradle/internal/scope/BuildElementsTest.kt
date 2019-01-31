@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.fixtures.DirectWorkerExecutor
 import com.android.build.gradle.internal.scope.InternalArtifactType.*
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.builder.core.VariantTypeImpl
-import com.android.ide.common.build.ApkInfo
 import com.android.utils.Pair
 import com.google.common.base.Charsets
 import com.google.common.collect.ImmutableList
@@ -91,8 +90,8 @@ class BuildElementsTest {
         assertThat(buildOutputs).hasSize(1)
         val buildOutput = Iterators.getOnlyElement<BuildOutput>(buildOutputs.iterator())
         assertThat(buildOutput.outputFile).isEqualTo(outputForSplit)
-        assertThat(buildOutput.apkInfo.filters).hasSize(1)
-        val filter = Iterators.getOnlyElement(buildOutput.apkInfo.filters.iterator())
+        assertThat(buildOutput.apkData.filters).hasSize(1)
+        val filter = Iterators.getOnlyElement(buildOutput.apkData.filters.iterator())
         assertThat(filter.identifier).isEqualTo("xxhdpi")
         assertThat(filter.filterType).isEqualTo(VariantOutput.FilterType.DENSITY.name)
     }
@@ -114,20 +113,20 @@ class BuildElementsTest {
         FileUtils.write(
                 outputFile,
                 "[{\"outputType\":{\"type\":\"MERGED_MANIFESTS\"},"
-                        + "\"apkInfo\":{\"type\":\"MAIN\",\"splits\":[],\"versionCode\":12},"
+                        + "\"apkData\":{\"type\":\"MAIN\",\"splits\":[],\"versionCode\":12},"
                         + "\"path\":\"/foo/bar/AndroidManifest.xml\","
                         + "\"properties\":{\"packageId\":\"com.android.tests.basic.debug\","
                         + "\"split\":\"\"}},"
                         + "{\"outputType\":{\"type\":\"DENSITY_OR_LANGUAGE_PACKAGED_SPLIT\"},"
-                        + "\"apkInfo\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
+                        + "\"apkData\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
                         + "\"value\":\"mdpi\"}],\"versionCode\":12},\"path\":"
                         + "\"/foo/bar/SplitAware-mdpi-debug-unsigned.apk\",\"properties\":{}},"
                         + "{\"outputType\":{\"type\":\"DENSITY_OR_LANGUAGE_PACKAGED_SPLIT\"},"
-                        + "\"apkInfo\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
+                        + "\"apkData\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
                         + "\"value\":\"xhdpi\"}],\"versionCode\":14},\"path\":"
                         + "\"/foo/bar/SplitAware-xhdpi-debug-unsigned.apk\",\"properties\":{}},"
                         + "{\"outputType\":{\"type\":\"DENSITY_OR_LANGUAGE_PACKAGED_SPLIT\"},"
-                        + "\"apkInfo\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
+                        + "\"apkData\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
                         + "\"value\":\"hdpi\"}],\"versionCode\":13},"
                         + "\"path\":\"/foo/bar/SplitAware-hdpi-debug-unsigned.apk\",\"properties\""
                         + ":{}}]")
@@ -155,20 +154,20 @@ class BuildElementsTest {
         FileUtils.write(
             outputFile,
             "[{\"outputType\":{\"type\":\"MERGED_MANIFESTS\"},"
-                    + "\"apkInfo\":{\"type\":\"MAIN\",\"splits\":[],\"versionCode\":12},"
+                    + "\"apkData\":{\"type\":\"MAIN\",\"splits\":[],\"versionCode\":12},"
                     + "\"path\":\"/foo/bar/AndroidManifest.xml\","
                     + "\"properties\":{\"packageId\":\"com.android.tests.basic.debug\","
                     + "\"split\":\"\"}},"
                     + "{\"outputType\":{\"type\":\"MERGED_MANIFESTS\"},"
-                    + "\"apkInfo\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
+                    + "\"apkData\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
                     + "\"value\":\"mdpi\"}],\"versionCode\":12},\"path\":"
                     + "\"/foo/bar/SplitAware-mdpi-debug-unsigned.apk\",\"properties\":{}},"
                     + "{\"outputType\":{\"type\":\"MERGED_MANIFESTS\"},"
-                    + "\"apkInfo\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
+                    + "\"apkData\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
                     + "\"value\":\"xhdpi\"}],\"versionCode\":14},\"path\":"
                     + "\"/foo/bar/SplitAware-xhdpi-debug-unsigned.apk\",\"properties\":{}},"
                     + "{\"outputType\":{\"type\":\"MERGED_MANIFESTS\"},"
-                    + "\"apkInfo\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
+                    + "\"apkData\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
                     + "\"value\":\"hdpi\"}],\"versionCode\":13},"
                     + "\"path\":\"/foo/bar/SplitAware-hdpi-debug-unsigned.apk\",\"properties\""
                     + ":{}}]")
@@ -188,7 +187,7 @@ class BuildElementsTest {
         FileUtils.write(
                 outputFile,
                 "[{\"outputType\":{\"type\":\"MERGED_MANIFESTS\"},"
-                        + "\"apkInfo\":{\"type\":\"MAIN\",\"splits\":[],\"versionCode\":12},"
+                        + "\"apkData\":{\"type\":\"MAIN\",\"splits\":[],\"versionCode\":12},"
                         + "\"path\":\"/foo/bar/AndroidManifest.xml\","
                         + "\"properties\":{\"packageId\":\"com.android.tests.basic.debug\","
                         + "\"split\":\"\"}}]")
@@ -200,8 +199,8 @@ class BuildElementsTest {
         assertThat(buildOutput.filters).isEmpty()
         assertThat(buildOutput.outputFile.absolutePath)
                 .isEqualTo(File("/foo/bar/AndroidManifest.xml").absolutePath)
-        assertThat(buildOutput.apkInfo.type).isEqualTo(VariantOutput.OutputType.MAIN)
-        assertThat(buildOutput.apkInfo.filters).isEmpty()
+        assertThat(buildOutput.apkData.type).isEqualTo(VariantOutput.OutputType.MAIN)
+        assertThat(buildOutput.apkData.filters).isEmpty()
     }
 
     @Test
@@ -212,7 +211,7 @@ class BuildElementsTest {
         FileUtils.write(
                 outputFile,
                 ("[{\"outputType\":{\"type\":\"MERGED_MANIFESTS\"},"
-                        + "\"apkInfo\":{\"type\":\"MAIN\",\"splits\":[],\"versionCode\":12},"
+                        + "\"apkData\":{\"type\":\"MAIN\",\"splits\":[],\"versionCode\":12},"
                         + "\"path\":\"/foo/bar/AndroidManifest.xml\","
                         + "\"properties\":{\"packageId\":\"com.android.tests.basic\","
                         + "\"split\":\"\"}}]"))
@@ -233,15 +232,15 @@ class BuildElementsTest {
         FileUtils.write(
                 outputFile,
                 ("[{\"outputType\":{\"type\":\"DENSITY_OR_LANGUAGE_PACKAGED_SPLIT\"},"
-                        + "\"apkInfo\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
+                        + "\"apkData\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
                         + "\"value\":\"mdpi\"}],\"versionCode\":12},\"path\":"
                         + "\"/foo/bar/SplitAware-mdpi-debug-unsigned.apk\",\"properties\":{}},"
                         + "{\"outputType\":{\"type\":\"DENSITY_OR_LANGUAGE_PACKAGED_SPLIT\"},"
-                        + "\"apkInfo\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
+                        + "\"apkData\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
                         + "\"value\":\"xhdpi\"}],\"versionCode\":14},\"path\":"
                         + "\"/foo/bar/SplitAware-xhdpi-debug-unsigned.apk\",\"properties\":{}},"
                         + "{\"outputType\":{\"type\":\"DENSITY_OR_LANGUAGE_PACKAGED_SPLIT\"},"
-                        + "\"apkInfo\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
+                        + "\"apkData\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
                         + "\"value\":\"hdpi\"}],\"versionCode\":13},"
                         + "\"path\":\"/foo/bar/SplitAware-hdpi-debug-unsigned.apk\",\"properties\""
                         + ":{}}]"))
@@ -271,7 +270,7 @@ class BuildElementsTest {
     @Test
     @Throws(IOException::class)
     fun testRelativePath() {
-        val apkInfo = Mockito.mock(ApkInfo::class.java)
+        val apkInfo = Mockito.mock(ApkData::class.java)
         `when`<VariantOutput.OutputType>(apkInfo.type).thenReturn(VariantOutput.OutputType.MAIN)
         `when`<Int>(apkInfo.versionCode).thenReturn(123)
 
@@ -312,20 +311,20 @@ class BuildElementsTest {
         FileUtils.write(
             outputFile,
             "[{\"outputType\":{\"type\":\"MERGED_MANIFESTS\"},"
-                    + "\"apkInfo\":{\"type\":\"MAIN\",\"splits\":[],\"versionCode\":12},"
+                    + "\"apkData\":{\"type\":\"MAIN\",\"splits\":[],\"versionCode\":12},"
                     + "\"path\":\"/foo/bar/AndroidManifest.xml\","
                     + "\"properties\":{\"packageId\":\"com.android.tests.basic.debug\","
                     + "\"split\":\"\"}},"
                     + "{\"outputType\":{\"type\":\"DENSITY_OR_LANGUAGE_PACKAGED_SPLIT\"},"
-                    + "\"apkInfo\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
+                    + "\"apkData\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
                     + "\"value\":\"mdpi\"}],\"versionCode\":12},\"path\":"
                     + "\"/foo/bar/SplitAware-mdpi-debug-unsigned.apk\",\"properties\":{}},"
                     + "{\"outputType\":{\"type\":\"DENSITY_OR_LANGUAGE_PACKAGED_SPLIT\"},"
-                    + "\"apkInfo\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
+                    + "\"apkData\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
                     + "\"value\":\"xhdpi\"}],\"versionCode\":14},\"path\":"
                     + "\"/foo/bar/SplitAware-xhdpi-debug-unsigned.apk\",\"properties\":{}},"
                     + "{\"outputType\":{\"type\":\"DENSITY_OR_LANGUAGE_PACKAGED_SPLIT\"},"
-                    + "\"apkInfo\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
+                    + "\"apkData\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
                     + "\"value\":\"hdpi\"}],\"versionCode\":13},"
                     + "\"path\":\"/foo/bar/SplitAware-hdpi-debug-unsigned.apk\",\"properties\""
                     + ":{}}]"

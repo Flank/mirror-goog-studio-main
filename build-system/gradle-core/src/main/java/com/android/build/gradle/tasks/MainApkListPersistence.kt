@@ -22,7 +22,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.ide.common.build.ApkData
 import com.android.utils.FileUtils
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input

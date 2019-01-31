@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.builder.core.AndroidBuilder
-import com.android.ide.common.build.ApkData
+import com.android.build.gradle.internal.scope.ApkData
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
 import org.gradle.api.file.Directory

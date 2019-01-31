@@ -33,7 +33,6 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder
 import com.android.build.gradle.internal.transforms.InstantRunSplitApkBuilder
 import com.android.builder.internal.aapt.BlockingResourceLinker
-import com.android.ide.common.build.ApkInfo
 import com.android.ide.common.process.ProcessException
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.sdklib.IAndroidTarget

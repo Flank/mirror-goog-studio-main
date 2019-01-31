@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 import org.junit.Rule;
 import org.junit.Test;
 
-/** Assemble tests for genFolderApi2. */
+/** Tests for addJavaSourceFoldersToModel Variant API. */
 public class GenFolderApi2Test {
     @Rule
     public GradleTestProject project =

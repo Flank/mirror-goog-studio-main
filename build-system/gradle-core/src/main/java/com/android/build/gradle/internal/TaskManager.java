@@ -97,6 +97,7 @@ import com.android.build.gradle.internal.res.LinkAndroidResForBundleTask;
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask;
 import com.android.build.gradle.internal.res.namespaced.NamespacedResourcesTaskManager;
 import com.android.build.gradle.internal.scope.AnchorOutputType;
+import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -223,7 +224,6 @@ import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
 import com.android.builder.utils.FileCache;
-import com.android.ide.common.build.ApkData;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
@@ -3780,7 +3780,10 @@ public abstract class TaskManager {
                 .setSourceGenTask(
                         taskFactory.register(
                                 scope.getTaskName("generate", "Sources"),
-                                task -> task.dependsOn(PrepareLintJar.NAME)));
+                                task -> {
+                                    task.dependsOn(PrepareLintJar.NAME);
+                                    task.dependsOn(variantData.getExtraGeneratedResFolders());
+                                }));
         // and resGenTask
         scope.getTaskContainer()
                 .setResourceGenTask(

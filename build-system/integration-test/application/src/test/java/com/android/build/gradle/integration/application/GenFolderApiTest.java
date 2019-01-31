@@ -22,12 +22,18 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
+import com.android.build.gradle.integration.common.utils.ModelContainerUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
+import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
+import com.google.common.collect.MoreCollectors;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
@@ -37,7 +43,17 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-/** Assemble tests for genFolderApi. */
+/**
+ * Tests for generated source registration APIs.
+ *
+ * <p>Includes the following APIs:
+ *
+ * <ul>
+ *   <li>registerJavaGeneratingTask
+ *   <li>registerResGeneratingTask
+ *   <li>registerGeneratedResFolders
+ * </ul>
+ */
 public class GenFolderApiTest {
     @ClassRule
     public static GradleTestProject project =
@@ -45,16 +61,19 @@ public class GenFolderApiTest {
 
     private static AndroidProject model;
 
+    private static List<String> ideSetupTasks;
+
     @BeforeClass
     public static void setUp() throws Exception {
         project.executor()
-                .withProperty("inject_enable_generate_values_res", "true")
-                .run("clean", "assembleDebug");
-        model =
+                .withArgument("-P" + "inject_enable_generate_values_res=true")
+                .run("assembleDebug");
+        ModelContainer<AndroidProject> modelContainer =
                 project.model()
-                        .withProperty("inject_enable_generate_values_res", "true")
-                        .fetchAndroidProjects()
-                        .getOnlyModel();
+                        .withArgument("-P" + "inject_enable_generate_values_res=true")
+                        .fetchAndroidProjects();
+        ideSetupTasks = ModelContainerUtils.getDebugGenerateSourcesCommands(modelContainer);
+        model = modelContainer.getOnlyModel();
     }
 
     @AfterClass
@@ -65,58 +84,87 @@ public class GenFolderApiTest {
 
     @Test
     public void checkTheCustomJavaGenerationTaskRan() throws Exception {
-        assertThat(project.getApk("debug")).containsClass("Lcom/custom/Foo;");
+        try (Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG)) {
+            assertThat(apk).containsClass("Lcom/custom/Foo;");
+        }
     }
 
     @Test
     public void checkTheCustomResGenerationTaskRan() throws Exception {
-        assertThat(project.getApk("debug")).contains("res/xml/generated.xml");
-        File intermediateFile =
-                project.file("build/intermediates/res/merged/debug/values/values.xml");
-        if (!intermediateFile.exists()) {
-            intermediateFile =
-                    project.file("build/intermediates/res/merged/debug/values_values.arsc.flat");
-            // we can't read the contents
-            assertThat(intermediateFile).exists();
-        } else {
-            assertThat(intermediateFile).contains("generated_string");
+        try (Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG)) {
+            assertThat(apk).contains("res/xml/generated.xml");
+            assertThat(apk)
+                    .hasClass("Lcom/android/tests/basic/R$string;")
+                    .that()
+                    .hasField("generated_string");
         }
+    }
+
+    /** Regression test for b/120750247 */
+    @Test
+    public void checkCustomGenerationRunAtSync() throws Exception {
+        project.executor()
+                .withArgument("-P" + "inject_enable_generate_values_res=true")
+                .run("clean");
+        project.executor()
+                .withArgument("-P" + "inject_enable_generate_values_res=true")
+                .run(ideSetupTasks);
+
+        AndroidArtifact debugArtifact =
+                AndroidProjectUtils.getDebugVariant(model).getMainArtifact();
+
+        File customCode =
+                debugArtifact
+                        .getGeneratedSourceFolders()
+                        .stream()
+                        .filter(it -> it.getAbsolutePath().startsWith(getSourceFolderStart()))
+                        .collect(MoreCollectors.onlyElement());
+        assertThat(customCode).isDirectory();
+
+        File customResources =
+                debugArtifact
+                        .getGeneratedResourceFolders()
+                        .stream()
+                        .filter(it -> it.getAbsolutePath().startsWith(getCustomResPath()))
+                        .collect(MoreCollectors.onlyElement());
+        assertThat(customResources).isDirectory();
+
+        File customResources2 =
+                debugArtifact
+                        .getGeneratedResourceFolders()
+                        .stream()
+                        .filter(it -> it.getAbsolutePath().startsWith(getCustomRes2Path()))
+                        .collect(MoreCollectors.onlyElement());
+        assertThat(customResources2).isDirectory();
     }
 
 
     @Test
     public void checkAddingAndRemovingGeneratingTasks() throws Exception {
         project.executor()
-                .withProperty("inject_enable_generate_values_res", "false")
+                .withArgument("-P" + "inject_enable_generate_values_res=false")
                 .run("assembleDebug");
-        assertThat(project.getApk("debug")).contains("res/xml/generated.xml");
-        File intermediateFile =
-                project.file("build/intermediates/res/merged/debug/values/values.xml");
-        if (!intermediateFile.exists()) {
-            intermediateFile =
-                    project.file("build/intermediates/res/merged/debug/values_values.arsc.flat");
-            assertThat(intermediateFile).exists();
-        } else {
-            assertThat(intermediateFile).doesNotContain("generated_string");
+
+        try (Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG)) {
+            assertThat(apk)
+                    .hasClass("Lcom/android/tests/basic/R$string;")
+                    .that()
+                    .doesNotHaveField("generated_string");
         }
 
         project.executor()
-                .withProperty("inject_enable_generate_values_res", "true")
+                .withArgument("-P" + "inject_enable_generate_values_res=true")
                 .run("assembleDebug");
-        assertThat(project.getApk("debug")).contains("res/xml/generated.xml");
-
-        if (intermediateFile.getName().endsWith(".flat")) {
-            assertThat(intermediateFile).exists();
-        } else {
-            assertThat(intermediateFile).contains("generated_string");
+        try (Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG)) {
+            assertThat(apk)
+                    .hasClass("Lcom/android/tests/basic/R$string;")
+                    .that()
+                    .hasField("generated_string");
         }
     }
 
     @Test
     public void checkJavaFolderInModel() throws Exception {
-        File projectDir = project.getTestDir();
-
-        File buildDir = new File(projectDir, "build");
 
         for (Variant variant : model.getVariants()) {
 
@@ -128,8 +176,7 @@ public class GenFolderApiTest {
             Collection<File> genSourceFolder = mainInfo.getGeneratedSourceFolders();
 
             // We're looking for a custom folder
-            String sourceFolderStart =
-                    new File(buildDir, "customCode").getAbsolutePath() + File.separatorChar;
+            String sourceFolderStart = getSourceFolderStart();
             boolean found = false;
             for (File f : genSourceFolder) {
                 if (f.getAbsolutePath().startsWith(sourceFolderStart)) {
@@ -142,11 +189,14 @@ public class GenFolderApiTest {
         }
     }
 
+    @NonNull
+    private String getSourceFolderStart() {
+        return FileUtils.join(project.getTestDir().getAbsolutePath(), "build", "customCode")
+                + File.separatorChar;
+    }
+
     @Test
     public void checkResFolderInModel() throws Exception {
-        File projectDir = project.getTestDir();
-
-        File buildDir = new File(projectDir, "build");
 
         for (Variant variant : model.getVariants()) {
 
@@ -162,15 +212,25 @@ public class GenFolderApiTest {
                             .collect(Collectors.toList());
 
             assertThat(genResFolders).containsNoDuplicates();
-            String buildDirPath = buildDir.getAbsolutePath();
 
             assertThat(genResFolders)
                     .containsAllOf(
-                            FileUtils.join(buildDirPath, "customRes", variant.getName()),
-                            FileUtils.join(buildDirPath, "customRes2", variant.getName()));
+                            getCustomResPath() + variant.getName(),
+                            getCustomRes2Path() + variant.getName());
         }
     }
 
+    @NonNull
+    private String getCustomResPath() {
+        return FileUtils.join(project.getTestDir().getAbsolutePath(), "build", "customRes")
+                + File.separatorChar;
+    }
+
+    @NonNull
+    private String getCustomRes2Path() {
+        return FileUtils.join(project.getTestDir().getAbsolutePath(), "build", "customRes2")
+                + File.separatorChar;
+    }
 
     @Test
     public void backwardsCompatible() throws Exception {

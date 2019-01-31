@@ -26,6 +26,7 @@ import com.android.build.VariantOutput;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantTypeImpl;
@@ -33,7 +34,6 @@ import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptOptions;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.sdk.TargetInfo;
-import com.android.ide.common.build.ApkInfo;
 import com.android.repository.Revision;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
@@ -92,7 +92,7 @@ public class InstantRunSplitApkBuilderTest {
     File instantRunFolder;
     File aaptTempFolder;
 
-    final ApkInfo apkInfo = ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), 12345);
+    final ApkData apkInfo = ApkData.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), 12345);
 
     @Before
     public void setup() throws IOException {
@@ -243,7 +243,7 @@ public class InstantRunSplitApkBuilderTest {
     public void testNoVersionGeneration() throws Exception {
 
         File apkListFile = apkListDirectory.newFile("apk-list2.json");
-        ApkInfo apkInfo = ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), -1);
+        ApkData apkInfo = ApkData.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), -1);
 
         FileUtils.write(apkListFile, ExistingBuildElements.persistApkList(ImmutableList.of()));
         when(apkList.iterator()).thenReturn(ImmutableList.of(apkListFile).iterator());

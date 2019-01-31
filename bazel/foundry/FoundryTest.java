@@ -26,13 +26,9 @@ public final class FoundryTest {
     public void testAapt2() throws Exception {
         File testLocalDir = new File(".");
         String osName = System.getProperty("os.name").toLowerCase();
-        String[] env = {
-            "LD_PRELOAD="
-                    + testLocalDir.getAbsolutePath()
-                    + "/prebuilts/tools/common/aapt/linux/lib64/libc++.so"
-        };
+
         if (osName.equalsIgnoreCase("Linux")) {
-            execute("prebuilts/tools/common/aapt/" + osName + "/aapt2 -h", env, 1);
+            execute("prebuilts/tools/common/aapt/" + osName + "/aapt2 -h", null, 1);
         } else {
             execute(
                     "prebuilts/tools/common/aapt/"

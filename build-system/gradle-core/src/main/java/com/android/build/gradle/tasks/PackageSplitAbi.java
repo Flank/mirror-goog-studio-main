@@ -24,6 +24,7 @@ import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
+import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildElementsTransformParams;
 import com.android.build.gradle.internal.scope.BuildElementsTransformRunnable;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
@@ -37,7 +38,6 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.internal.packaging.IncrementalPackager;
-import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.resources.FileStatus;
 import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.sdklib.AndroidVersion;
@@ -183,7 +183,7 @@ public class PackageSplitAbi extends AndroidBuilderTask {
 
     private static class PackageSplitAbiTransformParams extends BuildElementsTransformParams {
         private final File input;
-        private final ApkInfo apkInfo;
+        private final ApkData apkInfo;
         private final File output;
         private final File incrementalDir;
         private final File signingConfigFile;
@@ -194,7 +194,7 @@ public class PackageSplitAbi extends AndroidBuilderTask {
         private final boolean isJniDebuggable;
         private final int minSdkVersion;
 
-        PackageSplitAbiTransformParams(ApkInfo apkInfo, File input, PackageSplitAbi task) {
+        PackageSplitAbiTransformParams(ApkData apkInfo, File input, PackageSplitAbi task) {
             this.apkInfo = apkInfo;
             this.input = input;
             output =
@@ -225,7 +225,7 @@ public class PackageSplitAbi extends AndroidBuilderTask {
     }
 
     private static String getApkName(
-            final ApkInfo apkData, String archivesBaseName, boolean isSigned) {
+            final ApkData apkData, String archivesBaseName, boolean isSigned) {
         String apkName = archivesBaseName + "-" + apkData.getBaseName();
         return apkName + (isSigned ? "" : "-unsigned") + SdkConstants.DOT_ANDROID_PACKAGE;
     }

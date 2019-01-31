@@ -136,7 +136,7 @@ public class TestApplicationTestData extends AbstractTestDataImpl {
                 .stream()
                 .filter(
                         splitOutput ->
-                                splitOutput.getApkInfo().getType()
+                                splitOutput.getApkData().getType()
                                         == VariantOutput.OutputType.SPLIT)
                 .map(splitOutput -> splitOutput.getOutputFile().getAbsolutePath())
                 .collect(Collectors.toList());
@@ -156,7 +156,7 @@ public class TestApplicationTestData extends AbstractTestDataImpl {
                         .stream()
                         .filter(
                                 splitOutput ->
-                                        splitOutput.getApkInfo().getType()
+                                        splitOutput.getApkData().getType()
                                                 != VariantOutput.OutputType.SPLIT)
                         .map(BuildOutput::getOutputFile)
                         .findFirst();

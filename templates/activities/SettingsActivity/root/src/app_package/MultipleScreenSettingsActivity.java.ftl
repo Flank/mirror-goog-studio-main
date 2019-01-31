@@ -11,14 +11,20 @@ import androidx.preference.PreferenceFragmentCompat;
 public class ${activityClass} extends AppCompatActivity implements
         PreferenceFragmentCompat.OnPreferenceStartFragmentCallback {
 
+    private static final String TITLE_TAG = "settingsActivityTitle";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.settings_activity);
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.settings, new HeaderFragment())
-                .commit();
+        if (savedInstanceState == null) {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.settings, new HeaderFragment())
+                    .commit();
+        } else {
+            setTitle(savedInstanceState.getCharSequence(TITLE_TAG));
+        }
         getSupportFragmentManager().addOnBackStackChangedListener(
                 new FragmentManager.OnBackStackChangedListener() {
                     @Override
@@ -32,6 +38,13 @@ public class ${activityClass} extends AppCompatActivity implements
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        // Save current activity title so we can set it again after a configuration change
+        outState.putCharSequence(TITLE_TAG, getTitle());
     }
 
     @Override

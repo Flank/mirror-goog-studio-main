@@ -27,17 +27,18 @@ import com.android.annotations.Nullable;
 import com.android.utils.StdLogger;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.Multimap;
 import java.io.BufferedReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
+import java.util.function.Predicate;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -129,17 +130,34 @@ public class ManifestMerger2Test {
                 "91_tools_in_lib_but_not_main.xml",
                 "92_do_not_duplicate_xmlns_when_injecting_into_added_application_node.xml",
                 "93_expand_nav_graphs",
-                "94_add_implicit_elements_no_duplicates.xml"
+                "94_add_implicit_elements_no_duplicates.xml",
+                "95_enforce_unique_package_name.xml",
+                "96_enforce_unique_package_name_error.xml",
+                "97_enforce_unique_package_name_same_as_app_error.xml",
             };
 
-    private static final Set<String> DATA_FILES_NO_TOOLS_REMOVAL =
-            new HashSet<>(Arrays.asList("91_tools_in_lib_but_not_main.xml"));
-
-    private static final Set<String> DATA_FILES_DEBUGGABLE =
-            new HashSet<>(
-                    Arrays.asList(
-                            "92_do_not_duplicate_xmlns_when_injecting_into_added_application_node.xml"));
-
+    private static final Multimap<Predicate<String>, ManifestMerger2.Invoker.Feature>
+            TEST_CASE_FEATURES =
+                    ImmutableSetMultimap
+                            .<Predicate<String>, ManifestMerger2.Invoker.Feature>builder()
+                            .put(
+                                    testCaseIsNot("91_tools_in_lib_but_not_main.xml"),
+                                    ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS)
+                            .put(
+                                    testCaseIs(
+                                            "92_do_not_duplicate_xmlns_when_injecting_into_added_application_node.xml"),
+                                    ManifestMerger2.Invoker.Feature.DEBUGGABLE)
+                            .put(
+                                    testCaseIs("95_enforce_unique_package_name.xml"),
+                                    ManifestMerger2.Invoker.Feature.ENFORCE_UNIQUE_PACKAGE_NAME)
+                            .put(
+                                    testCaseIs("96_enforce_unique_package_name_error.xml"),
+                                    ManifestMerger2.Invoker.Feature.ENFORCE_UNIQUE_PACKAGE_NAME)
+                            .put(
+                                    testCaseIs(
+                                            "97_enforce_unique_package_name_same_as_app_error.xml"),
+                                    ManifestMerger2.Invoker.Feature.ENFORCE_UNIQUE_PACKAGE_NAME)
+                            .build();
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> getParameters() {
@@ -159,14 +177,7 @@ public class ManifestMerger2Test {
         ManifestModel model = new ManifestModel();
 
         // Make list of optional features
-        List<ManifestMerger2.Invoker.Feature> optionalFeatures = new ArrayList<>();
-        optionalFeatures.add(ManifestMerger2.Invoker.Feature.KEEP_INTERMEDIARY_STAGES);
-        if (!DATA_FILES_NO_TOOLS_REMOVAL.contains(fileName)) {
-            optionalFeatures.add(ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS);
-        }
-        if (DATA_FILES_DEBUGGABLE.contains(fileName)) {
-            optionalFeatures.add(ManifestMerger2.Invoker.Feature.DEBUGGABLE);
-        }
+        List<ManifestMerger2.Invoker.Feature> optionalFeatures = getFeaturesForTestCase();
 
         StdLogger stdLogger = new StdLogger(StdLogger.Level.VERBOSE);
         ManifestMerger2.Invoker invoker =
@@ -245,6 +256,20 @@ public class ManifestMerger2Test {
             compareExpectedAndActualErrors(mergeReport, testFiles.getExpectedErrors());
             assertFalse(notExpectingError);
         }
+    }
+
+    private List<ManifestMerger2.Invoker.Feature> getFeaturesForTestCase() {
+        List<ManifestMerger2.Invoker.Feature> optionalFeatures = new ArrayList<>();
+        optionalFeatures.add(ManifestMerger2.Invoker.Feature.KEEP_INTERMEDIARY_STAGES);
+
+        TEST_CASE_FEATURES
+                .asMap()
+                .entrySet()
+                .stream()
+                .filter(e -> e.getKey().test(fileName))
+                .forEach(e -> optionalFeatures.addAll(e.getValue()));
+
+        return optionalFeatures;
     }
 
     private static boolean isExpectingError(String expectedOutput) throws IOException {
@@ -338,5 +363,13 @@ public class ManifestMerger2Test {
             stringBuilder.append("\n");
         }
         stringBuilder.append("------------ End of records.\n");
+    }
+
+    private static Predicate<String> testCaseIs(String fileName) {
+        return s -> Objects.equals(s, fileName);
+    }
+
+    private static Predicate<String> testCaseIsNot(String fileName) {
+        return s -> !Objects.equals(s, fileName);
     }
 }

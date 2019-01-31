@@ -22,7 +22,6 @@ import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.api.artifact.forName
 import com.android.build.gradle.internal.ide.FilterDataImpl
-import com.android.ide.common.build.ApkInfo
 import com.google.common.collect.ImmutableList
 import com.google.gson.GsonBuilder
 import com.google.gson.TypeAdapter
@@ -133,23 +132,23 @@ class ExistingBuildElements {
         }
 
         @JvmStatic
-        fun persistApkList(apkInfos: Collection<ApkInfo>): String {
+        fun persistApkList(apkDatas: Collection<ApkData>): String {
             val gsonBuilder = GsonBuilder()
-            gsonBuilder.registerTypeHierarchyAdapter(ApkInfo::class.java, ApkInfoAdapter())
+            gsonBuilder.registerTypeHierarchyAdapter(ApkData::class.java, ApkDataAdapter())
             val gson = gsonBuilder.create()
-            return gson.toJson(apkInfos)
+            return gson.toJson(apkDatas)
         }
 
         @JvmStatic
         @Throws(FileNotFoundException::class)
-        fun loadApkList(file: File): Collection<ApkInfo> {
+        fun loadApkList(file: File): Collection<ApkData> {
             val gsonBuilder = GsonBuilder()
-            gsonBuilder.registerTypeHierarchyAdapter(ApkInfo::class.java, ApkInfoAdapter())
+            gsonBuilder.registerTypeHierarchyAdapter(ApkData::class.java, ApkDataAdapter())
             gsonBuilder.registerTypeAdapter(
                     ArtifactType::class.java,
                     OutputTypeTypeAdapter())
             val gson = gsonBuilder.create()
-            val recordType = object : TypeToken<List<ApkInfo>>() {}.type
+            val recordType = object : TypeToken<List<ApkData>>() {}.type
             return gson.fromJson(FileReader(file), recordType)
         }
 
@@ -160,7 +159,7 @@ class ExistingBuildElements {
                 reader: Reader): Collection<BuildOutput> {
             val gsonBuilder = GsonBuilder()
 
-            gsonBuilder.registerTypeAdapter(ApkInfo::class.java, ApkInfoAdapter())
+            gsonBuilder.registerTypeAdapter(ApkData::class.java, ApkDataAdapter())
             gsonBuilder.registerTypeAdapter(
                     ArtifactType::class.java,
                     OutputTypeTypeAdapter())
@@ -174,7 +173,7 @@ class ExistingBuildElements {
                     .map { buildOutput ->
                         BuildOutput(
                                 buildOutput.type,
-                                buildOutput.apkInfo,
+                                buildOutput.apkData,
                                 projectPath.resolve(buildOutput.outputPath),
                                 buildOutput.properties)
                     }
@@ -182,10 +181,10 @@ class ExistingBuildElements {
         }
     }
 
-    internal class ApkInfoAdapter: TypeAdapter<ApkInfo>() {
+    internal class ApkDataAdapter: TypeAdapter<ApkData>() {
 
         @Throws(IOException::class)
-        override fun write(out: JsonWriter, value: ApkInfo?) {
+        override fun write(out: JsonWriter, value: ApkData?) {
             if (value == null) {
                 out.nullValue()
                 return
@@ -217,7 +216,7 @@ class ExistingBuildElements {
         }
 
         @Throws(IOException::class)
-        override fun read(reader: JsonReader): ApkInfo {
+        override fun read(reader: JsonReader): ApkData {
             reader.beginObject()
             var outputType: String? = null
             val filters = ImmutableList.builder<FilterData>()
@@ -247,14 +246,14 @@ class ExistingBuildElements {
             val filterData = filters.build()
             val apkType = VariantOutput.OutputType.valueOf(outputType!!)
 
-            return ApkInfo.of(
+            return ApkData.of(
                     apkType,
                     filterData,
                     versionCode,
                     versionName,
                     filterName,
                     outputFile,
-                    fullName,
+                    fullName ?: "",
                     baseName ?: "",
                     enabled)
         }

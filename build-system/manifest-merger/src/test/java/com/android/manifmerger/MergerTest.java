@@ -107,6 +107,17 @@ public class MergerTest extends TestCase {
         }.process(args);
     }
 
+    public void testRemoveToolsDeclarationsParameter()
+            throws FileNotFoundException, ManifestMerger2.MergeFailureException {
+        final String[] args = {
+            "--main", "src/main/AndroidManifest.xml", "--remove-tools-declarations"
+        };
+        new MergerWithMock().process(args);
+        verify(mInvoker).withFeatures(ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS);
+        verify(mInvoker).merge();
+        verifyNoMoreInteractions(mInvoker);
+    }
+
     public void testLibParameter()
             throws FileNotFoundException, ManifestMerger2.MergeFailureException {
         final String[] args = { "--main", "src/main/AndroidManifest.xml",
@@ -234,16 +245,29 @@ public class MergerTest extends TestCase {
 
         File outFile = File.createTempFile("test", "merger");
 
-        final String[] args = { "--main", "src/main/AndroidManifest.xml",
-                "--libs", "src/lib1/AndroidManifest.xml" + File.pathSeparator
-                    + "src/lib2/AndroidManifest.xml" + File.pathSeparator
+        final String[] args = {
+            "--main",
+            "src/main/AndroidManifest.xml",
+            "--libs",
+            "src/lib1/AndroidManifest.xml"
+                    + File.pathSeparator
+                    + "src/lib2/AndroidManifest.xml"
+                    + File.pathSeparator
                     + "src/lib3/AndroidManifest.xml",
-                "--overlays", "src/flavor1/AndroidManifest.xml" + File.pathSeparator
-                    + "src/flavor2/AndroidManifest.xml" + File.pathSeparator
+            "--overlays",
+            "src/flavor1/AndroidManifest.xml"
+                    + File.pathSeparator
+                    + "src/flavor2/AndroidManifest.xml"
+                    + File.pathSeparator
                     + "src/flavor3/AndroidManifest.xml",
-                "--placeholder", "Foo=bar",
-                "--property", "max_sdk_version=21",
-                "--out", outFile.getAbsolutePath()};
+            "--placeholder",
+            "Foo=bar",
+            "--property",
+            "max_sdk_version=21",
+            "--out",
+            outFile.getAbsolutePath(),
+            "--remove-tools-declarations"
+        };
         Merger merger = new MergerWithMock() {
             @Override
             protected ManifestMerger2.Invoker createInvoker(@NonNull File mainManifestFile, @NonNull ILogger logger) {
@@ -260,6 +284,7 @@ public class MergerTest extends TestCase {
             }
         };
         merger.process(args);
+        verify(mInvoker).withFeatures(ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS);
         verify(mInvoker).addLibraryManifest(new File("src/lib1/AndroidManifest.xml"));
         verify(mInvoker).addLibraryManifest(new File("src/lib2/AndroidManifest.xml"));
         verify(mInvoker).addLibraryManifest(new File("src/lib3/AndroidManifest.xml"));

@@ -21,8 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.api.artifact.ArtifactType;
-import com.android.ide.common.build.ApkData;
-import com.android.ide.common.build.ApkInfo;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
@@ -47,32 +45,32 @@ import java.util.stream.Collectors;
 public final class BuildOutput implements OutputFile, Serializable {
 
     @NonNull private final ArtifactType outputType;
-    @NonNull private final ApkInfo apkInfo;
+    @NonNull private final ApkData apkData;
     // the right abstraction would be Path but it's not serializable so reconstruct the Path
     // instance from its String representation.
     @NonNull private final String path;
     @NonNull private final Map<String, String> properties;
 
     public BuildOutput(
-            @NonNull ArtifactType outputType, @NonNull ApkInfo apkInfo, @NonNull File outputFile) {
-        this(outputType, apkInfo, outputFile, ImmutableMap.of());
+            @NonNull ArtifactType outputType, @NonNull ApkData apkData, @NonNull File outputFile) {
+        this(outputType, apkData, outputFile, ImmutableMap.of());
     }
 
     public BuildOutput(
             @NonNull ArtifactType outputType,
-            @NonNull ApkInfo apkInfo,
+            @NonNull ApkData apkData,
             @NonNull File outputFile,
             @NonNull Map<String, String> properties) {
-        this(outputType, apkInfo, outputFile.toPath(), properties);
+        this(outputType, apkData, outputFile.toPath(), properties);
     }
 
     public BuildOutput(
             @NonNull ArtifactType outputType,
-            @NonNull ApkInfo apkInfo,
+            @NonNull ApkData apkData,
             @NonNull Path outputPath,
             @NonNull Map<String, String> properties) {
         this.outputType = outputType;
-        this.apkInfo = apkInfo;
+        this.apkData = apkData;
         this.path = outputPath.toString();
         this.properties = properties;
     }
@@ -88,8 +86,8 @@ public final class BuildOutput implements OutputFile, Serializable {
      * @return APK information about the APK in which this build output will be packaged into.
      */
     @NonNull
-    public ApkInfo getApkInfo() {
-        return apkInfo;
+    public ApkData getApkData() {
+        return apkData;
     }
 
     @NonNull
@@ -117,7 +115,7 @@ public final class BuildOutput implements OutputFile, Serializable {
     @NonNull
     @Override
     public String getOutputType() {
-        return apkInfo.getType().toString();
+        return apkData.getType().toString();
     }
 
     /**
@@ -128,7 +126,7 @@ public final class BuildOutput implements OutputFile, Serializable {
     @NonNull
     @Override
     public Collection<String> getFilterTypes() {
-        return apkInfo.getFilters()
+        return apkData.getFilters()
                 .stream()
                 .map(FilterData::getFilterType)
                 .collect(Collectors.toList());
@@ -137,12 +135,12 @@ public final class BuildOutput implements OutputFile, Serializable {
     @NonNull
     @Override
     public Collection<FilterData> getFilters() {
-        return apkInfo.getFilters();
+        return apkData.getFilters();
     }
 
     @Nullable
     public String getFilter(String filterType) {
-        return ApkData.getFilter(apkInfo.getFilters(), FilterType.valueOf(filterType));
+        return ApkData.getFilter(apkData.getFilters(), FilterType.valueOf(filterType));
     }
 
     /**
@@ -179,7 +177,7 @@ public final class BuildOutput implements OutputFile, Serializable {
      */
     @Override
     public int getVersionCode() {
-        return apkInfo.getVersionCode();
+        return apkData.getVersionCode();
     }
 
     /**
@@ -196,7 +194,7 @@ public final class BuildOutput implements OutputFile, Serializable {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-                .add("apkInfo", apkInfo)
+                .add("apkData", apkData)
                 .add("path", path)
                 .add("properties", Joiner.on(",").join(properties.entrySet()))
                 .toString();
@@ -213,13 +211,13 @@ public final class BuildOutput implements OutputFile, Serializable {
         BuildOutput that = (BuildOutput) o;
         return outputType == that.outputType
                 && Objects.equals(properties, that.properties)
-                && Objects.equals(apkInfo, that.apkInfo)
+                && Objects.equals(apkData, that.apkData)
                 && Objects.equals(path, that.path);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(outputType, apkInfo, path, properties);
+        return Objects.hash(outputType, apkData, path, properties);
     }
 
     public Path getOutputPath() {

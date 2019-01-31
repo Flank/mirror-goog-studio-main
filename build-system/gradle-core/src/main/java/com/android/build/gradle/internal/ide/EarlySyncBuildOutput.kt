@@ -21,10 +21,10 @@ import com.android.build.OutputFile
 import com.android.build.VariantOutput
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.gradle.internal.scope.AnchorOutputType
+import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.ide.common.build.ApkInfo
 import com.google.common.collect.ImmutableList
 import com.google.gson.GsonBuilder
 import com.google.gson.TypeAdapter
@@ -87,7 +87,7 @@ data class EarlySyncBuildOutput(
             val gsonBuilder = GsonBuilder()
 
             // TODO : remove use of ApkInfo and replace with EarlySyncApkInfo.
-            gsonBuilder.registerTypeAdapter(ApkInfo::class.java, ApkInfoAdapter())
+            gsonBuilder.registerTypeAdapter(ApkData::class.java, ApkDataAdapter())
             gsonBuilder.registerTypeAdapter(
                     ArtifactType::class.java,
                     OutputTypeTypeAdapter())
@@ -100,23 +100,23 @@ data class EarlySyncBuildOutput(
                     .map { buildOutput ->
                         EarlySyncBuildOutput(
                                 buildOutput.type,
-                                buildOutput.apkInfo.type,
-                                buildOutput.apkInfo.filters,
-                                buildOutput.apkInfo.versionCode,
+                                buildOutput.apkData.type,
+                                buildOutput.apkData.filters,
+                                buildOutput.apkData.versionCode,
                                 projectPath.resolve(buildOutput.outputPath).toFile())
                     }
                     .toList()
         }
 
-        internal class ApkInfoAdapter : TypeAdapter<ApkInfo>() {
+        internal class ApkDataAdapter : TypeAdapter<ApkData>() {
 
             @Throws(IOException::class)
-            override fun write(out: JsonWriter, value: ApkInfo?) {
+            override fun write(out: JsonWriter, value: ApkData?) {
                 throw IOException("Unexpected call to write")
             }
 
             @Throws(IOException::class)
-            override fun read(`in`: JsonReader): ApkInfo {
+            override fun read(`in`: JsonReader): ApkData {
                 `in`.beginObject()
                 var outputType: String? = null
                 val filters = ImmutableList.builder<FilterData>()
@@ -136,10 +136,11 @@ data class EarlySyncBuildOutput(
                 if (outputType == null) {
                     throw IOException("invalid format ")
                 }
-                return ApkInfo.of(
-                        VariantOutput.OutputType.valueOf(outputType),
-                        filters.build(),
-                        versionCode)
+                return ApkData.of(
+                    VariantOutput.OutputType.valueOf(outputType),
+                    filters.build(),
+                    versionCode
+                )
             }
 
             @Throws(IOException::class)

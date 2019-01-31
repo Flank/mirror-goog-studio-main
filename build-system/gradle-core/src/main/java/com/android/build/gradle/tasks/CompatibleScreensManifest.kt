@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.ide.common.build.ApkData
+import com.android.build.gradle.internal.scope.ApkData
 import com.android.resources.Density
 import com.android.utils.FileUtils
 import com.google.common.base.Charsets

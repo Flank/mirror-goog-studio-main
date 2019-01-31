@@ -27,12 +27,12 @@ import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
+import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.DeviceProvider;
-import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.process.DefaultProcessExecutor;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.sdklib.AndroidVersion;
@@ -63,7 +63,7 @@ public class InstallVariantTaskTest {
     @NonNull
     private static BuildOutput createSingleMainApkOutput(@NonNull File mainOutputFileApk) {
 
-        ApkInfo apkInfo = mock(ApkInfo.class);
+        ApkData apkInfo = mock(ApkData.class);
         when(apkInfo.getType()).thenReturn(OutputFile.OutputType.MAIN);
         return new BuildOutput(InternalArtifactType.APK, apkInfo, mainOutputFileApk);
     }

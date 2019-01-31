@@ -22,6 +22,7 @@ import com.android.annotations.VisibleForTesting;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
+import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
@@ -29,7 +30,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
-import com.android.ide.common.build.ApkInfo;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.io.Files;
@@ -110,7 +110,7 @@ public class CheckManifestInInstantRunMode extends AndroidVariantTask {
         }
 
         for (BuildOutput buildOutput : buildOutputs) {
-            ApkInfo apkInfo = buildOutput.getApkInfo();
+            ApkData apkInfo = buildOutput.getApkData();
             File mergedManifest = buildOutput.getOutputFile();
 
             LOG.info("CheckManifestInInstantRunMode : Merged manifest %1$s", mergedManifest);
