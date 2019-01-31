@@ -21,7 +21,6 @@ coverage_java_test(
     srcs = glob(["src/test/java/**"]),
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
     resources = glob(["src/test/resources/**"]),
-    tags = ["no_test_windows"],  # b/77288863
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":tools.analyzer-cli",
