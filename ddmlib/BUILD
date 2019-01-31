@@ -8,7 +8,6 @@ iml_module(
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.ddmlib.iml"],
     javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
-    tags = ["no_windows"],
     test_data = ["//prebuilts/studio/sdk:platform-tools"],
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
@@ -60,7 +59,6 @@ coverage_java_test(
     data = ["//prebuilts/studio/sdk:platform-tools"],
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
     resources = glob(["src/test/resources/**"]),
-    tags = ["no_windows"],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":tools.ddmlib",
