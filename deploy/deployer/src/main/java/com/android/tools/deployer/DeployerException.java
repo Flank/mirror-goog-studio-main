@@ -16,11 +16,24 @@
 
 package com.android.tools.deployer;
 
+/**
+ * Represents a failed deployment. When installing, apply changes or apply code changes failed, this
+ * will be raised containing the information needed by the UI (IDE or command line) to surface the
+ * error and the possible actions to the user.
+ */
 public class DeployerException extends Exception {
 
+    /** The type of error that occurred. */
     private final Error error;
+
+    /**
+     * A sub-error code, kept as a String but can only by created by an enum to ensure that it can
+     * be logged safely.
+     */
     private final String code;
-    private final String reason;
+
+    /** A possible multi-line, more verbose details on the issue that occurred. */
+    private final String details;
 
     public enum Error {
         DUMP_FAILED,
@@ -43,24 +56,29 @@ public class DeployerException extends Exception {
     }
 
     public DeployerException(Error error, String message) {
-        super(message);
-        this.error = error;
-        this.code = "";
-        this.reason = null;
+        this(error, message, "");
     }
 
-    public <E extends Enum> DeployerException(Error error, E code, String message, String reason) {
+    public DeployerException(Error error, String message, String details) {
+        this(error, "", message, details);
+    }
+
+    public <E extends Enum> DeployerException(Error error, E code, String message, String details) {
+        this(error, code.name(), message, details);
+    }
+
+    private DeployerException(Error error, String code, String message, String details) {
         super(message);
         this.error = error;
-        this.code = code.name();
-        this.reason = reason;
+        this.code = code;
+        this.details = details;
     }
 
     public DeployerException(Error error, Throwable t) {
         super(t);
         this.error = error;
         this.code = "";
-        this.reason = null;
+        this.details = null;
     }
 
     public Error getError() {
@@ -71,7 +89,7 @@ public class DeployerException extends Exception {
         return error.name() + (code.isEmpty() ? "" : ".") + code;
     }
 
-    public String getReason() {
-        return reason;
+    public String getDetails() {
+        return details;
     }
 }

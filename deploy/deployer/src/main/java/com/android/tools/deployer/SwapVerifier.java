@@ -23,11 +23,11 @@ import java.util.List;
 class SwapVerifier {
 
     public static final String STATIC_LIB_MODIFIED_ERROR =
-            "Modifying .so requires application restart.";
+            "Changes were not applied: Modifying .so files requires an app restart.";
     public static final String MODIFYING_ANDROID_MANIFEST_XML_FILES_NOT_SUPPORTED =
-            "Modifying AndroidManifest.xml files not supported.";
+            "Changes were not applied: Modifying AndroidManifest.xml files requires an app restart.";
     public static final String RESOURCE_MODIFICATION_NOT_ALLOWED =
-            "Resource modification not allowed.";
+            "An activity restart is required to apply changes for the following resource:\n";
 
     public List<FileDiff> verify(List<FileDiff> diffs, boolean allChanges)
             throws DeployerException {
@@ -56,7 +56,7 @@ class SwapVerifier {
                 if (!allChanges) {
                     throw new DeployerException(
                             DeployerException.Error.CANNOT_SWAP_RESOURCE,
-                            RESOURCE_MODIFICATION_NOT_ALLOWED);
+                            RESOURCE_MODIFICATION_NOT_ALLOWED + name);
                 }
             }
         }

@@ -27,7 +27,7 @@ public class DeployerErrorMessagePresenterTest {
                 new JvmtiRedefinerException(
                         Lists.newArrayList(
                                 "JVMTI_ERROR_UNSUPPORTED_REDEFINITION_METHOD_MODIFIERS_CHANGED"));
-        String message = DeployerErrorMessagePresenter.createInstance().present(deployerException);
+        String message = deployerException.getMessage();
         Assert.assertTrue(message.contains("Changes to method modifiers"));
     }
 
@@ -35,7 +35,7 @@ public class DeployerErrorMessagePresenterTest {
     public void testInternalFailure() {
         DeployerException deployerException =
                 new DeployerException(DeployerException.Error.DUMP_FAILED, "ABCD");
-        String message = DeployerErrorMessagePresenter.createInstance().present(deployerException);
+        String message = deployerException.getMessage();
         Assert.assertTrue(message.contains("ABCD"));
     }
 }

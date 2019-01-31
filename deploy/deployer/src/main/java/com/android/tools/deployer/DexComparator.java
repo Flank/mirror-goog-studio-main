@@ -81,7 +81,8 @@ public class DexComparator {
                     // This is a new class. This is not supported.
                     throw new DeployerException(
                             DeployerException.Error.CANNOT_SWAP_NEW_CLASS,
-                            "Unable to swap new class '" + klass.name + "'");
+                            "Changes were not applied: Adding a new class requires an app restart.",
+                            "Class name: '" + klass.name + "'");
                 }
             }
 
