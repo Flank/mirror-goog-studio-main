@@ -87,29 +87,4 @@ public class AgentBasedClassRedefinerKotlinTest extends AgentBasedClassRedefiner
         Assert.assertTrue(
                 android.waitForInput("KotlinCompanionTarget JUST SWAPPED", RETURN_VALUE_TIMEOUT));
     }
-
-    @Test
-    public void testKotlinCoroutine() throws Exception {
-        android.loadDex(DEX_LOCATION);
-        android.launchActivity(ACTIVITY_CLASS);
-
-        android.triggerMethod(ACTIVITY_CLASS, "getKotlinCoroutineTargetStatus");
-
-        // Note: Arithmetic Series: (100*(100-1))/2 = 4950
-        Assert.assertTrue(android.waitForInput("KotlinCoroutineTarget 4950", RETURN_VALUE_TIMEOUT));
-
-        Deploy.SwapRequest request =
-                createRequest(
-                        "pkg.KotlinCoroutineTarget$getStatus$1",
-                        "pkg/KotlinCoroutineTarget$getStatus$1.dex",
-                        false);
-        redefiner.redefine(request);
-
-        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
-        Assert.assertEquals(Deploy.AgentSwapResponse.Status.OK, response.getStatus());
-
-        android.triggerMethod(ACTIVITY_CLASS, "getKotlinCoroutineTargetStatus");
-
-        Assert.assertTrue(android.waitForInput("KotlinCoroutineTarget 0", RETURN_VALUE_TIMEOUT));
-    }
 }

@@ -75,10 +75,6 @@ java_binary(
 kotlin_library(
     name = "original_kotlin",
     srcs = ["data/kotlin"],
-    deps = [
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlinx/kotlinx-coroutines-core-common/1.0.0:jar",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlinx/kotlinx-coroutines-core/1.0.0:jar",
-    ],
 )
 
 dex_library(
@@ -105,8 +101,4 @@ java_binary(
 kotlin_library(
     name = "swapped_kotlin",
     srcs = ["data/kotlin_swap"],
-    deps = [
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlinx/kotlinx-coroutines-core-common/1.0.0:jar",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlinx/kotlinx-coroutines-core/1.0.0:jar",
-    ],
 )
