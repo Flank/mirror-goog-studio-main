@@ -71,21 +71,6 @@ gradle_integration_test(
 )
 
 gradle_integration_test(
-    name = "UberSkeletonSmokeTest",
-    srcs = ["UberSkeletonSmokeTest.java"],
-    data = TEST_DATA + [
-        "@android_studio_gradle_test//:all_files",
-    ],
-    maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
-        "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/external:uber_skeleton_prebuilts",
-        "//tools/base/build-system/integration-test:support_library_latest",
-    ],
-    tags = ["no_test_windows"],  # b/73306170
-    deps = TEST_DEPS,
-)
-
-gradle_integration_test(
     name = "WordPressAppSmokeTest",
     srcs = ["WordPressAppSmokeTest.java"],
     data = TEST_DATA + [
