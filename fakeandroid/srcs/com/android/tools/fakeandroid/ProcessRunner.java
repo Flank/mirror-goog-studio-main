@@ -137,7 +137,11 @@ public class ProcessRunner {
 
         } catch (InterruptedException ex) {
         }
-        System.out.println("Wait Time: " + (System.currentTimeMillis() - time));
+        System.out.println(
+                "Wait Time: "
+                        + (System.currentTimeMillis() - time)
+                        + "ms. Pattern: "
+                        + statement.pattern());
         return null;
     }
 

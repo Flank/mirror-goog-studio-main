@@ -28,6 +28,7 @@ public class MemoryPerfDriver extends PerfDriver {
 
     @Override
     protected void before() throws Throwable {
+        super.before();
         // For Memory tests, we need to invoke beginSession and startMonitoringApp to properly
         // initialize the memory cache and establish the perfa->perfd connection
         getGrpc()
@@ -46,5 +47,6 @@ public class MemoryPerfDriver extends PerfDriver {
         } catch (StatusRuntimeException e) {
             // TODO(b/112274301): fix "connection closed" error.
         }
+        super.after();
     }
 }

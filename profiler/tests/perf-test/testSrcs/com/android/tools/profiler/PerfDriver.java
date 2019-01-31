@@ -31,24 +31,24 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.regex.Pattern;
 import org.junit.Assert;
+import org.junit.rules.ExternalResource;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
-import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 /**
- * This class is the base class for all perf test. The management of test ports, processes, and
- * basic rpc calls that are shared between all perf test (jvmti and instrumented) should live in
- * this base class.
+ * This class is the test rule for all perf test. The management of test ports, processes, and basic
+ * rpc calls that are shared between all perf test (jvmti and instrumented) should live in this base
+ * class.
  */
-public class PerfDriver implements TestRule {
+public class PerfDriver extends ExternalResource {
     // Folder to create temporary config files, which is chained in TestRule and will be deleted
     // at the test's end.
     private final TemporaryFolder myTemporaryFolder = new TemporaryFolder();
     private final String myActivityClass;
 
-    public static final String LOCAL_HOST = "127.0.0.1";
+    private static final String LOCAL_HOST = "127.0.0.1";
     private File myConfigFile;
     private int myPid = -1;
     private FakeAndroidDriver myMockApp;
@@ -87,55 +87,33 @@ public class PerfDriver implements TestRule {
     @Override
     public Statement apply(Statement base, Description description) {
         return RuleChain.outerRule(myTemporaryFolder)
-                .apply(
-                        new Statement() {
-                            @Override
-                            public void evaluate() throws Throwable {
-                                try {
-                                    ruleBefore();
-                                    before();
-                                    base.evaluate();
-                                } finally {
-                                    after();
-                                    ruleAfter();
-                                }
-                            }
-
-                            private void ruleBefore() throws Throwable {
-                                // Logs in perf-test output to track the sdk level and test start.
-                                System.out.println(
-                                        String.format(
-                                                "Start test %s with sdk level %d",
-                                                myActivityClass, mySdkLevel));
-                                startPerfd();
-                                start(myActivityClass);
-                            }
-
-                            private void ruleAfter() {
-                                if (mySession != null) {
-                                    try {
-                                        getGrpc().endSession(mySession.getSessionId());
-                                    } catch (StatusRuntimeException e) {
-                                        // TODO(b/112274301): fix "connection closed" error.
-                                    }
-                                }
-                                myMockApp.stop();
-                                myPerfdDriver.stop();
-                                // Logs in perf-test output to track the sdk level and test end.
-                                System.out.println(
-                                        String.format(
-                                                "Finish test %s with sdk level %d",
-                                                myActivityClass, mySdkLevel));
-                            }
-                        },
-                        description);
+                .apply(super.apply(base, description), description);
     }
 
-    /** Override to set up the associated test. */
-    protected void before() throws Throwable {}
+    @Override
+    protected void before() throws Throwable {
+        // Logs in perf-test output to track the sdk level and test start.
+        System.out.println(
+                String.format("Start activity %s with sdk level %d", myActivityClass, mySdkLevel));
+        startPerfd();
+        start(myActivityClass);
+    }
 
-    /** Override to tear down the associated test. */
-    protected void after() {}
+    @Override
+    protected void after() {
+        if (mySession != null) {
+            try {
+                getGrpc().endSession(mySession.getSessionId());
+            } catch (StatusRuntimeException e) {
+                // TODO(b/112274301): fix "connection closed" error.
+            }
+        }
+        myMockApp.stop();
+        myPerfdDriver.stop();
+        // Logs in perf-test output to track the sdk level and test end.
+        System.out.println(
+                String.format("Finish activity %s with sdk level %d", myActivityClass, mySdkLevel));
+    }
 
     /**
      * Returns the port the app communicates over. Note: this will not be valid until after {@link
@@ -245,8 +223,7 @@ public class PerfDriver implements TestRule {
      */
     private void buildAndSaveConfig(int sdkLevel) {
         try {
-            myConfigFile =
-                    File.createTempFile("agent_config", ".data", myTemporaryFolder.getRoot());
+            myConfigFile = myTemporaryFolder.newFile();
             FileOutputStream outputStream = new FileOutputStream(myConfigFile);
             Agent.AgentConfig.MemoryConfig memConfig =
                     MemoryConfig.newBuilder()
