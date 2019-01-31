@@ -210,10 +210,11 @@ public class TestOptions {
          *       the <code>package</code> attribute in the final app manifest.
          * </ul>
          *
-         * <p>Note that starting with version 3.5.0, if you set the Gradle property <code>
-         * android.testConfig.useRelativePath</code> to <code>true</code>, the paths above will be
-         * relative paths; otherwise, they will be absolute paths. Prior to version 3.5.0, the paths
-         * are all absolute paths.
+         * <p>Note that starting with version 3.5.0, if the Gradle property <code>
+         * android.testConfig.useRelativePath</code> is set to <code>true</code>, the paths above
+         * will be relative paths (relative to the current project directory, not the root project
+         * directory); otherwise, they will be absolute paths. Prior to version 3.5.0, the paths are
+         * all absolute paths.
          *
          * @since 3.0.0
          */

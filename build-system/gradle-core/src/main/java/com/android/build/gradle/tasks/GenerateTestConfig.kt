@@ -74,7 +74,9 @@ open class GenerateTestConfig @Inject constructor(workerExecutor: WorkerExecutor
 
     @get:Nested
     val testConfigProperties: TestConfigProperties by lazy {
-        testConfigInputs.computeProperties(project.rootDir)
+        // The base for the relative paths in the test config file should be the current project
+        // directory, not the root project directory.
+        testConfigInputs.computeProperties(project.projectDir)
     }
 
     @get:OutputDirectory
@@ -197,16 +199,16 @@ open class GenerateTestConfig @Inject constructor(workerExecutor: WorkerExecutor
             packageNameOfFinalRClassProvider()
         }
 
-        fun computeProperties(rootProjectDir: File): TestConfigProperties {
+        fun computeProperties(projectDir: File): TestConfigProperties {
             val manifestOutput =
                 ExistingBuildElements.from(InternalArtifactType.MERGED_MANIFESTS, mergedManifest)
                     .element(mainApkInfo) ?: error("Unable to find manifest output")
 
             return TestConfigProperties(
-                resourceApk?.let { getRelativePathIfRequired(it.singleFile(), rootProjectDir) },
-                mergedResources?.let { getRelativePathIfRequired(it.singleFile(), rootProjectDir) },
-                getRelativePathIfRequired(mergedAssets.get().asFile, rootProjectDir),
-                getRelativePathIfRequired(manifestOutput.outputFile, rootProjectDir),
+                resourceApk?.let { getRelativePathIfRequired(it.singleFile(), projectDir) },
+                mergedResources?.let { getRelativePathIfRequired(it.singleFile(), projectDir) },
+                getRelativePathIfRequired(mergedAssets.get().asFile, projectDir),
+                getRelativePathIfRequired(manifestOutput.outputFile, projectDir),
                 packageNameOfFinalRClass
             )
         }

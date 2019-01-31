@@ -145,6 +145,7 @@ public class UnitTestingAndroidResourcesTest {
 
         GradleTaskExecutor runGradleTasks =
                 project.executor()
+                        .with(BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG, true)
                         .with(
                                 BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION,
                                 rClassStrategy == RClassStrategy.GENERATE_JAR);
@@ -172,6 +173,7 @@ public class UnitTestingAndroidResourcesTest {
         // Check that the model contains the generated file
         AndroidProject model =
                 project.model()
+                        .with(BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG, true)
                         .with(
                                 BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION,
                                 rClassStrategy == RClassStrategy.GENERATE_JAR)
@@ -191,8 +193,6 @@ public class UnitTestingAndroidResourcesTest {
         }
         commands.add(debugUnitTest.getCompileTaskName());
         runGradleTasks.run(commands.build());
-
-
 
         Path configFile = getConfigFile(debugUnitTest.getAdditionalClassesFolders());
         assertNotNull(configFile);
@@ -221,7 +221,7 @@ public class UnitTestingAndroidResourcesTest {
                             throw new UncheckedIOException(e);
                         }
                     } else {
-                        assertThat(Paths.get(value.toString())).exists();
+                        assertThat(project.file(value.toString())).exists();
                     }
                 });
 
@@ -232,7 +232,7 @@ public class UnitTestingAndroidResourcesTest {
         // Check the tests see the assets from dependencies, even in the library case where they
         // would not otherwise be merged.
         List<String> filenames =
-                Files.walk(Paths.get(properties.getProperty("android_merged_assets")))
+                Files.walk(project.file(properties.getProperty("android_merged_assets")).toPath())
                         .filter(Files::isRegularFile)
                         .map(path -> path.getFileName().toString())
                         .collect(Collectors.toList());
@@ -264,11 +264,10 @@ public class UnitTestingAndroidResourcesTest {
         files.addAll(main.getAdditionalClassesFolders());
         files.add(test.getClassesFolder(), test.getJavaResourcesFolder());
         files.addAll(test.getAdditionalClassesFolders());
-        List<URL> urls =
+        return new URLClassLoader(
                 files.build()
                         .stream()
                         .map(IOExceptionFunction.asFunction(SdkUtils::fileToUrl))
-                        .collect(Collectors.toList());
-        return new URLClassLoader(urls.toArray(new URL[0]));
+                        .toArray(URL[]::new));
     }
 }
