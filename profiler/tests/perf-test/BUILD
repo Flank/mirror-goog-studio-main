@@ -78,7 +78,6 @@ perf_test(
     srcs = [
         "testSrcs/com/android/tools/profiler/BasicPerfTest.java",
     ],
-    tags = ["manual"],  # b/123474790
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":test_lib",
@@ -98,7 +97,6 @@ perf_test(
         "testSrcs/com/android/tools/profiler/network/UnifiedPipelineHttpUrlTest.java",
         "testSrcs/com/android/tools/profiler/network/UnifiedPipelineOkHttpTest.java",
     ],
-    tags = ["manual"],  # b/123474790
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":test_lib",
@@ -115,7 +113,7 @@ perf_test(
         "testSrcs/com/android/tools/profiler/memory/JniTest.java",
         "testSrcs/com/android/tools/profiler/memory/MemoryTest.java",
     ],
-    tags = ["manual"],  # b/123474790
+    tags = ["manual"],  # b/80501379
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":test_lib",
@@ -132,7 +130,6 @@ perf_test(
     srcs = [
         "testSrcs/com/android/tools/profiler/EventProfilerTest.java",
     ],
-    tags = ["manual"],  # b/123474790
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":test_lib",
@@ -151,7 +148,6 @@ perf_test(
         "testSrcs/com/android/tools/profiler/energy/LocationTest.java",
         "testSrcs/com/android/tools/profiler/energy/WakeLockTest.java",
     ],
-    tags = ["manual"],  # b/123474790
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":test_lib",

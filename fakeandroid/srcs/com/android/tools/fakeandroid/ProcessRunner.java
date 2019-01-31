@@ -55,6 +55,10 @@ public class ProcessRunner {
         return myProcess != null && myProcess.isAlive();
     }
 
+    protected int exitValue() {
+        return myProcess.exitValue();
+    }
+
     private void listen(String streamName, InputStream stream, List<String> storage) {
         try {
             InputStreamReader isr = new InputStreamReader(stream);
