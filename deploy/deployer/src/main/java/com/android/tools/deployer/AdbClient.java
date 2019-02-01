@@ -89,6 +89,24 @@ public class AdbClient {
         }
     }
 
+    /**
+     * Executes the given Binder command and sends {@code input} to stdin and returns stdout as a
+     * byte[]
+     */
+    public byte[] binder(String[] parameters, InputStream input) throws IOException {
+        logger.info("BINDER: " + String.join(" ", parameters));
+        ByteArrayOutputReceiver receiver;
+        try (Trace ignored = Trace.begin("binder" + Arrays.toString(parameters))) {
+            receiver = new ByteArrayOutputReceiver();
+            device.executeBinderCommand(parameters, receiver, 5, TimeUnit.MINUTES, input);
+            return receiver.toByteArray();
+        } catch (AdbCommandRejectedException
+                | ShellCommandUnresponsiveException
+                | TimeoutException e) {
+            throw new IOException(e);
+        }
+    }
+
     public InstallResult install(List<String> apks, List<String> options, boolean reinstall) {
         List<File> files = apks.stream().map(File::new).collect(Collectors.toList());
         try {

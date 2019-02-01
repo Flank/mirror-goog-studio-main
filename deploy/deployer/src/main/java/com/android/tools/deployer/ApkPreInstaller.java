@@ -149,9 +149,8 @@ public class ApkPreInstaller {
         String sessionId;
         try {
             byte[] rawResponse =
-                    adb.shell(
+                    adb.binder(
                             new String[] {
-                                "cmd",
                                 "package",
                                 "install-create",
                                 "-t",
@@ -180,9 +179,8 @@ public class ApkPreInstaller {
                 FileInputStream stream = new FileInputStream(new File(apk.path));
                 long size = Files.size(Paths.get(apk.path));
                 byte[] rawResponse =
-                        adb.shell(
+                        adb.binder(
                                 new String[] {
-                                    "cmd",
                                     "package",
                                     "install-write",
                                     "-S",
