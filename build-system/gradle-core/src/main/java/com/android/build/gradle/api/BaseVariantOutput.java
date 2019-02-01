@@ -53,7 +53,7 @@ public interface BaseVariantOutput extends OutputFile {
     /**
      * Returns the manifest merging task.
      *
-     * @deprecated Use {@link #getProcessResourcesProvider()}
+     * @deprecated Use {@link #getProcessManifestProvider()}
      */
     @NonNull
     @Deprecated
