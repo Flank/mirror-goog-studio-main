@@ -18,8 +18,7 @@ package com.android.build.gradle.internal.cxx.json
 
 import com.android.utils.tokenizeCommandLineToEscaped
 import com.google.gson.stream.JsonReader
-import java.io.File
-import java.io.FileReader
+import java.nio.file.Paths
 
 /**
  * This is a visitor over clang compilation database json file. It builds a string table of
@@ -31,17 +30,17 @@ class CompilationDatabaseIndexingVisitor(private val strings: StringTable) :
     CompilationDatabaseStreamingVisitor() {
     private var compiler = ""
     private var flags = ""
-    private var file = File(".")
+    private var file = "."
     private val map = mutableMapOf<String, Int>()
 
     override fun beginCommand() {
         compiler = ""
         flags = ""
-        file = File(".")
+        file = "."
     }
 
     override fun visitFile(file: String) {
-        this.file = File(file)
+        this.file = file
     }
 
     /**
@@ -67,7 +66,13 @@ class CompilationDatabaseIndexingVisitor(private val strings: StringTable) :
     }
 
     override fun endCommand() {
-        map[file.path] = strings.intern(flags)
+        // Use normalized path for consistency.
+        var filePath = Paths.get(file).normalize().toString()
+        if (filePath.isEmpty()) {
+            // If the normalized path is empty string, it's better to use the non-normalized path.
+            filePath = Paths.get(file).toString()
+        }
+        map[filePath] = strings.intern(flags)
     }
 
     fun mappings(): Map<String, Int> = map
