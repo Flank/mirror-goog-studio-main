@@ -10,6 +10,7 @@ java_library(
             "common/src/main/**/*.java",
             # Need to include this here as platforms/latest_jar is not visible outside this package.
             "echo-sample/src/main/**/*.java",
+            "dynamic-layout-inspector/src/main/**/*.java",
         ],
         # Since Energy profiler doesn't support compile-time instrumentation, don't include the src
         # to avoid adding its dependencies.
@@ -31,6 +32,7 @@ java_library(
         "common/src/main/**/*.java",
         # Need to include this here as platforms/latest_jar is not visible outside this package.
         "echo-sample/src/main/**/*.java",
+        "dynamic-layout-inspector/src/main/**/*.java",
     ]),
     deps = [
         "//prebuilts/studio/sdk:platforms/latest_jar",

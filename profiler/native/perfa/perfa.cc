@@ -34,6 +34,7 @@
 #include "slicer/writer.h"
 
 #include "commands/echo_agent_command.h"
+#include "commands/layoutinspector_agent_command.h"
 #include "transform/android_activitythread_transform.h"
 #include "transform/android_alarmmanager_listenerwrapper_transform.h"
 #include "transform/android_alarmmanager_transform.h"
@@ -326,6 +327,9 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
                             JVMTI_THREAD_NORM_PRIORITY);
 
   EchoAgentCommand::RegisterAgentEchoCommandHandler(vm);
+  if (agent_config.android_feature_level() >= 29) {
+    LayoutInspectorAgentCommand::RegisterAgentLayoutInspectorCommandHandler(vm);
+  }
   return JNI_OK;
 }
 

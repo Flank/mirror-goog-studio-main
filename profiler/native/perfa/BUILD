@@ -17,6 +17,7 @@ cc_binary(
         "-Itools/base/profiler/native",
         "-Itools/base/transport",
         "-Itools/base/echo-sample",
+        "-Itools/base/dynamic-layout-inspector/src/main/native",
         "-I$(GENDIR)/tools/base/transport",
     ],
     linkopts = ANDROID_LINKOPTS,
@@ -28,6 +29,8 @@ cc_binary(
     deps = [
         "//external:slicer",
         "//prebuilts/studio/jdk:jni_headers",
+        "//tools/base/dynamic-layout-inspector:agent_command",
+        "//tools/base/dynamic-layout-inspector:jni",
         "//tools/base/echo-sample:agent_command",
         "//tools/base/echo-sample:jni",
         "//tools/base/profiler/native/agent",

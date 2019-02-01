@@ -21,6 +21,7 @@ option java_outer_classname = "Transport";
 
 import "common.proto";
 import "echo.proto";
+import "layout_inspector.proto";
 
 service TransportService {
   // Gets current timestamp that used in the device's data.
@@ -193,6 +194,9 @@ message Command {
 
     // Sample echo Command
     ECHO = 1000;
+
+    // Layout inspector command.
+    LAYOUT_INSPECTOR = 1100;
   }
 
   // A stream is an entity that provides data, such as a device or an imported
@@ -207,9 +211,11 @@ message Command {
     EndSession end_session = 5;
     AttachAgent attach_agent = 6;
 
-
     // Sample Echo Command starts at 1000;
     echo.EchoData echo_data = 1000;
+
+    // Layout editor starts at 1100;
+    layoutinspector.LayoutInspectorCommand layout_inspector = 1100;
   }
 }
 
