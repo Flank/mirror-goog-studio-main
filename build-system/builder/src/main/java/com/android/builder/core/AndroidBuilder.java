@@ -78,7 +78,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
@@ -88,6 +87,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * This is the main builder class. It is given all the data to process the build (such as {@link
@@ -362,23 +362,13 @@ public class AndroidBuilder {
         return mBootClasspathAll;
     }
 
-    /**
-     * Helper method to get the boot classpath to be used during compilation.
-     *
-     * @param includeOptionalLibraries if true, optional libraries are included even if not
-     *                                 required by the project setup.
-     */
+    /** Helper method to get the boot classpath to be used during compilation. */
     @NonNull
-    public List<String> getBootClasspathAsStrings(boolean includeOptionalLibraries) {
-        List<File> classpath = getBootClasspath(includeOptionalLibraries);
-
-        // convert to Strings.
-        List<String> results = Lists.newArrayListWithCapacity(classpath.size());
-        for (File f : classpath) {
-            results.add(f.getAbsolutePath());
-        }
-
-        return results;
+    public List<String> getFilteredBootClasspathAsStrings() {
+        return computeFilteredBootClasspath()
+                .stream()
+                .map(c -> c.getAbsolutePath())
+                .collect(Collectors.toList());
     }
 
     /**
