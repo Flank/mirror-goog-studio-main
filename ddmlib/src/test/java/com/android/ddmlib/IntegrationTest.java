@@ -172,7 +172,7 @@ public class IntegrationTest {
             assertThat(devices.length).isEqualTo(1);
             assertThat(devices[0].getName()).isEqualTo(SERIAL);
 
-            assertThat(devices[0].supportsFeature(IDevice.Feature.ABB)).isTrue();
+            assertThat(devices[0].supportsFeature(IDevice.Feature.ABB_EXEC)).isTrue();
         } finally {
             AndroidDebugBridge.terminate();
         }

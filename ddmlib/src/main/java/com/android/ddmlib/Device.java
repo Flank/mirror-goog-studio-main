@@ -309,8 +309,8 @@ final class Device implements IDevice {
                 return mHasScreenRecorder;
             case PROCSTATS:
                 return getVersion().isGreaterOrEqualThan(19);
-            case ABB:
-                return getAdbFeatures().contains("abb");
+            case ABB_EXEC:
+                return getAdbFeatures().contains("abb_exec");
             default:
                 return false;
         }
@@ -324,7 +324,10 @@ final class Device implements IDevice {
 
         try {
             String response = AdbHelper.getFeatures(AndroidDebugBridge.getSocketAddress(), this);
-            mAdbFeatures = new HashSet<String>(Arrays.asList(response.split(",")));
+            mAdbFeatures = new HashSet<>(Arrays.asList(response.split(",")));
+            response = AdbHelper.getHostFeatures(AndroidDebugBridge.getSocketAddress(), this);
+            // We want features supported by both device and host.
+            mAdbFeatures.retainAll(Arrays.asList(response.split(",")));
         } catch (TimeoutException | AdbCommandRejectedException | IOException e) {
             Log.e(LOG_TAG, "Error obtaining features: " + e);
             return new HashSet<String>();
@@ -589,6 +592,36 @@ final class Device implements IDevice {
                 maxTimeToOutputResponse,
                 maxTimeUnits,
                 is);
+    }
+
+    @Override
+    public void executeBinderCommand(
+            String[] parameters,
+            IShellOutputReceiver receiver,
+            long maxTimeToOutputResponse,
+            TimeUnit maxTimeUnits,
+            @Nullable InputStream is)
+            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
+                    IOException {
+        if (supportsFeature(Feature.ABB_EXEC)) {
+            AdbHelper.executeRemoteCommand(
+                    AndroidDebugBridge.getSocketAddress(),
+                    AdbHelper.AdbService.ABB_EXEC,
+                    String.join("\u0000", parameters),
+                    this,
+                    receiver,
+                    0L,
+                    maxTimeToOutputResponse,
+                    maxTimeUnits,
+                    is);
+        } else {
+            executeShellCommand(
+                    "cmd " + String.join(" ", parameters),
+                    receiver,
+                    maxTimeToOutputResponse,
+                    maxTimeUnits,
+                    is);
+        }
     }
 
     @Override

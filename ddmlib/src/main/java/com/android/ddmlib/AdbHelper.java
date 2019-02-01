@@ -435,7 +435,7 @@ final class AdbHelper {
         EXEC,
 
         /** The abb service. */
-        ABB,
+        ABB_EXEC,
     }
 
     /**
@@ -775,7 +775,7 @@ final class AdbHelper {
      * @throws AdbCommandRejectedException if adb rejects the command
      * @throws IOException in case of I/O error on the connection.
      */
-    public static String getFeatures(InetSocketAddress adbSockAddr, Device device)
+    static String queryFeatures(InetSocketAddress adbSockAddr, Device device, String adbCommand)
             throws TimeoutException, AdbCommandRejectedException, IOException {
 
         SocketChannel adbChan = null;
@@ -786,8 +786,9 @@ final class AdbHelper {
             byte[] request =
                     formAdbRequest(
                             String.format(
-                                    "host-serial:%1$s:features", //$NON-NLS-1$
-                                    device.getSerialNumber()));
+                                    "host-serial:%1$s:%2$s", //$NON-NLS-1$
+                                    device.getSerialNumber(),
+                                    adbCommand));
 
             write(adbChan, request);
 
@@ -803,6 +804,34 @@ final class AdbHelper {
                 adbChan.close();
             }
         }
+    }
+
+    /**
+     * Queries a set of supported features from the device.
+     *
+     * @param adbSockAddr the socket address to connect to adb
+     * @param device the device on which to do the port forwarding
+     * @throws TimeoutException in case of timeout on the connection.
+     * @throws AdbCommandRejectedException if adb rejects the command
+     * @throws IOException in case of I/O error on the connection.
+     */
+    public static String getFeatures(InetSocketAddress adbSockAddr, Device device)
+      throws TimeoutException, AdbCommandRejectedException, IOException {
+        return queryFeatures(adbSockAddr, device, "features");
+    }
+
+    /**
+     * Queries a set of supported features from the ADB host.
+     *
+     * @param adbSockAddr the socket address to connect to adb
+     * @param device the device on which to do the port forwarding
+     * @throws TimeoutException in case of timeout on the connection.
+     * @throws AdbCommandRejectedException if adb rejects the command
+     * @throws IOException in case of I/O error on the connection.
+     */
+    public static String getHostFeatures(InetSocketAddress adbSockAddr, Device device)
+      throws TimeoutException, AdbCommandRejectedException, IOException {
+        return queryFeatures(adbSockAddr, device, "host-features");
     }
 
     /**

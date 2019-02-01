@@ -28,9 +28,10 @@ import java.net.Socket;
 public class FeaturesCommandHandler extends HostCommandHandler {
 
     @NonNull public static final String COMMAND = "features";
+    @NonNull public static final String HOST_COMMAND = "host-features";
 
     @NonNull
-    public static final String sFeatures = "push_sync,fixed_push_mkdir,shell_v2,apex,stat_v2,abb";
+    public static final String sFeatures = "push_sync,fixed_push_mkdir,shell_v2,apex,stat_v2,abb,abb_exec";
 
     @Override
     public boolean invoke(

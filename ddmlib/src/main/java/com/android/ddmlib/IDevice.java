@@ -65,7 +65,7 @@ public interface IDevice extends IShellEnabledDevice {
     enum Feature {
         SCREEN_RECORD,      // screen recorder available?
         PROCSTATS,          // procstats service (dumpsys procstats) available
-        ABB, // Android Binder Bridge available
+        ABB_EXEC,           // Android Binder Bridge available
     }
 
     /** Device level hardware features. */
@@ -378,6 +378,34 @@ public interface IDevice extends IShellEnabledDevice {
     /** A version of executeShell command that can take an input stream to send through stdin. */
     default void executeShellCommand(
             String command,
+            IShellOutputReceiver receiver,
+            long maxTimeToOutputResponse,
+            TimeUnit maxTimeUnits,
+            @Nullable InputStream is)
+            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
+                    IOException {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Executes a Binder command on the device, and sends the result to a <var>receiver</var>
+     * <p>This uses exec:cmd <command> call or faster abb_exec:<command> if both device OS and
+     * host ADB server support Android Binder Bridge execute feature.
+     *
+     * @param command the binder command to execute
+     * @param receiver the {@link IShellOutputReceiver} that will receives the output of the binder
+     *            command
+     * @param is optional input stream to send through stdin
+     * @throws TimeoutException in case of timeout on the connection.
+     * @throws AdbCommandRejectedException if adb rejects the command
+     * @throws ShellCommandUnresponsiveException in case the binder command doesn't send output
+     *            for a given time.
+     * @throws IOException in case of I/O error on the connection.
+     *
+     * @see DdmPreferences#getTimeOut()
+     */
+    default void executeBinderCommand(
+            String[] parameters,
             IShellOutputReceiver receiver,
             long maxTimeToOutputResponse,
             TimeUnit maxTimeUnits,
