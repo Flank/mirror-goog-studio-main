@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.resources;
 
 import static com.android.SdkConstants.AMP_ENTITY;
@@ -25,12 +24,12 @@ import static com.android.SdkConstants.QUOT_ENTITY;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.annotations.VisibleForTesting;
+import org.jetbrains.annotations.Contract;
 
 /**
  * Helper class to help with XML values resource file.
  */
 public class ValueXmlHelper {
-
     /**
      * Replaces escapes in an XML resource string with the actual characters, performing unicode
      * substitutions (replacing any {@code \\uNNNN} references in the given string with the
@@ -42,6 +41,7 @@ public class ValueXmlHelper {
      * @return the string with the escape characters removed and expanded
      */
     @SuppressWarnings("UnnecessaryContinue")
+    @Contract("!null, _, _ -> !null")
     @Nullable
     public static String unescapeResourceString(
             @Nullable String s,
