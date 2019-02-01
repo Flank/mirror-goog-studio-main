@@ -104,9 +104,6 @@ import java.util.stream.Collectors;
  *   <li>{@link #mergeManifestsForTestVariant }
  *   <li>{@link #processResources }
  * </ol>
- *
- * <p>Java compilation is not handled but the builder provides the boot classpath with {@link
- * #getBootClasspath(boolean)}.
  */
 public class AndroidBuilder {
 
@@ -154,8 +151,6 @@ public class AndroidBuilder {
 
     private List<File> mBootClasspathFiltered;
     private List<File> mBootClasspathAll;
-    @NonNull
-    private List<LibraryRequest> mLibraryRequests = ImmutableList.of();
 
     /**
      * Creates an AndroidBuilder.
@@ -209,10 +204,6 @@ public class AndroidBuilder {
 
     public void setSdkInfoProvider(@NonNull Supplier<SdkInfo> sdkInfoProvider) {
         mSdkInfoProvider = sdkInfoProvider;
-    }
-
-    public void setLibraryRequests(@NonNull Collection<LibraryRequest> libraryRequests) {
-        mLibraryRequests = ImmutableList.copyOf(libraryRequests);
     }
 
     /**
@@ -287,29 +278,16 @@ public class AndroidBuilder {
     }
 
     /**
-     * Helper method to get the boot classpath to be used during compilation.
-     *
-     * @param includeOptionalLibraries if true, optional libraries are included even if not
-     *                                 required by the project setup.
-     */
-    @NonNull
-    public List<File> getBootClasspath(boolean includeOptionalLibraries) {
-        if (includeOptionalLibraries) {
-            return computeFullBootClasspath();
-        }
-
-        return computeFilteredBootClasspath();
-    }
-
-    /**
      * Returns the list of additional and requested optional library jar files
      *
+     * @param libraryRequests optional libraries requested to be included in the project.
      * @return the list of files from the additional and optional libraries which appear in the
      *     filtered boot classpath
      */
-    public List<File> computeAdditionalAndRequestedOptionalLibraries() {
+    public List<File> computeAdditionalAndRequestedOptionalLibraries(
+            Collection<LibraryRequest> libraryRequests) {
         return BootClasspathBuilder.computeAdditionalAndRequestedOptionalLibraries(
-                getTargetInfo().getTarget(), mLibraryRequests, issueReporter);
+                getTargetInfo().getTarget(), ImmutableList.copyOf(libraryRequests), issueReporter);
     }
 
     /**
@@ -320,7 +298,7 @@ public class AndroidBuilder {
      *
      * @return a list of jar files that forms the filtered classpath.
      */
-    public List<File> computeFilteredBootClasspath() {
+    public List<File> computeFilteredBootClasspath(Collection<LibraryRequest> libraryRequests) {
         // computes and caches the filtered boot classpath.
         // Changes here should be applied to #computeFullClasspath()
 
@@ -331,7 +309,7 @@ public class AndroidBuilder {
             mBootClasspathFiltered =
                     BootClasspathBuilder.computeFilteredClasspath(
                             getTargetInfo().getTarget(),
-                            mLibraryRequests,
+                            ImmutableList.copyOf(libraryRequests),
                             issueReporter,
                             getSdkInfo().getAnnotationsJar());
         }
@@ -362,10 +340,15 @@ public class AndroidBuilder {
         return mBootClasspathAll;
     }
 
-    /** Helper method to get the boot classpath to be used during compilation. */
+    /**
+     * Helper method to get the boot classpath to be used during compilation.
+     *
+     * @param libraryRequests optional libraries requested to be included in the project.
+     */
     @NonNull
-    public List<String> getFilteredBootClasspathAsStrings() {
-        return computeFilteredBootClasspath()
+    public List<String> getFilteredBootClasspathAsStrings(
+            Collection<LibraryRequest> libraryRequests) {
+        return computeFilteredBootClasspath(libraryRequests)
                 .stream()
                 .map(c -> c.getAbsolutePath())
                 .collect(Collectors.toList());

@@ -397,7 +397,13 @@ public class ExtractAnnotations extends AndroidVariantTask {
 
             // Setup the boot classpath just before the task actually runs since this will
             // force the sdk to be parsed. (Same as in compileTask)
-            task.setBootClasspath(() -> androidBuilder.getFilteredBootClasspathAsStrings());
+            task.setBootClasspath(
+                    () ->
+                            androidBuilder.getFilteredBootClasspathAsStrings(
+                                    variantScope
+                                            .getGlobalScope()
+                                            .getExtension()
+                                            .getLibraryRequests()));
 
             task.lintClassPath = variantScope.getGlobalScope().getProject().getConfigurations()
                     .getByName(LintBaseTask.LINT_CLASS_PATH);

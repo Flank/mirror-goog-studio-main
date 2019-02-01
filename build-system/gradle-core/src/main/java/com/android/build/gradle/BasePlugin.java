@@ -872,7 +872,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
             return sdkHandler.initTarget(
                     extension.getCompileSdkVersion(),
                     extension.getBuildToolsRevision(),
-                    extension.getLibraryRequests(),
                     globalScope.getAndroidBuilder(),
                     SdkHandler.useCachedSdk(projectOptions));
 

@@ -2375,7 +2375,8 @@ public abstract class TaskManager {
                                         variantScope
                                                 .getGlobalScope()
                                                 .getAndroidBuilder()
-                                                .computeFilteredBootClasspath())
+                                                .computeFilteredBootClasspath(
+                                                        extension.getLibraryRequests()))
                         .setDexOptions(dexOptions)
                         .setMessageReceiver(variantScope.getGlobalScope().getMessageReceiver())
                         .setUserLevelCache(userLevelCache)

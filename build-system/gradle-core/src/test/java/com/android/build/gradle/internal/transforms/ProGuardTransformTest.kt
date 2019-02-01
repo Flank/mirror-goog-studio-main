@@ -37,7 +37,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.mockito.ArgumentMatchers.anyBoolean
+import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
 import java.io.File
 import java.nio.file.Files
@@ -306,7 +306,7 @@ class ProGuardTransformTest {
         val androidBuilder = Mockito.mock(AndroidBuilder::class.java)
         val bootClassPath = listOf(TestUtils.getPlatformFile("android.jar"))
         Mockito.`when`(androidBuilder.computeFullBootClasspath()).thenReturn(bootClassPath)
-        Mockito.`when`(androidBuilder.computeFilteredBootClasspath()).thenReturn(bootClassPath)
+        Mockito.`when`(androidBuilder.computeFilteredBootClasspath(ArgumentMatchers.anyCollection())).thenReturn(bootClassPath)
 
         val project = Mockito.mock(Project::class.java)
         val configFilesCollection = FakeConfigurableFileCollection(configFiles)

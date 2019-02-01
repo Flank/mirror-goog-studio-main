@@ -130,7 +130,6 @@ public class SdkHandler {
     public boolean initTarget(
             @NonNull String targetHash,
             @NonNull Revision buildToolRevision,
-            @NonNull Collection<LibraryRequest> usedLibraries,
             @NonNull AndroidBuilder androidBuilder,
             boolean useCachedVersion) {
         Preconditions.checkNotNull(targetHash, "android.compileSdkVersion is missing!");
@@ -209,7 +208,6 @@ public class SdkHandler {
 
         androidBuilder.setSdkInfo(sdkInfo);
         androidBuilder.setTargetInfo(targetInfo);
-        androidBuilder.setLibraryRequests(usedLibraries);
 
         logger.verbose("SDK initialized in %1$d ms", stopwatch.elapsed(TimeUnit.MILLISECONDS));
         return true;

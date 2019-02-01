@@ -325,7 +325,9 @@ public class ModelBuilder<Extension extends AndroidConfig>
         List<String> bootClasspath;
         final AndroidBuilder androidBuilder = globalScope.getAndroidBuilder();
         if (androidBuilder.getTargetInfo() != null) {
-            bootClasspath = androidBuilder.getFilteredBootClasspathAsStrings();
+            bootClasspath =
+                    androidBuilder.getFilteredBootClasspathAsStrings(
+                            globalScope.getExtension().getLibraryRequests());
         } else {
             // SDK not set up, error will be reported as a sync issue.
             bootClasspath = Collections.emptyList();

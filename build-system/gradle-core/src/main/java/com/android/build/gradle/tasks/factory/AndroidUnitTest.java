@@ -211,7 +211,10 @@ public class AndroidUnitTest extends Test implements VariantAwareTask {
                             .files(
                                     scope.getGlobalScope()
                                             .getAndroidBuilder()
-                                            .computeAdditionalAndRequestedOptionalLibraries()));
+                                            .computeAdditionalAndRequestedOptionalLibraries(
+                                                    scope.getGlobalScope()
+                                                            .getExtension()
+                                                            .getLibraryRequests())));
 
             // 6. Mockable JAR is last, to make sure you can shadow the classes with
             // dependencies.
