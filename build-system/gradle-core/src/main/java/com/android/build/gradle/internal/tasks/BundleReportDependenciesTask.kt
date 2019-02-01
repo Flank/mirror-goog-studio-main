@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.artifact.BuildableArtifact
-import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -49,7 +47,7 @@ open class BundleReportDependenciesTask :
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
-    lateinit var baseDeps: BuildableArtifact
+    lateinit var baseDeps: Provider<RegularFile>
         internal set
 
     @get:InputFiles
@@ -64,7 +62,7 @@ open class BundleReportDependenciesTask :
     @TaskAction
     fun writeFile() {
 
-        val baseAppDeps =  BufferedInputStream(FileInputStream(baseDeps.singleFile())).use {
+        val baseAppDeps =  BufferedInputStream(FileInputStream(baseDeps.get().asFile)).use {
             AppDependencies.parseDelimitedFrom(it)
         }
 
@@ -152,7 +150,7 @@ open class BundleReportDependenciesTask :
 
         override fun configure(task: BundleReportDependenciesTask) {
             super.configure(task)
-            task.baseDeps = variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT)
+            task.baseDeps = variantScope.artifacts.getFinalProduct(InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT)
             task.featureDeps = variantScope.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.METADATA_VALUES,
                 AndroidArtifacts.ArtifactScope.ALL,

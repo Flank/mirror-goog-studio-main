@@ -18,8 +18,6 @@ package com.android.build.gradle.tasks.factory;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl;
-import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.tasks.AndroidJavaCompile;
 import com.android.build.gradle.tasks.JavaCompileUtils;
 import com.android.builder.profile.ProcessProfileWriter;
@@ -62,12 +60,12 @@ public class AndroidJavaCompileTest {
         File inputFile = temporaryFolder.newFile();
         Files.write(inputFile.toPath(), "[]".getBytes("utf-8"));
         task.variantName = VARIANT_NAME;
-        task.processorListFile = new BuildableArtifactImpl(project.files(inputFile));
+
+        task.processorListFile =
+                project.getLayout().getBuildDirectory().file(inputFile.getAbsolutePath());
 
         Set<String> annotationProcessors =
-                JavaCompileUtils.readAnnotationProcessorsFromJsonFile(
-                                BuildableArtifactUtil.singleFile(task.processorListFile))
-                        .keySet();
+                JavaCompileUtils.readAnnotationProcessorsFromJsonFile(inputFile).keySet();
         JavaCompileUtils.recordAnnotationProcessorsForAnalytics(
                 annotationProcessors, project.getPath(), task.variantName);
 
@@ -83,12 +81,11 @@ public class AndroidJavaCompileTest {
         Files.write(
                 inputFile.toPath(), "{\"processor1\":false,\"processor2\":true}".getBytes("utf-8"));
         task.variantName = VARIANT_NAME;
-        task.processorListFile = new BuildableArtifactImpl(project.files(inputFile));
+        task.processorListFile =
+                project.getLayout().getBuildDirectory().file(inputFile.getAbsolutePath());
 
         Set<String> annotationProcessors =
-                JavaCompileUtils.readAnnotationProcessorsFromJsonFile(
-                                BuildableArtifactUtil.singleFile(task.processorListFile))
-                        .keySet();
+                JavaCompileUtils.readAnnotationProcessorsFromJsonFile(inputFile).keySet();
         JavaCompileUtils.recordAnnotationProcessorsForAnalytics(
                 annotationProcessors, project.getPath(), task.variantName);
 

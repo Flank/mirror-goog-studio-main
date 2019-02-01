@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.api.artifact.BuildableArtifact
-import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder.OperationType.APPEND
 import com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_GENERATED_SOURCES_PRIVATE_USE
 import com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_GENERATED_SOURCES_PUBLIC_USE
@@ -32,8 +30,11 @@ import com.android.sdklib.AndroidTargetHash
 import com.google.common.base.Joiner
 import org.gradle.api.JavaVersion
 import org.gradle.api.file.FileTree
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.PathSensitive
@@ -87,9 +88,9 @@ open class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
         BooleanOption.ENABLE_SEPARATE_ANNOTATION_PROCESSING.defaultValue
         private set
 
-    @get:InputFiles
+    @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
-    lateinit var processorListFile: BuildableArtifact
+    lateinit var processorListFile: Provider<RegularFile>
         internal set
 
     @get:Internal
@@ -118,7 +119,7 @@ open class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
         val hasKapt = this.project.pluginManager.hasPlugin(KOTLIN_KAPT_PLUGIN_ID)
 
         val annotationProcessors =
-            readAnnotationProcessorsFromJsonFile(processorListFile.singleFile())
+            readAnnotationProcessorsFromJsonFile(processorListFile.get().asFile)
         val nonIncrementalAPs =
             annotationProcessors.filter { it -> it.value == java.lang.Boolean.FALSE }
         val allAPsAreIncremental = nonIncrementalAPs.isEmpty()
@@ -283,7 +284,7 @@ open class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
                     DEFAULT_INCREMENTAL_COMPILATION
             task.separateAnnotationProcessingFlag = separateAnnotationProcessingFlag
             task.processorListFile =
-                    variantScope.artifacts.getFinalArtifactFiles(ANNOTATION_PROCESSOR_LIST)
+                    variantScope.artifacts.getFinalProduct(ANNOTATION_PROCESSOR_LIST)
             task.compileSdkVersion = globalScope.extension.compileSdkVersion
 
             // Configure properties for annotation processing, but only if it is not done by

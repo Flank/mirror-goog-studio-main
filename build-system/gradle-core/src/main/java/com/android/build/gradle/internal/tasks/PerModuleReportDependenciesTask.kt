@@ -27,29 +27,28 @@ import com.android.tools.build.libraries.metadata.ModuleDependencies
 import com.android.tools.build.libraries.metadata.LibraryDependencies
 import com.android.tools.build.libraries.metadata.Library
 import com.android.tools.build.libraries.metadata.MavenLibrary
-import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.component.ModuleComponentSelector
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.result.ComponentSelectionCause
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.TaskAction
-import java.io.File
-import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.internal.artifacts.result.DefaultResolvedDependencyResult
-import org.gradle.api.provider.Provider
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.TaskProvider
 import java.io.FileOutputStream
 import java.util.Dictionary
 import java.util.Hashtable
 import java.util.LinkedList
 import java.util.function.Supplier
+import javax.inject.Inject
 
 /**
  * Task that publishes the app dependencies proto for each module.
  */
-open class PerModuleReportDependenciesTask :
+open class PerModuleReportDependenciesTask public @Inject constructor(objectFactory: ObjectFactory) :
     AndroidVariantTask() {
 
     private lateinit var runtimeClasspath: Configuration
@@ -59,8 +58,7 @@ open class PerModuleReportDependenciesTask :
         private set
 
     @get:OutputFile
-    lateinit var dependenciesList: File
-        private set
+    val dependenciesList: RegularFileProperty = objectFactory.fileProperty()
 
     private lateinit var moduleNameSupplier: Supplier<String>
 
@@ -143,7 +141,7 @@ open class PerModuleReportDependenciesTask :
             .addModuleDependencies(moduleDependency.build())
             .build()
 
-        appDependencies.writeDelimitedTo(FileOutputStream(dependenciesList))
+        appDependencies.writeDelimitedTo(FileOutputStream(dependenciesList.get().asFile))
     }
 
 
@@ -153,22 +151,22 @@ open class PerModuleReportDependenciesTask :
         override val name: String = variantScope.getTaskName("collect", "Dependencies")
         override val type: Class<PerModuleReportDependenciesTask> = PerModuleReportDependenciesTask::class.java
 
-        private lateinit var dependenciesList : Provider<RegularFile>
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-            dependenciesList = variantScope
+        override fun handleProvider(taskProvider: TaskProvider<out PerModuleReportDependenciesTask>) {
+            super.handleProvider(taskProvider)
+
+            variantScope
                 .artifacts
-                .createArtifactFile(
+                .producesFile(
                     InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT,
                     BuildArtifactsHolder.OperationType.INITIAL,
-                            taskName,
+                    taskProvider,
+                    taskProvider.map { task -> task.dependenciesList },
                     "dependencies.pb"
                 )
         }
 
         override fun configure(task: PerModuleReportDependenciesTask) {
             super.configure(task)
-            task.dependenciesList = dependenciesList.get().asFile
             task.runtimeClasspath = variantScope.variantDependencies.runtimeClasspath
             task.runtimeClasspathArtifacts = variantScope.getArtifactCollection(
                 AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,

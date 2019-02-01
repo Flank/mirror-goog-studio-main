@@ -74,15 +74,16 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import javax.inject.Inject;
 import javax.xml.parsers.ParserConfigurationException;
 import org.gradle.api.GradleException;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.file.Directory;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaBasePlugin;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
@@ -104,7 +105,7 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
     }
 
     private DeviceProvider deviceProvider;
-    private Provider<Directory> coverageDir;
+    private final DirectoryProperty coverageDir;
     private File reportsDir;
     private File resultsDir;
     private FileCollection buddyApks;
@@ -131,8 +132,10 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
 
     @Nullable private Collection<String> installOptions;
 
-    public DeviceProviderInstrumentTestTask() {
+    @Inject
+    public DeviceProviderInstrumentTestTask(ObjectFactory objectFactory) {
         executor = new ExecutorServiceAdapter(ForkJoinPool.commonPool());
+        coverageDir = objectFactory.directoryProperty();
     }
 
     @TaskAction
@@ -148,7 +151,7 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
         File resultsOutDir = getResultsDir();
         FileUtils.cleanOutputDir(resultsOutDir);
 
-        File coverageOutDir = getCoverageDir();
+        File coverageOutDir = getCoverageDir().get().getAsFile();
         FileUtils.cleanOutputDir(coverageOutDir);
 
         // populate the TestData from the tested variant build output.
@@ -271,8 +274,8 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
     }
 
     @OutputDirectory
-    public File getCoverageDir() {
-        return coverageDir.get().getAsFile();
+    public DirectoryProperty getCoverageDir() {
+        return coverageDir;
     }
 
     @Deprecated
@@ -382,7 +385,6 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
         private final DeviceProvider deviceProvider;
         @NonNull private final AbstractTestDataImpl testData;
         @NonNull private final FileCollection testTargetManifests;
-        private Provider<Directory> coverageDir;
 
         public CreationAction(
                 @NonNull VariantScope scope,
@@ -408,33 +410,30 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
         }
 
         @Override
-        public void preConfigure(@NonNull String taskName) {
-            super.preConfigure(taskName);
-
-            if (deviceProvider instanceof ConnectedDeviceProvider) {
-                coverageDir =
-                        getVariantScope()
-                                .getArtifacts()
-                                .createDirectory(
-                                        InternalArtifactType.CODE_COVERAGE,
-                                        taskName,
-                                        deviceProvider.getName());
-            } else {
-                coverageDir =
-                        getVariantScope()
-                                .getArtifacts()
-                                .createDirectory(
-                                        InternalArtifactType.DEVICE_PROVIDER_CODE_COVERAGE,
-                                        BuildArtifactsHolder.OperationType.APPEND,
-                                        taskName,
-                                        deviceProvider.getName());
-            }
-        }
-
-        @Override
         public void handleProvider(
                 @NonNull TaskProvider<? extends DeviceProviderInstrumentTestTask> taskProvider) {
             super.handleProvider(taskProvider);
+
+            if (deviceProvider instanceof ConnectedDeviceProvider) {
+                getVariantScope()
+                        .getArtifacts()
+                        .producesDir(
+                                InternalArtifactType.CODE_COVERAGE,
+                                BuildArtifactsHolder.OperationType.INITIAL,
+                                taskProvider,
+                                taskProvider.map(DeviceProviderInstrumentTestTask::getCoverageDir),
+                                deviceProvider.getName());
+            } else {
+                getVariantScope()
+                        .getArtifacts()
+                        .producesDir(
+                                InternalArtifactType.DEVICE_PROVIDER_CODE_COVERAGE,
+                                BuildArtifactsHolder.OperationType.INITIAL,
+                                taskProvider,
+                                taskProvider.map(DeviceProviderInstrumentTestTask::getCoverageDir),
+                                deviceProvider.getName());
+            }
+
             VariantScope scope = getVariantScope();
             if (scope.getVariantData() instanceof TestVariantData) {
                 if (deviceProvider instanceof ConnectedDeviceProvider) {
@@ -568,8 +567,6 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
                         FD_REPORTS + "/" + FD_ANDROID_TESTS;
             }
             task.reportsDir = project.file(rootLocation + subFolder);
-
-            task.coverageDir = coverageDir;
 
             // The configuration is not created by the experimental plugin, so just create an empty
             // FileCollection in this case.

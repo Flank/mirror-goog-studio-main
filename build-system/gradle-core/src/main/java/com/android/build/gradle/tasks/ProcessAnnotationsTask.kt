@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.api.artifact.BuildableArtifact
-import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder.OperationType.APPEND
 import com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_GENERATED_SOURCES_PRIVATE_USE
 import com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_LIST
@@ -27,6 +25,8 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.tasks.CacheableTask
 import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.file.FileTree
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.PathSensitive
@@ -49,7 +49,7 @@ open class ProcessAnnotationsTask : JavaCompile(), VariantAwareTask {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
-    lateinit var processorListFile: BuildableArtifact
+    lateinit var processorListFile: Provider<RegularFile>
         private set
 
     @get:Internal
@@ -82,7 +82,7 @@ open class ProcessAnnotationsTask : JavaCompile(), VariantAwareTask {
         // in that case. (This decision can't be made at the task's configuration as we don't want
         // to resolve annotation processors at configuration time.)
         val annotationProcessors =
-            readAnnotationProcessorsFromJsonFile(processorListFile.singleFile())
+            readAnnotationProcessorsFromJsonFile(processorListFile.get().asFile)
         if (annotationProcessors.isEmpty()) {
             return
         }
@@ -120,7 +120,7 @@ open class ProcessAnnotationsTask : JavaCompile(), VariantAwareTask {
 
             // Configure properties that are specific to ProcessAnnotationTask
             task.processorListFile =
-                    variantScope.artifacts.getFinalArtifactFiles(ANNOTATION_PROCESSOR_LIST)
+                    variantScope.artifacts.getFinalProduct(ANNOTATION_PROCESSOR_LIST)
 
             // Configure properties for annotation processing
             task.configurePropertiesForAnnotationProcessing(variantScope)

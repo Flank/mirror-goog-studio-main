@@ -21,11 +21,11 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROCESSED_JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.ANNOTATION_PROCESSOR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
-import static com.android.build.gradle.internal.scope.BuildArtifactsHolder.OperationType.APPEND;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
@@ -45,20 +45,21 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.RegularFile;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.logging.Logging;
-import org.gradle.api.provider.Provider;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.workers.WorkerExecutor;
 
 /** Tasks to perform necessary action before a JavaCompile. */
 @CacheableTask
 public class JavaPreCompileTask extends AndroidBuilderTask {
 
-    private File processorListFile;
+    @NonNull private RegularFileProperty processorListFile;
 
     private String annotationProcessorConfigurationName;
 
@@ -73,19 +74,18 @@ public class JavaPreCompileTask extends AndroidBuilderTask {
     private final WorkerExecutorFacade workers;
 
     @Inject
-    public JavaPreCompileTask(WorkerExecutor workerExecutor) {
+    public JavaPreCompileTask(WorkerExecutor workerExecutor, ObjectFactory objectFactory) {
         workers = Workers.INSTANCE.getWorker(workerExecutor);
+        processorListFile = objectFactory.fileProperty();
     }
 
     @VisibleForTesting
     void init(
-            @NonNull File processorListFile,
             @NonNull String annotationProcessorConfigurationName,
             @NonNull ArtifactCollection annotationProcessorConfiguration,
             @NonNull ArtifactCollection compileClasspaths,
             @NonNull AnnotationProcessorOptions annotationProcessorOptions,
             boolean isTestComponent) {
-        this.processorListFile = processorListFile;
         this.annotationProcessorConfigurationName = annotationProcessorConfigurationName;
         this.annotationProcessorConfiguration = annotationProcessorConfiguration;
         this.compileClasspaths = compileClasspaths;
@@ -93,8 +93,9 @@ public class JavaPreCompileTask extends AndroidBuilderTask {
         this.isTestComponent = isTestComponent;
     }
 
+    @NonNull
     @OutputFile
-    public File getProcessorListFile() {
+    public RegularFileProperty getProcessorListFile() {
         return processorListFile;
     }
 
@@ -114,7 +115,7 @@ public class JavaPreCompileTask extends AndroidBuilderTask {
             workerExecutor.submit(
                     PreCompileRunnable.class,
                     new PreCompileParams(
-                            processorListFile,
+                            processorListFile.get().getAsFile(),
                             annotationProcessorConfigurationName,
                             toSerializable(annotationProcessorConfiguration),
                             toSerializable(compileClasspaths),
@@ -232,8 +233,6 @@ public class JavaPreCompileTask extends AndroidBuilderTask {
 
     public static class CreationAction extends VariantTaskCreationAction<JavaPreCompileTask> {
 
-        private Provider<RegularFile> apList;
-
         public CreationAction(VariantScope scope) {
             super(scope);
         }
@@ -251,16 +250,17 @@ public class JavaPreCompileTask extends AndroidBuilderTask {
         }
 
         @Override
-        public void preConfigure(@NonNull String taskName) {
-            super.preConfigure(taskName);
-            apList =
-                    getVariantScope()
-                            .getArtifacts()
-                            .createArtifactFile(
-                                    InternalArtifactType.ANNOTATION_PROCESSOR_LIST,
-                                    APPEND,
-                                    taskName,
-                                    "annotationProcessors.json");
+        public void handleProvider(
+                @NonNull TaskProvider<? extends JavaPreCompileTask> taskProvider) {
+            super.handleProvider(taskProvider);
+            getVariantScope()
+                    .getArtifacts()
+                    .producesFile(
+                            InternalArtifactType.ANNOTATION_PROCESSOR_LIST,
+                            BuildArtifactsHolder.OperationType.INITIAL,
+                            taskProvider,
+                            taskProvider.map(JavaPreCompileTask::getProcessorListFile),
+                            "annotationProcessors.json");
         }
 
         @Override
@@ -269,7 +269,6 @@ public class JavaPreCompileTask extends AndroidBuilderTask {
             VariantScope scope = getVariantScope();
 
             task.init(
-                    apList.get().getAsFile(),
                     scope.getVariantData().getType().isTestComponent()
                             ? scope.getVariantData().getType().getPrefix() + "AnnotationProcessor"
                             : "annotationProcessor",

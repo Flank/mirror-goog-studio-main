@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.google.common.truth.Truth.assertThat
-import com.android.build.api.artifact.BuildableArtifact
 import org.gradle.api.file.FileCollection
 import com.android.tools.build.libraries.metadata.AppDependencies
 import com.android.tools.build.libraries.metadata.Library
@@ -38,6 +37,8 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 import com.google.common.collect.ImmutableSet
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Provider
 
 class BundleReportDependenciesTaskTest {
 
@@ -54,7 +55,8 @@ class BundleReportDependenciesTaskTest {
     lateinit var featureDepsFiles : Set<File>
     lateinit var baseDepsFiles : Set<File>
 
-    @Mock private lateinit var baseDeps: BuildableArtifact
+    @Mock private lateinit var provider: Provider<RegularFile>
+    @Mock private lateinit var baseDeps: RegularFile
     @Mock private lateinit var featureDeps: FileCollection
 
     @Before
@@ -68,8 +70,8 @@ class BundleReportDependenciesTaskTest {
         featureDepsFiles = ImmutableSet.of(feature1File, feature2File)
         baseDepsFiles = ImmutableSet.of(baseDepsFile)
 
-        Mockito.`when`(baseDeps.files).thenReturn(baseDepsFiles)
-        Mockito.`when`(baseDeps.iterator()).thenReturn(baseDepsFiles.iterator())
+        Mockito.`when`(provider.get()).thenReturn(baseDeps)
+        Mockito.`when`(baseDeps.asFile).thenReturn(baseDepsFile)
         Mockito.`when`(featureDeps.files).thenReturn(featureDepsFiles)
 
         val testDir = temporaryFolder.newFolder()
@@ -188,7 +190,7 @@ class BundleReportDependenciesTaskTest {
                     .build())
             .build()
 
-        task.baseDeps = baseDeps
+        task.baseDeps = provider
         task.featureDeps = featureDeps
 
         task.writeFile()

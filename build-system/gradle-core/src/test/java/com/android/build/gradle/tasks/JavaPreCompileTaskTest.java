@@ -56,7 +56,6 @@ public class JavaPreCompileTaskTest {
     private Configuration processorConfiguration;
     private Configuration compileConfiguration;
     private JavaPreCompileTask task;
-    private File outputFile;
 
     @BeforeClass
     public static void classSetUp() throws IOException {
@@ -88,18 +87,17 @@ public class JavaPreCompileTaskTest {
     @Before
     public void setUp() throws IOException {
         File testDir = temporaryFolder.newFolder();
-        outputFile = temporaryFolder.newFile();
         project = ProjectBuilder.builder().withProjectDir(testDir).build();
         task = project.getTasks().create("test", JavaPreCompileTask.class);
         processorConfiguration = project.getConfigurations().create("annotationProcessor");
         compileConfiguration = project.getConfigurations().create("api");
+        task.getProcessorListFile().set(temporaryFolder.newFile());
     }
 
     @Test
     public void checkSuccessForNormalJar() throws IOException {
         project.getDependencies().add("api", project.files(jar, nonJarFile, directory));
         task.init(
-                outputFile,
                 "annotationProcessor",
                 processorConfiguration.getIncoming().getArtifacts(),
                 compileConfiguration.getIncoming().getArtifacts(),
@@ -124,7 +122,6 @@ public class JavaPreCompileTaskTest {
                         project.files(
                                 jarWithAnnotationProcessor, directoryWithAnnotationProcessor));
         task.init(
-                outputFile,
                 "annotationProcessor",
                 processorConfiguration.getIncoming().getArtifacts(),
                 compileConfiguration.getIncoming().getArtifacts(),
@@ -147,7 +144,6 @@ public class JavaPreCompileTaskTest {
                         project.files(
                                 jarWithAnnotationProcessor, directoryWithAnnotationProcessor));
         task.init(
-                outputFile,
                 "annotationProcessor",
                 processorConfiguration.getIncoming().getArtifacts(),
                 compileConfiguration.getIncoming().getArtifacts(),
@@ -168,7 +164,6 @@ public class JavaPreCompileTaskTest {
         AnnotationProcessorOptions options = new AnnotationProcessorOptions();
         options.setIncludeCompileClasspath(false);
         task.init(
-                outputFile,
                 "annotationProcessor",
                 processorConfiguration.getIncoming().getArtifacts(),
                 compileConfiguration.getIncoming().getArtifacts(),
@@ -186,7 +181,6 @@ public class JavaPreCompileTaskTest {
         AnnotationProcessorOptions options = new AnnotationProcessorOptions();
         options.setIncludeCompileClasspath(true);
         task.init(
-                outputFile,
                 "annotationProcessor",
                 processorConfiguration.getIncoming().getArtifacts(),
                 compileConfiguration.getIncoming().getArtifacts(),
@@ -204,7 +198,6 @@ public class JavaPreCompileTaskTest {
         project.getDependencies()
                 .add("annotationProcessor", project.files(jarWithAnnotationProcessor));
         task.init(
-                outputFile,
                 "annotationProcessor",
                 processorConfiguration.getIncoming().getArtifacts(),
                 compileConfiguration.getIncoming().getArtifacts(),
@@ -220,7 +213,6 @@ public class JavaPreCompileTaskTest {
         AnnotationProcessorOptions options = new AnnotationProcessorOptions();
         options.getClassNames().add(testProcessorName);
         task.init(
-                outputFile,
                 "annotationProcessor",
                 processorConfiguration.getIncoming().getArtifacts(),
                 compileConfiguration.getIncoming().getArtifacts(),
@@ -239,7 +231,6 @@ public class JavaPreCompileTaskTest {
         options.getClassNames().add(testProcessorName);
 
         task.init(
-                outputFile,
                 "annotationProcessor",
                 processorConfiguration.getIncoming().getArtifacts(),
                 compileConfiguration.getIncoming().getArtifacts(),
@@ -260,7 +251,6 @@ public class JavaPreCompileTaskTest {
         AnnotationProcessorOptions options = new AnnotationProcessorOptions();
 
         task.init(
-                outputFile,
                 "annotationProcessor",
                 processorConfiguration.getIncoming().getArtifacts(),
                 compileConfiguration.getIncoming().getArtifacts(),
@@ -276,6 +266,7 @@ public class JavaPreCompileTaskTest {
 
     @NonNull
     private Set<String> getProcessorNames() {
+        File outputFile = task.getProcessorListFile().get().getAsFile();
         assertThat(outputFile).isFile();
         return JavaCompileUtils.readAnnotationProcessorsFromJsonFile(outputFile).keySet();
     }

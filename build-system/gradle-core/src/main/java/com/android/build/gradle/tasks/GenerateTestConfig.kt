@@ -20,6 +20,7 @@ import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.dsl.TestOptions
 import com.android.build.gradle.internal.scope.ApkData
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_FOR_LOCAL_TEST
@@ -34,6 +35,8 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -44,6 +47,7 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.IOException
@@ -61,7 +65,7 @@ import javax.inject.Inject
  * See DSL documentation at [TestOptions.UnitTestOptions.isIncludeAndroidResources].
  */
 @CacheableTask
-open class GenerateTestConfig @Inject constructor(workerExecutor: WorkerExecutor) :
+open class GenerateTestConfig @Inject constructor(workerExecutor: WorkerExecutor, objectFactory: ObjectFactory) :
     AndroidVariantTask() {
 
     // This task has 2 types of inputs:
@@ -80,8 +84,7 @@ open class GenerateTestConfig @Inject constructor(workerExecutor: WorkerExecutor
     }
 
     @get:OutputDirectory
-    lateinit var outputDirectory: File
-        private set
+    val outputDirectory: DirectoryProperty = objectFactory.directoryProperty()
 
     private val workers: WorkerExecutorFacade = Workers.getWorker(workerExecutor)
 
@@ -89,7 +92,7 @@ open class GenerateTestConfig @Inject constructor(workerExecutor: WorkerExecutor
     fun generateTestConfig() {
         workers.submit(
             GenerateTestConfigRunnable::class.java,
-            GenerateTestConfigParams(testConfigProperties, outputDirectory)
+            GenerateTestConfigParams(testConfigProperties, outputDirectory.get().asFile)
         )
         workers.close()
     }
@@ -110,31 +113,28 @@ open class GenerateTestConfig @Inject constructor(workerExecutor: WorkerExecutor
     class CreationAction(scope: VariantScope) :
         VariantTaskCreationAction<GenerateTestConfig>(scope) {
 
-        private lateinit var outputDirectory: File
-
         override val name: String
             get() = variantScope.getTaskName("generate", "Config")
 
         override val type: Class<GenerateTestConfig>
             get() = GenerateTestConfig::class.java
 
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
+        override fun handleProvider(taskProvider: TaskProvider<out GenerateTestConfig>) {
+            super.handleProvider(taskProvider)
 
-            outputDirectory = variantScope
-                .artifacts
-                .appendArtifact(
+            variantScope.artifacts
+                .producesDir(
                     InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY,
-                    taskName,
-                    "out"
-                )
+                    BuildArtifactsHolder.OperationType.INITIAL,
+                    taskProvider,
+                    taskProvider.map { task -> task.outputDirectory },
+                    "out")
         }
 
         override fun configure(task: GenerateTestConfig) {
             super.configure(task)
 
             task.testConfigInputs = TestConfigInputs(variantScope)
-            task.outputDirectory = outputDirectory
         }
     }
 

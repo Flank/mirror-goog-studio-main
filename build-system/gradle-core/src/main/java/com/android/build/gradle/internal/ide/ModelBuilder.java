@@ -714,12 +714,12 @@ public class ModelBuilder<Extension extends AndroidConfig>
         Set<File> additionalTestClasses = new HashSet<>();
         additionalTestClasses.addAll(variantData.getAllPreJavacGeneratedBytecode().getFiles());
         additionalTestClasses.addAll(variantData.getAllPostJavacGeneratedBytecode().getFiles());
-        if (scope.getArtifacts().hasArtifact(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY)) {
+        if (scope.getArtifacts().hasFinalProduct(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY)) {
             additionalTestClasses.add(
-                    BuildableArtifactUtil.singleFile(
-                            scope.getArtifacts()
-                                    .getFinalArtifactFiles(
-                                            InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY)));
+                    scope.getArtifacts()
+                            .getFinalProduct(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY)
+                            .get()
+                            .getAsFile());
         }
         // The separately compile R class, if applicable.
         VariantScope testedScope = Objects.requireNonNull(scope.getTestedVariantData()).getScope();
