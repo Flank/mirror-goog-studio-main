@@ -25,8 +25,7 @@ import com.android.build.gradle.integration.common.truth.TaskStateList.Execution
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.UP_TO_DATE
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
-import com.google.common.collect.Sets
-import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Expect
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -56,11 +55,13 @@ class LibraryCacheabilityTest {
                     ":app:clean",
                     ":lib:clean",
                     ":lib:compileReleaseSources",
+                    ":lib:generateReleaseAssets",
                     ":lib:generateReleaseResources",
                     ":lib:preBuild",
                     ":lib:preReleaseBuild"
                 ),
                 FROM_CACHE to setOf(
+                    ":lib:compileReleaseShaders",
                     ":lib:compileReleaseJavaWithJavac",
                     ":lib:extractReleaseAnnotations",
                     ":lib:generateReleaseBuildConfig",
@@ -76,50 +77,30 @@ class LibraryCacheabilityTest {
                     ":lib:verifyReleaseResources",
                     ":lib:mergeReleaseJavaResource"
                 ),
+                /*
+                 * Tasks that should be cacheable but are not yet cacheable.
+                 *
+                 * If you add a task to this list, remember to file a bug for it.
+                 */
                 DID_WORK to setOf(
-                    ":lib:bundleReleaseAar",
-                    ":lib:checkReleaseManifest",
-                    ":lib:compileReleaseShaders",
-                    ":lib:mergeReleaseConsumerProguardFiles",
-                    ":lib:prepareLintJar",
-                    ":lib:transformClassesAndResourcesWithSyncLibJarsForRelease",
-                    ":lib:transformNativeLibsWithMergeJniLibsForRelease",
-                    ":lib:transformNativeLibsWithStripDebugSymbolForRelease",
-                    ":lib:transformNativeLibsWithSyncJniLibsForRelease"
+                    ":lib:bundleReleaseAar" /*Bug 121275773 */,
+                    ":lib:checkReleaseManifest" /* Bug 74595857 */,
+                    ":lib:mergeReleaseConsumerProguardFiles" /* Bug 121276920 */,
+                    ":lib:prepareLintJar" /* Bug 120413672 */,
+                    ":lib:transformClassesAndResourcesWithSyncLibJarsForRelease" /* Bug 121275815 */,
+                    ":lib:transformNativeLibsWithMergeJniLibsForRelease" /* Bug 74595223 */,
+                    ":lib:transformNativeLibsWithStripDebugSymbolForRelease" /* Bug 120414535 */,
+                    ":lib:transformNativeLibsWithSyncJniLibsForRelease" /* Bug 121275531 */
                 ),
                 SKIPPED to setOf(
                     ":lib:packageReleaseRenderscript",
                     ":lib:assembleRelease",
                     ":lib:compileReleaseAidl",
                     ":lib:compileReleaseRenderscript",
-                    ":lib:generateReleaseAssets",
                     ":lib:processReleaseJavaRes"
                 ),
                 FAILED to setOf()
             )
-
-        /**
-         * Tasks that should be cacheable but are not yet cacheable.
-         *
-         * If you add a task to this list, remember to file a bug for it. The master bug for this
-         * list is Bug 69668176.
-         */
-        private val NOT_YET_CACHEABLE = setOf(
-            ":lib:bundleReleaseAar" /*Bug 121275773 */,
-            ":lib:checkReleaseManifest" /* Bug 74595857 */,
-            ":lib:compileReleaseShaders" /* Bug 120413401 */,
-            ":lib:mergeReleaseConsumerProguardFiles" /* Bug 121276920 */,
-            ":lib:prepareLintJar" /* Bug 120413672 */,
-            ":lib:transformClassesAndResourcesWithSyncLibJarsForRelease" /* Bug 121275815 */,
-            ":lib:transformNativeLibsWithMergeJniLibsForRelease" /* Bug 74595223 */,
-            ":lib:transformNativeLibsWithStripDebugSymbolForRelease" /* Bug 120414535 */,
-            ":lib:transformNativeLibsWithSyncJniLibsForRelease" /* Bug 121275531 */
-        )
-
-        /**
-         * Tasks that are never cacheable.
-         */
-        private val NEVER_CACHEABLE = setOf<String>()
     }
 
     @get:Rule
@@ -137,6 +118,9 @@ class LibraryCacheabilityTest {
         .withName("projectCopy2")
         .dontOutputLogOnFailure()
         .create()
+
+    @get:Rule
+    val expect: Expect = Expect.create()
 
     @Test
     fun testRelocatability() {
@@ -164,19 +148,21 @@ class LibraryCacheabilityTest {
         }
 
         // Check that the tasks' states are as expected
-        assertThat(result.upToDateTasks)
+        expect.that(result.upToDateTasks)
+            .named("UpToDate Tasks")
             .containsExactlyElementsIn(EXPECTED_TASK_STATES[UP_TO_DATE]!!)
-        assertThat(result.fromCacheTasks)
+        expect.that(result.fromCacheTasks)
+            .named("FromCache Tasks")
             .containsExactlyElementsIn(EXPECTED_TASK_STATES[FROM_CACHE]!!)
-        assertThat(result.didWorkTasks).containsExactlyElementsIn(expectedDidWorkTasks)
-        assertThat(result.skippedTasks).containsExactlyElementsIn(EXPECTED_TASK_STATES[SKIPPED]!!)
-        assertThat(result.failedTasks).containsExactlyElementsIn(EXPECTED_TASK_STATES[FAILED]!!)
-
-        // Sanity-check that all the tasks that did work (were not cacheable) have been looked at
-        // and categorized into either NOT_YET_CACHEABLE or NEVER_CACHEABLE.
-        assertThat(EXPECTED_TASK_STATES[DID_WORK]).containsExactlyElementsIn(
-            Sets.union(NOT_YET_CACHEABLE, NEVER_CACHEABLE)
-        )
+        expect.that(result.didWorkTasks)
+            .named("DidWork Tasks")
+            .containsExactlyElementsIn(expectedDidWorkTasks)
+        expect.that(result.skippedTasks)
+            .named("Skipped Tasks")
+            .containsExactlyElementsIn(EXPECTED_TASK_STATES[SKIPPED]!!)
+        expect.that(result.failedTasks)
+            .named("Failed Tasks")
+            .containsExactlyElementsIn(EXPECTED_TASK_STATES[FAILED]!!)
 
         // Clean up the cache
         FileUtils.deleteRecursivelyIfExists(buildCacheDir)

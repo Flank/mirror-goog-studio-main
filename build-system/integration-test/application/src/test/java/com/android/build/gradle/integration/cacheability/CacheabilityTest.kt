@@ -57,12 +57,14 @@ class CacheabilityTest {
                     ":app:clean",
                     ":app:preBuild",
                     ":app:generateDebugResources",
+                    ":app:generateDebugAssets",
                     ":app:compileDebugSources",
                     ":app:preDebugUnitTestBuild"
                 ),
                 FROM_CACHE to setOf(
                     ":app:preDebugBuild",
                     ":app:generateDebugBuildConfig",
+                    ":app:compileDebugShaders",
                     ":app:javaPreCompileDebug",
                     ":app:generateDebugResValues",
                     ":app:mergeDebugResources",
@@ -92,7 +94,6 @@ class CacheabilityTest {
                  */
                 DID_WORK to setOf(
                     ":app:checkDebugManifest" /* Bug 74595857 */,
-                    ":app:compileDebugShaders" /* Bug 120413401 */,
                     ":app:transformClassesWithDexBuilderForDebug" /* Bug 74595921 */,
                     ":app:mergeDexDebug" /* Bug 120413559 */,
                     ":app:transformNativeLibsWithMergeJniLibsForDebug" /* Bug 74595223 */,
@@ -102,7 +103,6 @@ class CacheabilityTest {
                 SKIPPED to setOf(
                     ":app:compileDebugAidl",
                     ":app:compileDebugRenderscript",
-                    ":app:generateDebugAssets",
                     ":app:processDebugJavaRes",
                     ":app:assembleDebug",
                     ":app:processDebugUnitTestJavaRes"

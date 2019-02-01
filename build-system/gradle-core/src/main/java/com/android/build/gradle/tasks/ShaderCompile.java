@@ -81,6 +81,7 @@ public class ShaderCompile extends AndroidBuilderTask {
     private Provider<Directory> sourceDir;
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public Provider<Directory> getSourceDir() {
         return sourceDir;
     }
