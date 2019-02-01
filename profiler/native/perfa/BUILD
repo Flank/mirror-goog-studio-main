@@ -1,18 +1,64 @@
 load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS", "android_cc_binary")
 
+# Common helper used by both perfa_lib and transport agent.
+cc_library(
+    name = "jvmti_helper",
+    srcs = ["jvmti_helper.cc"],
+    hdrs = [
+        "jvmti_helper.h",
+        "scoped_local_ref.h",
+    ],
+    copts = ANDROID_COPTS + [
+        "-Itools/base/transport",
+    ],
+    tags = [
+        "no_windows",
+    ],
+    deps = [
+        "//prebuilts/studio/jdk:jni_headers",
+        "//tools/base/transport/utils",
+    ],
+)
+
+# Profiler-specific code inside Transport JVMTI agent.
+cc_library(
+    name = "perfa_lib",
+    srcs = [
+        "jni_function_table.cc",
+        "memory/memory_tracking_env.cc",
+        "perfa.cc",
+    ],
+    hdrs = [
+        "jni_function_table.h",
+        "memory/memory_tracking_env.h",
+        "memory/stats.h",
+        "perfa.h",
+    ] + glob(["transform/*.h"]),
+    copts = ANDROID_COPTS + [
+        "-Itools/base/profiler/native",
+        "-Itools/base/transport",
+        "-I$(GENDIR)/tools/base/transport",
+    ],
+    tags = [
+        "no_windows",
+    ],
+    deps = [
+        ":jvmti_helper",
+        "//external:slicer",
+        "//prebuilts/studio/jdk:jni_headers",
+        "//tools/base/profiler/native/agent",
+        "//tools/base/transport/proto:cc_proto",
+        "//tools/base/transport/utils",
+    ],
+)
+
+# Transport pipeline JVMTI agent.
+# TODO: move to transport/ directory.
 cc_binary(
     name = "libperfa.so",
     srcs = [
-        "jni_function_table.cc",
-        "jni_function_table.h",
-        "jvmti_helper.cc",
-        "jvmti_helper.h",
-        "memory/memory_tracking_env.cc",
-        "memory/memory_tracking_env.h",
-        "memory/stats.h",
-        "perfa.cc",
-        "scoped_local_ref.h",
-    ] + glob(["transform/*.h"]),
+        "transport_agent.cc",
+    ],
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",
         "-Itools/base/transport",
@@ -27,7 +73,8 @@ cc_binary(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "//external:slicer",
+        ":jvmti_helper",
+        ":perfa_lib",
         "//prebuilts/studio/jdk:jni_headers",
         "//tools/base/dynamic-layout-inspector:agent_command",
         "//tools/base/dynamic-layout-inspector:jni",

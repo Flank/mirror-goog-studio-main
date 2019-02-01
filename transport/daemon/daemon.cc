@@ -50,10 +50,11 @@ namespace {
 
 // Connector is a program that inherits (since it is invoked by execl()) a
 // client socket already connected to the daemon and passes the socket to the
-// agent. This is technically an implementation detail of perfd due to Android's
-// security restriction. Therefore, we frame the functionality into "perfd
-// -connect". However, in the point of view of process relationship, we use
-// connector as the process name (not binary name) for the ease of description.
+// agent. This is technically an implementation detail of daemon due to
+// Android's security restriction. Therefore, we frame the functionality into
+// "daemon -connect". However, in the point of view of process relationship, we
+// use connector as the process name (not binary name) for the ease of
+// description.
 const char* const kConnectorFileName = "transport";
 // On-device path of the connector program relative to an app's data folder.
 const char* const kConnectorRelativePath = "./transport";
@@ -73,7 +74,7 @@ void DeleteFileFromPackageFolder(const string& package_name,
   }
 }
 
-// Copy file executable from this process's folder (perfd's folder) to
+// Copy file executable from this process's folder (daemon's folder) to
 // package's data folder.
 void CopyFileToPackageFolder(const string& package_name,
                              const string& file_name) {
@@ -94,7 +95,7 @@ void CopyFileToPackageFolder(const string& package_name,
 }
 
 // Use execl() and run-as to run connector which will establish the
-// communication between perfd and the agent.
+// communication between daemon and the agent.
 //
 // By using execl(), the client-side socket that's connected to daemon can be
 // used by connector.
@@ -121,7 +122,7 @@ void RunConnector(int app_pid, const string& package_name,
   std::ostringstream connect_arg;
   connect_arg << "--" << kConnectCmdLineArg << "=" << app_pid;
   // Pass the fd as command line argument to connector.
-  connect_arg << ":" << kPerfdConnectRequest << ":" << fd;
+  connect_arg << ":" << kDaemonConnectRequest << ":" << fd;
 
   int return_value =
       execl(kRunAsExecutable, kRunAsExecutable, package_name.c_str(),
@@ -225,7 +226,7 @@ bool Daemon::TryAttachAppAgent(int32_t app_pid, const std::string& app_name,
   // to send messages to perfa's Unix socket server.
   CopyFileToPackageFolder(package_name, kConnectorFileName);
   // Only attach agent if one is not detected. Note that an agent can already
-  // exist if we have profiled the same app before, and either Studio/perfd
+  // exist if we have profiled the same app before, and either Studio/daemon
   // has restarted and has lost any knowledge about such agent.
   if (!IsAppAgentAlive(app_pid, package_name)) {
     RunAgent(app_name, package_name, config_->GetConfigFilePath(),
@@ -234,7 +235,7 @@ bool Daemon::TryAttachAppAgent(int32_t app_pid, const std::string& app_name,
 
   // Only reconnect to perfa if an existing connection has not been detected.
   // This can be identified by whether perfa has a valid grpc channel to send
-  // this perfd instance the heartbeats.
+  // this daemon instance the heartbeats.
   if (!CheckAppHeartBeat(app_pid)) {
     int fork_pid = fork();
     if (fork_pid == -1) {

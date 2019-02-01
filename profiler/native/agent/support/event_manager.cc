@@ -40,7 +40,7 @@ EventManager& EventManager::Instance() {
 }
 
 EventManager::EventManager() {
-  Agent::Instance().AddPerfdStatusChangedCallback(std::bind(
+  Agent::Instance().AddDaemonStatusChangedCallback(std::bind(
       &profiler::EventManager::PerfdStateChanged, this, std::placeholders::_1));
 }
 

@@ -48,7 +48,7 @@ bool ConnectAndSendDataToPerfa(const std::string& connect_arg) {
   int retry_count = 0;
   if (control.compare(profiler::kHeartBeatRequest) == 0) {
     // Send heartbeat. No additional parsing needed.
-  } else if (control.compare(profiler::kPerfdConnectRequest) == 0) {
+  } else if (control.compare(profiler::kDaemonConnectRequest) == 0) {
     // Connect request. Parse the file descriptor as well.
     // connect_arg[delimiter_index] is ':'
     // connect_arg[delimiter_index + 1] is 'C'

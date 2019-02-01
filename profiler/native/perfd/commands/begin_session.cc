@@ -15,13 +15,17 @@
  */
 #include "perfd/commands/begin_session.h"
 
+#include <unistd.h>
 #include <string>
+
 #include "perfd/sessions/sessions_manager.h"
 #include "proto/common.pb.h"
+#include "utils/log.h"
 #include "utils/process_manager.h"
 
 using grpc::Status;
 using grpc::StatusCode;
+using profiler::proto::AgentData;
 using profiler::proto::Event;
 using std::string;
 
@@ -41,15 +45,41 @@ Status BeginSession::ExecuteOn(Daemon* daemon) {
   auto session = SessionsManager::Instance()->GetLastSession();
   session->StartSamplers();
   if (data_.jvmti_config().attach_agent()) {
-    bool attachable = daemon->TryAttachAppAgent(
-        pid, app_name, data_.jvmti_config().agent_lib_file_name());
-    if (!attachable) {
-      Event event;
-      event.set_pid(pid);
-      event.set_kind(Event::AGENT);
-      auto* status = event.mutable_agent_data();
-      status->set_status(proto::AgentData::UNATTACHABLE);
-      daemon->buffer()->Add(event);
+    switch (daemon->GetAgentStatus(pid)) {
+      case AgentData::UNSPECIFIED:
+        // Agent has not been attached yet.
+        if (daemon->TryAttachAppAgent(
+                pid, app_name, data_.jvmti_config().agent_lib_file_name())) {
+          // Wait for agent to be attached so the command can be forwarded to
+          // agent.
+          int32_t count = 0;
+          while (count < kAgentStatusRetries &&
+                 daemon->GetAgentStatus(pid) != AgentData::ATTACHED) {
+            usleep(kAgentStatusRateUs);
+            ++count;
+          }
+          if (count == kAgentStatusRetries) {
+            Log::W("[BeginSession] Agent not yet attached.");
+          }
+        } else {
+          // Agent is unattachable.
+          Event event;
+          event.set_pid(pid);
+          event.set_kind(Event::AGENT);
+          auto* status = event.mutable_agent_data();
+          status->set_status(proto::AgentData::UNATTACHABLE);
+          daemon->buffer()->Add(event);
+        }
+        break;
+      case AgentData::ATTACHED:
+        // Agent is already attached. It will handle the command to initialize
+        // profilers if not yet.
+        break;
+      case AgentData::UNATTACHABLE:
+        // Agent is unattachable. Abort.
+        break;
+      default:
+        break;
     }
   }
 

@@ -35,6 +35,10 @@ class DeviceInfo {
   static const bool is_user_build() { return Instance()->is_user_build_; }
   static const bool is_emulator() { return Instance()->is_emulator_; }
   static const int feature_level() { return Instance()->feature_level_; }
+  static const int O = 26;
+  static const int O_MR1 = 27;
+  static const int P = 28;
+  static const int Q = 29;
 
  private:
   DeviceInfo();

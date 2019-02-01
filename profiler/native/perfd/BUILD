@@ -40,6 +40,14 @@ cc_library(
 )
 
 cc_library(
+    name = "perfd_commands",
+    hdrs = [
+        "commands/begin_session.h",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
     name = "perfd",
     srcs = [
         "commands/begin_session.cc",

@@ -29,15 +29,15 @@ const char* const kAgentSocketName = "@AndroidStudioTransportAgent";
 // points to a profiler::proto::AgentConfig file.
 const char* const kConfigFileDefaultPath = "/data/local/tmp/perfd/agent.config";
 
-// The command line argument indicating that perfd is establishing communication
-// channel with the agent through Unix abstract socket.
+// The command line argument indicating that daemon is establishing
+// communication channel with the agent through Unix abstract socket.
 const char* const kConnectCmdLineArg = "connect";
 
 // Control messages that are sent by Perfd to Perfa via unix socket.
 // Also see profiler::ConnectAndSendDataToPerfa for more details on how each
 // message is used.
 const char* const kHeartBeatRequest = "H";
-const char* const kPerfdConnectRequest = "C";
+const char* const kDaemonConnectRequest = "C";
 
 // Default timeout used for grpc calls in which the the grpc target can change.
 // In those cases, instead of having the grpc requests block and retry aimlessly

@@ -34,7 +34,7 @@ namespace profiler {
 // |kHeartBeatRequest| - this is a simple ping ('H') to check whether
 // the agent is alive. If so, the send would simply return success. No ":{DATA}"
 // in this case.
-// |kPerfdConnectRequest| - A message formatted as "C:%d", where 'C' signifies
+// |kDaemonConnectRequest| - A message formatted as "C:%d", where 'C' signifies
 // that this is a connect request, and the integer is the {DATA} representing
 // the file descriptor of the client socket which the agent can use to
 // communicate with the perfd grpc server.

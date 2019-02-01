@@ -108,8 +108,10 @@ public class GrpcUtils {
                                         .build())
                         .build());
         // Block until we can verify the agent was fully attached, which takes a while.
-        assertThat(myMockApp.waitForInput("Perfa connected to Perfd.")).isTrue();
-        return beginSession(pid);
+        assertThat(myMockApp.waitForInput("Transport agent connected to daemon.")).isTrue();
+        Session session = beginSession(pid);
+        assertThat(myMockApp.waitForInput("Profiler initialization complete on agent.")).isTrue();
+        return session;
     }
 
     /** Ends the profiler session for the specified sessionId. */

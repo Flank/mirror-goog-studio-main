@@ -33,10 +33,10 @@
 #include "utils/thread_name.h"
 
 namespace {
-// If the agent is disconnected from perfd, grpc requests will begin backing up.
-// Given that downloading a 1MB image would send 1000 1K chunk messages (plus
-// general network event messages), it seems reasonable to limit our queue to
-// something one or two magnitudes above that, to be safe.
+// If the agent is disconnected from daemon, grpc requests will begin backing
+// up. Given that downloading a 1MB image would send 1000 1K chunk messages
+// (plus general network event messages), it seems reasonable to limit our queue
+// to something one or two magnitudes above that, to be safe.
 const int32_t kMaxBackgroundTasks = 100000;  // Worst case: ~100MB in memory
 }  // namespace
 
@@ -59,21 +59,25 @@ Agent& Agent::Instance(const Config* config) {
 
 Agent::Agent(const Config& config)
     : agent_config_(config.GetAgentConfig()),
-      memory_component_(nullptr),  // set in ConnectToPerfd()
       background_queue_("Studio:Agent", kMaxBackgroundTasks),
       can_grpc_target_change_(false),
-      grpc_target_initialized_(false) {
-  if (profiler::DeviceInfo::feature_level() >= 26 &&
-      agent_config_.socket_type() == proto::ABSTRACT_SOCKET) {
-    // For O and post-O devices, we used an existing socket of which the file
-    // descriptor will be provided into kAgentSocketName. This is provided via
-    // socket_thread_ so we don't setup here.
+      grpc_target_initialized_(false),
+      memory_component_(nullptr),  // set in ConnectToDaemon()
+      profiler_initialized_(false) {
+  if (agent_config_.socket_type() == proto::ABSTRACT_SOCKET) {
+    // We use an existing socket of which the file descriptor will be provided
+    // into kAgentSocketName. This is provided via socket_thread_ so we don't
+    // setup here.
     can_grpc_target_change_ = true;
     socket_thread_ = std::thread(&Agent::RunSocketThread, this);
   } else {
-    // Pre-O, we don't need to start the socket thread, as the agent
-    // communicates to perfd via a fixed port.
-    ConnectToPerfd(agent_config_.service_address());
+    // Otherwise the agent communicates to daemon via a fixed port.
+    ConnectToDaemon(agent_config_.service_address());
+    // In Pre-O, only profilers can attach agent so we can initialize profilers
+    // now.
+    if (profiler::DeviceInfo::feature_level() < DeviceInfo::O) {
+      InitializeProfilers();
+    }
     StartHeartbeat();
   }
 
@@ -88,6 +92,21 @@ void Agent::StartHeartbeat() {
   }
   heartbeat_thread_ = std::thread(&Agent::RunHeartbeatThread, this);
 }
+
+void Agent::InitializeProfilers() {
+  AddDaemonConnectedCallback([this] {
+    std::lock_guard<std::mutex> profiler_guard(profiler_mutex_);
+    profiler_initialized_ = true;
+    if (memory_component_ == nullptr) {
+      memory_component_ =
+          new MemoryComponent(&background_queue_, can_grpc_target_change_);
+    }
+    memory_component_->Connect(channel_);
+    profiler_cv_.notify_all();
+  });
+}
+
+bool Agent::IsProfilerInitalized() { return profiler_initialized_; }
 
 void Agent::SubmitAgentTasks(const std::vector<AgentServiceTask>& tasks) {
   background_queue_.EnqueueTask([this, tasks] {
@@ -229,32 +248,32 @@ proto::InternalNetworkService::Stub& Agent::network_stub() {
   return *(network_stub_.get());
 }
 
-MemoryComponent& Agent::memory_component() {
-  std::unique_lock<std::mutex> lock(connect_mutex_);
-  while (!grpc_target_initialized_ || memory_component_ == nullptr) {
-    connect_cv_.wait(lock);
+MemoryComponent& Agent::wait_and_get_memory_component() {
+  std::unique_lock<std::mutex> lock(profiler_mutex_);
+  while (memory_component_ == nullptr) {
+    profiler_cv_.wait(lock);
   }
   return *memory_component_;
 }
 
-void Agent::AddPerfdStatusChangedCallback(PerfdStatusChanged callback) {
+void Agent::AddDaemonStatusChangedCallback(DaemonStatusChanged callback) {
   lock_guard<std::mutex> guard(callback_mutex_);
-  perfd_status_changed_callbacks_.push_back(callback);
+  daemon_status_changed_callbacks_.push_back(callback);
 }
 
-void Agent::AddPerfdConnectedCallback(std::function<void()> callback) {
+void Agent::AddDaemonConnectedCallback(std::function<void()> callback) {
   lock_guard<std::mutex> connect_guard(connect_mutex_);
   if (grpc_target_initialized_) {
     background_queue_.EnqueueTask([callback] { callback(); });
   }
-  lock_guard<std::mutex> perfd_connected_guard(perfd_connected_mutex_);
-  perfd_connected_callbacks_.push_back(callback);
+  lock_guard<std::mutex> daemon_connected_guard(daemon_connected_mutex_);
+  daemon_connected_callbacks_.push_back(callback);
 }
 
 void Agent::RunHeartbeatThread() {
   SetThreadName("Studio:Heartbeat");
   Stopwatch stopwatch;
-  bool was_perfd_alive = false;
+  bool was_daemon_alive = false;
   while (true) {
     int64_t start_ns = stopwatch.GetElapsed();
     // TODO: handle erroneous status
@@ -262,7 +281,7 @@ void Agent::RunHeartbeatThread() {
     grpc::ClientContext context;
 
     // Set a deadline on the context, so we can get a proper status code if
-    // perfd is not connected.
+    // daemon is not connected.
     std::chrono::nanoseconds offset(kHeartBeatIntervalNs * 2);
     std::chrono::system_clock::time_point deadline =
         std::chrono::system_clock::now();
@@ -281,19 +300,19 @@ void Agent::RunHeartbeatThread() {
         agent_stub().HeartBeat(&context, request, &response);
 
     int64_t elapsed_ns = stopwatch.GetElapsed() - start_ns;
-    // Use status to determine if perfd is alive.
-    bool is_perfd_alive = status.ok();
+    // Use status to determine if daemon is alive.
+    bool is_daemon_alive = status.ok();
     if (kHeartBeatIntervalNs > elapsed_ns) {
       int64_t sleep_us = Clock::ns_to_us(kHeartBeatIntervalNs - elapsed_ns);
       usleep(static_cast<uint64_t>(sleep_us));
     }
 
-    if (is_perfd_alive != was_perfd_alive) {
+    if (is_daemon_alive != was_daemon_alive) {
       lock_guard<std::mutex> guard(callback_mutex_);
-      for (auto callback : perfd_status_changed_callbacks_) {
-        callback(is_perfd_alive);
+      for (auto callback : daemon_status_changed_callbacks_) {
+        callback(is_daemon_alive);
       }
-      was_perfd_alive = is_perfd_alive;
+      was_daemon_alive = is_daemon_alive;
     }
   }
 }
@@ -316,12 +335,12 @@ void Agent::RunSocketThread() {
                                                 buffer_length, 1, 0);
     if (read_count > 0) {
       if (strncmp(buf, kHeartBeatRequest, 1) == 0) {
-        // Heartbeat - No-op. Perfd will check whether send was successful.
-      } else if (strncmp(buf, kPerfdConnectRequest, 1) == 0) {
+        // Heartbeat - No-op. Daemon will check whether send was successful.
+      } else if (strncmp(buf, kDaemonConnectRequest, 1) == 0) {
         // A connect request - reconnect using the incoming fd.
         std::ostringstream os;
         os << kGrpcUnixSocketAddrPrefix << "&" << receive_fd;
-        ConnectToPerfd(os.str());
+        ConnectToDaemon(os.str());
       }
     }
   }
@@ -340,16 +359,11 @@ void Agent::RunCommandHandlerThread() {
   }
 }
 
-void Agent::ConnectToPerfd(const std::string& target) {
+void Agent::ConnectToDaemon(const std::string& target) {
   // Synchronization is needed around the (re)initialization of all
   // services to prevent a task to acquire a service stub but gets freed
   // below.
   lock_guard<std::mutex> guard(connect_mutex_);
-
-  if (memory_component_ == nullptr) {
-    memory_component_ =
-        new MemoryComponent(&background_queue_, can_grpc_target_change_);
-  }
 
   // Note: If the same target is being reused, do not reconnect as the
   // 'previous' fd will be closed (if this is a unix socket target), and the
@@ -372,7 +386,6 @@ void Agent::ConnectToPerfd(const std::string& target) {
   energy_stub_ = InternalEnergyService::NewStub(channel_);
   event_stub_ = InternalEventService::NewStub(channel_);
   network_stub_ = InternalNetworkService::NewStub(channel_);
-  memory_component_->Connect(channel_);
 
   OpenCommandStream();
 
@@ -385,8 +398,8 @@ void Agent::ConnectToPerfd(const std::string& target) {
     // the first time.
     connect_cv_.notify_all();
     background_queue_.EnqueueTask([this] {
-      lock_guard<std::mutex> guard(perfd_connected_mutex_);
-      for (auto callback : perfd_connected_callbacks_) {
+      lock_guard<std::mutex> guard(daemon_connected_mutex_);
+      for (auto callback : daemon_connected_callbacks_) {
         callback();
       }
     });

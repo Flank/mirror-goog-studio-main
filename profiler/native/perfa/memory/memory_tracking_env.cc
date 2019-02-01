@@ -193,9 +193,12 @@ void MemoryTrackingEnv::Initialize() {
   SetEventNotification(jvmti_, JVMTI_ENABLE,
                        JVMTI_EVENT_GARBAGE_COLLECTION_FINISH);
 
-  Agent::Instance().memory_component().RegisterMemoryControlHandler(std::bind(
-      &MemoryTrackingEnv::HandleControlSignal, this, std::placeholders::_1));
-  Agent::Instance().memory_component().OpenControlStream();
+  Agent::Instance()
+      .wait_and_get_memory_component()
+      .RegisterMemoryControlHandler(
+          std::bind(&MemoryTrackingEnv::HandleControlSignal, this,
+                    std::placeholders::_1));
+  Agent::Instance().wait_and_get_memory_component().OpenControlStream();
 
   JNIEnv* jni = GetThreadLocalJNI(g_vm);
   // Start AllocWorkerThread - this is alive for the duration of the agent, but

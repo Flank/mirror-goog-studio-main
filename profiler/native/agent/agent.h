@@ -38,9 +38,9 @@
 namespace profiler {
 
 // Function call back that returns the true/false status if the agent is
-// connected to perfd. Each time the status changes this callback gets called
+// connected to daemon. Each time the status changes this callback gets called
 // with the new (current) state of the connection.
-using PerfdStatusChanged = std::function<void(bool)>;
+using DaemonStatusChanged = std::function<void(bool)>;
 
 // Function that handles a Command forwarded from daemon.
 using CommandHandler = std::function<void(const proto::Command*)>;
@@ -86,14 +86,15 @@ class Agent {
 
   const proto::AgentConfig& agent_config() const { return agent_config_; }
 
-  // In O+, this method will block until the Agent is connected to Perfd for the
-  // very first time (e.g. when Perfd sends the client socket fd for the agent
-  // to connect to). If/when perfd dies, the memory service stub inside can also
-  // point to a previous, stale Perfd. However, when the Agent reconnects to a
-  // new Perfd, the stub will resolve to the correct grpc target.
-  MemoryComponent& memory_component();
+  // In O+, this method will block until the Agent is connected to Daemon for
+  // the very first time (e.g. when daemon sends the client socket fd for the
+  // agent to connect to). If/when daemon dies, the memory service stub inside
+  // can also point to a previous, stale daemon. However, when the Agent
+  // reconnects to a new daemon, the stub will resolve to the correct grpc
+  // target.
+  MemoryComponent& wait_and_get_memory_component();
 
-  // Tell the agent to start sending heartbeats back to perfd to signal
+  // Tell the agent to start sending heartbeats back to daemon to signal
   // that the app agent is alive.
   void StartHeartbeat();
 
@@ -107,11 +108,16 @@ class Agent {
 
   void SubmitCpuTasks(const std::vector<CpuServiceTask>& tasks);
 
-  void AddPerfdStatusChangedCallback(PerfdStatusChanged callback);
+  void AddDaemonStatusChangedCallback(DaemonStatusChanged callback);
 
-  // Callback for everytime perfd is reconnected to perfa.
+  // Callback for everytime daemon is reconnected to agent.
   // (e.g. Studio restarts within the duration of the same app instance)
-  void AddPerfdConnectedCallback(std::function<void()> callback);
+  void AddDaemonConnectedCallback(std::function<void()> callback);
+
+  // Initializes profiler-specific componenets.
+  void InitializeProfilers();
+
+  bool IsProfilerInitalized();
 
   // Registers a handler for the given command type.
   // Newer registration overwrites prior registrations of the same type.
@@ -129,9 +135,9 @@ class Agent {
   ~Agent() = delete;  // TODO: Support destroying the agent
 
   // In O+, getting the service stubs below will block until the Agent is
-  // connected to Perfd for the very first time (e.g. when Perfd sends the
-  // client socket fd for the agent to connect to). If/when perfd dies, the
-  // stubs can also point to a previous, stale Perfd. If/when a new Perfd
+  // connected to daemon for the very first time (e.g. when daemon sends the
+  // client socket fd for the agent to connect to). If/when daemon dies, the
+  // stubs can also point to a previous, stale daemon. If/when a new daemon
   // isntance sends a new client socket fd to the Agent, the stubs will be
   // resolved to the correct grpc target.
   proto::AgentService::Stub& agent_stub();
@@ -141,12 +147,12 @@ class Agent {
   proto::InternalNetworkService::Stub& network_stub();
 
   /**
-   * Connects/reconnects to perfd via the provided target.
+   * Connects/reconnects to transport daemon via the provided target.
    */
-  void ConnectToPerfd(const std::string& target);
+  void ConnectToDaemon(const std::string& target);
 
   /**
-   * A thread that is used to continuously ping perfd at regular intervals
+   * A thread that is used to continuously ping daemon at regular intervals
    * as a signal that perfa is alive. This signal is used by the Studio
    * Profilers to determine whether certain advanced profiling features
    * should be enabled.
@@ -154,7 +160,7 @@ class Agent {
   void RunHeartbeatThread();
 
   /**
-   * A thread that opens a socket for perfd to communicate to. The address of
+   * A thread that opens a socket for daemon to communicate to. The address of
    * the socket is defined as: |kAgentSocketName| + app's process id - this is
    * to ensure that multiple applcations being profiled each opens a unique
    * socket. Each connection is meant to be short-lived and sends only one
@@ -175,7 +181,7 @@ class Agent {
   proto::AgentConfig agent_config_;
 
   // Used for |connect_cv_| and protects |agent_stub_|, |event_stub_|,
-  // |io_stub_|, |network_stub_| and |memory_component_|
+  // |io_stub_|, |network_stub_| and |wait_and_get_memory_component_|
   std::mutex connect_mutex_;
   std::condition_variable connect_cv_;
   // The current grpc target we are currently connected to. We only
@@ -185,7 +191,7 @@ class Agent {
   // (TODO: investigate further).
   // For pre-O, the target is an ip address. (e.g. |profiler::kServerAddress|)
   // For O+ the target is of the form "unix:&fd", where fd maps to the client
-  // socket used for communicating with the perfd server.
+  // socket used for communicating with the daemon server.
   std::string current_connected_target_;
   std::shared_ptr<grpc::Channel> channel_;
   std::unique_ptr<proto::AgentService::Stub> agent_stub_;
@@ -195,14 +201,13 @@ class Agent {
   std::unique_ptr<proto::InternalNetworkService::Stub> network_stub_;
   std::unique_ptr<grpc::ClientReader<proto::Command>> command_stream_reader_;
   std::unique_ptr<grpc::ClientContext> command_stream_context_;
-  MemoryComponent* memory_component_;
 
-  // Protects |perfd_status_changed_callbacks_|
+  // Protects |daemon_status_changed_callbacks_|
   std::mutex callback_mutex_;
-  std::list<PerfdStatusChanged> perfd_status_changed_callbacks_;
+  std::list<DaemonStatusChanged> daemon_status_changed_callbacks_;
 
-  std::mutex perfd_connected_mutex_;
-  std::vector<std::function<void()>> perfd_connected_callbacks_;
+  std::mutex daemon_connected_mutex_;
+  std::vector<std::function<void()>> daemon_connected_callbacks_;
 
   // Maps command types to functions that handle command proto data.
   std::map<proto::Command::CommandType, CommandHandler> command_handlers_;
@@ -217,14 +222,21 @@ class Agent {
   BackgroundQueue background_queue_;
 
   // Whether the agent and its children service stub should anticipate
-  // the underlying channel to perfd changing.
+  // the underlying channel to daemon changing.
   // This value should only be true for O+ with JVMTI.
   bool can_grpc_target_change_;
 
   // Whether the agent has been connected to a grpc target. Before the
-  // first time the agent connects to a perfd instance, this would be
+  // first time the agent connects to a daemon instance, this would be
   // false and any service stubs are expected to be |nullptr|.
   bool grpc_target_initialized_;
+
+  MemoryComponent* memory_component_;
+  // Whether profiler componets (e.g. byte-code instrumentation) are
+  // initialized. Set to true whenever a profling session starts.
+  bool profiler_initialized_;
+  std::mutex profiler_mutex_;
+  std::condition_variable profiler_cv_;
 };
 
 }  // end of namespace profiler

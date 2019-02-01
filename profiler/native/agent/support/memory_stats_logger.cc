@@ -49,7 +49,7 @@ void EnqueueAllocStats(int32_t alloc_count, int32_t free_count) {
 
   int64_t timestamp = GetClock().GetCurrentTime();
   int32_t pid = getpid();
-  Agent::Instance().memory_component().SubmitMemoryTasks(
+  Agent::Instance().wait_and_get_memory_component().SubmitMemoryTasks(
       {[alloc_count, free_count, pid, timestamp](
            InternalMemoryService::Stub& stub, ClientContext& ctx) {
         AllocStatsRequest alloc_stats_request;
@@ -71,7 +71,7 @@ void EnqueueGcStats(int64_t start_time, int64_t end_time) {
   }
 
   int32_t pid = getpid();
-  Agent::Instance().memory_component().SubmitMemoryTasks(
+  Agent::Instance().wait_and_get_memory_component().SubmitMemoryTasks(
       {[start_time, end_time, pid](InternalMemoryService::Stub& stub,
                                    ClientContext& ctx) {
         GcStatsRequest gc_stats_request;
@@ -92,7 +92,7 @@ void EnqueueAllocationEvents(proto::BatchAllocationSample& request) {
   }
 
   request.set_pid(getpid());
-  Agent::Instance().memory_component().SubmitMemoryTasks(
+  Agent::Instance().wait_and_get_memory_component().SubmitMemoryTasks(
       {[request](InternalMemoryService::Stub& stub, ClientContext& ctx) {
         EmptyMemoryReply reply;
         return stub.RecordAllocationEvents(&ctx, request, &reply);
@@ -105,7 +105,7 @@ void EnqueueJNIGlobalRefEvents(proto::BatchJNIGlobalRefEvent& request) {
   }
 
   request.set_pid(getpid());
-  Agent::Instance().memory_component().SubmitMemoryTasks(
+  Agent::Instance().wait_and_get_memory_component().SubmitMemoryTasks(
       {[request](InternalMemoryService::Stub& stub, ClientContext& ctx) {
         EmptyMemoryReply reply;
         return stub.RecordJNIRefEvents(&ctx, request, &reply);
@@ -119,7 +119,7 @@ void EnqueueAllocationSamplingRateEvent(int64_t timestamp,
   }
 
   int32_t pid = getpid();
-  Agent::Instance().memory_component().SubmitMemoryTasks(
+  Agent::Instance().wait_and_get_memory_component().SubmitMemoryTasks(
       {[timestamp, sampling_num_interval, pid](
            InternalMemoryService::Stub& stub, ClientContext& ctx) {
         AllocationSamplingRateEventRequest request;

@@ -16,6 +16,8 @@
 #ifndef PERFD_COMMANDS_BEGIN_SESSION_H_
 #define PERFD_COMMANDS_BEGIN_SESSION_H_
 
+#include <chrono>
+
 #include "daemon/daemon.h"
 #include "proto/profiler.grpc.pb.h"
 
@@ -33,6 +35,14 @@ class BeginSession : public CommandT<BeginSession> {
   virtual grpc::Status ExecuteOn(Daemon* daemon) override;
 
  private:
+  // Number of retries for checking agent status.
+  static const int32_t kAgentStatusRetries = 10;
+  // Time in microseconds between each retry for checking agent status.
+  static const int32_t kAgentStatusRateUs =
+      std::chrono::duration_cast<std::chrono::microseconds>(
+          std::chrono::milliseconds(500))
+          .count();
+
   proto::BeginSession data_;
 };
 
