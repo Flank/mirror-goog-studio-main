@@ -12,9 +12,6 @@
             <#if dynamicFeatureInstallTimeWithConditionsDelivery>
             <dist:install-time>
                 <dist:conditions>
-                    <#if dynamicFeatureMinSdkDelivery!="">
-                    <dist:min-sdk dist:value="${dynamicFeatureMinSdkDelivery}"/>
-                    </#if>
                     <#list dynamicFeatureDeviceFeatureList as deviceFeature>
                         <#if deviceFeature.deviceFeatureType().get().getDisplayName() == "Name">
                             <dist:device-feature dist:name="${deviceFeature.deviceFeatureValue()}" />
