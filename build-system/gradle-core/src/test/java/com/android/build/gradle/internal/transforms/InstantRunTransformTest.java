@@ -89,7 +89,7 @@ public class InstantRunTransformTest {
     public void setUpMock() {
         MockitoAnnotations.initMocks(this);
         AndroidBuilder mockBuilder = Mockito.mock(AndroidBuilder.class);
-        when(mockBuilder.getBootClasspath(true)).thenReturn(ImmutableList.of());
+        when(mockBuilder.computeFullBootClasspath()).thenReturn(ImmutableList.of());
         when(globalScope.getAndroidBuilder()).thenReturn(mockBuilder);
         when(globalScope.getProjectOptions()).thenReturn(new ProjectOptions(ImmutableMap.of()));
         when(variantScope.getGlobalScope()).thenReturn(globalScope);

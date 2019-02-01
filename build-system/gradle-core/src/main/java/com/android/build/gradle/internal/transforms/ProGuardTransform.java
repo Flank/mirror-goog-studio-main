@@ -236,7 +236,7 @@ public class ProGuardTransform extends BaseProguardAction {
 
             // libraryJars: the runtime jars, with all optional libraries.
             variantScope.getBootClasspath().forEach(this::libraryJar);
-            globalScope.getAndroidBuilder().getBootClasspath(true).forEach(this::libraryJar);
+            globalScope.getAndroidBuilder().computeFullBootClasspath().forEach(this::libraryJar);
 
             // --- Out files ---
             outJar(outFile);

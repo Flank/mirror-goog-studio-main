@@ -312,7 +312,15 @@ public class AndroidBuilder {
                 getTargetInfo().getTarget(), mLibraryRequests, issueReporter);
     }
 
-    private List<File> computeFilteredBootClasspath() {
+    /**
+     * Returns the boot classpath to be used during compilation with all available additional jars
+     * but only the requested optional ones.
+     *
+     * <p>Requested libraries not found will be reported to the issue handler.
+     *
+     * @return a list of jar files that forms the filtered classpath.
+     */
+    public List<File> computeFilteredBootClasspath() {
         // computes and caches the filtered boot classpath.
         // Changes here should be applied to #computeFullClasspath()
 
@@ -331,8 +339,14 @@ public class AndroidBuilder {
         return mBootClasspathFiltered;
     }
 
+    /**
+     * Returns the boot classpath to be used during compilation with all available additional and
+     * optional jars (even those not requested).
+     *
+     * @return a list of jar files that forms the filtered classpath.
+     */
     @NonNull
-    private List<File> computeFullBootClasspath() {
+    public List<File> computeFullBootClasspath() {
         // computes and caches the full boot classpath.
         // Changes here should be applied to #computeFilteredClasspath()
 

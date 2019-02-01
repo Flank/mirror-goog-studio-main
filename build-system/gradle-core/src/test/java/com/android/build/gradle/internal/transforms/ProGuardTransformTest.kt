@@ -305,7 +305,8 @@ class ProGuardTransformTest {
     private fun createScope(configFiles: Set<File> = setOf()) : VariantScope {
         val androidBuilder = Mockito.mock(AndroidBuilder::class.java)
         val bootClassPath = listOf(TestUtils.getPlatformFile("android.jar"))
-        Mockito.`when`(androidBuilder.getBootClasspath(anyBoolean())).thenReturn(bootClassPath)
+        Mockito.`when`(androidBuilder.computeFullBootClasspath()).thenReturn(bootClassPath)
+        Mockito.`when`(androidBuilder.computeFilteredBootClasspath()).thenReturn(bootClassPath)
 
         val project = Mockito.mock(Project::class.java)
         val configFilesCollection = FakeConfigurableFileCollection(configFiles)

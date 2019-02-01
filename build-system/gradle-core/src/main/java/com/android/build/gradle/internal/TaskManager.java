@@ -30,7 +30,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAVA_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JNI;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_CLASSES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_JAVA_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.MODULE_PATH;
@@ -90,7 +89,6 @@ import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
-import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -2377,7 +2375,7 @@ public abstract class TaskManager {
                                         variantScope
                                                 .getGlobalScope()
                                                 .getAndroidBuilder()
-                                                .getBootClasspath(false))
+                                                .computeFilteredBootClasspath())
                         .setDexOptions(dexOptions)
                         .setMessageReceiver(variantScope.getGlobalScope().getMessageReceiver())
                         .setUserLevelCache(userLevelCache)
