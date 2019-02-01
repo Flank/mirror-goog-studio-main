@@ -2366,7 +2366,8 @@ public abstract class TaskManager {
                         && extension.getTransforms().isEmpty()
                         && !minified
                         && !variantScope.getInstantRunBuildContext().isInInstantRunMode()
-                        && variantScope.getJava8LangSupportType() == Java8LangSupport.UNUSED;
+                        && variantScope.getJava8LangSupportType() == Java8LangSupport.UNUSED
+                        && getAdvancedProfilingTransforms(projectOptions).isEmpty();
         FileCache userLevelCache = getUserDexCache(minified, dexOptions.getPreDexLibraries());
         DexArchiveBuilderTransform preDexTransform =
                 new DexArchiveBuilderTransformBuilder()
