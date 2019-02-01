@@ -181,7 +181,7 @@ public class Main {
                             String message =
                                     String.format(
                                             "\"`%1$s`\" is a Gradle project. To correctly "
-                                                    + "analyze Gradle projects, you should run \"`gradlew :lint`\" "
+                                                    + "analyze Gradle projects, you should run \"`gradlew lint`\" "
                                                     + "instead.",
                                             project.getName());
                             Location location =
