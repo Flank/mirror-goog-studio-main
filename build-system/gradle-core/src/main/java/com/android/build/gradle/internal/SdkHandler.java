@@ -27,7 +27,6 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.build.gradle.options.SyncOptions.EvaluationMode;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.core.LibraryRequest;
 import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
@@ -58,7 +57,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Collection;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -130,6 +128,7 @@ public class SdkHandler {
     public boolean initTarget(
             @NonNull String targetHash,
             @NonNull Revision buildToolRevision,
+            @NonNull EvalIssueReporter evalIssueReporter,
             @NonNull AndroidBuilder androidBuilder,
             boolean useCachedVersion) {
         Preconditions.checkNotNull(targetHash, "android.compileSdkVersion is missing!");
@@ -151,8 +150,7 @@ public class SdkHandler {
         }
 
         if (buildToolRevision.compareTo(AndroidBuilder.MIN_BUILD_TOOLS_REV) < 0) {
-            androidBuilder
-                    .getIssueReporter()
+            evalIssueReporter
                     .reportWarning(
                             Type.BUILD_TOOLS_TOO_LOW,
                             String.format(
@@ -181,8 +179,7 @@ public class SdkHandler {
         try {
             targetInfo = sdkLoader.getTargetInfo(targetHash, buildToolRevision, logger, sdkLibData);
         } catch (LicenceNotAcceptedException e) {
-            androidBuilder
-                    .getIssueReporter()
+            evalIssueReporter
                     .reportError(
                             EvalIssueReporter.Type.MISSING_SDK_PACKAGE,
                             new EvalIssueException(
@@ -193,8 +190,7 @@ public class SdkHandler {
                                             .collect(Collectors.joining(" "))));
             return false;
         } catch (InstallFailedException e) {
-            androidBuilder
-                    .getIssueReporter()
+            evalIssueReporter
                     .reportError(
                             EvalIssueReporter.Type.MISSING_SDK_PACKAGE,
                             new EvalIssueException(

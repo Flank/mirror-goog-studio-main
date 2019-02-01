@@ -1040,6 +1040,7 @@ public abstract class BaseExtension implements AndroidConfig {
             return sdkHandler.initTarget(
                     getCompileSdkVersion(),
                     buildToolsRevision,
+                    globalScope.getErrorHandler(),
                     globalScope.getAndroidBuilder(),
                     SdkHandler.useCachedSdk(projectOptions));
         }
