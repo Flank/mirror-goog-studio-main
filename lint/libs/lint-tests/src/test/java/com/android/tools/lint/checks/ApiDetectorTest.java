@@ -3089,6 +3089,48 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    public void testGradient() {
+        //noinspection all // Sample code
+        lint().files(
+                        manifest().minSdk(14),
+                        xml(
+                                "res/drawable/gradient.xml",
+                                ""
+                                        + "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "        xmlns:aapt=\"http://schemas.android.com/aapt\"\n"
+                                        + "        android:height=\"76dp\"\n"
+                                        + "        android:width=\"76dp\"\n"
+                                        + "        android:viewportHeight=\"48\"\n"
+                                        + "        android:viewportWidth=\"48\"\n"
+                                        + "        android:tint=\"?attr/colorControlActivated\">\n"
+                                        + "\n"
+                                        + "    <clip-path android:pathData=\"M10,10h40v30h-40z\"/>\n"
+                                        + "\n"
+                                        + "    <group\n"
+                                        + "            android:name=\"root\"\n"
+                                        + "            android:translateX=\"24.0\"\n"
+                                        + "            android:translateY=\"24.0\" >\n"
+                                        + "        <path android:pathData=\"M10,10h40v30h-40z\">\n"
+                                        + "            <aapt:attr name=\"android:fillColor\">\n"
+                                        + "                <gradient android:startY=\"10\" android:startX=\"10\" android:endY=\"40\" android:endX=\"10\">\n"
+                                        + "                    <item android:offset=\"0\" android:color=\"#FFFF0000\"/>\n"
+                                        + "                    <item android:offset=\"1\" android:color=\"#FFFFFF00\"/>\n"
+                                        + "                </gradient>\n"
+                                        + "            </aapt:attr>\n"
+                                        + "        </path>\n"
+                                        + "    </group>\n"
+                                        + "\n"
+                                        + "</vector>\n"),
+                        gradle(
+                                "apply plugin: 'com.android.application'\n"
+                                        + "dependencies {\n"
+                                        + "    compile 'com.android.support:appcompat-v7:+'\n"
+                                        + "}\n"))
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expectClean();
+    }
+
     public void testPaddingStart() {
         String expected =
                 ""
