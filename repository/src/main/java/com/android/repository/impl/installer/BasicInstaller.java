@@ -38,7 +38,8 @@ import java.net.URL;
  * Probably instances should be created by {@link BasicInstallerFactory}
  */
 class BasicInstaller extends AbstractInstaller {
-    private static final String FN_UNZIP_DIR = "unzip";
+    static final String FN_UNZIP_DIR = "unzip";
+    private File myUnzipDir;
 
     BasicInstaller(@NonNull RemotePackage p, @NonNull RepoManager mgr,
       @NonNull Downloader downloader, @NonNull FileOp fop) {
@@ -78,11 +79,11 @@ class BasicInstaller extends AbstractInstaller {
                 progress.logWarning("Failed to download package!");
                 return false;
             }
-            File unzip = new File(installTempPath, FN_UNZIP_DIR);
-            mFop.mkdirs(unzip);
+            myUnzipDir = new File(installTempPath, FN_UNZIP_DIR);
+            mFop.mkdirs(myUnzipDir);
             InstallerUtil.unzip(
                     downloadLocation,
-                    unzip,
+                    myUnzipDir,
                     mFop,
                     archive.getComplete().getSize(),
                     progress.createSubProgress(1));
@@ -107,6 +108,7 @@ class BasicInstaller extends AbstractInstaller {
     protected void cleanup(@NonNull ProgressIndicator progress) {
         super.cleanup(progress);
         mFop.deleteFileOrFolder(getLocation(progress));
+        mFop.deleteFileOrFolder(myUnzipDir);
     }
 
     /**
