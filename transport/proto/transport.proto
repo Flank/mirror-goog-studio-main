@@ -35,12 +35,12 @@ service TransportService {
   // return an ID which can be used to fetch data using this central cache.
   rpc GetBytes(BytesRequest) returns (BytesResponse) {}
 
-  // Gets the currently connected devices.
+  // Studio-side only: gets the currently connected devices.
   // TODO: replace with command in the new pipeline.
   // TODO: expand with timing information for historical requests.
   rpc GetDevices(GetDevicesRequest) returns (GetDevicesResponse) {}
 
-  // Gets the running processes of a given device
+  // Studio-side only: get the running processes of a given device
   // TODO: replace with command in the new pipeline.
   rpc GetProcesses(GetProcessesRequest) returns (GetProcessesResponse) {}
 

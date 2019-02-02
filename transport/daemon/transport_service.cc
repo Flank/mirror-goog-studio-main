@@ -76,17 +76,6 @@ Status TransportServiceImpl::GetBytes(ServerContext* context,
   return Status::OK;
 }
 
-Status TransportServiceImpl::GetDevices(ServerContext* context,
-                                        const proto::GetDevicesRequest* request,
-                                        proto::GetDevicesResponse* response) {
-  Trace trace("PRO:GetDevices");
-  profiler::proto::Device* device = response->add_device();
-  string device_id;
-  FileReader::Read("/proc/sys/kernel/random/boot_id", &device_id);
-  device->set_boot_id(device_id);
-  return Status::OK;
-}
-
 Status TransportServiceImpl::GetAgentStatus(
     ServerContext* context, const proto::AgentStatusRequest* request,
     proto::AgentData* response) {

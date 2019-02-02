@@ -43,10 +43,6 @@ class TransportServiceImpl final
                         const proto::BytesRequest* request,
                         proto::BytesResponse* response) override;
 
-  grpc::Status GetDevices(grpc::ServerContext* context,
-                          const proto::GetDevicesRequest* request,
-                          proto::GetDevicesResponse* response) override;
-
   grpc::Status GetAgentStatus(grpc::ServerContext* context,
                               const proto::AgentStatusRequest* request,
                               proto::AgentData* response) override;
