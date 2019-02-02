@@ -106,13 +106,13 @@ public class AbstractInstallerTest {
         remote.setCompleteUrl("http://www.example.com/package.zip");
         FakeDownloader downloader = new FakeDownloader(fop);
         // Consume temp dir 1
-        FileOpUtils.getNewTempDir(AbstractPackageOperation.TEMP_DIR_PREFIX, fop);
+        AbstractPackageOperation.getNewPackageOperationTempDir(mgr, AbstractPackageOperation.TEMP_DIR_PREFIX, fop);
         // prepare() will create an keep a reference to temp dir 2
         new TestInstaller(remote, mgr, downloader, fop).prepare(new FakeProgressIndicator(true));
         File tempDir;
         // Create the remaining temp dirs
         do {
-            tempDir = FileOpUtils.getNewTempDir(AbstractPackageOperation.TEMP_DIR_PREFIX, fop);
+            tempDir = AbstractPackageOperation.getNewPackageOperationTempDir(mgr, AbstractPackageOperation.TEMP_DIR_PREFIX, fop);
         } while (tempDir != null);
         FakeRemotePackage remote2 = new FakeRemotePackage("foo;baz");
         TestInstaller installer = new TestInstaller(remote2, mgr, downloader, fop);
@@ -120,8 +120,8 @@ public class AbstractInstallerTest {
         installer.prepare(new FakeProgressIndicator(true));
         // This will cause the newly created temp dir to be deleted.
         installer.complete(new FakeProgressIndicator(true));
-        for (int i = 1; i < 100; i++) {
-            File dir = FileOpUtils.getTempDir(AbstractPackageOperation.TEMP_DIR_PREFIX, i);
+        for (int i = 1; i < AbstractPackageOperation.MAX_PACKAGE_OPERATION_TEMP_DIRS; i++) {
+            File dir = AbstractPackageOperation.getPackageOperationTempDir(mgr, AbstractPackageOperation.TEMP_DIR_PREFIX, i);
             // Only temp dir 2 should remain, since it's still referenced by the incomplete install.
             assertTrue(fop.exists(dir) == (i == 2));
         }
