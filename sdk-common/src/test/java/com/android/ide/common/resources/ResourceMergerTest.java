@@ -522,7 +522,7 @@ public class ResourceMergerTest extends BaseTestCase {
         assertNotNull(parsedFile);
         assertTrue(parsedFile.getFile().equals(layoutFile));
         assertEquals("", parsedFile.getQualifiers());
-        assertEquals(12, parsedFile.getItems().size());
+        assertEquals(13, parsedFile.getItems().size());
         Collection<ResourceMergerItem> layoutItems =
                 Collections2.filter(
                         parsedFile.getItems(),
@@ -547,7 +547,7 @@ public class ResourceMergerTest extends BaseTestCase {
                                 input.getType() == ResourceType.ID
                                         && input.getSourceFile() != null
                                         && input.getSourceFile().equals(parsedFile));
-        assertEquals(11, idItems.size());
+        assertEquals(12, idItems.size());
 
         File folder = TestUtils.createTempDirDeletedOnExit();
         folder.deleteOnExit();

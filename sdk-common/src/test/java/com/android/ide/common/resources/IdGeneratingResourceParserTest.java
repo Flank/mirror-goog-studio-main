@@ -15,26 +15,22 @@
  */
 package com.android.ide.common.resources;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import com.android.annotations.NonNull;
 import com.android.resources.ResourceType;
 import com.android.testutils.TestResources;
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
 import java.io.File;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.TreeSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.Test;
 
-/**
- * Test the IdGeneratingResourceParser.
- */
+/** Tests for {@link IdGeneratingResourceParser}. */
 public class IdGeneratingResourceParserTest extends BaseTestCase {
-
     @Test
     public void testParseLayoutDocument() throws Exception {
         File root = TestResources.getDirectory(getClass(), "/testData/resources/idGenerating");
@@ -45,13 +41,24 @@ public class IdGeneratingResourceParserTest extends BaseTestCase {
                 new IdGeneratingResourceParser(
                         layoutFile, "layout_for_id_scan", ResourceType.LAYOUT, null, null);
         ResourceMergerItem fileItem = parser.getFileResourceMergerItem();
-        assertEquals(fileItem.getName(), "layout_for_id_scan");
-        assertEquals(fileItem.getType(), ResourceType.LAYOUT);
+        assertEquals("layout_for_id_scan", fileItem.getName());
+        assertEquals(ResourceType.LAYOUT, fileItem.getType());
 
         List<ResourceMergerItem> idItems = parser.getIdResourceMergerItems();
-        assertResourceItemsNames(idItems,
-                                 "header", "image", "styledView", "imageView", "btn_title_refresh", "title_refresh_progress",
-                                 "imageView2", "imageButton", "noteArea", "text2", "nonExistent");
+        assertResourceItemsNames(
+                idItems,
+                "btn_title_refresh",
+                "bug123032845",
+                "header",
+                "image",
+                "imageButton",
+                "imageView",
+                "imageView2",
+                "nonExistent",
+                "noteArea",
+                "styledView",
+                "text2",
+                "title_refresh_progress");
     }
 
     @Test
@@ -64,8 +71,8 @@ public class IdGeneratingResourceParserTest extends BaseTestCase {
                 new IdGeneratingResourceParser(menuFile, "menu", ResourceType.MENU, null, null);
 
         ResourceMergerItem fileItem = parser.getFileResourceMergerItem();
-        assertEquals(fileItem.getName(), "menu");
-        assertEquals(fileItem.getType(), ResourceType.MENU);
+        assertEquals("menu", fileItem.getName());
+        assertEquals(ResourceType.MENU, fileItem.getType());
 
         List<ResourceMergerItem> idItems = parser.getIdResourceMergerItems();
         assertResourceItemsNames(idItems, "item1", "group", "group_item1", "group_item2", "submenu", "submenu_item2");
@@ -80,7 +87,7 @@ public class IdGeneratingResourceParserTest extends BaseTestCase {
         try {
             new IdGeneratingResourceParser(
                     layoutFile, "layout_with_databinding", ResourceType.LAYOUT, null, null);
-            assertTrue("Should have thrown exception", true);
+            fail("Should have thrown exception");
         }
         catch (MergingException e) {
             assertEquals("Error: Does not handle data-binding files", e.getMessage());
@@ -88,21 +95,12 @@ public class IdGeneratingResourceParserTest extends BaseTestCase {
     }
 
     private static void assertResourceItemsNames(
-            Collection<ResourceMergerItem> idItems, String... expected) {
-        Collection<String> idNames =
-                Collections2.transform(
-                        idItems,
-                        (Function<ResourceItem, String>)
-                                input -> {
-                                    assertEquals(input.getType(), ResourceType.ID);
-                                    return input.getName();
-                                });
-        assertSameElements(idNames, Arrays.asList(expected));
-    }
-
-    private static <T> void assertSameElements(Collection<? extends T> collection, Collection<T> expected) {
-        assertNotNull(collection);
-        assertNotNull(expected);
-        assertEquals(new TreeSet<>(expected), new TreeSet<>(collection));
+            @NonNull Collection<? extends ResourceItem> idItems, @NonNull String... expected) {
+        Set<String> idNames =
+                idItems.stream()
+                        .peek(id -> assertEquals(ResourceType.ID, id.getType()))
+                        .map(ResourceItem::getName)
+                        .collect(Collectors.toSet());
+        assertThat(idNames).containsExactlyElementsIn(expected);
     }
 }
