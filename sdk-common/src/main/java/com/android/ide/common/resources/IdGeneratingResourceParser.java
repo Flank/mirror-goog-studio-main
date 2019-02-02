@@ -137,46 +137,40 @@ class IdGeneratingResourceParser {
             // the form "@+id/".
             for (int i = 0; i < attributes.getLength(); ++i) {
                 Node attribute = attributes.item(i);
-                String attrNamespace = attribute.getNamespaceURI();
-                if (ANDROID_URI.equals(attrNamespace)) {
-                    String attrName = attribute.getLocalName();
-                    String value = attribute.getNodeValue();
-                    if (value == null) {
-                        continue;
-                    }
-                    // If the attribute is not android:id, and an item for it hasn't been created
-                    // yet, add it to the list of pending ids.
-                    if (value.startsWith(NEW_ID_PREFIX) && !ATTR_ID.equals(attrName)) {
-                        String id = value.substring(NEW_ID_PREFIX.length());
-                        if (!id.isEmpty()) {
-                            pendingResourceIds.add(id);
-                        }
-                    }
-                    else if (ATTR_ID.equals(attrName)) {
-                        // Now process the android:id attribute.
-                        String id;
-                        if (value.startsWith(ID_PREFIX)) {
-                            // If the id is not "@+id/", it may still have been declared as "@+id/"
-                            // in a preceding view (eg. layout_above). So, we test if this is such
-                            // a pending id.
-                            id = value.substring(ID_PREFIX.length());
-                            if (!pendingResourceIds.contains(id)) {
-                                continue;
-                            }
-                        }
-                        else if (value.startsWith(NEW_ID_PREFIX)) {
-                            id = value.substring(NEW_ID_PREFIX.length());
-                        }
-                        else {
+                String value = attribute.getNodeValue();
+                if (value == null) {
+                    continue;
+                }
+                if (ANDROID_URI.equals(attribute.getNamespaceURI())
+                        && ATTR_ID.equals(attribute.getLocalName())) {
+                    // Now process the android:id attribute.
+                    String id;
+                    if (value.startsWith(ID_PREFIX)) {
+                        // If the id is not "@+id/", it may still have been declared as "@+id/"
+                        // in a preceding view (eg. layout_above). So, we test if this is such
+                        // a pending id.
+                        id = value.substring(ID_PREFIX.length());
+                        if (!pendingResourceIds.contains(id)) {
                             continue;
                         }
-                        pendingResourceIds.remove(id);
-                        if (!id.isEmpty()) {
-                            ResourceMergerItem item =
-                                    new IdResourceMergerItem(
-                                            id, mNamespace, ResourceType.ID, mLibraryName);
-                            items.add(item);
-                        }
+                    } else if (value.startsWith(NEW_ID_PREFIX)) {
+                        id = value.substring(NEW_ID_PREFIX.length());
+                    } else {
+                        continue;
+                    }
+                    pendingResourceIds.remove(id);
+                    if (!id.isEmpty()) {
+                        ResourceMergerItem item =
+                                new IdResourceMergerItem(
+                                        id, mNamespace, ResourceType.ID, mLibraryName);
+                        items.add(item);
+                    }
+                } else if (value.startsWith(NEW_ID_PREFIX)) {
+                    // If the attribute is not android:id, and an item for it hasn't been created
+                    // yet, add it to the list of pending ids.
+                    String id = value.substring(NEW_ID_PREFIX.length());
+                    if (!id.isEmpty()) {
+                        pendingResourceIds.add(id);
                     }
                 }
             }
