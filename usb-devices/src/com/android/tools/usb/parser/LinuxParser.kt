@@ -20,28 +20,47 @@ import com.android.tools.usb.UsbDevice
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
-import java.rmi.UnexpectedException
-import java.util.concurrent.CompletableFuture
-import java.util.stream.Collectors
 
 // see: testData/linux.txt for example: Bus 003 Device 037: ID 18d1:4ee7 Google Inc.
 private val PATTERN_STRING: String = "Bus \\d{3} Device \\d{3}: ID (\\w{4}):(\\w{4}) (.*)"
 private val BUS_REGEX: Regex = Regex(PATTERN_STRING)
+private val SERIAL_REGEX = Regex("\\h*iSerial\\h+(\\S+)\\h*(\\S*)$")
 
-fun createUsbDevice(line: String): UsbDevice {
-  val matcher = BUS_REGEX.matchEntire(line) ?: throw UnexpectedException("Mismatched line: " + line)
-  assert(matcher.groupValues.size == 4)
-  val (_, vendorId, productId, productName) = matcher.groupValues
-  return UsbDevice(productName.trim(), "0x" + vendorId, "0x" + productId)
+fun createUsbDevice(line: String): UsbDevice? {
+    val matcher = BUS_REGEX.matchEntire(line) ?: return null
+    assert(matcher.groupValues.size == 4)
+    val (_, vendorId, productId, productName) = matcher.groupValues
+    return UsbDevice(productName.trim(), "0x" + vendorId, "0x" + productId)
 }
 
-fun matchPattern(line: String): Boolean = line.matches(BUS_REGEX)
-
 class LinuxParser : OutputParser {
-  override fun parse(output: InputStream): List<UsbDevice> {
-    return BufferedReader(InputStreamReader(output, Charsets.UTF_8)).lines()
-      .filter { l -> matchPattern(l) }
-      .map { l -> createUsbDevice(l) }.collect(Collectors.toList())
+    override fun parse(output: InputStream): List<UsbDevice> {
+        val lines = BufferedReader(InputStreamReader(output, Charsets.UTF_8)).lines()
 
-  }
+        val result = ArrayList<UsbDevice>()
+        var curDevice: UsbDevice? = null
+        for (next in lines) {
+            val nextDevice = createUsbDevice(next)
+            if (nextDevice != null) {
+                if (curDevice != null) {
+                    result.add(curDevice)
+                }
+                curDevice = nextDevice
+                continue
+            }
+            if (curDevice != null) {
+                val matchSerial = SERIAL_REGEX.matchEntire(next)
+                if (matchSerial != null) {
+                    val (_, _, iSerial) = matchSerial.groupValues
+                    if (!iSerial.isEmpty()) {
+                        curDevice = curDevice.copy(iSerial = iSerial)
+                    }
+                }
+            }
+        }
+        if (curDevice != null) {
+            result.add(curDevice)
+        }
+        return result
+    }
 }

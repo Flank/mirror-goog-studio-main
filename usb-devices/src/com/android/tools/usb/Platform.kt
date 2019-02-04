@@ -26,7 +26,7 @@ import com.android.tools.usb.parser.WindowsParser
  */
 enum class Platform(val supported: Boolean, val command: String?) {
   Windows(true, "${System.getenv("WINDIR")}\\system32\\wbem\\wmic path CIM_LogicalDevice where \"DeviceID like 'USB\\\\%'\" get /value"),
-  Linux(true, "lsusb"),
+  Linux(true, "lsusb -v"),
   Mac(true, "system_profiler SPUSBDataType -detailLevel mini"),
   Unknown(false, null);
 

@@ -18,10 +18,9 @@ package com.android.tools.usb.parser
 
 import com.android.testutils.TestUtils
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
-import java.io.File
-import java.nio.file.Paths
 
 class LinuxParserTest {
     private lateinit var parser: OutputParser
@@ -35,9 +34,16 @@ class LinuxParserTest {
     fun parseOutput() {
         val file = TestUtils.getWorkspaceFile("tools/base/usb-devices/testData/linux.txt");
         val devices = parser.parse(file.inputStream())
-        assertEquals(12, devices.size)
-        assertEquals("Intel Corp.", devices[0].name)
-        assertEquals("0x8087", devices[0].vendorId)
-        assertEquals("0x8002", devices[0].productId)
+        assertEquals(15, devices.size)
+        val phone = devices[12]
+        assertEquals("Google Inc. Nexus 4 (debug)", phone.name)
+        assertEquals("0x18d1", phone.vendorId)
+        assertEquals("0x4ee2", phone.productId)
+        assertEquals("84B5T15A29000460", phone.iSerial)
+        val hub = devices[14]
+        assertEquals("Linux Foundation 2.0 root hub", hub.name)
+        assertEquals("0x1d6b", hub.vendorId)
+        assertEquals("0x0002", hub.productId)
+        assertNull(hub.iSerial)
     }
 }
