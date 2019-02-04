@@ -27,6 +27,7 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
+import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.VariantUtils;
 import com.android.build.gradle.options.BooleanOption;
@@ -139,6 +140,9 @@ public class UnitTestingAndroidResourcesTest {
 
     @Test
     public void runUnitTests() throws Exception {
+        // Bug 120098460
+        AssumeUtil.assumeNotWindows();
+
         GradleTaskExecutor runGradleTasks =
                 project.executor()
                         .with(
