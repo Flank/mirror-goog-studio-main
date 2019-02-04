@@ -31,8 +31,10 @@ import java.util.stream.Collector
 private val NAME_KEY = "name"
 private val VENDOR_ID_KEY = "Vendor ID"
 private val PRODUCT_ID_KEY = "Product ID"
+private val SERIAL_KEY = "Serial Number"
 private val NAME_REGEX: Regex = Regex("(.*):$")
 private val PROPERTY_REGEX: Regex = Regex("(.*):(.*)$")
+private val EMPTY_SERIAL = Regex("0*$")
 private val REQUIRED_KEYS: List<String> = arrayListOf(NAME_KEY, VENDOR_ID_KEY, PRODUCT_ID_KEY)
 
 private fun extractValues(lines: List<String>): Map<String, String> {
@@ -54,10 +56,18 @@ private fun extractValues(lines: List<String>): Map<String, String> {
 }
 
 private fun createUsbDevice(map: Map<String, String>): UsbDevice {
+  var serial = map[SERIAL_KEY]
+
+  if (serial != null && serial.matches(EMPTY_SERIAL)) {
+    serial = null
+  }
+
   return UsbDevice(
     map[NAME_KEY]!!,
     map[VENDOR_ID_KEY]!!.split(" ")[0], // output could include vendorId aa text. i.e. 0x18d1 (Google Inc.)
-    map[PRODUCT_ID_KEY]!!
+    map[PRODUCT_ID_KEY]!!,
+    null,
+    serial
   )
 }
 
