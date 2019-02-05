@@ -32,9 +32,8 @@ import com.android.resources.ResourceType;
 import com.android.utils.XmlUtils;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
@@ -53,7 +52,7 @@ import org.xml.sax.SAXException;
 @Deprecated
 class IdGeneratingResourceParser {
     @NonNull private final ResourceMergerItem mFileResourceMergerItem;
-    @NonNull private final List<ResourceMergerItem> mIdResourceMergerItems;
+    @NonNull private final Set<ResourceMergerItem> mIdResourceMergerItems;
     @NonNull private final ResourceNamespace mNamespace;
     @Nullable private final String mLibraryName;
 
@@ -85,8 +84,8 @@ class IdGeneratingResourceParser {
         mNamespace = namespace;
         mFileResourceMergerItem =
                 new IdResourceMergerItem(sourceName, mNamespace, sourceType, libraryName);
-        mIdResourceMergerItems = new ArrayList<>();
-        Set<String> pendingResourceIds = new HashSet<>();
+        mIdResourceMergerItems = new LinkedHashSet<>();
+        Set<String> pendingResourceIds = new LinkedHashSet<>();
         NodeList nodes = mDocument.getChildNodes();
         for (int i = 0; i < nodes.getLength(); ++i) {
             Node child = nodes.item(i);
@@ -123,12 +122,12 @@ class IdGeneratingResourceParser {
     }
 
     @NonNull
-    public List<ResourceMergerItem> getIdResourceMergerItems() {
+    public Collection<ResourceMergerItem> getIdResourceMergerItems() {
         return mIdResourceMergerItems;
     }
 
     private void parseIds(
-            @NonNull List<ResourceMergerItem> items,
+            @NonNull Set<ResourceMergerItem> items,
             @NonNull Node node,
             @NonNull Set<String> pendingResourceIds) {
         NamedNodeMap attributes = node.getAttributes();

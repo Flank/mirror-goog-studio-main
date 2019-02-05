@@ -20,12 +20,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.resources.ResourceType;
 import com.android.testutils.TestResources;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Test;
 
@@ -39,12 +39,16 @@ public class IdGeneratingResourceParserTest extends BaseTestCase {
 
         IdGeneratingResourceParser parser =
                 new IdGeneratingResourceParser(
-                        layoutFile, "layout_for_id_scan", ResourceType.LAYOUT, null, null);
+                        layoutFile,
+                        "layout_for_id_scan",
+                        ResourceType.LAYOUT,
+                        ResourceNamespace.RES_AUTO,
+                        null);
         ResourceMergerItem fileItem = parser.getFileResourceMergerItem();
         assertEquals("layout_for_id_scan", fileItem.getName());
         assertEquals(ResourceType.LAYOUT, fileItem.getType());
 
-        List<ResourceMergerItem> idItems = parser.getIdResourceMergerItems();
+        Collection<ResourceMergerItem> idItems = parser.getIdResourceMergerItems();
         assertResourceItemsNames(
                 idItems,
                 "btn_title_refresh",
@@ -68,13 +72,14 @@ public class IdGeneratingResourceParserTest extends BaseTestCase {
         File menuFile = new File(menu, "menu.xml");
 
         IdGeneratingResourceParser parser =
-                new IdGeneratingResourceParser(menuFile, "menu", ResourceType.MENU, null, null);
+                new IdGeneratingResourceParser(
+                        menuFile, "menu", ResourceType.MENU, ResourceNamespace.RES_AUTO, null);
 
         ResourceMergerItem fileItem = parser.getFileResourceMergerItem();
         assertEquals("menu", fileItem.getName());
         assertEquals(ResourceType.MENU, fileItem.getType());
 
-        List<ResourceMergerItem> idItems = parser.getIdResourceMergerItems();
+        Collection<ResourceMergerItem> idItems = parser.getIdResourceMergerItems();
         assertResourceItemsNames(idItems, "item1", "group", "group_item1", "group_item2", "submenu", "submenu_item2");
     }
 
@@ -96,11 +101,11 @@ public class IdGeneratingResourceParserTest extends BaseTestCase {
 
     private static void assertResourceItemsNames(
             @NonNull Collection<? extends ResourceItem> idItems, @NonNull String... expected) {
-        Set<String> idNames =
+        List<String> idNames =
                 idItems.stream()
                         .peek(id -> assertEquals(ResourceType.ID, id.getType()))
                         .map(ResourceItem::getName)
-                        .collect(Collectors.toSet());
+                        .collect(Collectors.toList());
         assertThat(idNames).containsExactlyElementsIn(expected);
     }
 }

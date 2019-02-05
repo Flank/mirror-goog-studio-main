@@ -510,9 +510,11 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
                     IdGeneratingResourceParser parser =
                             new IdGeneratingResourceParser(
                                     file, resourceName, folderData.type, mNamespace, mLibraryName);
-                    items = parser.getIdResourceMergerItems();
+                    Collection<ResourceMergerItem> idItems = parser.getIdResourceMergerItems();
                     ResourceMergerItem fileItem = parser.getFileResourceMergerItem();
-                    items.add(0, fileItem);
+                    items = new ArrayList<>(idItems.size() + 1);
+                    items.add(fileItem);
+                    items.addAll(idItems);
                 }
                 return new ResourceFile(file, items, folderData.folderConfiguration);
             } else {
