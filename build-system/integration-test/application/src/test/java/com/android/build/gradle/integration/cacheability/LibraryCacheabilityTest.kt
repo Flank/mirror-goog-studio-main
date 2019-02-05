@@ -73,7 +73,8 @@ class LibraryCacheabilityTest {
                     ":lib:packageReleaseAssets",
                     ":lib:packageReleaseResources",
                     ":lib:processReleaseManifest",
-                    ":lib:verifyReleaseResources"
+                    ":lib:verifyReleaseResources",
+                    ":lib:mergeReleaseJavaResource"
                 ),
                 DID_WORK to setOf(
                     ":lib:bundleReleaseAar",
@@ -84,8 +85,7 @@ class LibraryCacheabilityTest {
                     ":lib:transformClassesAndResourcesWithSyncLibJarsForRelease",
                     ":lib:transformNativeLibsWithMergeJniLibsForRelease",
                     ":lib:transformNativeLibsWithStripDebugSymbolForRelease",
-                    ":lib:transformNativeLibsWithSyncJniLibsForRelease",
-                    ":lib:mergeReleaseJavaResource"
+                    ":lib:transformNativeLibsWithSyncJniLibsForRelease"
                 ),
                 SKIPPED to setOf(
                     ":lib:packageReleaseRenderscript",
@@ -113,8 +113,7 @@ class LibraryCacheabilityTest {
             ":lib:transformClassesAndResourcesWithSyncLibJarsForRelease" /* Bug 121275815 */,
             ":lib:transformNativeLibsWithMergeJniLibsForRelease" /* Bug 74595223 */,
             ":lib:transformNativeLibsWithStripDebugSymbolForRelease" /* Bug 120414535 */,
-            ":lib:transformNativeLibsWithSyncJniLibsForRelease" /* Bug 121275531 */,
-            ":lib:mergeReleaseJavaResource" /* Bug 74595224 */
+            ":lib:transformNativeLibsWithSyncJniLibsForRelease" /* Bug 121275531 */
         )
 
         /**

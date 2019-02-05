@@ -34,6 +34,7 @@ import com.android.builder.merge.IncrementalFileMergerInput
 import com.android.ide.common.resources.FileStatus
 import com.android.utils.FileUtils
 import org.gradle.api.file.FileCollection
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
@@ -50,6 +51,7 @@ import javax.inject.Inject
 /**
  * Task to merge java resources from multiple modules
  */
+@CacheableTask
 open class MergeJavaResourceTask
 @Inject constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
 

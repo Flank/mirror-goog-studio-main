@@ -82,7 +82,8 @@ class CacheabilityTest {
                     ":app:generateDebugUnitTestConfig",
                     ":app:compileDebugUnitTestJavaWithJavac",
                     ":app:packageDebugUnitTestForUnitTest",
-                    ":app:testDebugUnitTest"
+                    ":app:testDebugUnitTest",
+                    ":app:mergeDebugJavaResource"
                 ),
                 /*
                  * Tasks that should be cacheable but are not yet cacheable.
@@ -96,7 +97,6 @@ class CacheabilityTest {
                     ":app:mergeDexDebug" /* Bug 120413559 */,
                     ":app:transformNativeLibsWithMergeJniLibsForDebug" /* Bug 74595223 */,
                     ":app:transformNativeLibsWithStripDebugSymbolForDebug" /* Bug 120414535 */,
-                    ":app:mergeDebugJavaResource" /* Bug 74595224 */,
                     ":app:packageDebug" /* Bug 74595859 */
                 ),
                 SKIPPED to setOf(
