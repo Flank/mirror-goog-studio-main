@@ -47,6 +47,7 @@ public class BenchmarkTest {
         String benchmarkFlag = null;
         String benchmarkSize = null;
         String benchmarkType = null;
+        boolean benchmarkWithWorkers = false;
         List<String> setupDiffs = new ArrayList<>();
         int warmUps = 0;
         int iterations = 0;
@@ -105,6 +106,8 @@ public class BenchmarkTest {
                 listeners.add(locateListener(it.next()).newInstance());
             } else if (arg.equals("--from-studio") && it.hasNext()) {
                 fromStudio = Boolean.valueOf(it.next());
+            } else if (arg.equals("--with-workers") && it.hasNext()) {
+                benchmarkWithWorkers = Boolean.valueOf(it.next());
             } else {
                 throw new IllegalArgumentException("Unknown flag: " + arg);
             }
@@ -121,6 +124,7 @@ public class BenchmarkTest {
                         benchmarkFlag,
                         benchmarkSize,
                         benchmarkType,
+                        benchmarkWithWorkers,
                         new BenchmarkRun(
                                 warmUps, iterations, removeUpperOutliers, removeLowerOutliers),
                         setupDiffs,
@@ -164,6 +168,7 @@ public class BenchmarkTest {
             String benchmarkFlag,
             String benchmarkSize,
             String benchmarkType,
+            boolean benchmarkWithWorkers,
             BenchmarkRun benchmarkRun,
             List<String> setupDiffs,
             List<File> mutations,
@@ -198,6 +203,7 @@ public class BenchmarkTest {
         }
         mapBuilder.put("fromStudio", Boolean.toString(fromStudio));
         mapBuilder.put("benchmarkHost", hostName());
+        mapBuilder.put("benchmarkWithWorkers", Boolean.toString(benchmarkWithWorkers));
         benchmarkBuilder.setMetadata(mapBuilder.build());
 
         Benchmark benchmark = benchmarkBuilder.build();
