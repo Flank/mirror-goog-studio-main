@@ -47,6 +47,19 @@ import kotlin.test.fail
 
 private const val MAIN_DEX_LIST_PATH = "/BUNDLE-METADATA/com.android.tools.build.bundletool/mainDexList.txt"
 
+internal val multiDexSupportLibClasses = listOf(
+    "Landroid/support/multidex/MultiDex;",
+    "Landroid/support/multidex/MultiDexApplication;",
+    "Landroid/support/multidex/MultiDexExtractor;",
+    "Landroid/support/multidex/MultiDexExtractor\$1;",
+    "Landroid/support/multidex/MultiDexExtractor\$ExtractedDex;",
+    "Landroid/support/multidex/MultiDex\$V14;",
+    "Landroid/support/multidex/MultiDex\$V19;",
+    "Landroid/support/multidex/MultiDex\$V4;",
+    "Landroid/support/multidex/ZipUtil;",
+    "Landroid/support/multidex/ZipUtil\$CentralDirectory;"
+)
+
 class DynamicAppTest {
 
     @get:Rule
@@ -85,21 +98,8 @@ class DynamicAppTest {
         "/BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map"
     ))
 
-    private val multiDexSuppotLibClasses = listOf(
-        "Landroid/support/multidex/MultiDex;",
-        "Landroid/support/multidex/MultiDexApplication;",
-        "Landroid/support/multidex/MultiDexExtractor;",
-        "Landroid/support/multidex/MultiDexExtractor\$1;",
-        "Landroid/support/multidex/MultiDexExtractor\$ExtractedDex;",
-        "Landroid/support/multidex/MultiDex\$V14;",
-        "Landroid/support/multidex/MultiDex\$V19;",
-        "Landroid/support/multidex/MultiDex\$V4;",
-        "Landroid/support/multidex/ZipUtil;",
-        "Landroid/support/multidex/ZipUtil\$CentralDirectory;"
-    )
-
     private val mainDexClasses: List<String> =
-        multiDexSuppotLibClasses.plus("Lcom/example/app/AppClassNeededInMainDexList;")
+        multiDexSupportLibClasses.plus("Lcom/example/app/AppClassNeededInMainDexList;")
 
     private val mainDexListClassesInBundle: List<String> =
         mainDexClasses.plus("Lcom/example/feature1/Feature1ClassNeededInMainDexList;")
@@ -318,7 +318,7 @@ class DynamicAppTest {
 
             val mainDexList = Files.readAllLines(it.getEntry(MAIN_DEX_LIST_PATH))
             val expectedMainDexList =
-                multiDexSuppotLibClasses.map { it.substring(1, it.length - 1) + ".class" }
+                multiDexSupportLibClasses.map { it.substring(1, it.length - 1) + ".class" }
             assertThat(mainDexList).containsExactlyElementsIn(expectedMainDexList)
         }
     }

@@ -3432,9 +3432,15 @@ public abstract class TaskManager {
                                 .getArtifacts()
                                 .getFinalArtifactFiles(InternalArtifactType.APK_MAPPING)
                         : null;
+        BuildableArtifact mainDexList =
+                variantScope
+                        .getArtifacts()
+                        .getFinalArtifactFilesIfPresent(
+                                InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE);
 
         DexSplitterTransform transform =
-                new DexSplitterTransform(dexSplitterOutput, featureJars, baseJars, mappingFileSrc);
+                new DexSplitterTransform(
+                        dexSplitterOutput, featureJars, baseJars, mappingFileSrc, mainDexList);
 
         Optional<TaskProvider<TransformTask>> transformTask =
                 variantScope

@@ -21,15 +21,19 @@ import com.android.build.api.transform.Context
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
 import com.android.build.api.transform.TransformOutputProvider
+import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeFileCollection
+import com.android.build.gradle.internal.fixtures.createBuildArtifact
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.dexing.DexingType
+import com.android.testutils.TestClassesGenerator
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
 import com.android.testutils.apk.Dex
 import com.android.testutils.truth.MoreTruth.assertThat
+import com.android.testutils.truth.MoreTruth.assertThatDex
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
 import org.gradle.api.file.ConfigurableFileCollection
@@ -44,6 +48,8 @@ import org.mockito.MockitoAnnotations
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import kotlin.streams.toList
 
 /**
@@ -125,11 +131,44 @@ class DexSplitterTransformTest {
         checkDexSplitterOutputs()
     }
 
+    @Test
+    fun testMainDexListFile() {
+        val numClasses = 0xFFFF/3 + 1
+        val baseSplit = tmp.root.resolve("base-split.jar").also { file ->
+            ZipOutputStream(file.outputStream()).use { zip ->
+                repeat(numClasses) {
+                    zip.putNextEntry(ZipEntry("test/A$it.class"))
+                    val emptyClass = TestClassesGenerator.classWithEmptyMethods("A$it", "foo:()V", "foo2:()V")
+                    zip.write(emptyClass)
+                    zip.closeEntry()
+                }
+            }
+        }
+        runR8(listOf(baseSplit, featureClasses), "class ** { *; }")
+
+        val primaryDex = listOf("test/A0", "test/A1", "test/A${numClasses - 1}")
+        val primaryClasses = tmp.newFile("mainDexList.txt").also { file ->
+            file.writeText(primaryDex.joinToString(separator = System.lineSeparator()) { "$it.class" })
+        }
+
+        runDexSplitter(
+            File(r8OutputProviderDir, "main"),
+            listOf(featureClasses),
+            createBuildArtifact(baseSplit),
+            mappingFileSrc = null,
+            mainDexList = createBuildArtifact(primaryClasses))
+
+        assertThatDex(dexSplitterOutputProviderDir.resolve("splitDexFiles/classes.dex")).containsClassesIn(
+            primaryDex.map { "L$it;" }
+        )
+    }
+
     private fun runDexSplitter(
         dexDir: File,
         featureJars: List<File>,
         baseJars: BuildableArtifact,
-        mappingFileSrc: BuildableArtifact? = null
+        mappingFileSrc: BuildableArtifact? = null,
+        mainDexList: BuildableArtifact? = null
     ) {
         val dexSplitterInput = TransformTestHelper.directoryBuilder(dexDir).build()
         val dexSplitterInvocation =
@@ -145,7 +184,8 @@ class DexSplitterTransformTest {
                         dexSplitterOutputDir,
                         FakeFileCollection(featureJars),
                         baseJars,
-                        mappingFileSrc = mappingFileSrc)
+                        mappingFileSrc = mappingFileSrc,
+                        mainDexList = mainDexList)
 
         dexSplitterTransform.transform(dexSplitterInvocation)
     }
@@ -165,6 +205,7 @@ class DexSplitterTransformTest {
                         .build()
 
         val r8Transform = getR8Transform()
+        r8Transform.setActions(PostprocessingFeatures(false, false, false))
         r8Keep?.let { r8Transform.keep(it) }
 
         r8Transform.transform(r8Invocation)

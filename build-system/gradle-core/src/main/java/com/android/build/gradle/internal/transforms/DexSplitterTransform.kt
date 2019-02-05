@@ -41,7 +41,8 @@ class DexSplitterTransform(
         private val outputDir: File,
         private val featureJars: FileCollection,
         private val baseJars: BuildableArtifact,
-        private val mappingFileSrc: BuildableArtifact?
+        private val mappingFileSrc: BuildableArtifact?,
+        private val mainDexList: BuildableArtifact?
 ) :
         Transform() {
 
@@ -61,6 +62,7 @@ class DexSplitterTransform(
         secondaryFiles.add(SecondaryFile.nonIncremental(featureJars))
         secondaryFiles.add(SecondaryFile.nonIncremental(baseJars))
         mappingFileSrc?.let { secondaryFiles.add(SecondaryFile.nonIncremental(it)) }
+        mainDexList?.let { secondaryFiles.add(SecondaryFile.nonIncremental(it)) }
         return secondaryFiles
     }
 
@@ -86,7 +88,9 @@ class DexSplitterTransform(
             outputProvider.deleteAll()
             FileUtils.deleteRecursivelyIfExists(outputDir)
 
-            val builder = DexSplitterTool.Builder(outputDir.toPath(), mappingFile?.toPath())
+            val builder = DexSplitterTool.Builder(
+                outputDir.toPath(), mappingFile?.toPath(), mainDexList?.singleFile()?.toPath()
+            )
 
             for (dirInput in TransformInputUtil.getDirectories(transformInvocation.inputs)) {
                 dirInput.listFiles()?.toList()?.map { it.toPath() }?.forEach { builder.addInputArchive(it) }

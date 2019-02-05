@@ -25,12 +25,13 @@ import java.nio.file.Path
  */
 class DexSplitterTool private constructor(private val options: Options) {
 
-    class Builder(output: Path, proguardMap: Path?) {
+    class Builder(output: Path, proguardMap: Path?, mainDexListFile: Path?) {
         private val options = Options()
 
         init {
             options.output = output.toString()
             options.proguardMap = proguardMap?.toString()
+            options.mainDexList = mainDexListFile?.toString()
         }
 
         fun addInputArchive(path: Path) {
