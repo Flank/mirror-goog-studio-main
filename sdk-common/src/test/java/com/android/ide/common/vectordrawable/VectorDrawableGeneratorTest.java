@@ -57,6 +57,16 @@ public class VectorDrawableGeneratorTest extends TestCase {
             boolean dumpXml,
             @Nullable String expectedError)
             throws Exception {
+        checkVectorConversion(testFileName, type, dumpXml, expectedError, IMAGE_SIZE);
+    }
+
+    private void checkVectorConversion(
+            @NonNull String testFileName,
+            @NonNull FileType type,
+            boolean dumpXml,
+            @Nullable String expectedError,
+            int imageSize)
+            throws Exception {
         String incomingFileName;
         if (type == FileType.SVG) {
             incomingFileName = testFileName + ".svg";
@@ -96,7 +106,7 @@ public class VectorDrawableGeneratorTest extends TestCase {
         }
 
         VdPreview.TargetSize imageTargetSize =
-                VdPreview.TargetSize.createFromMaxDimension(IMAGE_SIZE);
+                VdPreview.TargetSize.createFromMaxDimension(imageSize);
         StringBuilder builder = new StringBuilder();
         BufferedImage image =
                 VdPreview.getPreviewFromVectorXml(imageTargetSize, xmlContent, builder);
@@ -986,5 +996,9 @@ public class VectorDrawableGeneratorTest extends TestCase {
      */
     public void testPathDataInStringToolsResource() throws Exception {
         checkXmlConversion("test_pathData_in_string_tools_resource");
+    }
+
+    public void testSmallVectorWithTint() throws Exception {
+        checkVectorConversion("test_small_image_with_tint", FileType.XML, false, null, 16);
     }
 }

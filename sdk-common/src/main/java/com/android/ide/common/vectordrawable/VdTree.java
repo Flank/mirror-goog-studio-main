@@ -23,6 +23,7 @@ import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.NoninvertibleTransformException;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
@@ -109,7 +110,10 @@ class VdTree {
             gTemp.setPaint(new Color(mRootTint));
             gTemp.fillRect(0, 0, width, height);
             gFinal.setComposite(AlphaComposite.SrcIn);
-            gFinal.drawImage(tintImage, 0, 0, null);
+            try {
+                gFinal.drawImage(tintImage, gFinal.getTransform().createInverse(), null);
+            } catch (NoninvertibleTransformException ignored) {
+            }
             gTemp.dispose();
         }
 
