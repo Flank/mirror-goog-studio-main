@@ -50,7 +50,7 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 iml_module(
     name = "studio.android.sdktools.aspects-agent",
     srcs = ["src/main"],
-    iml_files = ["android.sdktools.aspects-agent.iml"],
+    iml_files = ["android.sdktools.aspects_agent.iml"],
     test_srcs = ["src/test"],
     visibility = ["//visibility:public"],
     deps = [
