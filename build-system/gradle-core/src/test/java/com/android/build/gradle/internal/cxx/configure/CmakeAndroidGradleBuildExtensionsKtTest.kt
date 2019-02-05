@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.*
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.google.common.truth.Truth.assertThat
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 
@@ -41,6 +42,7 @@ class CmakeAndroidGradleBuildExtensionsKtTest {
     private lateinit var ndkFolder: File
     private lateinit var toolchain: File
     private lateinit var sourceProperties: File
+    private val logger = RecordingLoggingEnvironment()
 
     @Before
     fun setup() {
@@ -58,6 +60,11 @@ class CmakeAndroidGradleBuildExtensionsKtTest {
         ndkFolder = File(base,"ndk")
         toolchain = File(ndkFolder,"toolchain.cmake")
         sourceProperties = File(ndkFolder,"source.properties")
+    }
+
+    @After
+    fun after() {
+        logger.close()
     }
 
     @Test

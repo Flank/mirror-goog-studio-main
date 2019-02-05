@@ -37,9 +37,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue;
 import com.android.build.gradle.truth.NativeBuildConfigValueSubject;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import java.io.File;
-import java.io.FileNotFoundException;
 import org.junit.Test;
 
 
@@ -52,11 +50,6 @@ public class NativeBuildConfigValueBuilderTest {
                 new NativeBuildConfigValueBuilder(projectPath, projectPath.getParentFile())
                         .addCommands("echo build command", "echo clean command", "debug", string)
                         .build();
-        String actualResult = new GsonBuilder()
-                .setPrettyPrinting()
-                .create()
-                .toJson(actualValue);
-        System.err.println(actualResult);
 
         if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
             expected = expected.replace("/", "\\\\");
@@ -71,7 +64,7 @@ public class NativeBuildConfigValueBuilderTest {
     }
 
     @Test
-    public void doubleTarget() throws FileNotFoundException {
+    public void doubleTarget() {
         assertThatNativeBuildConfigEquals(
                 "g++ -c a.c -o x86_64/a.o\n"
                         + "g++ x86_64/a.o -o x86_64/a.so\n"
@@ -142,7 +135,7 @@ public class NativeBuildConfigValueBuilderTest {
     }
 
     @Test
-    public void includeInSource() throws FileNotFoundException {
+    public void includeInSource() {
         assertThatNativeBuildConfigEquals(
                 "g++ -c a.c -o x/aa.o -Isome-include-path\n",
                 "{\n"
@@ -188,7 +181,7 @@ public class NativeBuildConfigValueBuilderTest {
     }
 
     @Test
-    public void weirdExtension1() throws FileNotFoundException {
+    public void weirdExtension1() {
         assertThatNativeBuildConfigEquals(
                 "g++ -c a.c -o x86_64/aa.o\n"
                         + "g++ -c a.S -o x86_64/aS.so\n"
@@ -243,7 +236,7 @@ public class NativeBuildConfigValueBuilderTest {
     }
 
     @Test
-    public void weirdExtension2() throws FileNotFoundException {
+    public void weirdExtension2() {
         assertThatNativeBuildConfigEquals(
                 "g++ -c a.S -o x86_64/aS.so\n"
                         + "g++ -c a.c -o x86_64/aa.o\n"

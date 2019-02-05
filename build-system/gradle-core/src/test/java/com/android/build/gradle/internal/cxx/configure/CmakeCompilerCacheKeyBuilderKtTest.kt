@@ -134,7 +134,6 @@ class CmakeCompilerCacheKeyBuilderKtTest {
             .trimIndent().split("\n")
         val commandLine = parseCmakeArguments(args)
         val key = makeCmakeCompilerCacheKey(commandLine)!!
-        println(key.toJsonString())
         assertThat(key.ndkInstallationFolder).isNotNull()
         assertThat(key.args).containsExactly(
             "-DANDROID_ABI\u003dx86",

@@ -149,8 +149,9 @@ public class ServerProtocolV1Test {
     @Test
     public void testConfigureWithInteractiveMessages() throws IOException {
         ServerProtocolV1 serverProtocolV1 = createConnectedServer();
+        StringBuilder sb = new StringBuilder();
         serverReceiver.setMessageReceiver(
-                message -> System.err.print("CMAKE SERVER: " + message.message + "\n"));
+                message -> sb.append("CMAKE SERVER: ").append(message.message).append("\n"));
 
         List<String> cacheArguments = getCachedArgs();
 
@@ -173,13 +174,15 @@ public class ServerProtocolV1Test {
         assertThat(ServerUtils.isConfigureResultValid(configureCommandResult.configureResult))
                 .isTrue();
         assertThat(configureCommandResult.interactiveMessages).isEqualTo("Something happened.\n");
+        assertThat(sb.length()).isGreaterThan(0);
     }
 
     @Test
     public void testGetHackyCCompilerExecutable() throws IOException {
         ServerProtocolV1 serverProtocolV1 = createConnectedServer();
+        StringBuilder sb = new StringBuilder();
         serverReceiver.setMessageReceiver(
-                message -> System.err.print("CMAKE SERVER: " + message.message + "\n"));
+                message -> sb.append("CMAKE SERVER: ").append(message.message).append("\n"));
 
         List<String> cacheArguments = getCachedArgs();
 
@@ -214,13 +217,15 @@ public class ServerProtocolV1Test {
         assertThat(c_compiler_info).isEqualTo(C_COMPILER_EXEC);
         final String cc_compiler_info = serverProtocolV1.getCppCompilerExecutable();
         assertThat(cc_compiler_info).isEmpty();
+        assertThat(sb.length()).isGreaterThan(0);
     }
 
     @Test
     public void testGetHackyCxxCompilerExecutable() throws IOException {
         ServerProtocolV1 serverProtocolV1 = createConnectedServer();
+        StringBuilder sb = new StringBuilder();
         serverReceiver.setMessageReceiver(
-                message -> System.err.print("CMAKE SERVER: " + message.message + "\n"));
+                message -> sb.append("CMAKE SERVER: ").append(message.message).append("\n"));
 
         List<String> cacheArguments = getCachedArgs();
 
@@ -255,13 +260,15 @@ public class ServerProtocolV1Test {
         assertThat(c_compiler_info).isEmpty();
         final String cc_compiler_info = serverProtocolV1.getCppCompilerExecutable();
         assertThat(cc_compiler_info).isEqualTo(CXX_COMPILER_EXEC);
+        assertThat(sb.toString().length()).isGreaterThan(0);
     }
 
     @Test
     public void testGetHackyCompilerExecutable() throws IOException {
         ServerProtocolV1 serverProtocolV1 = createConnectedServer();
+        StringBuilder sb = new StringBuilder();
         serverReceiver.setMessageReceiver(
-                message -> System.err.print("CMAKE SERVER: " + message.message + "\n"));
+                message -> sb.append("CMAKE SERVER: ").append(message.message).append("\n"));
 
         List<String> cacheArguments = getCachedArgs();
 
@@ -313,6 +320,7 @@ public class ServerProtocolV1Test {
         assertThat(c_compiler_info).isEqualTo(C_COMPILER_EXEC);
         final String cc_compiler_info = serverProtocolV1.getCppCompilerExecutable();
         assertThat(cc_compiler_info).isEqualTo(CXX_COMPILER_EXEC);
+        assertThat(sb.length()).isGreaterThan(0);
     }
 
     @Test(expected = RuntimeException.class)
