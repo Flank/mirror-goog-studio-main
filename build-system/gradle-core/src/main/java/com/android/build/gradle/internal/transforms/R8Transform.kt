@@ -36,6 +36,7 @@ import com.android.builder.dexing.MainDexListConfig
 import com.android.builder.dexing.ProguardConfig
 import com.android.builder.dexing.R8OutputType
 import com.android.builder.dexing.ToolConfig
+import com.android.builder.dexing.getR8Version
 import com.android.builder.dexing.runR8
 import com.android.ide.common.blame.MessageReceiver
 import org.gradle.api.file.ConfigurableFileCollection
@@ -163,9 +164,10 @@ class R8Transform(
         LoggerWrapper.getLogger(R8Transform::class.java)
             .lifecycle(
                 """
-                |R8 is an experimental feature. If you experience any issues, please file a bug at
+                |R8 is a new Android code shrinker. If you experience any issues, please file a bug at
                 |https://issuetracker.google.com, using 'Shrinker (R8)' as component name. You can
                 |disable R8 by updating gradle.properties with 'android.enableR8=false'.
+                |Current version is: ${getR8Version()}.
                 |""".trimMargin()
             )
 
