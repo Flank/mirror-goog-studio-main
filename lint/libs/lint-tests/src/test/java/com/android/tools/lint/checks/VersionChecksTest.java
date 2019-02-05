@@ -2470,14 +2470,29 @@ public class VersionChecksTest extends AbstractCheckTest {
                                         + "package test.pkg;\n"
                                         + "\n"
                                         + "import android.support.annotation.RequiresApi;\n"
+                                        + "import android.app.job.JobScheduler;\n"
                                         + "\n"
                                         + "@RequiresApi(WorkManager.MIN_JOB_SCHEDULER_API_LEVEL)\n"
                                         + "public class SystemJobScheduler {\n"
                                         + "    public SystemJobScheduler() { }\n"
+                                        + "    \n"
+                                        + "    private JobScheduler mJobScheduler;"
+                                        + "    public void schedule(int systemId) {\n"
+                                        // Regression test for
+                                        // 123945223: @RequiresApi with a reference to a constant
+                                        //   turns off all Lint API level checks for that class
+                                        + "        mJobScheduler.getPendingJob(systemId);\n"
+                                        + "    }\n"
+                                        + "    \n"
                                         + "}\n"),
                         mSupportJar)
                 .run()
-                .expectClean();
+                .expect(
+                        ""
+                                + "src/test/pkg/SystemJobScheduler.java:11: Error: Call requires API level 24 (current min is 23): android.app.job.JobScheduler#getPendingJob [NewApi]\n"
+                                + "        mJobScheduler.getPendingJob(systemId);\n"
+                                + "                      ~~~~~~~~~~~~~\n"
+                                + "1 errors, 0 warnings");
     }
 
     public void test113198297() {
