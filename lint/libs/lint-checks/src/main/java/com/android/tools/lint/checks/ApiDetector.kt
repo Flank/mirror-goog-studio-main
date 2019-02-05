@@ -2495,13 +2495,18 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                                     }
                                 }
                             }
-                        } else if (expression is UReferenceExpression) {
-                            val name = expression.resolvedName
-                            if (name != null) {
-                                return codeNameToApi(name)
-                            }
                         } else {
-                            return codeNameToApi(expression.asSourceString())
+                            val apiLevel = ConstantEvaluator.evaluate(null, expression) as? Int
+                            if (apiLevel != null) {
+                                return apiLevel
+                            } else if (expression is UReferenceExpression) {
+                                val name = expression.resolvedName
+                                if (name != null) {
+                                    return codeNameToApi(name)
+                                }
+                            } else {
+                                return codeNameToApi(expression.asSourceString())
+                            }
                         }
                     }
                 } else if (fqcn == null) {
