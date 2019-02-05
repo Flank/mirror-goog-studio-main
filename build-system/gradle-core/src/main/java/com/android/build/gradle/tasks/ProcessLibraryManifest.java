@@ -19,17 +19,22 @@ package com.android.build.gradle.tasks;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
+import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
+import com.android.build.gradle.internal.tasks.Workers;
+import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ProductFlavor;
+import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.manifmerger.MergingReport;
 import com.android.manifmerger.XmlDocument;
@@ -39,12 +44,15 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 import javax.inject.Inject;
 import org.apache.tools.ant.BuildException;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.tasks.CacheableTask;
@@ -57,6 +65,7 @@ import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
+import org.gradle.workers.WorkerExecutor;
 
 /** a Task that only merge a single manifest with its overlays. */
 @CacheableTask
@@ -71,13 +80,15 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
     private OutputScope outputScope;
 
     private final RegularFileProperty manifestOutputFile;
+    private final WorkerExecutor workerExecutor;
 
     private boolean isNamespaced;
 
     @Inject
-    public ProcessLibraryManifest(ObjectFactory objectFactory) {
+    public ProcessLibraryManifest(ObjectFactory objectFactory, WorkerExecutor workerExecutor) {
         super(objectFactory);
         manifestOutputFile = objectFactory.fileProperty();
+        this.workerExecutor = workerExecutor;
     }
 
     @OutputFile
@@ -88,69 +99,169 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
 
     @Override
     protected void doFullTaskAction() {
-        File aaptFriendlyManifestOutputFile = getAaptFriendlyManifestOutputFile();
-        Collection<ManifestMerger2.Invoker.Feature> optionalFeatures =
-                isNamespaced
-                        ? Collections.singletonList(
-                                ManifestMerger2.Invoker.Feature.FULLY_NAMESPACE_LOCAL_RESOURCES)
-                        : Collections.emptyList();
-        MergingReport mergingReport =
-                getBuilder()
-                        .mergeManifestsForApplication(
-                                getMainManifest(),
-                                getManifestOverlays(),
-                                Collections.emptyList(),
-                                getNavigationFiles(),
-                                null,
-                                getPackageOverride(),
-                                getVersionCode(),
-                                getVersionName(),
-                                getMinSdkVersion(),
-                                getTargetSdkVersion(),
-                                getMaxSdkVersion(),
-                                manifestOutputFile.get().getAsFile().getAbsolutePath(),
-                                aaptFriendlyManifestOutputFile != null
-                                        ? aaptFriendlyManifestOutputFile.getAbsolutePath()
-                                        : null,
-                                null /* outInstantRunManifestLocation */,
-                                null, /*outMetadataFeatureManifestLocation */
-                                null /* outBundleManifestLocation */,
-                                null /* outInstantAppManifestLocation */,
-                                ManifestMerger2.MergeType.LIBRARY,
-                                variantConfiguration.getManifestPlaceholders(),
-                                optionalFeatures,
-                                getReportFile());
+        try (WorkerExecutorFacade workers = Workers.INSTANCE.getWorker(workerExecutor)) {
+            DirectoryProperty manifestOutputDirectory = getManifestOutputDirectory();
+            DirectoryProperty aaptFriendlyManifestOutputDirectory =
+                    getAaptFriendlyManifestOutputDirectory();
 
-        XmlDocument mergedXmlDocument =
-                mergingReport.getMergedXmlDocument(MergingReport.MergedManifestKind.MERGED);
+            workers.submit(
+                    ProcessLibRunnable.class,
+                    new ProcessLibParams(
+                            getAaptFriendlyManifestOutputFile(),
+                            isNamespaced,
+                            getMainManifest(),
+                            getManifestOverlays(),
+                            getNavigationFiles(),
+                            getPackageOverride(),
+                            getVersionCode(),
+                            getVersionName(),
+                            getMinSdkVersion(),
+                            getTargetSdkVersion(),
+                            getMaxSdkVersion(),
+                            manifestOutputFile.get().getAsFile(),
+                            variantConfiguration.getManifestPlaceholders(),
+                            getReportFile(),
+                            manifestOutputDirectory.isPresent()
+                                    ? manifestOutputDirectory.get().getAsFile()
+                                    : null,
+                            aaptFriendlyManifestOutputDirectory.isPresent()
+                                    ? aaptFriendlyManifestOutputDirectory.get().getAsFile()
+                                    : null,
+                            outputScope.getMainSplit()));
+        }
+    }
 
-        ImmutableMap<String, String> properties =
-                mergedXmlDocument != null
-                        ? ImmutableMap.of(
-                                "packageId", mergedXmlDocument.getPackageName(),
-                                "split", mergedXmlDocument.getSplitName())
-                        : ImmutableMap.of();
+    private static class ProcessLibParams implements Serializable {
+        @Nullable private final File aaptFriendlyManifestOutputFile;
+        private final boolean isNamespaced;
+        @NonNull private final File mainManifest;
+        @NonNull private final List<File> manifestOverlays;
+        @NonNull private final List<File> navigationFiles;
+        @NonNull private final String packageOverride;
+        private final int versionCode;
+        @Nullable private final String versionName;
+        @Nullable private final String minSdkVersion;
+        @Nullable private final String targetSdkVersion;
+        @Nullable private final Integer maxSdkVersion;
+        @NonNull private final File manifestOutputFile;
+        @NonNull private final Map<String, Object> manifestPlaceholders;
+        @NonNull private final File reportFile;
+        @Nullable private final File manifestOutputDirectory;
+        @Nullable private final File aaptFriendlyManifestOutputDirectory;
+        @NonNull private final ApkData mainSplit;
 
-        try {
-            if (getManifestOutputDirectory().isPresent()) {
-                new BuildOutput(
-                                InternalArtifactType.MERGED_MANIFESTS,
-                                outputScope.getMainSplit(),
-                                manifestOutputFile.get().getAsFile(),
-                                properties)
-                        .save(getManifestOutputDirectory().get().getAsFile());
+        private ProcessLibParams(
+                @Nullable File aaptFriendlyManifestOutputFile,
+                boolean isNamespaced,
+                @NonNull File mainManifest,
+                @NonNull List<File> manifestOverlays,
+                @NonNull List<File> navigationFiles,
+                @NonNull String packageOverride,
+                int versionCode,
+                @Nullable String versionName,
+                @Nullable String minSdkVersion,
+                @Nullable String targetSdkVersion,
+                @Nullable Integer maxSdkVersion,
+                @NonNull File manifestOutputFile,
+                @NonNull Map<String, Object> manifestPlaceholders,
+                @NonNull File reportFile,
+                @Nullable File manifestOutputDirectory,
+                @Nullable File aaptFriendlyManifestOutputDirectory,
+                @NonNull ApkData mainSplit) {
+            this.aaptFriendlyManifestOutputFile = aaptFriendlyManifestOutputFile;
+            this.isNamespaced = isNamespaced;
+            this.mainManifest = mainManifest;
+            this.manifestOverlays = manifestOverlays;
+            this.navigationFiles = navigationFiles;
+            this.packageOverride = packageOverride;
+            this.versionCode = versionCode;
+            this.versionName = versionName;
+            this.minSdkVersion = minSdkVersion;
+            this.targetSdkVersion = targetSdkVersion;
+            this.maxSdkVersion = maxSdkVersion;
+            this.manifestOutputFile = manifestOutputFile;
+            this.manifestPlaceholders = manifestPlaceholders;
+            this.reportFile = reportFile;
+            this.manifestOutputDirectory = manifestOutputDirectory;
+            this.aaptFriendlyManifestOutputDirectory = aaptFriendlyManifestOutputDirectory;
+            this.mainSplit = mainSplit;
+        }
+    }
+
+    public static class ProcessLibRunnable implements Runnable {
+        @NonNull private final ProcessLibParams params;
+
+        @Inject
+        public ProcessLibRunnable(@NonNull ProcessLibParams params) {
+            this.params = params;
+        }
+
+        @Override
+        public void run() {
+            Collection<ManifestMerger2.Invoker.Feature> optionalFeatures =
+                    params.isNamespaced
+                            ? Collections.singletonList(
+                                    ManifestMerger2.Invoker.Feature.FULLY_NAMESPACE_LOCAL_RESOURCES)
+                            : Collections.emptyList();
+            MergingReport mergingReport =
+                    AndroidBuilder.mergeManifestsForApplication(
+                            params.mainManifest,
+                            params.manifestOverlays,
+                            Collections.emptyList(),
+                            params.navigationFiles,
+                            null,
+                            params.packageOverride,
+                            params.versionCode,
+                            params.versionName,
+                            params.minSdkVersion,
+                            params.targetSdkVersion,
+                            params.maxSdkVersion,
+                            params.manifestOutputFile.getAbsolutePath(),
+                            params.aaptFriendlyManifestOutputFile != null
+                                    ? params.aaptFriendlyManifestOutputFile.getAbsolutePath()
+                                    : null,
+                            null /* outInstantRunManifestLocation */,
+                            null, /*outMetadataFeatureManifestLocation */
+                            null /* outBundleManifestLocation */,
+                            null /* outInstantAppManifestLocation */,
+                            ManifestMerger2.MergeType.LIBRARY,
+                            params.manifestPlaceholders,
+                            optionalFeatures,
+                            params.reportFile,
+                            LoggerWrapper.getLogger(ProcessLibraryManifest.class));
+
+            XmlDocument mergedXmlDocument =
+                    mergingReport.getMergedXmlDocument(MergingReport.MergedManifestKind.MERGED);
+
+            ImmutableMap<String, String> properties =
+                    mergedXmlDocument != null
+                            ? ImmutableMap.of(
+                                    "packageId", mergedXmlDocument.getPackageName(),
+                                    "split", mergedXmlDocument.getSplitName())
+                            : ImmutableMap.of();
+
+            try {
+                if (params.manifestOutputDirectory != null) {
+                    new BuildOutput(
+                                    InternalArtifactType.MERGED_MANIFESTS,
+                                    params.mainSplit,
+                                    params.manifestOutputFile,
+                                    properties)
+                            .save(params.manifestOutputDirectory);
+                }
+
+                if (params.aaptFriendlyManifestOutputDirectory != null) {
+                    new BuildOutput(
+                                    InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
+                                    params.mainSplit,
+                                    params.aaptFriendlyManifestOutputFile,
+                                    properties)
+                            .save(params.aaptFriendlyManifestOutputDirectory);
+                }
+            } catch (IOException e) {
+                throw new BuildException("Exception while saving build metadata : ", e);
             }
 
-            if (getAaptFriendlyManifestOutputDirectory().isPresent()) {
-                new BuildOutput(
-                                InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
-                                outputScope.getMainSplit(),
-                                aaptFriendlyManifestOutputFile,
-                                properties)
-                        .save(getAaptFriendlyManifestOutputDirectory().get().getAsFile());
-            }
-        } catch (IOException e) {
-            throw new BuildException("Exception while saving build metadata : ", e);
         }
     }
 
@@ -215,6 +326,7 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
 
     @Input
     @Optional
+    @Nullable
     public String getVersionName() {
         return variantConfiguration.getVersionName();
     }

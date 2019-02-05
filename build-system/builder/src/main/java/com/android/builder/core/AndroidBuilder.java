@@ -428,7 +428,7 @@ public class AndroidBuilder {
     }
 
     /** Invoke the Manifest Merger version 2. */
-    public MergingReport mergeManifestsForApplication(
+    public static MergingReport mergeManifestsForApplication(
             @NonNull File mainManifest,
             @NonNull List<File> manifestOverlays,
             @NonNull List<? extends ManifestProvider> dependencies,
@@ -449,12 +449,13 @@ public class AndroidBuilder {
             ManifestMerger2.MergeType mergeType,
             Map<String, Object> placeHolders,
             @NonNull Collection<Invoker.Feature> optionalFeatures,
-            @Nullable File reportFile) {
+            @Nullable File reportFile,
+            @NonNull ILogger logger) {
 
         try {
 
             Invoker manifestMergerInvoker =
-                    ManifestMerger2.newMerger(mainManifest, mLogger, mergeType)
+                    ManifestMerger2.newMerger(mainManifest, logger, mergeType)
                             .setPlaceHolderValues(placeHolders)
                             .addFlavorAndBuildTypeManifests(manifestOverlays.toArray(new File[0]))
                             .addManifestProviders(dependencies)
@@ -477,10 +478,10 @@ public class AndroidBuilder {
                     minSdkVersion, targetSdkVersion, maxSdkVersion);
 
             MergingReport mergingReport = manifestMergerInvoker.merge();
-            mLogger.verbose("Merging result: %1$s", mergingReport.getResult());
+            logger.verbose("Merging result: %1$s", mergingReport.getResult());
             switch (mergingReport.getResult()) {
                 case WARNING:
-                    mergingReport.log(mLogger);
+                    mergingReport.log(logger);
                     // fall through since these are just warnings.
                 case SUCCESS:
                     String xmlDocument =
@@ -489,10 +490,10 @@ public class AndroidBuilder {
                     String annotatedDocument =
                             mergingReport.getMergedDocument(MergingReport.MergedManifestKind.BLAME);
                     if (annotatedDocument != null) {
-                        mLogger.verbose(annotatedDocument);
+                        logger.verbose(annotatedDocument);
                     }
                     save(xmlDocument, new File(outManifestLocation));
-                    mLogger.verbose("Merged manifest saved to " + outManifestLocation);
+                    logger.verbose("Merged manifest saved to " + outManifestLocation);
 
                     if (outAaptSafeManifestLocation != null) {
                         save(
@@ -540,7 +541,7 @@ public class AndroidBuilder {
                     }
                     break;
                 case ERROR:
-                    mergingReport.log(mLogger);
+                    mergingReport.log(logger);
                     throw new RuntimeException(mergingReport.getReportString());
                 default:
                     throw new RuntimeException("Unhandled result type : "

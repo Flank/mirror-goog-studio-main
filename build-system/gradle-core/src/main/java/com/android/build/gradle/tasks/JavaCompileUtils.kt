@@ -18,26 +18,26 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.gradle.api.AnnotationProcessorOptions
-import com.android.build.gradle.internal.scope.VariantScope
-import com.google.common.base.Joiner
-import org.gradle.api.tasks.compile.JavaCompile
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROCESSED_JAR
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.ANNOTATION_PROCESSOR
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
+import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.profile.ProcessProfileWriter
 import com.android.utils.FileUtils
+import com.google.common.base.Joiner
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.google.wireless.android.sdk.stats.AnnotationProcessorInfo
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
+import org.gradle.api.tasks.compile.JavaCompile
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter
 import java.io.IOException
+import java.io.Serializable
 import java.io.UncheckedIOException
 import java.util.jar.JarFile
 
@@ -105,6 +105,15 @@ fun JavaCompile.configurePropertiesForAnnotationProcessing(scope: VariantScope) 
     compileOptions.annotationProcessorGeneratedSourcesDirectory = scope.annotationProcessorOutputDir
 }
 
+data class SerializableArtifact(
+    val displayName: String,
+    val file: File
+) : Serializable {
+
+    constructor(artifact: ResolvedArtifactResult) : this(artifact.id.displayName, artifact.file)
+}
+
+
 /**
  * Detects all the annotation processors that will be executed and finds out whether they are
  * incremental or not.
@@ -119,15 +128,16 @@ fun JavaCompile.configurePropertiesForAnnotationProcessing(scope: VariantScope) 
  * incremental or not
  */
 fun detectAnnotationProcessors(
-    processorOptions: AnnotationProcessorOptions,
-    processorClasspath: ArtifactCollection,
-    compileClasspath: ArtifactCollection
+    apOptionIncludeCompileClasspath: Boolean?,
+    apOptionClassNames: List<String>,
+    processorClasspath: Collection<SerializableArtifact>,
+    compileClasspath: Collection<SerializableArtifact>
 ): Map<String, Boolean> {
     val processors = mutableMapOf<String, Boolean>()
 
-    if (!processorOptions.classNames.isEmpty()) {
+    if (!apOptionClassNames.isEmpty()) {
         // If the processor names are specified, the Java compiler will run only those
-        for (processor in processorOptions.classNames) {
+        for (processor in apOptionClassNames) {
             // TODO Assume the annotation processors are non-incremental for now, we will improve
             // this later. We will also need to check if the processor names can be found on the
             // annotation processor or compile classpath.
@@ -136,15 +146,15 @@ fun detectAnnotationProcessors(
     } else {
         // If the processor names are not specified, the Java compiler will auto-detect them on the
         // annotation processor or compile classpath.
-        val processorArtifacts = mutableMapOf<ResolvedArtifactResult, Boolean>()
+        val processorArtifacts = mutableMapOf<SerializableArtifact, Boolean>()
         processorArtifacts.putAll(detectAnnotationProcessors(processorClasspath))
 
         // Add those on the compile classpath only when includeCompileClasspath is true.
-        if (java.lang.Boolean.TRUE == processorOptions.includeCompileClasspath) {
+        if (java.lang.Boolean.TRUE == apOptionIncludeCompileClasspath) {
             processorArtifacts.putAll(detectAnnotationProcessors(compileClasspath))
         }
 
-        processors.putAll(processorArtifacts.mapKeys { it -> it.key.id.displayName })
+        processors.putAll(processorArtifacts.mapKeys { it.key.displayName })
     }
 
     return processors
@@ -158,13 +168,13 @@ fun detectAnnotationProcessors(
  * incremental or not
  */
 fun detectAnnotationProcessors(
-    artifacts: ArtifactCollection
-): Map<ResolvedArtifactResult, Boolean> {
+    artifacts: Collection<SerializableArtifact>
+): Map<SerializableArtifact, Boolean> {
     // TODO We assume that an artifact has an annotation processor if it contains
     // ANNOTATION_PROCESSORS_INDICATOR_FILE, and the processor is incremental if it contains
     // INCREMENTAL_ANNOTATION_PROCESSORS_INDICATOR_FILE. We need to revisit this assumption as the
     // processors may register as incremental dynamically.
-    val processors = mutableMapOf<ResolvedArtifactResult, Boolean>()
+    val processors = mutableMapOf<SerializableArtifact, Boolean>()
 
     for (artifact in artifacts) {
         val artifactFile = artifact.file

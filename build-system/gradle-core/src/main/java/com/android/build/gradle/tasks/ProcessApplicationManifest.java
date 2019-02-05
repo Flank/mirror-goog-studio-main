@@ -29,6 +29,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
+import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.core.VariantConfiguration;
@@ -49,6 +50,7 @@ import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexingType;
 import com.android.builder.model.ApiVersion;
@@ -204,40 +206,40 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
                             : null;
 
             MergingReport mergingReport =
-                    getBuilder()
-                            .mergeManifestsForApplication(
-                                    getMainManifest(),
-                                    getManifestOverlays(),
-                                    computeFullProviderList(compatibleScreenManifestForSplit),
-                                    getNavigationFiles(),
-                                    getFeatureName(),
-                                    moduleMetadata == null
-                                            ? getPackageOverride()
-                                            : moduleMetadata.getApplicationId(),
-                                    moduleMetadata == null
-                                            ? apkData.getVersionCode()
-                                            : Integer.parseInt(moduleMetadata.getVersionCode()),
-                                    moduleMetadata == null
-                                            ? apkData.getVersionName()
-                                            : moduleMetadata.getVersionName(),
-                                    getMinSdkVersion(),
-                                    getTargetSdkVersion(),
-                                    getMaxSdkVersion(),
-                                    manifestOutputFile.getAbsolutePath(),
-                                    // no aapt friendly merged manifest file necessary for applications.
-                                    null /* aaptFriendlyManifestOutputFile */,
-                                    instantRunManifestOutputFile != null
-                                            ? instantRunManifestOutputFile.getAbsolutePath()
-                                            : null,
-                                    metadataFeatureManifestOutputFile.getAbsolutePath(),
-                                    bundleManifestOutputFile.getAbsolutePath(),
-                                    instantAppManifestOutputFile != null
-                                            ? instantAppManifestOutputFile.getAbsolutePath()
-                                            : null,
-                                    ManifestMerger2.MergeType.APPLICATION,
-                                    variantConfiguration.getManifestPlaceholders(),
-                                    getOptionalFeatures(),
-                                    getReportFile());
+                    AndroidBuilder.mergeManifestsForApplication(
+                            getMainManifest(),
+                            getManifestOverlays(),
+                            computeFullProviderList(compatibleScreenManifestForSplit),
+                            getNavigationFiles(),
+                            getFeatureName(),
+                            moduleMetadata == null
+                                    ? getPackageOverride()
+                                    : moduleMetadata.getApplicationId(),
+                            moduleMetadata == null
+                                    ? apkData.getVersionCode()
+                                    : Integer.parseInt(moduleMetadata.getVersionCode()),
+                            moduleMetadata == null
+                                    ? apkData.getVersionName()
+                                    : moduleMetadata.getVersionName(),
+                            getMinSdkVersion(),
+                            getTargetSdkVersion(),
+                            getMaxSdkVersion(),
+                            manifestOutputFile.getAbsolutePath(),
+                            // no aapt friendly merged manifest file necessary for applications.
+                            null /* aaptFriendlyManifestOutputFile */,
+                            instantRunManifestOutputFile != null
+                                    ? instantRunManifestOutputFile.getAbsolutePath()
+                                    : null,
+                            metadataFeatureManifestOutputFile.getAbsolutePath(),
+                            bundleManifestOutputFile.getAbsolutePath(),
+                            instantAppManifestOutputFile != null
+                                    ? instantAppManifestOutputFile.getAbsolutePath()
+                                    : null,
+                            ManifestMerger2.MergeType.APPLICATION,
+                            variantConfiguration.getManifestPlaceholders(),
+                            getOptionalFeatures(),
+                            getReportFile(),
+                            LoggerWrapper.getLogger(ProcessApplicationManifest.class));
 
             XmlDocument mergedXmlDocument =
                     mergingReport.getMergedXmlDocument(MergingReport.MergedManifestKind.MERGED);

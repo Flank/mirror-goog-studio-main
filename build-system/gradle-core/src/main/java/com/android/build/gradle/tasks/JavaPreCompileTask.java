@@ -24,26 +24,35 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import static com.android.build.gradle.internal.scope.BuildArtifactsHolder.OperationType.APPEND;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
+import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
+import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.io.Serializable;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
+import javax.inject.Inject;
 import org.gradle.api.artifacts.ArtifactCollection;
-import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFile;
+import org.gradle.api.logging.Logging;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.workers.WorkerExecutor;
 
 /** Tasks to perform necessary action before a JavaCompile. */
 @CacheableTask
@@ -60,6 +69,13 @@ public class JavaPreCompileTask extends AndroidBuilderTask {
     private AnnotationProcessorOptions annotationProcessorOptions;
 
     private boolean isTestComponent;
+
+    private final WorkerExecutorFacade workers;
+
+    @Inject
+    public JavaPreCompileTask(WorkerExecutor workerExecutor) {
+        workers = Workers.INSTANCE.getWorker(workerExecutor);
+    }
 
     @VisibleForTesting
     void init(
@@ -94,54 +110,124 @@ public class JavaPreCompileTask extends AndroidBuilderTask {
 
     @TaskAction
     public void preCompile() {
-        if (annotationProcessorOptions.getIncludeCompileClasspath() == null) {
-            FileCollection processorClasspath = annotationProcessorConfiguration.getArtifactFiles();
+        try (WorkerExecutorFacade workerExecutor = this.workers) {
+            workerExecutor.submit(
+                    PreCompileRunnable.class,
+                    new PreCompileParams(
+                            processorListFile,
+                            annotationProcessorConfigurationName,
+                            toSerializable(annotationProcessorConfiguration),
+                            toSerializable(compileClasspaths),
+                            isTestComponent,
+                            annotationProcessorOptions.getClassNames(),
+                            annotationProcessorOptions.getIncludeCompileClasspath()));
+        }
+    }
 
-            // Detect processors that are on the compile classpath but not on the annotation
-            // processor classpath
-            Collection<ResolvedArtifactResult> violatingProcessors =
-                    JavaCompileUtils.detectAnnotationProcessors(compileClasspaths).keySet();
-            violatingProcessors =
-                    violatingProcessors
-                            .stream()
-                            .filter(artifact -> !processorClasspath.contains(artifact.getFile()))
-                            .collect(Collectors.toList());
+    @NonNull
+    private static Collection<SerializableArtifact> toSerializable(
+            @NonNull ArtifactCollection artifactCollection) {
+        return artifactCollection
+                .getArtifacts()
+                .stream()
+                .map(SerializableArtifact::new)
+                .collect(ImmutableList.toImmutableList());
+    }
 
-            if (!violatingProcessors.isEmpty()) {
-                Collection<String> violatingProcessorNames =
-                        violatingProcessors
-                                .stream()
-                                .map(artifact -> artifact.getId().getDisplayName())
-                                .collect(Collectors.toList());
-                String message =
-                        "Annotation processors must be explicitly declared now.  The following "
-                                + "dependencies on the compile classpath are found to contain "
-                                + "annotation processor.  Please add them to the "
-                                + annotationProcessorConfigurationName
-                                + " configuration.\n  - "
-                                + Joiner.on("\n  - ").join(violatingProcessorNames)
-                                + "\nAlternatively, set "
-                                + "android.defaultConfig.javaCompileOptions.annotationProcessorOptions.includeCompileClasspath = true "
-                                + "to continue with previous behavior.  Note that this option "
-                                + "is deprecated and will be removed in the future.\n"
-                                + "See "
-                                + "https://developer.android.com/r/tools/annotation-processor-error-message.html "
-                                + "for more details.";
-                if (isTestComponent) {
-                    getLogger().warn(message);
-                } else {
-                    throw new RuntimeException(message);
-                }
-            }
+    static class PreCompileParams implements Serializable {
+        @NonNull private final File processorListFile;
+        @NonNull private final String annotationProcessorConfigurationName;
+        @NonNull private final Collection<SerializableArtifact> annotationProcessorConfiguration;
+        @NonNull private final Collection<SerializableArtifact> compileClasspaths;
+        private final boolean isTestComponent;
+        @NonNull private final List<String> apOptionClassNames;
+        @Nullable final Boolean apOptionIncludeCompileClasspath;
+
+        public PreCompileParams(
+                @NonNull File processorListFile,
+                @NonNull String annotationProcessorConfigurationName,
+                @NonNull Collection<SerializableArtifact> annotationProcessorConfiguration,
+                @NonNull Collection<SerializableArtifact> compileClasspaths,
+                boolean isTestComponent,
+                @NonNull List<String> apOptionClassNames,
+                @Nullable Boolean apOptionIncludeCompileClasspath) {
+            this.processorListFile = processorListFile;
+            this.annotationProcessorConfigurationName = annotationProcessorConfigurationName;
+            this.annotationProcessorConfiguration = annotationProcessorConfiguration;
+            this.compileClasspaths = compileClasspaths;
+            this.isTestComponent = isTestComponent;
+            this.apOptionClassNames = apOptionClassNames;
+            this.apOptionIncludeCompileClasspath = apOptionIncludeCompileClasspath;
+        }
+    }
+
+    public static class PreCompileRunnable implements Runnable {
+        @NonNull private final PreCompileParams params;
+
+        @Inject
+        public PreCompileRunnable(@NonNull PreCompileParams params) {
+            this.params = params;
         }
 
-        Map<String, Boolean> annotationProcessors =
-                JavaCompileUtils.detectAnnotationProcessors(
-                        annotationProcessorOptions,
-                        annotationProcessorConfiguration,
-                        compileClasspaths);
-        JavaCompileUtils.writeAnnotationProcessorsToJsonFile(
-                annotationProcessors, processorListFile);
+        @Override
+        public void run() {
+            if (params.apOptionIncludeCompileClasspath == null) {
+                Set<File> processorClasspath =
+                        params.annotationProcessorConfiguration
+                                .stream()
+                                .map(SerializableArtifact::getFile)
+                                .collect(Collectors.toSet());
+
+                // Detect processors that are on the compile classpath but not on the annotation
+                // processor classpath
+                Collection<SerializableArtifact> violatingProcessors =
+                        JavaCompileUtils.detectAnnotationProcessors(params.compileClasspaths)
+                                .keySet();
+                violatingProcessors =
+                        violatingProcessors
+                                .stream()
+                                .filter(
+                                        artifact ->
+                                                !processorClasspath.contains(artifact.getFile()))
+                                .collect(Collectors.toList());
+
+                if (!violatingProcessors.isEmpty()) {
+                    Collection<String> violatingProcessorNames =
+                            violatingProcessors
+                                    .stream()
+                                    .map(SerializableArtifact::getDisplayName)
+                                    .collect(Collectors.toList());
+                    String message =
+                            "Annotation processors must be explicitly declared now.  The following "
+                                    + "dependencies on the compile classpath are found to contain "
+                                    + "annotation processor.  Please add them to the "
+                                    + params.annotationProcessorConfigurationName
+                                    + " configuration.\n  - "
+                                    + Joiner.on("\n  - ").join(violatingProcessorNames)
+                                    + "\nAlternatively, set "
+                                    + "android.defaultConfig.javaCompileOptions.annotationProcessorOptions.includeCompileClasspath = true "
+                                    + "to continue with previous behavior.  Note that this option "
+                                    + "is deprecated and will be removed in the future.\n"
+                                    + "See "
+                                    + "https://developer.android.com/r/tools/annotation-processor-error-message.html "
+                                    + "for more details.";
+                    if (params.isTestComponent) {
+                        Logging.getLogger(JavaPreCompileTask.class).warn(message);
+                    } else {
+                        throw new RuntimeException(message);
+                    }
+                }
+            }
+
+            Map<String, Boolean> annotationProcessors =
+                    JavaCompileUtils.detectAnnotationProcessors(
+                            params.apOptionIncludeCompileClasspath,
+                            params.apOptionClassNames,
+                            params.annotationProcessorConfiguration,
+                            params.compileClasspaths);
+            JavaCompileUtils.writeAnnotationProcessorsToJsonFile(
+                    annotationProcessors, params.processorListFile);
+        }
     }
 
     public static class CreationAction extends VariantTaskCreationAction<JavaPreCompileTask> {

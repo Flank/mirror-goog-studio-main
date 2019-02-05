@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.TaskInputHelper
+import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ProcessAndroidResources
@@ -31,6 +32,7 @@ import com.android.ide.common.symbols.IdProvider
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
 import com.android.ide.common.symbols.parseResourceSourceSetDirectory
+import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.common.base.Strings
 import com.google.common.collect.Iterables
 import org.gradle.api.file.FileCollection
@@ -44,11 +46,16 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.IOException
+import java.io.Serializable
+import javax.inject.Inject
 
 @CacheableTask
-open class GenerateLibraryRFileTask : ProcessAndroidResources() {
+open class GenerateLibraryRFileTask @Inject constructor(workerExecutor: WorkerExecutor) : ProcessAndroidResources() {
+
+    private val workers: WorkerExecutorFacade = Workers.getWorker(workerExecutor)
 
     @get:OutputDirectory @get:Optional var sourceOutputDirectory: File? = null; private set
     @Input fun outputSources() = sourceOutputDirectory != null
@@ -100,38 +107,74 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
                 ExistingBuildElements.from(InternalArtifactType.MERGED_MANIFESTS, manifestFiles))
                 .outputFile
 
-        val androidAttrSymbol = getAndroidAttrSymbols(platformAttrRTxt.singleFile)
+        workers.use {
+            it.submit(
+                GenerateLibRFileRunnable::class.java,
+                GenerateLibRFileParams(
+                    manifest,
+                    platformAttrRTxt.singleFile,
+                    inputResourcesDir.single(),
+                    dependencies.files,
+                    packageForR.get(),
+                    sourceOutputDirectory,
+                    rClassOutputJar,
+                    textSymbolOutputFile,
+                    proguardOutputFile,
+                    namespacedRClass,
+                    symbolsWithPackageNameOutputFile
+                )
+            )
+        }
+    }
 
-        val symbolTable = parseResourceSourceSetDirectory(
-                inputResourcesDir.single(),
+    data class GenerateLibRFileParams(
+        val manifest: File,
+        val androidJar: File,
+        val inputResourcesDir: File,
+        val dependencies: Set<File>,
+        val packageForR: String,
+        val sourceOutputDirectory: File?,
+        val rClassOutputJar: File?,
+        val textSymbolOutputFile: File,
+        val proguardOutputFile: File?,
+        val namespacedRClass: Boolean,
+        val symbolsWithPackageNameOutputFile: File
+    ) : Serializable
+
+    class GenerateLibRFileRunnable @Inject constructor(private val params: GenerateLibRFileParams) : Runnable {
+        override fun run() {
+            val androidAttrSymbol = getAndroidAttrSymbols()
+
+            val symbolTable = parseResourceSourceSetDirectory(
+                params.inputResourcesDir,
                 IdProvider.sequential(),
                 androidAttrSymbol)
 
-        processLibraryMainSymbolTable(
+            processLibraryMainSymbolTable(
                 librarySymbols = symbolTable,
-                libraries = this.dependencies.files,
-                mainPackageName = packageForR.get(),
-                manifestFile = manifest,
-                sourceOut = sourceOutputDirectory,
-                rClassOutputJar = rClassOutputJar,
-                symbolFileOut = textSymbolOutputFile,
-                proguardOut = proguardOutputFile,
-                mergedResources = inputResourcesDir.single(),
+                libraries = params.dependencies,
+                mainPackageName = params.packageForR,
+                manifestFile = params.manifest,
+                sourceOut = params.sourceOutputDirectory,
+                rClassOutputJar = params.rClassOutputJar,
+                symbolFileOut = params.textSymbolOutputFile,
+                proguardOut = params.proguardOutputFile,
+                mergedResources = params.inputResourcesDir,
                 platformSymbols = androidAttrSymbol,
-                namespacedRClass = namespacedRClass)
+                namespacedRClass = params.namespacedRClass)
 
-        SymbolIo.writeSymbolListWithPackageName(
-                textSymbolOutputFile.toPath(),
-                manifest.toPath(),
-                symbolsWithPackageNameOutputFile.toPath())
-    }
+            SymbolIo.writeSymbolListWithPackageName(
+                params.textSymbolOutputFile.toPath(),
+                params.manifest.toPath(),
+                params.symbolsWithPackageNameOutputFile.toPath())
+        }
 
-    private fun getAndroidAttrSymbols(androidJar: File) =
-            if (androidJar.exists())
-                SymbolIo.readFromAapt(androidJar, "android")
+        private fun getAndroidAttrSymbols() =
+            if (params.androidJar.exists())
+                SymbolIo.readFromAapt(params.androidJar, "android")
             else
                 SymbolTable.builder().tablePackage("android").build()
-
+    }
 
 
     class CreationAction(
