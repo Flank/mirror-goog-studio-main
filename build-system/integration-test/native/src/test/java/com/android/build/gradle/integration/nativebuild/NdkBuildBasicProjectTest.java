@@ -44,7 +44,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 /** Assemble tests for ndk-build. */
-public class NdkBuildTest {
+public class NdkBuildBasicProjectTest {
 
     @Rule
     public GradleTestProject project =
@@ -100,7 +100,7 @@ public class NdkBuildTest {
     }
 
     @Test
-    public void apk() throws IOException, InterruptedException {
+    public void checkApkContent() throws IOException, InterruptedException {
         AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         project.execute("clean", "assembleDebug");
         Apk apk = project.getApk("debug");
@@ -116,7 +116,7 @@ public class NdkBuildTest {
     }
 
     @Test
-    public void injectedAbi() throws IOException, InterruptedException {
+    public void checkApkContentWithInjectedAbi() throws IOException, InterruptedException {
         AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         // Pass invalid-abi, x86 and armeabi. The first (invalid-abi) should be ignored because
         // it is not valid for the build . The second (x86) should be the one chosen to build.
@@ -138,7 +138,7 @@ public class NdkBuildTest {
     }
 
     @Test
-    public void model() throws IOException {
+    public void checkModel() throws IOException {
         project.model().fetchAndroidProjects(); // Make sure we can successfully get AndroidProject
         NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
         assertThat(model.getBuildSystems()).containsExactly(NativeBuildSystem.NDK_BUILD.getName());
@@ -166,7 +166,7 @@ public class NdkBuildTest {
     }
 
     @Test
-    public void clean() throws IOException, InterruptedException {
+    public void checkClean() throws IOException, InterruptedException {
         AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         project.execute("clean", "assembleDebug", "assembleRelease");
         NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
@@ -181,7 +181,7 @@ public class NdkBuildTest {
     }
 
     @Test
-    public void abiSubset() throws IOException, InterruptedException {
+    public void checkCleanAfterAbiSubset() throws IOException, InterruptedException {
         AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         project.execute("clean", "assembleDebug", "assembleRelease");
         NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);

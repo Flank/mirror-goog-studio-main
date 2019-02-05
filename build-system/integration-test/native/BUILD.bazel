@@ -77,12 +77,10 @@ MAVEN_REPOS = [
     "//tools/base/build-system/integration-test/native:prebuilts",
 ]
 
-WINDOWS_DISABLED_TAG = [
-    "no_test_windows",  # b/73306170
-]
-
-MAC_DISABLED_TAG = [
+#keep sorted
+TAGS = [
     "no_test_mac_psq",  # b/113099009
+    "no_test_windows",  # b/73306170
 ]
 
 single_gradle_integration_test(
@@ -90,7 +88,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = WINDOWS_DISABLED_TAG + MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -99,7 +97,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = WINDOWS_DISABLED_TAG + MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -108,7 +106,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -117,7 +115,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = WINDOWS_DISABLED_TAG + MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -126,7 +124,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = WINDOWS_DISABLED_TAG + MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -135,7 +133,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + ANDROID_23 + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -144,7 +142,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = WINDOWS_DISABLED_TAG + MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -153,7 +151,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = WINDOWS_DISABLED_TAG + MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -162,7 +160,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = WINDOWS_DISABLED_TAG + MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -171,7 +169,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = WINDOWS_DISABLED_TAG + MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -180,7 +178,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = WINDOWS_DISABLED_TAG + MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -189,7 +187,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = WINDOWS_DISABLED_TAG + MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -198,7 +196,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -207,7 +205,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = WINDOWS_DISABLED_TAG + MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -216,7 +214,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = WINDOWS_DISABLED_TAG + MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -225,7 +223,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = WINDOWS_DISABLED_TAG + MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -234,7 +232,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = WINDOWS_DISABLED_TAG + MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -243,7 +241,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -252,16 +250,16 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = WINDOWS_DISABLED_TAG + MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
 single_gradle_integration_test(
-    name = "NdkBuildTest",
+    name = "NdkBuildBasicProjectTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -270,7 +268,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + ANDROID_23 + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = WINDOWS_DISABLED_TAG + MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -279,7 +277,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = WINDOWS_DISABLED_TAG + MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -288,7 +286,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = WINDOWS_DISABLED_TAG + MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -297,7 +295,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = WINDOWS_DISABLED_TAG + MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -306,7 +304,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = WINDOWS_DISABLED_TAG + MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -315,7 +313,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = WINDOWS_DISABLED_TAG + MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -324,7 +322,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = WINDOWS_DISABLED_TAG + MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -333,7 +331,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -342,7 +340,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK_LEGACY,
     maven_repos = MAVEN_REPOS,
-    tags = MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -351,7 +349,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = MAC_DISABLED_TAG + [
+    tags = TAGS + [
         "no_test_mac",  # b/110846203
     ],
     deps = DEPS,
@@ -362,7 +360,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/ndk/",
     data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = WINDOWS_DISABLED_TAG + MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -371,7 +369,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/ndk/",
     data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -380,7 +378,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/ndk/",
     data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -389,7 +387,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/ndk/",
     data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = WINDOWS_DISABLED_TAG + MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -398,7 +396,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/ndk/",
     data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = WINDOWS_DISABLED_TAG + MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
@@ -407,7 +405,7 @@ single_gradle_integration_test(
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
-    tags = WINDOWS_DISABLED_TAG + MAC_DISABLED_TAG,
+    tags = TAGS,
     deps = DEPS,
 )
 
