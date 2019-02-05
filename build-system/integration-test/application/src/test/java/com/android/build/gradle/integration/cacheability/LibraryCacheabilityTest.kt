@@ -69,6 +69,7 @@ class LibraryCacheabilityTest {
                     ":lib:generateReleaseRFile",
                     ":lib:javaPreCompileRelease",
                     ":lib:mergeReleaseJniLibFolders",
+                    ":lib:mergeReleaseNativeLibs",
                     ":lib:mergeReleaseShaders",
                     ":lib:mergeReleaseResources",
                     ":lib:packageReleaseAssets",
@@ -88,7 +89,6 @@ class LibraryCacheabilityTest {
                     ":lib:mergeReleaseJavaResource" /* Bug 74595224 */,
                     ":lib:prepareLintJarForPublish" /* Bug 120413672 */,
                     ":lib:transformClassesAndResourcesWithSyncLibJarsForRelease" /* Bug 121275815 */,
-                    ":lib:transformNativeLibsWithMergeJniLibsForRelease" /* Bug 74595223 */,
                     ":lib:transformNativeLibsWithStripDebugSymbolForRelease" /* Bug 120414535 */,
                     ":lib:transformNativeLibsWithSyncJniLibsForRelease" /* Bug 121275531 */
                 ),

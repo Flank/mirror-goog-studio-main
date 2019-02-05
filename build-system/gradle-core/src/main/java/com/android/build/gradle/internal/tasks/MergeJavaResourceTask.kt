@@ -15,25 +15,24 @@
  */
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
 import com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES
 import com.android.build.api.transform.QualifiedContent.Scope.PROJECT
 import com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS
 import com.android.build.api.transform.QualifiedContent.ScopeType
 import com.android.build.gradle.internal.InternalScope
-import com.android.build.gradle.internal.packaging.ParsedPackagingOptions
 import com.android.build.gradle.internal.packaging.SerializablePackagingOptions
 import com.android.build.gradle.internal.pipeline.StreamFilter.PROJECT_RESOURCES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.builder.files.FileCacheByPath
-import com.android.builder.merge.IncrementalFileMergerInput
 import com.android.ide.common.resources.FileStatus
-import com.android.utils.FileUtils
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
@@ -42,9 +41,9 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
-import java.io.Serializable
 import javax.inject.Inject
 
 /**
@@ -52,10 +51,9 @@ import javax.inject.Inject
  *
  * TODO: Make task cacheable. Using @get:Classpath instead of @get:InputFiles would allow caching
  * but leads to issues with incremental task action: https://github.com/gradle/gradle/issues/1931.
- * We can make task cacheable after gradle implements https://github.com/gradle/gradle/issues/8491.
  */
 open class MergeJavaResourceTask
-@Inject constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
+@Inject constructor(workerExecutor: WorkerExecutor, objects: ObjectFactory) : IncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -97,8 +95,7 @@ open class MergeJavaResourceTask
     private lateinit var incrementalStateFile: File
 
     @get:OutputFile
-    lateinit var outputFile: File
-        private set
+    val outputFile: RegularFileProperty = objects.fileProperty()
 
     private val workers = Workers.getWorker(path, workerExecutor)
 
@@ -108,17 +105,18 @@ open class MergeJavaResourceTask
         workers.use {
             it.submit(
                 MergeJavaResRunnable::class.java,
-                MergeJavaResParams(
+                MergeJavaResRunnable.Params(
                     projectJavaRes.files,
                     subProjectJavaRes?.files,
                     externalLibJavaRes?.files,
                     featureJavaRes?.files,
-                    outputFile,
+                    outputFile.get().asFile,
                     packagingOptions,
                     incrementalStateFile,
                     false,
                     cacheDir,
-                    null
+                    null,
+                    RESOURCES
                 )
             )
         }
@@ -132,17 +130,18 @@ open class MergeJavaResourceTask
         workers.use {
             it.submit(
                 MergeJavaResRunnable::class.java,
-                MergeJavaResParams(
+                MergeJavaResRunnable.Params(
                     projectJavaRes.files,
                     subProjectJavaRes?.files,
                     externalLibJavaRes?.files,
                     featureJavaRes?.files,
-                    outputFile,
+                    outputFile.get().asFile,
                     packagingOptions,
                     incrementalStateFile,
                     true,
                     cacheDir,
-                    changedInputs
+                    changedInputs,
+                    RESOURCES
                 )
             )
         }
@@ -161,12 +160,10 @@ open class MergeJavaResourceTask
         override val type: Class<MergeJavaResourceTask>
             get() = MergeJavaResourceTask::class.java
 
-        private lateinit var outputFile: File
-
         init {
             if (variantScope.needsJavaResStreams) {
                 // Because ordering matters for Transform pipeline, we need to fetch the java res
-                // as soon as this creation action is instantiated, in needed.
+                // as soon as this creation action is instantiated, if needed.
                 projectJavaResFromStreams =
                         variantScope.transformManager
                             .getPipelineOutputAsFileCollection(PROJECT_RESOURCES)
@@ -179,11 +176,16 @@ open class MergeJavaResourceTask
             }
         }
 
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-            outputFile =
-                    variantScope.artifacts
-                        .appendArtifact(InternalArtifactType.MERGED_JAVA_RES, taskName, "out.jar")
+        override fun handleProvider(taskProvider: TaskProvider<out MergeJavaResourceTask>) {
+            super.handleProvider(taskProvider)
+
+            variantScope.artifacts.producesFile(
+                MERGED_JAVA_RES,
+                BuildArtifactsHolder.OperationType.APPEND,
+                taskProvider,
+                taskProvider.map { it.outputFile },
+                "out.jar"
+            )
         }
 
         override fun configure(task: MergeJavaResourceTask) {
@@ -193,11 +195,11 @@ open class MergeJavaResourceTask
 
             if (mergeScopes.contains(SUB_PROJECTS)) {
                 task.subProjectJavaRes =
-                        variantScope.getArtifactFileCollection(
-                            AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-                            AndroidArtifacts.ArtifactScope.MODULE,
-                            AndroidArtifacts.ArtifactType.JAVA_RES
-                        )
+                    variantScope.getArtifactFileCollection(
+                        AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                        AndroidArtifacts.ArtifactScope.MODULE,
+                        AndroidArtifacts.ArtifactType.JAVA_RES
+                    )
             }
 
             if (mergeScopes.contains(EXTERNAL_LIBRARIES)) {
@@ -219,76 +221,14 @@ open class MergeJavaResourceTask
             }
 
             task.mergeScopes = mergeScopes
-
             task.packagingOptions =
                     SerializablePackagingOptions(
                         variantScope.globalScope.extension.packagingOptions)
-
             task.intermediateDir =
                     variantScope.getIncrementalDir("${variantScope.fullVariantName}-mergeJavaRes")
-
             task.cacheDir = File(task.intermediateDir, "zip-cache")
-
             task.incrementalStateFile = File(task.intermediateDir, "merge-state")
-
-            task.outputFile = outputFile
         }
-    }
-}
-
-private class MergeJavaResParams(
-    val projectJavaRes: Collection<File>,
-    val subProjectJavaRes: Collection<File>?,
-    val externalLibJavaRes: Collection<File>?,
-    val featureJavaRes: Collection<File>?,
-    val outputFile: File,
-    val packagingOptions: SerializablePackagingOptions,
-    val incrementalStateFile: File,
-    val isIncremental: Boolean,
-    val cacheDir: File,
-    val changedInputs: Map<File, FileStatus>?
-): Serializable
-
-private class MergeJavaResRunnable @Inject constructor(val params: MergeJavaResParams) : Runnable {
-    override fun run() {
-        if (!params.isIncremental) {
-            FileUtils.deleteIfExists(params.outputFile)
-        }
-        FileUtils.mkdirs(params.cacheDir)
-
-        val zipCache = FileCacheByPath(params.cacheDir)
-        val cacheUpdates = mutableListOf<Runnable>()
-        val contentMap = mutableMapOf<IncrementalFileMergerInput, QualifiedContent>()
-
-        val inputMap = mutableMapOf<File, ScopeType>()
-        params.projectJavaRes.forEach { inputMap[it] = PROJECT}
-        params.subProjectJavaRes?.forEach { inputMap[it] = SUB_PROJECTS}
-        params.externalLibJavaRes?.forEach { inputMap[it] = EXTERNAL_LIBRARIES}
-        params.featureJavaRes?.forEach { inputMap[it] = InternalScope.FEATURES}
-
-        val inputs =
-            toInputs(
-                inputMap,
-                params.changedInputs,
-                zipCache,
-                cacheUpdates,
-                !params.isIncremental,
-                RESOURCES,
-                contentMap
-            )
-
-        val mergeJavaResDelegate =
-            MergeJavaResourcesDelegate(
-                inputs,
-                params.outputFile,
-                contentMap,
-                ParsedPackagingOptions(params.packagingOptions),
-                RESOURCES,
-                params.incrementalStateFile,
-                params.isIncremental
-            )
-        mergeJavaResDelegate.run()
-        cacheUpdates.forEach(Runnable::run)
     }
 }
 
@@ -303,4 +243,3 @@ fun getProjectJavaRes(scope: VariantScope): FileCollection {
     )
     return javaRes
 }
-

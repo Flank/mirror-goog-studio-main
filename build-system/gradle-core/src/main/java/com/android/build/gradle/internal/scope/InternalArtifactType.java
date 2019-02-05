@@ -61,7 +61,7 @@ public enum InternalArtifactType implements ArtifactType {
     // java processing output
     JAVA_RES,
     // merged java resources
-    MERGED_JAVA_RES,
+    MERGED_JAVA_RES(Kind.FILE),
     // packaged java res for aar intermediate publishing
     LIBRARY_JAVA_RES(Kind.FILE),
 
@@ -144,6 +144,8 @@ public enum InternalArtifactType implements ArtifactType {
     MERGED_SHADERS,
     // folder for NDK *.so libraries
     NDK_LIBS,
+    // native libs merged from module(s)
+    MERGED_NATIVE_LIBS,
 
     // Assets created by compiling shader
     SHADER_ASSETS,

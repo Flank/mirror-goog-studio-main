@@ -74,6 +74,7 @@ class CacheabilityTest {
                     ":app:mergeDebugAssets",
                     ":app:mergeExtDexDebug",
                     ":app:mergeDebugJniLibFolders",
+                    ":app:mergeDebugNativeLibs",
                     ":app:processDebugManifest",
                     ":app:processDebugResources",
                     ":app:mainApkListPersistenceDebug",
@@ -95,7 +96,6 @@ class CacheabilityTest {
                     ":app:checkDebugManifest" /* Bug 74595857 */,
                     ":app:transformClassesWithDexBuilderForDebug" /* Bug 74595921 */,
                     ":app:mergeDexDebug" /* Bug 120413559 */,
-                    ":app:transformNativeLibsWithMergeJniLibsForDebug" /* Bug 74595223 */,
                     ":app:transformNativeLibsWithStripDebugSymbolForDebug" /* Bug 120414535 */,
                     ":app:mergeDebugJavaResource" /* Bug 74595224 */,
                     ":app:packageDebug" /* Bug 74595859 */

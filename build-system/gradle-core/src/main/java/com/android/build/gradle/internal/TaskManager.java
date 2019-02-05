@@ -18,6 +18,7 @@ package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
+import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_ANDROID_APIS;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_LINTCHECKS;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_LINTPUBLISH;
@@ -28,7 +29,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CONSUMER_PROGUARD_RULES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAVA_RES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JNI;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
@@ -41,11 +41,10 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_PUBLISH_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JNI_LIBS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIVE_LIBS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_LIB;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_CLASSES;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
@@ -117,6 +116,7 @@ import com.android.build.gradle.internal.tasks.JacocoTask;
 import com.android.build.gradle.internal.tasks.LintCompile;
 import com.android.build.gradle.internal.tasks.MergeAaptProguardFilesCreationAction;
 import com.android.build.gradle.internal.tasks.MergeJavaResourceTask;
+import com.android.build.gradle.internal.tasks.MergeNativeLibsTask;
 import com.android.build.gradle.internal.tasks.PackageForUnitTest;
 import com.android.build.gradle.internal.tasks.PrepareLintJar;
 import com.android.build.gradle.internal.tasks.PrepareLintJarForPublish;
@@ -154,7 +154,6 @@ import com.android.build.gradle.internal.transforms.DexMergerTransformCallable;
 import com.android.build.gradle.internal.transforms.DexSplitterTransform;
 import com.android.build.gradle.internal.transforms.ExternalLibsMergerTransform;
 import com.android.build.gradle.internal.transforms.MergeClassesTransform;
-import com.android.build.gradle.internal.transforms.MergeJavaResourcesTransform;
 import com.android.build.gradle.internal.transforms.ProGuardTransform;
 import com.android.build.gradle.internal.transforms.ProguardConfigurable;
 import com.android.build.gradle.internal.transforms.R8Transform;
@@ -259,6 +258,7 @@ import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
@@ -586,31 +586,18 @@ public abstract class TaskManager {
                                         RUNTIME_CLASSPATH, EXTERNAL, CLASSES))
                         .build());
 
-        // We include RESOURCES in externalContentTypes if EXTERNAL_LIBRARIES isn't in the set of
-        // java res merging scopes.
-        final Set<QualifiedContent.ContentType> externalContentTypes =
-                getResMergingScopes(variantScope).contains(Scope.EXTERNAL_LIBRARIES)
-                        ? ImmutableSet.of(ExtendedContentType.NATIVE_LIBS)
-                        : ImmutableSet.of(
-                                ExtendedContentType.NATIVE_LIBS, DefaultContentType.RESOURCES);
-        transformManager.addStream(
-                OriginalStream.builder(project, "ext-libs-res-plus-native")
-                        .addContentTypes(externalContentTypes)
-                        .addScope(Scope.EXTERNAL_LIBRARIES)
-                        .setArtifactCollection(
-                                variantScope.getArtifactCollection(
-                                        RUNTIME_CLASSPATH, EXTERNAL, JAVA_RES))
-                        .build());
-
-        // and the android AAR also have a specific jni folder
-        transformManager.addStream(
-                OriginalStream.builder(project, "ext-libs-jni")
-                        .addContentTypes(TransformManager.CONTENT_NATIVE_LIBS)
-                        .addScope(Scope.EXTERNAL_LIBRARIES)
-                        .setArtifactCollection(
-                                variantScope.getArtifactCollection(
-                                        RUNTIME_CLASSPATH, EXTERNAL, JNI))
-                        .build());
+        // Add stream of external java resources if EXTERNAL_LIBRARIES isn't in the set of java res
+        // merging scopes.
+        if (!getResMergingScopes(variantScope).contains(Scope.EXTERNAL_LIBRARIES)) {
+            transformManager.addStream(
+                    OriginalStream.builder(project, "ext-libs-java-res")
+                            .addContentTypes(RESOURCES)
+                            .addScope(Scope.EXTERNAL_LIBRARIES)
+                            .setArtifactCollection(
+                                    variantScope.getArtifactCollection(
+                                            RUNTIME_CLASSPATH, EXTERNAL, JAVA_RES))
+                            .build());
+        }
 
         // for the sub modules, new intermediary classes artifact has its own stream
         transformManager.addStream(
@@ -622,31 +609,17 @@ public abstract class TaskManager {
                                         RUNTIME_CLASSPATH, MODULE, CLASSES))
                         .build());
 
-        // same for the resources which can be java-res or jni.
-        // We include RESOURCES in subProjectContentTypes if SUB_PROJECTS isn't in the set of java
-        // res merging scopes.
-        final Set<QualifiedContent.ContentType> subProjectContentTypes =
-                getResMergingScopes(variantScope).contains(Scope.SUB_PROJECTS)
-                        ? ImmutableSet.of(ExtendedContentType.NATIVE_LIBS)
-                        : ImmutableSet.of(
-                                ExtendedContentType.NATIVE_LIBS, DefaultContentType.RESOURCES);
-        transformManager.addStream(
-                OriginalStream.builder(project, "sub-projects-res-plus-native")
-                        .addContentTypes(subProjectContentTypes)
-                        .addScope(Scope.SUB_PROJECTS)
-                        .setArtifactCollection(
-                                variantScope.getArtifactCollection(
-                                        RUNTIME_CLASSPATH, MODULE, JAVA_RES))
-                        .build());
-
-        // and the android library sub-modules also have a specific jni folder
-        transformManager.addStream(
-                OriginalStream.builder(project, "sub-projects-jni")
-                        .addContentTypes(TransformManager.CONTENT_NATIVE_LIBS)
-                        .addScope(Scope.SUB_PROJECTS)
-                        .setArtifactCollection(
-                                variantScope.getArtifactCollection(RUNTIME_CLASSPATH, MODULE, JNI))
-                        .build());
+        // same for the java resources, if SUB_PROJECTS isn't in the set of java res merging scopes.
+        if (!getResMergingScopes(variantScope).contains(Scope.SUB_PROJECTS)) {
+            transformManager.addStream(
+                    OriginalStream.builder(project, "sub-projects-java-res")
+                            .addContentTypes(RESOURCES)
+                            .addScope(Scope.SUB_PROJECTS)
+                            .setArtifactCollection(
+                                    variantScope.getArtifactCollection(
+                                            RUNTIME_CLASSPATH, MODULE, JAVA_RES))
+                            .build());
+        }
 
         // if variantScope.consumesFeatureJars(), add streams of classes from features or
         // dynamic-features.
@@ -919,94 +892,28 @@ public abstract class TaskManager {
     }
 
     @NonNull
-    public Optional<TaskProvider<TransformTask>> createMergeJniLibFoldersTasks(
-            @NonNull final VariantScope variantScope) {
+    public void createMergeJniLibFoldersTasks(@NonNull final VariantScope variantScope) {
         // merge the source folders together using the proper priority.
-        TaskProvider<MergeSourceSetFolders> mergeJniLibFoldersTask =
-                taskFactory.register(
-                        new MergeSourceSetFolders.MergeJniLibFoldersCreationAction(variantScope));
+        taskFactory.register(
+                new MergeSourceSetFolders.MergeJniLibFoldersCreationAction(variantScope));
         final MutableTaskContainer taskContainer = variantScope.getTaskContainer();
 
-        // create the stream generated from this task
+        // Compute the scopes that need to be merged.
+        Set<ScopeType> mergeScopes = getResMergingScopes(variantScope);
+
+        taskFactory.register(new MergeNativeLibsTask.CreationAction(mergeScopes, variantScope));
+
+        // also add a new merged native libs stream
+        Provider<Directory> nativeLibsProvider =
+                variantScope.getArtifacts().getFinalProduct(MERGED_NATIVE_LIBS);
         variantScope
                 .getTransformManager()
                 .addStream(
-                        OriginalStream.builder(project, "mergedJniFolder")
+                        OriginalStream.builder(project, "merged-native-libs")
                                 .addContentType(ExtendedContentType.NATIVE_LIBS)
-                                .addScope(Scope.PROJECT)
-                                .setFileCollection(
-                                        project.files(
-                                                variantScope
-                                                        .getArtifacts()
-                                                        .getFinalProduct(MERGED_JNI_LIBS)))
+                                .addScopes(mergeScopes)
+                                .setFileCollection(project.getLayout().files(nativeLibsProvider))
                                 .build());
-
-
-        // create a stream that contains the content of the local external native build
-        if (taskContainer.getExternalNativeJsonGenerator() != null) {
-            variantScope
-                    .getTransformManager()
-                    .addStream(
-                            OriginalStream.builder(project, "external-native-build")
-                                    .addContentType(ExtendedContentType.NATIVE_LIBS)
-                                    .addScope(Scope.PROJECT)
-                                    .setFileCollection(
-                                            project.files(
-                                                            taskContainer
-                                                                    .getExternalNativeJsonGenerator()
-                                                                    .getObjFolder())
-                                                    .builtBy(
-                                                            checkNotNull(
-                                                                            taskContainer
-                                                                                    .getExternalNativeBuildTask())
-                                                                    .getName()))
-                                    .build());
-        }
-
-        // create a stream containing the content of the renderscript compilation output
-        // if support mode is enabled.
-        if (variantScope.getVariantConfiguration().getRenderscriptSupportModeEnabled()) {
-            ConfigurableFileCollection rsFileCollection =
-                    project.files(
-                            variantScope
-                                    .getArtifacts()
-                                    .getFinalArtifactFiles(RENDERSCRIPT_LIB)
-                                    .get());
-
-            rsFileCollection.from(
-                    variantScope
-                            .getGlobalScope()
-                            .getSdkComponents()
-                            .getSupportNativeLibFolderProvider());
-
-            if (variantScope.getVariantConfiguration().getRenderscriptSupportModeBlasEnabled()) {
-                rsFileCollection.from(
-                        variantScope
-                                .getGlobalScope()
-                                .getSdkComponents()
-                                .getSupportBlasLibFolderProvider());
-            }
-
-            variantScope
-                    .getTransformManager()
-                    .addStream(
-                            OriginalStream.builder(project, "rs-support-mode-output")
-                                    .addContentType(ExtendedContentType.NATIVE_LIBS)
-                                    .addScope(Scope.PROJECT)
-                                    .setFileCollection(rsFileCollection)
-                                    .build());
-        }
-
-        // compute the scopes that need to be merged.
-        Set<? super Scope> mergeScopes = getResMergingScopes(variantScope);
-        // Create the merge transform
-        MergeJavaResourcesTransform mergeTransform = new MergeJavaResourcesTransform(
-                variantScope.getGlobalScope().getExtension().getPackagingOptions(),
-                mergeScopes, ExtendedContentType.NATIVE_LIBS, "mergeJniLibs", variantScope);
-
-        return variantScope
-                .getTransformManager()
-                .addTransform(taskFactory, variantScope, mergeTransform);
     }
 
     public void createBuildConfigTask(@NonNull VariantScope scope) {
@@ -1290,10 +1197,11 @@ public abstract class TaskManager {
                     .getTransformManager()
                     .addStream(
                             OriginalStream.builder(project, "processed-java-res")
-                                    .addContentType(DefaultContentType.RESOURCES)
+                                    .addContentType(RESOURCES)
                                     .addScope(Scope.PROJECT)
                                     .setFileCollection(
-                                            variantScope.getArtifacts()
+                                            variantScope
+                                                    .getArtifacts()
                                                     .getFinalArtifactFiles(
                                                             InternalArtifactType.JAVA_RES)
                                                     .get())
@@ -1317,16 +1225,13 @@ public abstract class TaskManager {
 
         // also add a new merged java res stream if needed.
         if (variantScope.getNeedsMergedJavaResStream()) {
-            // FIXME the file collection does not survive Artifact transform/append b/110709212
+            Provider<RegularFile> mergedJavaResProvider =
+                    variantScope.getArtifacts().getFinalProduct(MERGED_JAVA_RES);
             transformManager.addStream(
                     OriginalStream.builder(project, "merged-java-res")
                             .addContentTypes(TransformManager.CONTENT_RESOURCES)
                             .addScopes(mergeScopes)
-                            .setFileCollection(
-                                    variantScope
-                                            .getArtifacts()
-                                            .getFinalArtifactFiles(MERGED_JAVA_RES)
-                                            .get())
+                            .setFileCollection(project.getLayout().files(mergedJavaResProvider))
                             .build());
         }
 

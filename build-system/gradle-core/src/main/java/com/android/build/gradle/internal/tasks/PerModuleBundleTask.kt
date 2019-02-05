@@ -32,6 +32,7 @@ import com.android.builder.packaging.JarMerger
 import com.android.utils.FileUtils
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -221,7 +222,9 @@ open class PerModuleBundleTask : AndroidVariantTask() {
                 variantScope.transformManager
                     .getPipelineOutputAsFileCollection(StreamFilter.RESOURCES)
             } else {
-                artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_JAVA_RES).get()
+                variantScope.globalScope.project.layout.files(
+                    artifacts.getFinalProduct<RegularFile>(InternalArtifactType.MERGED_JAVA_RES)
+                )
             }
             task.nativeLibsFiles = variantScope.transformManager.getPipelineOutputAsFileCollection(
                 StreamFilter.NATIVE_LIBS)

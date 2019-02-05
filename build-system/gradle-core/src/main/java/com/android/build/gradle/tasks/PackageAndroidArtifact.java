@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.MODULE_PATH;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.SdkConstants;
@@ -102,6 +103,7 @@ import javax.inject.Inject;
 import org.gradle.api.Project;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
@@ -1172,10 +1174,9 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                         .getTransformManager()
                         .getPipelineOutputAsFileCollection(StreamFilter.RESOURCES);
             }
-            return getVariantScope()
-                    .getArtifacts()
-                    .getFinalArtifactFiles(InternalArtifactType.MERGED_JAVA_RES)
-                    .get();
+            Provider<RegularFile> mergedJavaResProvider =
+                    getVariantScope().getArtifacts().getFinalProduct(MERGED_JAVA_RES);
+            return project.getLayout().files(mergedJavaResProvider);
         }
 
         @NonNull
