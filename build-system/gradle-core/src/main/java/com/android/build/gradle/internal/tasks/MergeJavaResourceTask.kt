@@ -35,6 +35,7 @@ import com.android.ide.common.resources.FileStatus
 import com.android.utils.FileUtils
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
@@ -55,24 +56,24 @@ import javax.inject.Inject
 open class MergeJavaResourceTask
 @Inject constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
 
-    @get:InputFiles
+    @get:Classpath
     @get:PathSensitive(PathSensitivity.RELATIVE)
     lateinit var projectJavaRes: FileCollection
         private set
 
-    @get:InputFiles
+    @get:Classpath
     @get:Optional
     @get:PathSensitive(PathSensitivity.RELATIVE)
     var subProjectJavaRes: FileCollection? = null
         private set
 
-    @get:InputFiles
+    @get:Classpath
     @get:Optional
     @get:PathSensitive(PathSensitivity.RELATIVE)
     var externalLibJavaRes: FileCollection? = null
         private set
 
-    @get:InputFiles
+    @get:Classpath
     @get:Optional
     @get:PathSensitive(PathSensitivity.RELATIVE)
     var featureJavaRes: FileCollection? = null

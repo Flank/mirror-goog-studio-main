@@ -18,8 +18,6 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
 import com.android.SdkConstants.FN_INTERMEDIATE_RES_JAR
-import com.android.build.api.transform.QualifiedContent
-import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.pipeline.StreamFilter.PROJECT_RESOURCES
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -34,6 +32,7 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkerExecutor
+import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.Serializable
 import java.nio.file.Files
@@ -113,6 +112,9 @@ class BundleLibraryJavaResRunnable @Inject constructor(val params: Params) : Run
 
         val predicate = Predicate<String> { entry -> !entry.endsWith(SdkConstants.DOT_CLASS) }
         JarMerger(params.output.toPath(), predicate).use { out ->
+            // add empty entry to prevent creation of totally empty jars, which can confuse gradle's
+            // up-to-date check when using @Classpath annotation, as in MergeJavaResourceTask
+            out.addEntry("empty/.empty", ByteArrayInputStream(ByteArray(0)))
             params.inputs.forEach { base ->
                 if (base.isDirectory) {
                     out.addDirectory(base.toPath())
