@@ -43,6 +43,7 @@ data class DeepLink(
         val host: String?,
         val port: Int,
         val path: String,
+        val query: String?,
         val sourceFilePosition: SourceFilePosition,
         val isAutoVerify: Boolean) {
 
@@ -62,6 +63,7 @@ data class DeepLink(
                     deepLinkUri.host,
                     deepLinkUri.port,
                     deepLinkUri.path,
+                    deepLinkUri.query,
                     sourceFilePosition,
                     isAutoVerify)
         }
@@ -71,7 +73,7 @@ data class DeepLink(
      * A class representing an RFC 2396 compliant URI, following the same rules as java.net.URI,
      * except also allowing the following deviations in the input uri string:
      *
-     * 1. use of ".*" or "{placeholder}" wildcards in the URI path.
+     * 1. use of ".*" or "{placeholder}" wildcards in the URI path and query.
      *
      * 2. use of "${applicationId}" in the URI host and path.
      *
@@ -84,7 +86,11 @@ data class DeepLink(
      */
     @VisibleForTesting
     data class DeepLinkUri(
-            val schemes: List<String>, val host: String?, val port: Int, val path: String) {
+            val schemes: List<String>,
+            val host: String?,
+            val port: Int,
+            val path: String,
+            val query: String?) {
 
         companion object {
 
@@ -169,7 +175,9 @@ data class DeepLink(
                                 }
                     }
 
-                return DeepLinkUri(schemes, host, compliantUri.port, path)
+                val query = compliantUri.query?.replace(pathWildcardEncoder, WILDCARD)
+
+                return DeepLinkUri(schemes, host, compliantUri.port, path, query)
             }
 
             /**

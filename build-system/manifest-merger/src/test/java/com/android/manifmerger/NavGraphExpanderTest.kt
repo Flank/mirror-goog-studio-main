@@ -29,6 +29,7 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.Mockito.atLeast
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations
 
@@ -236,7 +237,7 @@ class NavGraphExpanderTest {
                     |    xmlns:android="http://schemas.android.com/apk/res/android"
                     |    xmlns:app="http://schemas.android.com/apk/res-auto">
                     |    <include app:graph="@navigation/nav2" />
-                    |    <deepLink app:uri="http://www.example.com" />
+                    |    <deepLink app:uri="http://www.example.com?param=foo" />
                     |</navigation>""".trimMargin()
 
         val navigationId2 = "nav2"
@@ -245,7 +246,7 @@ class NavGraphExpanderTest {
                     |<navigation
                     |    xmlns:android="http://schemas.android.com/apk/res/android"
                     |    xmlns:app="http://schemas.android.com/apk/res-auto">
-                    |    <deepLink app:uri="www.example.com/foo/" />
+                    |    <deepLink app:uri="www.example.com/foo/?param={bar}" />
                     |</navigation>""".trimMargin()
 
         val loadedNavigationMap: Map<String, NavigationXmlDocument> =
@@ -260,14 +261,16 @@ class NavGraphExpanderTest {
                     "www.example.com",
                     -1,
                     "/",
-                    SourceFilePosition(UNKNOWN, SourcePosition(5, 4, 220, 5, 49, 265)),
+                    "param=foo",
+                    SourceFilePosition(UNKNOWN, SourcePosition(5, 4, 220, 5, 59, 275)),
                     false),
                 DeepLink(
                     ImmutableList.of("http", "https"),
                     "www.example.com",
                     -1,
                     "/foo/",
-                    SourceFilePosition(UNKNOWN, SourcePosition(4, 4, 175, 4, 47, 218)),
+                    "param=.*",
+                    SourceFilePosition(UNKNOWN, SourcePosition(4, 4, 175, 4, 59, 230)),
                     false))
     }
 
@@ -321,5 +324,290 @@ class NavGraphExpanderTest {
                 Mockito.eq(
                         "Multiple destinations found with a deep link to " +
                                 "http://www.example.com/"))
+    }
+
+    @Test
+    fun testDeepLinksDifferInQuery() {
+
+        val navigationId1 = "nav1"
+        val navigationString1 =
+            """"|<?xml version="1.0" encoding="UTF-8"?>
+                    |<navigation
+                    |    xmlns:android="http://schemas.android.com/apk/res/android"
+                    |    xmlns:app="http://schemas.android.com/apk/res-auto">
+                    |    <include app:graph="@navigation/nav2" />
+                    |    <deepLink app:uri="http://www.example.com?foo=bar" />
+                    |</navigation>""".trimMargin()
+
+        val navigationId2 = "nav2"
+        val navigationString2 =
+            """"|<?xml version="1.0" encoding="UTF-8"?>
+                    |<navigation
+                    |    xmlns:android="http://schemas.android.com/apk/res/android"
+                    |    xmlns:app="http://schemas.android.com/apk/res-auto">
+                    |    <deepLink app:uri="http://www.example.com" />
+                    |</navigation>""".trimMargin()
+
+        val inputManifestString =
+            """"|<?xml version="1.0" encoding="UTF-8"?>
+                    |<manifest
+                    |    xmlns:android="http://schemas.android.com/apk/res/android"
+                    |    package="com.example.app1">
+                    |    <application android:name="TheApp">
+                    |        <activity android:name=".MainActivity">
+                    |            <nav-graph android:value="@navigation/nav1" />
+                    |        </activity>
+                    |    </application>
+                    |</manifest>""".trimMargin()
+
+        val expectedOutputManifestString =
+            """ |<?xml version="1.0" encoding="utf-8"?>
+                    |<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    |    package="com.example.app1" >
+                    |    <application android:name="com.example.app1.TheApp" >
+                    |        <activity android:name="com.example.app1.MainActivity" >
+                    |            <intent-filter>
+                    |                <action android:name="android.intent.action.VIEW" />
+                    |                <category android:name="android.intent.category.DEFAULT" />
+                    |                <category android:name="android.intent.category.BROWSABLE" />
+                    |                <data android:scheme="http" />
+                    |                <data android:host="www.example.com" />
+                    |                <data android:path="/" />
+                    |            </intent-filter>
+                    |        </activity>
+                    |    </application>
+                    |</manifest>""".trimMargin()
+
+        val xmlDocument = TestUtils.xmlDocumentFromString(UNKNOWN, inputManifestString, model)
+
+        val loadedNavigationMap: Map<String, NavigationXmlDocument> =
+            mapOf(
+                Pair(navigationId1, NavigationXmlLoader.load(UNKNOWN, navigationString1)),
+                Pair(navigationId2, NavigationXmlLoader.load(UNKNOWN, navigationString2)))
+
+        val expandedXmlDocument =
+            expandNavGraphs(xmlDocument, loadedNavigationMap, mergingReportBuilder)
+
+        val expectedXmlDocument =
+            TestUtils.xmlDocumentFromString(UNKNOWN, expectedOutputManifestString, model)
+
+        assertThat(expandedXmlDocument.compareTo(expectedXmlDocument)).isAbsent()
+
+        // verify no error was recorded.
+        Mockito.verify(mergingReportBuilder, never()).addMessage(
+            Mockito.any<SourceFilePosition>(),
+            Mockito.eq(MergingReport.Record.Severity.ERROR),
+            Mockito.any<String>())
+    }
+
+    @Test
+    fun testDuplicateDeepLinkWithQueryNavGraphException() {
+
+        val navigationId1 = "nav1"
+        val navigationString1 =
+            """"|<?xml version="1.0" encoding="UTF-8"?>
+                    |<navigation
+                    |    xmlns:android="http://schemas.android.com/apk/res/android"
+                    |    xmlns:app="http://schemas.android.com/apk/res-auto">
+                    |    <include app:graph="@navigation/nav2" />
+                    |    <deepLink app:uri="http://www.example.com?foo={bar}" />
+                    |</navigation>""".trimMargin()
+
+        val navigationId2 = "nav2"
+        val navigationString2 =
+            """"|<?xml version="1.0" encoding="UTF-8"?>
+                    |<navigation
+                    |    xmlns:android="http://schemas.android.com/apk/res/android"
+                    |    xmlns:app="http://schemas.android.com/apk/res-auto">
+                    |    <deepLink app:uri="www.example.com?foo={qwe}" />
+                    |</navigation>""".trimMargin()
+
+        val inputManifestString =
+            """"|<?xml version="1.0" encoding="UTF-8"?>
+                    |<manifest
+                    |    xmlns:android="http://schemas.android.com/apk/res/android"
+                    |    package="com.example.app1">
+                    |    <application android:name="TheApp">
+                    |        <activity android:name=".MainActivity">
+                    |            <nav-graph android:value="@navigation/nav1" />
+                    |        </activity>
+                    |    </application>
+                    |</manifest>""".trimMargin()
+
+        val xmlDocument = TestUtils.xmlDocumentFromString(UNKNOWN, inputManifestString, model)
+
+        val loadedNavigationMap: Map<String, NavigationXmlDocument> =
+            mapOf(
+                Pair(navigationId1, NavigationXmlLoader.load(UNKNOWN, navigationString1)),
+                Pair(navigationId2, NavigationXmlLoader.load(UNKNOWN, navigationString2)))
+
+        expandNavGraphs(xmlDocument, loadedNavigationMap, mergingReportBuilder)
+
+        // verify the error was recorded.
+        Mockito.verify(mergingReportBuilder).addMessage(
+            Mockito.any<SourceFilePosition>(),
+            Mockito.eq(MergingReport.Record.Severity.ERROR),
+            Mockito.eq(
+                "Multiple destinations found with a deep link to " +
+                        "http://www.example.com/?foo=.*"))
+    }
+
+    @Test
+    fun testLinksDifferOnlyInSchemeGoToOneIntentFilter() {
+        val navigationId1 = "nav1"
+        val navigationString1 =
+            """"|<?xml version="1.0" encoding="UTF-8"?>
+                    |<navigation
+                    |    xmlns:android="http://schemas.android.com/apk/res/android"
+                    |    xmlns:app="http://schemas.android.com/apk/res-auto">
+                    |    <include app:graph="@navigation/nav2" />
+                    |    <deepLink app:uri="http://www.example.com" />
+                    |</navigation>""".trimMargin()
+
+        val navigationId2 = "nav2"
+        val navigationString2 =
+            """"|<?xml version="1.0" encoding="UTF-8"?>
+                    |<navigation
+                    |    xmlns:android="http://schemas.android.com/apk/res/android"
+                    |    xmlns:app="http://schemas.android.com/apk/res-auto">
+                    |    <deepLink app:uri="https://www.example.com" />
+                    |</navigation>""".trimMargin()
+
+        val inputManifestString =
+            """"|<?xml version="1.0" encoding="UTF-8"?>
+                    |<manifest
+                    |    xmlns:android="http://schemas.android.com/apk/res/android"
+                    |    package="com.example.app1">
+                    |    <application android:name="TheApp">
+                    |        <activity android:name=".MainActivity">
+                    |            <nav-graph android:value="@navigation/nav1" />
+                    |        </activity>
+                    |    </application>
+                    |</manifest>""".trimMargin()
+
+        val expectedOutputManifestString =
+            """ |<?xml version="1.0" encoding="utf-8"?>
+                    |<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    |    package="com.example.app1" >
+                    |    <application android:name="com.example.app1.TheApp" >
+                    |        <activity android:name="com.example.app1.MainActivity" >
+                    |            <intent-filter>
+                    |                <action android:name="android.intent.action.VIEW" />
+                    |                <category android:name="android.intent.category.DEFAULT" />
+                    |                <category android:name="android.intent.category.BROWSABLE" />
+                    |                <data android:scheme="http" />
+                    |                <data android:scheme="https" />
+                    |                <data android:host="www.example.com" />
+                    |                <data android:path="/" />
+                    |            </intent-filter>
+                    |        </activity>
+                    |    </application>
+                    |</manifest>""".trimMargin()
+
+        val xmlDocument = TestUtils.xmlDocumentFromString(UNKNOWN, inputManifestString, model)
+
+        val loadedNavigationMap: Map<String, NavigationXmlDocument> =
+            mapOf(
+                Pair(navigationId1, NavigationXmlLoader.load(UNKNOWN, navigationString1)),
+                Pair(navigationId2, NavigationXmlLoader.load(UNKNOWN, navigationString2)))
+
+        val expandedXmlDocument =
+            expandNavGraphs(xmlDocument, loadedNavigationMap, mergingReportBuilder)
+
+        val expectedXmlDocument =
+            TestUtils.xmlDocumentFromString(UNKNOWN, expectedOutputManifestString, model)
+
+        assertThat(expandedXmlDocument.compareTo(expectedXmlDocument)).isAbsent()
+
+        // verify no error was recorded.
+        Mockito.verify(mergingReportBuilder, never()).addMessage(
+            Mockito.any<SourceFilePosition>(),
+            Mockito.eq(MergingReport.Record.Severity.ERROR),
+            Mockito.any<String>())
+    }
+
+    @Test
+    fun testLinksDifferInSchemeAndQueryGoToOneIntentFilter() {
+        val navigationId1 = "nav1"
+        val navigationString1 =
+            """"|<?xml version="1.0" encoding="UTF-8"?>
+                    |<navigation
+                    |    xmlns:android="http://schemas.android.com/apk/res/android"
+                    |    xmlns:app="http://schemas.android.com/apk/res-auto">
+                    |    <include app:graph="@navigation/nav2" />
+                    |    <deepLink app:uri="http://www.example.com" />
+                    |</navigation>""".trimMargin()
+
+        val navigationId2 = "nav2"
+        val navigationString2 =
+            """"|<?xml version="1.0" encoding="UTF-8"?>
+                    |<navigation
+                    |    xmlns:android="http://schemas.android.com/apk/res/android"
+                    |    xmlns:app="http://schemas.android.com/apk/res-auto">
+                    |    <deepLink app:uri="https://www.example.com" />
+                    |    <include app:graph="@navigation/nav3" />
+                    |</navigation>""".trimMargin()
+
+        val navigationId3 = "nav3"
+        val navigationString3 =
+            """"|<?xml version="1.0" encoding="UTF-8"?>
+                    |<navigation
+                    |    xmlns:android="http://schemas.android.com/apk/res/android"
+                    |    xmlns:app="http://schemas.android.com/apk/res-auto">
+                    |    <deepLink app:uri="www.example.com?foo=bar" />
+                    |</navigation>""".trimMargin()
+
+        val inputManifestString =
+            """"|<?xml version="1.0" encoding="UTF-8"?>
+                    |<manifest
+                    |    xmlns:android="http://schemas.android.com/apk/res/android"
+                    |    package="com.example.app1">
+                    |    <application android:name="TheApp">
+                    |        <activity android:name=".MainActivity">
+                    |            <nav-graph android:value="@navigation/nav1" />
+                    |        </activity>
+                    |    </application>
+                    |</manifest>""".trimMargin()
+
+        val expectedOutputManifestString =
+            """ |<?xml version="1.0" encoding="utf-8"?>
+                    |<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    |    package="com.example.app1" >
+                    |    <application android:name="com.example.app1.TheApp" >
+                    |        <activity android:name="com.example.app1.MainActivity" >
+                    |            <intent-filter>
+                    |                <action android:name="android.intent.action.VIEW" />
+                    |                <category android:name="android.intent.category.DEFAULT" />
+                    |                <category android:name="android.intent.category.BROWSABLE" />
+                    |                <data android:scheme="http" />
+                    |                <data android:scheme="https" />
+                    |                <data android:host="www.example.com" />
+                    |                <data android:path="/" />
+                    |            </intent-filter>
+                    |        </activity>
+                    |    </application>
+                    |</manifest>""".trimMargin()
+
+        val xmlDocument = TestUtils.xmlDocumentFromString(UNKNOWN, inputManifestString, model)
+
+        val loadedNavigationMap: Map<String, NavigationXmlDocument> =
+            mapOf(
+                Pair(navigationId1, NavigationXmlLoader.load(UNKNOWN, navigationString1)),
+                Pair(navigationId2, NavigationXmlLoader.load(UNKNOWN, navigationString2)),
+                Pair(navigationId3, NavigationXmlLoader.load(UNKNOWN, navigationString3)))
+
+        val expandedXmlDocument =
+            expandNavGraphs(xmlDocument, loadedNavigationMap, mergingReportBuilder)
+
+        val expectedXmlDocument =
+            TestUtils.xmlDocumentFromString(UNKNOWN, expectedOutputManifestString, model)
+
+        assertThat(expandedXmlDocument.compareTo(expectedXmlDocument)).isAbsent()
+
+        // verify no error was recorded.
+        Mockito.verify(mergingReportBuilder, never()).addMessage(
+            Mockito.any<SourceFilePosition>(),
+            Mockito.eq(MergingReport.Record.Severity.ERROR),
+            Mockito.any<String>())
     }
 }
