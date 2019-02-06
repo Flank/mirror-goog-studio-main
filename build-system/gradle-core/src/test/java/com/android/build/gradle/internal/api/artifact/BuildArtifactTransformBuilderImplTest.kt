@@ -57,7 +57,6 @@ class BuildArtifactTransformBuilderImplTest {
 
     @Before
     fun setUp() {
-        BuildableArtifactImpl.disableResolution()
         taskHolder =
                 VariantBuildArtifactsHolder(
                     project,
@@ -128,14 +127,12 @@ class BuildArtifactTransformBuilderImplTest {
                     assertThat(this).isInstanceOf(TestClassWithExpectations::class.java)
                     assertThat(i.getArtifact(JAVAC_CLASSES)).isSameAs(i.artifact)
                 }
-        BuildableArtifactImpl.enableResolution()
         buildableArtifactsActions.runAll()
         assertThat(input!!.artifact.map(File::getName)).containsExactly("javac")
     }
 
     @Test
     fun multiInput() {
-        BuildableArtifactImpl.enableResolution()
         builder
             .append(JAVAC_CLASSES)
             .append(JAVA_COMPILE_CLASSPATH)
@@ -155,7 +152,6 @@ class BuildArtifactTransformBuilderImplTest {
             BuildArtifactsHolder.OperationType.INITIAL,
             task.name,
             "classpath")
-        BuildableArtifactImpl.enableResolution()
         buildableArtifactsActions.runAll()
 
         assertThat(taskHolder.getArtifactFiles(JAVAC_CLASSES).map(File::getName))
@@ -167,7 +163,6 @@ class BuildArtifactTransformBuilderImplTest {
     @Test
     fun output() {
         var output : OutputFileProvider? = null
-        BuildableArtifactImpl.enableResolution()
         builder
                 .replace(JAVAC_CLASSES)
                 .append(JAVA_COMPILE_CLASSPATH)
@@ -192,7 +187,6 @@ class BuildArtifactTransformBuilderImplTest {
             BuildArtifactsHolder.OperationType.INITIAL,
             task.name,
             "classpath")
-        BuildableArtifactImpl.enableResolution()
         buildableArtifactsActions.runAll()
 
         assertThat(taskHolder.getArtifactFiles(JAVAC_CLASSES).files.map(File::getName))
@@ -249,7 +243,6 @@ class BuildArtifactTransformBuilderImplTest {
                                 .plus(project.files("final_file").files)))
         }
         val initialTask = project.tasks.withType(TestClassWithExpectations::class.java).single()
-        BuildableArtifactImpl.enableResolution()
         buildableArtifactsActions.runAll()
         initialTask.verify()
     }
@@ -268,7 +261,6 @@ class BuildArtifactTransformBuilderImplTest {
                         project.files("replaced_file").plus(project.files("final_file").files))
             }
         val initialTask = project.tasks.withType(TestClassWithExpectations::class.java).single()
-        BuildableArtifactImpl.enableResolution()
         buildableArtifactsActions.runAll()
         initialTask.verify()
    }
@@ -315,7 +307,6 @@ class BuildArtifactTransformBuilderImplTest {
             BuildArtifactsHolder.OperationType.APPEND,
             project.files("final_file"))
 
-        BuildableArtifactImpl.enableResolution()
         buildableArtifactsActions.runAll()
         initialTask.verify()
         anotherTask.verify()

@@ -473,7 +473,7 @@ abstract class BuildArtifactsHolder(
         return if (hasArtifact(artifactType)) {
             getFinalArtifactFiles(artifactType)
         } else {
-            BuildableArtifactImpl(project.files(), dslScope)
+            BuildableArtifactImpl(project.files())
         }
     }
 
@@ -518,7 +518,7 @@ abstract class BuildArtifactsHolder(
             newFiles : Any,
             taskName : String? = null) {
         val collection = createFileCollection(artifactType, operationType, newFiles, taskName)
-        val files = BuildableArtifactImpl(collection, dslScope)
+        val files = BuildableArtifactImpl(collection)
         createOutput(artifactType, files)
     }
 
@@ -864,7 +864,7 @@ abstract class BuildArtifactsHolder(
         files: FileCollection,
         producer: BuildableProducer? = null) : BuildableArtifact {
 
-        val newBuildableArtifact = BuildableArtifactImpl(files, dslScope)
+        val newBuildableArtifact = BuildableArtifactImpl(files)
         createOutput(type, newBuildableArtifact, producer)
         return newBuildableArtifact
     }
@@ -883,7 +883,7 @@ abstract class BuildArtifactsHolder(
 
     private fun getArtifactRecord(artifactType : ArtifactType) : ArtifactRecord {
         return artifactRecordMap[artifactType] ?:
-        createOutput(artifactType, BuildableArtifactImpl(project.files(), dslScope))
+        createOutput(artifactType, BuildableArtifactImpl(project.files()))
     }
 
     fun createReport() : Report =

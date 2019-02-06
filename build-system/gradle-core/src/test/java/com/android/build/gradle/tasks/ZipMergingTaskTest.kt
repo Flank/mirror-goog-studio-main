@@ -52,10 +52,8 @@ class ZipMergingTaskTest {
         val output = File(temporaryFolder.newFolder(), "output.zip")
         val task = project.tasks.create("test", ZipMergingTask::class.java)
 
-        val dslScope = Mockito.mock(DslScope::class.java)
-        BuildableArtifactImpl.enableResolution()
-        task.init(BuildableArtifactImpl(project.files(zip1), dslScope),
-                BuildableArtifactImpl(project.files(zip2), dslScope),
+        task.init(BuildableArtifactImpl(project.files(zip1)),
+                BuildableArtifactImpl(project.files(zip2)),
                 output)
         task.merge()
 
@@ -79,10 +77,8 @@ class ZipMergingTaskTest {
         val output = File(temporaryFolder.newFolder(), "output.zip")
         val task = project.tasks.create("test", ZipMergingTask::class.java)
 
-        val dslScope = Mockito.mock(DslScope::class.java)
-        BuildableArtifactImpl.enableResolution()
-        task.init(BuildableArtifactImpl(project.files(zip1), dslScope),
-            BuildableArtifactImpl(project.files(zip2), dslScope),
+        task.init(BuildableArtifactImpl(project.files(zip1)),
+            BuildableArtifactImpl(project.files(zip2)),
             output)
         task.merge()
 

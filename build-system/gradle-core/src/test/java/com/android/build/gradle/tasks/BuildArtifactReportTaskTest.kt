@@ -68,7 +68,6 @@ class BuildArtifactReportTaskTest {
             BuildArtifactsHolder.OperationType.INITIAL,
             task1.name,
             "java_compile_classpath")
-        BuildableArtifactImpl.enableResolution()
     }
 
     @Test

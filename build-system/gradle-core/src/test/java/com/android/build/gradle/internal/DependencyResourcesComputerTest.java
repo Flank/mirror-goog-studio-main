@@ -23,11 +23,7 @@ import static org.mockito.Mockito.when;
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl;
-import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter;
-import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter;
 import com.android.build.gradle.internal.fixtures.FakeFileCollection;
-import com.android.build.gradle.internal.fixtures.FakeObjectFactory;
-import com.android.build.gradle.internal.variant2.DslScopeImpl;
 import com.android.builder.core.BuilderConstants;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.resources.ResourceSet;
@@ -64,7 +60,6 @@ public class DependencyResourcesComputerTest {
 
     @Before
     public void setUp() throws IOException {
-        BuildableArtifactImpl.Companion.enableResolution();
         computer = new DependecyResourcesComputer();
 
         // set some default file collection on the required inputs
@@ -246,12 +241,7 @@ public class DependencyResourcesComputerTest {
             File... files) {
         ResourceSet mainSet = new ResourceSet(name, ResourceNamespace.RES_AUTO, null, false);
         BuildableArtifact artifact =
-                new BuildableArtifactImpl(
-                        new FakeFileCollection(Arrays.asList(files)),
-                        new DslScopeImpl(
-                                new FakeEvalIssueReporter(true),
-                                new FakeDeprecationReporter(),
-                                new FakeObjectFactory()));
+                new BuildableArtifactImpl(new FakeFileCollection(Arrays.asList(files)));
         artifactMap.put(name, artifact);
         mainSet.addSources(artifact.getFiles());
         folderSets.add(mainSet);

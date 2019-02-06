@@ -85,7 +85,6 @@ class BuildArtifactsHolderTest(
 
     @Before
     fun setUp() {
-        BuildableArtifactImpl.enableResolution()
         project = ProjectBuilder.builder().build()
         root = project.file("build")
         holder = VariantBuildArtifactsHolder(

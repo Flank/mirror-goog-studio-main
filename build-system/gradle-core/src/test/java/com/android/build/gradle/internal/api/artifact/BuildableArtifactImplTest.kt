@@ -23,22 +23,16 @@ import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.variant2.DslScopeImpl
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
-import kotlin.test.assertFailsWith
 
 /**
  * Test for [BuildableArtifactImpl]
  */
 class BuildableArtifactImplTest {
     private val provider = FakeFilesProvider()
-    private val dslScope = DslScopeImpl(
-            FakeEvalIssueReporter(throwOnError = true),
-            FakeDeprecationReporter(),
-            FakeObjectFactory())
 
     @Test
     fun default() {
-        BuildableArtifactImpl.enableResolution()
-        val collection = BuildableArtifactImpl(provider.files(), dslScope)
+        val collection = BuildableArtifactImpl(provider.files())
         assertThat(collection.fileCollection).isNotNull()
         assertThat(collection.isEmpty()).isTrue()
         assertThat(collection.files).isEmpty()
@@ -47,9 +41,8 @@ class BuildableArtifactImplTest {
 
     @Test
     fun singleFile() {
-        BuildableArtifactImpl.enableResolution()
         val file = provider.file("foo")
-        val collection = BuildableArtifactImpl(provider.files(file), dslScope)
+        val collection = BuildableArtifactImpl(provider.files(file))
         assertThat(collection.isEmpty()).isFalse()
         assertThat(collection.files).hasSize(1)
         assertThat(collection).containsExactly(file)
@@ -57,22 +50,10 @@ class BuildableArtifactImplTest {
 
     @Test
     fun multipleFiles() {
-        BuildableArtifactImpl.enableResolution()
         val files = listOf(provider.file("foo"), provider.file("bar"))
-        val collection = BuildableArtifactImpl(provider.files(files), dslScope)
+        val collection = BuildableArtifactImpl(provider.files(files))
         assertThat(collection.isEmpty()).isFalse()
         assertThat(collection.files).containsExactlyElementsIn(files)
         assertThat(collection).containsExactlyElementsIn(files)
     }
-
-    /** All getter invocation should throw when resolution is not allowed */
-    @Test
-    fun disabledResolution() {
-        BuildableArtifactImpl.disableResolution()
-        val collection = BuildableArtifactImpl(provider.files(), dslScope)
-        assertFailsWith<RuntimeException> { collection.isEmpty() }
-        assertFailsWith<RuntimeException> { collection.files }
-        assertFailsWith<RuntimeException> { collection.iterator() }
-    }
-
 }

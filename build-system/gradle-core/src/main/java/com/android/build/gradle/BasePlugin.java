@@ -37,7 +37,6 @@ import com.android.build.gradle.internal.PluginInitializer;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
-import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl;
 import com.android.build.gradle.internal.api.dsl.extensions.BaseExtension2;
 import com.android.build.gradle.internal.crash.CrashReporting;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
@@ -279,7 +278,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
                 .setPluginGeneration(GradleBuildProject.PluginGeneration.FIRST)
                 .setOptions(AnalyticsUtil.toProto(projectOptions));
 
-        BuildableArtifactImpl.Companion.disableResolution();
         if (!projectOptions.get(BooleanOption.ENABLE_NEW_DSL_AND_API)) {
 
             threadRecorder.record(
@@ -429,9 +427,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
         gradle.addBuildListener(
                 new BuildListener() {
                     @Override
-                    public void buildStarted(@NonNull Gradle gradle) {
-                        BuildableArtifactImpl.Companion.disableResolution();
-                    }
+                    public void buildStarted(@NonNull Gradle gradle) {}
 
                     @Override
                     public void settingsEvaluated(@NonNull Settings settings) {}
@@ -809,7 +805,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
         }
 
         checkSplitConfiguration();
-        BuildableArtifactImpl.Companion.enableResolution();
         variantManager.setHasCreatedTasks(true);
     }
 

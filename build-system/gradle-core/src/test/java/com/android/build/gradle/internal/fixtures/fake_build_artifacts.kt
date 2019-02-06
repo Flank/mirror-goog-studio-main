@@ -17,11 +17,9 @@
 package com.android.build.gradle.internal.fixtures
 
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
-import com.android.build.gradle.internal.variant2.DslScopeImpl
 import java.io.File
 
 fun createBuildArtifact(vararg files: File) =
     BuildableArtifactImpl(
-        FakeFileCollection(*files),
-        DslScopeImpl(FakeEvalIssueReporter(), FakeDeprecationReporter(), FakeObjectFactory())
+        FakeFileCollection(*files)
     )
