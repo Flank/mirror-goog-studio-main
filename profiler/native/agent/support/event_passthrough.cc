@@ -56,7 +56,7 @@ Status SendSystemEvent(InternalEventService::Stub& stub, ClientContext& ctx,
 }
 
 void SendKeyboardEvent(JStringWrapper& text, int64_t event_down_time) {
-  if (Agent::Instance().agent_config().unified_pipeline()) {
+  if (Agent::Instance().agent_config().profiler_unified_pipeline()) {
     return;
   }
 
@@ -121,7 +121,7 @@ Java_com_android_tools_profiler_support_event_InputConnectionWrapper_sendKeyboar
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_event_WindowProfilerCallback_sendTouchEvent(
     JNIEnv* env, jobject thiz, jint jstate, jlong jdownTime) {
-  if (Agent::Instance().agent_config().unified_pipeline()) {
+  if (Agent::Instance().agent_config().profiler_unified_pipeline()) {
     return;
   }
 
@@ -204,7 +204,7 @@ Java_com_android_tools_profiler_support_event_FragmentWrapper_sendFragmentRemove
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_profilers_EventProfiler_sendRotationEvent(
     JNIEnv* env, jobject thiz, jint jstate) {
-  if (Agent::Instance().agent_config().unified_pipeline()) {
+  if (Agent::Instance().agent_config().profiler_unified_pipeline()) {
     return;
   }
 

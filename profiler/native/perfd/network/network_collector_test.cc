@@ -29,7 +29,7 @@ TEST(NetworkCollector, SamplersEmptyForNewPipeline) {
   NetworkCollector collector1(config1, &clock, 1);
   EXPECT_EQ(collector1.samplers().size(), 3);
 
-  agent_config.set_unified_pipeline(true);
+  agent_config.set_profiler_unified_pipeline(true);
   Config config2(agent_config);
   NetworkCollector collector2(config2, &clock, 1);
   EXPECT_EQ(collector2.samplers().size(), 0);

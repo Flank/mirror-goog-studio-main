@@ -349,15 +349,13 @@ void Daemon::SetHeartBeatTimestamp(int32_t app_pid, int64_t timestamp) {
       callback(app_pid);
     }
 
-    // Generate and send an Event for the new pipeline
-    if (config()->GetAgentConfig().unified_pipeline()) {
-      Event event;
-      event.set_pid(app_pid);
-      event.set_kind(Event::AGENT);
-      auto status = event.mutable_agent_data();
-      status->set_status(AgentData::ATTACHED);
-      buffer()->Add(event);
-    }
+    // Generate and send an Event for the new data pipeline
+    Event event;
+    event.set_pid(app_pid);
+    event.set_kind(Event::AGENT);
+    auto status = event.mutable_agent_data();
+    status->set_status(AgentData::ATTACHED);
+    buffer()->Add(event);
   }
   heartbeat_timestamp_map_[app_pid] = timestamp;
 }

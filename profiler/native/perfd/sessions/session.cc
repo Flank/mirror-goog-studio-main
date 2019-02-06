@@ -33,7 +33,7 @@ Session::Session(int64_t stream_id, int32_t pid, int64_t start_timestamp,
   info_.set_start_timestamp(start_timestamp);
   info_.set_end_timestamp(LLONG_MAX);
 
-  if (daemon->config()->GetAgentConfig().unified_pipeline()) {
+  if (daemon->config()->GetAgentConfig().profiler_unified_pipeline()) {
     samplers_.push_back(std::unique_ptr<Sampler>(
         new profiler::NetworkConnectionCountSampler(*this, daemon->buffer())));
     samplers_.push_back(

@@ -56,7 +56,7 @@ TEST(Session, SamplersAddedForNewPipeline) {
   Session session1(0, 0, 0, &daemon1);
   EXPECT_EQ(session1.samplers().size(), 0);
 
-  agent_config.set_unified_pipeline(true);
+  agent_config.set_profiler_unified_pipeline(true);
   Config config2(agent_config);
   Daemon daemon2(&clock, &config2, &file_cache, &event_buffer);
   Session session2(0, 0, 0, &daemon2);
@@ -74,7 +74,7 @@ TEST(Session, SamplerDeallocatedWhenSessionDies) {
   Session session1(0, 0, 0, &daemon1);
   EXPECT_EQ(session1.samplers().size(), 0);
 
-  agent_config.set_unified_pipeline(true);
+  agent_config.set_profiler_unified_pipeline(true);
   Config config2(agent_config);
   Daemon daemon2(&clock, &config2, &file_cache, &event_buffer);
   Session session2(0, 0, 0, &daemon2);

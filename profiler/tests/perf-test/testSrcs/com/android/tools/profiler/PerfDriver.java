@@ -244,7 +244,7 @@ public class PerfDriver extends ExternalResource {
                             .setSocketType(Agent.SocketType.UNSPECIFIED_SOCKET)
                             .setEnergyProfilerEnabled(true)
                             .setAndroidFeatureLevel(sdkLevel)
-                            .setUnifiedPipeline(myUnifiedPipeline)
+                            .setProfilerUnifiedPipeline(myUnifiedPipeline)
                             .build();
             config.writeTo(outputStream);
             outputStream.flush();

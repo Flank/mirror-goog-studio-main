@@ -374,9 +374,7 @@ void Agent::ConnectToPerfd(const std::string& target) {
   network_stub_ = InternalNetworkService::NewStub(channel_);
   memory_component_->Connect(channel_);
 
-  if (agent_config().unified_pipeline()) {
-    OpenCommandStream();
-  }
+  OpenCommandStream();
 
   if (!grpc_target_initialized_) {
     grpc_target_initialized_ = true;

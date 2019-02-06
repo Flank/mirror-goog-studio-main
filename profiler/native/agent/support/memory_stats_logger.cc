@@ -43,7 +43,7 @@ const SteadyClock& GetClock() {
 namespace profiler {
 
 void EnqueueAllocStats(int32_t alloc_count, int32_t free_count) {
-  if (Agent::Instance().agent_config().unified_pipeline()) {
+  if (Agent::Instance().agent_config().profiler_unified_pipeline()) {
     return;
   }
 
@@ -66,7 +66,7 @@ void EnqueueAllocStats(int32_t alloc_count, int32_t free_count) {
 }
 
 void EnqueueGcStats(int64_t start_time, int64_t end_time) {
-  if (Agent::Instance().agent_config().unified_pipeline()) {
+  if (Agent::Instance().agent_config().profiler_unified_pipeline()) {
     return;
   }
 
@@ -87,7 +87,7 @@ void EnqueueGcStats(int64_t start_time, int64_t end_time) {
 }
 
 void EnqueueAllocationEvents(proto::BatchAllocationSample& request) {
-  if (Agent::Instance().agent_config().unified_pipeline()) {
+  if (Agent::Instance().agent_config().profiler_unified_pipeline()) {
     return;
   }
 
@@ -100,7 +100,7 @@ void EnqueueAllocationEvents(proto::BatchAllocationSample& request) {
 }
 
 void EnqueueJNIGlobalRefEvents(proto::BatchJNIGlobalRefEvent& request) {
-  if (Agent::Instance().agent_config().unified_pipeline()) {
+  if (Agent::Instance().agent_config().profiler_unified_pipeline()) {
     return;
   }
 
@@ -114,7 +114,7 @@ void EnqueueJNIGlobalRefEvents(proto::BatchJNIGlobalRefEvent& request) {
 
 void EnqueueAllocationSamplingRateEvent(int64_t timestamp,
                                         int32_t sampling_num_interval) {
-  if (Agent::Instance().agent_config().unified_pipeline()) {
+  if (Agent::Instance().agent_config().profiler_unified_pipeline()) {
     return;
   }
 

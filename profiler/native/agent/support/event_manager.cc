@@ -61,7 +61,7 @@ void EventManager::CacheAndEnqueueActivityEvent(
 
 void EventManager::EnqueueActivityEvent(
     const profiler::proto::ActivityData& activity) {
-  if (Agent::Instance().agent_config().unified_pipeline()) {
+  if (Agent::Instance().agent_config().profiler_unified_pipeline()) {
     return;
   }
 

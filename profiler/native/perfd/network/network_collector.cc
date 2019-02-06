@@ -33,7 +33,7 @@ namespace profiler {
 NetworkCollector::NetworkCollector(const Config& config, Clock* clock,
                                    int sample_ms)
     : clock_(clock), sample_us_(sample_ms * 1000) {
-  if (!config.GetAgentConfig().unified_pipeline()) {
+  if (!config.GetAgentConfig().profiler_unified_pipeline()) {
     samplers_.emplace_back(new ConnectivitySampler());
     samplers_.emplace_back(
         new SpeedSampler(clock, NetworkConstants::GetTrafficBytesFilePath()));

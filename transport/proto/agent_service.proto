@@ -115,7 +115,7 @@ message AgentConfig {
   int32 android_feature_level = 8;
   CpuConfig cpu_config = 9;
   // equivalent to StudioFlags.PROFILER_UNIFIED_PIPELINE
-  bool unified_pipeline = 10;
+  bool profiler_unified_pipeline = 10;
 }
 
 message RegisterAgentRequest {
