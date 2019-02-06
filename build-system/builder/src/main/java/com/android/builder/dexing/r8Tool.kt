@@ -30,17 +30,22 @@ import com.android.tools.r8.DataEntryResource
 import com.android.tools.r8.DataResourceConsumer
 import com.android.tools.r8.DataResourceProvider
 import com.android.tools.r8.DexIndexedConsumer
+import com.android.tools.r8.DiagnosticsHandler
 import com.android.tools.r8.ProgramResource
 import com.android.tools.r8.ProgramResourceProvider
 import com.android.tools.r8.R8
 import com.android.tools.r8.StringConsumer
 import com.android.tools.r8.origin.Origin
 import com.android.tools.r8.utils.ArchiveResourceProvider
+import com.google.common.io.ByteStreams
+import java.io.BufferedOutputStream
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.logging.Level
 import java.util.logging.Logger
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 fun isProguardRule(name: String): Boolean {
     val lowerCaseName = name.toLowerCase()
@@ -117,7 +122,7 @@ fun runR8(
     val compilationMode =
         if (toolConfig.isDebuggable) CompilationMode.DEBUG else CompilationMode.RELEASE
 
-    val dataResourceConsumer = ClassFileConsumer.ArchiveConsumer(javaResourcesJar)
+    val dataResourceConsumer = JavaResourcesConsumer(javaResourcesJar)
     val programConsumer =
         if (toolConfig.r8OutputType == R8OutputType.CLASSES) {
             val baseConsumer: ClassFileConsumer = if (Files.isDirectory(output)) {
@@ -300,4 +305,34 @@ private class ResourceOnlyProvider(val originalProvider: ProgramResourceProvider
     override fun getProgramResources() = listOf<ProgramResource>()
 
     override fun getDataResourceProvider() = originalProvider.getDataResourceProvider()
+}
+
+/** Custom Java resources consumer to make sure we compress Java resources in the jar. */
+private class JavaResourcesConsumer(val outputJar: Path): DataResourceConsumer {
+
+    private val output = lazy { ZipOutputStream(BufferedOutputStream(outputJar.toFile().outputStream())) }
+
+    override fun accept(directory: DataDirectoryResource, diagnosticsHandler: DiagnosticsHandler) {
+        val entry:ZipEntry = createNewZipEntry(directory.getName() + "/")
+        output.value.putNextEntry(entry)
+        output.value.closeEntry()
+    }
+
+    override fun accept(file: DataEntryResource, diagnosticsHandler: DiagnosticsHandler) {
+        val entry:ZipEntry = createNewZipEntry(file.getName())
+        output.value.putNextEntry(entry)
+        output.value.write(ByteStreams.toByteArray(file.getByteStream()))
+        output.value.closeEntry()
+    }
+
+    override fun finished(handler: DiagnosticsHandler) {
+        output.value.close()
+    }
+
+    private fun createNewZipEntry(name: String): ZipEntry {
+        return ZipEntry(name).apply {
+            method = ZipEntry.DEFLATED
+            time = 0
+        }
+    }
 }

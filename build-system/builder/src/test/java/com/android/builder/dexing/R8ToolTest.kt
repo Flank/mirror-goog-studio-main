@@ -28,6 +28,8 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
 import kotlin.test.fail
 
 /**
@@ -115,6 +117,13 @@ class R8ToolTest {
         )
         assertThat(getDexFileCount(output)).isEqualTo(1)
         assertThatZip(javaRes.toFile()).contains("res.txt")
+
+        // check Java resources are compressed
+        ZipFile(javaRes.toFile()).use { zip ->
+            for (entry in zip.entries()) {
+                assertThat(entry.method).named("entry is compressed").isEqualTo(ZipEntry.DEFLATED)
+            }
+        }
     }
 
     @Test
