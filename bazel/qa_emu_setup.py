@@ -2,7 +2,6 @@
 
 import os
 import sys
-import shutil
 
 android_home = os.environ["QA_ANDROID_SDK_ROOT"]
 if not os.path.exists(android_home) or not os.path.isdir(android_home):
@@ -25,5 +24,5 @@ if not os.path.isdir(target_path):
 target_emu_dir = os.path.join(target_path, "emulator")
 target_sys_img_dir = os.path.join(target_path, "system-images")
 
-shutil.copytree(emu_dir, target_emu_dir)
-shutil.copytree(sys_img_dir, target_sys_img_dir)
+os.symlink(emu_dir, target_emu_dir)
+os.symlink(sys_img_dir, target_sys_img_dir)
