@@ -249,6 +249,9 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
         // Used to check whether an activity, service or broadcast receiver are
         // protected by a permission.
         String permission = element.getAttributeNS(ANDROID_URI, ATTR_PERMISSION);
+        if ("TODO".equals(permission)) { // temporary quickfix state: don't accept as solved
+            return true;
+        }
         if (permission == null || permission.isEmpty()) {
             Node parent = element.getParentNode();
             if (parent.getNodeType() == Node.ELEMENT_NODE
@@ -324,7 +327,7 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
                 && isUnprotectedByPermission(element)
                 && !isStandardReceiver(element)) {
             // No declared permission for this exported receiver: complain
-            LintFix fix = LintFix.create().set(ANDROID_URI, ATTR_PERMISSION, "").build();
+            LintFix fix = LintFix.create().set().todo(ANDROID_URI, ATTR_PERMISSION).build();
             context.report(
                     EXPORTED_RECEIVER,
                     element,
@@ -339,7 +342,7 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
                 && isUnprotectedByPermission(element)
                 && !isWearableListenerServiceAction(element)) {
             // No declared permission for this exported service: complain
-            LintFix fix = LintFix.create().set(ANDROID_URI, ATTR_PERMISSION, "").build();
+            LintFix fix = LintFix.create().set().todo(ANDROID_URI, ATTR_PERMISSION).build();
             context.report(
                     EXPORTED_SERVICE,
                     element,

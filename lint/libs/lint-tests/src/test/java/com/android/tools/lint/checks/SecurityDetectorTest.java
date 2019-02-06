@@ -557,13 +557,13 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                 .window(1)
                 .expectFixDiffs(
                         ""
-                                + "Fix for AndroidManifest.xml line 11: Set permission:\n"
+                                + "Fix for AndroidManifest.xml line 12: Set permission:\n"
                                 + "@@ -14 +14\n"
                                 + "              android:name=\"com.sample.service.serviceClass\"\n"
                                 + "-             android:label=\"@string/app_name\" >\n"
                                 + "+             android:label=\"@string/app_name\"\n"
-                                + "+             android:permission=\"|\" >\n"
-                                + "              <intent-filter>\n");
+                                + "+             android:permission=\"[TODO]|\" >\n"
+                                + "              <intent-filter>");
     }
 
     public void testReceiver2() throws Exception {
@@ -679,14 +679,74 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                 .run()
                 .expect(expected)
                 .verifyFixes()
+                // Make sure we don't get any fixes if in robot mode (e.g. lintFix Gradle task)
+                .robot(true)
+                .expectFixDiffs("")
+                // But in the IDE, offer quickfixes:
+                .robot(false)
                 .window(1)
                 .expectFixDiffs(
                         ""
-                                + "Fix for AndroidManifest.xml line 11: Set permission:\n"
+                                + "Fix for AndroidManifest.xml line 12: Set permission:\n"
                                 + "@@ -15 +15\n"
                                 + "              android:label=\"@string/app_name\"\n"
-                                + "+             android:permission=\"|\"\n"
-                                + "              android:process=\":remote\" >\n");
+                                + "+             android:permission=\"[TODO]|\"\n"
+                                + "              android:process=\":remote\" >");
+    }
+
+    public void testReceiverWithTodo() {
+        // User applied quickfix which put in temporary todo marker; should not
+        // be treated as having solved the problem
+        String expected =
+                ""
+                        + "AndroidManifest.xml:12: Warning: Exported receiver does not require permission [ExportedReceiver]\n"
+                        + "        <receiver\n"
+                        + "         ~~~~~~~~\n"
+                        + "0 errors, 1 warnings";
+        //noinspection all // Sample code
+        lint().files(
+                xml(
+                        "AndroidManifest.xml",
+                        ""
+                                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "    package=\"foo.bar2\"\n"
+                                + "    android:versionCode=\"1\"\n"
+                                + "    android:versionName=\"1.0\" >\n"
+                                + "\n"
+                                + "    <uses-sdk android:minSdkVersion=\"14\" />\n"
+                                + "\n"
+                                + "    <application\n"
+                                + "        android:icon=\"@drawable/ic_launcher\"\n"
+                                + "        android:label=\"@string/app_name\" >\n"
+                                + "        <receiver\n"
+                                + "            android:label=\"@string/app_name\"\n"
+                                + "            android:name=\"com.sample.service.serviceClass\"\n"
+                                + "            android:process=\":remote\""
+                                + "            android:permission=\"TODO\">\n"
+                                + "            <intent-filter >\n"
+                                + "                <action android:name=\"com.sample.service.serviceClass\" >\n"
+                                + "                </action>\n"
+                                + "            </intent-filter>\n"
+                                + "        </receiver>\n"
+                                + "    </application>\n"
+                                + "\n"
+                                + "</manifest>\n"
+                                + "\n"),
+                mStrings)
+                .run()
+                .expect(expected)
+                .verifyFixes()
+                .robot(false)
+                .window(1)
+                .expectFixDiffs(
+                        ""
+                                + "Fix for AndroidManifest.xml line 12: Set permission:\n"
+                                + "@@ -15 +15\n"
+                                + "              android:label=\"@string/app_name\"\n"
+                                + "-             android:permission=\"TODO\"\n"
+                                + "+             android:permission=\"[TODO]|\"\n"
+                                + "              android:process=\":remote\" >");
     }
 
     public void testReceiver5() throws Exception {

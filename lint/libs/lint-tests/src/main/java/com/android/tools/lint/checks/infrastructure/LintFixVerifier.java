@@ -65,6 +65,7 @@ public class LintFixVerifier {
     private final List<Warning> warnings;
     private int diffWindow = 0;
     private Boolean reformat;
+    private boolean robot = false;
 
     LintFixVerifier(TestLintTask task, List<Warning> warnings) {
         this.task = task;
@@ -74,6 +75,15 @@ public class LintFixVerifier {
     /** Sets up 2 lines of context in the diffs */
     public LintFixVerifier window() {
         diffWindow = 2;
+        return this;
+    }
+
+    /**
+     * Specifies whether a robot is driving the quickfixes (which means it will only allow
+     * auto-fixable lint fixes. Default is false.
+     */
+    public LintFixVerifier robot(boolean isRobot) {
+        robot = isRobot;
         return this;
     }
 
@@ -175,6 +185,10 @@ public class LintFixVerifier {
         List<String> names = Lists.newArrayList();
         for (Warning warning : warnings) {
             LintFix data = warning.quickfixData;
+            if (robot && !data.robot) {
+                // Fix requires human intervention
+                continue;
+            }
             List<LintFix> list;
             if (data instanceof LintFixGroup) {
                 LintFixGroup group = (LintFixGroup) data;

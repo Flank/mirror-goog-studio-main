@@ -702,8 +702,8 @@ public class LintFix {
         private String value = "";
         private int mark = Integer.MIN_VALUE;
         private int dot = Integer.MIN_VALUE;
-        private boolean robot = true;
-        private boolean independent = true;
+        private boolean robot;
+        private boolean independent;
         private Location range;
 
         /** Constructed from {@link Builder#set()} */
@@ -1160,6 +1160,14 @@ public class LintFix {
             }
 
             return displayName;
+        }
+
+        @Override
+        public LintFix autoFix(boolean robot, boolean independent) {
+            for (LintFix fix : fixes) {
+                fix.autoFix(robot, independent);
+            }
+            return super.autoFix(robot, independent);
         }
     }
 
