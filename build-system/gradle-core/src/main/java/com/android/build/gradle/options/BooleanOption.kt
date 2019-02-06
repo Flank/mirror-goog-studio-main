@@ -79,6 +79,7 @@ enum class BooleanOption(
     ENFORCE_UNIQUE_PACKAGE_NAMES("android.uniquePackageNames", false, status = Option.Status.STABLE),
     USE_RELATIVE_PATH_IN_TEST_CONFIG("android.testConfig.useRelativePath", false),
     ENABLE_INCREMENTAL_DATA_BINDING("android.databinding.incremental", false, Option.Status.STABLE),
+    KEEP_SERVICES_BETWEEN_BUILDS("android.keepWorkerActionServicesBetweenBuilds", false),
 
     // ---------------
     // Lifecycle flags: Stable stage, Enabled by default, can be disabled

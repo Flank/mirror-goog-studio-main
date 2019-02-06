@@ -428,9 +428,12 @@ public abstract class BasePlugin<E extends BaseExtension2>
                                 project.getPath(),
                                 null,
                                 () -> {
-                                    WorkerActionServiceRegistry.INSTANCE
-                                            .shutdownAllRegisteredServices(
-                                                    ForkJoinPool.commonPool());
+                                    if (!projectOptions.get(
+                                            BooleanOption.KEEP_SERVICES_BETWEEN_BUILDS)) {
+                                        WorkerActionServiceRegistry.INSTANCE
+                                                .shutdownAllRegisteredServices(
+                                                        ForkJoinPool.commonPool());
+                                    }
                                     Main.clearInternTables();
                                 });
                         DeprecationReporterImpl.Companion.clean();
